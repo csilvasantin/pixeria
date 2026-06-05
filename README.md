@@ -1,6 +1,6 @@
 # Pixeria
 
-Pixeria is a static website for `www.pixeria.com`, positioned as a global reference for AI content creation.
+Pixeria is a static website for `pixeria.com`, positioned as a global reference for AI content creation.
 
 **Mejoras recientes (junio 2026):**
 - Nuevo hero cinematografico optimizado (242 KB vs 1.8 MB anterior)
