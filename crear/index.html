@@ -751,7 +751,7 @@
             const label = `Opción ${idx + 1}`;
             resultHTML += `
               <div class="image-variant" data-variant="${idx}" style="flex:1; min-width:160px; max-width:220px; border:1px solid var(--line); background:#111a20; border-radius:8px; overflow:hidden; text-align:center;">
-                <img src="${variant.preview}" style="width:100%; display:block; border-bottom:1px solid var(--line);" alt="${label}">
+                <img src="${variant.cleanAsset}" style="width:100%; display:block; border-bottom:1px solid var(--line); background: repeating-conic-gradient(#222 0% 25%, #111 0% 50%) 50% / 20px 20px;" alt="${label} (fondo transparente)">
                 <div style="padding:8px 6px; font-size:12px;">
                   <strong>${label}</strong><br>
                   <span style="font-size:10px; opacity:.7; display:block; margin:4px 0;">${prompt.slice(0,45)}...</span>
