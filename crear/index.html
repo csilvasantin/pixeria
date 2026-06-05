@@ -637,6 +637,54 @@
       return c.toDataURL('image/png');
     }
 
+    // Generates a CLEAN asset with transparent background (for gemelo digital / stock import)
+    function generateTransparentImageDataURL(promptText, modelName, variant = 0) {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 512;
+      const ctx = c.getContext('2d', { alpha: true });
+      ctx.clearRect(0, 0, c.width, c.height); // fully transparent
+
+      const hash = (promptText || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) + variant * 37;
+
+      // Abstract generative art based on prompt + variant (no background fill)
+      // Multiple semi-transparent shapes
+      for (let i = 0; i < 5; i++) {
+        const x = 100 + ((hash + i * 73) % 300);
+        const y = 100 + ((hash + i * 47) % 300);
+        const size = 40 + ((hash + i * 29) % 80);
+        const alpha = 0.4 + (i % 3) * 0.15;
+        const hue = (hash + variant * 60 + i * 30) % 360;
+
+        ctx.fillStyle = `hsla(${hue}, 80%, 65%, ${alpha})`;
+        ctx.beginPath();
+        if (i % 2 === 0) {
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+        } else {
+          ctx.rect(x - size/2, y - size/2, size, size * 0.6);
+        }
+        ctx.fill();
+      }
+
+      // Stylized prompt text as part of the "art" (white with soft shadow for readability on any bg)
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.font = '700 26px Inter, system-ui, sans-serif';
+      const words = (promptText || 'Generated asset').split(/\s+/).slice(0, 4);
+      words.forEach((word, i) => {
+        ctx.fillText(word, 40 + (i % 2) * 20, 380 + i * 32);
+      });
+      ctx.shadowBlur = 0;
+
+      // Subtle Pixeria watermark (very faint, for provenance)
+      ctx.fillStyle = 'rgba(104,220,233,0.25)';
+      ctx.font = '500 14px JetBrains Mono, monospace';
+      ctx.fillText('PIXERIA', 380, 480);
+
+      return c.toDataURL('image/png');
+    }
+
     // Called when user clicks "Elegir esta" on one of the 3 image variants
     function selectImageVariant(variantIdx, thumbDataUrl, promptText, modelName) {
       // Highlight chosen
@@ -690,10 +738,12 @@
 
         if (currentFormat === 'imagen' || currentFormat === 'marketing') {
           // Generate 3 visual options for images (as requested)
-          const variants = [0, 1, 2].map(v => ({
-            v,
-            thumb: generateThumbnailDataURL(currentFormat, prompt, model, v)
-          }));
+          // Each has a preview card (for UI) + a CLEAN transparent asset (for gemelo/stock)
+          const variants = [0, 1, 2].map(v => {
+            const preview = generateThumbnailDataURL(currentFormat, prompt, model, v); // card with bg for nice display in tool
+            const cleanAsset = generateTransparentImageDataURL(prompt, model, v);     // transparent for import
+            return { v, preview, cleanAsset };
+          });
 
           resultHTML = `<div class="image-options" style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">`;
 
@@ -701,12 +751,12 @@
             const label = `Opción ${idx + 1}`;
             resultHTML += `
               <div class="image-variant" data-variant="${idx}" style="flex:1; min-width:160px; max-width:220px; border:1px solid var(--line); background:#111a20; border-radius:8px; overflow:hidden; text-align:center;">
-                <img src="${variant.thumb}" style="width:100%; display:block; border-bottom:1px solid var(--line);" alt="${label}">
+                <img src="${variant.preview}" style="width:100%; display:block; border-bottom:1px solid var(--line);" alt="${label}">
                 <div style="padding:8px 6px; font-size:12px;">
                   <strong>${label}</strong><br>
                   <span style="font-size:10px; opacity:.7; display:block; margin:4px 0;">${prompt.slice(0,45)}...</span>
                   <button class="button secondary" style="font-size:11px; padding:4px 10px; margin-top:4px;" 
-                          onclick="selectImageVariant(${idx}, '${variant.thumb.replace(/'/g, "\\'")}', '${prompt.replace(/'/g, "\\'")}', '${model.replace(/'/g, "\\'")}')">
+                          onclick="selectImageVariant(${idx}, '${variant.cleanAsset.replace(/'/g, "\\'")}', '${prompt.replace(/'/g, "\\'")}', '${model.replace(/'/g, "\\'")}')">
                     Elegir esta
                   </button>
                 </div>
@@ -715,7 +765,7 @@
 
           resultHTML += `</div>
             <div style="margin-top:10px; font-size:12px; color:#aeb9bd; text-align:center;">
-              Modelo: ${model} • Elige una variante para continuar
+              Modelo: ${model} • Elige una variante (todas con fondo transparente para el gemelo digital)
             </div>`;
         } else if (currentFormat === 'video') {
           resultHTML = `
