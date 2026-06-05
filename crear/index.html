@@ -350,8 +350,12 @@
       } else if (format === 'imagen' || format === 'marketing') {
         recommended = 'Flux Pro 1.1 (Imagen - gratuito vía HF/Grok)';
       } else if (format === 'audio') {
-        // Prioritize truly free native for voice; Suno for music but default to free TTS
-        recommended = 'Browser Web Speech API (Voz - 100% gratuito y nativo)';
+        // Smart choice: if prompt hints at music → Suno (free tier), else best free voice = native TTS
+        const currentPrompt = (document.getElementById('prompt')?.value || '').toLowerCase();
+        const wantsMusic = /música|musica|canción|cancion|beat|instrumental|jingle|soundtrack/.test(currentPrompt);
+        recommended = wantsMusic 
+          ? 'Suno v4 (Música - free tier)' 
+          : 'Browser Web Speech API (Voz - 100% gratuito y nativo)';
       } else if (format === 'texto') {
         recommended = 'Flux Pro 1.1 (Imagen - gratuito vía HF/Grok)'; // placeholder, or could be text model
       } else if (format === 'operaciones') {
@@ -471,29 +475,65 @@
 
     function playFreeTTS(text) {
       if (!('speechSynthesis' in window)) {
-        alert('Tu navegador no soporta Web Speech API. Usa Chrome, Edge o Safari.');
+        alert('Tu navegador no soporta Web Speech API. Usa Chrome, Edge o Safari para TTS gratuito.');
         return;
       }
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'es-ES'; // Spanish
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
 
-      // Try to pick a good Spanish voice if available
-      const voices = speechSynthesis.getVoices();
-      const spanishVoice = voices.find(v => v.lang.includes('es') && (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('microsoft')));
-      if (spanishVoice) {
-        utterance.voice = spanishVoice;
+      // Generate a nice spoken script from the brief (for better audio result)
+      const spokenText = text.length > 200 
+        ? text.substring(0, 180) + '. Fin del mensaje.' 
+        : text + '. Esto es una demostración de generación de audio con IA gratuita.';
+
+      const utterance = new SpeechSynthesisUtterance(spokenText);
+      utterance.lang = 'es-ES';
+      utterance.rate = 0.95;
+      utterance.pitch = 1.05;
+      utterance.volume = 0.95;
+
+      // Robust voice loading
+      function doSpeak() {
+        const voices = speechSynthesis.getVoices();
+        // Prefer natural Spanish voices
+        const preferred = voices.find(v => 
+          v.lang.includes('es') && 
+          (v.name.toLowerCase().includes('google') || 
+           v.name.toLowerCase().includes('microsoft') || 
+           v.name.toLowerCase().includes('samantha') ||
+           v.name.toLowerCase().includes('paola'))
+        );
+        if (preferred) utterance.voice = preferred;
+        speechSynthesis.speak(utterance);
       }
 
-      speechSynthesis.speak(utterance);
+      const voices = speechSynthesis.getVoices();
+      if (voices.length === 0) {
+        speechSynthesis.onvoiceschanged = doSpeak;
+        // Fallback in case event doesn't fire quickly
+        setTimeout(doSpeak, 800);
+      } else {
+        doSpeak();
+      }
 
-      // Visual feedback
-      const btns = document.querySelectorAll('button');
-      btns.forEach(b => { if (b.textContent.includes('Reproducir')) b.textContent = '⏹ Detener'; });
+      // Better visual feedback - target the specific audio result buttons
+      const audioButtons = document.querySelectorAll('#output button');
+      audioButtons.forEach(b => {
+        if (b.textContent.includes('Reproducir') || b.textContent.includes('TTS')) {
+          b.textContent = '⏹ Detener reproducción';
+          b.disabled = true;
+        }
+      });
+
       utterance.onend = () => {
-        btns.forEach(b => { if (b.textContent.includes('Detener')) b.textContent = '▶ Reproducir con TTS Gratuito (nativo)'; });
+        audioButtons.forEach(b => {
+          if (b.textContent.includes('Detener')) {
+            b.textContent = '▶ Reproducir con TTS Gratuito (nativo)';
+            b.disabled = false;
+          }
+        });
+      };
+
+      utterance.onerror = () => {
+        alert('Error al reproducir el audio TTS. Prueba en Chrome o Edge.');
       };
     }
 
@@ -548,9 +588,10 @@
                 🔊 AUDIO GENERADO<br>
                 <span style="font-size:11px;">${model}</span><br>
                 ${isFreeTTS ? 
-                  `<button onclick="playFreeTTS('${prompt.replace(/'/g, "\\'")}')" style="margin-top:8px; padding:6px 12px; background:#68dce9; color:#0b1117; border:none; border-radius:4px; cursor:pointer;">▶ Reproducir con TTS Gratuito (nativo)</button>` :
+                  `<button id="tts-play-btn" style="margin-top:8px; padding:6px 12px; background:#68dce9; color:#0b1117; border:none; border-radius:4px; cursor:pointer;">▶ Reproducir con TTS Gratuito (nativo)</button>` :
                   `<div style="margin:10px 0; height:3px; background:#68dce9; width:60%;"></div>
-                   <span style="font-size:11px;">Duración: 18s • Calidad: Alta</span>`
+                   <span style="font-size:11px;">Duración: 18s • Calidad: Alta</span><br>
+                   <small style="opacity:0.7">Para música real: abre Suno.ai (free tier) y pega el brief</small>`
                 }
               </div>
               <div style="font-size:12px; margin-top:8px;">${prompt.slice(0,60)}...</div>
@@ -566,6 +607,14 @@
 
         output.innerHTML = resultHTML;
         actions.style.display = 'block';
+
+        // Attach real TTS handler safely (avoids fragile onclick with user prompt)
+        if (currentFormat === 'audio' && model.includes('Web Speech')) {
+          const ttsBtn = document.getElementById('tts-play-btn');
+          if (ttsBtn) {
+            ttsBtn.onclick = () => playFreeTTS(prompt);
+          }
+        }
 
         // save to history
         const item = {
@@ -638,6 +687,13 @@
           e.preventDefault();
           ta.focus();
         }
+      }
+    });
+
+    // Re-evaluate best free model when prompt changes (for smart audio choice voice vs music)
+    document.addEventListener('input', function(e) {
+      if (e.target && e.target.id === 'prompt' && currentFormat === 'audio') {
+        autoSelectBestFreeModel('audio');
       }
     });
 
