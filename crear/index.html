@@ -270,14 +270,15 @@
             </div>
 
             <div style="margin-bottom:14px;">
-              <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Modelo (del Radar)</label>
+              <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Modelo (auto: mejor gratuito según formato)</label>
               <select id="model" class="model-select">
-                <option>Kling 2.1 (Video)</option>
-                <option>Runway Gen-4 (Video)</option>
+                <option>Kling 2.1 (Video - free tier limitado)</option>
+                <option>Runway Gen-4 (Video - créditos gratis)</option>
                 <option>Midjourney v7 (Imagen)</option>
-                <option>Flux Pro 1.1 (Imagen)</option>
-                <option>ElevenLabs Multilingual v3 (Voz)</option>
-                <option>Suno v4 (Música)</option>
+                <option>Flux Pro 1.1 (Imagen - gratuito vía HF/Grok)</option>
+                <option>ElevenLabs Multilingual v3 (Voz - plan free)</option>
+                <option>Suno v4 (Música - free tier)</option>
+                <option>Browser Web Speech API (Voz - 100% gratuito y nativo)</option>
               </select>
             </div>
 
@@ -340,6 +341,46 @@
     let currentFormat = 'video';
     let history = [];
 
+    function autoSelectBestFreeModel(format) {
+      const modelSelect = document.getElementById('model');
+      let recommended = '';
+
+      if (format === 'video') {
+        recommended = 'Runway Gen-4 (Video - créditos gratis)';
+      } else if (format === 'imagen' || format === 'marketing') {
+        recommended = 'Flux Pro 1.1 (Imagen - gratuito vía HF/Grok)';
+      } else if (format === 'audio') {
+        // Prioritize truly free native for voice; Suno for music but default to free TTS
+        recommended = 'Browser Web Speech API (Voz - 100% gratuito y nativo)';
+      } else if (format === 'texto') {
+        recommended = 'Flux Pro 1.1 (Imagen - gratuito vía HF/Grok)'; // placeholder, or could be text model
+      } else if (format === 'operaciones') {
+        recommended = 'Browser Web Speech API (Voz - 100% gratuito y nativo)';
+      }
+
+      if (recommended) {
+        // Try to find and select the matching option
+        let found = false;
+        for (let i = 0; i < modelSelect.options.length; i++) {
+          if (modelSelect.options[i].text.includes(recommended.split(' (')[0]) || 
+              modelSelect.options[i].text === recommended) {
+            modelSelect.selectedIndex = i;
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          // fallback: select first that matches format hint
+          for (let i = 0; i < modelSelect.options.length; i++) {
+            if (modelSelect.options[i].text.toLowerCase().includes(format)) {
+              modelSelect.selectedIndex = i;
+              break;
+            }
+          }
+        }
+      }
+    }
+
     // Format chips
     function initFormatChips() {
       const chips = document.querySelectorAll('#format-chips .format-chip');
@@ -348,10 +389,13 @@
           chips.forEach(c => c.classList.remove('active'));
           chip.classList.add('active');
           currentFormat = chip.dataset.format;
+          autoSelectBestFreeModel(currentFormat);
         });
       });
       // default active
       chips[0].classList.add('active');
+      // auto select for default format
+      autoSelectBestFreeModel(currentFormat);
     }
 
     function doLogin(e) {
@@ -425,6 +469,34 @@
       document.getElementById('prompt').value = '';
     }
 
+    function playFreeTTS(text) {
+      if (!('speechSynthesis' in window)) {
+        alert('Tu navegador no soporta Web Speech API. Usa Chrome, Edge o Safari.');
+        return;
+      }
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'es-ES'; // Spanish
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      // Try to pick a good Spanish voice if available
+      const voices = speechSynthesis.getVoices();
+      const spanishVoice = voices.find(v => v.lang.includes('es') && (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('microsoft')));
+      if (spanishVoice) {
+        utterance.voice = spanishVoice;
+      }
+
+      speechSynthesis.speak(utterance);
+
+      // Visual feedback
+      const btns = document.querySelectorAll('button');
+      btns.forEach(b => { if (b.textContent.includes('Reproducir')) b.textContent = '⏹ Detener'; });
+      utterance.onend = () => {
+        btns.forEach(b => { if (b.textContent.includes('Detener')) b.textContent = '▶ Reproducir con TTS Gratuito (nativo)'; });
+      };
+    }
+
     function generateContent() {
       const output = document.getElementById('output');
       const actions = document.getElementById('output-actions');
@@ -469,13 +541,17 @@
               <div style="margin-top:10px; font-size:13px;"><strong>${prompt.slice(0,55)}...</strong></div>
             </div>`;
         } else if (currentFormat === 'audio') {
+          const isFreeTTS = model.includes('Browser Web Speech') || model.includes('Web Speech');
           resultHTML = `
             <div class="result">
               <div style="padding:14px; background:#111a20; border-radius:6px;">
                 🔊 AUDIO GENERADO<br>
                 <span style="font-size:11px;">${model}</span><br>
-                <div style="margin:10px 0; height:3px; background:#68dce9; width:60%;"></div>
-                <span style="font-size:11px;">Duración: 18s • Calidad: Alta</span>
+                ${isFreeTTS ? 
+                  `<button onclick="playFreeTTS('${prompt.replace(/'/g, "\\'")}')" style="margin-top:8px; padding:6px 12px; background:#68dce9; color:#0b1117; border:none; border-radius:4px; cursor:pointer;">▶ Reproducir con TTS Gratuito (nativo)</button>` :
+                  `<div style="margin:10px 0; height:3px; background:#68dce9; width:60%;"></div>
+                   <span style="font-size:11px;">Duración: 18s • Calidad: Alta</span>`
+                }
               </div>
               <div style="font-size:12px; margin-top:8px;">${prompt.slice(0,60)}...</div>
             </div>`;
