@@ -316,7 +316,7 @@
 
             <div id="output-actions" style="display:none; margin-top:14px; gap:8px;">
               <button class="button primary" onclick="sendToPixerFeed()" style="width:100%; margin-bottom:6px;">Enviar a Pixer Feed</button>
-              <button class="button secondary" onclick="saveToLibrary()" style="width:100%;">Guardar en Biblioteca</button>
+              <button class="button secondary" onclick="publishLastToStock()" style="width:100%;">📌 Publicar en Stock (admira.studio)</button>
             </div>
           </div>
         </div>
@@ -537,6 +537,46 @@
       };
     }
 
+    function getStockType(format) {
+      if (format === 'imagen' || format === 'marketing') return 'imagen';
+      if (format === 'video') return 'video';
+      if (format === 'audio') return 'audio';
+      return 'imagen';
+    }
+
+    function generateThumbnailDataURL(format, promptText, modelName) {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 288;
+      const ctx = c.getContext('2d', { alpha: true });
+      const pal = {
+        video: ['#1a242f', '#68dce9'],
+        imagen: ['#0f161d', '#ff6b5c'],
+        audio: ['#111a20', '#6bd6a6'],
+        texto: ['#15130f', '#f1c96a'],
+        marketing: ['#1a242f', '#ff6b5c'],
+        operaciones: ['#0b1117', '#aeb9bd']
+      };
+      const [c1, acc] = pal[format] || ['#111a20', '#68dce9'];
+      const g = ctx.createLinearGradient(0, 0, 0, c.height);
+      g.addColorStop(0, c1); g.addColorStop(1, '#0b1117');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.fillStyle = acc; ctx.fillRect(0, 0, c.width, 6);
+      ctx.fillStyle = '#f4f0e8';
+      ctx.font = '700 22px Inter, system-ui, sans-serif';
+      ctx.fillText(format.toUpperCase(), 24, 48);
+      ctx.font = '15px Inter, system-ui, sans-serif';
+      const lines = (promptText || '').match(/.{1,42}/g) || [];
+      lines.slice(0, 5).forEach((l, i) => ctx.fillText(l, 24, 90 + i * 26));
+      ctx.font = '13px JetBrains Mono, monospace';
+      ctx.fillStyle = '#aeb9bd';
+      ctx.fillText((modelName || '').substring(0, 42), 24, c.height - 28);
+      ctx.fillStyle = '#68dce9';
+      ctx.fillText('PIXERIA STUDIO', c.width - 170, c.height - 28);
+      return c.toDataURL('image/png');
+    }
+
+    let lastGeneratedAsset = null;
+
     function generateContent() {
       const output = document.getElementById('output');
       const actions = document.getElementById('output-actions');
@@ -616,6 +656,19 @@
           }
         }
 
+        // Generate savable asset (thumbnail + metadata) for Stock
+        try {
+          const thumb = generateThumbnailDataURL(currentFormat, prompt, model);
+          lastGeneratedAsset = {
+            type: getStockType(currentFormat),
+            motor: model,
+            prompt: prompt,
+            thumbnail: thumb,
+            url: thumb,  // use thumbnail as the visual asset for demo
+            mime: 'image/png'
+          };
+        } catch(e) { console.warn('thumb gen failed', e); }
+
         // save to history
         const item = {
           id: Date.now(),
@@ -636,8 +689,61 @@
       // In real life this would POST to the signage worker
     }
 
-    function saveToLibrary() {
-      alert('💾 Guardado en tu biblioteca personal de Pixeria.\n\nDisponible en la sección Biblioteca del sitio principal.');
+    function publishLastToStock() {
+      if (!lastGeneratedAsset) {
+        alert('Genera algo primero.');
+        return;
+      }
+      publishToStock(lastGeneratedAsset);
+    }
+
+    const ELEVEN_WORKER_URL = 'https://pixer-eleven.csilvasantin.workers.dev';
+    const STOCK_PUBLISH_URL = ELEVEN_WORKER_URL + '/stock/publish';
+
+    async function publishToStock(meta) {
+      const btns = document.querySelectorAll('#output-actions button');
+      btns.forEach(b => { if (b.textContent.includes('Stock')) { b.disabled = true; b.dataset.old = b.textContent; b.textContent = '⏳ publicando...'; } });
+
+      try {
+        const payload = {
+          type: meta.type,
+          motor: meta.motor || 'Pixeria Studio',
+          prompt: meta.prompt || '',
+          title: `Pixeria Studio • ${meta.prompt.substring(0, 50)}`,
+          comment: `Generado con ${meta.motor} en Pixeria Studio`,
+          tags: ['pixeria', 'studio', meta.type],
+          costEst: 0.02,
+          thumbnail: meta.thumbnail || null,
+        };
+
+        if (meta.url && meta.url.startsWith('data:')) {
+          const comma = meta.url.indexOf(',');
+          payload.mime = meta.mime || meta.url.substring(5, comma);
+          payload.base64 = meta.url.substring(comma + 1);
+        } else if (meta.url) {
+          payload.sourceUrl = meta.url;
+          payload.mime = meta.mime || null;
+        }
+
+        const r = await fetch(STOCK_PUBLISH_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await r.json().catch(() => ({}));
+
+        if (r.ok && (data.ok || data.id)) {
+          alert(`✅ Publicado en Stock!\nID: ${data.id}\nVer: https://www.admira.studio/stock.html`);
+          // optional: open the stock in new tab
+          // window.open('https://www.admira.studio/stock.html', '_blank');
+        } else {
+          alert('Error al publicar en Stock: ' + (data.error || r.statusText || 'desconocido'));
+        }
+      } catch (err) {
+        alert('Fallo de red al publicar en Stock: ' + err.message);
+      } finally {
+        btns.forEach(b => { if (b.dataset.old) { b.textContent = b.dataset.old; b.disabled = false; delete b.dataset.old; } });
+      }
     }
 
     function renderHistory() {
