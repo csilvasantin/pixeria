@@ -2,6 +2,13 @@
   if (window.__godModeLoaded) return;
   window.__godModeLoaded = true;
 
+  // Wait for god-auth if present
+  if (window.__godAuthCheck && !window.__godAuthCheck()) {
+    // Will be re-inited from auth success
+    window.__initGodMode = initGodMode;
+    return;
+  }
+
   const STORAGE_KEY = 'god-text-edits-' + location.pathname;
 
   // Add styles for editing
