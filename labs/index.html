@@ -86,8 +86,21 @@
     </nav>
     <div class="header-actions">
       <a class="nav-action" href="mailto:csilvasantin@gmail.com?subject=Pixeria%20Labs">Hablar</a>
+      <button class="nav-toggle" aria-label="Abrir menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </header>
+
+  <nav class="mobile-nav" id="mobileNav" aria-label="Navegacion movil">
+    <a href="/#radar">Radar</a>
+    <a href="/#formatos">Formatos</a>
+    <a href="/#programas">Programas</a>
+    <a href="/#metodo">Metodo</a>
+    <a href="/#biblioteca">Biblioteca</a>
+    <a href="/labs/" class="active">Labs</a>
+    <a class="mobile-cta" href="mailto:csilvasantin@gmail.com?subject=Pixeria%20Labs">Contactar</a>
+  </nav>
 
   <main>
     <section class="hero labs-hero">
@@ -154,5 +167,22 @@
     <p>Herramientas que usamos para crear y operar contenido con IA.</p>
     <a href="/">Volver a pixeria.com</a>
   </footer>
+
+  <script>
+    (function () {
+      const toggle = document.querySelector('.nav-toggle');
+      const mobileNav = document.getElementById('mobileNav');
+      if (!toggle || !mobileNav) return;
+
+      function setOpen(open) {
+        mobileNav.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        document.body.style.overflow = open ? 'hidden' : '';
+      }
+      toggle.addEventListener('click', () => setOpen(!mobileNav.classList.contains('open')));
+      mobileNav.addEventListener('click', (e) => { if (e.target.tagName === 'A') setOpen(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+    })();
+  </script>
 </body>
 </html>
