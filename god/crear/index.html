@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crear · Pixeria Studio</title>
+  <meta name="description" content="Herramienta de creación de Pixeria. Inicia sesión para acceder al estudio de generación de contenido con IA.">
+  <meta name="theme-color" content="#0b1117">
+  <link rel="canonical" href="https://pixeria.com/god/crear/">
+  <link rel="stylesheet" href="../assets/styles.css?v=20260605-2">
+  <style>
+    .login-gate {
+      min-height: 70vh;
+      display: grid;
+      place-items: center;
+      padding: 40px 20px;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(244, 240, 232, 0.06);
+      border: 1px solid var(--line);
+      padding: 40px 36px;
+      border-radius: 12px;
+    }
+    .login-card h2 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .login-card .subtitle {
+      color: var(--muted);
+      margin-bottom: 28px;
+      font-size: 15px;
+    }
+    .login-card label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .login-card input {
+      width: 100%;
+      background: rgba(11,17,23,0.6);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+    .login-card input:focus {
+      border-color: var(--cyan);
+      outline: none;
+    }
+    .studio {
+      display: none;
+    }
+    .studio.active {
+      display: block;
+    }
+    .studio-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+    }
+    .studio-header .user {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .studio-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr 320px;
+      gap: 16px;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    @media (max-width: 1100px) {
+      .studio-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .studio-panel {
+      background: rgba(244, 240, 232, 0.045);
+      border: 1px solid var(--line);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .studio-panel h4 {
+      font-size: 14px;
+      margin-bottom: 12px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .format-grid-small {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .format-chip {
+      padding: 8px 10px;
+      background: rgba(11,17,23,0.5);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 13px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .format-chip.active, .format-chip:hover {
+      border-color: var(--cyan);
+      background: rgba(104,220,233,0.1);
+    }
+    .model-select {
+      width: 100%;
+      background: rgba(11,17,23,0.6);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .prompt-area textarea {
+      width: 100%;
+      min-height: 160px;
+      background: rgba(11,17,23,0.6);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      padding: 14px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 15px;
+      resize: vertical;
+    }
+    .generate-btn {
+      width: 100%;
+      min-height: 52px;
+      background: var(--cyan);
+      color: #0b1117;
+      font-weight: 780;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    .output {
+      min-height: 220px;
+      background: #0b1117;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .output .result {
+      width: 100%;
+      color: var(--ink);
+    }
+    .output .result img {
+      max-width: 100%;
+      border-radius: 6px;
+    }
+    .history {
+      margin-top: 32px;
+      max-width: 1180px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .history-item {
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      margin-bottom: 6px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(244,240,232,0.03);
+    }
+    .login-success {
+      color: var(--green);
+      margin-top: 12px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/god/" aria-label="Pixeria inicio">
+      <span class="brand-mark">P</span>
+      <span>Pixeria</span>
+    </a>
+    <nav class="nav" aria-label="Navegacion principal">
+      <a href="/#radar">Radar</a>
+      <a href="/#formatos">Formatos</a>
+      <a href="/#programas">Programas</a>
+      <a href="/#metodo">Metodo</a>
+      <a href="/#biblioteca">Biblioteca</a>
+      <a href="/god/crear/" class="active">Crear</a>
+      <a href="/god/labs/">Labs</a>
+    </nav>
+    <div class="header-actions">
+      <a class="nav-action" href="mailto:csilvasantin@gmail.com?subject=Pixeria%20Studio">Hablar</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- LOGIN GATE -->
+    <div id="login-gate" class="login-gate">
+      <div class="login-card">
+        <p class="eyebrow">Acceso protegido</p>
+        <h2>Pixeria Studio</h2>
+        <p class="subtitle">La herramienta oficial de creación de contenidos con IA de Pixeria.</p>
+
+        <form id="login-form" onsubmit="doLogin(event)">
+          <label>Email del equipo</label>
+          <input type="email" id="email" value="demo@pixeria.com" required>
+
+          <label>Contraseña o token</label>
+          <input type="password" id="password" value="pixeria" required>
+
+          <button type="submit" class="button primary" style="width:100%; min-height:48px; margin-top:8px;">Entrar al Estudio</button>
+        </form>
+
+        <p style="margin-top:18px; font-size:12px; color:var(--muted); text-align:center;">
+          Demo: usa cualquier email + contraseña <strong>pixeria</strong>
+        </p>
+        <div id="login-msg" class="login-success" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- STUDIO (hidden until login) -->
+    <div id="studio" class="studio">
+      <div style="max-width:1180px; margin:0 auto; padding: 0 20px;">
+        <div class="studio-header">
+          <div>
+            <strong style="font-size:22px;">Pixeria Studio</strong>
+            <span style="margin-left:12px; font-size:12px; background:rgba(104,220,233,0.15); color:var(--cyan); padding:2px 8px; border-radius:3px;">PRODUCCIÓN</span>
+          </div>
+          <div>
+            <span id="user-badge" class="user"></span>
+            <button onclick="logout()" class="button secondary" style="padding:6px 14px; font-size:13px; margin-left:12px;">Cerrar sesión</button>
+          </div>
+        </div>
+
+        <div class="studio-grid">
+          <!-- CONFIG -->
+          <div class="studio-panel">
+            <h4>Configuración</h4>
+
+            <div style="margin-bottom:14px;">
+              <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Formato</label>
+              <div class="format-grid-small" id="format-chips">
+                <div class="format-chip" data-format="video">Video</div>
+                <div class="format-chip" data-format="imagen">Imagen</div>
+                <div class="format-chip" data-format="audio">Audio</div>
+                <div class="format-chip" data-format="texto">Texto</div>
+                <div class="format-chip" data-format="marketing">Marketing</div>
+                <div class="format-chip" data-format="operaciones">Operaciones</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Modelo (auto: mejor gratuito según formato)</label>
+              <select id="model" class="model-select">
+                <option>Kling 2.1 (Video - free tier limitado)</option>
+                <option>Runway Gen-4 (Video - créditos gratis)</option>
+                <option>Midjourney v7 (Imagen)</option>
+                <option>Flux Pro 1.1 (Imagen - gratuito vía HF/Grok)</option>
+                <option>ElevenLabs Multilingual v3 (Voz - plan free)</option>
+                <option>Suno v4 (Música - free tier)</option>
+                <option>Browser Web Speech API (Voz - 100% gratuito y nativo)</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Aspecto / Duración</label>
+              <select id="aspect" class="model-select">
+                <option>16:9 — Horizontal</option>
+                <option>9:16 — Vertical (Reels/TikTok)</option>
+                <option>1:1 — Cuadrado</option>
+                <option>4:3 — Clásico</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- PROMPT -->
+          <div class="studio-panel prompt-area">
+            <h4>Prompt / Brief</h4>
+            <textarea id="prompt" placeholder="Describe la pieza que quieres crear. Ej: Campaña de producto con modelo de lujo en entorno minimalista, tono sofisticado, iluminación cinematográfica..."></textarea>
+
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <button class="button secondary" onclick="useMethodPrompt()" style="flex:1; font-size:13px;">Usar prompt del Método</button>
+              <button class="button secondary" onclick="clearPrompt()" style="flex:1; font-size:13px;">Limpiar</button>
+            </div>
+
+            <button class="generate-btn" onclick="generateContent()">Generar con Pixeria</button>
+            <div style="font-size:11px; color:var(--muted); margin-top:8px; text-align:center;">Modelos sincronizados con el Radar • Junio 2026</div>
+          </div>
+
+          <!-- OUTPUT -->
+          <div class="studio-panel">
+            <h4>Resultado</h4>
+            <div id="output" class="output">
+              <div>El resultado de la generación aparecerá aquí.<br>Elige formato, modelo y escribe un prompt.</div>
+            </div>
+
+            <div id="output-actions" style="display:none; margin-top:14px; gap:8px;">
+              <button class="button primary" onclick="sendToPixerFeed()" style="width:100%; margin-bottom:6px;">Enviar a Pixer Feed</button>
+              <button class="button secondary" onclick="saveToLibrary()" style="width:100%;">Guardar en Biblioteca</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="history">
+          <h4 style="margin: 20px 0 10px; font-size:14px; color:var(--cyan);">Historial de esta sesión</h4>
+          <div id="history-list"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <span>Pixeria Studio</span>
+    <p>Herramienta de creación interna. Contenido generado se puede publicar a Pixer Feed.</p>
+    <a href="/god/">Volver al sitio principal (god)</a>
+  </footer>
+
+  <script>
+    let currentUser = null;
+    let currentFormat = 'video';
+    let history = [];
+
+    function autoSelectBestFreeModel(format) {
+      const modelSelect = document.getElementById('model');
+      let recommended = '';
+
+      if (format === 'video') {
+        recommended = 'Runway Gen-4 (Video - créditos gratis)';
+      } else if (format === 'imagen' || format === 'marketing') {
+        recommended = 'Flux Pro 1.1 (Imagen - gratuito vía HF/Grok)';
+      } else if (format === 'audio') {
+        // Prioritize truly free native for voice; Suno for music but default to free TTS
+        recommended = 'Browser Web Speech API (Voz - 100% gratuito y nativo)';
+      } else if (format === 'texto') {
+        recommended = 'Flux Pro 1.1 (Imagen - gratuito vía HF/Grok)'; // placeholder, or could be text model
+      } else if (format === 'operaciones') {
+        recommended = 'Browser Web Speech API (Voz - 100% gratuito y nativo)';
+      }
+
+      if (recommended) {
+        // Try to find and select the matching option
+        let found = false;
+        for (let i = 0; i < modelSelect.options.length; i++) {
+          if (modelSelect.options[i].text.includes(recommended.split(' (')[0]) || 
+              modelSelect.options[i].text === recommended) {
+            modelSelect.selectedIndex = i;
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          // fallback: select first that matches format hint
+          for (let i = 0; i < modelSelect.options.length; i++) {
+            if (modelSelect.options[i].text.toLowerCase().includes(format)) {
+              modelSelect.selectedIndex = i;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // Format chips
+    function initFormatChips() {
+      const chips = document.querySelectorAll('#format-chips .format-chip');
+      chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          chips.forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          currentFormat = chip.dataset.format;
+          autoSelectBestFreeModel(currentFormat);
+        });
+      });
+      // default active
+      chips[0].classList.add('active');
+      // auto select for default format
+      autoSelectBestFreeModel(currentFormat);
+    }
+
+    function doLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const pass = document.getElementById('password').value.trim();
+
+      if (!email || !pass) {
+        alert('Introduce email y contraseña');
+        return;
+      }
+
+      // Demo auth: any email, password must contain "pixeria" or be demo
+      if (!pass.toLowerCase().includes('pixeria') && pass !== 'demo') {
+        const msg = document.getElementById('login-msg');
+        msg.style.display = 'block';
+        msg.style.color = '#ff6b5c';
+        msg.textContent = 'Contraseña incorrecta para demo (usa "pixeria")';
+        return;
+      }
+
+      currentUser = email;
+
+      // Hide gate, show studio
+      document.getElementById('login-gate').style.display = 'none';
+      const studio = document.getElementById('studio');
+      studio.style.display = 'block';
+      studio.classList.add('active');
+
+      // Set user badge
+      document.getElementById('user-badge').textContent = currentUser + ' · equipo';
+
+      // init studio bits
+      initFormatChips();
+      document.getElementById('output-actions').style.display = 'none';
+
+      // Optional: auto fill a nice prompt
+      if (!document.getElementById('prompt').value) {
+        document.getElementById('prompt').value = 'Campaña de lanzamiento de producto premium en entorno arquitectónico minimalista, iluminación volumétrica, tono sofisticado y cinematográfico, modelo diverso.';
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('studio').style.display = 'none';
+      document.getElementById('studio').classList.remove('active');
+      document.getElementById('login-gate').style.display = 'grid';
+      document.getElementById('login-msg').style.display = 'none';
+      document.getElementById('history-list').innerHTML = '';
+      history = [];
+      // reset output
+      document.getElementById('output').innerHTML = '<div>El resultado de la generación aparecerá aquí.</div>';
+      document.getElementById('output-actions').style.display = 'none';
+    }
+
+    function useMethodPrompt() {
+      const prompts = {
+        'video': 'Secuencia de 8-12 segundos: producto entrando en plano, slow motion elegante, transición a modelo usando el producto, final con logo y claim de marca. Movimiento fluido y premium.',
+        'imagen': 'Fotografía de producto de lujo sobre fondo neutro texturizado. Dirección de arte minimalista, luces suaves, sombras controladas, alta resolución, consistencia de marca.',
+        'audio': 'Locución cálida y autoritaria en español neutro, 18 segundos. Música ambiente sutil de sintetizadores y percusión ligera. Final con sting de marca.',
+        'texto': 'Copy para post de Instagram + caption largo. Tono sofisticado, aspiracional pero cercano. Incluye 3 CTAs diferentes y hashtags estratégicos.',
+        'marketing': 'Variantes A/B para campaña paid: 3 headlines + 3 visuals descriptions + 2 versiones de copy largo para landing.',
+        'operaciones': 'Guion de briefing interno + checklist de producción para equipo de 4 personas. Incluye tiempos, assets necesarios y puntos de control de calidad.'
+      };
+      const ta = document.getElementById('prompt');
+      ta.value = prompts[currentFormat] || prompts['video'];
+      ta.focus();
+    }
+
+    function clearPrompt() {
+      document.getElementById('prompt').value = '';
+    }
+
+    function playFreeTTS(text) {
+      if (!('speechSynthesis' in window)) {
+        alert('Tu navegador no soporta Web Speech API. Usa Chrome, Edge o Safari.');
+        return;
+      }
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'es-ES'; // Spanish
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      // Try to pick a good Spanish voice if available
+      const voices = speechSynthesis.getVoices();
+      const spanishVoice = voices.find(v => v.lang.includes('es') && (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('microsoft')));
+      if (spanishVoice) {
+        utterance.voice = spanishVoice;
+      }
+
+      speechSynthesis.speak(utterance);
+
+      // Visual feedback
+      const btns = document.querySelectorAll('button');
+      btns.forEach(b => { if (b.textContent.includes('Reproducir')) b.textContent = '⏹ Detener'; });
+      utterance.onend = () => {
+        btns.forEach(b => { if (b.textContent.includes('Detener')) b.textContent = '▶ Reproducir con TTS Gratuito (nativo)'; });
+      };
+    }
+
+    function generateContent() {
+      const output = document.getElementById('output');
+      const actions = document.getElementById('output-actions');
+      const prompt = document.getElementById('prompt').value.trim() || 'Prompt por defecto de Pixeria.';
+      const model = document.getElementById('model').value;
+      const aspect = document.getElementById('aspect').value;
+
+      output.innerHTML = `
+        <div style="width:100%">
+          <div style="margin-bottom:12px; color:#68dce9;">Generando con ${model}...</div>
+          <div class="progress" style="height:4px; background:rgba(104,220,233,0.2); border-radius:2px; overflow:hidden;">
+            <div style="height:100%; width:0%; background:#68dce9; animation: genprogress 1.8s linear forwards;"></div>
+          </div>
+        </div>
+      `;
+
+      // fake progress + result
+      setTimeout(() => {
+        let resultHTML = '';
+
+        if (currentFormat === 'imagen' || currentFormat === 'marketing') {
+          resultHTML = `
+            <div class="result">
+              <div style="background:linear-gradient(135deg,#1a242f,#0f161d); padding:12px; border-radius:6px; margin-bottom:10px;">
+                <div style="height:160px; background:linear-gradient(45deg, #68dce9 0%, #ff6b5c 100%); border-radius:4px; display:flex; align-items:center; justify-content:center; color:#0b1117; font-weight:700; font-size:13px; text-align:center;">
+                  IMAGEN GENERADA<br>
+                  <span style="font-size:10px; opacity:.7;">${aspect}</span>
+                </div>
+              </div>
+              <strong style="font-size:13px;">${prompt.slice(0,70)}...</strong><br>
+              <span style="font-size:11px; color:#aeb9bd;">Modelo: ${model}</span>
+            </div>`;
+        } else if (currentFormat === 'video') {
+          resultHTML = `
+            <div class="result">
+              <div style="background:#111a20; padding:8px; border-radius:6px;">
+                <div style="height:130px; background:#0b1117; border:1px solid #68dce9; border-radius:4px; display:flex; align-items:center; justify-content:center; flex-direction:column; font-size:12px;">
+                  🎥 VIDEO  •  ${aspect}<br>
+                  <span style="font-size:10px; margin-top:4px; opacity:.6;">Renderizado • 8.2s</span>
+                </div>
+              </div>
+              <div style="margin-top:10px; font-size:13px;"><strong>${prompt.slice(0,55)}...</strong></div>
+            </div>`;
+        } else if (currentFormat === 'audio') {
+          const isFreeTTS = model.includes('Browser Web Speech') || model.includes('Web Speech');
+          resultHTML = `
+            <div class="result">
+              <div style="padding:14px; background:#111a20; border-radius:6px;">
+                🔊 AUDIO GENERADO<br>
+                <span style="font-size:11px;">${model}</span><br>
+                ${isFreeTTS ? 
+                  `<button onclick="playFreeTTS('${prompt.replace(/'/g, "\\'")}')" style="margin-top:8px; padding:6px 12px; background:#68dce9; color:#0b1117; border:none; border-radius:4px; cursor:pointer;">▶ Reproducir con TTS Gratuito (nativo)</button>` :
+                  `<div style="margin:10px 0; height:3px; background:#68dce9; width:60%;"></div>
+                   <span style="font-size:11px;">Duración: 18s • Calidad: Alta</span>`
+                }
+              </div>
+              <div style="font-size:12px; margin-top:8px;">${prompt.slice(0,60)}...</div>
+            </div>`;
+        } else {
+          resultHTML = `
+            <div class="result" style="text-align:left; font-size:13px;">
+              <strong>Texto / Guion generado</strong><br><br>
+              ${prompt.slice(0,120)}...<br><br>
+              <em style="font-size:11px; color:#aeb9bd;">Listo para revisión editorial. Modelo: ${model}</em>
+            </div>`;
+        }
+
+        output.innerHTML = resultHTML;
+        actions.style.display = 'block';
+
+        // save to history
+        const item = {
+          id: Date.now(),
+          format: currentFormat,
+          model: model,
+          prompt: prompt.substring(0, 80),
+          time: new Date().toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})
+        };
+        history.unshift(item);
+        renderHistory();
+
+      }, 1850);
+    }
+
+    function sendToPixerFeed() {
+      const output = document.getElementById('output');
+      alert('✅ Contenido enviado a Pixer Feed.\n\nEl asset aparecerá en los overlays de pantallas activas en los próximos segundos (según polling del worker).');
+      // In real life this would POST to the signage worker
+    }
+
+    function saveToLibrary() {
+      alert('💾 Guardado en tu biblioteca personal de Pixeria.\n\nDisponible en la sección Biblioteca del sitio principal.');
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('history-list');
+      if (!history.length) {
+        container.innerHTML = '<div style="color:var(--muted); font-size:13px;">Todavía no hay generaciones en esta sesión.</div>';
+        return;
+      }
+      container.innerHTML = history.map(item => `
+        <div class="history-item" onclick="loadFromHistory(${item.id})">
+          <div>
+            <strong>${item.format.toUpperCase()}</strong> · ${item.model.split('(')[0].trim()} <span style="opacity:.5;">${item.time}</span><br>
+            <span style="font-size:12px; opacity:.75;">${item.prompt}...</span>
+          </div>
+          <div style="font-size:11px; color:var(--cyan);">Cargar →</div>
+        </div>
+      `).join('');
+    }
+
+    function loadFromHistory(id) {
+      const item = history.find(h => h.id === id);
+      if (!item) return;
+      // set values
+      currentFormat = item.format;
+      document.getElementById('prompt').value = item.prompt + '... (cargado del historial)';
+      document.getElementById('model').value = item.model;
+
+      // activate chip
+      document.querySelectorAll('#format-chips .format-chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.format === item.format);
+      });
+
+      // scroll to prompt
+      document.getElementById('prompt').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function initStudio() {
+      // any extra init
+      // preselect first format chip if studio is shown later
+    }
+
+    // Keyboard support for demo
+    document.addEventListener('keydown', function(e) {
+      if (e.key === '/' && document.getElementById('studio').classList.contains('active')) {
+        const ta = document.getElementById('prompt');
+        if (document.activeElement !== ta) {
+          e.preventDefault();
+          ta.focus();
+        }
+      }
+    });
+
+    // Make sure chips work even if studio shown later (init is called on login)
+    console.log('%c[Pixeria Studio] Login + creation tool ready. Password hint: pixeria', 'color:#555');
+  </script>
+  <script src="../god-mode.js"></script>
+</body>
+</html>
