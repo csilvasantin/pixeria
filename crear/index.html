@@ -266,6 +266,7 @@
                 <div class="format-chip" data-format="texto">Texto</div>
                 <div class="format-chip" data-format="marketing">Marketing</div>
                 <div class="format-chip" data-format="operaciones">Operaciones</div>
+                <div class="format-chip" data-format="mobiliario">🛋 Mobiliario</div>
               </div>
             </div>
 
@@ -319,6 +320,28 @@
               <button class="button secondary" onclick="publishLastToStock()" style="width:100%;">📌 Publicar en Stock (admira.studio)</button>
             </div>
           </div>
+        </div>
+
+        <!-- MOBILIARIO (furni) — Fase A: Pixeria → Stock → gemelo -->
+        <div class="studio-panel" id="furni-panel" style="display:none; margin-top:16px;">
+          <h4>🛋 Mobiliario para el Xpacio (gemelo)</h4>
+          <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Crea un elemento pixelado y publícalo como <code>furni</code>. Aparece en el gemelo con <code>/importar catalogo</code>.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
+            <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Nombre</label><input id="furni-title" class="model-select" placeholder="Ej: Sofá retro" style="width:100%;"></div>
+            <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Alto (px)</label><input id="furni-ph" class="model-select" type="number" value="46" min="12" max="200" style="width:100%;"></div>
+            <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Huella ancho (tiles)</label><select id="furni-fpw" class="model-select"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+            <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Huella fondo (tiles)</label><select id="furni-fpd" class="model-select"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+          </div>
+          <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Prompt (para generar con IA)</label>
+          <textarea id="furni-prompt" placeholder="Ej: silla de madera, pixel-art isométrico, vista frontal, fondo blanco liso" style="min-height:70px;"></textarea>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <button class="button secondary" id="furni-upload-btn" style="flex:1;">🖼 Subir PNG</button>
+            <input id="furni-file" type="file" accept="image/png,image/webp" style="display:none;">
+            <button class="button secondary" id="furni-ai-btn" style="flex:1;">✨ Generar con IA</button>
+          </div>
+          <div id="furni-preview" style="margin-top:12px;min-height:80px;display:flex;align-items:center;justify-content:center;background:#0b1117;border:1px dashed #28323a;border-radius:6px;color:#5a6a72;font-size:12px;padding:8px;">Sube un PNG o genera con IA…</div>
+          <button class="button primary" id="furni-publish-btn" style="width:100%;margin-top:12px;" disabled>📌 Publicar como Mobiliario (furni)</button>
+          <div id="furni-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;min-height:16px;"></div>
         </div>
 
         <!-- HISTORY -->
@@ -394,12 +417,24 @@
           chip.classList.add('active');
           currentFormat = chip.dataset.format;
           autoSelectBestFreeModel(currentFormat);
+          updateFurniMode();
         });
       });
       // default active
       chips[0].classList.add('active');
       // auto select for default format
       autoSelectBestFreeModel(currentFormat);
+      setupFurniPanel();
+      updateFurniMode();
+    }
+    // Modo Mobiliario: muestra el compositor de furni y oculta el flujo genérico.
+    function updateFurniMode() {
+      const isFurni = currentFormat === 'mobiliario';
+      const fp = document.getElementById('furni-panel');
+      if (fp) fp.style.display = isFurni ? 'block' : 'none';
+      document.querySelectorAll('.studio-panel.prompt-area, #output-actions').forEach(el => {
+        if (el) el.style.opacity = isFurni ? '0.35' : '1';
+      });
     }
 
     function doLogin(e) {
@@ -744,6 +779,68 @@
       } finally {
         btns.forEach(b => { if (b.dataset.old) { b.textContent = b.dataset.old; b.disabled = false; delete b.dataset.old; } });
       }
+    }
+
+    // ── MOBILIARIO (furni) — Fase A: crear y publicar al Stock como 'furni' ──
+    let furniAsset = null; // { base64?, sourceUrl?, mime }
+    function furniSetPreview(src, label) {
+      const p = document.getElementById('furni-preview');
+      p.innerHTML = '<img src="' + src + '" style="max-height:120px;image-rendering:pixelated;border-radius:4px;"><div style="margin-left:10px;font-size:12px;color:#9fe7ff;">' + (label || '') + '</div>';
+      document.getElementById('furni-publish-btn').disabled = false;
+    }
+    function furniSetStatus(t) { const s = document.getElementById('furni-status'); if (s) s.textContent = t || ''; }
+    function setupFurniPanel() {
+      const fileBtn = document.getElementById('furni-upload-btn');
+      const file = document.getElementById('furni-file');
+      if (fileBtn && file && !fileBtn.dataset.wired) {
+        fileBtn.dataset.wired = '1';
+        fileBtn.onclick = () => file.click();
+        file.onchange = () => {
+          const f = file.files && file.files[0]; if (!f) return;
+          const rd = new FileReader();
+          rd.onload = () => { furniAsset = { base64: rd.result.split(',')[1], mime: f.type || 'image/png' }; furniSetPreview(rd.result, f.name); furniSetStatus('PNG listo: ' + f.name); };
+          rd.readAsDataURL(f);
+        };
+      }
+      const aiBtn = document.getElementById('furni-ai-btn'); if (aiBtn) aiBtn.onclick = furniGenerateAI;
+      const pubBtn = document.getElementById('furni-publish-btn'); if (pubBtn) pubBtn.onclick = furniPublish;
+    }
+    async function furniGenerateAI() {
+      const prompt = (document.getElementById('furni-prompt').value || '').trim();
+      if (!prompt) { alert('Escribe un prompt para generar.'); return; }
+      const full = 'isometric pixel-art furniture sprite, front view, ' + prompt + ', clean solid flat background, centered, single object, 16-bit retro game asset';
+      const btn = document.getElementById('furni-ai-btn'); btn.disabled = true; const old = btn.textContent; btn.textContent = '⏳ generando…';
+      furniSetStatus('Generando con Grok Imagine…');
+      try {
+        const r = await fetch(ELEVEN_WORKER_URL + '/xai/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: full, model: 'grok-imagine-image' }) });
+        const data = await r.json().catch(() => ({}));
+        const first = data && data.data && data.data[0];
+        const url = first && (first.url || (first.b64_json ? 'data:image/jpeg;base64,' + first.b64_json : null));
+        if (!r.ok || !url) throw new Error(data && data.error ? (data.error.message || JSON.stringify(data.error)) : 'sin imagen');
+        if (url.startsWith('data:')) { furniAsset = { base64: url.split(',')[1], mime: 'image/jpeg' }; }
+        else { furniAsset = { sourceUrl: url, mime: 'image/jpeg' }; }
+        furniSetPreview(url, 'Generado con IA'); furniSetStatus('Imagen generada. Revisa y publica. (Recorte de fondo: Fase E)');
+      } catch (e) { furniSetStatus('Error IA: ' + e.message); alert('Generación falló: ' + e.message); }
+      finally { btn.disabled = false; btn.textContent = old; }
+    }
+    async function furniPublish() {
+      if (!furniAsset) { alert('Sube o genera una imagen primero.'); return; }
+      const title = (document.getElementById('furni-title').value || '').trim() || 'Mobiliario Pixeria';
+      const ph = parseInt(document.getElementById('furni-ph').value, 10) || 46;
+      const fpw = parseInt(document.getElementById('furni-fpw').value, 10) || 1;
+      const fpd = parseInt(document.getElementById('furni-fpd').value, 10) || 1;
+      const payload = { type: 'furni', motor: 'Pixeria Studio', title: title, tags: ['mobiliario', 'pixeria'], prompt: (document.getElementById('furni-prompt').value || '').slice(0, 300), fp: [fpw, fpd], ph: ph, comment: 'Mobiliario creado en Pixeria' };
+      if (furniAsset.base64) { payload.base64 = furniAsset.base64; payload.mime = furniAsset.mime; }
+      else if (furniAsset.sourceUrl) { payload.sourceUrl = furniAsset.sourceUrl; payload.mime = furniAsset.mime || null; }
+      const btn = document.getElementById('furni-publish-btn'); btn.disabled = true; const old = btn.textContent; btn.textContent = '⏳ publicando…';
+      furniSetStatus('Publicando en Stock…');
+      try {
+        const r = await fetch(STOCK_PUBLISH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const data = await r.json().catch(() => ({}));
+        if (r.ok && (data.ok || data.id)) { furniSetStatus('✅ Publicado · id ' + data.id + ' · ya en el gemelo con /importar catalogo'); }
+        else { furniSetStatus('Error: ' + (data.error || r.statusText)); alert('Error al publicar: ' + (data.error || r.statusText)); }
+      } catch (e) { furniSetStatus('Fallo de red: ' + e.message); }
+      finally { btn.disabled = false; btn.textContent = old; }
     }
 
     function renderHistory() {
