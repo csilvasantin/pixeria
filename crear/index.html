@@ -579,10 +579,12 @@
       return 'imagen';
     }
 
-    function generateThumbnailDataURL(format, promptText, modelName) {
+    function generateThumbnailDataURL(format, promptText, modelName, variant = 0) {
       const c = document.createElement('canvas');
       c.width = 512; c.height = 288;
       const ctx = c.getContext('2d', { alpha: true });
+
+      // Base palette per format
       const pal = {
         video: ['#1a242f', '#68dce9'],
         imagen: ['#0f161d', '#ff6b5c'],
@@ -591,26 +593,79 @@
         marketing: ['#1a242f', '#ff6b5c'],
         operaciones: ['#0b1117', '#aeb9bd']
       };
-      const [c1, acc] = pal[format] || ['#111a20', '#68dce9'];
+      let [c1, acc] = pal[format] || ['#111a20', '#68dce9'];
+
+      // For image variants, create visual diversity (different accent, layout, shapes)
+      if ((format === 'imagen' || format === 'marketing') && variant > 0) {
+        const hues = [0, 120, 240]; // red, green, blue shifts
+        const hue = hues[variant % 3];
+        // Simple color shift simulation for demo
+        if (variant === 1) { c1 = '#2a1f2f'; acc = '#a78bfa'; } // purple-ish
+        if (variant === 2) { c1 = '#1f2f2a'; acc = '#4ade80'; } // green-ish
+      }
+
       const g = ctx.createLinearGradient(0, 0, 0, c.height);
       g.addColorStop(0, c1); g.addColorStop(1, '#0b1117');
       ctx.fillStyle = g; ctx.fillRect(0, 0, c.width, c.height);
       ctx.fillStyle = acc; ctx.fillRect(0, 0, c.width, 6);
+
+      // Variant-specific decorative elements for images
+      if ((format === 'imagen' || format === 'marketing') && variant > 0) {
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        if (variant === 1) {
+          ctx.beginPath(); ctx.arc(400, 80, 60, 0, Math.PI * 2); ctx.fill(); // circle
+        } else if (variant === 2) {
+          ctx.fillRect(380, 40, 8, 200); // vertical bar
+        }
+      }
+
       ctx.fillStyle = '#f4f0e8';
       ctx.font = '700 22px Inter, system-ui, sans-serif';
-      ctx.fillText(format.toUpperCase(), 24, 48);
+      ctx.fillText(format.toUpperCase() + (variant > 0 ? ` #${variant}` : ''), 24, 48);
+
       ctx.font = '15px Inter, system-ui, sans-serif';
       const lines = (promptText || '').match(/.{1,42}/g) || [];
       lines.slice(0, 5).forEach((l, i) => ctx.fillText(l, 24, 90 + i * 26));
+
       ctx.font = '13px JetBrains Mono, monospace';
       ctx.fillStyle = '#aeb9bd';
       ctx.fillText((modelName || '').substring(0, 42), 24, c.height - 28);
+
       ctx.fillStyle = '#68dce9';
       ctx.fillText('PIXERIA STUDIO', c.width - 170, c.height - 28);
+
       return c.toDataURL('image/png');
     }
 
+    // Called when user clicks "Elegir esta" on one of the 3 image variants
+    function selectImageVariant(variantIdx, thumbDataUrl, promptText, modelName) {
+      // Highlight chosen
+      document.querySelectorAll('.image-variant').forEach((card, i) => {
+        card.style.border = (i === variantIdx) ? '3px solid #68dce9' : '1px solid var(--line)';
+        card.style.opacity = (i === variantIdx) ? '1' : '0.7';
+      });
+
+      // Store the chosen asset for Stock / history
+      lastGeneratedAsset = {
+        type: getStockType(currentFormat),
+        motor: modelName,
+        prompt: promptText,
+        thumbnail: thumbDataUrl,
+        url: thumbDataUrl,
+        mime: 'image/png',
+        variant: variantIdx
+      };
+
+      // Show the action buttons
+      const actions = document.getElementById('output-actions');
+      if (actions) actions.style.display = 'block';
+
+      // Optional: scroll to actions
+      actions?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
     let lastGeneratedAsset = null;
+    let currentImageVariants = []; // for the 3 options UI
 
     function generateContent() {
       const output = document.getElementById('output');
@@ -619,9 +674,10 @@
       const model = document.getElementById('model').value;
       const aspect = document.getElementById('aspect').value;
 
+      const isImageGen = (currentFormat === 'imagen' || currentFormat === 'marketing');
       output.innerHTML = `
         <div style="width:100%">
-          <div style="margin-bottom:12px; color:#68dce9;">Generando con ${model}...</div>
+          <div style="margin-bottom:12px; color:#68dce9;">Generando ${isImageGen ? '3 opciones de imagen' : ''} con ${model}...</div>
           <div class="progress" style="height:4px; background:rgba(104,220,233,0.2); border-radius:2px; overflow:hidden;">
             <div style="height:100%; width:0%; background:#68dce9; animation: genprogress 1.8s linear forwards;"></div>
           </div>
@@ -633,16 +689,33 @@
         let resultHTML = '';
 
         if (currentFormat === 'imagen' || currentFormat === 'marketing') {
-          resultHTML = `
-            <div class="result">
-              <div style="background:linear-gradient(135deg,#1a242f,#0f161d); padding:12px; border-radius:6px; margin-bottom:10px;">
-                <div style="height:160px; background:linear-gradient(45deg, #68dce9 0%, #ff6b5c 100%); border-radius:4px; display:flex; align-items:center; justify-content:center; color:#0b1117; font-weight:700; font-size:13px; text-align:center;">
-                  IMAGEN GENERADA<br>
-                  <span style="font-size:10px; opacity:.7;">${aspect}</span>
+          // Generate 3 visual options for images (as requested)
+          const variants = [0, 1, 2].map(v => ({
+            v,
+            thumb: generateThumbnailDataURL(currentFormat, prompt, model, v)
+          }));
+
+          resultHTML = `<div class="image-options" style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">`;
+
+          variants.forEach((variant, idx) => {
+            const label = `Opción ${idx + 1}`;
+            resultHTML += `
+              <div class="image-variant" data-variant="${idx}" style="flex:1; min-width:160px; max-width:220px; border:1px solid var(--line); background:#111a20; border-radius:8px; overflow:hidden; text-align:center;">
+                <img src="${variant.thumb}" style="width:100%; display:block; border-bottom:1px solid var(--line);" alt="${label}">
+                <div style="padding:8px 6px; font-size:12px;">
+                  <strong>${label}</strong><br>
+                  <span style="font-size:10px; opacity:.7; display:block; margin:4px 0;">${prompt.slice(0,45)}...</span>
+                  <button class="button secondary" style="font-size:11px; padding:4px 10px; margin-top:4px;" 
+                          onclick="selectImageVariant(${idx}, '${variant.thumb.replace(/'/g, "\\'")}', '${prompt.replace(/'/g, "\\'")}', '${model.replace(/'/g, "\\'")}')">
+                    Elegir esta
+                  </button>
                 </div>
-              </div>
-              <strong style="font-size:13px;">${prompt.slice(0,70)}...</strong><br>
-              <span style="font-size:11px; color:#aeb9bd;">Modelo: ${model}</span>
+              </div>`;
+          });
+
+          resultHTML += `</div>
+            <div style="margin-top:10px; font-size:12px; color:#aeb9bd; text-align:center;">
+              Modelo: ${model} • Elige una variante para continuar
             </div>`;
         } else if (currentFormat === 'video') {
           resultHTML = `
@@ -691,18 +764,21 @@
           }
         }
 
-        // Generate savable asset (thumbnail + metadata) for Stock
-        try {
-          const thumb = generateThumbnailDataURL(currentFormat, prompt, model);
-          lastGeneratedAsset = {
-            type: getStockType(currentFormat),
-            motor: model,
-            prompt: prompt,
-            thumbnail: thumb,
-            url: thumb,  // use thumbnail as the visual asset for demo
-            mime: 'image/png'
-          };
-        } catch(e) { console.warn('thumb gen failed', e); }
+        // For non-image formats, generate the asset immediately.
+        // For images, the asset is set when the user selects a variant (see selectImageVariant).
+        if (currentFormat !== 'imagen' && currentFormat !== 'marketing') {
+          try {
+            const thumb = generateThumbnailDataURL(currentFormat, prompt, model);
+            lastGeneratedAsset = {
+              type: getStockType(currentFormat),
+              motor: model,
+              prompt: prompt,
+              thumbnail: thumb,
+              url: thumb,
+              mime: 'image/png'
+            };
+          } catch(e) { console.warn('thumb gen failed', e); }
+        }
 
         // save to history
         const item = {
