@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pixeria Tool | Lanetro Yarig clock bridge</title>
+  <title>Labs · Lanetro | Pixeria</title>
   <link rel="canonical" href="https://www.pixeria.com/tool/">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap');
@@ -46,10 +46,46 @@
       cursor: pointer;
     }
 
+    /* Pixeria Labs top bar - consistent with main site dark editorial */
+    .pixeria-labs-bar {
+      background: #0b1117;
+      color: #f4f0e8;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 18px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(244, 240, 232, 0.12);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+    .pixeria-labs-bar .pix-brand {
+      font-weight: 760;
+      color: #68dce9;
+      text-decoration: none;
+    }
+    .pixeria-labs-bar .pix-labs-label {
+      background: rgba(104, 220, 233, 0.12);
+      color: #68dce9;
+      font-size: 11px;
+      font-weight: 820;
+      padding: 2px 8px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+    }
+    .pixeria-labs-bar .pix-back {
+      margin-left: auto;
+      color: #aeb9bd;
+      font-size: 12px;
+      text-decoration: none;
+    }
+    .pixeria-labs-bar .pix-back:hover {
+      color: #f4f0e8;
+    }
+
     .shell {
       width: min(1180px, calc(100vw - 28px));
       margin: 0 auto;
-      padding: 18px 0 42px;
+      padding: 28px 0 42px;
     }
 
     .topbar {
@@ -504,6 +540,11 @@
   </style>
 </head>
 <body>
+  <div class="pixeria-labs-bar">
+    <a href="/" class="pix-brand" aria-label="Pixeria inicio">Pixeria</a>
+    <span class="pix-labs-label">Labs</span>
+    <a href="/" class="pix-back">← Volver al sitio</a>
+  </div>
   <main class="shell">
     <header class="topbar">
       <div class="brand">
@@ -517,7 +558,7 @@
         </div>
       </div>
       <nav class="nav" aria-label="Navegacion">
-        <a class="secondary" href="../">Pixeria</a>
+        <a class="secondary" href="../">← Pixeria</a>
         <button class="icon-button" id="refreshBtn" title="Actualizar Yarig" aria-label="Actualizar Yarig">R</button>
       </nav>
     </header>
