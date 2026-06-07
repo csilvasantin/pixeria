@@ -33,24 +33,43 @@
     .calendar-shell {
       padding: clamp(42px, 7vw, 86px) clamp(20px, 5vw, 64px);
     }
+    .calendar-controls,
+    .calendar-summary,
+    .calendar-panel,
+    .calendar-cta {
+      width: min(100%, 1440px);
+      max-width: none;
+    }
     .calendar-controls {
-      max-width: var(--max);
       margin: 0 auto 18px;
       display: grid;
-      grid-template-columns: minmax(150px, .9fr) minmax(150px, .9fr) minmax(220px, 1.3fr) minmax(180px, 1fr) auto;
-      gap: 12px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 14px;
       align-items: end;
     }
     .calendar-controls label {
       display: grid;
       gap: 6px;
+      min-width: 0;
       color: var(--muted);
       font-size: 12px;
       font-weight: 760;
       text-transform: uppercase;
     }
+    .calendar-field-circuit,
+    .calendar-field-locality,
+    .calendar-field-date {
+      grid-column: span 2;
+    }
+    .calendar-field-point,
+    .calendar-field-screen {
+      grid-column: span 3;
+    }
     .calendar-controls select,
     .calendar-controls input {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       min-height: 46px;
       border: 1px solid var(--line);
       background: rgba(244, 240, 232, 0.06);
@@ -59,9 +78,11 @@
       border-radius: 8px;
       font: inherit;
       text-transform: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .calendar-summary {
-      max-width: var(--max);
       margin: 0 auto 18px;
       color: var(--muted);
       font-size: 14px;
@@ -80,7 +101,6 @@
       font-weight: 760;
     }
     .calendar-panel {
-      max-width: var(--max);
       margin: 0 auto;
       border: 1px solid var(--line);
       background: #02080d;
@@ -89,7 +109,6 @@
       min-height: 360px;
     }
     .calendar-cta {
-      max-width: var(--max);
       margin: 24px auto 0;
       display: flex;
       justify-content: space-between;
@@ -99,12 +118,30 @@
       border-top: 1px solid var(--line);
       padding-top: 22px;
     }
+    @media (max-width: 1180px) {
+      .calendar-controls {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+      .calendar-field-circuit,
+      .calendar-field-locality,
+      .calendar-field-date {
+        grid-column: span 2;
+      }
+      .calendar-field-point,
+      .calendar-field-screen {
+        grid-column: span 3;
+      }
+    }
     @media (max-width: 820px) {
-      .calendar-controls,
       .calendar-cta,
       .calendar-summary {
-        grid-template-columns: 1fr;
         display: grid;
+      }
+      .calendar-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .calendar-controls label {
+        grid-column: span 2;
       }
       .calendar-cta .button {
         width: 100%;
@@ -144,23 +181,23 @@
 
     <section class="calendar-shell">
       <div class="calendar-controls">
-        <label>
+        <label class="calendar-field-circuit">
           Circuito
           <select id="circuitSel"></select>
         </label>
-        <label>
+        <label class="calendar-field-locality">
           Localidad
           <select id="localitySel"></select>
         </label>
-        <label>
+        <label class="calendar-field-point">
           Punto
           <select id="pointSel"></select>
         </label>
-        <label>
+        <label class="calendar-field-screen">
           Pantalla
           <select id="screenSel"></select>
         </label>
-        <label>
+        <label class="calendar-field-date">
           Dia
           <input id="dateInp" type="date">
         </label>
