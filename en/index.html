@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PixerIA · AI content for real-world screens</title>
+  <meta name="description" content="AI content for digital signage, campaigns and real-world screens.">
+  <meta name="theme-color" content="#0b1117">
+  <link rel="canonical" href="https://pixeria.com/en/">
+  <link rel="stylesheet" href="../assets/styles.css?v=20260607-3">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/en/" aria-label="PixerIA home">
+      <span class="brand-mark">P</span>
+      <span>Pixeria</span>
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="/en/#method">Method</a>
+      <a href="/crear/">Create</a>
+      <a href="/crear-campana/">Campaigns</a>
+    </nav>
+    <div class="header-actions">
+      <div class="language-switcher" aria-label="Language selection">
+        <a href="/">ESP</a>
+        <a class="active" href="/en/" aria-current="true">ENG</a>
+      </div>
+      <a class="nav-action" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Contact</a>
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="mobile-nav" id="mobileNav" aria-label="Mobile navigation">
+    <a href="/en/#method">Method</a>
+    <a href="/crear/">Create</a>
+    <a href="/crear-campana/">Campaigns</a>
+    <div class="mobile-language-switcher" aria-label="Language selection">
+      <a href="/">ESP</a>
+      <a class="active" href="/en/" aria-current="true">ENG</a>
+    </div>
+    <a class="mobile-cta" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Contact</a>
+  </nav>
+
+  <main id="top">
+    <section class="hero">
+      <picture class="hero-media">
+        <img src="../assets/hero-pixeria.jpg" alt="PixerIA cinematic AI content studio for real-world screens">
+      </picture>
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div class="hero-content">
+        <p class="eyebrow">AI content + digital signage</p>
+        <h1>Pixeria</h1>
+        <p class="hero-copy">Create, preview and buy campaign content for real-world screens through Admira and XpaceOS.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="/crear/">Create</a>
+          <a class="button secondary" href="/crear-campana/">Campaigns</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="method" class="method band">
+      <div class="section-head">
+        <p class="eyebrow">Method</p>
+        <h2>One workflow from idea to screen.</h2>
+      </div>
+      <div class="steps">
+        <div><span>01</span><h3>Diagnose</h3><p>Audience, objective, constraints and available screen context.</p></div>
+        <div><span>02</span><h3>Design</h3><p>Turn the brief into a repeatable production pipeline.</p></div>
+        <div><span>03</span><h3>Produce</h3><p>Create assets with reviewable previews and clear campaign intent.</p></div>
+        <div><span>04</span><h3>Publish</h3><p>Buy the placement in Admira and prepare emission in XpaceOS.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Pixeria</span>
+    <p>AI content for digital signage, directed with human taste.</p>
+    <a href="mailto:csilvasantin@gmail.com">csilvasantin@gmail.com</a>
+  </footer>
+
+  <script>
+    (function () {
+      const toggle = document.querySelector('.nav-toggle');
+      const mobileNav = document.getElementById('mobileNav');
+      if (!toggle || !mobileNav) return;
+      function setOpen(open) {
+        mobileNav.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        document.body.style.overflow = open ? 'hidden' : '';
+      }
+      toggle.addEventListener('click', () => setOpen(!mobileNav.classList.contains('open')));
+      mobileNav.addEventListener('click', (e) => { if (e.target.tagName === 'A') setOpen(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+    })();
+  </script>
+</body>
+</html>

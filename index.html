@@ -14,7 +14,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://pixeria.com/">
   <link rel="preload" href="assets/hero-pixeria.jpg" as="image">
-  <link rel="stylesheet" href="assets/styles.css?v=20260605-2">
+  <link rel="stylesheet" href="assets/styles.css?v=20260607-3">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -37,19 +37,16 @@
       <span>Pixeria</span>
     </a>
     <nav class="nav" aria-label="Navegacion principal">
-      <a href="#radar">Radar</a>
-      <a href="#formatos">Formatos</a>
-      <a href="#programas">Programas</a>
       <a href="#metodo">Metodo</a>
-      <a href="#biblioteca">Biblioteca</a>
       <a href="/crear/">Crear</a>
-      <a href="/crear-campana/">Crear campaña</a>
-      <a href="/calendario/">Calendario</a>
-      <a href="/labs/">Labs</a>
-      <a href="/documentacion/">Documentación</a>
+      <a href="/crear-campana/">Campañas</a>
     </nav>
     <div class="header-actions">
-      <a class="nav-action" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Hablar</a>
+      <div class="language-switcher" aria-label="Seleccion de idioma">
+        <a class="active" href="/" aria-current="true">ESP</a>
+        <a href="/en/">ENG</a>
+      </div>
+      <a class="nav-action" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Contacto</a>
       <button class="nav-toggle" aria-label="Abrir menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -57,17 +54,14 @@
   </header>
 
   <nav class="mobile-nav" id="mobileNav" aria-label="Navegacion movil">
-    <a href="#radar">Radar</a>
-    <a href="#formatos">Formatos</a>
-    <a href="#programas">Programas</a>
     <a href="#metodo">Metodo</a>
-    <a href="#biblioteca">Biblioteca</a>
     <a href="/crear/">Crear</a>
-    <a href="/crear-campana/">Crear campaña</a>
-    <a href="/calendario/">Calendario</a>
-    <a href="/labs/">Labs</a>
-    <a href="/documentacion/">Documentación</a>
-    <a class="mobile-cta" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Contactar Pixeria</a>
+    <a href="/crear-campana/">Campañas</a>
+    <div class="mobile-language-switcher" aria-label="Seleccion de idioma">
+      <a class="active" href="/" aria-current="true">ESP</a>
+      <a href="/en/">ENG</a>
+    </div>
+    <a class="mobile-cta" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Contacto</a>
   </nav>
 
   <main id="top">
@@ -335,7 +329,7 @@
 
     // Active nav link highlight (desktop + mobile links)
     (function () {
-      const sections = ['radar', 'formatos', 'programas', 'metodo', 'biblioteca'].map(id => document.getElementById(id)).filter(Boolean);
+      const sections = ['metodo'].map(id => document.getElementById(id)).filter(Boolean);
       const navLinks = Array.from(document.querySelectorAll('.nav a[href^="#"], .mobile-nav a[href^="#"]'));
 
       if (!sections.length || !navLinks.length) return;

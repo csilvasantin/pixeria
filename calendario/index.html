@@ -7,7 +7,7 @@
   <meta name="description" content="Parrilla diaria del circuito de pantallas: qué se emite hoy y qué huecos quedan disponibles para campañas creadas en Pixeria.">
   <meta name="theme-color" content="#0b1117">
   <link rel="canonical" href="https://www.pixeria.com/calendario/">
-  <link rel="stylesheet" href="../assets/styles.css?v=20260605-2">
+  <link rel="stylesheet" href="../assets/styles.css?v=20260607-3">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/emission-calendar.css">
   <style>
     .calendar-hero {
@@ -156,20 +156,32 @@
       <span>Pixeria</span>
     </a>
     <nav class="nav" aria-label="Navegacion principal">
-      <a href="/#radar">Radar</a>
-      <a href="/#formatos">Formatos</a>
-      <a href="/#programas">Programas</a>
       <a href="/#metodo">Metodo</a>
-      <a href="/#biblioteca">Biblioteca</a>
       <a href="/crear/">Crear</a>
-      <a href="/crear-campana/">Crear campaña</a>
-      <a href="/calendario/" class="active">Calendario</a>
-      <a href="/labs/">Labs</a>
+      <a href="/crear-campana/" class="active">Campañas</a>
     </nav>
     <div class="header-actions">
-      <a class="nav-action" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Hablar</a>
+      <div class="language-switcher" aria-label="Seleccion de idioma">
+        <a class="active" href="/" aria-current="true">ESP</a>
+        <a href="/en/">ENG</a>
+      </div>
+      <a class="nav-action" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Contacto</a>
+      <button class="nav-toggle" aria-label="Abrir menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </header>
+
+  <nav class="mobile-nav" id="mobileNav" aria-label="Navegacion movil">
+    <a href="/#metodo">Metodo</a>
+    <a href="/crear/">Crear</a>
+    <a href="/crear-campana/" class="active">Campañas</a>
+    <div class="mobile-language-switcher" aria-label="Seleccion de idioma">
+      <a class="active" href="/" aria-current="true">ESP</a>
+      <a href="/en/">ENG</a>
+    </div>
+    <a class="mobile-cta" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Contacto</a>
+  </nav>
 
   <main>
     <section class="calendar-hero">
@@ -225,6 +237,20 @@
   <script src="https://www.admira.app/locations.js"></script>
   <script src="https://csilvasantin.github.io/admira-design/emission-calendar.js"></script>
   <script>
+    (function () {
+      const toggle = document.querySelector('.nav-toggle');
+      const mobileNav = document.getElementById('mobileNav');
+      if (!toggle || !mobileNav) return;
+      function setOpen(open) {
+        mobileNav.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        document.body.style.overflow = open ? 'hidden' : '';
+      }
+      toggle.addEventListener('click', () => setOpen(!mobileNav.classList.contains('open')));
+      mobileNav.addEventListener('click', (e) => { if (e.target.tagName === 'A') setOpen(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+    })();
+
     (function () {
       var WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
       var $ = function (s) { return document.querySelector(s); };
