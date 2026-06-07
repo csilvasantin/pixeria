@@ -433,13 +433,9 @@
         var url = new URL('/crear-campana/', window.location.origin);
         if (state.store) {
           url.searchParams.set('locationId', state.store.id);
-          url.searchParams.set('pointName', state.store.name);
-          url.searchParams.set('locality', cityOf(state.store));
-          url.searchParams.set('circuit', circuitOf(state.store));
         }
         if (state.screen) {
           url.searchParams.set('screenId', state.screen.id);
-          url.searchParams.set('screenName', state.screen.name);
         }
         url.searchParams.set('date', state.date || todayMadrid());
         return url.pathname + url.search;
