@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
+  <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
+  <link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
+  <title>Pixeria Studio · Director</title>
+  <meta name="description" content="Interface de director con IA — Stage/Score/Cast inspirado en Adobe Director, asistido por los 4 motores generativos.">
+  <!-- Admira · Xperience · design system del grupo (tokens + nav header) -->
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/tokens.css">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
+  <script defer src="https://csilvasantin.github.io/admira-design/contact-panel.js"></script>
+  <link rel="stylesheet" href="workspace.css?v=20260607-ops1">
+  <style>
+    /* ── Director layout ──────────────────────────────────────── */
+    body[data-page="director"] main { width: min(1600px, calc(100% - 40px)); }
+    body[data-page="director"] .primary-nav a[data-nav="director"] {
+      color: var(--matrix); border-color: var(--line-bright);
+      background: rgba(0,255,65,.10); text-shadow: var(--glow);
+    }
+
+    .director-brief {
+      display: grid; grid-template-columns: 1fr auto; gap: 12px;
+      padding: 12px; border: 1px solid var(--line-bright); margin-bottom: 14px;
+      background: rgba(0, 20, 5, .25);
+    }
+    .director-brief input[type="text"] {
+      width: 100%; background: var(--bg); border: 1px solid var(--line);
+      color: var(--matrix); padding: 8px 12px;
+      font-family: inherit; font-size: 13px;
+    }
+    .director-brief input[type="text"]:focus { outline: none; border-color: var(--matrix); box-shadow: var(--glow); }
+    .director-brief .brief-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px; }
+    .director-brief small { color: var(--muted); font-size: 11px; letter-spacing: .06em; }
+    .director-actions { display: flex; gap: 8px; align-items: flex-end; }
+
+    .director-stage-cast {
+      display: grid; grid-template-columns: 1fr 320px; gap: 14px; margin-bottom: 14px;
+    }
+    .director-stage {
+      border: 1px solid var(--matrix); aspect-ratio: 16/9;
+      background: #000;
+      display: grid; place-items: center; position: relative;
+      box-shadow: 0 0 24px rgba(0,255,65,.15);
+      overflow: hidden;
+    }
+    .stage-empty { color: var(--matrix-deep); font-size: 14px; letter-spacing: .2em; }
+    .stage-preview { position: absolute; inset: 0; background: var(--visual-bg, #001a08); }
+    .stage-preview::after {
+      content: ""; position: absolute; inset: 0;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.66)),
+        repeating-linear-gradient(0deg, rgba(0,255,65,.08) 0 1px, transparent 1px 4px);
+      pointer-events: none;
+    }
+    .stage-caption {
+      position: absolute; left: 24px; right: 24px; bottom: 48px; z-index: 1;
+      color: white; text-shadow: 0 0 10px rgba(0,255,65,.8);
+    }
+    .stage-caption strong { display: block; font-size: clamp(22px, 3vw, 44px); line-height: 1.02; text-transform: uppercase; letter-spacing: .03em; }
+    .stage-caption span { display: block; margin-top: 8px; color: var(--matrix); font-size: 13px; letter-spacing: .12em; }
+    .stage-timecode {
+      position: absolute; bottom: 8px; left: 12px;
+      color: var(--matrix); font-family: inherit;
+      background: rgba(0,0,0,.6); padding: 2px 8px;
+      letter-spacing: .12em;
+    }
+    .stage-controls {
+      position: absolute; bottom: 8px; right: 12px;
+      display: flex; gap: 4px;
+    }
+    .stage-controls button {
+      background: rgba(0,0,0,.6); border: 1px solid var(--matrix-deep);
+      color: var(--matrix); width: 32px; height: 28px; cursor: pointer;
+      font-family: inherit;
+    }
+    .stage-controls button:hover { background: var(--matrix); color: #000; }
+    .stage-status {
+      position: absolute; top: 8px; right: 12px; z-index: 2;
+      color: var(--matrix); background: rgba(0,0,0,.6); border: 1px solid var(--matrix-deep);
+      padding: 3px 8px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+    }
+
+    .director-cast {
+      border: 1px solid var(--line-bright); display: flex; flex-direction: column;
+      background: rgba(0, 20, 5, .25);
+    }
+    .cast-head {
+      padding: 10px 12px; border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center;
+      color: var(--matrix); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    }
+    .cast-filters { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+    .cast-filters .chips { gap: 4px; }
+    .cast-filters .chip { font-size: 10px; padding: 3px 8px; }
+    .cast-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; padding: 8px;
+      max-height: 380px; overflow-y: auto;
+    }
+    .cast-item {
+      aspect-ratio: 1/1; border: 1px solid var(--line); cursor: grab;
+      position: relative; overflow: hidden; background: #000;
+    }
+    .cast-item:hover { border-color: var(--matrix); box-shadow: 0 0 8px rgba(0,255,65,.4); }
+    .cast-item .cast-tag {
+      position: absolute; top: 2px; left: 2px;
+      background: rgba(0,0,0,.7); color: var(--matrix);
+      font-size: 9px; padding: 1px 4px; letter-spacing: .08em;
+    }
+    .cast-item.kind-audio,
+    .cast-item.kind-voice,
+    .cast-item.kind-music {
+      display: grid; place-items: center;
+      color: var(--matrix); font-size: 24px;
+    }
+    .cast-item.active { border-color: #fff; box-shadow: 0 0 0 2px var(--matrix), 0 0 10px rgba(0,255,65,.7); }
+    .cast-item .cast-name {
+      position: absolute; left: 3px; right: 3px; bottom: 3px;
+      background: rgba(0,0,0,.78); color: #fff; font-size: 9px; padding: 2px 4px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cast-item.kind-audio { background: linear-gradient(135deg, #001a08, #003315); }
+    .cast-item.kind-music { background: linear-gradient(135deg, #1a3300, #335500); }
+    .cast-item.placeholder { border-style: dashed; opacity: .45; }
+    .cast-item.placeholder::after {
+      content: "?"; position: absolute; inset: 0; display: grid; place-items: center;
+      color: var(--muted); font-size: 24px;
+    }
+
+    .director-markers {
+      display: flex; gap: 0; margin-bottom: 4px;
+      border: 1px solid var(--line); position: relative; height: 24px;
+    }
+    .director-marker {
+      position: absolute; top: 0; bottom: 0;
+      border-left: 2px solid var(--matrix);
+      padding: 3px 8px 0 6px; color: var(--matrix);
+      font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+      white-space: nowrap;
+      background: linear-gradient(90deg, rgba(0,255,65,.12), rgba(0,255,65,0));
+    }
+
+    .director-score {
+      border: 1px solid var(--matrix); background: rgba(0, 20, 5, .35);
+      padding: 0; margin-bottom: 14px;
+    }
+    .score-track {
+      display: grid; grid-template-columns: 80px 1fr; min-height: 36px;
+      border-bottom: 1px solid var(--line);
+    }
+    .score-track:last-child { border-bottom: none; }
+    .score-track-label {
+      padding: 10px 12px; border-right: 1px solid var(--line);
+      color: var(--muted); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(0,0,0,.3);
+    }
+    .score-track-label .track-color {
+      width: 10px; height: 10px; display: inline-block;
+      margin-right: 6px;
+    }
+    .score-track-content { position: relative; }
+    .score-clip {
+      position: absolute; top: 4px; bottom: 4px;
+      border: 1px solid var(--matrix); cursor: pointer;
+      display: flex; align-items: center; padding: 0 6px;
+      font-size: 10px; color: #000; font-weight: 700;
+      letter-spacing: .04em; overflow: hidden; white-space: nowrap;
+      transition: filter .12s;
+    }
+    .score-clip:hover { filter: brightness(1.2); box-shadow: 0 0 6px rgba(0,255,65,.6); }
+    .score-clip.kind-video { background: var(--video); border-color: var(--video); }
+    .score-clip.kind-voice { background: var(--audio); border-color: var(--audio); }
+    .score-clip.kind-music { background: var(--music); border-color: var(--music); }
+    .score-clip.kind-sfx   { background: var(--image); border-color: var(--image); }
+    .score-clip.selected { box-shadow: 0 0 0 2px var(--matrix), 0 0 12px var(--matrix); z-index: 2; }
+    .score-clip.placeholder {
+      background: transparent; border-style: dashed; color: var(--muted);
+      border-color: var(--line-bright);
+    }
+
+    .score-ruler {
+      display: grid; grid-template-columns: 80px 1fr;
+      border-top: 1px solid var(--matrix-deep);
+      color: var(--muted); font-size: 10px;
+    }
+    .score-ruler .ruler-empty { border-right: 1px solid var(--line); }
+    .score-ruler .ruler-marks {
+      position: relative; height: 22px;
+    }
+    .score-ruler .ruler-marks span {
+      position: absolute; top: 6px; transform: translateX(-50%);
+      letter-spacing: .04em;
+    }
+
+    .score-playhead {
+      position: absolute; top: 0; bottom: 0;
+      width: 0; border-left: 1px solid var(--matrix);
+      box-shadow: 0 0 6px var(--matrix);
+      pointer-events: none; z-index: 3;
+    }
+
+    .director-inspector {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;
+      padding: 14px; border: 1px solid var(--line-bright);
+      background: rgba(0, 20, 5, .25);
+    }
+    .inspector-head { color: var(--matrix); font-size: 11px;
+      letter-spacing: .14em; text-transform: uppercase; margin-bottom: 6px; }
+    .inspector-row { display: grid; grid-template-columns: auto 1fr; gap: 8px;
+      align-items: center; padding: 4px 0; font-size: 12px; }
+    .inspector-row label { color: var(--muted); }
+    .inspector-row input, .inspector-row select {
+      background: var(--bg); border: 1px solid var(--line); color: var(--matrix);
+      padding: 4px 8px; font-family: inherit; font-size: 12px;
+    }
+    .inspector-prompt {
+      background: var(--bg); border: 1px solid var(--line); color: var(--matrix);
+      padding: 8px; font-family: inherit; font-size: 11px;
+      min-height: 70px; width: 100%; resize: vertical;
+    }
+    .inspector-actions { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+    .director-note.is-live { border-color: var(--matrix); color: #d6ffe2; background: rgba(0,255,65,.07); }
+
+    .director-note {
+      margin-top: 12px; padding: 12px; border: 1px dashed var(--muted);
+      color: var(--muted); font-size: 12px; line-height: 1.6;
+    }
+    .director-note strong { color: var(--matrix); }
+
+    @media (max-width: 980px) {
+      body[data-page="director"] main { width: min(100% - 20px, 900px); }
+      .director-brief, .director-stage-cast, .director-inspector { grid-template-columns: 1fr; }
+      .director-brief .brief-row { grid-template-columns: 1fr 1fr; }
+      .director-actions { flex-wrap: wrap; }
+      .director-cast { min-height: 260px; }
+      .cast-grid { grid-template-columns: repeat(4, 1fr); }
+      .score-track { grid-template-columns: 64px 1fr; }
+      .score-track-label { padding: 8px 6px; font-size: 9px; }
+    }
+  </style>
+</head>
+<body data-page="director">
+  <!-- Banda superior del grupo Admira · Xperience -->
+  <nav class="admira-nav admira-nav-static" aria-label="Admira · Xperience">
+    <a class="admira-nav-brand" href="https://www.admira.app">
+      <span class="admira-nav-brand-name">Admira</span>
+      <span class="admira-nav-brand-tag">Xperience</span>
+    </a>
+    <div class="admira-nav-items">
+      <a class="admira-nav-link admira-nav-link-active" href="https://www.pixeria.com">Pixeria</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live/council-scumm.html">Consejo Live</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.xpaceos.com">XpaceOS</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.app">Xbusiness</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live">Live</a>
+      <a class="admira-nav-link admira-nav-link-cta" href="#contact" data-admira-contact>Contacto</a>
+    </div>
+  </nav>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
+  <header class="topnav">
+    <div class="brand"><a href="index.html" class="brand-link"><span class="brand-name">Pixeria</span><span class="brand-version">v.2026.06.07-ops</span></a></div>
+    <nav class="primary-nav">
+      <a href="audio.html" data-nav="audio">Audio</a>
+      <a href="musica.html" data-nav="musica">Música</a>
+      <a href="imagenes.html" data-nav="imagenes">Imágenes</a>
+      <a href="video.html" data-nav="video">Video</a>
+      <a href="publicidad.html" data-nav="publicidad">Publicidad</a>
+      <a href="stock.html" data-nav="stock">Stock</a>
+      <a href="plataforma.html" data-nav="plataforma">Plataforma</a>
+      <a href="admira-xp.html" data-nav="admira-xp">Admira XP</a>
+      <button type="button" class="nav-import" id="openImport" title="Importa un video/audio (YouTube/Vimeo/X/TikTok/IG) vía yt-dlp local">Importar</button>
+      <a href="director.html" data-nav="director">Director</a>
+      <a href="xtore.html" data-nav="xtore">Xtore</a>
+      <a href="/#metodo" data-nav="metodo">Método</a>
+      <a href="/crear/" data-nav="crear">Crear</a>
+      <a href="/crear-campana/" data-nav="campanas">Campañas</a>
+    </nav>
+    <div class="topnav-actions">
+      <button type="button" class="btn-back" onclick="history.length>1?history.back():location.href='index.html'">← Volver</button>
+    </div>
+  </header>
+
+  <header class="page-head">
+    <p class="eyebrow stock">Director r72 · prototipo funcional local</p>
+    <h1>Director · timeline asistido por los 4 motores.</h1>
+    <p class="lead">El director declara la intención y los markers de la pieza; la IA propone Cast y Score. El director acepta, regenera o reorganiza. Inspirado en Adobe Director (Stage / Cast / Score / Markers).</p>
+  </header>
+
+  <main>
+
+    <!-- BRIEF ─────────────────────────────────────────────────── -->
+    <section class="director-brief">
+      <div>
+        <div class="brief-row">
+          <div>
+            <small>INTENCIÓN</small>
+            <input id="brief-intencion" type="text" value="lanzamiento Veo 3.1 a inversores">
+          </div>
+          <div>
+            <small>ESTILO</small>
+            <input id="brief-estilo" type="text" value="matrix neon cinematic">
+          </div>
+          <div>
+            <small>RATIO</small>
+            <select id="brief-ratio">
+              <option>16:9</option>
+              <option>9:16</option>
+              <option>1:1</option>
+            </select>
+          </div>
+          <div>
+            <small>DURACIÓN</small>
+            <input id="brief-duracion" type="text" value="30s">
+          </div>
+        </div>
+      </div>
+      <div class="director-actions">
+        <button class="btn primary" id="directorAutoCast">✨ AUTO-CAST</button>
+        <button class="btn" id="directorAutoScore">✨ AUTO-SCORE</button>
+        <button class="btn" id="directorRender">▶ RENDER</button>
+        <button class="btn" id="directorSave">💾 PROYECTO</button>
+      </div>
+    </section>
+
+    <!-- STAGE + CAST ──────────────────────────────────────────── -->
+    <section class="director-stage-cast">
+      <div class="director-stage" id="directorStage">
+        <div class="stage-empty">// STAGE · preview se renderizará aquí</div>
+        <div class="stage-status" id="directorStatus">LISTO</div>
+        <div class="stage-timecode" id="directorTimecode">00:00 / 00:30</div>
+        <div class="stage-controls">
+          <button title="Inicio" id="directorHome">⏮</button>
+          <button title="Play/Pause" id="directorPlay">▶</button>
+          <button title="Stop" id="directorStop">⏹</button>
+          <button title="Fin" id="directorEnd">⏭</button>
+        </div>
+      </div>
+
+      <aside class="director-cast">
+        <div class="cast-head">
+          <span>CAST · Stock</span>
+          <span id="castCount" style="color:var(--muted);font-size:10px;">0 items</span>
+        </div>
+        <div class="cast-filters">
+          <div class="chips">
+            <label class="chip active"><input type="radio" name="cast-f" value="todos" checked>todos</label>
+            <label class="chip"><input type="radio" name="cast-f" value="image">imagen</label>
+            <label class="chip"><input type="radio" name="cast-f" value="video">video</label>
+            <label class="chip"><input type="radio" name="cast-f" value="voice">voz</label>
+            <label class="chip"><input type="radio" name="cast-f" value="music">música</label>
+          </div>
+        </div>
+        <div class="cast-grid" id="directorCast"></div>
+      </aside>
+    </section>
+
+    <!-- MARKERS ───────────────────────────────────────────────── -->
+    <div class="director-markers" id="directorMarkers"></div>
+
+    <!-- SCORE ─────────────────────────────────────────────────── -->
+    <section class="director-score" id="directorScore">
+      <div class="score-ruler">
+        <div class="ruler-empty"></div>
+        <div class="ruler-marks" id="directorRuler"></div>
+      </div>
+    </section>
+
+    <!-- INSPECTOR ─────────────────────────────────────────────── -->
+    <section class="director-inspector">
+      <div>
+        <div class="inspector-head">📌 CLIP SELECCIONADO</div>
+        <div class="inspector-row"><label>track</label><span id="inspTrack">VIDEO</span></div>
+        <div class="inspector-row"><label>asset</label><span id="inspAsset" style="color:var(--matrix);font-family:inherit;">-</span></div>
+        <div class="inspector-row"><label>motor</label><span><code id="inspMotor">-</code></span></div>
+        <div class="inspector-row"><label>in</label><input id="inspIn" type="text" value="0.0s"></div>
+        <div class="inspector-row"><label>out</label><input id="inspOut" type="text" value="0.0s"></div>
+        <div class="inspector-row"><label>transición</label>
+          <select id="inspTransition"><option>cut</option><option>fade</option><option>dissolve</option></select>
+        </div>
+      </div>
+      <div>
+        <div class="inspector-head">💬 PROMPT</div>
+        <textarea class="inspector-prompt" id="inspPrompt">close-up shot of holographic UI rotating in matrix-green neon, cinematic, slow camera dolly forward, ambient electronic score</textarea>
+        <div class="inspector-actions">
+          <button class="btn" id="directorApplyClip">✓ APLICAR</button>
+          <button class="btn" id="directorVariant">🔄 VARIANTE</button>
+          <button class="btn" id="directorDeleteClip">🗑 ELIMINAR</button>
+        </div>
+      </div>
+      <div>
+        <div class="inspector-head">📋 ESTRUCTURA · markers</div>
+        <div id="inspMarkers"></div>
+        <div class="inspector-actions" style="margin-top:14px;">
+          <button class="btn" id="directorAddMarker">＋ marker</button>
+          <button class="btn" id="directorAddTrack">＋ track</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="director-note is-live">
+      <strong>// Prototipo local r72.</strong> Auto-Cast, Auto-Score, preview de Stage, selección de clips, inspector y guardado ya funcionan en el navegador. Los endpoints siguen siendo el siguiente salto:
+      <code>POST /director/autocast</code> (brief → propuesta de cast),
+      <code>POST /director/autoscore</code> (cast + markers → propuesta de score),
+      <code>POST /director/render</code> (proyecto → mp4 final, vía ffmpeg en el Mac Mini),
+      <code>POST /director/save</code> + <code>GET /director/load/:id</code> (proyecto JSON en R2).
+    </div>
+  </main>
+
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.2026.06.07-ops</a></footer>
+
+  <dialog id="importModal" class="keys-modal">
+    <form method="dialog" class="keys-form">
+      <h3>📥 IMPORTAR DESDE URL</h3>
+      <p class="keys-warn">yt-dlp en Mac Mini (audio mp3 + video mp4). Hosts permitidos: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn.</p>
+      <div class="field"><label for="import-url">URL</label><input id="import-url" type="text" autocomplete="off" placeholder="https://www.youtube.com/watch?v=..."></div>
+      <div class="field">
+        <label>Formato</label>
+        <div class="chips">
+          <label class="chip"><input type="radio" name="import-fmt" value="audio" checked> Audio (mp3)</label>
+          <label class="chip"><input type="radio" name="import-fmt" value="video"> Video (mp4)</label>
+        </div>
+      </div>
+      <div class="keys-actions">
+        <button type="button" class="btn primary" id="doImport">Importar</button>
+        <button type="button" class="btn" id="closeImport">Cerrar</button>
+      </div>
+      <pre class="brief" id="importStatus" style="display:none;font-size:11px;max-height:200px;"></pre>
+    </form>
+  </dialog>
+
+  <script src="matrix-rain.js"></script>
+  <script src="app.js"></script>
+  <script>
+  (function () {
+    const STORE = 'pixer-director-project-v1';
+    const TRACKS = [
+      { id: 'video', label: 'VIDEO', color: 'var(--video)' },
+      { id: 'voice', label: 'VOZ', color: 'var(--audio)' },
+      { id: 'music', label: 'MUSICA', color: 'var(--music)' },
+      { id: 'sfx', label: 'SFX', color: 'var(--image)' },
+    ];
+    const state = {
+      project: loadProject() || createProject(),
+      selectedClipId: null,
+      castFilter: 'todos',
+      playing: false,
+      timer: null,
+      currentTime: 0,
+    };
+
+    const $ = (sel) => document.querySelector(sel);
+    const els = {
+      stage: $('#directorStage'),
+      cast: $('#directorCast'),
+      score: $('#directorScore'),
+      markers: $('#directorMarkers'),
+      ruler: $('#directorRuler'),
+      count: $('#castCount'),
+      timecode: $('#directorTimecode'),
+      status: $('#directorStatus'),
+      play: $('#directorPlay'),
+    };
+
+    function loadProject() {
+      try { return JSON.parse(localStorage.getItem(STORE) || 'null'); } catch { return null; }
+    }
+    function saveProject() {
+      try { localStorage.setItem(STORE, JSON.stringify(state.project)); } catch {}
+    }
+    function createProject() {
+      return {
+        id: 'director-' + Date.now(),
+        title: 'Lanzamiento Veo 3.1',
+        brief: { intention: 'lanzamiento Veo 3.1 a inversores', style: 'matrix neon cinematic', ratio: '16:9', duration: 30 },
+        markers: [
+          { id: 'm-intro', label: 'intro', time: 0 },
+          { id: 'm-hook', label: 'hook', time: 3 },
+          { id: 'm-drop', label: 'drop', time: 10 },
+          { id: 'm-outro', label: 'outro', time: 25 },
+        ],
+        cast: [],
+        clips: [],
+      };
+    }
+    function readBrief() {
+      const durationRaw = ($('#brief-duracion')?.value || '30s').match(/\d+/);
+      state.project.brief = {
+        intention: $('#brief-intencion')?.value.trim() || 'pieza sin titulo',
+        style: $('#brief-estilo')?.value.trim() || 'matrix neon cinematic',
+        ratio: $('#brief-ratio')?.value || '16:9',
+        duration: Math.max(5, Math.min(180, Number(durationRaw ? durationRaw[0] : 30))),
+      };
+      state.project.title = state.project.brief.intention;
+      saveProject();
+    }
+    function hydrateBrief() {
+      $('#brief-intencion').value = state.project.brief.intention;
+      $('#brief-estilo').value = state.project.brief.style;
+      $('#brief-ratio').value = state.project.brief.ratio;
+      $('#brief-duracion').value = state.project.brief.duration + 's';
+    }
+    function slug(text) {
+      return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48) || 'asset';
+    }
+    function visualStyle(seed, kind) {
+      const palettes = {
+        video: ['#8eff7a', '#00b354', '#00150a'],
+        image: ['#d9ff70', '#14c8ff', '#07120c'],
+        voice: ['#66ffcc', '#00a878', '#001913'],
+        music: ['#d5ff64', '#5f8f00', '#111b00'],
+        sfx: ['#ffec70', '#ff8e3c', '#130a00'],
+      };
+      const p = palettes[kind] || palettes.video;
+      const x = 20 + (seed % 55);
+      const y = 18 + ((seed * 7) % 60);
+      return `radial-gradient(circle at ${x}% ${y}%, ${p[0]} 0 0.5%, transparent 18%), linear-gradient(135deg, ${p[1]}, ${p[2]} 58%, #000 100%), repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 1px, transparent 1px 14px)`;
+    }
+    function autoCast() {
+      readBrief();
+      const b = state.project.brief;
+      const base = b.intention + ', ' + b.style;
+      state.project.cast = [
+        { id: 'asset-hero', kind: 'video', name: 'hero cinematic', motor: 'veo-3.1-fast-generate-preview', prompt: base + ', hero shot, premium digital signage', visual: visualStyle(801, 'video') },
+        { id: 'asset-product', kind: 'video', name: 'product reveal', motor: 'veo-3.1-fast-generate-preview', prompt: base + ', product reveal, slow dolly, luminous UI', visual: visualStyle(802, 'video') },
+        { id: 'asset-world', kind: 'image', name: 'world frame', motor: 'imagen-4.0-ultra-generate-001', prompt: base + ', worldbuilding frame, graphic background', visual: visualStyle(803, 'image') },
+        { id: 'asset-logo', kind: 'image', name: 'logo lockup', motor: 'nano-banana', prompt: 'Admira Studio logo lockup, ' + b.style + ', clean typography', visual: visualStyle(804, 'image') },
+        { id: 'asset-voice-main', kind: 'voice', name: 'voz principal', motor: 'elevenlabs-v3', prompt: 'Locucion principal: ' + b.intention + '. Tono ejecutivo, claro, con cierre memorable.' },
+        { id: 'asset-voice-cta', kind: 'voice', name: 'voz CTA', motor: 'elevenlabs-flash-v2-5', prompt: 'CTA breve para pantalla y evento: pedir accion clara en menos de 4 segundos.' },
+        { id: 'asset-music-bed', kind: 'music', name: 'electronic bed', motor: 'suno-local-v5', prompt: b.style + ', electronic build up, 30 second loop, confident, futuristic' },
+        { id: 'asset-sfx-hit', kind: 'sfx', name: 'whoosh hit', motor: 'pixer-loop', prompt: 'Whoosh digital + impact hit para cambio de marker.' },
+      ];
+      if (!state.selectedClipId) state.selectedClipId = null;
+      flash('AUTO-CAST LISTO');
+      autoScore(false);
+    }
+    function autoScore(showStatus) {
+      readBrief();
+      if (!state.project.cast.length) autoCast();
+      const d = state.project.brief.duration;
+      state.project.markers = [
+        { id: 'm-intro', label: 'intro', time: 0 },
+        { id: 'm-hook', label: 'hook', time: Math.max(2, Math.round(d * 0.1)) },
+        { id: 'm-drop', label: 'drop', time: Math.max(5, Math.round(d * 0.34)) },
+        { id: 'm-outro', label: 'outro', time: Math.max(6, Math.round(d * 0.84)) },
+      ];
+      const m = state.project.markers;
+      state.project.clips = [
+        clip('clip-v-intro', 'video', 'asset-world', m[0].time, m[1].time, 'intro · mundo', 'fade'),
+        clip('clip-v-hook', 'video', 'asset-hero', m[1].time, m[2].time, 'hook · promesa', 'cut'),
+        clip('clip-v-drop', 'video', 'asset-product', m[2].time, m[3].time, 'drop · demo', 'dissolve'),
+        clip('clip-v-outro', 'video', 'asset-logo', m[3].time, d, 'outro · marca', 'fade'),
+        clip('clip-voice-hook', 'voice', 'asset-voice-main', m[1].time, Math.min(d, m[2].time + 4), 'voz · manifiesto', 'cut'),
+        clip('clip-voice-cta', 'voice', 'asset-voice-cta', m[3].time, d, 'voz · CTA', 'cut'),
+        clip('clip-music-bed', 'music', 'asset-music-bed', 0, d, 'suno v5 · bed', 'cut'),
+        clip('clip-sfx-hit', 'sfx', 'asset-sfx-hit', m[2].time, Math.min(d, m[2].time + 1), 'whoosh', 'cut'),
+      ];
+      state.selectedClipId = 'clip-v-hook';
+      state.currentTime = state.project.markers[1].time;
+      if (showStatus !== false) flash('AUTO-SCORE LISTO');
+      saveProject();
+      render();
+    }
+    function clip(id, track, assetId, start, end, label, transition) {
+      const asset = state.project.cast.find(a => a.id === assetId);
+      return { id, track, assetId, start, end, label, transition, prompt: asset ? asset.prompt : '', motor: asset ? asset.motor : '-' };
+    }
+    function pct(time) {
+      return Math.max(0, Math.min(100, (time / state.project.brief.duration) * 100));
+    }
+    function kindLabel(kind) {
+      return ({ image: 'IMG', video: 'VIDEO', voice: 'VOZ', music: 'MUS', sfx: 'SFX' })[kind] || kind.toUpperCase();
+    }
+    function iconFor(kind) {
+      return ({ voice: '🎙', music: '🎵', sfx: '🔔' })[kind] || '';
+    }
+    function renderCast() {
+      const items = state.project.cast.filter(a => state.castFilter === 'todos' || a.kind === state.castFilter);
+      els.count.textContent = state.project.cast.length + ' items';
+      els.cast.innerHTML = items.map(a => `
+        <button type="button" class="cast-item kind-${a.kind}" data-asset="${a.id}" title="${escapeHtml(a.name)}" style="${a.visual ? `background:${a.visual};` : ''}">
+          <span class="cast-tag">${kindLabel(a.kind)}</span>
+          ${iconFor(a.kind)}
+          <span class="cast-name">${escapeHtml(a.name)}</span>
+        </button>
+      `).join('') + '<div class="cast-item placeholder" title="slot IA pendiente"></div>';
+    }
+    function renderMarkers() {
+      els.markers.innerHTML = state.project.markers.map(m => `
+        <div class="director-marker" style="left:${pct(m.time)}%;">▌${escapeHtml(m.label)}</div>
+      `).join('');
+      $('#inspMarkers').innerHTML = state.project.markers.map((m, i) => `
+        <div class="inspector-row"><label>m${i + 1}</label><span><code>${escapeHtml(m.label)}</code> · ${m.time}s</span></div>
+      `).join('');
+    }
+    function renderScore() {
+      const existingRuler = els.score.querySelector('.score-ruler');
+      els.score.querySelectorAll('.score-track').forEach(n => n.remove());
+      TRACKS.forEach(t => {
+        const row = document.createElement('div');
+        row.className = 'score-track';
+        const clips = state.project.clips.filter(c => c.track === t.id);
+        row.innerHTML = `
+          <div class="score-track-label"><span><span class="track-color" style="background:${t.color};"></span>${t.label}</span></div>
+          <div class="score-track-content">
+            <div class="score-playhead" style="left:${pct(state.currentTime)}%;"></div>
+            ${clips.map(c => `<button type="button" class="score-clip kind-${c.track}${c.id === state.selectedClipId ? ' selected' : ''}" data-clip="${c.id}" style="left:${pct(c.start)}%;width:${Math.max(1, pct(c.end - c.start))}%;">${escapeHtml(c.label)}</button>`).join('')}
+          </div>`;
+        els.score.insertBefore(row, existingRuler);
+      });
+      const d = state.project.brief.duration;
+      const step = d <= 30 ? 5 : 10;
+      const marks = [];
+      for (let t = 0; t <= d; t += step) marks.push(t);
+      if (marks[marks.length - 1] !== d) marks.push(d);
+      els.ruler.innerHTML = marks.map(t => `<span style="left:${pct(t)}%;">${t}${t === 0 ? 's' : ''}</span>`).join('');
+    }
+    function renderStage() {
+      const clipObj = selectedClip() || state.project.clips.find(c => c.track === 'video') || null;
+      const asset = clipObj ? state.project.cast.find(a => a.id === clipObj.assetId) : null;
+      const stageEmpty = els.stage.querySelector('.stage-empty');
+      els.stage.querySelector('.stage-preview')?.remove();
+      if (asset) {
+        stageEmpty.style.display = 'none';
+        const wrap = document.createElement('div');
+        wrap.className = 'stage-preview';
+        wrap.style.setProperty('--visual-bg', asset.visual || visualStyle(900, asset.kind));
+        wrap.innerHTML = `<div class="stage-caption"><strong>${escapeHtml(clipObj.label)}</strong><span>${escapeHtml(asset.motor)} · ${clipObj.start}s-${clipObj.end}s</span></div>`;
+        els.stage.insertBefore(wrap, els.stage.firstChild);
+      } else {
+        stageEmpty.style.display = '';
+      }
+      els.timecode.textContent = formatTime(state.currentTime) + ' / ' + formatTime(state.project.brief.duration);
+    }
+    function renderInspector() {
+      const c = selectedClip();
+      if (!c) return;
+      const asset = state.project.cast.find(a => a.id === c.assetId);
+      $('#inspTrack').textContent = c.track.toUpperCase();
+      $('#inspAsset').textContent = c.assetId;
+      $('#inspMotor').textContent = c.motor || (asset && asset.motor) || '-';
+      $('#inspIn').value = c.start.toFixed(1) + 's';
+      $('#inspOut').value = c.end.toFixed(1) + 's';
+      $('#inspTransition').value = c.transition || 'cut';
+      $('#inspPrompt').value = c.prompt || (asset && asset.prompt) || '';
+    }
+    function render() {
+      renderCast();
+      renderMarkers();
+      renderScore();
+      renderStage();
+      renderInspector();
+    }
+    function selectedClip() {
+      return state.project.clips.find(c => c.id === state.selectedClipId) || null;
+    }
+    function selectClip(id) {
+      state.selectedClipId = id;
+      const c = selectedClip();
+      if (c) state.currentTime = c.start;
+      saveProject();
+      render();
+    }
+    function applyClip() {
+      const c = selectedClip();
+      if (!c) return;
+      c.start = parseSeconds($('#inspIn').value, c.start);
+      c.end = Math.max(c.start + .5, parseSeconds($('#inspOut').value, c.end));
+      c.transition = $('#inspTransition').value;
+      c.prompt = $('#inspPrompt').value.trim();
+      saveProject();
+      flash('CLIP ACTUALIZADO');
+      render();
+    }
+    function variantClip() {
+      const c = selectedClip();
+      if (!c) return;
+      c.prompt = (c.prompt || '') + ' | variante ' + new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      const asset = state.project.cast.find(a => a.id === c.assetId);
+      if (asset) asset.visual = visualStyle(Math.floor(Math.random() * 9999), asset.kind);
+      saveProject();
+      flash('VARIANTE CREADA');
+      render();
+    }
+    function deleteClip() {
+      const c = selectedClip();
+      if (!c) return;
+      state.project.clips = state.project.clips.filter(item => item.id !== c.id);
+      state.selectedClipId = state.project.clips[0]?.id || null;
+      saveProject();
+      flash('CLIP ELIMINADO');
+      render();
+    }
+    function addMarker() {
+      const next = state.project.markers.length + 1;
+      const time = Math.min(state.project.brief.duration - 1, Math.max(1, Math.round(state.currentTime || state.project.brief.duration / 2)));
+      state.project.markers.push({ id: 'm-custom-' + Date.now(), label: 'marker ' + next, time });
+      state.project.markers.sort((a, b) => a.time - b.time);
+      saveProject();
+      flash('MARKER ANADIDO');
+      render();
+    }
+    function addTrackClip() {
+      const id = 'clip-custom-' + Date.now();
+      const asset = state.project.cast.find(a => a.kind === 'image') || state.project.cast[0];
+      state.project.clips.push({
+        id, track: 'video', assetId: asset?.id || 'asset-world',
+        start: Math.min(state.project.brief.duration - 2, state.currentTime),
+        end: Math.min(state.project.brief.duration, state.currentTime + 4),
+        label: 'nuevo clip', transition: 'cut', prompt: asset?.prompt || '', motor: asset?.motor || '-',
+      });
+      selectClip(id);
+      flash('CLIP ANADIDO');
+    }
+    function play() {
+      if (state.playing) { pause(); return; }
+      state.playing = true;
+      els.play.textContent = '⏸';
+      flash('PLAY');
+      state.timer = setInterval(() => {
+        state.currentTime += .25;
+        if (state.currentTime >= state.project.brief.duration) {
+          state.currentTime = state.project.brief.duration;
+          pause();
+        }
+        const active = state.project.clips.find(c => c.track === 'video' && state.currentTime >= c.start && state.currentTime < c.end);
+        if (active) state.selectedClipId = active.id;
+        renderScore();
+        renderStage();
+        renderInspector();
+      }, 250);
+    }
+    function pause() {
+      state.playing = false;
+      els.play.textContent = '▶';
+      clearInterval(state.timer);
+    }
+    function go(time) {
+      pause();
+      state.currentTime = Math.max(0, Math.min(state.project.brief.duration, time));
+      const active = state.project.clips.find(c => c.track === 'video' && state.currentTime >= c.start && state.currentTime <= c.end);
+      if (active) state.selectedClipId = active.id;
+      render();
+    }
+    function renderProject() {
+      saveProject();
+      flash('RENDER SIMULADO · proyecto listo para /director/render');
+    }
+    function exportProject() {
+      readBrief();
+      const blob = new Blob([JSON.stringify(state.project, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = slug(state.project.title) + '.director.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      flash('PROYECTO GUARDADO');
+    }
+    function parseSeconds(value, fallback) {
+      const match = String(value).match(/-?\d+(\.\d+)?/);
+      if (!match) return fallback;
+      return Math.max(0, Math.min(state.project.brief.duration, Number(match[0])));
+    }
+    function formatTime(seconds) {
+      const s = Math.max(0, Math.round(seconds));
+      return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }
+    function flash(text) {
+      els.status.textContent = text;
+      clearTimeout(flash.t);
+      flash.t = setTimeout(() => { els.status.textContent = state.playing ? 'PLAY' : 'LISTO'; }, 1800);
+    }
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+    }
+
+    document.getElementById('directorAutoCast')?.addEventListener('click', autoCast);
+    document.getElementById('directorAutoScore')?.addEventListener('click', () => autoScore(true));
+    document.getElementById('directorRender')?.addEventListener('click', renderProject);
+    document.getElementById('directorSave')?.addEventListener('click', exportProject);
+    document.getElementById('directorApplyClip')?.addEventListener('click', applyClip);
+    document.getElementById('directorVariant')?.addEventListener('click', variantClip);
+    document.getElementById('directorDeleteClip')?.addEventListener('click', deleteClip);
+    document.getElementById('directorAddMarker')?.addEventListener('click', addMarker);
+    document.getElementById('directorAddTrack')?.addEventListener('click', addTrackClip);
+    document.getElementById('directorHome')?.addEventListener('click', () => go(0));
+    document.getElementById('directorEnd')?.addEventListener('click', () => go(state.project.brief.duration));
+    document.getElementById('directorStop')?.addEventListener('click', () => go(0));
+    document.getElementById('directorPlay')?.addEventListener('click', play);
+    document.querySelectorAll('input[name="cast-f"]').forEach(input => {
+      input.addEventListener('change', () => {
+        state.castFilter = input.value;
+        document.querySelectorAll('.cast-filters .chip').forEach(chip => chip.classList.toggle('active', chip.querySelector('input').checked));
+        renderCast();
+      });
+    });
+    els.cast.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('[data-asset]');
+      if (!btn) return;
+      const assetId = btn.dataset.asset;
+      const clip = state.project.clips.find(c => c.assetId === assetId);
+      if (clip) selectClip(clip.id);
+      else flash('ASSET EN CAST · usa + track para colocarlo');
+    });
+    els.score.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('[data-clip]');
+      if (btn) selectClip(btn.dataset.clip);
+    });
+
+    hydrateBrief();
+    if (!state.project.cast.length || !state.project.clips.length) autoCast();
+    else render();
+  })();
+  </script>
+</body>
+</html>

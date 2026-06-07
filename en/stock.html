@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
+  <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
+  <link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
+  <title>Pixeria Studio · Stock</title>
+  <meta name="description" content="Public gallery de assets generados por los motores IA — audio, música, imágenes y video — desplegados a Stock.">
+  <!-- Admira · Xperience · design system del grupo (tokens + nav header) -->
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/tokens.css">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
+  <script defer src="https://csilvasantin.github.io/admira-design/contact-panel.js"></script>
+  <link rel="stylesheet" href="../workspace.css?v=20260607-ops1">
+</head>
+<body data-page="stock">
+  <!-- Banda superior del grupo Admira · Xperience -->
+  <nav class="admira-nav admira-nav-static" aria-label="Admira · Xperience">
+    <a class="admira-nav-brand" href="https://www.admira.app">
+      <span class="admira-nav-brand-name">Admira</span>
+      <span class="admira-nav-brand-tag">Xperience</span>
+    </a>
+    <div class="admira-nav-items">
+      <a class="admira-nav-link admira-nav-link-active" href="https://www.pixeria.com/en/">Pixeria</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live/council-scumm.html">Live Council</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.xpaceos.com">XpaceOS</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.app">Xbusiness</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live">Live</a>
+      <a class="admira-nav-link admira-nav-link-cta" href="#contact" data-admira-contact>Contact</a>
+    </div>
+  </nav>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
+  <header class="topnav">
+    <div class="brand"><a href="index.html" class="brand-link"><span class="brand-name">Pixeria</span><span class="brand-version">v.2026.06.07-ops</span></a></div>
+    <nav class="primary-nav">
+      <a href="audio.html" data-nav="audio">Audio</a>
+      <a href="musica.html" data-nav="musica">Music</a>
+      <a href="imagenes.html" data-nav="imagenes">Images</a>
+      <a href="video.html" data-nav="video">Video</a>
+      <a href="publicidad.html" data-nav="publicidad">Advertising</a>
+      <a href="stock.html" data-nav="stock">Stock</a>
+      <a href="plataforma.html" data-nav="plataforma">Platform</a>
+      <a href="admira-xp.html" data-nav="admira-xp">Admira XP</a>
+      <button type="button" class="nav-import" id="openImport" title="Import audio/video from URL via local yt-dlp">Import</button>
+      <a href="director.html" data-nav="director">Director</a>
+      <a href="../xtore.html" data-nav="xtore">Xtore</a>
+      <a href="/en/#method" data-nav="method">Method</a>
+      <a href="/crear/" data-nav="create">Create</a>
+      <a href="/en/crear-campana/" data-nav="campaigns">Campaigns</a>
+    </nav>
+    <div class="topnav-actions">
+      <button type="button" class="btn-back" onclick="history.length>1?history.back():location.href='index.html'">← Volver</button>
+    </div>
+  </header>
+
+  <header class="page-head">
+    <p class="eyebrow stock">Public gallery</p>
+    <h1>Stock · assets deployed from the creative engines.</h1>
+    <p class="lead">Everything published from Audio, Music, Images or Video appears here. Filter by type and engine; search by prompt, comments or tags.</p>
+  </header>
+
+  <main>
+    <section class="stock-toolbar">
+      <nav class="stock-pager stock-pager-top" aria-label="Vista, filtros, búsqueda, orden y paginación">
+        <div class="stock-view" role="group" aria-label="Tamaño de vista">
+          <button type="button" class="stock-view-btn" data-view="list" title="Lista">☰</button>
+          <button type="button" class="stock-view-btn" data-view="compact" title="Compacto · más vídeos de un vistazo">▦</button>
+          <button type="button" class="stock-view-btn" data-view="medium" title="Medio">◻</button>
+        </div>
+        <div class="stock-pager-search">
+          <label for="stockSearch" class="sr-only">Búsqueda por prompt, comentario o etiqueta</label>
+          <input id="stockSearch" type="text" placeholder="🔍 buscar en prompts, comentarios, tags…" autocomplete="off">
+        </div>
+        <div class="stock-pager-filters">
+          <select id="stockTypeFilter" title="Filtrar por tipo" aria-label="Filtrar por tipo">
+            <option value="">Todos los tipos</option>
+            <option value="audio">Audio</option>
+            <option value="music">Música</option>
+            <option value="image">Imágenes</option>
+            <option value="video">Video</option>
+            <option value="animation">Animaciones</option>
+            <option value="furni">Mobiliario</option>
+          </select>
+          <select id="stockMotorFilter" title="Filtrar por motor" aria-label="Filtrar por motor">
+            <option value="">Todos los motores</option>
+          </select>
+        </div>
+        <div class="stock-pager-size">
+          <select class="stock-page-size" title="Resultados por página" aria-label="Resultados por página">
+            <option value="10" selected>10</option>
+            <option value="12">12</option>
+            <option value="24">24</option>
+            <option value="48">48</option>
+            <option value="96">96</option>
+            <option value="0">todos</option>
+          </select>
+        </div>
+        <div class="stock-pager-sort" id="stockSortBar" role="group" aria-label="Ordenar por">
+          <span class="stock-sortbar-label">Ordenar:</span>
+          <button type="button" class="stock-sort-th" data-key="name">Nombre <span class="stock-sort-arrow">⇅</span></button>
+          <button type="button" class="stock-sort-th" data-key="date">Fecha <span class="stock-sort-arrow">⇅</span></button>
+        </div>
+        <div class="stock-pager-controls">
+          <button type="button" class="stock-pager-btn" data-page="first" title="Primera página">«</button>
+          <button type="button" class="stock-pager-btn" data-page="prev" title="Anterior">‹</button>
+          <span class="stock-pager-info">— / —</span>
+          <button type="button" class="stock-pager-btn" data-page="next" title="Siguiente">›</button>
+          <button type="button" class="stock-pager-btn" data-page="last" title="Última página">»</button>
+        </div>
+        <button type="button" class="btn stock-refresh-icon" id="stockRefresh" title="Refrescar — volver a pedir la lista">↻</button>
+      </nav>
+      <div id="stockStatus" class="stock-status" role="status" aria-live="polite"></div>
+    </section>
+
+    <section>
+
+      <div id="stockGrid" class="stock-grid"></div>
+      <div id="stockEmpty" class="stock-empty" hidden>
+        <p>// Stock vacío.</p>
+        <p>Genera un asset en Audio/Música/Imágenes/Video y pulsa <strong>📌 PUBLICAR EN STOCK</strong>.</p>
+      </div>
+
+      <nav class="stock-pager stock-pager-bottom" hidden aria-label="Paginación (abajo)">
+        <div class="stock-pager-size">
+          <select class="stock-page-size" title="Resultados por página" aria-label="Resultados por página">
+            <option value="10" selected>10</option>
+            <option value="12">12</option>
+            <option value="24">24</option>
+            <option value="48">48</option>
+            <option value="96">96</option>
+            <option value="0">todos</option>
+          </select>
+        </div>
+        <div class="stock-pager-controls">
+          <button type="button" class="stock-pager-btn" data-page="first" title="Primera página">«</button>
+          <button type="button" class="stock-pager-btn" data-page="prev" title="Anterior">‹</button>
+          <span class="stock-pager-info">— / —</span>
+          <button type="button" class="stock-pager-btn" data-page="next" title="Siguiente">›</button>
+          <button type="button" class="stock-pager-btn" data-page="last" title="Última página">»</button>
+        </div>
+      </nav>
+    </section>
+
+    <div id="stockLightbox" class="stock-lightbox" hidden aria-hidden="true">
+      <button type="button" class="stock-lightbox-close" id="stockLightboxClose" aria-label="Cerrar">✕</button>
+      <div class="stock-lightbox-inner" id="stockLightboxInner"></div>
+      <div class="stock-lightbox-meta" id="stockLightboxMeta"></div>
+    </div>
+  </main>
+
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.2026.06.07-ops</a></footer>
+
+  <dialog id="importModal" class="keys-modal">
+    <form method="dialog" class="keys-form import-form">
+      <h3>📥 IMPORTAR DESDE URL</h3>
+      <p class="keys-warn">yt-dlp en Mac Mini (audio mp3 + video mp4). Hosts permitidos: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn. Si abres en local también funciona suno-local (:3777).</p>
+      <div class="field"><label for="import-url">URL</label><input id="import-url" type="text" autocomplete="off" placeholder="https://www.youtube.com/watch?v=..."></div>
+      <div class="field">
+        <label for="import-comment">Comentarios <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(opcional · indexable por búsqueda en Stock)</small></label>
+        <textarea id="import-comment" rows="2" autocomplete="off" placeholder="Notas, etiquetas, contexto… (luego se puede buscar)"></textarea>
+      </div>
+      <div class="field">
+        <label>Formato</label>
+        <div class="import-fmt" role="radiogroup" aria-label="Formato de importación">
+          <label class="import-fmt-chip is-audio">
+            <input type="radio" name="import-fmt" value="audio" checked>
+            <span class="import-fmt-icon" aria-hidden="true">🎵</span>
+            <span class="import-fmt-label"><b>AUDIO</b><small>mp3 · sólo pista de audio</small></span>
+          </label>
+          <label class="import-fmt-chip is-video">
+            <input type="radio" name="import-fmt" value="video">
+            <span class="import-fmt-icon" aria-hidden="true">🎬</span>
+            <span class="import-fmt-label"><b>VIDEO</b><small>mp4 · video + audio</small></span>
+          </label>
+        </div>
+      </div>
+      <div class="import-progress" id="importProgress" hidden>
+        <div class="import-progress-head">
+          <span class="import-progress-kind" id="importProgressKind">— ESPERANDO —</span>
+          <span class="import-progress-stats" id="importProgressStats">0 MB · 0s</span>
+        </div>
+        <div class="import-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+          <div class="import-progress-fill" id="importProgressFill"></div>
+          <div class="import-progress-indet" id="importProgressIndet" hidden></div>
+        </div>
+      </div>
+      <div class="keys-actions">
+        <button type="button" class="btn primary" id="doImport">Importar</button>
+        <button type="button" class="btn" id="closeImport">Cerrar</button>
+      </div>
+      <pre class="brief" id="importStatus" style="display:none;font-size:11px;max-height:200px;"></pre>
+    </form>
+  </dialog>
+
+  <script src="../matrix-rain.js"></script>
+  <script src="../app.js"></script>
+  <script>
+  (function () {
+    const grid = document.getElementById('stockGrid');
+    const status = document.getElementById('stockStatus');
+    const empty = document.getElementById('stockEmpty');
+    const search = document.getElementById('stockSearch');
+    const typeFilter = document.getElementById('stockTypeFilter');
+    const motorFilter = document.getElementById('stockMotorFilter');
+    const sortBar = document.getElementById('stockSortBar');
+    const lightbox = document.getElementById('stockLightbox');
+    const lightboxInner = document.getElementById('stockLightboxInner');
+    const lightboxMeta = document.getElementById('stockLightboxMeta');
+    const STOCK_BASE = 'https://pixer-eleven.csilvasantin.workers.dev';
+    const STOCK_LIST_URL = STOCK_BASE + '/stock/list';
+    const TYPE_ORDER = { audio: 0, music: 1, image: 2, video: 3, animation: 4 };
+    let allItems = [];
+    let filters = { type: '', motor: '', q: '', tag: '', dateQuick: '', dateFrom: '', dateTo: '' };
+    let sortMode = 'date-desc';
+    let pageSize = 10; // 0 = mostrar todos
+    let currentPage = 1;
+    const pagers = Array.from(document.querySelectorAll('.stock-pager'));
+    const pageSizeSels = Array.from(document.querySelectorAll('.stock-page-size'));
+
+    function fmtDate(iso) {
+      try { return new Date(iso).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); }
+      catch { return iso; }
+    }
+    function renderPreview(it) {
+      if (it.type === 'furni') {
+        // Mobiliario del gemelo: sprite pixelado → render nítido.
+        return `<img src="${it.url}" alt="" loading="lazy" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
+      }
+      if (it.type === 'image') {
+        return `<img src="${it.thumbnail || it.url}" alt="" loading="lazy">`;
+      }
+      if (it.type === 'video' || it.type === 'animation') {
+        return `<video src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} preload="metadata" controls></video>`;
+      }
+      if (it.type === 'audio' || it.type === 'music') {
+        const cover = it.thumbnail || '';
+        return `${cover ? `<img class="stock-cover" src="${cover}" alt="" loading="lazy">` : '<div class="stock-cover-empty">▶</div>'}
+                <audio src="${it.url}" preload="none" controls></audio>`;
+      }
+      return `<pre>${JSON.stringify(it).slice(0,200)}</pre>`;
+    }
+    function escAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
+    function ainimationImportHref(it) {
+      const params = new URLSearchParams();
+      params.set('admiraStockUrl', it.url || '');
+      params.set('admiraStockType', it.type || '');
+      params.set('admiraStockTitle', it.title || it.prompt || 'Admira Stock asset');
+      if (it.id) params.set('admiraStockId', it.id);
+      if (it.prompt) params.set('admiraStockPrompt', it.prompt);
+      if (it.thumbnail) params.set('admiraStockThumbnail', it.thumbnail);
+      if (it.width) params.set('admiraStockWidth', it.width);
+      if (it.height) params.set('admiraStockHeight', it.height);
+      if (it.duration) params.set('admiraStockDuration', it.duration);
+      return `https://ainimation.studio/studio.html?${params.toString()}`;
+    }
+    function renderPromptHtml(raw) {
+      const safe = String(raw || '').replace(/</g,'&lt;');
+      const trunc = safe.slice(0, 140) + (safe.length > 140 ? '…' : '');
+      if (/^https?:\/\//i.test(raw)) {
+        return `<a class="stock-prompt-link" href="${escAttr(raw)}" target="_blank" rel="noopener" title="${escAttr(raw)}">${trunc}</a>`;
+      }
+      return `<span title="${escAttr(raw)}">${trunc}</span>`;
+    }
+    function renderTagsHtml(tags) {
+      if (!Array.isArray(tags) || tags.length === 0) return '';
+      return `<div class="stock-tags">${tags.map(t => {
+        const safe = String(t).replace(/</g, '&lt;');
+        return `<button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Filtrar por #${escAttr(t)}">#${safe}</button>`;
+      }).join('')}</div>`;
+    }
+    function renderTagsEditorHtml(id, tags) {
+      const safeId = String(id || '').replace(/[^A-Za-z0-9-]/g, '');
+      const chips = (Array.isArray(tags) ? tags : []).map(t => {
+        const safe = String(t).replace(/</g, '&lt;');
+        return `<span class="stock-tag-edit"><button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Filtrar por #${escAttr(t)}">#${safe}</button><button type="button" class="stock-tag-x" data-act="remove-tag" data-tag="${escAttr(t)}" title="Quitar etiqueta" aria-label="Quitar #${escAttr(t)}">✕</button></span>`;
+      }).join('');
+      return `<div class="stock-tags-editor" data-edit-id="${safeId}">
+        ${chips}
+        <button type="button" class="stock-tag-add" data-act="add-tag" title="Añadir etiqueta">+ etiqueta</button>
+      </div>`;
+    }
+    async function saveTags(id, tags) {
+      try {
+        const r = await fetch(`${STOCK_BASE}/stock/${encodeURIComponent(id)}/tags`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tags }),
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        // Actualiza el item local
+        const it = allItems.find(x => x.id === id);
+        if (it) it.tags = d.tags || [];
+        return d.tags || [];
+      } catch (e) {
+        alert('Error guardando etiquetas: ' + e.message);
+        return null;
+      }
+    }
+    function currentItemInLightbox() {
+      const id = window.__lightboxItemId;
+      return id ? allItems.find(i => i.id === id) : null;
+    }
+    function renderCard(it) {
+      const idAttr = String(it.id || '').replace(/[^A-Za-z0-9-]/g, '');
+      const assetUrl = escAttr(it.url || '');
+      const titleRaw = (it.title || '').trim();
+      const titleInline = titleRaw
+        ? `<span class="stock-title-inline" title="${escAttr(titleRaw)}">${titleRaw.replace(/</g,'&lt;').slice(0, 90)}${titleRaw.length > 90 ? '…' : ''}</span>`
+        : '';
+      // Meta de cabecera (sube footer + motor a la línea del badge): motor · coste · fecha
+      const headMeta = [it.motor, it.costEst, fmtDate(it.createdAt)]
+        .filter(Boolean).map(s => String(s).replace(/</g, '&lt;')).join(' · ');
+      const commentRaw = (it.comment || '').trim();
+      const commentSafe = commentRaw.replace(/</g, '&lt;');
+      const commentBlock = commentRaw
+        ? `<p class="stock-comment" title="${escAttr(commentRaw)}">💬 ${commentSafe.slice(0, 200)}${commentRaw.length > 200 ? '…' : ''}</p>`
+        : '';
+      const tagsBlock = renderTagsHtml(it.tags);
+      return `<article class="stock-card" data-type="${it.type}" data-motor="${it.motor}" data-id="${idAttr}" tabindex="0" role="button" aria-label="Maximizar ${it.type}">
+        <div class="stock-card-media">
+          ${renderPreview(it)}
+        </div>
+        <div class="stock-card-body">
+          <header>
+            <span class="stock-type ${it.type}">${it.type}</span>
+            <div class="stock-card-actions">
+              <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Abrir en AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
+              <button type="button" class="stock-card-btn" data-act="feed" title="Enviar al Pixer Feed (pantallas / gemelo)"><span aria-hidden="true">📺</span></button>
+              <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Abrir asset en pestaña nueva" data-act="open"><span aria-hidden="true">↗</span></a>
+              <button type="button" class="stock-card-btn" data-act="max" title="Maximizar"><span aria-hidden="true">⛶</span></button>
+              <button type="button" class="stock-card-btn danger" data-act="del" title="Eliminar"><span aria-hidden="true">🗑</span></button>
+            </div>
+            ${titleInline}
+            <span class="stock-head-meta">${headMeta}</span>
+          </header>
+          ${tagsBlock}
+          <p class="stock-prompt">${renderPromptHtml(it.prompt)}</p>
+          ${commentBlock}
+        </div>
+      </article>`;
+    }
+    function sortItems(items, mode) {
+      const sorted = items.slice();
+      const recent = (a, b) => (b.createdAt || '').localeCompare(a.createdAt || '');
+      const name = it => (it.title || it.prompt || '').trim();
+      const comparators = {
+        'date-desc': recent,
+        'date-asc':  (a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''),
+        'name-asc':  (a, b) => name(a).localeCompare(name(b), 'es', { sensitivity: 'base' }) || recent(a, b),
+        'name-desc': (a, b) => name(b).localeCompare(name(a), 'es', { sensitivity: 'base' }) || recent(a, b),
+        'type-asc':  (a, b) => ((TYPE_ORDER[a.type] ?? 99) - (TYPE_ORDER[b.type] ?? 99)) || recent(a, b),
+        'type-desc': (a, b) => ((TYPE_ORDER[b.type] ?? 99) - (TYPE_ORDER[a.type] ?? 99)) || recent(a, b),
+        'motor-asc': (a, b) => String(a.motor || '').localeCompare(String(b.motor || ''), 'es', { sensitivity: 'base' }) || recent(a, b),
+        'motor-desc':(a, b) => String(b.motor || '').localeCompare(String(a.motor || ''), 'es', { sensitivity: 'base' }) || recent(a, b),
+      };
+      sorted.sort(comparators[mode] || recent);
+      return sorted;
+    }
+
+    function renderActiveTagBanner() {
+      let banner = document.getElementById('stockTagBanner');
+      if (!filters.tag) { if (banner) banner.remove(); return; }
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'stockTagBanner';
+        banner.className = 'stock-tag-banner';
+        document.querySelector('.stock-toolbar').appendChild(banner);
+      }
+      banner.innerHTML = `Filtrando por <b>#${filters.tag.replace(/</g,'&lt;')}</b> <button type="button" class="stock-tag-clear">✕ limpiar</button>`;
+      banner.querySelector('.stock-tag-clear').addEventListener('click', () => {
+        filters.tag = '';
+        renderActiveTagBanner();
+        applyFilters(true);
+      });
+    }
+    // "animation" es un tipo virtual: ainimation.studio publica como type=video
+    // con motor=ainimation, así que lo distinguimos por el motor (el worker no
+    // admite un type 'animation' real sin redeploy).
+    function matchesType(it, t) {
+      if (!t) return true;
+      // Animación = tipo real 'animation' o (compat) lo publicado por ainimation
+      // como video con motor=ainimation antes de existir el tipo real.
+      const isAnim = it.type === 'animation' || String(it.motor || '').toLowerCase() === 'ainimation';
+      if (t === 'animation') return isAnim;
+      if (t === 'video') return it.type === 'video' && !isAnim;
+      return it.type === t;
+    }
+    function applyFilters(resetPage) {
+      const items = allItems.filter(it => {
+        if (!matchesType(it, filters.type)) return false;
+        if (filters.motor && it.motor !== filters.motor) return false;
+        if (filters.tag) {
+          const tags = Array.isArray(it.tags) ? it.tags.map(t => String(t).toLowerCase()) : [];
+          if (!tags.includes(filters.tag.toLowerCase())) return false;
+        }
+        if (filters.q) {
+          const hay = (
+            (it.prompt || '') + ' ' +
+            (it.title || '') + ' ' +
+            (it.comment || '') + ' ' +
+            (Array.isArray(it.tags) ? it.tags.join(' ') : '')
+          ).toLowerCase();
+          if (!hay.includes(filters.q)) return false;
+        }
+        return true;
+      });
+      const sorted = sortItems(items, sortMode);
+
+      // Paginación (0 = todos)
+      const totalPages = pageSize > 0 ? Math.max(1, Math.ceil(sorted.length / pageSize)) : 1;
+      if (resetPage) currentPage = 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+      const pageItems = pageSize > 0
+        ? sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+        : sorted;
+
+      grid.classList.remove('stock-grid-grouped');
+      grid.innerHTML = pageItems.map(renderCard).join('');
+      empty.hidden = items.length > 0;
+
+      // Pager UI. El superior lleva el orden integrado, así que no se oculta del
+      // todo: solo escondemos sus flechas cuando hay una única página. El inferior
+      // (solo paginación) sí se oculta entero.
+      const hidePagers = (pageSize === 0 || sorted.length <= pageSize);
+      pagers.forEach(p => {
+        const isTop = p.classList.contains('stock-pager-top');
+        const controls = p.querySelector('.stock-pager-controls');
+        if (isTop) {
+          p.hidden = false;
+          if (controls) controls.hidden = hidePagers;
+        } else {
+          p.hidden = hidePagers;
+        }
+        if (hidePagers) return;
+        p.querySelector('.stock-pager-info').textContent = `${currentPage}/${totalPages}`;
+        p.querySelector('[data-page="first"]').disabled = currentPage <= 1;
+        p.querySelector('[data-page="prev"]').disabled = currentPage <= 1;
+        p.querySelector('[data-page="next"]').disabled = currentPage >= totalPages;
+        p.querySelector('[data-page="last"]').disabled = currentPage >= totalPages;
+      });
+    }
+
+    function openLightbox(it) {
+      let media = '';
+      if (it.type === 'furni') {
+        media = `<img src="${it.url}" alt="" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
+      } else if (it.type === 'image') {
+        media = `<img src="${it.thumbnail || it.url}" alt="">`;
+      } else if (it.type === 'video' || it.type === 'animation') {
+        media = `<video src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} controls autoplay></video>`;
+      } else if (it.type === 'audio' || it.type === 'music') {
+        const cover = it.thumbnail || '';
+        media = `${cover ? `<img class="stock-cover" src="${cover}" alt="">` : '<div class="stock-cover-empty">▶</div>'}
+                 <audio src="${it.url}" controls autoplay></audio>`;
+      } else {
+        media = `<pre>${JSON.stringify(it, null, 2)}</pre>`;
+      }
+      lightboxInner.innerHTML = media;
+      const titleRaw = (it.title || '').trim();
+      const titleBlock = titleRaw ? `<p class="stock-title">${titleRaw.replace(/</g,'&lt;')}</p>` : '';
+      const commentRaw = (it.comment || '').trim();
+      const commentSafe = commentRaw.replace(/</g, '&lt;');
+      const commentBlock = commentRaw
+        ? `<p class="stock-comment">💬 ${commentSafe}</p>`
+        : '';
+      const tagsEditor = renderTagsEditorHtml(it.id, it.tags);
+      lightboxMeta.innerHTML = `
+        <div><span class="stock-type ${it.type}">${it.type}</span> <span class="stock-motor">${it.motor || ''}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span></div>
+        ${titleBlock}
+        ${tagsEditor}
+        <p class="stock-prompt">${renderPromptHtml(it.prompt)}</p>
+        ${commentBlock}
+        <div class="stock-lightbox-actions">
+          <a class="btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener">AI Abrir en AINimation</a>
+          <a class="btn" href="${it.url}" target="_blank" rel="noopener" download>⬇ Descargar archivo</a>
+          <a class="btn" href="${it.url}" target="_blank" rel="noopener">↗ Abrir asset</a>
+        </div>`;
+      window.__lightboxItemId = it.id || null;
+      lightbox.hidden = false;
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('stock-lightbox-open');
+    }
+    function closeLightbox() {
+      lightbox.hidden = true;
+      lightbox.setAttribute('aria-hidden', 'true');
+      lightboxInner.innerHTML = '';
+      lightboxMeta.innerHTML = '';
+      document.body.classList.remove('stock-lightbox-open');
+    }
+    document.getElementById('stockLightboxClose').addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !lightbox.hidden) closeLightbox(); });
+
+    // Edición de tags dentro del lightbox (quitar / añadir)
+    lightboxMeta.addEventListener('click', async e => {
+      const removeBtn = e.target.closest('[data-act="remove-tag"]');
+      const addBtn = e.target.closest('[data-act="add-tag"]');
+      if (!removeBtn && !addBtn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const it = currentItemInLightbox();
+      if (!it) return;
+      let nextTags = Array.isArray(it.tags) ? it.tags.slice() : [];
+      if (removeBtn) {
+        const t = removeBtn.dataset.tag;
+        nextTags = nextTags.filter(x => x !== t);
+      } else {
+        const fresh = (prompt('Añadir etiqueta (1-2 palabras):') || '').trim().toLowerCase();
+        if (!fresh) return;
+        if (nextTags.includes(fresh)) { return; }
+        if (nextTags.length >= 8) { alert('Máximo 8 etiquetas por asset.'); return; }
+        nextTags.push(fresh);
+      }
+      const saved = await saveTags(it.id, nextTags);
+      if (saved) {
+        it.tags = saved;
+        // Re-render del bloque de editor
+        const newHtml = renderTagsEditorHtml(it.id, saved);
+        const oldEditor = lightboxMeta.querySelector('.stock-tags-editor');
+        if (oldEditor) oldEditor.outerHTML = newHtml;
+        // Re-render del grid para reflejar el cambio en la card
+        applyFilters();
+      }
+    });
+
+    async function deleteAsset(id, card) {
+      if (!id) return;
+      if (!confirm('¿Eliminar este asset del Stock? Borra el archivo y la metadata en R2. No se puede deshacer.')) return;
+      const beforeStatus = status.textContent;
+      status.textContent = `// borrando ${id}...`;
+      try {
+        const r = await fetch(`${STOCK_BASE}/stock/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        if (!r.ok) {
+          let body = '';
+          try { body = JSON.stringify(await r.json()); } catch {}
+          status.textContent = `// ERROR ${r.status} borrando: ${body.slice(0, 120)}`;
+          return;
+        }
+        allItems = allItems.filter(i => i.id !== id);
+        applyFilters();
+      } catch (e) {
+        status.textContent = `// ERROR red: ${e}`;
+      }
+    }
+
+    // Envía un asset del Stock al Pixer Feed (signage) → lo pollean las
+    // pantallas y el gemelo (/signage/feed). Broadcast (sin target = todas).
+    async function sendToPixerFeed(it, btn) {
+      if (!it || !it.url) return;
+      const kind = (it.type === 'video' || it.type === 'animation') ? 'video'
+                 : (it.type === 'audio' || it.type === 'music') ? 'audio'
+                 : 'image'; // image y furni → image
+      const label = (it.title || it.prompt || it.id || '').slice(0, 60);
+      status.textContent = `// enviando "${label}" al Pixer Feed…`;
+      if (btn) btn.disabled = true;
+      try {
+        const r = await fetch(`${STOCK_BASE}/signage/push`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind, src: it.url, title: it.title || it.prompt || '', mime: it.mime || null }),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (r.ok && data.ok) {
+          status.textContent = `📺 "${label}" enviado al Pixer Feed — aparecerá en pantallas y en el gemelo`;
+        } else {
+          status.textContent = `// ERROR feed ${r.status}: ${String(data.error || '').slice(0, 120)}`;
+        }
+      } catch (e) {
+        status.textContent = `// ERROR red Pixer Feed: ${e}`;
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    grid.addEventListener('click', e => {
+      // Click en chip de tag → activa filtro por ese tag (no abre lightbox)
+      const tagBtn = e.target.closest('.stock-tag');
+      if (tagBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const t = tagBtn.dataset.tag || '';
+        filters.tag = (filters.tag === t) ? '' : t; // toggle
+        renderActiveTagBanner();
+        applyFilters(true);
+        return;
+      }
+      // Botones de acciones (max/del/open) — el "open" es un <a> y deja burbujear,
+      // pero detenemos para no abrir también el lightbox.
+      const btn = e.target.closest('.stock-card-btn');
+      if (btn) {
+        const card = btn.closest('.stock-card');
+        const id = card?.dataset.id;
+        const item = allItems.find(i => i.id === id);
+        if (!item) return;
+        if (btn.dataset.act === 'max') { e.preventDefault(); openLightbox(item); }
+        else if (btn.dataset.act === 'del') { e.preventDefault(); deleteAsset(id, card); }
+        else if (btn.dataset.act === 'feed') { e.preventDefault(); sendToPixerFeed(item, btn); }
+        // 'open' es <a target=_blank> → deja burbujear sin preventDefault
+        e.stopPropagation();
+        return;
+      }
+      // Click en el enlace del prompt: no abrimos lightbox, dejamos la nav
+      if (e.target.closest('.stock-prompt-link')) return;
+      // Click en los controles nativos de <audio>/<video>: dejarlos
+      if (e.target.closest('audio, video')) return;
+      // Click en cualquier otra parte de la card → abrir lightbox
+      const card = e.target.closest('.stock-card');
+      if (!card) return;
+      const item = allItems.find(i => i.id === card.dataset.id);
+      if (item) openLightbox(item);
+    });
+    grid.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const card = e.target.closest('.stock-card');
+      if (!card || e.target !== card) return;
+      e.preventDefault();
+      const item = allItems.find(i => i.id === card.dataset.id);
+      if (item) openLightbox(item);
+    });
+    function buildMotorOptions() {
+      const motors = Array.from(new Set(allItems.map(i => i.motor).filter(Boolean))).sort();
+      const cur = filters.motor;
+      motorFilter.innerHTML = `<option value="">Todos los motores</option>`
+        + motors.map(m => `<option value="${String(m).replace(/"/g, '&quot;')}">${String(m).replace(/</g, '&lt;')}</option>`).join('');
+      motorFilter.value = motors.includes(cur) ? cur : '';
+    }
+    const STOCK_CACHE_KEY = 'stockCache_v1';
+    function readCache() {
+      try { const c = JSON.parse(localStorage.getItem(STOCK_CACHE_KEY) || 'null'); return (c && Array.isArray(c.items)) ? c : null; }
+      catch { return null; }
+    }
+    function writeCache(items) {
+      try { localStorage.setItem(STOCK_CACHE_KEY, JSON.stringify({ items, ts: Date.now() })); } catch {}
+    }
+    async function fetchList() {
+      // 3 intentos con backoff: un único fetch fallido (hipo de red o arranque
+      // en frío del worker) NO debe vaciar la vista ni parecer pérdida de datos.
+      let lastErr;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const r = await fetch(STOCK_LIST_URL + '?limit=200', { cache: 'no-store' });
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          const data = await r.json();
+          if (!data || !Array.isArray(data.items)) throw new Error('respuesta sin items');
+          return data.items;
+        } catch (e) {
+          lastErr = e;
+          if (attempt < 3) await new Promise(res => setTimeout(res, attempt * 800));
+        }
+      }
+      throw lastErr;
+    }
+    function feedMatrix() {
+      window.MATRIX_TITLES_FEED = allItems
+        .map(it => (it.title || it.comment || it.prompt || '').toString().trim())
+        .filter(Boolean);
+    }
+    async function load() {
+      status.textContent = '// cargando stock...';
+      empty.hidden = true;
+      grid.innerHTML = '';
+      try {
+        allItems = await fetchList();
+        writeCache(allItems);
+        buildMotorOptions();
+        applyFilters();
+        status.textContent = '';
+        feedMatrix();
+      } catch (e) {
+        // Fallo de red/worker: NO es pérdida de datos. Si hay copia guardada, mostrarla.
+        const cached = readCache();
+        if (cached && cached.items.length) {
+          allItems = cached.items;
+          buildMotorOptions();
+          applyFilters();
+          feedMatrix();
+          const when = cached.ts ? fmtDate(new Date(cached.ts).toISOString()) : '';
+          status.textContent = `// sin conexión con el servidor · mostrando copia guardada${when ? ' (' + when + ')' : ''} · pulsa ↻ para reintentar`;
+        } else {
+          empty.hidden = true; // error de carga, NO "vacío"
+          status.textContent = '// no se pudo cargar el stock (error de red, no se ha borrado nada) · pulsa ↻ para reintentar';
+        }
+      }
+    }
+    typeFilter.addEventListener('change', () => { filters.type = typeFilter.value; applyFilters(true); });
+    motorFilter.addEventListener('change', () => { filters.motor = motorFilter.value; applyFilters(true); });
+    search.addEventListener('input', () => {
+      filters.q = search.value.trim().toLowerCase();
+      applyFilters(true);
+    });
+    // Cabezales ordenables (Nombre / Fecha / Tipo / Motor) — clic alterna asc/desc
+    const SORT_DEFAULT_DIR = { name: 'asc', date: 'desc' };
+    const SORT_VALID = new Set(['name-asc','name-desc','date-asc','date-desc']);
+    function applySortIndicators() {
+      const [key, dir] = sortMode.split('-');
+      sortBar.querySelectorAll('.stock-sort-th').forEach(b => {
+        const active = b.dataset.key === key;
+        b.classList.toggle('active', active);
+        const arrow = b.querySelector('.stock-sort-arrow');
+        if (arrow) arrow.textContent = active ? (dir === 'asc' ? '▲' : '▼') : '⇅';
+      });
+    }
+    sortBar.querySelectorAll('.stock-sort-th').forEach(b => b.addEventListener('click', () => {
+      const key = b.dataset.key;
+      const [curKey, curDir] = sortMode.split('-');
+      const dir = curKey === key ? (curDir === 'asc' ? 'desc' : 'asc') : (SORT_DEFAULT_DIR[key] || 'asc');
+      sortMode = `${key}-${dir}`;
+      try { localStorage.setItem('stockSort', sortMode); } catch {}
+      applySortIndicators();
+      applyFilters(true);
+    }));
+    try { const s = localStorage.getItem('stockSort'); if (s && SORT_VALID.has(s)) sortMode = s; } catch {}
+    applySortIndicators();
+    document.getElementById('stockRefresh').addEventListener('click', load);
+
+    // Densidad de vista: lista / compacto / medio (persistida en localStorage).
+    // La clase va en #stockGrid; render() solo cambia innerHTML y la clase
+    // stock-grid-grouped, así que la vista se conserva entre renders.
+    const viewBtns = document.querySelectorAll('.stock-view-btn');
+    function applyStockView(v) {
+      const view = (v === 'list' || v === 'compact') ? v : 'medium';
+      grid.classList.remove('view-list', 'view-compact', 'view-medium');
+      grid.classList.add('view-' + view);
+      viewBtns.forEach(b => b.classList.toggle('active', b.dataset.view === view));
+      try { localStorage.setItem('stockView', view); } catch {}
+    }
+    viewBtns.forEach(b => b.addEventListener('click', () => applyStockView(b.dataset.view)));
+    let savedView = 'list';
+    try { savedView = localStorage.getItem('stockView') || 'list'; } catch {}
+    applyStockView(savedView);
+
+    // Pager (arriba y abajo, sincronizados)
+    pageSizeSels.forEach(sel => sel.addEventListener('change', () => {
+      pageSize = parseInt(sel.value, 10) || 0;
+      pageSizeSels.forEach(s => { s.value = String(pageSize); });
+      try { localStorage.setItem('stockPageSize', String(pageSize)); } catch {}
+      applyFilters(true);
+    }));
+    try {
+      const saved = parseInt(localStorage.getItem('stockPageSize') || '', 10);
+      if (!isNaN(saved)) { pageSize = saved; pageSizeSels.forEach(s => { s.value = String(saved); }); }
+    } catch {}
+    pagers.forEach(p => p.querySelectorAll('.stock-pager-btn').forEach(btn => btn.addEventListener('click', () => {
+      const act = btn.dataset.page;
+      if (act === 'first') currentPage = 1;
+      else if (act === 'prev') currentPage = Math.max(1, currentPage - 1);
+      else if (act === 'next') currentPage += 1;
+      else if (act === 'last') currentPage = 99999;
+      applyFilters();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    })));
+
+    // Track de reproducciones: 1 POST por asset + sesión cuando empieza a sonar
+    const trackedPlays = new Set();
+    function trackPlay(media) {
+      const card = media.closest('.stock-card') || media.closest('#stockLightbox');
+      let id;
+      if (card && card.classList.contains('stock-card')) {
+        id = card.dataset.id;
+      } else {
+        // lightbox: lee del último item abierto si lo guardamos
+        id = window.__lightboxItemId || null;
+      }
+      if (!id || trackedPlays.has(id)) return;
+      trackedPlays.add(id);
+      try {
+        fetch(`${STOCK_BASE}/stock/track/${encodeURIComponent(id)}?event=play`, {
+          method: 'POST', keepalive: true,
+        }).catch(() => {});
+      } catch {}
+    }
+    // Captura el 'play' de cualquier <video>/<audio> en el documento
+    document.addEventListener('play', e => {
+      const t = e.target;
+      if (t && (t.tagName === 'VIDEO' || t.tagName === 'AUDIO')) trackPlay(t);
+    }, true);
+
+    // Si llegamos con ?highlight=<id> (post-importación), hacemos scroll
+    // a la card recién creada y un flash visual.
+    function highlightFromQuery() {
+      const id = new URLSearchParams(location.search).get('highlight');
+      if (!id) return;
+      const safeId = id.replace(/[^A-Za-z0-9-]/g, '');
+      const card = grid.querySelector(`.stock-card[data-id="${safeId}"]`);
+      if (!card) return;
+      card.classList.add('stock-card-flash');
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => card.classList.remove('stock-card-flash'), 2400);
+      try { history.replaceState({}, '', location.pathname); } catch {}
+    }
+
+    (async () => {
+      await load();
+      setTimeout(highlightFromQuery, 80);
+    })();
+  })();
+  </script>
+</body>
+</html>

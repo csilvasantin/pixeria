@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
+  <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
+  <link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
+  <title>Pixeria Studio · Admira XP</title>
+  <meta name="description" content="Capa de experiencia que orquesta los outputs de Pixer.ia en escenas, triggers y publicaciones.">
+  <!-- Admira · Xperience · design system del grupo (tokens + nav header) -->
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/tokens.css">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
+  <script defer src="https://csilvasantin.github.io/admira-design/contact-panel.js"></script>
+  <link rel="stylesheet" href="workspace.css?v=20260607-ops1">
+</head>
+<body data-page="admira-xp">
+  <!-- Banda superior del grupo Admira · Xperience -->
+  <nav class="admira-nav admira-nav-static" aria-label="Admira · Xperience">
+    <a class="admira-nav-brand" href="https://www.admira.app">
+      <span class="admira-nav-brand-name">Admira</span>
+      <span class="admira-nav-brand-tag">Xperience</span>
+    </a>
+    <div class="admira-nav-items">
+      <a class="admira-nav-link admira-nav-link-active" href="https://www.pixeria.com">Pixeria</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live/council-scumm.html">Consejo Live</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.xpaceos.com">XpaceOS</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.app">Xbusiness</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live">Live</a>
+      <a class="admira-nav-link admira-nav-link-cta" href="#contact" data-admira-contact>Contacto</a>
+    </div>
+  </nav>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
+  <header class="topnav">
+    <div class="brand"><a href="index.html" class="brand-link"><span class="brand-name">Pixeria</span><span class="brand-version">v.2026.06.07-ops</span></a></div>
+    <nav class="primary-nav">
+      <a href="audio.html" data-nav="audio">Audio</a>
+      <a href="musica.html" data-nav="musica">Música</a>
+      <a href="imagenes.html" data-nav="imagenes">Imágenes</a>
+      <a href="video.html" data-nav="video">Video</a>
+      <a href="publicidad.html" data-nav="publicidad">Publicidad</a>
+      <a href="stock.html" data-nav="stock">Stock</a>
+      <a href="plataforma.html" data-nav="plataforma">Plataforma</a>
+      <a href="admira-xp.html" data-nav="admira-xp">Admira XP</a>
+      <button type="button" class="nav-import" id="openImport" title="Importa un video/audio (YouTube/Vimeo/X/TikTok/IG) vía yt-dlp local">Importar</button>
+      <a href="director.html" data-nav="director">Director</a>
+      <a href="xtore.html" data-nav="xtore">Xtore</a>
+      <a href="/#metodo" data-nav="metodo">Método</a>
+      <a href="/crear/" data-nav="crear">Crear</a>
+      <a href="/crear-campana/" data-nav="campanas">Campañas</a>
+    </nav>
+    <div class="topnav-actions">
+      <span id="xtoreStatus" class="xtore-badge" title="Estado de la pantalla Xtore (signage.html)">🔴 XTORE</span>
+      <button type="button" class="btn-back" onclick="history.length>1?history.back():location.href='index.html'">← Volver</button>
+    </div>
+  </header>
+
+  <header class="page-head has-gif"><figure class="page-gif"><img src="https://upload.wikimedia.org/wikipedia/commons/0/01/Matrixcode.gif" alt="Admira.xp · Matrixcode" loading="lazy"><figcaption>// Admira.xp · Matrixcode</figcaption></figure>
+    <p class="eyebrow xp">Capa de experiencia · Admira.xp</p>
+    <h1>De los outputs de Pixer.ia a una experiencia navegable.</h1>
+    <p class="lead">Admira.xp recibe los contenidos generados en Pixer.ia (audio, música, imágenes, video) y los organiza por escena, canal o interacción. El resultado: experiencias medibles y reutilizables, no piezas sueltas.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Flujo Pixer.ia → Admira.xp</h2>
+      <div class="xp-flow">
+        <div class="xp-step"><strong>1 · Entrada</strong><p>Brief de cliente, objetivo, tipo de contenido y restricciones de marca. Llega desde la página de cada tipo o desde Plataforma.</p></div>
+        <div class="xp-step"><strong>2 · Generación</strong><p>Pixer.ia produce las piezas: voces y guiones, loops y stingers, assets visuales, video editado por canal.</p></div>
+        <div class="xp-step"><strong>3 · Orquestación</strong><p>Admira.xp conecta piezas, define escenas, estados y triggers; añade reglas de reutilización por momento o canal.</p></div>
+        <div class="xp-step"><strong>4 · Salida</strong><p>Publicación: web, demo, presentación, pantalla en evento, campaña multicanal o experiencia interactiva.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Roles que cubre Admira.xp</h2>
+      <div class="xp-roles">
+        <div class="xp-role"><h4>Director de experiencia</h4><p>Decide qué pieza aparece en qué momento, según escena, canal o interacción del usuario.</p></div>
+        <div class="xp-role"><h4>Bibliotecario</h4><p>Indexa los outputs por cliente, campaña, idioma y estado (borrador, aprobado, publicado).</p></div>
+        <div class="xp-role"><h4>Orquestador</h4><p>Conecta audio + música + imagen + video como un único paquete reutilizable por canal.</p></div>
+        <div class="xp-role"><h4>Publicador</h4><p>Empaqueta la salida para web, evento o presentación, con las versiones por formato y duración.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Cómo se usa desde aquí</h2>
+      <div class="home-grid">
+        <a class="home-card" href="plataforma.html">
+          <span class="badge platform">P</span>
+          <div>
+            <h3>Ir a Plataforma</h3>
+            <p>Rellena el brief consolidado y descarga el JSON. Es la entrada estándar para Admira.xp.</p>
+            <small>brief unificado → entrada Admira.xp</small>
+          </div>
+        </a>
+        <a class="home-card" href="index.html">
+          <span class="badge xp">XP</span>
+          <div>
+            <h3>Volver al inicio</h3>
+            <p>Vista general de los cuatro tipos de contenido y de las dos capas operativas.</p>
+            <small>mapa del workspace</small>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.2026.06.07-ops</a></footer>
+
+  <dialog id="importModal" class="keys-modal">
+    <form method="dialog" class="keys-form import-form">
+      <h3>📥 IMPORTAR DESDE URL</h3>
+      <p class="keys-warn">yt-dlp en Mac Mini (audio mp3 + video mp4). Hosts permitidos: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn. Si abres en local también funciona suno-local (:3777).</p>
+      <div class="field"><label for="import-url">URL</label><input id="import-url" type="text" autocomplete="off" placeholder="https://www.youtube.com/watch?v=..."></div>
+      <div class="field">
+        <label for="import-comment">Comentarios <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(opcional · indexable por búsqueda en Stock)</small></label>
+        <textarea id="import-comment" rows="2" autocomplete="off" placeholder="Notas, etiquetas, contexto… (luego se puede buscar)"></textarea>
+      </div>
+      <div class="field">
+        <label>Formato</label>
+        <div class="import-fmt" role="radiogroup" aria-label="Formato de importación">
+          <label class="import-fmt-chip is-audio">
+            <input type="radio" name="import-fmt" value="audio" checked>
+            <span class="import-fmt-icon" aria-hidden="true">🎵</span>
+            <span class="import-fmt-label"><b>AUDIO</b><small>mp3 · sólo pista de audio</small></span>
+          </label>
+          <label class="import-fmt-chip is-video">
+            <input type="radio" name="import-fmt" value="video">
+            <span class="import-fmt-icon" aria-hidden="true">🎬</span>
+            <span class="import-fmt-label"><b>VIDEO</b><small>mp4 · video + audio</small></span>
+          </label>
+        </div>
+      </div>
+      <div class="import-progress" id="importProgress" hidden>
+        <div class="import-progress-head">
+          <span class="import-progress-kind" id="importProgressKind">— ESPERANDO —</span>
+          <span class="import-progress-stats" id="importProgressStats">0 MB · 0s</span>
+        </div>
+        <div class="import-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+          <div class="import-progress-fill" id="importProgressFill"></div>
+          <div class="import-progress-indet" id="importProgressIndet" hidden></div>
+        </div>
+      </div>
+      <div class="keys-actions">
+        <button type="button" class="btn primary" id="doImport">Importar</button>
+        <button type="button" class="btn" id="closeImport">Cerrar</button>
+      </div>
+      <pre class="brief" id="importStatus" style="display:none;font-size:11px;max-height:200px;"></pre>
+    </form>
+  </dialog>
+  <dialog id="keysModal" class="keys-modal">
+    <form method="dialog" class="keys-form">
+      <h3>⚙ API KEYS</h3>
+      <p class="keys-warn">Las claves se guardan solo en este navegador (localStorage). No se envían a ningún servidor de Pixer.ia.</p>      <div class="field"><label for="key-elevenlabs-voice">ElevenLabs Voice ID</label><input id="key-elevenlabs-voice" type="text" autocomplete="off" placeholder="EXAVITQu4vr4xnSDxMaL (Bella · default)"></div>      <div class="keys-actions">
+        <button type="button" class="btn primary" id="saveKeys">Guardar</button>
+        <button type="button" class="btn" id="clearKeys">Borrar todas</button>
+        <button type="button" class="btn" id="closeKeys">Cerrar</button>
+      </div>
+    </form>
+  </dialog>
+  <script src="matrix-rain.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
