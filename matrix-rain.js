@@ -5,7 +5,7 @@
 
   const GLYPHS = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789ABCDEFｦﾞﾟ｡･ｰ';
   const FONT_SIZE = 16;
-  let width = 0, height = 0, columns = 0, drops = [], speeds = [];
+  let width = 0, height = 0, sideWidth = 120, columns = 0, drops = [], speeds = [];
 
   // Por columna: si tiene un writer activo, va sirviendo los chars de un
   // título uno a uno mientras el "drop" desciende; al acabar vuelve a glifos.
@@ -52,10 +52,17 @@
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sideWidth = Math.min(190, Math.max(72, Math.round(width * 0.115)));
     columns = Math.ceil(width / FONT_SIZE);
     drops = new Array(columns).fill(0).map(() => Math.random() * -height / FONT_SIZE);
     speeds = new Array(columns).fill(0).map(() => 0.4 + Math.random() * 0.9);
     writers = new Array(columns).fill(null);
+  }
+
+  function sidePower(x) {
+    const left = x < sideWidth ? 1 - x / sideWidth : 0;
+    const right = x > width - sideWidth ? 1 - (width - x) / sideWidth : 0;
+    return Math.max(0, left, right);
   }
 
   function draw() {
@@ -71,22 +78,26 @@
       const y = drops[i] * FONT_SIZE;
       const ch = glyphFor(i);
       const head = drops[i] > 1 && Math.random() > 0.965;
+      const side = sidePower(x);
 
+      ctx.globalAlpha = side ? 0.52 + side * 0.45 : 0.30;
       if (head) {
         ctx.fillStyle = '#e8ffe8';
         ctx.shadowColor = '#00ff41';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 12;
       } else {
-        ctx.fillStyle = '#00d63a';
-        ctx.shadowBlur = 0;
+        ctx.fillStyle = side ? '#00ff41' : '#00c837';
+        ctx.shadowColor = '#00ff41';
+        ctx.shadowBlur = side * 8;
       }
       ctx.fillText(ch, x, y);
       ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
 
       if (y > height && Math.random() > 0.975) {
         drops[i] = 0;
       }
-      drops[i] += speeds[i];
+      drops[i] += speeds[i] + side * 0.22;
     }
     requestAnimationFrame(draw);
   }

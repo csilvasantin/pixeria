@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="theme-color" content="#0b1117">
   <link rel="canonical" href="https://www.pixeria.com/en/crear-campana/">
-  <link rel="stylesheet" href="../../assets/styles.css?v=20260607-topbar">
+  <link rel="stylesheet" href="../../assets/styles.css?v=20260608-sides">
   <style>
     .access-hero {
       min-height: 100vh;
@@ -79,6 +79,7 @@
   </style>
 </head>
 <body>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
   <header class="site-header">
     <a class="brand" href="/en/" aria-label="PixerIA home">
       <span class="brand-mark">P</span>
@@ -161,5 +162,6 @@
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
     })();
   </script>
+  <script src="/assets/matrix-rain.js?v=20260608-sides"></script>
 </body>
 </html>

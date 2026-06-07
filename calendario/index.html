@@ -7,7 +7,7 @@
   <meta name="description" content="Parrilla diaria del circuito de pantallas: qué se emite hoy y qué huecos quedan disponibles para campañas creadas en Pixeria.">
   <meta name="theme-color" content="#0b1117">
   <link rel="canonical" href="https://www.pixeria.com/calendario/">
-  <link rel="stylesheet" href="../assets/styles.css?v=20260607-topbar">
+  <link rel="stylesheet" href="../assets/styles.css?v=20260608-sides">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/emission-calendar.css">
   <style>
     .calendar-hero {
@@ -150,6 +150,7 @@
   </style>
 </head>
 <body>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
   <header class="site-header">
     <a class="brand" href="/" aria-label="Pixeria inicio">
       <span class="brand-mark">P</span>
@@ -490,5 +491,6 @@
       else document.addEventListener('DOMContentLoaded', init);
     })();
   </script>
+  <script src="/assets/matrix-rain.js?v=20260608-sides"></script>
 </body>
 </html>
