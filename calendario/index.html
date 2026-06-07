@@ -35,6 +35,7 @@
     }
     .calendar-controls,
     .calendar-summary,
+    .calendar-creator,
     .calendar-panel,
     .calendar-cta {
       width: min(100%, 1440px);
@@ -100,6 +101,133 @@
       color: var(--ink);
       font-weight: 760;
     }
+    .calendar-creator {
+      margin: 0 auto 18px;
+      border: 1px solid var(--line);
+      background: rgba(244, 240, 232, 0.045);
+      border-radius: 8px;
+      padding: clamp(14px, 2vw, 22px);
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    .campaign-form,
+    .campaign-preview {
+      min-width: 0;
+    }
+    .campaign-form {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .campaign-form h2,
+    .campaign-preview h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    .campaign-form label {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+      text-transform: uppercase;
+    }
+    .campaign-form input,
+    .campaign-form textarea,
+    .campaign-form select {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      background: rgba(11, 17, 23, 0.62);
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 12px;
+      font: inherit;
+    }
+    .campaign-form input,
+    .campaign-form select {
+      min-height: 46px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .campaign-form textarea {
+      min-height: 112px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+    .campaign-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .campaign-actions .button {
+      min-width: min(100%, 180px);
+      cursor: pointer;
+    }
+    .campaign-actions .button:disabled {
+      opacity: 0.5;
+      cursor: default;
+      transform: none;
+    }
+    .campaign-preview {
+      display: grid;
+      gap: 12px;
+    }
+    .campaign-context {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .campaign-context span {
+      max-width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      background: rgba(11, 17, 23, 0.42);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .campaign-preview-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      min-height: 220px;
+      border: 1px solid rgba(104, 220, 233, 0.3);
+      background: #02080d;
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .campaign-preview-frame.is-vertical {
+      width: min(100%, 360px);
+      aspect-ratio: 9 / 16;
+      min-height: 420px;
+      justify-self: center;
+    }
+    .campaign-preview-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 5px;
+      background: #071018;
+    }
+    .campaign-preview-empty {
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.45;
+      padding: 20px;
+    }
     .calendar-panel {
       margin: 0 auto;
       border: 1px solid var(--line);
@@ -136,6 +264,9 @@
       .calendar-cta,
       .calendar-summary {
         display: grid;
+      }
+      .calendar-creator {
+        grid-template-columns: 1fr;
       }
       .calendar-controls {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -205,6 +336,44 @@
       <div class="calendar-summary" id="calendarSummary">
         <span>Selecciona circuito, localidad y punto para ver sus pantallas disponibles.</span>
       </div>
+      <section class="calendar-creator" id="campaignCreator">
+        <div class="campaign-form">
+          <h2>Crear contenido para este punto</h2>
+          <label>
+            Marca
+            <input id="campaignBrand" type="text" value="Pixeria">
+          </label>
+          <label>
+            Campaña
+            <input id="campaignName" type="text">
+          </label>
+          <label>
+            Estilo
+            <select id="campaignTone">
+              <option value="premium">Premium</option>
+              <option value="oferta">Oferta</option>
+              <option value="evento">Evento</option>
+              <option value="informativo">Informativo</option>
+            </select>
+          </label>
+          <label>
+            Mensaje
+            <textarea id="campaignMessage" placeholder="Nuevo lanzamiento disponible hoy"></textarea>
+          </label>
+          <div class="campaign-actions">
+            <button class="button primary" id="campaignGenerate" type="button">Generar previo</button>
+            <button class="button secondary" id="campaignBuy" type="button" disabled>Comprar en Admira</button>
+          </div>
+        </div>
+        <div class="campaign-preview">
+          <h2>Previo en pantalla</h2>
+          <div class="campaign-context" id="campaignContext"></div>
+          <div class="campaign-preview-frame" id="campaignPreviewFrame">
+            <img id="campaignPreviewImg" alt="Previo de creatividad para la pantalla seleccionada" hidden>
+            <div class="campaign-preview-empty" id="campaignPreviewEmpty">Selecciona un punto y genera el previo.</div>
+          </div>
+        </div>
+      </section>
       <div class="calendar-panel">
         <div id="cal"></div>
       </div>
@@ -226,8 +395,10 @@
   <script>
     (function () {
       var WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
+      var STOCK_PUBLISH_URL = WORKER + '/stock/publish';
+      var ADMIRA_BUY_URL = 'https://admira.app/';
       var $ = function (s) { return document.querySelector(s); };
-      var state = { allStores: [], stores: [], store: null, screens: [], screen: null, date: '', cal: null, filters: { circuit: 'all', locality: 'all' } };
+      var state = { allStores: [], stores: [], store: null, screens: [], screen: null, date: '', cal: null, campaign: null, filters: { circuit: 'all', locality: 'all' } };
 
       function slug(s) {
         return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -246,7 +417,7 @@
       function screensOf(store) {
         return store.surfaces.filter(isScreen).map(function (sf) {
           var surface = String(sf.surface || 'pantalla');
-          return { id: slug(store.id) + '-' + slug(sf.name), name: sf.name + ' · ' + surface, pixerScreens: Array.isArray(sf.pixerScreens) ? sf.pixerScreens : [] };
+          return { id: slug(store.id) + '-' + slug(sf.name), name: sf.name + ' · ' + surface, rawName: sf.name, surface: surface, pixerScreens: Array.isArray(sf.pixerScreens) ? sf.pixerScreens : [] };
         });
       }
 
@@ -364,6 +535,7 @@
 
       function selectScreen(id) {
         state.screen = state.screens.find(function (s) { return s.id === id; }) || state.screens[0];
+        resetCampaignPreview();
         if (!state.screen) {
           $('#cal').innerHTML = '<div style="color:#75aab9;text-align:center;padding:40px">Este circuito no tiene pantallas.</div>';
           return;
@@ -372,6 +544,7 @@
         if (!state.cal) state.cal = window.EmissionCalendar.mount($('#cal'), opts);
         else state.cal.setContext({ screen: state.screen.id, date: state.date, screenName: state.screen.name, storeName: state.store.name });
         updateSummary();
+        updateCampaignContext();
       }
 
       function updateFromFilters(preferredStoreId, preferredScreenId) {
@@ -388,6 +561,284 @@
         var screenCount = state.screens.length;
         el.innerHTML = '<span><strong>' + state.store.name + '</strong> · ' + cityOf(state.store) + ' · ' + circuitOf(state.store) + '</span>'
           + '<span>' + pointCount + ' puntos filtrados · ' + screenCount + ' pantallas/superficies en este punto</span>';
+      }
+
+      function escHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+        });
+      }
+
+      function selectedCampaignContext() {
+        return {
+          store: state.store,
+          screen: state.screen,
+          city: state.store ? cityOf(state.store) : '',
+          circuit: state.store ? circuitOf(state.store) : '',
+          date: state.date || todayMadrid(),
+        };
+      }
+
+      function isVerticalScreen(screen) {
+        var text = String((screen && (screen.name + ' ' + screen.rawName + ' ' + screen.surface)) || '').toLowerCase();
+        return /vertical|vending|1080×1920|1080x1920|reels|story/.test(text);
+      }
+
+      function defaultCampaignName() {
+        return state.store ? 'Campaña ' + state.store.name : 'Campaña Pixeria';
+      }
+
+      function defaultCampaignMessage() {
+        if (!state.store) return 'Nuevo lanzamiento disponible hoy';
+        return 'Contenido contextual para ' + state.store.name + ' en ' + cityOf(state.store);
+      }
+
+      function resetCampaignPreview(text) {
+        state.campaign = null;
+        var img = $('#campaignPreviewImg');
+        var empty = $('#campaignPreviewEmpty');
+        var buy = $('#campaignBuy');
+        if (img) {
+          img.hidden = true;
+          img.removeAttribute('src');
+        }
+        if (empty) {
+          empty.hidden = false;
+          empty.textContent = text || 'Genera el previo para esta selección.';
+        }
+        if (buy) buy.disabled = true;
+      }
+
+      function updateCampaignContext() {
+        var ctx = selectedCampaignContext();
+        var box = $('#campaignContext');
+        if (box) {
+          box.innerHTML = [
+            ctx.store && ctx.store.name,
+            ctx.city,
+            ctx.screen && ctx.screen.name,
+            ctx.date,
+          ].filter(Boolean).map(function (item) { return '<span>' + escHtml(item) + '</span>'; }).join('');
+        }
+        var name = $('#campaignName');
+        if (name && (!name.dataset.touched || !name.value.trim())) {
+          name.value = defaultCampaignName();
+          name.dataset.autofill = '1';
+        }
+        var msg = $('#campaignMessage');
+        if (msg && (!msg.dataset.touched || !msg.value.trim())) {
+          msg.value = defaultCampaignMessage();
+          msg.dataset.autofill = '1';
+        }
+        var frame = $('#campaignPreviewFrame');
+        if (frame) frame.classList.toggle('is-vertical', isVerticalScreen(ctx.screen));
+      }
+
+      function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+        var words = String(text || '').split(/\s+/).filter(Boolean);
+        var line = '';
+        var lines = [];
+        words.forEach(function (word) {
+          var test = line ? line + ' ' + word : word;
+          if (ctx.measureText(test).width > maxWidth && line) {
+            lines.push(line);
+            line = word;
+          } else {
+            line = test;
+          }
+        });
+        if (line) lines.push(line);
+        lines.slice(0, maxLines).forEach(function (l, idx) {
+          var out = idx === maxLines - 1 && lines.length > maxLines ? l.replace(/\s+\S+$/, '') + '...' : l;
+          ctx.fillText(out, x, y + idx * lineHeight);
+        });
+        return Math.min(lines.length, maxLines) * lineHeight;
+      }
+
+      function generateCampaignCreative() {
+        var ctx = selectedCampaignContext();
+        if (!ctx.store || !ctx.screen) return null;
+        var vertical = isVerticalScreen(ctx.screen);
+        var canvas = document.createElement('canvas');
+        canvas.width = vertical ? 1080 : 1920;
+        canvas.height = vertical ? 1920 : 1080;
+        var c = canvas.getContext('2d');
+        var brand = ($('#campaignBrand') && $('#campaignBrand').value.trim()) || 'Pixeria';
+        var campaign = ($('#campaignName') && $('#campaignName').value.trim()) || defaultCampaignName();
+        var message = ($('#campaignMessage') && $('#campaignMessage').value.trim()) || defaultCampaignMessage();
+        var tone = ($('#campaignTone') && $('#campaignTone').value) || 'premium';
+        var palettes = {
+          premium: ['#071018', '#68dce9', '#f4f0e8'],
+          oferta: ['#190f0b', '#ff6b5c', '#f1c96a'],
+          evento: ['#101022', '#a78bfa', '#68dce9'],
+          informativo: ['#0c1711', '#6bd6a6', '#f4f0e8'],
+        };
+        var pal = palettes[tone] || palettes.premium;
+        var g = c.createLinearGradient(0, 0, canvas.width, canvas.height);
+        g.addColorStop(0, pal[0]);
+        g.addColorStop(0.58, '#0b1117');
+        g.addColorStop(1, pal[1]);
+        c.fillStyle = g;
+        c.fillRect(0, 0, canvas.width, canvas.height);
+        c.save();
+        c.globalAlpha = 0.16;
+        c.strokeStyle = pal[1];
+        c.lineWidth = vertical ? 3 : 4;
+        for (var i = 0; i < 9; i++) {
+          c.beginPath();
+          c.moveTo(canvas.width * (0.54 + i * 0.06), canvas.height * 0.08);
+          c.lineTo(canvas.width * (0.88 + i * 0.06), canvas.height * 0.92);
+          c.stroke();
+        }
+        c.restore();
+        c.fillStyle = 'rgba(244,240,232,0.08)';
+        for (var j = 0; j < 5; j++) c.fillRect(canvas.width * (0.58 + j * 0.07), canvas.height * (0.16 + j * 0.12), canvas.width * 0.18, vertical ? 18 : 22);
+        var pad = vertical ? 92 : 118;
+        c.fillStyle = pal[1];
+        c.fillRect(pad, pad, vertical ? 92 : 120, 10);
+        c.fillStyle = pal[2];
+        c.font = '700 ' + (vertical ? 54 : 68) + 'px Inter, system-ui, sans-serif';
+        c.fillText(brand.toUpperCase(), pad, vertical ? 230 : 260);
+        c.font = '800 ' + (vertical ? 92 : 124) + 'px Inter, system-ui, sans-serif';
+        wrapCanvasText(c, campaign, pad, vertical ? 390 : 430, canvas.width - pad * 2, vertical ? 106 : 138, vertical ? 4 : 3);
+        c.font = '500 ' + (vertical ? 48 : 58) + 'px Inter, system-ui, sans-serif';
+        c.fillStyle = 'rgba(244,240,232,0.88)';
+        wrapCanvasText(c, message, pad, vertical ? 860 : 710, canvas.width - pad * 2, vertical ? 62 : 74, vertical ? 5 : 3);
+        c.fillStyle = 'rgba(11,17,23,0.72)';
+        c.fillRect(pad, canvas.height - (vertical ? 250 : 190), canvas.width - pad * 2, vertical ? 132 : 92);
+        c.fillStyle = pal[1];
+        c.font = '700 ' + (vertical ? 30 : 34) + 'px ui-monospace, SFMono-Regular, Menlo, monospace';
+        c.fillText((ctx.screen.rawName || ctx.screen.name).toUpperCase().slice(0, 42), pad + 34, canvas.height - (vertical ? 168 : 132));
+        c.fillStyle = 'rgba(244,240,232,0.72)';
+        c.font = '500 ' + (vertical ? 28 : 32) + 'px Inter, system-ui, sans-serif';
+        c.fillText((ctx.store.name + ' · ' + ctx.city).slice(0, 58), pad + 34, canvas.height - (vertical ? 114 : 80));
+        var dataUrl = canvas.toDataURL('image/png');
+        state.campaign = {
+          dataUrl: dataUrl,
+          brand: brand,
+          campaign: campaign,
+          message: message,
+          tone: tone,
+          assetType: 'image',
+          prompt: message + ' · ' + ctx.store.name + ' · ' + ctx.screen.name,
+        };
+        var img = $('#campaignPreviewImg');
+        var empty = $('#campaignPreviewEmpty');
+        if (img) {
+          img.src = dataUrl;
+          img.hidden = false;
+        }
+        if (empty) empty.hidden = true;
+        var buy = $('#campaignBuy');
+        if (buy) buy.disabled = false;
+        return state.campaign;
+      }
+
+      function campaignTargetPayload() {
+        var surface = String(state.screen && state.screen.surface || '').toLowerCase();
+        return {
+          placements: surface === 'escaparate' ? ['exterior'] : ['interior'],
+          genders: ['hombre', 'mujer'],
+          ages: ['adulto'],
+          timeSlots: ['manana', 'mediodia', 'tarde'],
+          locationId: state.store && state.store.id,
+          screenId: state.screen && state.screen.id,
+          pointName: state.store && state.store.name,
+          screenName: state.screen && state.screen.name,
+          date: state.date,
+        };
+      }
+
+      async function publishCampaignCreative() {
+        if (!state.campaign) generateCampaignCreative();
+        if (!state.campaign || !state.campaign.dataUrl) return '';
+        var comma = state.campaign.dataUrl.indexOf(',');
+        var btn = $('#campaignBuy');
+        var old = btn && btn.textContent;
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Preparando...';
+        }
+        try {
+          var payload = {
+            type: 'image',
+            motor: 'Pixeria Calendar Studio',
+            prompt: state.campaign.prompt,
+            title: state.campaign.campaign,
+            comment: 'Creatividad creada desde calendario para ' + (state.store && state.store.name || ''),
+            tags: ['pixeria', 'calendario', 'admira', 'xpaceos'],
+            costEst: 0.02,
+            mime: 'image/png',
+            base64: state.campaign.dataUrl.substring(comma + 1),
+            thumbnail: state.campaign.dataUrl,
+          };
+          var r = await fetch(STOCK_PUBLISH_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          var data = await r.json().catch(function () { return {}; });
+          if (r.ok && data.url) return data.url;
+          throw new Error(data.error || r.statusText || 'stock-publish-failed');
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = old || 'Comprar en Admira';
+          }
+        }
+      }
+
+      async function buyCampaignInAdmira() {
+        try {
+          if (!state.campaign) generateCampaignCreative();
+          var assetUrl = await publishCampaignCreative();
+          var draft = {
+            id: 'PX-CAL-' + Date.now(),
+            brand: state.campaign.brand,
+            campaign: state.campaign.campaign,
+            assetUrl: assetUrl,
+            assetType: 'image',
+            prompt: state.campaign.prompt,
+            target: campaignTargetPayload(),
+            locationId: state.store && state.store.id,
+            screenId: state.screen && state.screen.id,
+            pointName: state.store && state.store.name,
+            screenName: state.screen && state.screen.name,
+          };
+          try { localStorage.setItem('pixeria-calendar-draft', JSON.stringify(draft)); } catch (_) {}
+          var url = new URL(ADMIRA_BUY_URL);
+          url.searchParams.set('draft', 'pixeria');
+          url.searchParams.set('campaignId', draft.id);
+          url.searchParams.set('brand', draft.brand);
+          url.searchParams.set('campaign', draft.campaign);
+          url.searchParams.set('assetUrl', draft.assetUrl);
+          url.searchParams.set('assetType', draft.assetType);
+          url.searchParams.set('prompt', draft.prompt);
+          url.searchParams.set('target', JSON.stringify(draft.target));
+          url.searchParams.set('locationId', draft.locationId || '');
+          url.searchParams.set('screenId', draft.screenId || '');
+          url.searchParams.set('pointName', draft.pointName || '');
+          url.searchParams.set('screenName', draft.screenName || '');
+          window.open(url.toString(), '_blank', 'noopener');
+        } catch (err) {
+          alert('No se pudo preparar la creatividad para Admira: ' + err.message);
+        }
+      }
+
+      function bindCampaignCreator() {
+        ['campaignBrand', 'campaignName', 'campaignMessage'].forEach(function (id) {
+          var el = $('#' + id);
+          if (el) el.addEventListener('input', function () {
+            el.dataset.touched = '1';
+            resetCampaignPreview('Genera de nuevo para ver tus cambios.');
+          });
+        });
+        var tone = $('#campaignTone');
+        if (tone) tone.addEventListener('change', function () {
+          resetCampaignPreview('Genera de nuevo para ver este estilo.');
+        });
+        $('#campaignGenerate')?.addEventListener('click', generateCampaignCreative);
+        $('#campaignBuy')?.addEventListener('click', buyCampaignInAdmira);
       }
 
       function init() {
@@ -413,7 +864,11 @@
           $('#dateInp').onchange = function (e) {
             state.date = e.target.value || todayMadrid();
             if (state.cal) state.cal.setContext({ date: state.date });
+            resetCampaignPreview();
+            updateCampaignContext();
           };
+          bindCampaignCreator();
+          updateCampaignContext();
         });
       }
 
