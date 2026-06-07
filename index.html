@@ -14,7 +14,9 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://www.pixeria.com/">
   <link rel="preload" href="assets/hero-pixeria.jpg" as="image">
-  <link rel="stylesheet" href="assets/styles.css?v=20260607-5">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/tokens.css">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
+  <link rel="stylesheet" href="assets/styles.css?v=20260607-6">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -31,6 +33,21 @@
   </script>
 </head>
 <body>
+  <nav class="admira-nav admira-nav-static" aria-label="Admira · Xperience">
+    <a class="admira-nav-brand" href="https://www.admira.app">
+      <span class="admira-nav-brand-name">Admira</span>
+      <span class="admira-nav-brand-tag">Xperience</span>
+    </a>
+    <div class="admira-nav-items">
+      <a class="admira-nav-link admira-nav-link-active" href="https://www.pixeria.com">Pixeria</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.studio">Pixer.IA</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.xpaceos.com">XpaceOS</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live">Live</a>
+      <a class="admira-nav-link admira-nav-link-cta" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Contacto</a>
+    </div>
+  </nav>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
+
   <header class="site-header">
     <a class="brand" href="#top" aria-label="Pixeria inicio">
       <span class="brand-mark">P</span>
@@ -78,6 +95,11 @@
           <a class="button primary" href="#radar">Explorar radar</a>
           <a class="button secondary" href="#metodo">Ver metodo</a>
           <a class="button secondary" href="/crear/">Abrir Creador</a>
+        </div>
+        <div class="topbar hero-terminal-bar" aria-label="Estado Pixeria">
+          <span class="pill">Radar junio 2026</span>
+          <span class="pill">Pixer Feed live</span>
+          <span class="pill">Salida: pantallas + campañas</span>
         </div>
       </div>
       <aside class="hero-panel" aria-label="Indicadores Pixeria">
@@ -349,5 +371,6 @@
       sections.forEach(s => io.observe(s));
     })();
   </script>
+  <script src="assets/matrix-rain.js"></script>
 </body>
 </html>
