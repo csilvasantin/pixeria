@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
   <script defer src="https://csilvasantin.github.io/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=20260607-topbar">
+  <link rel="stylesheet" href="workspace.css?v=20260607-homebar">
 </head>
 <body data-page="stock">
   <!-- Banda superior del grupo Admira · Xperience -->
@@ -33,7 +33,7 @@
   </nav>
   <canvas id="matrix-rain" aria-hidden="true"></canvas>
   <header class="topnav">
-    <div class="brand"><a href="index.html" class="brand-link"><span class="brand-name">Pixeria</span><span class="brand-version">v.2026.06.07-ops</span></a></div>
+    <div class="brand"><a href="index.html" class="brand-link"><span class="brand-mark">P</span><span class="brand-name">Pixeria</span></a></div>
     <nav class="primary-nav">
       <a href="audio.html" data-nav="audio">Audio</a>
       <a href="musica.html" data-nav="musica">Música</a>
@@ -51,7 +51,11 @@
       <a href="/crear-campana/" data-nav="campanas">Campañas</a>
     </nav>
     <div class="topnav-actions">
-      <button type="button" class="btn-back" onclick="history.length>1?history.back():location.href='index.html'">← Volver</button>
+      <div class="language-switcher" aria-label="Seleccion de idioma">
+        <a class="active" href="/" aria-current="true">ESP</a>
+        <a href="/en/">ENG</a>
+      </div>
+      <a class="nav-action" href="mailto:csilvasantin.com?subject=Pixeria">Contacto</a>
     </div>
   </header>
 
