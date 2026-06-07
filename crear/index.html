@@ -206,6 +206,7 @@
       <a href="/#metodo">Metodo</a>
       <a href="/#biblioteca">Biblioteca</a>
       <a href="/crear/" class="active">Crear</a>
+      <a href="/calendario/">Calendario</a>
       <a href="/labs/">Labs</a>
     </nav>
     <div class="header-actions">
@@ -316,6 +317,7 @@
             </div>
 
             <div id="output-actions" style="display:none; margin-top:14px; gap:8px;">
+              <button class="button primary" id="admira-buy-btn" onclick="useInSignage()" style="width:100%; margin-bottom:6px;">Comprar emisión en Admira</button>
               <button class="button primary" onclick="sendToPixerFeed()" style="width:100%; margin-bottom:6px;">Enviar a Pixer Feed</button>
               <button class="button secondary" onclick="publishLastToStock()" style="width:100%;">📌 Publicar en Stock (admira.studio)</button>
             </div>
@@ -899,6 +901,104 @@
 
     const ELEVEN_WORKER_URL = 'https://pixer-eleven.csilvasantin.workers.dev';
     const STOCK_PUBLISH_URL = ELEVEN_WORKER_URL + '/stock/publish';
+    const ADMIRA_BUY_URL = 'https://admira.app/';
+
+    function campaignNameFromPrompt(prompt) {
+      const clean = String(prompt || '').replace(/\s+/g, ' ').trim();
+      if (!clean) return 'Campaña Pixeria';
+      return clean.split(/[.!?\n]/)[0].slice(0, 72) || 'Campaña Pixeria';
+    }
+
+    function defaultCampaignTarget() {
+      return {
+        placements: ['exterior'],
+        genders: ['female'],
+        ages: ['adult-30-50'],
+        timeSlots: ['morning', 'midday', 'afternoon']
+      };
+    }
+
+    function campaignAssetType(meta) {
+      const mime = String(meta && meta.mime || '');
+      if (mime.startsWith('video/')) return 'video';
+      return 'image';
+    }
+
+    async function publishGeneratedAssetForAdmira(meta) {
+      if (!meta || !meta.url) return '';
+      if (!/^data:/i.test(meta.url) && !/^blob:/i.test(meta.url)) return meta.url;
+
+      const comma = meta.url.indexOf(',');
+      if (comma < 0) return meta.url;
+
+      const btn = document.getElementById('admira-buy-btn');
+      const old = btn && btn.textContent;
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Preparando asset...';
+      }
+
+      try {
+        const payload = {
+          type: campaignAssetType(meta),
+          motor: meta.motor || 'Pixeria Studio',
+          prompt: meta.prompt || '',
+          title: 'Pixeria · ' + campaignNameFromPrompt(meta.prompt),
+          comment: 'Asset preparado para comprar emisión en Admira',
+          tags: ['pixeria', 'admira', 'xpaceos'],
+          costEst: 0.02,
+          thumbnail: meta.thumbnail || null,
+          mime: meta.mime || meta.url.substring(5, comma),
+          base64: meta.url.substring(comma + 1)
+        };
+        const r = await fetch(STOCK_PUBLISH_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await r.json().catch(() => ({}));
+        if (r.ok && data.url) return data.url;
+      } catch (err) {
+        console.warn('[Pixeria] stock publish for Admira failed', err);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = old || 'Comprar emisión en Admira';
+        }
+      }
+      return meta.url;
+    }
+
+    async function useInSignage() {
+      if (!lastGeneratedAsset) {
+        alert('Genera o elige un asset primero.');
+        return;
+      }
+      const assetUrl = await publishGeneratedAssetForAdmira(lastGeneratedAsset);
+      const draft = {
+        id: 'PX-' + Date.now(),
+        brand: 'Pixeria',
+        campaign: campaignNameFromPrompt(lastGeneratedAsset.prompt),
+        assetUrl,
+        assetType: campaignAssetType(lastGeneratedAsset),
+        prompt: lastGeneratedAsset.prompt || '',
+        target: defaultCampaignTarget()
+      };
+      try {
+        localStorage.setItem('pixeria-admira-draft', JSON.stringify(draft));
+      } catch (_) {}
+
+      const url = new URL(ADMIRA_BUY_URL);
+      url.searchParams.set('draft', 'pixeria');
+      url.searchParams.set('campaignId', draft.id);
+      url.searchParams.set('brand', draft.brand);
+      url.searchParams.set('campaign', draft.campaign);
+      url.searchParams.set('assetUrl', draft.assetUrl);
+      url.searchParams.set('assetType', draft.assetType);
+      url.searchParams.set('prompt', draft.prompt);
+      url.searchParams.set('target', JSON.stringify(draft.target));
+      window.open(url.toString(), '_blank', 'noopener');
+    }
 
     async function publishToStock(meta) {
       const btns = document.querySelectorAll('#output-actions button');

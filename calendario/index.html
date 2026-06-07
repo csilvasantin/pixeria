@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calendario de emisión · Pixeria</title>
+  <meta name="description" content="Parrilla diaria del circuito de pantallas: qué se emite hoy y qué huecos quedan disponibles para campañas creadas en Pixeria.">
+  <meta name="theme-color" content="#0b1117">
+  <link rel="canonical" href="https://www.pixeria.com/calendario/">
+  <link rel="stylesheet" href="../assets/styles.css?v=20260605-2">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/emission-calendar.css">
+  <style>
+    .calendar-hero {
+      min-height: 54vh;
+      display: grid;
+      align-items: end;
+      padding: 132px clamp(20px, 6vw, 76px) 54px;
+      background:
+        linear-gradient(90deg, rgba(8, 13, 19, 0.96), rgba(8, 13, 19, 0.68) 46%, rgba(8, 13, 19, 0.2)),
+        url("../assets/hero-pixeria.jpg") center/cover;
+      border-bottom: 1px solid var(--line);
+    }
+    .calendar-hero h1 {
+      max-width: 980px;
+      font-size: clamp(54px, 9vw, 128px);
+    }
+    .calendar-hero p {
+      max-width: 720px;
+      color: rgba(244, 240, 232, 0.84);
+      font-size: clamp(18px, 2.4vw, 28px);
+      line-height: 1.2;
+    }
+    .calendar-shell {
+      padding: clamp(42px, 7vw, 86px) clamp(20px, 5vw, 64px);
+    }
+    .calendar-controls {
+      max-width: var(--max);
+      margin: 0 auto 18px;
+      display: grid;
+      grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+    .calendar-controls label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+      text-transform: uppercase;
+    }
+    .calendar-controls select,
+    .calendar-controls input {
+      min-height: 46px;
+      border: 1px solid var(--line);
+      background: rgba(244, 240, 232, 0.06);
+      color: var(--ink);
+      padding: 0 12px;
+      border-radius: 8px;
+      font: inherit;
+      text-transform: none;
+    }
+    .calendar-panel {
+      max-width: var(--max);
+      margin: 0 auto;
+      border: 1px solid var(--line);
+      background: #02080d;
+      border-radius: 8px;
+      padding: clamp(14px, 3vw, 28px);
+      min-height: 360px;
+    }
+    .calendar-cta {
+      max-width: var(--max);
+      margin: 24px auto 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      padding-top: 22px;
+    }
+    @media (max-width: 820px) {
+      .calendar-controls,
+      .calendar-cta {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+      .calendar-cta .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Pixeria inicio">
+      <span class="brand-mark">P</span>
+      <span>Pixeria</span>
+    </a>
+    <nav class="nav" aria-label="Navegacion principal">
+      <a href="/#radar">Radar</a>
+      <a href="/#formatos">Formatos</a>
+      <a href="/#programas">Programas</a>
+      <a href="/#metodo">Metodo</a>
+      <a href="/#biblioteca">Biblioteca</a>
+      <a href="/crear/">Crear</a>
+      <a href="/calendario/" class="active">Calendario</a>
+      <a href="/labs/">Labs</a>
+    </nav>
+    <div class="header-actions">
+      <a class="nav-action" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Hablar</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="calendar-hero">
+      <div>
+        <p class="eyebrow">Calendario de emisión</p>
+        <h1>Qué se emite hoy</h1>
+        <p>Consulta la parrilla del día por pantalla y reserva los huecos disponibles desde Admira.</p>
+      </div>
+    </section>
+
+    <section class="calendar-shell">
+      <div class="calendar-controls">
+        <label>
+          Circuito
+          <select id="circuitSel"></select>
+        </label>
+        <label>
+          Pantalla
+          <select id="screenSel"></select>
+        </label>
+        <label>
+          Dia
+          <input id="dateInp" type="date">
+        </label>
+      </div>
+      <div class="calendar-panel">
+        <div id="cal"></div>
+      </div>
+      <div class="calendar-cta">
+        <p>Las campañas creadas en Pixeria se compran en Admira y se emiten en XpaceOS.</p>
+        <a class="button primary" href="https://admira.app/">Reservar en Admira</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Pixeria</span>
+    <p>Calendario compartido con Admira y XpaceOS.</p>
+    <a href="/crear/">Crear campaña</a>
+  </footer>
+
+  <script src="https://www.admira.app/locations.js"></script>
+  <script src="https://csilvasantin.github.io/admira-design/emission-calendar.js"></script>
+  <script>
+    (function () {
+      var WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
+      var $ = function (s) { return document.querySelector(s); };
+      var state = { stores: [], store: null, screens: [], screen: null, date: '', cal: null };
+
+      function slug(s) {
+        return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      }
+
+      function todayMadrid() {
+        var p = {};
+        new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date()).forEach(function (x) { p[x.type] = x.value; });
+        return p.year + '-' + p.month + '-' + p.day;
+      }
+
+      function isScreen(sf) {
+        return ['pantalla', 'escaparate', 'vending', 'mostrador'].indexOf(sf.surface) >= 0;
+      }
+
+      function screensOf(store) {
+        return store.surfaces.filter(isScreen).map(function (sf) {
+          return { id: slug(store.id) + '-' + slug(sf.name), name: sf.name, pixerScreens: Array.isArray(sf.pixerScreens) ? sf.pixerScreens : [] };
+        });
+      }
+
+      async function loadStores() {
+        var list = [];
+        try {
+          if (window.loadOmnipLocationsAsync) {
+            var r = await window.loadOmnipLocationsAsync();
+            list = Array.isArray(r) ? r : (r && r.locations) || [];
+          }
+        } catch (e) {}
+        if (!list.length && window.loadOmnipLocations) {
+          try { list = window.loadOmnipLocations(); } catch (e) {}
+        }
+        if (!list.length) list = window.OMNIP_LOCATIONS_DEFAULT || [];
+        state.stores = list.filter(function (s) { return Array.isArray(s.surfaces) && s.surfaces.some(isScreen); });
+        var sel = $('#circuitSel');
+        sel.innerHTML = '';
+        state.stores.forEach(function (s) {
+          var o = document.createElement('option');
+          o.value = s.id;
+          o.textContent = s.name;
+          sel.appendChild(o);
+        });
+      }
+
+      function selectStore(id) {
+        state.store = state.stores.find(function (s) { return s.id === id; }) || state.stores[0];
+        state.screens = state.store ? screensOf(state.store) : [];
+        var sel = $('#screenSel');
+        sel.innerHTML = '';
+        state.screens.forEach(function (sc) {
+          var o = document.createElement('option');
+          o.value = sc.id;
+          o.textContent = sc.name;
+          sel.appendChild(o);
+        });
+        selectScreen(state.screens[0] && state.screens[0].id);
+      }
+
+      function selectScreen(id) {
+        state.screen = state.screens.find(function (s) { return s.id === id; }) || state.screens[0];
+        if (!state.screen) {
+          $('#cal').innerHTML = '<div style="color:#75aab9;text-align:center;padding:40px">Este circuito no tiene pantallas.</div>';
+          return;
+        }
+        var opts = { workerBase: WORKER, role: 'public', screen: state.screen.id, date: state.date, screenName: state.screen.name };
+        if (!state.cal) state.cal = window.EmissionCalendar.mount($('#cal'), opts);
+        else state.cal.setContext({ screen: state.screen.id, date: state.date, screenName: state.screen.name });
+      }
+
+      function init() {
+        if (!window.EmissionCalendar) {
+          setTimeout(init, 150);
+          return;
+        }
+        state.date = todayMadrid();
+        $('#dateInp').value = state.date;
+        loadStores().then(function () {
+          var xt = state.stores.find(function (s) { return s.id === 'xtanco'; }) || state.stores[0];
+          $('#circuitSel').value = xt && xt.id;
+          selectStore(xt && xt.id);
+          $('#circuitSel').onchange = function (e) { selectStore(e.target.value); };
+          $('#screenSel').onchange = function (e) { selectScreen(e.target.value); };
+          $('#dateInp').onchange = function (e) {
+            state.date = e.target.value || todayMadrid();
+            if (state.cal) state.cal.setContext({ date: state.date });
+          };
+        });
+      }
+
+      if (document.readyState !== 'loading') init();
+      else document.addEventListener('DOMContentLoaded', init);
+    })();
+  </script>
+</body>
+</html>
