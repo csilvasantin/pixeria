@@ -72,6 +72,10 @@ body::after {
 
 a { color: inherit; }
 
+.admira-nav {
+  display: none !important;
+}
+
 ::selection { background: var(--matrix); color: #020602; text-shadow: none; }
 
 /* Scrollbar */

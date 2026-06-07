@@ -961,8 +961,7 @@ body::after {
 }
 
 .admira-nav {
-  position: relative;
-  z-index: 80;
+  display: none !important;
 }
 
 .site-header {
@@ -1013,9 +1012,10 @@ body::after {
 }
 
 .nav a {
-  padding: 8px 10px;
+  padding: 5px 5px;
   border: 1px solid transparent;
   color: var(--muted);
+  font-size: 10px;
 }
 
 .nav a:hover,
@@ -1084,8 +1084,8 @@ body::after {
 }
 
 .hero {
-  min-height: calc(100vh - 44px);
-  padding: clamp(44px, 6vw, 76px) clamp(20px, 5vw, 64px) 56px;
+  min-height: auto;
+  padding: clamp(34px, 4.5vw, 58px) clamp(20px, 5vw, 64px) clamp(40px, 5vw, 70px);
   align-items: start;
 }
 
@@ -1228,6 +1228,11 @@ h1::after {
 }
 
 .hero-panel {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  width: min(650px, 100%);
+  margin-top: 30px;
   border-color: var(--line);
   background: rgba(2, 6, 2, .84);
   backdrop-filter: blur(10px);
