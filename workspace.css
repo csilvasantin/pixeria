@@ -1318,9 +1318,42 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
   background: #000;
 }
 .stock-card-media img,
-.stock-card-media video,
 .stock-card-media .stock-cover {
   width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.stock-card-media video {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%; object-fit: contain; display: block;
+  background: #000;
+}
+.stock-video-preview {
+  pointer-events: none;
+}
+.stock-card[data-type="video"] .stock-card-media,
+.stock-card[data-type="animation"] .stock-card-media {
+  aspect-ratio: 16 / 9;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(0, 255, 65, .10), transparent 58%),
+    #000;
+}
+.stock-card[data-type="video"] .stock-card-media::after,
+.stock-card[data-type="animation"] .stock-card-media::after {
+  content: "▶";
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: #001400;
+  background: var(--matrix);
+  border: 1px solid rgba(0, 255, 65, .78);
+  box-shadow: 0 0 18px rgba(0, 255, 65, .45);
+  font-size: 15px;
+  line-height: 1;
+  opacity: .94;
 }
 .stock-card-media audio {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -1688,11 +1721,31 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
 }
 .stock-grid.view-list .stock-card-media {
   flex: 0 0 200px; width: 200px; aspect-ratio: 16/10;
+  align-self: flex-start;
+}
+.stock-grid.view-list .stock-card[data-type="video"] .stock-card-media,
+.stock-grid.view-list .stock-card[data-type="animation"] .stock-card-media {
+  flex-basis: 220px;
+  width: 220px;
+  aspect-ratio: 16 / 9;
 }
 .stock-grid.view-list .stock-card-body { flex: 1 1 auto; padding: 8px 14px; }
 .stock-grid.view-list .stock-prompt { max-height: 3em; }
 @media (max-width: 560px) {
   .stock-grid.view-list .stock-card-media { flex-basis: 130px; width: 130px; }
+  .stock-grid.view-list .stock-card[data-type="video"] .stock-card-media,
+  .stock-grid.view-list .stock-card[data-type="animation"] .stock-card-media {
+    flex-basis: 138px;
+    width: 138px;
+  }
+  .stock-card[data-type="video"] .stock-card-media::after,
+  .stock-card[data-type="animation"] .stock-card-media::after {
+    width: 26px;
+    height: 26px;
+    left: 7px;
+    bottom: 6px;
+    font-size: 12px;
+  }
 }
 
 /* ── Lightbox: maximizar un asset ── */
