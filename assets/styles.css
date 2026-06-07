@@ -282,9 +282,13 @@ h1 {
 
 #radar,
 #formatos,
+#formats,
 #programas,
+#programs,
 #metodo,
-#biblioteca {
+#method,
+#biblioteca,
+#library {
   scroll-margin-top: 88px;
 }
 
