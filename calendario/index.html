@@ -501,10 +501,21 @@
         return $('#pointSel').value;
       }
 
-      async function loadStores() {
-        var list = [];
+      async function loadCachedLocations() {
         try {
-          if (window.loadOmnipLocationsAsync) {
+          var r = await fetch('/calendario/locations-cache.json', { cache: 'no-store' });
+          if (!r.ok) return [];
+          var data = await r.json();
+          return Array.isArray(data) ? data : (data && data.locations) || [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      async function loadStores() {
+        var list = await loadCachedLocations();
+        try {
+          if (!list.length && window.loadOmnipLocationsAsync) {
             var r = await window.loadOmnipLocationsAsync();
             list = Array.isArray(r) ? r : (r && r.locations) || [];
           }
