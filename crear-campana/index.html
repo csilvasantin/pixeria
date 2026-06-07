@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crear campaña · Pixeria</title>
+  <meta name="description" content="Crea una campaña para un punto y pantalla concretos, previsualiza la creatividad y compra la emisión en Admira.">
+  <meta name="theme-color" content="#0b1117">
+  <link rel="canonical" href="https://www.pixeria.com/crear-campana/">
+  <link rel="stylesheet" href="../assets/styles.css?v=20260605-2">
+  <style>
+    .campaign-hero {
+      min-height: 48vh;
+      display: grid;
+      align-items: end;
+      padding: 132px clamp(20px, 6vw, 76px) 54px;
+      background:
+        linear-gradient(90deg, rgba(8, 13, 19, 0.96), rgba(8, 13, 19, 0.68) 48%, rgba(8, 13, 19, 0.2)),
+        url("../assets/hero-pixeria.jpg") center/cover;
+      border-bottom: 1px solid var(--line);
+    }
+    .campaign-hero h1 {
+      max-width: 980px;
+      font-size: clamp(50px, 8vw, 118px);
+    }
+    .campaign-hero p {
+      max-width: 760px;
+      color: rgba(244, 240, 232, 0.84);
+      font-size: clamp(18px, 2.3vw, 27px);
+      line-height: 1.2;
+    }
+    .campaign-shell {
+      padding: clamp(42px, 7vw, 86px) clamp(20px, 5vw, 64px);
+    }
+    .campaign-controls,
+    .campaign-workspace,
+    .campaign-selection {
+      width: min(100%, 1440px);
+      margin-inline: auto;
+      max-width: none;
+    }
+    .campaign-controls {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 14px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+    .campaign-controls label,
+    .campaign-form label {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+      text-transform: uppercase;
+    }
+    .campaign-field-circuit,
+    .campaign-field-locality,
+    .campaign-field-date {
+      grid-column: span 2;
+    }
+    .campaign-field-point,
+    .campaign-field-screen {
+      grid-column: span 3;
+    }
+    .campaign-controls select,
+    .campaign-controls input,
+    .campaign-form input,
+    .campaign-form textarea,
+    .campaign-form select {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      background: rgba(244, 240, 232, 0.06);
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 12px;
+      font: inherit;
+    }
+    .campaign-controls select,
+    .campaign-controls input,
+    .campaign-form input,
+    .campaign-form select {
+      min-height: 46px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .campaign-selection {
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      border: 1px solid var(--line);
+      background: rgba(244, 240, 232, 0.045);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .campaign-selection strong {
+      color: var(--ink);
+    }
+    .campaign-workspace {
+      border: 1px solid var(--line);
+      background: rgba(244, 240, 232, 0.045);
+      border-radius: 8px;
+      padding: clamp(14px, 2vw, 22px);
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    .campaign-form,
+    .campaign-preview {
+      min-width: 0;
+    }
+    .campaign-form {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .campaign-form h2,
+    .campaign-preview h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    .campaign-form textarea {
+      min-height: 132px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+    .campaign-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .campaign-actions .button {
+      min-width: min(100%, 180px);
+      cursor: pointer;
+    }
+    .campaign-actions .button:disabled {
+      opacity: 0.5;
+      cursor: default;
+      transform: none;
+    }
+    .campaign-preview {
+      display: grid;
+      gap: 12px;
+    }
+    .campaign-context {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .campaign-context span {
+      max-width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      background: rgba(11, 17, 23, 0.42);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .campaign-preview-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      min-height: 220px;
+      border: 1px solid rgba(104, 220, 233, 0.3);
+      background: #02080d;
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .campaign-preview-frame.is-vertical {
+      width: min(100%, 360px);
+      aspect-ratio: 9 / 16;
+      min-height: 420px;
+      justify-self: center;
+    }
+    .campaign-preview-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 5px;
+      background: #071018;
+    }
+    .campaign-preview-empty {
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.45;
+      padding: 20px;
+    }
+    @media (max-width: 1180px) {
+      .campaign-controls {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+      .campaign-field-circuit,
+      .campaign-field-locality,
+      .campaign-field-date {
+        grid-column: span 2;
+      }
+      .campaign-field-point,
+      .campaign-field-screen {
+        grid-column: span 3;
+      }
+    }
+    @media (max-width: 820px) {
+      .campaign-controls,
+      .campaign-workspace {
+        grid-template-columns: 1fr;
+      }
+      .campaign-controls label {
+        grid-column: auto;
+      }
+      .campaign-actions .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Pixeria inicio">
+      <span class="brand-mark">P</span>
+      <span>Pixeria</span>
+    </a>
+    <nav class="nav" aria-label="Navegacion principal">
+      <a href="/#radar">Radar</a>
+      <a href="/#formatos">Formatos</a>
+      <a href="/#programas">Programas</a>
+      <a href="/#metodo">Metodo</a>
+      <a href="/#biblioteca">Biblioteca</a>
+      <a href="/crear/">Crear</a>
+      <a href="/crear-campana/" class="active">Crear campaña</a>
+      <a href="/calendario/">Calendario</a>
+      <a href="/labs/">Labs</a>
+    </nav>
+    <div class="header-actions">
+      <a class="nav-action" href="mailto:csilvasantin@gmail.com?subject=Pixeria">Hablar</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="campaign-hero">
+      <div>
+        <p class="eyebrow">Crear campaña</p>
+        <h1>Contenido para una pantalla concreta</h1>
+        <p>Elige circuito, localidad, punto y pantalla; prepara el mensaje, revisa el previo y compra la emisión en Admira.</p>
+      </div>
+    </section>
+
+    <section class="campaign-shell">
+      <div class="campaign-controls">
+        <label class="campaign-field-circuit">
+          Circuito
+          <select id="circuitSel"></select>
+        </label>
+        <label class="campaign-field-locality">
+          Localidad
+          <select id="localitySel"></select>
+        </label>
+        <label class="campaign-field-point">
+          Punto
+          <select id="pointSel"></select>
+        </label>
+        <label class="campaign-field-screen">
+          Pantalla
+          <select id="screenSel"></select>
+        </label>
+        <label class="campaign-field-date">
+          Dia
+          <input id="dateInp" type="date">
+        </label>
+      </div>
+      <div class="campaign-selection" id="campaignSelectionSummary">
+        Selecciona el punto de emisión para preparar el contenido.
+      </div>
+
+      <section class="campaign-workspace" id="campaignCreator">
+        <div class="campaign-form">
+          <h2>Contenido de campaña</h2>
+          <label>
+            Marca
+            <input id="campaignBrand" type="text" value="Pixeria">
+          </label>
+          <label>
+            Campaña
+            <input id="campaignName" type="text">
+          </label>
+          <label>
+            Estilo
+            <select id="campaignTone">
+              <option value="premium">Premium</option>
+              <option value="oferta">Oferta</option>
+              <option value="evento">Evento</option>
+              <option value="informativo">Informativo</option>
+            </select>
+          </label>
+          <label>
+            Mensaje
+            <textarea id="campaignMessage" placeholder="Nuevo lanzamiento disponible hoy"></textarea>
+          </label>
+          <div class="campaign-actions">
+            <button class="button primary" id="campaignGenerate" type="button">Generar previo</button>
+            <button class="button secondary" id="campaignBuy" type="button" disabled>Comprar en Admira</button>
+          </div>
+        </div>
+        <div class="campaign-preview">
+          <h2>Previo en pantalla</h2>
+          <div class="campaign-context" id="campaignContext"></div>
+          <div class="campaign-preview-frame" id="campaignPreviewFrame">
+            <img id="campaignPreviewImg" alt="Previo de creatividad para la pantalla seleccionada" hidden>
+            <div class="campaign-preview-empty" id="campaignPreviewEmpty">Selecciona un punto y genera el previo.</div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Pixeria</span>
+    <p>Las campañas creadas en Pixeria se compran en Admira y se emiten en XpaceOS.</p>
+    <a href="/calendario/">Ver calendario</a>
+  </footer>
+
+  <script src="https://www.admira.app/locations.js"></script>
+  <script src="../assets/campaign-studio.js?v=20260607-1"></script>
+</body>
+</html>
