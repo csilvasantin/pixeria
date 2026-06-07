@@ -1150,14 +1150,31 @@
       const ph = parseInt(document.getElementById('furni-ph').value, 10) || 46;
       const fpw = parseInt(document.getElementById('furni-fpw').value, 10) || 1;
       const fpd = parseInt(document.getElementById('furni-fpd').value, 10) || 1;
-      const payload = { type: 'furni', motor: 'Pixeria Studio', title: title, tags: ['mobiliario', 'pixeria'], prompt: (document.getElementById('furni-prompt').value || '').slice(0, 300), fp: [fpw, fpd], ph: ph, comment: 'Mobiliario creado en Pixeria' };
+      const payload = {
+        type: 'image',
+        stockType: 'furni',
+        kind: 'furni',
+        category: 'furni',
+        motor: 'Pixeria Studio',
+        title: title,
+        tags: ['furni', 'mobiliario', 'pixeria'],
+        prompt: (document.getElementById('furni-prompt').value || '').slice(0, 300),
+        fp: [fpw, fpd],
+        ph: ph,
+        comment: 'Mobiliario creado en Pixeria · tipo:furni'
+      };
       if (furniAsset.base64) { payload.base64 = furniAsset.base64; payload.mime = furniAsset.mime; }
       else if (furniAsset.sourceUrl) { payload.sourceUrl = furniAsset.sourceUrl; payload.mime = furniAsset.mime || null; }
       const btn = document.getElementById('furni-publish-btn'); btn.disabled = true; const old = btn.textContent; btn.textContent = '⏳ publicando…';
       furniSetStatus('Publicando en Stock…');
       try {
-        const r = await fetch(STOCK_PUBLISH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        const data = await r.json().catch(() => ({}));
+        let r = await fetch(STOCK_PUBLISH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        let data = await r.json().catch(() => ({}));
+        if (!r.ok && data.error === 'bad-type') {
+          const fallback = { ...payload, type: 'image', tags: Array.from(new Set([...(payload.tags || []), 'furni', 'mobiliario'])) };
+          r = await fetch(STOCK_PUBLISH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fallback) });
+          data = await r.json().catch(() => ({}));
+        }
         if (r.ok && (data.ok || data.id)) { furniSetStatus('✅ Publicado · id ' + data.id + ' · ya en el gemelo con /importar catalogo'); }
         else { furniSetStatus('Error: ' + (data.error || r.statusText)); alert('Error al publicar: ' + (data.error || r.statusText)); }
       } catch (e) { furniSetStatus('Fallo de red: ' + e.message); }

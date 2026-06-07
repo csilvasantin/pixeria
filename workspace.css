@@ -1354,6 +1354,7 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
 .stock-type.audio { color: var(--audio); }
 .stock-type.music { color: var(--music); }
 .stock-type.image { color: var(--image); }
+.stock-type.furni { color: var(--matrix); }
 .stock-type.video { color: var(--video); }
 .stock-type.animation { color: #b78cff; }
 .stock-motor {

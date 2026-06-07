@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
   <script defer src="https://csilvasantin.github.io/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="../workspace.css?v=20260607-homebar">
+  <link rel="stylesheet" href="../workspace.css?v=20260607-furni-stock">
 </head>
 <body data-page="stock">
   <!-- Banda superior del grupo Admira · Xperience -->
@@ -214,7 +214,7 @@
     const lightboxMeta = document.getElementById('stockLightboxMeta');
     const STOCK_BASE = 'https://pixer-eleven.csilvasantin.workers.dev';
     const STOCK_LIST_URL = STOCK_BASE + '/stock/list';
-    const TYPE_ORDER = { audio: 0, music: 1, image: 2, video: 3, animation: 4 };
+    const TYPE_ORDER = { audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
     let allItems = [];
     let filters = { type: '', motor: '', q: '', tag: '', dateQuick: '', dateFrom: '', dateTo: '' };
     let sortMode = 'date-desc';
@@ -227,8 +227,21 @@
       try { return new Date(iso).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }); }
       catch { return iso; }
     }
+    function isFurni(it) {
+      const tags = Array.isArray(it.tags) ? it.tags.map(t => String(t).toLowerCase()) : [];
+      return it.type === 'furni'
+        || it.stockType === 'furni'
+        || it.kind === 'furni'
+        || it.category === 'furni'
+        || tags.includes('furni')
+        || tags.includes('mobiliario')
+        || /tipo:furni|mobiliario creado/i.test(String(it.comment || ''));
+    }
+    function displayType(it) {
+      return isFurni(it) ? 'furni' : it.type;
+    }
     function renderPreview(it) {
-      if (it.type === 'furni') {
+      if (isFurni(it)) {
         // Mobiliario del gemelo: sprite pixelado → render nítido.
         return `<img src="${it.url}" alt="" loading="lazy" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
       }
@@ -310,6 +323,7 @@
     function renderCard(it) {
       const idAttr = String(it.id || '').replace(/[^A-Za-z0-9-]/g, '');
       const assetUrl = escAttr(it.url || '');
+      const typeLabel = displayType(it);
       const titleRaw = (it.title || '').trim();
       const titleInline = titleRaw
         ? `<span class="stock-title-inline" title="${escAttr(titleRaw)}">${titleRaw.replace(/</g,'&lt;').slice(0, 90)}${titleRaw.length > 90 ? '…' : ''}</span>`
@@ -323,13 +337,13 @@
         ? `<p class="stock-comment" title="${escAttr(commentRaw)}">💬 ${commentSafe.slice(0, 200)}${commentRaw.length > 200 ? '…' : ''}</p>`
         : '';
       const tagsBlock = renderTagsHtml(it.tags);
-      return `<article class="stock-card" data-type="${it.type}" data-motor="${it.motor}" data-id="${idAttr}" tabindex="0" role="button" aria-label="Maximizar ${it.type}">
+      return `<article class="stock-card" data-type="${typeLabel}" data-motor="${it.motor}" data-id="${idAttr}" tabindex="0" role="button" aria-label="Maximizar ${typeLabel}">
         <div class="stock-card-media">
           ${renderPreview(it)}
         </div>
         <div class="stock-card-body">
           <header>
-            <span class="stock-type ${it.type}">${it.type}</span>
+            <span class="stock-type ${typeLabel}">${typeLabel}</span>
             <div class="stock-card-actions">
               <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Abrir en AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
               <button type="button" class="stock-card-btn" data-act="feed" title="Enviar al Pixer Feed (pantallas / gemelo)"><span aria-hidden="true">📺</span></button>
@@ -355,8 +369,8 @@
         'date-asc':  (a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''),
         'name-asc':  (a, b) => name(a).localeCompare(name(b), 'es', { sensitivity: 'base' }) || recent(a, b),
         'name-desc': (a, b) => name(b).localeCompare(name(a), 'es', { sensitivity: 'base' }) || recent(a, b),
-        'type-asc':  (a, b) => ((TYPE_ORDER[a.type] ?? 99) - (TYPE_ORDER[b.type] ?? 99)) || recent(a, b),
-        'type-desc': (a, b) => ((TYPE_ORDER[b.type] ?? 99) - (TYPE_ORDER[a.type] ?? 99)) || recent(a, b),
+        'type-asc':  (a, b) => ((TYPE_ORDER[displayType(a)] ?? 99) - (TYPE_ORDER[displayType(b)] ?? 99)) || recent(a, b),
+        'type-desc': (a, b) => ((TYPE_ORDER[displayType(b)] ?? 99) - (TYPE_ORDER[displayType(a)] ?? 99)) || recent(a, b),
         'motor-asc': (a, b) => String(a.motor || '').localeCompare(String(b.motor || ''), 'es', { sensitivity: 'base' }) || recent(a, b),
         'motor-desc':(a, b) => String(b.motor || '').localeCompare(String(a.motor || ''), 'es', { sensitivity: 'base' }) || recent(a, b),
       };
@@ -389,8 +403,10 @@
       // como video con motor=ainimation antes de existir el tipo real.
       const isAnim = it.type === 'animation' || String(it.motor || '').toLowerCase() === 'ainimation';
       if (t === 'animation') return isAnim;
+      if (t === 'furni') return isFurni(it);
       if (t === 'video') return it.type === 'video' && !isAnim;
-      return it.type === t;
+      if (t === 'image') return it.type === 'image' && !isFurni(it);
+      return displayType(it) === t;
     }
     function applyFilters(resetPage) {
       const items = allItems.filter(it => {
@@ -449,7 +465,7 @@
 
     function openLightbox(it) {
       let media = '';
-      if (it.type === 'furni') {
+      if (isFurni(it)) {
         media = `<img src="${it.url}" alt="" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
       } else if (it.type === 'image') {
         media = `<img src="${it.thumbnail || it.url}" alt="">`;
@@ -471,8 +487,9 @@
         ? `<p class="stock-comment">💬 ${commentSafe}</p>`
         : '';
       const tagsEditor = renderTagsEditorHtml(it.id, it.tags);
+      const typeLabel = displayType(it);
       lightboxMeta.innerHTML = `
-        <div><span class="stock-type ${it.type}">${it.type}</span> <span class="stock-motor">${it.motor || ''}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span></div>
+        <div><span class="stock-type ${typeLabel}">${typeLabel}</span> <span class="stock-motor">${it.motor || ''}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span></div>
         ${titleBlock}
         ${tagsEditor}
         <p class="stock-prompt">${renderPromptHtml(it.prompt)}</p>
