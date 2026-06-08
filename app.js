@@ -115,6 +115,9 @@
       style: 'Matrix retail, neón verde, producto hero, texto alto contraste',
       segment: 'neutral',
       confidence: '0.64',
+      // Nuevo modelo Target (creación con Target completo)
+      mode: 'batch', // 'batch' | 'live'
+      targets: [],   // array de {id, gender, ageBand, persona, label, headline?, offer?, visual?, tone?}
     },
   };
 
@@ -1566,8 +1569,23 @@
   const AUDIENCE_LABELS = {
     male: 'Segmento hombre',
     female: 'Segmento mujer',
-    neutral: 'Segmento neutral',
+    neutral: 'Segmento neutral / todos',
+    todos: 'Todos los públicos',
   };
+
+  const AGE_BANDS = ['18-24', '25-34', '35-44', '45-54', '55+', 'todos'];
+  const GENDERS = ['hombre', 'mujer', 'todos'];
+  const PERSONA_TAGS = ['tech', 'urbano', 'fitness', 'profesional', 'familia', 'eco', 'luxury', 'joven', 'padres', 'creativo'];
+
+  const TARGET_PRESETS = [
+    { gender: 'hombre', ageBand: '25-34', persona: 'tech-urbano', label: 'Hombres 25-34 Tech' },
+    { gender: 'mujer', ageBand: '25-34', persona: 'profesional', label: 'Mujeres 25-34 Profesional' },
+    { gender: 'hombre', ageBand: '18-24', persona: 'urbano', label: 'Hombres 18-24 Urbano' },
+    { gender: 'mujer', ageBand: '35-44', persona: 'familia', label: 'Mujeres 35-44 Familia' },
+    { gender: 'todos', ageBand: '18-24', persona: 'joven', label: 'Jóvenes 18-24 Unisex' },
+    { gender: 'todos', ageBand: 'todos', persona: '', label: 'Público general' },
+  ];
+
   let adBaseImage = null;
 
   function normalizeAudienceSegment(value) {
@@ -1585,34 +1603,98 @@
     return { store, ad };
   }
 
-  function segmentedOffer(ad) {
-    if (ad.segment === 'male') return ad.offerMale || DEFAULTS.publicidad.offerMale;
-    if (ad.segment === 'female') return ad.offerFemale || DEFAULTS.publicidad.offerFemale;
+  // === NUEVO: Soporte completo para Targets (género + edad + persona) ===
+  function makeTarget(partial = {}) {
+    const id = partial.id || ('t' + Date.now().toString(36).slice(-6));
+    return {
+      id,
+      gender: partial.gender || 'todos',
+      ageBand: partial.ageBand || 'todos',
+      persona: partial.persona || '',
+      label: partial.label || (partial.gender && partial.ageBand ? `${partial.gender} ${partial.ageBand}` : 'Target'),
+      headline: partial.headline || '',
+      offer: partial.offer || '',
+      visual: partial.visual || '',
+      tone: partial.tone || '',
+    };
+  }
+
+  function getTargetLabel(t) {
+    if (t.label) return t.label;
+    const g = t.gender === 'todos' ? '' : (t.gender || '');
+    const a = t.ageBand === 'todos' ? '' : (t.ageBand || '');
+    const p = t.persona ? ` · ${t.persona}` : '';
+    return [g, a].filter(Boolean).join(' ') + p || 'Target';
+  }
+
+  function getTargetedOffer(ad, t) {
+    if (t && t.offer) return t.offer;
+    if (t && t.gender === 'hombre') return ad.offerMale || DEFAULTS.publicidad.offerMale;
+    if (t && t.gender === 'mujer') return ad.offerFemale || DEFAULTS.publicidad.offerFemale;
     return ad.offerNeutral || DEFAULTS.publicidad.offerNeutral;
   }
 
-  function segmentedHeadline(ad) {
+  function getTargetedHeadline(ad, t) {
     const product = (ad.product || DEFAULTS.publicidad.product).replace(/\s+/g, ' ').trim();
-    if (ad.segment === 'male') return `${product}: potencia tu siguiente movimiento`;
-    if (ad.segment === 'female') return `${product}: diseñado para moverte a tu manera`;
+    if (t && t.headline) return t.headline;
+    const g = t ? t.gender : ad.segment;
+    if (g === 'hombre') return `${product}: potencia tu siguiente movimiento`;
+    if (g === 'mujer') return `${product}: diseñado para moverte a tu manera`;
     return `${product}: entra en la experiencia`;
   }
 
+  function getTargetTheme(t) {
+    const g = t ? t.gender : 'neutral';
+    const age = t ? t.ageBand : 'todos';
+    if (g === 'hombre') return { a: '#00ff41', b: '#50c8ff', c: '#07140d', label: 'HOMBRE' + (age !== 'todos' ? ' ' + age : '') };
+    if (g === 'mujer') return { a: '#d4ff5a', b: '#ff5cc8', c: '#140716', label: 'MUJER' + (age !== 'todos' ? ' ' + age : '') };
+    return { a: '#c8ffd0', b: '#00ff41', c: '#020602', label: 'TODOS' + (age !== 'todos' ? ' ' + age : '') };
+  }
+
+  function getEffectiveTargets(ad) {
+    const storeTargets = (ad.targets && ad.targets.length) ? ad.targets : [];
+    if (storeTargets.length > 0) return storeTargets;
+    // Fallback a modelo antiguo (3 segmentos)
+    return [
+      makeTarget({ gender: 'hombre', ageBand: 'todos', label: 'Hombre' }),
+      makeTarget({ gender: 'mujer', ageBand: 'todos', label: 'Mujer' }),
+      makeTarget({ gender: 'todos', ageBand: 'todos', label: 'Neutral' }),
+    ];
+  }
+
+  function segmentedOffer(ad) {
+    // Compatibilidad con modelo antiguo + nuevo
+    const t = { gender: ad.segment === 'male' ? 'hombre' : ad.segment === 'female' ? 'mujer' : 'todos', ageBand: 'todos' };
+    return getTargetedOffer(ad, t);
+  }
+
+  function segmentedHeadline(ad) {
+    const t = { gender: ad.segment === 'male' ? 'hombre' : ad.segment === 'female' ? 'mujer' : 'todos', ageBand: 'todos' };
+    return getTargetedHeadline(ad, t);
+  }
+
   function segmentedTheme(ad) {
-    if (ad.segment === 'male') return { a: '#00ff41', b: '#50c8ff', c: '#07140d', label: 'HOMBRE' };
-    if (ad.segment === 'female') return { a: '#d4ff5a', b: '#ff5cc8', c: '#140716', label: 'MUJER' };
-    return { a: '#c8ffd0', b: '#00ff41', c: '#020602', label: 'NEUTRAL' };
+    const t = { gender: ad.segment === 'male' ? 'hombre' : ad.segment === 'female' ? 'mujer' : 'todos', ageBand: 'todos' };
+    return getTargetTheme(t);
   }
 
   function segmentedAdSvg(ad, store) {
-    const theme = segmentedTheme(ad);
+    // Delega al nuevo generador con un target derivado del segment actual
+    const t = { gender: ad.segment === 'male' ? 'hombre' : ad.segment === 'female' ? 'mujer' : 'todos', ageBand: 'todos' };
+    return targetedAdSvg(ad, store, t);
+  }
+
+  function targetedAdSvg(ad, store, target) {
+    const t = target || { gender: 'todos', ageBand: 'todos' };
+    const theme = getTargetTheme(t);
     const esc = (v) => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const headline = segmentedHeadline(ad);
-    const offer = segmentedOffer(ad);
+    const headline = getTargetedHeadline(ad, t);
+    const offer = getTargetedOffer(ad, t);
     const cta = ad.cta || DEFAULTS.publicidad.cta;
     const source = ad.source || DEFAULTS.publicidad.source;
     const confidence = Math.round(Math.max(0, Math.min(1, parseFloat(ad.confidence || '0.64'))) * 100);
     const brand = (store.cliente || 'Pixeria · XpaceOS').slice(0, 42);
+    const label = getTargetLabel(t);
     const baseImage = adBaseImage && adBaseImage.dataUrl
       ? `<image href="${escAttr(adBaseImage.dataUrl)}" x="960" y="150" width="500" height="500" preserveAspectRatio="xMidYMid slice" opacity=".95"/>`
       : '';
@@ -1635,11 +1717,11 @@
       ${baseImage}
       ${baseImageFrame}
       <text x="80" y="96" fill="${theme.a}" font-family="JetBrains Mono, Menlo, monospace" font-size="34" font-weight="800" letter-spacing="4">${esc(brand)}</text>
-      <text x="80" y="152" fill="#c8ffd0" opacity=".72" font-family="JetBrains Mono, Menlo, monospace" font-size="22" letter-spacing="3">XPACEOS LIVE AD ROUTER · ${theme.label} · ${confidence}%</text>
-      <foreignObject x="80" y="245" width="860" height="310"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Inter,Arial,sans-serif;color:#f5fff6;font-weight:900;font-size:76px;line-height:.95;letter-spacing:-1px;text-transform:uppercase">${esc(headline)}</div></foreignObject>
-      <foreignObject x="84" y="560" width="720" height="120"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Inter,Arial,sans-serif;color:#c8ffd0;font-size:34px;line-height:1.15">${esc(offer)}</div></foreignObject>
+      <text x="80" y="152" fill="#c8ffd0" opacity=".72" font-family="JetBrains Mono, Menlo, monospace" font-size="22" letter-spacing="3">XPACEOS TARGET AD · ${esc(label)} · ${confidence}%</text>
+      <foreignObject x="80" y="245" width="860" height="310"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Inter,Arial,sans-serif;color:#f5fff6;font-weight:900;font-size:72px;line-height:.95;letter-spacing:-1px;text-transform:uppercase">${esc(headline)}</div></foreignObject>
+      <foreignObject x="84" y="560" width="720" height="120"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Inter,Arial,sans-serif;color:#c8ffd0;font-size:32px;line-height:1.15">${esc(offer)}</div></foreignObject>
       <rect x="84" y="720" width="640" height="86" fill="${theme.a}" filter="url(#glow)"/><text x="124" y="774" fill="#020602" font-family="JetBrains Mono, Menlo, monospace" font-size="28" font-weight="900" letter-spacing="2">${esc(cta).slice(0, 42)}</text>
-      <text x="930" y="820" fill="${theme.b}" font-family="JetBrains Mono, Menlo, monospace" font-size="21" letter-spacing="2">SEÑAL: ${esc(source)} · no image stored · ephemeral segment</text>
+      <text x="930" y="820" fill="${theme.b}" font-family="JetBrains Mono, Menlo, monospace" font-size="21" letter-spacing="2">TARGET: ${esc(label)} · señal: ${esc(source)} · ephemeral</text>
       <text x="1190" y="478" fill="${theme.a}" font-family="JetBrains Mono, Menlo, monospace" font-size="118" font-weight="900" text-anchor="middle" filter="url(#glow)">AD</text>
       <text x="1190" y="532" fill="#c8ffd0" font-family="JetBrains Mono, Menlo, monospace" font-size="26" text-anchor="middle" letter-spacing="4">DIGITAL TWIN</text>
       <text x="1190" y="620" fill="${theme.b}" font-family="JetBrains Mono, Menlo, monospace" font-size="18" text-anchor="middle" letter-spacing="2">${baseImageCaption}</text>
@@ -1701,22 +1783,47 @@
   }
 
   function segmentedVariantData(store, baseAd, segment) {
+    // Compat legacy
     const ad = { ...baseAd, segment };
-    const svg = segmentedAdSvg(ad, store);
+    const t = { gender: segment === 'male' ? 'hombre' : segment === 'female' ? 'mujer' : 'todos', ageBand: 'todos' };
+    const svg = targetedAdSvg(ad, store, t);
     const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    const title = `${store.cliente || 'XpaceOS'} // ${AUDIENCE_LABELS[segment] || 'Segmento'} // ${ad.product || 'Publicidad'}`;
+    const title = `${store.cliente || 'XpaceOS'} // ${getTargetLabel(t)} // ${ad.product || 'Publicidad'}`;
     return {
       segment,
-      label: AUDIENCE_LABELS[segment] || 'Segmento',
+      target: t,
+      label: getTargetLabel(t),
       url,
       title,
-      headline: segmentedHeadline(ad),
-      offer: segmentedOffer(ad),
+      headline: getTargetedHeadline(ad, t),
+      offer: getTargetedOffer(ad, t),
       cta: ad.cta || DEFAULTS.publicidad.cta,
       source: ad.source || DEFAULTS.publicidad.source,
       confidence: ad.confidence,
       hasBaseImage: !!(adBaseImage && adBaseImage.dataUrl),
       baseImageName: adBaseImage && adBaseImage.name ? adBaseImage.name : '',
+    };
+  }
+
+  function targetVariantData(store, baseAd, t) {
+    const ad = { ...baseAd };
+    const svg = targetedAdSvg(ad, store, t);
+    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    const label = getTargetLabel(t);
+    const title = `${store.cliente || 'XpaceOS'} // ${label} // ${ad.product || 'Publicidad'}`;
+    return {
+      target: t,
+      label,
+      url,
+      title,
+      headline: getTargetedHeadline(ad, t) || segmentedHeadline(ad),
+      offer: getTargetedOffer(ad, t) || segmentedOffer(ad),
+      cta: ad.cta || DEFAULTS.publicidad.cta,
+      source: ad.source || DEFAULTS.publicidad.source,
+      hasBaseImage: !!(adBaseImage && adBaseImage.dataUrl),
+      baseImageName: adBaseImage && adBaseImage.name ? adBaseImage.name : '',
+      // Prompt listo para IA (para usar en /crear/ Marketing o modelos externos)
+      promptForAI: `Publicidad para ${label}. Producto: ${ad.product}. ${ad.context || ''}. Oferta: ${getTargetedOffer(ad, t)}. Estilo: ${ad.style || ''}. ${t.visual || ''} ${t.tone ? 'Tono: ' + t.tone : ''}. Alta calidad, cinematográfico, matrix retail neon, texto legible alto contraste, composición hero del producto.`,
     };
   }
 
@@ -1750,27 +1857,33 @@
 
   function playPublicidad() {
     const { store, ad } = currentAdData();
-    const variants = ['male', 'female'].map((segment) => segmentedVariantData(store, ad, segment));
-    const selectedSegment = normalizeAudienceSegment(ad.segment === 'neutral' ? 'female' : ad.segment);
+    const targets = getEffectiveTargets(ad);
+    const variants = targets.map((t) => targetVariantData(store, ad, t));
+    const selectedLabel = getTargetLabel({ gender: ad.segment === 'male' ? 'hombre' : ad.segment === 'female' ? 'mujer' : 'todos', ageBand: 'todos' });
+
     const plan = {
       baseImage: adBaseImage ? { name: adBaseImage.name, type: adBaseImage.type } : null,
       source: ad.source,
       screen: ad.screen,
       privacy: ad.privacy,
-      variants: variants.map((variant) => ({
-        segment: variant.segment,
-        headline: variant.headline,
-        offer: variant.offer,
-        cta: variant.cta,
-        confidence: variant.confidence,
+      mode: ad.mode || 'batch',
+      targets: targets.map(t => ({ id: t.id, label: getTargetLabel(t), gender: t.gender, ageBand: t.ageBand, persona: t.persona })),
+      variants: variants.map((v) => ({
+        label: v.label,
+        headline: v.headline,
+        offer: v.offer,
+        cta: v.cta,
+        promptForAI: v.promptForAI,
       })),
     };
+
+    const count = variants.length;
     showPlayer(`
       <div class="player-card segmented-player">
-        <div class="player-head">▶ PUBLICIDAD SEGMENTADA · 2 versiones · ${ad.source || 'señal local'}</div>
+        <div class="player-head">▶ PUBLICIDAD CON TARGET · ${count} variante${count === 1 ? '' : 's'} · ${ad.source || 'batch'}</div>
         <div class="segmented-variants">
           ${variants.map((variant) => `
-            <article class="segmented-variant${variant.segment === selectedSegment ? ' selected' : ''}" data-segmented-variant="${variant.segment}">
+            <article class="segmented-variant${variant.label === selectedLabel ? ' selected' : ''}" data-target-id="${variant.target.id || ''}">
               <div class="segmented-variant-head">
                 <strong>${variant.label}</strong>
                 <span>${variant.hasBaseImage ? 'base image' : 'creative shell'}</span>
@@ -1778,18 +1891,25 @@
               <div class="player-img-wrap segmented-preview">
                 <img class="player-img" src="${variant.url}" alt="Creatividad ${variant.label}" data-pixer-title="${escAttr(variant.title)}">
               </div>
-              <div class="segmented-variant-meta">${`${variant.headline} · ${variant.offer}`.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+              <div class="segmented-variant-meta">${(variant.headline + ' · ' + variant.offer).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+              <div class="target-prompt-hint" title="Prompt optimizado para modelos de imagen/video">📋 Prompt IA listo</div>
             </article>
           `).join('')}
         </div>
         <pre class="player-body">${JSON.stringify(plan, null, 2).replace(/</g,'&lt;')}</pre>
-        <small class="player-foot">// Dos assets SVG generados localmente a partir de la misma imagen base · haz clic en una variante para enviarla a Admira XP</small>
+        <small class="player-foot">// Variantes generadas para targets definidos (género + edad + persona). Haz clic en una para activar. Copia los prompts para usar en /crear/ (formato Marketing) o modelos externos.</small>
       </div>`);
-    document.querySelectorAll('[data-segmented-variant]').forEach((card) => {
+
+    document.querySelectorAll('[data-target-id]').forEach((card) => {
       card.addEventListener('click', () => {
-        document.querySelectorAll('[data-segmented-variant]').forEach((node) => node.classList.remove('selected'));
+        document.querySelectorAll('[data-target-id]').forEach((node) => node.classList.remove('selected'));
         card.classList.add('selected');
-        setAudienceSegment(card.dataset.segmentedVariant, { source: ad.source || 'Manual operator' });
+        // Activar señal simulada correspondiente (para live mode)
+        const id = card.dataset.targetId;
+        // Buscar el target y simular segment aproximado
+        const t = targets.find(x => x.id === id) || {};
+        const seg = t.gender === 'hombre' ? 'male' : t.gender === 'mujer' ? 'female' : 'neutral';
+        setAudienceSegment(seg, { source: ad.source || 'Target batch', autoplay: false });
       });
     });
   }
@@ -1797,6 +1917,7 @@
   function bindSegmentedAds() {
     if (document.body.dataset.page !== 'publicidad') return;
     bindPublicidadImageUpload();
+    bindPublicidadTargets();
     const params = new URLSearchParams(location.search);
     const incoming = params.get('segment') || params.get('audience');
     if (incoming) {
@@ -1832,6 +1953,145 @@
       });
     } catch {}
     updateSegmentedAdUi();
+  }
+
+  // === UI para Targets (nuevo modelo de Publicidad con Target) ===
+  function renderTargetsList() {
+    const container = document.getElementById('targetsList');
+    if (!container) return;
+    const { ad } = currentAdData();
+    const targets = ad.targets || [];
+
+    if (targets.length === 0) {
+      container.innerHTML = `<div style="opacity:.6;font-size:12px;padding:6px 8px;border:1px dashed var(--line);">Sin targets definidos. Usa los presets rápidos o "+ Añadir target". Se generarán variantes para cada uno.</div>`;
+      return;
+    }
+
+    container.innerHTML = targets.map((t, idx) => `
+      <div class="target-card" data-tid="${t.id}">
+        <header>
+          <span>${t.label || getTargetLabel(t)}</span>
+          <button type="button" class="btn-mini danger" data-del="${t.id}">✕</button>
+        </header>
+        <div class="t-meta">
+          <select data-tid="${t.id}" data-field="gender">
+            ${GENDERS.map(g => `<option value="${g}" ${t.gender===g?'selected':''}>${g}</option>`).join('')}
+          </select>
+          <select data-tid="${t.id}" data-field="ageBand">
+            ${AGE_BANDS.map(a => `<option value="${a}" ${t.ageBand===a?'selected':''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <div class="t-row">
+          <input data-tid="${t.id}" data-field="persona" placeholder="persona / interés" value="${t.persona || ''}" />
+          <input data-tid="${t.id}" data-field="label" placeholder="etiqueta" value="${t.label || ''}" />
+        </div>
+        <div class="t-row">
+          <input data-tid="${t.id}" data-field="offer" placeholder="oferta específica" value="${t.offer || ''}" style="grid-column:1/-1" />
+        </div>
+        <div class="t-actions">
+          <button type="button" class="btn-mini" data-apply="${t.id}">Aplicar señal</button>
+        </div>
+      </div>
+    `).join('');
+
+    // Wire events for this render
+    container.querySelectorAll('select, input').forEach(el => {
+      el.addEventListener('change', (e) => {
+        const tid = el.dataset.tid;
+        const field = el.dataset.field;
+        const { store, ad: curAd } = currentAdData();
+        const ts = (curAd.targets || []).map(tt => tt.id === tid ? { ...tt, [field]: el.value } : tt);
+        store.publicidad = { ...(store.publicidad || {}), targets: ts };
+        saveStore(store);
+        // re-render to keep in sync
+        renderTargetsList();
+      });
+    });
+
+    container.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tid = btn.dataset.del;
+        const { store, ad: curAd } = currentAdData();
+        const ts = (curAd.targets || []).filter(tt => tt.id !== tid);
+        store.publicidad = { ...(store.publicidad || {}), targets: ts };
+        saveStore(store);
+        renderTargetsList();
+      });
+    });
+
+    container.querySelectorAll('[data-apply]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tid = btn.dataset.apply;
+        const { ad: curAd } = currentAdData();
+        const t = (curAd.targets || []).find(tt => tt.id === tid);
+        if (!t) return;
+        const seg = t.gender === 'hombre' ? 'male' : t.gender === 'mujer' ? 'female' : 'neutral';
+        setAudienceSegment(seg, { source: 'Target selector', autoplay: false });
+      });
+    });
+  }
+
+  function addTargetFromPreset(preset) {
+    const { store, ad: curAd } = currentAdData();
+    const t = makeTarget(preset);
+    const existing = curAd.targets || [];
+    store.publicidad = { ...(store.publicidad || {}), targets: [...existing, t] };
+    saveStore(store);
+    renderTargetsList();
+  }
+
+  function addEmptyTarget() {
+    const { store, ad: curAd } = currentAdData();
+    const t = makeTarget({ gender: 'todos', ageBand: 'todos', persona: '', label: 'Nuevo target' });
+    const existing = curAd.targets || [];
+    store.publicidad = { ...(store.publicidad || {}), targets: [...existing, t] };
+    saveStore(store);
+    renderTargetsList();
+  }
+
+  function bindPublicidadTargets() {
+    if (document.body.dataset.page !== 'publicidad') return;
+
+    // Seed demo targets on first visit to the publicidad page (great onboarding for "creación con Target")
+    const store = loadStore();
+    if (!store.publicidad || !Array.isArray(store.publicidad.targets) || store.publicidad.targets.length === 0) {
+      store.publicidad = {
+        ...(store.publicidad || DEFAULTS.publicidad),
+        targets: [
+          makeTarget({ gender: 'hombre', ageBand: '25-34', persona: 'tech-urbano', label: 'Hombres 25-34 Tech' }),
+          makeTarget({ gender: 'mujer', ageBand: '25-34', persona: 'profesional', label: 'Mujeres 25-34 Profesional' }),
+          makeTarget({ gender: 'todos', ageBand: '18-24', persona: 'joven', label: 'Jóvenes 18-24 Unisex' }),
+        ],
+        mode: 'batch',
+      };
+      saveStore(store);
+    }
+
+    // Render presets
+    const presetsWrap = document.getElementById('targetPresets');
+    if (presetsWrap) {
+      presetsWrap.innerHTML = TARGET_PRESETS.map((p, i) => `
+        <button type="button" class="btn" data-preset="${i}" style="padding:3px 8px;font-size:11px">${p.label}</button>
+      `).join('');
+      presetsWrap.querySelectorAll('[data-preset]').forEach(b => {
+        b.addEventListener('click', () => {
+          const idx = parseInt(b.dataset.preset, 10);
+          addTargetFromPreset(TARGET_PRESETS[idx]);
+        });
+      });
+    }
+
+    // Main add button (there may be two)
+    const addBtns = [document.getElementById('addTargetBtn'), document.getElementById('addTargetBtn2')].filter(Boolean);
+    addBtns.forEach(btn => btn.addEventListener('click', addEmptyTarget));
+
+    // Initial render
+    renderTargetsList();
+
+    // Re-render when store changes from other parts
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) renderTargetsList();
+    });
   }
 
   function bindPlay(page) {

@@ -6,8 +6,8 @@
   <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
   <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
-  <title>Pixeria Studio | Publicidad segmentada</title>
-  <meta name="description" content="Generador de publicidad segmentada por senal de audiencia del gemelo digital XpaceOS y LiveCam.">
+  <title>Pixeria Studio | Publicidad con Target</title>
+  <meta name="description" content="Creación de contenidos con Target: genera variantes de anuncios para género, franjas de edad, personas y señales en vivo del gemelo XpaceOS / LiveCam.">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/tokens.css">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
@@ -52,10 +52,10 @@
   </header>
 
   <header class="page-head has-gif">
-    <figure class="page-gif"><img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Matrix_Digital_rain_banner.gif" alt="Publicidad segmentada · Matrix" loading="lazy"><figcaption>// XpaceOS LiveCam · audience signal</figcaption></figure>
-    <p class="eyebrow platform">XpaceOS · publicidad adaptativa</p>
-    <h1>Publicidad que cambia cuando cambia la audiencia.</h1>
-    <p class="lead">Subes una imagen base, defines una oferta para hombre y otra para mujer, y Pixer.ia te devuelve dos versiones del mismo contenido listas para pantalla.</p>
+    <figure class="page-gif"><img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Matrix_Digital_rain_banner.gif" alt="Publicidad con Target · Matrix" loading="lazy"><figcaption>// XpaceOS LiveCam + Campaign Targeting</figcaption></figure>
+    <p class="eyebrow platform">XpaceOS · Publicidad con Target</p>
+    <h1>Creación de contenidos con Target.</h1>
+    <p class="lead">Define audiencias completas (género, franjas de edad, intereses/personas) y genera variantes de creativo listas para campañas o para activar en tiempo real según la señal del gemelo digital.</p>
   </header>
 
   <main>
@@ -81,43 +81,48 @@
       </div>
 
       <section class="segmented-layout">
+        <!-- Señal Live / Contexto -->
         <article class="module">
-          <div class="module-head"><h3><span class="accent" style="background: var(--xp);"></span>Señal LiveCam / XpaceOS</h3><small>input del gemelo digital</small></div>
+          <div class="module-head"><h3><span class="accent" style="background: var(--xp);"></span>Señal &amp; Contexto</h3><small>LiveCam XpaceOS o modo campaña</small></div>
           <div class="segmented-signal">
             <div class="signal-readout">
               <span class="signal-dot" id="adSignalDot"></span>
               <div>
-                <strong id="adSignalLabel">Segmento neutral</strong>
+                <strong id="adSignalLabel">Público general</strong>
                 <small id="adSignalMeta">fuente: simulador local · confianza 0.64</small>
               </div>
             </div>
-            <div class="segment-switch" role="group" aria-label="Segmento de audiencia">
+            <div class="segment-switch" role="group" aria-label="Señal rápida">
               <button type="button" data-ad-segment="male">Hombre</button>
               <button type="button" data-ad-segment="female">Mujer</button>
-              <button type="button" data-ad-segment="neutral">Neutral</button>
+              <button type="button" data-ad-segment="neutral">General</button>
             </div>
           </div>
           <div class="row2">
-            <div class="field"><label for="ad-source">Fuente de señal</label>
+            <div class="field"><label for="ad-source">Fuente de señal / modo</label>
               <select id="ad-source" name="publicidad.source">
                 <option>Simulador local</option>
                 <option>LiveCam XpaceOS</option>
                 <option>API / signage event</option>
+                <option>Campaña planificada (batch)</option>
                 <option>Manual operator</option>
               </select>
             </div>
-            <div class="field"><label for="ad-screen">Pantalla destino</label><input id="ad-screen" name="publicidad.screen" type="text" placeholder="escaparate"></div>
+            <div class="field"><label for="ad-screen">Pantalla / circuito destino</label><input id="ad-screen" name="publicidad.screen" type="text" placeholder="escaparate"></div>
           </div>
           <div class="field">
             <label for="ad-privacy">Regla de privacidad</label>
             <input id="ad-privacy" name="publicidad.privacy" type="text" value="No guardar imagen, no identificar personas, usar solo señal efímera agregada">
           </div>
+          <div style="margin-top:8px;font-size:11px;opacity:.7;">La señal Live activa el target más cercano de la lista de abajo. En modo batch se generan todos los targets de la campaña.</div>
         </article>
 
+        <!-- Base creative + Target Builder -->
         <article class="module">
-          <div class="module-head"><h3><span class="accent" style="background: var(--video);"></span>Brief creativo</h3><small>copy + oferta + CTA</small></div>
+          <div class="module-head"><h3><span class="accent" style="background: var(--video);"></span>Brief base + Targets</h3><small>un brief, muchas audiencias</small></div>
+
           <div class="field">
-            <label>Imagen base del anuncio</label>
+            <label>Imagen base del anuncio (común a todos los targets)</label>
             <div class="ad-upload">
               <input id="ad-image-file" type="file" accept="image/*" hidden>
               <button type="button" class="btn" id="ad-image-pick">🖼 Seleccionar imagen</button>
@@ -128,36 +133,66 @@
               <img id="ad-image-preview-img" alt="Imagen base del anuncio">
             </div>
           </div>
+
           <div class="row2">
             <div class="field"><label for="ad-product">Producto / servicio</label><input id="ad-product" name="publicidad.product" type="text" placeholder="Zapatillas urbanas · pack premium"></div>
-            <div class="field"><label for="ad-context">Contexto del espacio</label><input id="ad-context" name="publicidad.context" type="text" placeholder="Escaparate interactivo en tienda física"></div>
+            <div class="field"><label for="ad-context">Contexto del espacio / campaña</label><input id="ad-context" name="publicidad.context" type="text" placeholder="Escaparate interactivo / campaña digital"></div>
           </div>
+
           <div class="row2">
-            <div class="field"><label for="ad-male">Oferta si segmento hombre</label><input id="ad-male" name="publicidad.offerMale" type="text" placeholder="Rendimiento, tecnologia y estilo urbano"></div>
-            <div class="field"><label for="ad-female">Oferta si segmento mujer</label><input id="ad-female" name="publicidad.offerFemale" type="text" placeholder="Diseño, comodidad y expresion personal"></div>
+            <div class="field"><label for="ad-cta">CTA común</label><input id="ad-cta" name="publicidad.cta" type="text" placeholder="Toca la pantalla y pruébalo en el gemelo"></div>
+            <div class="field"><label for="ad-style">Estilo visual global</label><input id="ad-style" name="publicidad.style" type="text" placeholder="Matrix retail, neon verde, producto hero, texto alto contraste"></div>
           </div>
-          <div class="row2">
-            <div class="field"><label for="ad-neutral">Oferta neutral / fallback</label><input id="ad-neutral" name="publicidad.offerNeutral" type="text" placeholder="Nueva coleccion disponible hoy"></div>
-            <div class="field"><label for="ad-cta">CTA</label><input id="ad-cta" name="publicidad.cta" type="text" placeholder="Toca la pantalla y pruebalo en el gemelo"></div>
+
+          <!-- TARGET BUILDER - lo nuevo -->
+          <div style="margin: 14px 0 6px; border-top: 1px solid var(--line); padding-top: 12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
+              <div>
+                <strong style="color:var(--matrix)">Targets de la campaña</strong>
+                <small style="opacity:.7"> (género + edad + persona/interés)</small>
+              </div>
+              <div>
+                <button type="button" class="btn" id="addTargetBtn" style="padding:4px 10px;font-size:11px">+ Añadir target</button>
+              </div>
+            </div>
+
+            <!-- Presets rápidos -->
+            <div id="targetPresets" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+              <!-- JS inyecta botones -->
+            </div>
+
+            <!-- Lista de targets definidos (renderizada por JS) -->
+            <div id="targetsList" class="targets-list" style="display:grid; gap:8px; margin-bottom:8px;">
+              <!-- Tarjetas de target -->
+            </div>
+
+            <div style="font-size:11px; opacity:.65;">
+              Cada target genera su propia variante (headline, oferta, dirección visual y prompt optimizado para IA).
+            </div>
+
+            <div style="margin-top:10px; font-size:10px; line-height:1.3; opacity:.6; border-left:2px solid var(--line); padding-left:8px;">
+              <strong>Dimensiones de Target soportadas:</strong><br>
+              Género (hombre / mujer / todos) · Franja de edad (18-24, 25-34, 35-44, 45-54, 55+) · Persona / Interés (tech, profesional, familia, fitness, eco, luxury...) · Señales en vivo de XpaceOS LiveCam
+            </div>
           </div>
-          <div class="field"><label for="ad-style">Estilo visual</label><input id="ad-style" name="publicidad.style" type="text" placeholder="Matrix retail, neon verde, producto hero, texto alto contraste"></div>
         </article>
       </section>
 
       <section class="brief-area">
         <div class="brief-head">
-          <h3>Brief de Publicidad Segmentada</h3>
+          <h3>Brief + Generación con Target</h3>
           <div class="brief-actions">
-            <button class="btn play" type="button" id="playOutput"><span class="play-label">✨ GENERAR 2 VERSIONES</span></button>
-            <button class="btn" type="button" id="adSimulatePass">Simular paso LiveCam</button>
+            <button class="btn play" type="button" id="playOutput"><span class="play-label">✨ GENERAR VARIANTES POR TARGET</span></button>
+            <button class="btn" type="button" id="adSimulatePass">Simular señal LiveCam</button>
+            <button class="btn" type="button" id="addTargetBtn2">+ Target rápido</button>
             <button class="btn" type="button" id="genBrief">Generar brief</button>
             <button class="btn" type="button" id="copyBrief">Copiar JSON</button>
             <button class="btn" type="button" id="copyMd">Copiar Markdown</button>
             <button class="btn" type="button" id="dlBrief">Descargar .json</button>
-            <button class="btn" type="button" id="clearAll">Limpiar Publicidad</button>
+            <button class="btn" type="button" id="clearAll">Limpiar</button>
           </div>
         </div>
-        <pre class="brief" id="briefOut">// Sube una imagen base, define la oferta para hombre y mujer, y pulsa "Generar 2 versiones".</pre>
+        <pre class="brief" id="briefOut">// Define 1+ targets (género + edad + persona) + brief base. Pulsa "GENERAR VARIANTES POR TARGET" para obtener creatividades + prompts listos para IA.</pre>
       </section>
       <div id="player" class="player-area" hidden></div>
     </form>
