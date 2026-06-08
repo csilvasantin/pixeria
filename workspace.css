@@ -195,6 +195,11 @@ body[data-page="admira-xp"] .primary-nav a[data-nav="admira-xp"] {
   color: #020602;
   text-shadow: none;
 }
+.language-switcher .lang-toggle {
+  background: var(--matrix);
+  color: #020602;
+  text-shadow: none;
+}
 .nav-action {
   padding: 10px 14px;
   border: 1px solid var(--line-bright);

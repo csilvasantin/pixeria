@@ -133,6 +133,13 @@ img {
   color: var(--bg);
 }
 
+.language-switcher .lang-toggle {
+  min-width: 54px;
+  background: var(--ink);
+  color: var(--bg);
+  text-shadow: none;
+}
+
 .hero {
   position: relative;
   min-height: 92vh;
@@ -849,7 +856,7 @@ h1 {
 
 .mobile-language-switcher {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 6px;
   margin-top: 10px;
 }
@@ -860,6 +867,11 @@ h1 {
 }
 
 .mobile-nav .mobile-language-switcher a.active {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.mobile-nav .mobile-language-switcher .lang-toggle {
   background: var(--ink);
   color: var(--bg);
 }
