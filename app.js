@@ -653,9 +653,12 @@
       'elevenlabs-v2':         { label: 'ElevenLabs v2',         model_id: 'eleven_multilingual_v2', pricePer1k: 0.30 },
       'elevenlabs-flash-v2-5': { label: 'ElevenLabs Flash v2.5', model_id: 'eleven_flash_v2_5',      pricePer1k: 0.15 },
       'elevenlabs-v3':         { label: 'ElevenLabs v3',         model_id: 'eleven_v3',              pricePer1k: 0.30 },
+      // TEMP: "Grok" usa por ahora ElevenLabs Flash bajo la etiqueta Grok (xAI no tiene TTS aun). Cambiar cuando exista endpoint de voz Grok.
+      'grok-voice':            { label: 'Grok (xAI)',            model_id: 'eleven_flash_v2_5',      pricePer1k: 0.15 },
     };
     if (ELEVEN_MODELS[motor]) {
       const { label, model_id, pricePer1k } = ELEVEN_MODELS[motor];
+      const shownModel = (motor === 'grok-voice') ? 'grok-voice' : model_id; // mantener la etiqueta Grok en la salida
       if (!(await confirmPro(label, `$${(pricePer1k * 1000).toFixed(0)} / 1M caracteres · vía worker pixer-eleven`))) return;
       const voiceId = keys.elevenlabs_voice || 'EXAVITQu4vr4xnSDxMaL';
       showPlayer(`
@@ -696,17 +699,12 @@
             ${audioCover ? `<img src="${escAttr(audioCover)}" style="width:100%;max-height:240px;object-fit:cover;border:1px solid var(--matrix);box-shadow:0 0 12px rgba(0,255,65,.3);">` : ''}
             <audio controls autoplay src="${url}" data-pixer-title="${escAttr(audioTitle)}"${audioCover ? ` data-pixer-cover="${escAttr(audioCover)}"` : ''} style="width:100%;"></audio>
             ${publishBtnHTML(pubMeta)}
-            <small class="player-foot">// ${text.length} caracteres · ~$${est} · model_id ${model_id} · vía worker</small>
+            <small class="player-foot">// ${text.length} caracteres · ~$${est} · model_id ${shownModel} · vía worker</small>
           </div>`);
       } catch (e) {
         stopElevenProg(false);
         showPlayer(`<div class="player-card"><div class="player-head">▶ AUDIO · ERROR</div><pre class="player-body">${String(e).replace(/</g,'&lt;')}</pre></div>`);
       }
-      return;
-    }
-
-    if (motor === 'grok-voice') {
-      showPlayer('<p class="player-msg">⚠ Grok (xAI) aún no genera audio desde el navegador: no hay endpoint de voz en el worker. Usa ElevenLabs (Best) o el motor gratuito.</p>');
       return;
     }
 
