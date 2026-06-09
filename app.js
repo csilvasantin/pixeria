@@ -151,8 +151,8 @@
       { id: 'suno-local-v5',        nombre: 'Suno v5 (local)',        tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción · cuenta loguead.', desc: 'chirp-v5 · máxima calidad · vía proxy suno-local' },
     ],
     imagenes: [
-      { id: 'flux-schnell',                  nombre: 'FLUX.1 [schnell]',        tipo: 'free', badge: 'Good',   coste: 'gratis · Pollinations', desc: 'open weights, rápido' },
-      { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'pro', badge: 'Better', coste: '~$0.04 / imagen',      desc: 'generación + edición consistente' },
+      { id: 'flux-schnell',                  nombre: 'FLUX.1 [schnell]',        tipo: 'free', badge: 'Good',   coste: 'gratis · vía Nano Banana', desc: 'rápido' },
+      { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Better', coste: 'gratis (free tier)',   desc: 'generación + edición consistente' },
       { id: 'grok-imagine-image-pro',        nombre: 'Grok Imagine Pro (xAI)',  tipo: 'pro',  badge: 'Best',   coste: '$0.07 / imagen',        desc: 'mayor calidad · vía worker' },
     ],
     video: [
@@ -1058,58 +1058,22 @@
   }
 
   async function playNanoBanana(s, fullPrompt) {
-    const model = 'gemini-2.5-flash-image-preview';
     const label = 'Nano Banana';
-    const cost = '~$0.04 / imagen';
-    if (!(await confirmPro(label + ' (Gemini 2.5 Flash Image)', cost + ' · vía worker pixer-eleven'))) return;
     const aspectRatio = ASPECT_IMAGEN[s.encuadre] || '1:1';
+    const url = nanoBananaUrl(fullPrompt, aspectRatio);
+    const imgTitle = deriveAssetTitle('imagenes', loadStore());
+    const pubMeta = { type: 'image', motor: 'nano-banana', prompt: fullPrompt, costEst: 'gratis', url, mime: 'image/png' };
     showPlayer(`
       <div class="player-card">
-        <div class="player-head">▶ IMAGEN · ${label} (Gemini 2.5) · ${aspectRatio}</div>
-        ${progressHtml(`Generando con ${label}...`, 'nanobanana', 10000)}
+        <div class="player-head">▶ IMAGEN · ${label} (Gemini 2.5 Flash Image) · ${aspectRatio}</div>
+        <div class="player-img-wrap">
+          <div class="player-loading">// generando imagen con ${label}...</div>
+          <img class="player-img" crossorigin="anonymous" src="${url}" alt="generada" data-pixer-title="${escAttr(imgTitle)}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none';var l=this.previousElementSibling;l.innerHTML='⚠ Nano Banana no devolvió imagen — cuota gratis agotada o error.&lt;br&gt;Reintenta en un rato.';l.style.color='#ff8a5c';l.style.lineHeight='1.5';">
+        </div>
+        <pre class="player-body">${fullPrompt.replace(/</g,'&lt;')}</pre>
+        ${publishBtnHTML(pubMeta)}
+        <small class="player-foot">// Nano Banana · Gemini 2.5 Flash Image · gratis (free tier)</small>
       </div>`);
-    const stop = startProgress('nanobanana');
-    try {
-      const r = await fetch(ELEVEN_WORKER_URL + '/nano-banana/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: fullPrompt, aspectRatio, numberOfImages: 1, model }),
-      });
-      if (!r.ok) {
-        stop(false);
-        const err = await r.text();
-        showPlayer(`<div class="player-card"><div class="player-head">▶ IMAGEN · ${label} · ERROR ${r.status}</div><pre class="player-body">${err.replace(/</g,'&lt;').slice(0,500)}</pre></div>`);
-        return;
-      }
-      const data = await r.json();
-      const b64 = data?.predictions?.[0]?.bytesBase64Encoded
-               || data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-      const mime = data?.predictions?.[0]?.mimeType
-               || data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.mimeType
-               || 'image/png';
-      if (!b64) {
-        stop(false);
-        showPlayer(`<div class="player-card"><div class="player-head">▶ IMAGEN · ${label} · sin imagen</div><pre class="player-body">${JSON.stringify(data).slice(0,400)}</pre></div>`);
-        return;
-      }
-      stop(true);
-      const url = `data:${mime};base64,${b64}`;
-      const imgTitle = deriveAssetTitle('imagenes', loadStore());
-      const pubMeta = { type: 'image', motor: 'nano-banana', prompt: fullPrompt, costEst: cost, url, mime };
-      showPlayer(`
-        <div class="player-card">
-          <div class="player-head">▶ IMAGEN · ${label} (Gemini 2.5) · ${aspectRatio}</div>
-          <div class="player-img-wrap">
-            <img class="player-img" src="${url}" alt="generada" data-pixer-title="${escAttr(imgTitle)}">
-          </div>
-          <pre class="player-body">${fullPrompt.replace(/</g,'&lt;')}</pre>
-          ${publishBtnHTML(pubMeta)}
-          <small class="player-foot">// Gemini ${model} · ${cost}</small>
-        </div>`);
-    } catch (e) {
-      stop(false);
-      showPlayer(`<div class="player-card"><div class="player-head">▶ IMAGEN · ${label} · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);
-    }
   }
 
   // ─── Generadores atómicos para "comparar todas" ─────────────────
@@ -1146,22 +1110,13 @@
       return { ok: true, url: `data:${data.predictions[0].mimeType || 'image/png'};base64,${b64}` };
     } catch (e) { return { ok: false, error: String(e) }; }
   }
+  // Nano Banana vía worker aislado admira-imagen (GET /img devuelve la imagen).
+  function nanoBananaUrl(fullPrompt, aspectRatio) {
+    const ar = aspectRatio || '1:1';
+    return `https://admira-imagen.csilvasantin.workers.dev/img?prompt=${encodeURIComponent(fullPrompt)}&ar=${ar}&model=gemini-2.5-flash-image`;
+  }
   async function genNanoBananaRaw(fullPrompt, aspectRatio) {
-    try {
-      const r = await fetch(ELEVEN_WORKER_URL + '/nano-banana/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: fullPrompt, aspectRatio, numberOfImages: 1, model: 'gemini-2.5-flash-image-preview' }),
-      });
-      const data = await r.json();
-      const b64 = data?.predictions?.[0]?.bytesBase64Encoded
-               || data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-      const mime = data?.predictions?.[0]?.mimeType
-               || data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.mimeType
-               || 'image/png';
-      if (!r.ok || !b64) return { ok: false, error: JSON.stringify(data).slice(0, 200) };
-      return { ok: true, url: `data:${mime};base64,${b64}` };
-    } catch (e) { return { ok: false, error: String(e) }; }
+    return { ok: true, url: nanoBananaUrl(fullPrompt, aspectRatio) };
   }
 
   // Compara N motores en paralelo, side-by-side. Recibe la lista de IDs
