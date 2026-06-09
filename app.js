@@ -23,7 +23,7 @@
     if (motorId === 'imagen-4.0-ultra-generate-001') return true; // Gemini API key
     if (motorId === 'nano-banana') return true; // Gemini 2.5 Flash Image via worker
     if (motorId === 'nano-banana-pro') return true; // Gemini 3 Pro Image via worker
-    if (motorId === 'veo-3.0-generate-001') return true; // Gemini API key
+    if (motorId.startsWith('veo-3.0-')) return true; // Gemini API key (worker pixer-eleven) · incl. @1080p
     if (motorId === 'veo-3.1-fast-generate-preview') return true; // Gemini API key
     if (motorId === 'gemini-omni-flash') return false; // API aún no pública (Google I/O 2026) — sin endpoint todavía
     if (motorId === 'suno-local-v45') return true; // depende del proxy local, se chequea aparte
@@ -157,9 +157,9 @@
       { id: 'grok-imagine-image-pro',        nombre: 'Grok Imagine Pro (xAI)',  tipo: 'pro',  badge: 'Better', coste: '$0.07 / imagen',       desc: 'mayor calidad · vía worker' },
     ],
     video: [
-      { id: 'runway-gen3',                   nombre: 'Runway Gen-3 Alpha',    tipo: 'pro', badge: 'Good',   coste: '$0.05 / segundo',  desc: 'video 1080p · requiere backend (sin CORS)' },
-      { id: 'veo-3.1-fast-generate-preview', nombre: 'Veo 3.1 Fast (Google)', tipo: 'pro', badge: 'Better', coste: '~$0.15 / segundo', desc: 'audio nativo · imagen→video · más rápido' },
-      { id: 'openai-sora',                   nombre: 'Sora (OpenAI)',         tipo: 'pro', badge: 'Best',   coste: 'vía API',          desc: 'texto→vídeo de alta calidad · próximamente' },
+      { id: 'veo-3.0-fast-generate-001',     nombre: 'Veo 3 Fast (Google)',  tipo: 'pro', badge: 'Good',   coste: '~$0.15 / segundo', desc: 'audio nativo · rápido · 720p' },
+      { id: 'veo-3.0-generate-001',          nombre: 'Veo 3 (Google)',       tipo: 'pro', badge: 'Better', coste: '~$0.40 / segundo', desc: 'audio nativo · más calidad · 720p' },
+      { id: 'veo-3.0-generate-001@1080p',    nombre: 'Veo 3 · 1080p (Google)', tipo: 'pro', badge: 'Best',  coste: '~$0.40 / segundo', desc: 'audio nativo · máxima resolución · 1080p' },
     ],
   };
 
@@ -229,9 +229,9 @@
       const opciones = MOTORES[seccion];
       if (!opciones) return;
       const store = loadStore();
-      // imagenes admite multi-select: click cada motor para añadir/quitar.
+      // imagenes y video admiten multi-select: click cada motor para añadir/quitar.
       // Para comparar 2-3 motores en paralelo basta con marcar varias.
-      const isMulti = (seccion === 'imagenes');
+      const isMulti = (seccion === 'imagenes' || seccion === 'video');
       const inputType = isMulti ? 'checkbox' : 'radio';
       let selected;
       if (isMulti) {
@@ -1317,138 +1317,183 @@
   };
 
   const VEO_MODELS = {
-    'veo-3.0-generate-001':          { label: 'Veo 3',        costPerSec: 0.40 },
-    'veo-3.1-fast-generate-preview': { label: 'Veo 3.1 Fast',  costPerSec: 0.15 },
+    'veo-3.0-fast-generate-001': { label: 'Veo 3 Fast', costPerSec: 0.15 },
+    'veo-3.0-generate-001':      { label: 'Veo 3',      costPerSec: 0.40 },
   };
 
-  async function playVeo(s, modelOverride) {
-    const model = modelOverride || 'veo-3.0-generate-001';
-    const meta = VEO_MODELS[model] || VEO_MODELS['veo-3.0-generate-001'];
-    const label = meta.label;
-    const costPerSec = meta.costPerSec;
-    const aspect = ASPECT_VEO[s.canal] || '16:9';
-    const dur = Math.max(4, Math.min(8, parseSeconds(s.duracion)));
-    const dur4or6or8 = dur <= 4 ? 4 : dur <= 6 ? 6 : 8;
+  // Parsea el id de motor "veo-3.0-generate-001@1080p" → { model, resolution, label }.
+  function parseVeoMotor(raw) {
+    const [model, resTag] = String(raw || 'veo-3.0-fast-generate-001').split('@');
+    const resolution = resTag || '720p';
+    const meta = VEO_MODELS[model] || VEO_MODELS['veo-3.0-fast-generate-001'];
+    return { model, resolution, costPerSec: meta.costPerSec, label: meta.label + (resTag ? ` · ${resTag}` : '') };
+  }
+  function buildVeoPrompt(s) {
     const guion = [s.hook, s.desarrollo, s.cierre, s.cta && `CTA: ${s.cta}`].filter(Boolean).join(' · ');
     const palette = (loadStore().imagenes && loadStore().imagenes.paleta) || 'cinematic';
-    const prompt = `${guion}, ${palette}, cinematic, with appropriate ambient sound and music`;
-    const cost = `~$${(dur4or6or8 * costPerSec).toFixed(2)} (${dur4or6or8}s × $${costPerSec})`;
-    if (!(await confirmPro(label + ' (Google)', cost + ' · paid tier Gemini · audio nativo'))) return;
+    return `${guion}, ${palette}, cinematic, with appropriate ambient sound and music`;
+  }
+  function veoDuration(s) {
+    const dur = Math.max(4, Math.min(8, parseSeconds(s.duracion)));
+    return dur <= 4 ? 4 : dur <= 6 ? 6 : 8;
+  }
 
-    showPlayer(`
-      <div class="player-card">
-        <div class="player-head">▶ VIDEO · ${label} (Google) · ${aspect} · ${dur4or6or8}s · 720p</div>
-        ${progressHtml('Enviando a Veo...', 'veo', 180000)}
-      </div>`);
-    const stop = startProgress('veo');
+  // Genera UN vídeo Veo (arranca operación + polling hasta done). No pinta UI:
+  // devuelve { ok, url, elapsed } | { ok:false, error }. onTick(elapsed, attempt)
+  // para refrescar etiquetas (barra de progreso o celda del comparador).
+  async function genVeoRaw(prompt, aspect, durationSeconds, resolution, model, onTick) {
     try {
       const r = await fetch(ELEVEN_WORKER_URL + '/veo/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, aspectRatio: aspect, durationSeconds: dur4or6or8, resolution: '720p', model }),
+        body: JSON.stringify({ prompt, aspectRatio: aspect, durationSeconds, resolution, model }),
       });
-      if (!r.ok) {
-        stop(false);
-        const err = await r.text();
-        showPlayer(`<div class="player-card"><div class="player-head">▶ VIDEO · ${label} · ERROR ${r.status}</div><pre class="player-body">${err.replace(/</g,'&lt;').slice(0,500)}</pre></div>`);
-        return;
-      }
+      if (!r.ok) return { ok: false, error: `gen ${r.status}: ${(await r.text()).slice(0, 200)}` };
       const startData = await r.json();
       const opName = startData.name;
-      if (!opName) {
-        stop(false);
-        showPlayer(`<div class="player-card"><div class="player-head">▶ VIDEO · ${label} · sin operation</div><pre class="player-body">${JSON.stringify(startData).slice(0,400)}</pre></div>`);
-        return;
-      }
-      setProgressLabel('veo', `Generando · ${opName.slice(-12)}`);
+      if (!opName) return { ok: false, error: 'sin operation: ' + JSON.stringify(startData).slice(0, 200) };
       const t0 = Date.now();
       let attempt = 0;
       while (true) {
         await new Promise(res => setTimeout(res, 5000));
         attempt++;
         const elapsed = ((Date.now() - t0) / 1000).toFixed(0);
-        setProgressLabel('veo', `Generando · ${elapsed}s · intento ${attempt}`);
+        if (onTick) onTick(elapsed, attempt);
         const pollR = await fetch(`${ELEVEN_WORKER_URL}/veo/status/${opName}`);
-        if (!pollR.ok) {
-          stop(false);
-          showPlayer(`<div class="player-card"><div class="player-head">▶ VIDEO · ${label} · POLL ERROR ${pollR.status}</div><pre class="player-body">${(await pollR.text()).slice(0,400)}</pre></div>`);
-          return;
-        }
+        if (!pollR.ok) return { ok: false, error: `poll ${pollR.status}` };
         const poll = await pollR.json();
         if (poll.done) {
           const uri = poll?.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri;
-          if (!uri) {
-            stop(false);
-            showPlayer(`<div class="player-card"><div class="player-head">▶ VIDEO · ${label} · sin URI</div><pre class="player-body">${JSON.stringify(poll).slice(0,400)}</pre></div>`);
-            return;
-          }
-          stop(true);
-          const proxyUrl = `${ELEVEN_WORKER_URL}/veo/download?uri=${encodeURIComponent(uri)}`;
-          const veoTitle = deriveAssetTitle('video', loadStore());
-          const pubMeta = { type: 'video', motor: model, prompt, costEst: cost, url: proxyUrl, mime: 'video/mp4' };
-          showPlayer(`
-            <div class="player-card">
-              <div class="player-head">▶ VIDEO · ${label} (Google) · ${aspect} · ${dur4or6or8}s · 720p · audio nativo</div>
-              <video controls autoplay src="${proxyUrl}" data-pixer-title="${escAttr(veoTitle)}" style="width:100%; max-height:55vh; border:1px solid var(--matrix); box-shadow:0 0 24px rgba(0,255,65,.30);"></video>
-              <pre class="player-body">${prompt.replace(/</g,'&lt;')}</pre>
-              <a class="btn" download="veo-${Date.now()}.mp4" href="${proxyUrl}">⬇ Descargar MP4</a>
-              ${publishBtnHTML(pubMeta)}
-              <small class="player-foot">// Gemini Veo · ${cost} · ${elapsed}s de procesado</small>
-            </div>`);
-          return;
+          if (!uri) return { ok: false, error: 'sin URI: ' + JSON.stringify(poll).slice(0, 200) };
+          return { ok: true, url: `${ELEVEN_WORKER_URL}/veo/download?uri=${encodeURIComponent(uri)}`, elapsed };
         }
-        if (attempt > 60) {
-          stop(false);
-          showPlayer(`<div class="player-card"><div class="player-head">▶ VIDEO · ${label} · TIMEOUT</div><pre class="player-body">operation: ${opName}</pre></div>`);
-          return;
-        }
+        if (attempt > 60) return { ok: false, error: 'timeout (>5min)' };
       }
     } catch (e) {
-      stop(false);
-      showPlayer(`<div class="player-card"><div class="player-head">▶ VIDEO · ${label} · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);
+      return { ok: false, error: String(e) };
     }
+  }
+
+  async function playVeo(s, modelOverride) {
+    const { model, resolution, costPerSec, label } = parseVeoMotor(modelOverride || 'veo-3.0-fast-generate-001');
+    const aspect = ASPECT_VEO[s.canal] || '16:9';
+    const dur4or6or8 = veoDuration(s);
+    const prompt = buildVeoPrompt(s);
+    const cost = `~$${(dur4or6or8 * costPerSec).toFixed(2)} (${dur4or6or8}s × $${costPerSec})`;
+    if (!(await confirmPro(label + ' (Google)', cost + ' · paid tier Gemini · audio nativo'))) return;
+
+    showPlayer(`
+      <div class="player-card">
+        <div class="player-head">▶ VIDEO · ${label} (Google) · ${aspect} · ${dur4or6or8}s · ${resolution}</div>
+        ${progressHtml('Enviando a Veo...', 'veo', 180000)}
+      </div>`);
+    const stop = startProgress('veo');
+    const res = await genVeoRaw(prompt, aspect, dur4or6or8, resolution, model,
+      (elapsed, attempt) => setProgressLabel('veo', `Generando · ${elapsed}s · intento ${attempt}`));
+    if (!res.ok) {
+      stop(false);
+      showPlayer(`<div class="player-card"><div class="player-head">▶ VIDEO · ${label} · ERROR</div><pre class="player-body">${String(res.error).replace(/</g,'&lt;').slice(0,500)}</pre></div>`);
+      return;
+    }
+    stop(true);
+    const veoTitle = deriveAssetTitle('video', loadStore());
+    const pubMeta = { type: 'video', motor: model, prompt, costEst: cost, url: res.url, mime: 'video/mp4' };
+    showPlayer(`
+      <div class="player-card">
+        <div class="player-head">▶ VIDEO · ${label} (Google) · ${aspect} · ${dur4or6or8}s · ${resolution} · audio nativo</div>
+        <video controls autoplay src="${res.url}" data-pixer-title="${escAttr(veoTitle)}" style="width:100%; max-height:55vh; border:1px solid var(--matrix); box-shadow:0 0 24px rgba(0,255,65,.30);"></video>
+        <pre class="player-body">${prompt.replace(/</g,'&lt;')}</pre>
+        <a class="btn" download="veo-${Date.now()}.mp4" href="${res.url}">⬇ Descargar MP4</a>
+        ${publishBtnHTML(pubMeta)}
+        <small class="player-foot">// Gemini Veo · ${cost} · ${res.elapsed}s de procesado</small>
+      </div>`);
+  }
+
+  // Compara N motores de vídeo (Veo) en paralelo, side-by-side. Cada celda
+  // arranca su propia generación y muestra el <video> + publicar en Stock cuando
+  // llega. Espejo de compareSelectedImages pero asíncrono (operaciones largas).
+  async function compareSelectedVideos(motorIds, s) {
+    const aspect = ASPECT_VEO[s.canal] || '16:9';
+    const dur4or6or8 = veoDuration(s);
+    const prompt = buildVeoPrompt(s);
+    const motors = [...new Set(motorIds)].map(id => Object.assign({ id }, parseVeoMotor(id)));
+    if (!motors.length) return;
+    const total = motors.reduce((a, m) => a + dur4or6or8 * m.costPerSec, 0);
+    if (!(await confirmPro('COMPARAR vídeo', motors.map(m => m.label).join(' + ') + ` · ${dur4or6or8}s c/u (~$${total.toFixed(2)} total · paid tier Gemini)`))) return;
+
+    showPlayer(`
+      <div class="player-card">
+        <div class="player-head">▶ COMPARAR VÍDEO · ${motors.length} motores · ${aspect} · ${dur4or6or8}s${motors.length > 1 ? ' · click el vídeo para elegir cuál enviar' : ''}</div>
+        <div class="compare-grid">
+          ${motors.map(m => `
+            <div class="compare-cell" data-cell="${m.id}" data-motor-label="${escAttr(m.label)}">
+              <div class="compare-cell-head"><strong>${m.label}</strong> <span style="opacity:.7">~$${(dur4or6or8 * m.costPerSec).toFixed(2)}</span></div>
+              <div class="compare-cell-img"><span class="compare-loading">// generando... 0s</span></div>
+            </div>`).join('')}
+        </div>
+        <pre class="player-body">${prompt.replace(/</g,'&lt;')}</pre>
+        <small class="player-foot">// ${motors.length} motores Veo en paralelo · cada uno tarda ~30–90s · resultados conforme lleguen</small>
+      </div>`);
+
+    // Click en una celda con vídeo → la marca como seleccionada (única) para
+    // que ENVIAR A ADMIRA XP recoja ese vídeo via detectLatestAsset.
+    document.querySelectorAll('.compare-cell[data-cell]').forEach(cellEl => {
+      cellEl.addEventListener('click', () => {
+        if (!cellEl.querySelector('.compare-cell-img video[src]')) return;
+        document.querySelectorAll('.compare-cell.selected').forEach(c => c.classList.remove('selected'));
+        cellEl.classList.add('selected');
+      });
+    });
+
+    let firstSelected = false;
+    motors.forEach(async m => {
+      const cellWrap = document.querySelector(`[data-cell="${m.id}"]`);
+      const cell = cellWrap && cellWrap.querySelector('.compare-cell-img');
+      const res = await genVeoRaw(prompt, aspect, dur4or6or8, m.resolution, m.model, (elapsed) => {
+        const loading = cell && cell.querySelector('.compare-loading');
+        if (loading) loading.textContent = `// generando... ${elapsed}s`;
+      });
+      if (!cell) return;
+      if (res && res.ok && res.url) {
+        const cTitle = deriveAssetTitle('video', loadStore());
+        const cellMeta = JSON.stringify({ type: 'video', motor: m.model, prompt, costEst: `~$${(dur4or6or8 * m.costPerSec).toFixed(2)}`, url: res.url, mime: 'video/mp4' }).replace(/'/g, '&#39;');
+        cell.innerHTML = `<video controls src="${res.url}" data-pixer-title="${escAttr(cTitle)}" style="width:100%;border:1px solid var(--matrix);box-shadow:0 0 12px rgba(0,255,65,.3)"></video><span class="compare-time">${res.elapsed}s</span>`
+          + `<button type="button" class="btn publish-btn compare-pub" data-publish-meta='${cellMeta}' title="Publicar este vídeo en Stock" style="display:block;width:100%;margin-top:6px;font-size:11px;padding:6px 8px">📌 PUBLICAR EN STOCK</button>`;
+        if (!firstSelected && motors.length > 1) {
+          cellWrap.classList.add('selected');
+          firstSelected = true;
+        }
+      } else {
+        cell.innerHTML = `<div class="compare-error">⚠ ${(res && res.error || 'error').slice(0, 140).replace(/</g,'&lt;')}</div>`;
+      }
+    });
   }
 
   function playVideo() {
     const s = loadStore().video || {};
-    const motor = s.motor || 'pixer-storyboard';
+    // Multi-select: leer s.motors (array) y caer a [s.motor] solo si no existe.
+    let motorsList = Array.isArray(s.motors) && s.motors.length ? s.motors : [s.motor || 'veo-3.0-fast-generate-001'];
+    // Migra ids muertos (runway/sora/veo-3.1) al Veo fast que sí funciona, y dedup.
+    motorsList = [...new Set(motorsList.map(m =>
+      (m === 'runway-gen3' || m === 'openai-sora' || m === 'veo-3.1-fast-generate-preview') ? 'veo-3.0-fast-generate-001' : m))];
+    const motor = motorsList[0]; // primario para single-render path
 
-    if (motor === 'veo-3.0-generate-001' || motor === 'veo-3.1-fast-generate-preview') {
+    // 2+ motores Veo seleccionados → grid comparativa.
+    if (motorsList.length > 1 && motorsList.every(m => m.startsWith('veo-3.0-'))) {
+      return compareSelectedVideos(motorsList, s);
+    }
+
+    if (motor.startsWith('veo-3.0-')) {
       return playVeo(s, motor);
     }
 
     // Gemini Omni — scaffolding (anunciado en Google I/O 2026; API pública aún no disponible).
-    // Selector deshabilitado (soon:true); al publicarse el endpoint, sustituir por la llamada real (patrón playVeo).
     if (motor === 'gemini-omni-flash') {
       showPlayer(`
         <div class="player-card">
           <div class="player-head">▶ VIDEO · Gemini Omni Flash (Google)</div>
           <pre class="player-body">Gemini Omni se anunció en Google I/O 2026. La API pública aún no está disponible (llega "en las próximas semanas").\n\nEl motor ya está cableado y se activará en cuanto Google publique el model ID y el endpoint.</pre>
           <small class="player-foot">// scaffolding · pendiente de API oficial</small>
-        </div>`);
-      return;
-    }
-
-    // PRO: Runway — sin CORS público, abrir tab
-    if (motor === 'runway-gen3') {
-      const guion = [s.hook, s.desarrollo, s.cierre, s.cta && `CTA: ${s.cta}`].filter(Boolean).join('\n\n');
-      showPlayer(`
-        <div class="player-card">
-          <div class="player-head">▶ VIDEO · runway-gen3</div>
-          <pre class="player-body">${guion.replace(/</g,'&lt;') || '// (sin guion)'}</pre>
-          <a class="btn primary" href="https://app.runwayml.com/" target="_blank" rel="noopener">Abrir Runway</a>
-          <small class="player-foot">// Runway no permite CORS desde navegador. Cambia a "Pixer Storyboard" para ver la previsualización.</small>
-        </div>`);
-      return;
-    }
-
-    // Sora (OpenAI) — pendiente de integrar (sin endpoint en el worker todavia).
-    if (motor === 'openai-sora') {
-      showPlayer(`
-        <div class="player-card">
-          <div class="player-head">▶ VIDEO · Sora (OpenAI)</div>
-          <pre class="player-body">Sora (OpenAI) todavía no está operativo en Pixeria: falta el endpoint en el worker pixer-eleven. Lo activaremos próximamente.</pre>
-          <small class="player-foot">// pendiente de integración</small>
         </div>`);
       return;
     }
