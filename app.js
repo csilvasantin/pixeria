@@ -28,7 +28,7 @@
     if (motorId === 'suno-local-v45') return true; // depende del proxy local, se chequea aparte
     if (motorId === 'suno-local-v5') return true; // depende del proxy local, se chequea aparte
     if (motorId === 'lyria-3-pro-preview') return true; // proxied vía worker
-    if (motorId === 'runway-gen3' || motorId === 'openai-tts-hd') return false;
+    if (motorId === 'runway-gen3' || motorId === 'openai-tts-hd' || motorId === 'openai-sora') return false;
     return true;
   }
   function bindSettingsModal() {
@@ -156,14 +156,9 @@
       { id: 'grok-imagine-image-pro',        nombre: 'Grok Imagine Pro (xAI)',  tipo: 'pro',  badge: 'Best',   coste: '$0.07 / imagen',        desc: 'mayor calidad · vía worker' },
     ],
     video: [
-      { id: 'pixer-storyboard',                nombre: 'Pixer Storyboard',      tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',  desc: '3 escenas + crossfade + voz' },
-      { id: 'runway-gen3',                     nombre: 'Runway Gen-3 Alpha',    tipo: 'pro',  coste: '$0.05 / segundo',     desc: 'video 1080p · requiere backend (sin CORS)' },
-      { id: 'veo-3.0-generate-001',            nombre: 'Veo 3 (Google)',        tipo: 'pro',  badge: 'Better', coste: '~$0.40 / segundo',    desc: '720p/1080p · audio + diálogos' },
-      { id: 'veo-3.1-fast-generate-preview',   nombre: 'Veo 3.1 Fast (Google)', tipo: 'pro',  badge: 'Best',   coste: '~$0.15 / segundo',    desc: 'audio nativo · imagen→video · más rápido' },
-      // Provisional: 'gemini-omni-flash' es un id placeholder. Gemini Omni se anunció en Google I/O 2026
-      // pero su API pública aún no existe — al publicarse, actualizar el id al model ID oficial y activar
-      // (quitar soon, ajustar hasKeyFor + branch en playVideo + endpoint en el worker pixer-eleven).
-      { id: 'gemini-omni-flash',               nombre: 'Gemini Omni Flash (Google)', tipo: 'pro', coste: 'API en preview · próximamente', desc: 'multimodal any-to-any · edición iterativa · anunciado en Google I/O 2026', soon: true },
+      { id: 'runway-gen3',                   nombre: 'Runway Gen-3 Alpha',    tipo: 'pro', badge: 'Good',   coste: '$0.05 / segundo',  desc: 'video 1080p · requiere backend (sin CORS)' },
+      { id: 'veo-3.1-fast-generate-preview', nombre: 'Veo 3.1 Fast (Google)', tipo: 'pro', badge: 'Better', coste: '~$0.15 / segundo', desc: 'audio nativo · imagen→video · más rápido' },
+      { id: 'openai-sora',                   nombre: 'Sora (OpenAI)',         tipo: 'pro', badge: 'Best',   coste: 'vía API',          desc: 'texto→vídeo de alta calidad · próximamente' },
     ],
   };
 
@@ -288,7 +283,7 @@
                        : motor.id === 'lyria-3-pro-preview' ? 'WORKER pixer-eleven (GCP)'
                        : motor.id === 'nano-banana' ? 'WORKER pixer-eleven (Gemini)'
                        : (motor.id.startsWith('imagen-') || motor.id.startsWith('veo-')) ? 'WORKER pixer-eleven (Gemini)'
-                       : (motor.id === 'runway-gen3' || motor.id === 'openai-tts-hd') ? 'BACKEND_REQUERIDO'
+                       : (motor.id === 'runway-gen3' || motor.id === 'openai-tts-hd' || motor.id === 'openai-sora') ? 'BACKEND_REQUERIDO'
                        : 'API_KEY';
         wrap.hidden = false;
         wrap.innerHTML = `
@@ -1468,6 +1463,17 @@
           <pre class="player-body">${guion.replace(/</g,'&lt;') || '// (sin guion)'}</pre>
           <a class="btn primary" href="https://app.runwayml.com/" target="_blank" rel="noopener">Abrir Runway</a>
           <small class="player-foot">// Runway no permite CORS desde navegador. Cambia a "Pixer Storyboard" para ver la previsualización.</small>
+        </div>`);
+      return;
+    }
+
+    // Sora (OpenAI) — pendiente de integrar (sin endpoint en el worker todavia).
+    if (motor === 'openai-sora') {
+      showPlayer(`
+        <div class="player-card">
+          <div class="player-head">▶ VIDEO · Sora (OpenAI)</div>
+          <pre class="player-body">Sora (OpenAI) todavía no está operativo en Pixeria: falta el endpoint en el worker pixer-eleven. Lo activaremos próximamente.</pre>
+          <small class="player-foot">// pendiente de integración</small>
         </div>`);
       return;
     }
