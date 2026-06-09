@@ -22,6 +22,7 @@
     if (motorId === 'grok-imagine-image-pro') return true; // proxied vía worker
     if (motorId === 'imagen-4.0-ultra-generate-001') return true; // Gemini API key
     if (motorId === 'nano-banana') return true; // Gemini 2.5 Flash Image via worker
+    if (motorId === 'nano-banana-pro') return true; // Gemini 3 Pro Image via worker
     if (motorId === 'veo-3.0-generate-001') return true; // Gemini API key
     if (motorId === 'veo-3.1-fast-generate-preview') return true; // Gemini API key
     if (motorId === 'gemini-omni-flash') return false; // API aún no pública (Google I/O 2026) — sin endpoint todavía
@@ -152,7 +153,8 @@
     ],
     imagenes: [
       { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Good',   coste: 'gratis (free tier)',   desc: 'generación + edición · Gemini 2.5 Flash Image' },
-      { id: 'grok-imagine-image-pro',        nombre: 'Grok Imagine Pro (xAI)',  tipo: 'pro',  badge: 'Best',   coste: '$0.07 / imagen',        desc: 'mayor calidad · vía worker' },
+      { id: 'nano-banana-pro',               nombre: 'Nano Banana Pro (Gemini 3)', tipo: 'pro', badge: 'Best', coste: 'premium · Gemini 3 Pro Image', desc: 'máxima calidad y seguimiento de prompt' },
+      { id: 'grok-imagine-image-pro',        nombre: 'Grok Imagine Pro (xAI)',  tipo: 'pro',  badge: 'Better', coste: '$0.07 / imagen',       desc: 'mayor calidad · vía worker' },
     ],
     video: [
       { id: 'runway-gen3',                   nombre: 'Runway Gen-3 Alpha',    tipo: 'pro', badge: 'Good',   coste: '$0.05 / segundo',  desc: 'video 1080p · requiere backend (sin CORS)' },
@@ -1056,22 +1058,27 @@
     }
   }
 
-  async function playNanoBanana(s, fullPrompt) {
-    const label = 'Nano Banana';
+  async function playNanoBanana(s, fullPrompt, opts) {
+    const o = opts || {};
+    const label = o.label || 'Nano Banana';
+    const model = o.model || 'gemini-2.5-flash-image';
+    const motorId = o.motorId || 'nano-banana';
+    const headModel = o.headModel || 'Gemini 2.5 Flash Image';
+    const cost = o.cost || 'gratis (free tier)';
     const aspectRatio = ASPECT_IMAGEN[s.encuadre] || '1:1';
-    const url = nanoBananaUrl(fullPrompt, aspectRatio);
+    const url = nanoBananaUrl(fullPrompt, aspectRatio, model);
     const imgTitle = deriveAssetTitle('imagenes', loadStore());
-    const pubMeta = { type: 'image', motor: 'nano-banana', prompt: fullPrompt, costEst: 'gratis', url, mime: 'image/png' };
+    const pubMeta = { type: 'image', motor: motorId, prompt: fullPrompt, costEst: cost, url, mime: 'image/png' };
     showPlayer(`
       <div class="player-card">
-        <div class="player-head">▶ IMAGEN · ${label} (Gemini 2.5 Flash Image) · ${aspectRatio}</div>
+        <div class="player-head">▶ IMAGEN · ${label} (${headModel}) · ${aspectRatio}</div>
         <div class="player-img-wrap">
           <div class="player-loading">// generando imagen con ${label}...</div>
-          <img class="player-img" crossorigin="anonymous" src="${url}" alt="generada" data-pixer-title="${escAttr(imgTitle)}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none';var l=this.previousElementSibling;l.innerHTML='⚠ Nano Banana no devolvió imagen — cuota gratis agotada o error.&lt;br&gt;Reintenta en un rato.';l.style.color='#ff8a5c';l.style.lineHeight='1.5';">
+          <img class="player-img" crossorigin="anonymous" src="${url}" alt="generada" data-pixer-title="${escAttr(imgTitle)}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none';var l=this.previousElementSibling;l.innerHTML='⚠ ${label} no devolvió imagen — cuota agotada o error.&lt;br&gt;Reintenta en un rato.';l.style.color='#ff8a5c';l.style.lineHeight='1.5';">
         </div>
         <pre class="player-body">${fullPrompt.replace(/</g,'&lt;')}</pre>
         ${publishBtnHTML(pubMeta)}
-        <small class="player-foot">// Nano Banana · Gemini 2.5 Flash Image · gratis (free tier)</small>
+        <small class="player-foot">// ${label} · ${headModel} · ${cost}</small>
       </div>`);
   }
 
@@ -1110,9 +1117,10 @@
     } catch (e) { return { ok: false, error: String(e) }; }
   }
   // Nano Banana vía worker aislado admira-imagen (GET /img devuelve la imagen).
-  function nanoBananaUrl(fullPrompt, aspectRatio) {
+  function nanoBananaUrl(fullPrompt, aspectRatio, model) {
     const ar = aspectRatio || '1:1';
-    return `https://admira-imagen.csilvasantin.workers.dev/img?prompt=${encodeURIComponent(fullPrompt)}&ar=${ar}&model=gemini-2.5-flash-image`;
+    const m = model || 'gemini-2.5-flash-image';
+    return `https://admira-imagen.csilvasantin.workers.dev/img?prompt=${encodeURIComponent(fullPrompt)}&ar=${ar}&model=${m}`;
   }
   async function genNanoBananaRaw(fullPrompt, aspectRatio) {
     return { ok: true, url: nanoBananaUrl(fullPrompt, aspectRatio) };
@@ -1124,8 +1132,8 @@
     const aspectRatio = ASPECT_IMAGEN[s.encuadre] || '1:1';
     // Tabla de fabricacion por motor → {label, cost, promise}
     const factory = {
-      'flux-schnell':                  () => ({ label: 'FLUX schnell',     cost: 'gratis',  promise: Promise.resolve({ ok: true, url: genFluxUrl(fullPrompt, w, h) }) }),
-      'nano-banana':                   () => ({ label: 'Nano Banana',      cost: '~$0.04',  promise: genNanoBananaRaw(fullPrompt, aspectRatio) }),
+      'nano-banana':                   () => ({ label: 'Nano Banana',      cost: 'gratis',  promise: genNanoBananaRaw(fullPrompt, aspectRatio) }),
+      'nano-banana-pro':               () => ({ label: 'Nano Banana Pro',  cost: 'premium', promise: Promise.resolve({ ok: true, url: nanoBananaUrl(fullPrompt, aspectRatio, 'gemini-3-pro-image-preview') }) }),
       'imagen-4.0-ultra-generate-001': () => ({ label: 'Imagen 4 Ultra',   cost: '$0.06',   promise: genImagenRaw(fullPrompt, aspectRatio) }),
       'grok-imagine-image-pro':        () => ({ label: 'Grok Imagine Pro', cost: '$0.07',   promise: genGrokRaw(fullPrompt, 'grok-imagine-image-pro') }),
     };
@@ -1219,6 +1227,10 @@
 
     if (motor === 'nano-banana') {
       return playNanoBanana(s, fullPrompt);
+    }
+
+    if (motor === 'nano-banana-pro') {
+      return playNanoBanana(s, fullPrompt, { label: 'Nano Banana Pro', model: 'gemini-3-pro-image-preview', motorId: 'nano-banana-pro', headModel: 'Gemini 3 Pro Image', cost: 'premium · Gemini 3' });
     }
 
     if (motor === 'grok-imagine-image-pro') {
