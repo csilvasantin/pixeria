@@ -268,32 +268,8 @@
   </nav>
 
   <main>
-    <!-- LOGIN GATE -->
-    <div id="login-gate" class="login-gate">
-      <div class="login-card">
-        <p class="eyebrow">Acceso protegido</p>
-        <h2>Pixeria Studio</h2>
-        <p class="subtitle">La herramienta oficial de creación de contenidos con IA de Pixeria.</p>
-
-        <form id="login-form" onsubmit="doLogin(event)">
-          <label>Email del equipo</label>
-          <input type="email" id="email" value="demo@pixeria.com" required>
-
-          <label>Contraseña o token</label>
-          <input type="password" id="password" value="pixeria" required>
-
-          <button type="submit" class="button primary" style="width:100%; min-height:48px; margin-top:8px;">Entrar al Estudio</button>
-        </form>
-
-        <p style="margin-top:18px; font-size:12px; color:var(--muted); text-align:center;">
-          Demo: usa cualquier email + contraseña <strong>pixeria</strong>
-        </p>
-        <div id="login-msg" class="login-success" style="display:none;"></div>
-      </div>
-    </div>
-
-    <!-- STUDIO (hidden until login) -->
-    <div id="studio" class="studio">
+    <!-- STUDIO (acceso libre · gate de login eliminado) -->
+    <div id="studio" class="studio active">
       <div style="max-width:1180px; margin:0 auto; padding: 0 20px;">
         <div class="studio-header">
           <div>
@@ -302,7 +278,6 @@
           </div>
           <div>
             <span id="user-badge" class="user"></span>
-            <button onclick="logout()" class="button secondary" style="padding:6px 14px; font-size:13px; margin-left:12px;">Cerrar sesión</button>
           </div>
         </div>
 
