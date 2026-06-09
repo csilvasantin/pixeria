@@ -1182,7 +1182,10 @@
         const cTitle = (typeof deriveAssetTitle==='function') ? deriveAssetTitle('imagenes', loadStore()) : (m.label);
         const safeTitle = (typeof escAttr==='function') ? escAttr(cTitle) : String(cTitle).replace(/"/g,'&quot;');
         const cellMeta = JSON.stringify({ type: 'image', motor: m.id, prompt: fullPrompt, costEst: m.cost, url: res.url, mime: 'image/png' }).replace(/'/g, '&#39;');
-        cell.innerHTML = `<img crossorigin="anonymous" src="${res.url}" alt="${m.label}" data-pixer-title="${safeTitle}" onload="this.parentElement.querySelector('.compare-time')?.remove()"><span class="compare-time">${(ms/1000).toFixed(1)}s</span>`
+        // crossorigin solo en imágenes con CORS (admira-imagen) → si no, el navegador
+        // bloquea la carga (p.ej. imgen.x.ai de Grok no manda cabeceras CORS).
+        const cors = /admira-imagen\.|^data:/.test(res.url || '') ? ' crossorigin="anonymous"' : '';
+        cell.innerHTML = `<img${cors} src="${res.url}" alt="${m.label}" data-pixer-title="${safeTitle}" onload="this.parentElement.querySelector('.compare-time')?.remove()"><span class="compare-time">${(ms/1000).toFixed(1)}s</span>`
           + `<button type="button" class="btn publish-btn compare-pub" data-publish-meta='${cellMeta}' title="Publicar esta imagen en Stock" style="display:block;width:100%;margin-top:6px;font-size:11px;padding:6px 8px">📌 PUBLICAR EN STOCK</button>`;
         // Auto-selecciona la primera imagen que carga (default seleccionada).
         if (!firstSelected && motors.length > 1) {
