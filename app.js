@@ -1321,7 +1321,7 @@
         <div class="player-head">▶ IMAGEN · Nano Banana (Gemini 2.5 Flash Image) · ${w}×${h}</div>
         <div class="player-img-wrap">
           <div class="player-loading">// generando imagen con Nano Banana...</div>
-          <img class="player-img" src="${url}" alt="generada" data-pixer-title="${escAttr(fluxTitle)}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none';var l=this.previousElementSibling;l.innerHTML='⚠ Nano Banana no devolvió imagen — cuota gratis agotada o error.&lt;br&gt;Reintenta en un rato o usa Grok Imagine.';l.style.color='#ff8a5c';l.style.lineHeight='1.5';">
+          <img class="player-img" crossorigin="anonymous" src="${url}" alt="generada" data-pixer-title="${escAttr(fluxTitle)}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none';var l=this.previousElementSibling;l.innerHTML='⚠ Nano Banana no devolvió imagen — cuota gratis agotada o error.&lt;br&gt;Reintenta en un rato o usa Grok Imagine.';l.style.color='#ff8a5c';l.style.lineHeight='1.5';">
         </div>
         <pre class="player-body">${fullPrompt.replace(/</g,'&lt;')}</pre>
         ${publishBtnHTML(pubMeta)}
@@ -2185,6 +2185,22 @@
   async function publishToStock(meta, btn) {
     if (btn) { btn.disabled = true; btn.dataset.origLabel = btn.textContent; btn.textContent = '⏳ subiendo...'; }
     try {
+      // Imágenes con URL externa (Nano Banana): captura el <img> ya mostrado a
+      // base64 (CORS-safe) → evita el re-fetch servidor (referer) y la
+      // re-generación no determinista. Publica EXACTAMENTE lo que se ve.
+      if (btn && (meta.type === 'image' || meta.type === 'imagen') && meta.url
+          && !meta.url.startsWith('data:') && !meta.url.startsWith('blob:')) {
+        const card = btn.closest('.player-card');
+        const imgEl = card && card.querySelector('img.player-img');
+        if (imgEl && imgEl.naturalWidth) {
+          try {
+            const cv = document.createElement('canvas');
+            cv.width = imgEl.naturalWidth; cv.height = imgEl.naturalHeight;
+            cv.getContext('2d').drawImage(imgEl, 0, 0);
+            meta = Object.assign({}, meta, { url: cv.toDataURL('image/png'), mime: 'image/png' });
+          } catch (_) { /* canvas tainted → seguirá por sourceUrl */ }
+        }
+      }
       const payload = {
         type: meta.type,
         motor: meta.motor,
