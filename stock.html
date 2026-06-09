@@ -41,7 +41,7 @@
       <a href="imagenes.html" data-nav="imagenes">Imágenes</a>
       <a href="video.html" data-nav="video">Video</a>
       <a href="publicidad.html" data-nav="publicidad">Publicidad</a>
-      <a href="/crear/" data-nav="crear">Crear</a>
+      <a href="/crear/" data-nav="crear">Assets</a>
       <a href="stock.html" data-nav="stock">Stock</a>
     </nav>
     <div class="topnav-actions">
@@ -236,7 +236,7 @@
     function renderPreview(it) {
       if (isFurni(it)) {
         // Mobiliario del gemelo: sprite pixelado → render nítido.
-        return `<img src="${it.url}" alt="" loading="lazy" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
+        return `<img src="${it.url}" alt="" loading="lazy" style="image-rendering:pixelated;object-fit:cover;background:#0a140a;">`;
       }
       if (it.type === 'image') {
         return `<img src="${it.thumbnail || it.url}" alt="" loading="lazy">`;

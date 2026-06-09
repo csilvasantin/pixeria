@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Crear · Pixeria Studio</title>
+  <title>Assets · Pixeria Studio</title>
   <meta name="description" content="Herramienta de creación de Pixeria. Inicia sesión para acceder al estudio de generación de contenido con IA.">
   <meta name="theme-color" content="#0b1117">
   <link rel="canonical" href="https://www.pixeria.com/crear/">
@@ -238,7 +238,7 @@
       <a href="/imagenes.html">Imagenes</a>
       <a href="/video.html">Video</a>
       <a href="/publicidad.html">Publicidad</a>
-      <a href="/crear/" class="active">Crear</a>
+      <a href="/crear/" class="active">Assets</a>
       <a href="/stock.html">Stock</a>
     </nav>
     <div class="header-actions">
@@ -259,7 +259,7 @@
     <a href="/imagenes.html">Imagenes</a>
     <a href="/video.html">Video</a>
     <a href="/publicidad.html">Publicidad</a>
-    <a href="/crear/" class="active">Crear</a>
+    <a href="/crear/" class="active">Assets</a>
     <a href="/stock.html">Stock</a>
     <div class="mobile-language-switcher" aria-label="Seleccion de idioma">
       <a class="lang-toggle" href="/en/" aria-label="Cambiar a ingles">ENG</a>
@@ -1258,8 +1258,19 @@
       }
     });
 
-    // Make sure chips work even if studio shown later (init is called on login)
-    console.log('%c[Pixeria Studio] Login + creation tool ready. Password hint: pixeria', 'color:#555');
+    // Acceso libre: entrar directo al estudio (gate de login eliminado)
+    (function autoEnterStudio() {
+      currentUser = 'pixeria';
+      const gate = document.getElementById('login-gate');
+      if (gate) gate.style.display = 'none';
+      const studio = document.getElementById('studio');
+      if (studio) { studio.style.display = 'block'; studio.classList.add('active'); }
+      const ub = document.getElementById('user-badge'); if (ub) ub.textContent = 'Pixeria · equipo';
+      const logoutBtn = document.querySelector('button[onclick="logout()"]'); if (logoutBtn) logoutBtn.style.display = 'none';
+      try { initFormatChips(); } catch (e) {}
+      const oa = document.getElementById('output-actions'); if (oa) oa.style.display = 'none';
+    })();
+    console.log('%c[Pixeria Studio] Acceso libre · creation tool ready.', 'color:#555');
   </script>
   <script src="/assets/matrix-rain.js?v=20260608-sides"></script>
 </body>
