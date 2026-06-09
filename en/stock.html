@@ -206,7 +206,12 @@
     const lightboxInner = document.getElementById('stockLightboxInner');
     const lightboxMeta = document.getElementById('stockLightboxMeta');
     const STOCK_BASE = 'https://pixer-eleven.csilvasantin.workers.dev';
-    const STOCK_LIST_URL = STOCK_BASE + '/stock/list';
+    // Spanish ISPs block the *.workers.dev IP range (LaLiga case, Jun 2026).
+    // The gallery reads the static index + blobs from the public r2.dev
+    // bucket instead (not blocked). STOCK_BASE remains for admin ops only.
+    const STOCK_PUBLIC_R2 = 'https://pub-bf043a4daa3b43b7a0b769617729d074.r2.dev';
+    const STOCK_LIST_URL = STOCK_PUBLIC_R2 + '/stock/index.json';
+    const STOCK_LIST_FALLBACK = STOCK_BASE + '/stock/list?limit=200';
     const TYPE_ORDER = { audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
     let allItems = [];
     let filters = { type: '', motor: '', q: '', tag: '', dateQuick: '', dateFrom: '', dateTo: '' };
@@ -242,7 +247,7 @@
         return `<img src="${it.thumbnail || it.url}" alt="" loading="lazy">`;
       }
       if (it.type === 'video' || it.type === 'animation') {
-        return `<video class="stock-video-preview" src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} preload="metadata" muted playsinline></video>`;
+        return `<video class="stock-video-preview" data-src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} preload="metadata" muted playsinline></video>`;
       }
       if (it.type === 'audio' || it.type === 'music') {
         const cover = it.thumbnail || '';
@@ -252,6 +257,25 @@
       return `<pre>${JSON.stringify(it).slice(0,200)}</pre>`;
     }
     function escAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
+
+    // Lazy-load video previews: src is assigned when the card nears the
+    // viewport (600px margin). Grid paints instantly regardless of item count.
+    const lazyVideoIO = ('IntersectionObserver' in window)
+      ? new IntersectionObserver((entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            const v = e.target;
+            if (v.dataset.src && !v.src) v.src = v.dataset.src;
+            lazyVideoIO.unobserve(v);
+          }
+        }, { rootMargin: '600px' })
+      : null;
+    function observeLazyVideos() {
+      document.querySelectorAll('video.stock-video-preview[data-src]').forEach(v => {
+        if (lazyVideoIO) lazyVideoIO.observe(v);
+        else if (!v.src) v.src = v.dataset.src;
+      });
+    }
     function ainimationImportHref(it) {
       const params = new URLSearchParams();
       params.set('admiraStockUrl', it.url || '');
@@ -432,6 +456,7 @@
 
       grid.classList.remove('stock-grid-grouped');
       grid.innerHTML = pageItems.map(renderCard).join('');
+      observeLazyVideos();
       empty.hidden = items.length > 0;
 
       // Pager UI. El superior lleva el orden integrado, así que no se oculta del
@@ -652,18 +677,22 @@
     async function fetchList() {
       // 3 intentos con backoff: un único fetch fallido (hipo de red o arranque
       // en frío del worker) NO debe vaciar la vista ni parecer pérdida de datos.
+      // Static r2.dev index first (unblocked, fast); worker endpoint as fallback.
       let lastErr;
+      const sources = [STOCK_LIST_URL, STOCK_LIST_FALLBACK];
       for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          const r = await fetch(STOCK_LIST_URL + '?limit=200', { cache: 'no-store' });
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          const data = await r.json();
-          if (!data || !Array.isArray(data.items)) throw new Error('respuesta sin items');
-          return data.items;
-        } catch (e) {
-          lastErr = e;
-          if (attempt < 3) await new Promise(res => setTimeout(res, attempt * 800));
+        for (const src of sources) {
+          try {
+            const r = await fetch(src, { cache: 'no-store' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const data = await r.json();
+            if (!data || !Array.isArray(data.items)) throw new Error('respuesta sin items');
+            return data.items.slice(0, 200);
+          } catch (e) {
+            lastErr = e;
+          }
         }
+        if (attempt < 3) await new Promise(res => setTimeout(res, attempt * 800));
       }
       throw lastErr;
     }
