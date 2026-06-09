@@ -1114,9 +1114,11 @@
 
   // ─── Generadores atómicos para "comparar todas" ─────────────────
   // Cada uno devuelve {ok, url?, error?} sin renderizar UI.
+  // Nano Banana (Gemini 2.5 Flash Image) vía worker aislado admira-imagen.
+  // Devuelve los bytes de la imagen directamente → usable en <img src>.
   function genFluxUrl(fullPrompt, w, h) {
-    const seed = Math.floor(Math.random() * 1e9);
-    return `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true`;
+    const ar = (w && h) ? (w / h >= 1.25 ? '16:9' : (h / w >= 1.25 ? '9:16' : '1:1')) : '16:9';
+    return `https://admira-imagen.csilvasantin.workers.dev/img?prompt=${encodeURIComponent(fullPrompt)}&ar=${ar}&model=gemini-2.5-flash-image`;
   }
   async function genGrokRaw(fullPrompt, model) {
     try {
@@ -1310,22 +1312,20 @@
       return;
     }
 
-    // Default: Pollinations (free). El parámetro referrer da el tier elevado
-    // cuando www.pixeria.com está registrado en Pollinations (sin token en cliente).
-    const seed = Math.floor(Math.random() * 1e9);
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&referrer=www.pixeria.com`;
+    // Nano Banana (Gemini 2.5 Flash Image) vía worker aislado admira-imagen.
+    const url = genFluxUrl(fullPrompt, w, h);
     const fluxTitle = deriveAssetTitle('imagenes', loadStore());
-    const pubMeta = { type: 'image', motor: 'flux-schnell', prompt: fullPrompt, costEst: 'gratis', url, mime: 'image/jpeg' };
+    const pubMeta = { type: 'image', motor: 'nano-banana', prompt: fullPrompt, costEst: 'gratis', url, mime: 'image/png' };
     showPlayer(`
       <div class="player-card">
-        <div class="player-head">▶ IMAGEN · Pollinations · ${w}×${h} · seed ${seed}</div>
+        <div class="player-head">▶ IMAGEN · Nano Banana (Gemini 2.5 Flash Image) · ${w}×${h}</div>
         <div class="player-img-wrap">
-          <div class="player-loading">// generando imagen...</div>
-          <img class="player-img" src="${url}" alt="generada" data-pixer-title="${escAttr(fluxTitle)}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none';var l=this.previousElementSibling;l.innerHTML='⚠ El modelo gratis (Pollinations) no devolvió imagen — saturado o limitado.&lt;br&gt;Reintenta o usa otro modelo (Grok Imagine).';l.style.color='#ff8a5c';l.style.lineHeight='1.5';">
+          <div class="player-loading">// generando imagen con Nano Banana...</div>
+          <img class="player-img" src="${url}" alt="generada" data-pixer-title="${escAttr(fluxTitle)}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none';var l=this.previousElementSibling;l.innerHTML='⚠ Nano Banana no devolvió imagen — cuota gratis agotada o error.&lt;br&gt;Reintenta en un rato o usa Grok Imagine.';l.style.color='#ff8a5c';l.style.lineHeight='1.5';">
         </div>
         <pre class="player-body">${fullPrompt.replace(/</g,'&lt;')}</pre>
         ${publishBtnHTML(pubMeta)}
-        <small class="player-foot">// Pollinations.ai · gratis · sin API key</small>
+        <small class="player-foot">// Nano Banana · Gemini 2.5 Flash Image · gratis (free tier)</small>
       </div>`);
   }
 
@@ -1498,7 +1498,7 @@
     const sceneSec = totalSec / scenes.length;
     const baseSeed = Math.floor(Math.random() * 1e9);
     const urls = scenes.map((sc, i) =>
-      `https://image.pollinations.ai/prompt/${encodeURIComponent(sc.text + ', ' + stylePalette + ', cinematic still, 35mm')}?width=${w}&height=${h}&seed=${baseSeed + i}&nologo=true`
+      genFluxUrl(sc.text + ', ' + stylePalette + ', cinematic still, 35mm', w, h)
     );
 
     showPlayer(`
@@ -2310,7 +2310,7 @@
     const seedSrc = String((s.uso || '') + (s.tonalidad || '') + ((store && store.cliente) || '') || 'pixer');
     let seed = 0;
     for (let i = 0; i < seedSrc.length; i++) seed = (seed * 31 + seedSrc.charCodeAt(i)) >>> 0;
-    return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&seed=${seed % 100000}&nologo=true`;
+    return genFluxUrl(prompt, 512, 512);
   }
 
   function detectLatestAsset() {
