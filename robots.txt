@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /god/
+
+Sitemap: https://www.pixeria.com/sitemap.xml

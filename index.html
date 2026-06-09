@@ -17,6 +17,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/favicon-180.png">
   <link rel="preload" href="assets/hero-pixeria.jpg" as="image">
+  <link rel="preconnect" href="https://csilvasantin.github.io" crossorigin>
+  <link rel="dns-prefetch" href="https://csilvasantin.github.io">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/tokens.css">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
@@ -97,7 +99,7 @@
   <main id="top">
     <section class="hero">
       <picture class="hero-media">
-        <img src="assets/hero-pixeria.jpg" alt="Estudio cinematografico Pixeria: creacion de contenido con IA, interfaces holograficas elegantes en espacio oscuro premium">
+        <img src="assets/hero-pixeria.jpg" width="1920" height="1080" fetchpriority="high" decoding="async" alt="Estudio cinematografico Pixeria: creacion de contenido con IA, interfaces holograficas elegantes en espacio oscuro premium">
       </picture>
       <div class="hero-shade" aria-hidden="true"></div>
       <div class="hero-content">
@@ -208,14 +210,16 @@
       <div class="radar-live">
         <p class="eyebrow">Modelos destacados · junio 2026</p>
         <div class="model-grid">
-          <div class="model"><span class="tag">Video</span><strong>Kling 2.1</strong><small>Mejor calidad de movimiento y lipsync</small></div>
-          <div class="model"><span class="tag">Video</span><strong>Runway Gen-4</strong><small>Control creativo y storyboards</small></div>
-          <div class="model"><span class="tag">Imagen</span><strong>Midjourney v7</strong><small>Consistencia de marca y detalle</small></div>
-          <div class="model"><span class="tag">Imagen</span><strong>Flux Pro 1.1</strong><small>Velocidad + fidelidad de texto</small></div>
-          <div class="model"><span class="tag">Voz</span><strong>ElevenLabs Multilingual v3</strong><small>Emocion y clonacion de locutores</small></div>
-          <div class="model"><span class="tag">Musica</span><strong>Suno v4</strong><small>Estructura y produccion usable</small></div>
+          <div class="model"><span class="tag">Video</span><strong>Veo 3.1</strong><small>Calidad cinematografica con audio nativo en 4K</small></div>
+          <div class="model"><span class="tag">Video</span><strong>Kling 3.0</strong><small>Storyboard multi-plano y el premium mas barato</small></div>
+          <div class="model"><span class="tag">Video</span><strong>Runway Gen-4.5</strong><small>Control de camara y personaje consistente</small></div>
+          <div class="model"><span class="tag">Imagen</span><strong>Flux 2</strong><small>Fotorrealismo lider y coste bajo por imagen</small></div>
+          <div class="model"><span class="tag">Imagen</span><strong>Midjourney v7</strong><small>Rey de la estetica y consistencia de marca</small></div>
+          <div class="model"><span class="tag">Voz</span><strong>ElevenLabs v3</strong><small>Emocion y clonacion de locutores</small></div>
+          <div class="model"><span class="tag">Musica</span><strong>Suno v5</strong><small>Voz con matiz humano y estructura usable</small></div>
+          <div class="model"><span class="tag">Musica</span><strong>ElevenLabs Music v2</strong><small>Audio licenciado, listo para uso comercial</small></div>
         </div>
-        <p class="radar-note">Actualizado con pruebas reales de produccion. El radar prioriza control, derechos y calidad final sobre demos virales. Estos modelos alimentan Pixer Feed (signage IA en pantallas y eventos en vivo).</p>
+        <p class="radar-note">Actualizado con pruebas reales de produccion. El radar prioriza control, derechos y calidad final sobre demos virales. En el punto de mira: <strong>Seedance 2.0</strong>, que gana ciegas de image-to-video. Estos modelos alimentan Pixer Feed (signage IA en pantallas y eventos en vivo).</p>
       </div>
     </section>
 
@@ -417,6 +421,35 @@
       }, { rootMargin: '-40% 0px -55% 0px', threshold: 0.01 });
 
       sections.forEach(s => io.observe(s));
+    })();
+
+    // Scroll reveal (progressive enhancement; respects reduced motion)
+    (function () {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (reduce.matches || !('IntersectionObserver' in window)) return;
+
+      const targets = document.querySelectorAll(
+        '.band .section-head, .ops-card, .radar-card, .model, ' +
+        '.format-grid article, .program-main, .program-list article, ' +
+        '.steps li, .library-layout > *'
+      );
+      if (!targets.length) return;
+
+      targets.forEach((el, i) => {
+        el.classList.add('reveal');
+        el.style.setProperty('--reveal-delay', (Math.min(i % 6, 5) * 60) + 'ms');
+      });
+
+      const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
+
+      targets.forEach(el => io.observe(el));
     })();
   </script>
   <script src="/assets/matrix-rain.js?v=20260608-sides"></script>
