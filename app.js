@@ -141,11 +141,9 @@
   // Default = primer elemento (siempre el gratuito).
   const MOTORES = {
     audio: [
-      { id: 'web-speech',             nombre: 'Web Speech API',        tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',     desc: 'TTS del sistema operativo' },
-      { id: 'elevenlabs-flash-v2-5',  nombre: 'ElevenLabs Flash v2.5', tipo: 'pro',  badge: 'Better', coste: '$150 / 1M caracteres',   desc: '~75ms latencia · 50% más barato' },
-      { id: 'elevenlabs-v2',          nombre: 'ElevenLabs v2',         tipo: 'pro',  coste: '$300 / 1M caracteres',   desc: 'voces ultrarrealistas, multilingüe' },
-      { id: 'elevenlabs-v3',          nombre: 'ElevenLabs v3 (alpha)', tipo: 'pro',  badge: 'Best',   coste: '$300 / 1M caracteres',   desc: 'máxima expresividad · tags emocionales' },
-      { id: 'openai-tts-hd',          nombre: 'OpenAI TTS HD',         tipo: 'pro',  coste: '$30 / 1M caracteres',    desc: 'multi-idioma, baja latencia' },
+      { id: 'web-speech',    nombre: 'Web Speech API', tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',     desc: 'TTS del sistema operativo' },
+      { id: 'grok-voice',    nombre: 'Grok (xAI)',     tipo: 'pro',  badge: 'Better', coste: 'vía worker',             desc: 'voz expresiva de xAI' },
+      { id: 'elevenlabs-v3', nombre: 'ElevenLabs v3',  tipo: 'pro',  badge: 'Best',   coste: '$300 / 1M caracteres',   desc: 'máxima expresividad · tags emocionales' },
     ],
     musica: [
       { id: 'pixer-loop',           nombre: 'Pixer Loop (Web Audio)', tipo: 'free', coste: 'gratis · navegador',  desc: 'pentatónica Cm in-browser' },
@@ -704,6 +702,11 @@
         stopElevenProg(false);
         showPlayer(`<div class="player-card"><div class="player-head">▶ AUDIO · ERROR</div><pre class="player-body">${String(e).replace(/</g,'&lt;')}</pre></div>`);
       }
+      return;
+    }
+
+    if (motor === 'grok-voice') {
+      showPlayer('<p class="player-msg">⚠ Grok (xAI) aún no genera audio desde el navegador: no hay endpoint de voz en el worker. Usa ElevenLabs (Best) o el motor gratuito.</p>');
       return;
     }
 
