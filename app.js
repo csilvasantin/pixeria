@@ -151,8 +151,7 @@
       { id: 'suno-local-v5',        nombre: 'Suno v5 (local)',        tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción · cuenta loguead.', desc: 'chirp-v5 · máxima calidad · vía proxy suno-local' },
     ],
     imagenes: [
-      { id: 'flux-schnell',                  nombre: 'FLUX.1 [schnell]',        tipo: 'free', badge: 'Good',   coste: 'gratis · vía Nano Banana', desc: 'rápido' },
-      { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Better', coste: 'gratis (free tier)',   desc: 'generación + edición consistente' },
+      { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Good',   coste: 'gratis (free tier)',   desc: 'generación + edición · Gemini 2.5 Flash Image' },
       { id: 'grok-imagine-image-pro',        nombre: 'Grok Imagine Pro (xAI)',  tipo: 'pro',  badge: 'Best',   coste: '$0.07 / imagen',        desc: 'mayor calidad · vía worker' },
     ],
     video: [
@@ -1174,7 +1173,9 @@
       if (res && res.ok && res.url) {
         const cTitle = (typeof deriveAssetTitle==='function') ? deriveAssetTitle('imagenes', loadStore()) : (m.label);
         const safeTitle = (typeof escAttr==='function') ? escAttr(cTitle) : String(cTitle).replace(/"/g,'&quot;');
-        cell.innerHTML = `<img src="${res.url}" alt="${m.label}" data-pixer-title="${safeTitle}" onload="this.parentElement.querySelector('.compare-time')?.remove()"><span class="compare-time">${(ms/1000).toFixed(1)}s</span>`;
+        const cellMeta = JSON.stringify({ type: 'image', motor: m.id, prompt: fullPrompt, costEst: m.cost, url: res.url, mime: 'image/png' }).replace(/'/g, '&#39;');
+        cell.innerHTML = `<img crossorigin="anonymous" src="${res.url}" alt="${m.label}" data-pixer-title="${safeTitle}" onload="this.parentElement.querySelector('.compare-time')?.remove()"><span class="compare-time">${(ms/1000).toFixed(1)}s</span>`
+          + `<button type="button" class="btn publish-btn compare-pub" data-publish-meta='${cellMeta}' title="Publicar esta imagen en Stock" style="display:block;width:100%;margin-top:6px;font-size:11px;padding:6px 8px">📌 PUBLICAR EN STOCK</button>`;
         // Auto-selecciona la primera imagen que carga (default seleccionada).
         if (!firstSelected && motors.length > 1) {
           cellWrap.classList.add('selected');
@@ -1189,7 +1190,10 @@
   async function playImagenes() {
     const s = loadStore().imagenes || {};
     // Multi-select: leer s.motors (array) y caer a [s.motor] solo si no existe.
-    const motorsList = Array.isArray(s.motors) && s.motors.length ? s.motors : [s.motor || 'flux-schnell'];
+    // flux-schnell ya no existe (Pollinations murió) → migra a nano-banana y dedup,
+    // así no se comparan dos motores idénticos.
+    let motorsList = Array.isArray(s.motors) && s.motors.length ? s.motors : [s.motor || 'nano-banana'];
+    motorsList = [...new Set(motorsList.map(m => m === 'flux-schnell' ? 'nano-banana' : m))];
     const motor = motorsList[0]; // primario para single-render path
     const prompt = (s.prompt || 'Matrix terminal screen with green falling code').trim();
     const sizeMap = {
@@ -2145,8 +2149,8 @@
       // re-generación no determinista. Publica EXACTAMENTE lo que se ve.
       if (btn && (meta.type === 'image' || meta.type === 'imagen') && meta.url
           && !meta.url.startsWith('data:') && !meta.url.startsWith('blob:')) {
-        const card = btn.closest('.player-card');
-        const imgEl = card && card.querySelector('img.player-img');
+        const card = btn.closest('.player-card, .compare-cell');
+        const imgEl = card && card.querySelector('img.player-img, .compare-cell-img img, img');
         if (imgEl && imgEl.naturalWidth) {
           try {
             const cv = document.createElement('canvas');
