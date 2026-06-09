@@ -1310,9 +1310,10 @@
       return;
     }
 
-    // Default: Pollinations (free)
+    // Default: Pollinations (free). El parámetro referrer da el tier elevado
+    // cuando www.pixeria.com está registrado en Pollinations (sin token en cliente).
     const seed = Math.floor(Math.random() * 1e9);
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true`;
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=${w}&height=${h}&seed=${seed}&nologo=true&referrer=www.pixeria.com`;
     const fluxTitle = deriveAssetTitle('imagenes', loadStore());
     const pubMeta = { type: 'image', motor: 'flux-schnell', prompt: fullPrompt, costEst: 'gratis', url, mime: 'image/jpeg' };
     showPlayer(`
@@ -1320,7 +1321,7 @@
         <div class="player-head">▶ IMAGEN · Pollinations · ${w}×${h} · seed ${seed}</div>
         <div class="player-img-wrap">
           <div class="player-loading">// generando imagen...</div>
-          <img class="player-img" src="${url}" alt="generada" data-pixer-title="${escAttr(fluxTitle)}" onload="this.previousElementSibling.style.display='none'">
+          <img class="player-img" src="${url}" alt="generada" data-pixer-title="${escAttr(fluxTitle)}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none';var l=this.previousElementSibling;l.innerHTML='⚠ El modelo gratis (Pollinations) no devolvió imagen — saturado o limitado.&lt;br&gt;Reintenta o usa otro modelo (Grok Imagine).';l.style.color='#ff8a5c';l.style.lineHeight='1.5';">
         </div>
         <pre class="player-body">${fullPrompt.replace(/</g,'&lt;')}</pre>
         ${publishBtnHTML(pubMeta)}
