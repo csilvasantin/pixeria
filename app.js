@@ -146,15 +146,13 @@
       { id: 'elevenlabs-v3', nombre: 'ElevenLabs v3',  tipo: 'pro',  badge: 'Best',   coste: '$300 / 1M caracteres',   desc: 'máxima expresividad · tags emocionales' },
     ],
     musica: [
-      { id: 'pixer-loop',           nombre: 'Pixer Loop (Web Audio)', tipo: 'free', coste: 'gratis · navegador',  desc: 'pentatónica Cm in-browser' },
-      { id: 'lyria-3-pro-preview',  nombre: 'Lyria 3 Pro (Google)',   tipo: 'pro',  badge: 'Better', coste: 'paid tier Gemini',    desc: '~2min con voz cantando la letra' },
-      { id: 'suno-local-v45',       nombre: 'Suno v4.5 (local)',      tipo: 'pro',  coste: '~10 créditos / canción · cuenta loguead.', desc: 'chirp-v4-5 · vía proxy suno-local' },
+      { id: 'pixer-loop',           nombre: 'Pixer Loop (Web Audio)', tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',  desc: 'pentatónica Cm in-browser' },
+      { id: 'lyria-3-pro-preview',  nombre: 'Gemini (Google)',        tipo: 'pro',  badge: 'Better', coste: 'paid tier Gemini',    desc: '~2min con voz cantando la letra' },
       { id: 'suno-local-v5',        nombre: 'Suno v5 (local)',        tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción · cuenta loguead.', desc: 'chirp-v5 · máxima calidad · vía proxy suno-local' },
     ],
     imagenes: [
       { id: 'flux-schnell',                  nombre: 'FLUX.1 [schnell]',        tipo: 'free', badge: 'Good',   coste: 'gratis · Pollinations', desc: 'open weights, rápido' },
       { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'pro', badge: 'Better', coste: '~$0.04 / imagen',      desc: 'generación + edición consistente' },
-      { id: 'imagen-4.0-ultra-generate-001', nombre: 'Imagen 4 Ultra (Google)', tipo: 'pro',  coste: '$0.06 / imagen 2K',     desc: 'máxima calidad · hasta 2K' },
       { id: 'grok-imagine-image-pro',        nombre: 'Grok Imagine Pro (xAI)',  tipo: 'pro',  badge: 'Best',   coste: '$0.07 / imagen',        desc: 'mayor calidad · vía worker' },
     ],
     video: [
