@@ -172,7 +172,14 @@ img {
 .hero-content {
   position: relative;
   z-index: 2;
-  max-width: 760px;
+  /* Centrado en la misma columna (--max) que las secciones de abajo y las
+     páginas interiores: antes el bloque iba pegado al borde izquierdo
+     (max-width:760 sin margin auto) y la home quedaba incoherente con el
+     resto de pantallas. Los anchos de lectura se capan en los hijos
+     (.hero-copy 620px, etc.). */
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
 }
 
 .eyebrow {
@@ -1381,7 +1388,9 @@ body::after {
 }
 
 .hero-content {
-  max-width: 1000px;
+  /* Misma columna --max que el resto de secciones (la regla base ya pone
+     width:100% + margin:0 auto); antes 1000px y descuadraba con la home. */
+  max-width: var(--max);
 }
 
 .eyebrow {
@@ -1506,6 +1515,9 @@ h1::after {
   bottom: auto;
   width: min(650px, 100%);
   margin-top: 30px;
+  /* Alinear el borde izquierdo del panel con la columna centrada (--max) del
+     hero y las secciones; a anchos < --max queda 0 (pegado, como antes). */
+  margin-left: calc((100% - min(100%, var(--max))) / 2);
   border-color: var(--line);
   background: rgba(2, 6, 2, .84);
   backdrop-filter: blur(10px);
