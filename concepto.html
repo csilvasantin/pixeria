@@ -347,12 +347,18 @@
         input.value = ""; autosize();
         const typing = addTyping();
 
+        // Timeout duro: sin esto, si el worker o el modelo se cuelgan el chat
+        // se queda "pensando" para siempre. Abortamos a los 75s y avisamos.
+        const ctrl = new AbortController();
+        const to = setTimeout(() => ctrl.abort(), 75000);
         try {
           const res = await fetch(ENDPOINT, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ messages: history }),
+            signal: ctrl.signal,
           });
+          clearTimeout(to);
           typing.remove();
           if (!res.ok) {
             let detail = "";
@@ -370,8 +376,13 @@
           addMsg("bot", reply);
           history.push({ role: "assistant", content: reply });
         } catch (err) {
+          clearTimeout(to);
           typing.remove();
-          addMsg("bot", "Error de conexión con el servidor. Comprueba tu red e inténtalo de nuevo.", "error");
+          if (err && err.name === "AbortError") {
+            addMsg("bot", "El modelo ha tardado demasiado (más de 75s) y he cortado la espera. Suele ser cola del modelo gratuito: reinténtalo en un momento.", "error");
+          } else {
+            addMsg("bot", "Error de conexión con el servidor. Comprueba tu red e inténtalo de nuevo.", "error");
+          }
         } finally {
           busy = false; send.disabled = false; input.focus();
         }

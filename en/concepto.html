@@ -344,12 +344,18 @@
         input.value = ""; autosize();
         const typing = addTyping();
 
+        // Hard timeout: without it, a hung worker/model leaves the chat
+        // "thinking" forever. Abort at 75s and tell the user.
+        const ctrl = new AbortController();
+        const to = setTimeout(() => ctrl.abort(), 75000);
         try {
           const res = await fetch(ENDPOINT, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ messages: history }),
+            signal: ctrl.signal,
           });
+          clearTimeout(to);
           typing.remove();
           if (!res.ok) {
             let detail = "";
@@ -367,8 +373,13 @@
           addMsg("bot", reply);
           history.push({ role: "assistant", content: reply });
         } catch (err) {
+          clearTimeout(to);
           typing.remove();
-          addMsg("bot", "Connection error with the server. Check your network and try again.", "error");
+          if (err && err.name === "AbortError") {
+            addMsg("bot", "The model took too long (over 75s) so I stopped waiting. This is usually the free model's queue: please try again in a moment.", "error");
+          } else {
+            addMsg("bot", "Connection error with the server. Check your network and try again.", "error");
+          }
         } finally {
           busy = false; send.disabled = false; input.focus();
         }
