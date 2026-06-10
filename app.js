@@ -158,10 +158,9 @@
       { id: 'grok-imagine-image-pro',        nombre: 'Grok Imagine Pro (xAI)',  tipo: 'pro',  badge: 'Better', coste: '$0.07 / imagen',       desc: 'mayor calidad · vía worker' },
     ],
     video: [
-      { id: 'veo-3.0-fast-generate-001',     nombre: 'Veo 3 Fast (Google)',  tipo: 'pro', badge: 'Good',   coste: '~$0.15 / segundo', desc: 'audio nativo · rápido · 720p' },
-      { id: 'veo-3.0-generate-001',          nombre: 'Veo 3 (Google)',       tipo: 'pro', badge: 'Better', coste: '~$0.40 / segundo', desc: 'audio nativo · más calidad · 720p' },
-      { id: 'veo-3.0-generate-001@1080p',    nombre: 'Veo 3 · 1080p (Google)', tipo: 'pro', badge: 'Better', coste: '~$0.40 / segundo', desc: 'audio nativo · máxima resolución · 1080p' },
-      { id: 'grok-imagine-video',            nombre: 'Grok Imagine Video (xAI)', tipo: 'pro', badge: 'Best', coste: 'premium · vía worker xAI', desc: 'Grok Imagine · vídeo cinemático · hasta 1080p' },
+      { id: 'pollinations-wan-fast',         nombre: 'Pollinations · Wan (gratis)', tipo: 'free', badge: 'Good',   coste: 'gratis · vía worker', desc: 'texto→vídeo gratis · Wan-Fast · 720p' },
+      { id: 'veo-3.0-generate-001',          nombre: 'Veo 3 (Google)',       tipo: 'pro', badge: 'Better', coste: '~$0.40 / segundo', desc: 'audio nativo · 720p' },
+      { id: 'grok-imagine-video',            nombre: 'Grok Imagine Video (xAI)', tipo: 'pro', badge: 'Best', coste: 'premium · vía worker xAI', desc: 'Grok Imagine · vídeo cinemático · 720p' },
     ],
   };
 
@@ -1455,7 +1454,7 @@
   async function playGrokVideo(s) {
     const aspect = ASPECT_VEO[s.canal] || '16:9';
     const dur = veoDuration(s);
-    const resolution = '1080p';
+    const resolution = '720p'; // el tier xAI de la cuenta no tiene 1080p (gen 400 "not available for your team")
     const prompt = buildVeoPrompt(s);
     if (!(await confirmPro('Grok Imagine Video (xAI)', `${dur}s · ${resolution} · vía worker xAI`))) return;
 
@@ -1483,6 +1482,63 @@
         <a class="btn" download="grok-${Date.now()}.mp4" href="${res.url}">⬇ Descargar MP4</a>
         ${publishBtnHTML(pubMeta)}
         <small class="player-foot">// xAI Grok Imagine · ${res.elapsed}s de procesado</small>
+      </div>`);
+  }
+
+  // ─── Pollinations Video (gratis) ────────────────────────────────
+  // Síncrono: el worker hace proxy a gen.pollinations.ai/video y devuelve el
+  // mp4 directo (un solo GET, ~30-90s). No hay polling. Se descarga como blob
+  // y se reproduce/publica localmente.
+  async function playPollinationsVideo(s) {
+    const aspect = ASPECT_VEO[s.canal] || '16:9';
+    const dur = veoDuration(s);
+    const prompt = buildVeoPrompt(s);
+    const qs = new URLSearchParams({ prompt, model: 'wan-fast', duration: String(dur), aspect, audio: 'true' });
+
+    showPlayer(`
+      <div class="player-card">
+        <div class="player-head">▶ VIDEO · Pollinations · Wan (gratis) · ${aspect} · ${dur}s · 720p</div>
+        ${progressHtml('Generando con Pollinations (gratis, puede tardar ~1 min)...', 'pvid', 180000)}
+      </div>`);
+    const stop = startProgress('pvid');
+
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 150000);
+    let blobUrl, errMsg;
+    try {
+      const r = await fetch(`${ELEVEN_WORKER_URL}/pvideo?${qs.toString()}`, { signal: ctrl.signal });
+      clearTimeout(to);
+      if (!r.ok) {
+        errMsg = `gen ${r.status}: ${(await r.text()).slice(0, 200)}`;
+      } else {
+        const blob = await r.blob();
+        if (!blob || blob.size < 1000 || !/video\//.test(blob.type)) {
+          errMsg = 'respuesta no es vídeo (' + (blob && blob.type) + ', ' + (blob && blob.size) + 'b)';
+        } else {
+          blobUrl = URL.createObjectURL(blob);
+        }
+      }
+    } catch (e) {
+      clearTimeout(to);
+      errMsg = (e && e.name === 'AbortError') ? 'timeout (>150s)' : String(e);
+    }
+
+    if (!blobUrl) {
+      stop(false);
+      showPlayer(`<div class="player-card"><div class="player-head">▶ VIDEO · Pollinations · ERROR</div><pre class="player-body">${String(errMsg).replace(/</g,'&lt;').slice(0,500)}</pre></div>`);
+      return;
+    }
+    stop(true);
+    const pTitle = deriveAssetTitle('video', loadStore());
+    const pubMeta = { type: 'video', motor: 'pollinations-wan-fast', prompt, costEst: 'gratis', url: blobUrl, mime: 'video/mp4' };
+    showPlayer(`
+      <div class="player-card">
+        <div class="player-head">▶ VIDEO · Pollinations · Wan (gratis) · ${aspect} · ${dur}s · 720p</div>
+        <video controls autoplay src="${blobUrl}" data-pixer-title="${escAttr(pTitle)}" style="width:100%; max-height:55vh; border:1px solid var(--matrix); box-shadow:0 0 24px rgba(0,255,65,.30);"></video>
+        <pre class="player-body">${prompt.replace(/</g,'&lt;')}</pre>
+        <a class="btn" download="pollinations-${Date.now()}.mp4" href="${blobUrl}">⬇ Descargar MP4</a>
+        ${publishBtnHTML(pubMeta)}
+        <small class="player-foot">// Pollinations · Wan-Fast · gratis</small>
       </div>`);
   }
 
@@ -1549,15 +1605,21 @@
   function playVideo() {
     const s = loadStore().video || {};
     // Multi-select: leer s.motors (array) y caer a [s.motor] solo si no existe.
-    let motorsList = Array.isArray(s.motors) && s.motors.length ? s.motors : [s.motor || 'veo-3.0-fast-generate-001'];
-    // Migra ids muertos (runway/sora/veo-3.1) al Veo fast que sí funciona, y dedup.
+    let motorsList = Array.isArray(s.motors) && s.motors.length ? s.motors : [s.motor || 'veo-3.0-generate-001'];
+    // Migra ids muertos/retirados (runway/sora/veo-3.1 + los Veo eliminados de
+    // la UI: fast y @1080p) al Veo 3 720p que sí funciona, y dedup.
     motorsList = [...new Set(motorsList.map(m =>
-      (m === 'runway-gen3' || m === 'openai-sora' || m === 'veo-3.1-fast-generate-preview') ? 'veo-3.0-fast-generate-001' : m))];
+      (m === 'runway-gen3' || m === 'openai-sora' || m === 'veo-3.1-fast-generate-preview'
+       || m === 'veo-3.0-fast-generate-001' || m === 'veo-3.0-generate-001@1080p') ? 'veo-3.0-generate-001' : m))];
     const motor = motorsList[0]; // primario para single-render path
 
     // 2+ motores Veo seleccionados → grid comparativa.
     if (motorsList.length > 1 && motorsList.every(m => m.startsWith('veo-3.0-'))) {
       return compareSelectedVideos(motorsList, s);
+    }
+
+    if (motor === 'pollinations-wan-fast') {
+      return playPollinationsVideo(s);
     }
 
     if (motor === 'grok-imagine-video') {
