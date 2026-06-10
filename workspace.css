@@ -165,6 +165,7 @@ body[data-page="imagenes"] .primary-nav a[data-nav="imagenes"],
 body[data-page="video"] .primary-nav a[data-nav="video"],
 body[data-page="plataforma"] .primary-nav a[data-nav="plataforma"],
 body[data-page="publicidad"] .primary-nav a[data-nav="publicidad"],
+body[data-page="avatar"] .primary-nav a[data-nav="avatar"],
 body[data-page="admira-xp"] .primary-nav a[data-nav="admira-xp"] {
   color: var(--matrix);
   background: transparent;
@@ -199,6 +200,253 @@ body[data-page="admira-xp"] .primary-nav a[data-nav="admira-xp"] {
   background: var(--matrix);
   color: #020602;
   text-shadow: none;
+}
+
+/* Avatar page */
+.avatar-head {
+  text-align: center;
+  max-width: 980px;
+}
+.avatar-head .lead {
+  margin-left: auto;
+  margin-right: auto;
+}
+.avatar-main {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto clamp(42px, 6vw, 80px);
+  display: grid;
+  gap: 18px;
+}
+.avatar-stage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+.avatar-poster {
+  position: relative;
+  min-height: clamp(360px, 48vw, 560px);
+  overflow: hidden;
+  border: 1px solid rgba(0, 255, 65, .34);
+  background: #020602;
+  box-shadow: 0 0 24px rgba(0, 255, 65, .12);
+}
+.avatar-poster img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  filter: blur(1px);
+  image-rendering: pixelated;
+  transform: scale(1.015);
+  transition: filter .35s ease, transform .35s ease;
+}
+.avatar-poster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, .12), rgba(0, 0, 0, .40)),
+    repeating-linear-gradient(90deg, rgba(0,255,65,.10) 0 1px, transparent 1px 7px);
+  mix-blend-mode: screen;
+  opacity: .6;
+}
+.avatar-poster.revealed img {
+  filter: saturate(1.08) contrast(1.04);
+  image-rendering: auto;
+  transform: scale(1);
+}
+.avatar-poster.revealed::after { opacity: .18; }
+.avatar-label,
+.avatar-sound,
+.avatar-reveal {
+  position: absolute;
+  z-index: 3;
+}
+.avatar-label {
+  top: 14px;
+  left: 14px;
+  padding: 5px 9px;
+  border: 1px solid rgba(0,255,65,.35);
+  background: rgba(2, 6, 2, .82);
+  color: var(--matrix);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.avatar-reveal {
+  top: 50%;
+  left: 50%;
+  width: 82px;
+  height: 82px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--matrix);
+  background: rgba(2, 16, 8, .76);
+  color: var(--matrix);
+  font-family: inherit;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 24px rgba(0,255,65,.32);
+}
+.avatar-reveal span {
+  font-size: 10px;
+  line-height: 1;
+}
+.avatar-reveal strong {
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.avatar-sound {
+  left: 14px;
+  bottom: 14px;
+  border: 1px solid rgba(0,255,65,.42);
+  background: rgba(2, 6, 2, .82);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.avatar-console {
+  border: 1px solid rgba(0, 255, 65, .34);
+  background: rgba(2, 10, 5, .76);
+  padding: clamp(16px, 2.8vw, 28px);
+  box-shadow: inset 0 0 32px rgba(0, 255, 65, .07);
+}
+.live-avatars {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.live-avatar {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-height: 168px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, .24);
+  color: var(--muted);
+  font-family: inherit;
+  cursor: pointer;
+}
+.live-avatar.active {
+  color: var(--ink);
+  border-color: var(--matrix);
+  box-shadow: 0 0 22px rgba(0,255,65,.22);
+}
+.live-led {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.face {
+  position: relative;
+  display: block;
+  width: 92px;
+  height: 92px;
+  border: 1px solid rgba(0,255,65,.35);
+  background:
+    radial-gradient(circle at 34% 36%, #f3d0bd 0 8px, transparent 9px),
+    radial-gradient(circle at 65% 36%, #f3d0bd 0 8px, transparent 9px),
+    linear-gradient(180deg, #e8b796, #c58a72);
+}
+.face-mother {
+  border-radius: 34% 34% 42% 42%;
+  box-shadow: inset 0 12px 0 #523226;
+}
+.face-father {
+  border-radius: 40% 40% 44% 44%;
+  box-shadow: inset 0 12px 0 #d8d8ce;
+}
+.eyes::before,
+.eyes::after {
+  content: "";
+  position: absolute;
+  top: 39px;
+  width: 7px;
+  height: 7px;
+  background: #072016;
+  border-radius: 50%;
+}
+.eyes::before { left: 30px; }
+.eyes::after { right: 30px; }
+.mouth {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  width: 26px;
+  height: 6px;
+  transform: translateX(-50%);
+  border-radius: 0 0 20px 20px;
+  background: #5b1d1d;
+}
+.live-avatar.speaking .mouth {
+  animation: avatar-mouth .18s steps(2, end) infinite;
+}
+@keyframes avatar-mouth {
+  0%, 100% { height: 5px; width: 22px; }
+  50% { height: 18px; width: 18px; border-radius: 50%; }
+}
+.avatar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.avatar-response {
+  min-height: 110px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, .24);
+}
+.avatar-response p {
+  margin: 8px 0 0;
+  color: var(--ink);
+}
+.avatar-response-kicker {
+  color: var(--matrix);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.avatar-pipeline {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+.avatar-pipeline span {
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(0,255,65,.26);
+  color: var(--matrix);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+@media (max-width: 760px) {
+  .avatar-stage,
+  .live-avatars {
+    grid-template-columns: 1fr;
+  }
+  .avatar-poster {
+    min-height: 420px;
+  }
+  .avatar-pipeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* Pixeria override for the shared Admira contact panel. */

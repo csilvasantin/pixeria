@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
+  <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
+  <link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
+  <title>Pixeria Studio | Avatar 3D</title>
+  <meta name="description" content="Avatar 3D para Pixeria: presentadores IA, respuesta conversacional, lip-sync 2D y salida a pantallas Admira XP.">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/tokens.css">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
+  <script defer src="https://csilvasantin.github.io/admira-design/contact-panel.js"></script>
+  <link rel="stylesheet" href="workspace.css?v=20260610-avatar">
+</head>
+<body data-page="avatar">
+  <nav class="admira-nav admira-nav-static" aria-label="Admira · Xperience">
+    <a class="admira-nav-brand" href="https://www.admira.app">
+      <span class="admira-nav-brand-name">Admira</span>
+      <span class="admira-nav-brand-tag">Xperience</span>
+    </a>
+    <div class="admira-nav-items">
+      <a class="admira-nav-link admira-nav-link-active" href="https://www.pixeria.com">Pixeria</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live/council-scumm.html">Consejo Live</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.xpaceos.com">XpaceOS</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.app">Xbusiness</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live">Live</a>
+      <a class="admira-nav-link admira-nav-link-cta" href="#contact" data-admira-contact>Contacto</a>
+    </div>
+  </nav>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
+  <header class="topnav">
+    <div class="brand"><a href="index.html" class="brand-link"><span class="brand-mark">P</span><span class="brand-name">Pixeria</span></a></div>
+    <nav class="primary-nav">
+      <a href="/concepto.html" data-nav="concepto">Concepto</a>
+      <a href="audio.html" data-nav="audio">Audio</a>
+      <a href="musica.html" data-nav="musica">Musica</a>
+      <a href="imagenes.html" data-nav="imagenes">Imagenes</a>
+      <a href="video.html" data-nav="video">Video</a>
+      <a href="publicidad.html" data-nav="publicidad">Publicidad</a>
+      <a href="avatar.html" data-nav="avatar">Avatar 3D</a>
+      <a href="/crear/" data-nav="crear">Assets</a>
+      <a href="stock.html" data-nav="stock">Stock</a>
+    </nav>
+    <div class="topnav-actions">
+      <div class="language-switcher" aria-label="Seleccion de idioma">
+        <a class="lang-toggle" href="/en/avatar.html" aria-label="Cambiar a ingles">ENG</a>
+      </div>
+      <a class="nav-action" href="#contact" data-admira-contact>Contacto</a>
+    </div>
+  </header>
+
+  <header class="page-head avatar-head">
+    <p class="eyebrow video">XpaceOS · Avatar 3D</p>
+    <h1>Avatar 3D conversacional para pantallas.</h1>
+    <p class="lead">Presentadores IA con guion, voz, pregunta en vivo y lip-sync 2D local. La pieza queda lista para demo, signage o produccion con motores de video.</p>
+  </header>
+
+  <main class="avatar-main">
+    <section class="avatar-stage" aria-label="Demo de avatares">
+      <article class="avatar-poster" data-avatar-card="mother">
+        <div class="avatar-label">Avatar A</div>
+        <img src="assets/avatar-mother.png" alt="Avatar femenino Pixeria" loading="eager">
+        <button type="button" class="avatar-reveal" data-reveal="mother"><span>Play</span><strong>Reveal</strong></button>
+        <button type="button" class="avatar-sound" data-sound="mother">Sound</button>
+      </article>
+      <article class="avatar-poster" data-avatar-card="father">
+        <div class="avatar-label">Avatar B</div>
+        <img src="assets/avatar-father.png" alt="Avatar masculino Pixeria" loading="eager">
+        <button type="button" class="avatar-reveal" data-reveal="father"><span>Play</span><strong>Reveal</strong></button>
+        <button type="button" class="avatar-sound" data-sound="father">Sound</button>
+      </article>
+    </section>
+
+    <section class="avatar-console">
+      <div class="live-avatars" role="group" aria-label="Seleccion de avatar activo">
+        <button type="button" class="live-avatar active" data-live="mother" aria-pressed="true">
+          <span class="live-led">live</span>
+          <span class="face face-mother"><span class="eyes"></span><span class="mouth"></span></span>
+          <strong>Avatar A</strong>
+          <small>Replies</small>
+        </button>
+        <button type="button" class="live-avatar" data-live="father" aria-pressed="false">
+          <span class="live-led">live</span>
+          <span class="face face-father"><span class="eyes"></span><span class="mouth"></span></span>
+          <strong>Avatar B</strong>
+          <small>Standby</small>
+        </button>
+      </div>
+
+      <div class="avatar-actions">
+        <button type="button" class="btn primary" id="askAvatar">Ask</button>
+        <button type="button" class="btn" id="lipSyncDemo">Lip-sync demo</button>
+        <button type="button" class="btn" id="copyAvatarBrief">Copiar brief</button>
+      </div>
+
+      <div class="field">
+        <label for="avatar-location">Ubicacion Admira</label>
+        <select id="avatar-location">
+          <option>Xtanco Barcelona · Portal de l'Angel 20 · Barcelona 08002</option>
+          <option>Admira Studio · Barcelona</option>
+          <option>Retail window · Madrid centro</option>
+          <option>Evento live · Consejo Admira</option>
+        </select>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="avatar-tone">Tono</label>
+          <select id="avatar-tone">
+            <option>Consultivo y claro</option>
+            <option>Retail premium</option>
+            <option>Evento en directo</option>
+            <option>Soporte tecnico</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="avatar-lang">Idioma</label>
+          <select id="avatar-lang">
+            <option>ES</option>
+            <option>EN</option>
+            <option>CA</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="avatar-question">Pregunta al avatar</label>
+        <textarea id="avatar-question" rows="3" placeholder="Que puede contar este avatar en una pantalla de retail?">Que puede contar este avatar en una pantalla de retail?</textarea>
+      </div>
+
+      <div class="avatar-response" id="avatarResponse" aria-live="polite">
+        <span class="avatar-response-kicker">// listo</span>
+        <p>Selecciona un avatar, escribe una pregunta y pulsa Ask. La demo genera una respuesta local y anima la boca para validar el flujo.</p>
+      </div>
+
+      <div class="avatar-pipeline" aria-label="Pipeline Avatar">
+        <span>Brief</span>
+        <span>Avatar 3D</span>
+        <span>Voz</span>
+        <span>Lip-sync</span>
+        <span>Stock</span>
+        <span>Pantallas</span>
+      </div>
+    </section>
+  </main>
+
+  <footer><a href="https://www.xpaceos.com" target="_blank" rel="noopener" title="Abrir XpaceOS">Pixeria AI Workspace · Avatar 3D para XpaceOS · v.2026.06.10-avatar</a></footer>
+
+  <script src="/matrix-rain.js?v=20260608-sides"></script>
+  <script>
+  (function () {
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+    let active = 'mother';
+    let speakingTimer = null;
+
+    function setActive(id) {
+      active = id;
+      $$('.live-avatar').forEach(btn => {
+        const on = btn.dataset.live === id;
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-pressed', String(on));
+        const small = $('small', btn);
+        if (small) small.textContent = on ? 'Replies' : 'Standby';
+      });
+    }
+
+    function speakVisual(ms) {
+      clearTimeout(speakingTimer);
+      const btn = $(`.live-avatar[data-live="${active}"]`);
+      if (!btn) return;
+      btn.classList.add('speaking');
+      speakingTimer = setTimeout(() => btn.classList.remove('speaking'), ms || 1800);
+    }
+
+    function buildReply() {
+      const q = $('#avatar-question').value.trim() || 'Que puede hacer este avatar?';
+      const loc = $('#avatar-location').value;
+      const tone = $('#avatar-tone').value;
+      const lang = $('#avatar-lang').value;
+      const who = active === 'mother' ? 'Avatar A' : 'Avatar B';
+      return `${who} responde en modo ${tone} (${lang}). En ${loc}, puedo explicar productos, resolver dudas frecuentes, adaptar mensajes al publico detectado y enviar el resultado a pantallas Admira XP. Pregunta recibida: "${q}"`;
+    }
+
+    $$('.avatar-reveal').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const card = btn.closest('.avatar-poster');
+        card.classList.add('revealed');
+        btn.hidden = true;
+      });
+    });
+
+    $$('.avatar-sound').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setActive(btn.dataset.sound);
+        speakVisual(1600);
+        $('#avatarResponse').innerHTML = `<span class="avatar-response-kicker">// sonido activado</span><p>${active === 'mother' ? 'Avatar A' : 'Avatar B'} preparado para reproducir voz o demo de locucion.</p>`;
+      });
+    });
+
+    $$('.live-avatar').forEach(btn => {
+      btn.addEventListener('click', () => setActive(btn.dataset.live));
+    });
+
+    $('#askAvatar').addEventListener('click', () => {
+      const reply = buildReply();
+      $('#avatarResponse').innerHTML = `<span class="avatar-response-kicker">// respuesta generada</span><p>${reply.replace(/</g, '&lt;')}</p>`;
+      speakVisual(Math.min(5200, Math.max(1800, reply.length * 35)));
+    });
+
+    $('#lipSyncDemo').addEventListener('click', () => {
+      $('#avatarResponse').innerHTML = '<span class="avatar-response-kicker">// lip-sync demo</span><p>Movimiento 2D local: ojos, boca y estado live se animan sin coste por uso. El siguiente paso es conectar voz ElevenLabs o el motor local de Admira.</p>';
+      speakVisual(3800);
+    });
+
+    $('#copyAvatarBrief').addEventListener('click', async () => {
+      const brief = {
+        section: 'Avatar',
+        activeAvatar: active === 'mother' ? 'Avatar A' : 'Avatar B',
+        location: $('#avatar-location').value,
+        tone: $('#avatar-tone').value,
+        language: $('#avatar-lang').value,
+        question: $('#avatar-question').value.trim(),
+        pipeline: ['brief', 'avatar', 'voice', 'lip-sync', 'stock', 'admira-xp'],
+      };
+      await navigator.clipboard.writeText(JSON.stringify(brief, null, 2));
+      $('#avatarResponse').innerHTML = '<span class="avatar-response-kicker">// brief copiado</span><p>JSON de Avatar copiado al portapapeles.</p>';
+    });
+  })();
+  </script>
+</body>
+</html>
