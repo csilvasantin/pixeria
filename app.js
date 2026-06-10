@@ -126,10 +126,10 @@
   function applyDefaults() {
     const store = loadStore();
     let changed = false;
-    // Migracion: el default antiguo era 'Demo Pixer.ai'. Si nadie lo edito,
+    // Migracion: el default antiguo era 'Demo PixerIA'. Si nadie lo edito,
     // lo movemos al nuevo default de marca 'Pixeria' (el separador "//"
     // se aplica via deriveAssetTitle, no aqui).
-    if (!store.cliente || store.cliente === 'Demo Pixer.ai') { store.cliente = DEFAULTS.cliente; changed = true; }
+    if (!store.cliente || store.cliente === 'Demo PixerIA') { store.cliente = DEFAULTS.cliente; changed = true; }
     for (const key of ['audio', 'musica', 'imagenes', 'video', 'publicidad']) {
       if (!store[key] || Object.keys(store[key]).length === 0) {
         store[key] = JSON.parse(JSON.stringify(DEFAULTS[key]));
@@ -369,7 +369,7 @@
 
   function toMarkdown(d) {
     const lines = [];
-    lines.push('# Brief Pixer.ia x Admira.xp');
+    lines.push('# Brief PixerIA x Admira.xp');
     if (d.cliente) lines.push(`**Cliente / proyecto:** ${d.cliente}`);
     lines.push(`**Version:** ${d.meta.version}  ·  **Generado:** ${d.meta.generado}`);
     const sections = [
