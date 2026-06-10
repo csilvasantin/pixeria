@@ -1509,7 +1509,12 @@
       const r = await fetch(`${ELEVEN_WORKER_URL}/pvideo?${qs.toString()}`, { signal: ctrl.signal });
       clearTimeout(to);
       if (!r.ok) {
-        errMsg = `gen ${r.status}: ${(await r.text()).slice(0, 200)}`;
+        const raw = (await r.text()).slice(0, 300);
+        if (r.status === 402 || /insufficient balance|payment_required|pollen/i.test(raw)) {
+          errMsg = 'Sin saldo Pollen en la cuenta de Pollinations. El vídeo gratuito usa "Pollen": consigue el grant diario subiendo de tier (p.ej. estrellando su repo de GitHub) en enter.pollinations.ai, o usa Veo 3 / Grok mientras tanto.';
+        } else {
+          errMsg = `gen ${r.status}: ${raw}`;
+        }
       } else {
         const blob = await r.blob();
         if (!blob || blob.size < 1000 || !/video\//.test(blob.type)) {
