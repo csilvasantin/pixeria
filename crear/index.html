@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Assets · Pixeria Studio</title>
+  <title>Pixeria Studio Assets</title>
   <meta name="description" content="Assets de Pixeria para crear mobiliario y elementos listos para gemelos digitales XpaceOS.">
   <meta name="theme-color" content="#0b1117">
   <link rel="canonical" href="https://www.pixeria.com/crear/">
@@ -311,7 +311,7 @@
   </style>
 </head>
 <body>
-  <h1 class="sr-only">Assets · Pixeria Studio</h1>
+  <h1 class="sr-only">Pixeria Studio Assets</h1>
   <canvas id="matrix-rain" aria-hidden="true"></canvas>
   <header class="site-header">
     <a class="brand" href="/" aria-label="Pixeria inicio">
@@ -360,8 +360,7 @@
       <div style="max-width:1180px; margin:0 auto; padding: 0 20px;">
         <div class="studio-header">
           <div>
-            <strong style="font-size:22px;">Pixeria Studio</strong>
-            <span style="margin-left:12px; font-size:12px; background:rgba(104,220,233,0.15); color:var(--cyan); padding:2px 8px; border-radius:3px;">PRODUCCIÓN</span>
+            <strong style="font-size:22px;">Pixeria Studio Assets</strong>
           </div>
           <div>
             <span id="user-badge" class="user"></span>
@@ -489,7 +488,7 @@
   </main>
 
   <footer class="site-footer">
-    <span>Pixeria Studio</span>
+    <span>Pixeria Studio Assets</span>
     <p>Herramienta de creación interna. Contenido generado se puede publicar a Pixer Feed.</p>
     <a href="/">Volver a pixeria.com</a>
   </footer>
@@ -1164,7 +1163,7 @@
       try {
         const payload = {
           type: campaignAssetType(meta),
-          motor: meta.motor || 'Pixeria Studio',
+          motor: meta.motor || 'Pixeria Studio Assets',
           prompt: meta.prompt || '',
           title: 'Pixeria · ' + campaignNameFromPrompt(meta.prompt),
           comment: 'Asset preparado para comprar emisión en Admira',
@@ -1230,10 +1229,10 @@
       try {
         const payload = {
           type: meta.type,
-          motor: meta.motor || 'Pixeria Studio',
+          motor: meta.motor || 'Pixeria Studio Assets',
           prompt: meta.prompt || '',
-          title: `Pixeria Studio • ${meta.prompt.substring(0, 50)}`,
-          comment: `Generado con ${meta.motor} en Pixeria Studio`,
+          title: `Pixeria Studio Assets • ${meta.prompt.substring(0, 50)}`,
+          comment: `Generado con ${meta.motor} en Pixeria Studio Assets`,
           tags: ['pixeria', 'studio', meta.type],
           costEst: 0.02,
           thumbnail: meta.thumbnail || null,
@@ -1422,7 +1421,7 @@
         stockType: 'furni',
         kind: 'furni',
         category: 'furni',
-        motor: 'Pixeria Studio',
+        motor: 'Pixeria Studio Assets',
         title: title,
         tags: ['furni', 'mobiliario', 'pixeria'],
         prompt: (document.getElementById('furni-prompt').value || '').slice(0, 300),
@@ -1527,7 +1526,7 @@
       try { applyFurniPreset(currentFurniPreset); } catch (e) {}
       const oa = document.getElementById('output-actions'); if (oa) oa.style.display = 'none';
     })();
-    console.log('%c[Pixeria Studio] Acceso libre · creation tool ready.', 'color:#555');
+    console.log('%c[Pixeria Studio Assets] Acceso libre · creation tool ready.', 'color:#555');
   </script>
   <script src="/assets/matrix-rain.js?v=20260608-sides"></script>
 </body>
