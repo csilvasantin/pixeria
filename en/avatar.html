@@ -33,7 +33,6 @@
   <header class="topnav">
     <div class="brand"><a href="index.html" class="brand-link"><span class="brand-mark">P</span><span class="brand-name">Pixeria</span></a></div>
     <nav class="primary-nav">
-      <a href="/en/concepto.html" data-nav="concepto">Concept</a>
       <a href="audio.html" data-nav="audio">Audio</a>
       <a href="musica.html" data-nav="musica">Music</a>
       <a href="imagenes.html" data-nav="imagenes">Images</a>
@@ -71,6 +70,33 @@
         <button type="button" class="avatar-reveal" data-reveal="father"><span>Play</span><strong>Reveal</strong></button>
         <button type="button" class="avatar-sound" data-sound="father">Sound</button>
       </article>
+    </section>
+
+    <section class="avatar-real-examples" aria-label="Real DigitalAvatar.ai examples">
+      <div class="avatar-real-head">
+        <div>
+          <p class="eyebrow video">DigitalAvatar.ai · real examples</p>
+          <h2>Superman's mother and father.</h2>
+        </div>
+        <div class="avatar-lang-tabs" role="group" aria-label="Real example language">
+          <button type="button" data-avatar-real-lang="es">Castellano</button>
+          <button type="button" class="active" data-avatar-real-lang="en">English</button>
+        </div>
+      </div>
+      <div class="avatar-real-grid">
+        <article class="avatar-real-card">
+          <span class="avatar-real-label">Mother</span>
+          <video class="avatar-real-video" data-real-role="female" controls preload="metadata" playsinline
+            poster="https://digitalavatar.ai/assets/avatar-female-en-poster.jpg"
+            src="https://digitalavatar.ai/assets/avatar-female-en.mp4"></video>
+        </article>
+        <article class="avatar-real-card">
+          <span class="avatar-real-label">Father</span>
+          <video class="avatar-real-video" data-real-role="male" controls preload="metadata" playsinline
+            poster="https://digitalavatar.ai/assets/avatar-male-en-poster.jpg"
+            src="https://digitalavatar.ai/assets/avatar-male-en.mp4"></video>
+        </article>
+      </div>
     </section>
 
     <section class="avatar-console">
@@ -155,6 +181,28 @@
     const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
     let active = 'mother';
     let speakingTimer = null;
+    const realAssets = {
+      es: {
+        female: {
+          src: 'https://digitalavatar.ai/assets/avatar-female-es.mp4',
+          poster: 'https://digitalavatar.ai/assets/avatar-female-es-poster.jpg'
+        },
+        male: {
+          src: 'https://digitalavatar.ai/assets/avatar-male-es.mp4',
+          poster: 'https://digitalavatar.ai/assets/avatar-male-es-poster.jpg'
+        }
+      },
+      en: {
+        female: {
+          src: 'https://digitalavatar.ai/assets/avatar-female-en.mp4',
+          poster: 'https://digitalavatar.ai/assets/avatar-female-en-poster.jpg'
+        },
+        male: {
+          src: 'https://digitalavatar.ai/assets/avatar-male-en.mp4',
+          poster: 'https://digitalavatar.ai/assets/avatar-male-en-poster.jpg'
+        }
+      }
+    };
 
     function setActive(id) {
       active = id;
@@ -202,6 +250,22 @@
 
     $$('.live-avatar').forEach(btn => {
       btn.addEventListener('click', () => setActive(btn.dataset.live));
+    });
+
+    $$('.avatar-lang-tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lang = btn.dataset.avatarRealLang || 'en';
+        $$('.avatar-lang-tabs button').forEach(b => b.classList.toggle('active', b === btn));
+        $$('.avatar-real-video').forEach(video => {
+          const role = video.dataset.realRole;
+          const asset = realAssets[lang] && realAssets[lang][role];
+          if (!asset) return;
+          video.pause();
+          video.poster = asset.poster;
+          video.src = asset.src;
+          video.load();
+        });
+      });
     });
 
     $('#askAvatar').addEventListener('click', () => {
