@@ -14,6 +14,18 @@
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
   <script defer src="https://csilvasantin.github.io/admira-design/contact-panel.js"></script>
   <link rel="stylesheet" href="workspace.css?v=20260608-video-fit">
+  <style>
+    /* Flechas anterior/siguiente del lightbox del Stock */
+    .stock-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);z-index:30;width:54px;height:84px;display:flex;align-items:center;justify-content:center;
+      border:1px solid rgba(118,185,0,.4);border-radius:12px;background:rgba(8,16,8,.72);color:#b8e577;font-size:34px;line-height:1;cursor:pointer;
+      font-family:inherit;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);transition:background .15s,border-color .15s,opacity .15s;user-select:none}
+    .stock-lightbox-nav:hover{background:rgba(118,185,0,.18);border-color:#76b900;color:#dfffae}
+    .stock-lightbox-nav.prev{left:18px}
+    .stock-lightbox-nav.next{right:18px}
+    .stock-lightbox-nav[disabled]{opacity:0;pointer-events:none}
+    .stock-lightbox[hidden] .stock-lightbox-nav{display:none}
+    @media (max-width:640px){ .stock-lightbox-nav{width:42px;height:64px;font-size:26px} .stock-lightbox-nav.prev{left:8px} .stock-lightbox-nav.next{right:8px} }
+  </style>
 </head>
 <body data-page="stock">
   <!-- Banda superior del grupo Admira · Xperience -->
@@ -142,6 +154,8 @@
 
     <div id="stockLightbox" class="stock-lightbox" hidden aria-hidden="true">
       <button type="button" class="stock-lightbox-close" id="stockLightboxClose" aria-label="Cerrar">✕</button>
+      <button type="button" class="stock-lightbox-nav prev" id="stockLightboxPrev" aria-label="Anterior">‹</button>
+      <button type="button" class="stock-lightbox-nav next" id="stockLightboxNext" aria-label="Siguiente">›</button>
       <div class="stock-lightbox-inner" id="stockLightboxInner"></div>
       <div class="stock-lightbox-meta" id="stockLightboxMeta"></div>
     </div>
@@ -205,6 +219,8 @@
     const lightbox = document.getElementById('stockLightbox');
     const lightboxInner = document.getElementById('stockLightboxInner');
     const lightboxMeta = document.getElementById('stockLightboxMeta');
+    const lightboxPrev = document.getElementById('stockLightboxPrev');
+    const lightboxNext = document.getElementById('stockLightboxNext');
     const STOCK_BASE = 'https://pixer-eleven.csilvasantin.workers.dev';
     // Los ISP españoles bloquean el rango de IPs de *.workers.dev (caso
     // LaLiga, jun 2026) y la galería se quedaba en blanco. El bucket público
@@ -217,6 +233,7 @@
     const STOCK_LIST_FALLBACK = STOCK_BASE + '/stock/list?limit=200';
     const TYPE_ORDER = { audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
     let allItems = [];
+    let currentView = []; // lista filtrada+ordenada actual (para navegar el lightbox)
     let filters = { type: '', motor: '', q: '', tag: '', dateQuick: '', dateFrom: '', dateTo: '' };
     let sortMode = 'date-desc';
     let pageSize = 10; // 0 = mostrar todos
@@ -452,6 +469,7 @@
         return true;
       });
       const sorted = sortItems(items, sortMode);
+      currentView = sorted; // las flechas del lightbox recorren esta lista (cruza páginas)
 
       // Paginación (0 = todos)
       const totalPages = pageSize > 0 ? Math.max(1, Math.ceil(sorted.length / pageSize)) : 1;
@@ -528,6 +546,25 @@
       lightbox.hidden = false;
       lightbox.setAttribute('aria-hidden', 'false');
       document.body.classList.add('stock-lightbox-open');
+      updateLightboxNav();
+    }
+    function lightboxIndex() {
+      const id = window.__lightboxItemId;
+      if (id == null) return -1;
+      return currentView.findIndex(x => x && x.id === id);
+    }
+    function updateLightboxNav() {
+      const i = lightboxIndex();
+      lightboxPrev.disabled = !(i > 0);
+      lightboxNext.disabled = !(i >= 0 && i < currentView.length - 1);
+    }
+    function navLightbox(dir) {
+      const i = lightboxIndex();
+      if (i < 0) return;
+      const j = i + dir;
+      if (j < 0 || j >= currentView.length) return;
+      lightboxInner.scrollTop = 0;
+      openLightbox(currentView[j]);
     }
     function closeLightbox() {
       lightbox.hidden = true;
@@ -538,7 +575,14 @@
     }
     document.getElementById('stockLightboxClose').addEventListener('click', closeLightbox);
     lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !lightbox.hidden) closeLightbox(); });
+    lightboxPrev.addEventListener('click', e => { e.stopPropagation(); navLightbox(-1); });
+    lightboxNext.addEventListener('click', e => { e.stopPropagation(); navLightbox(1); });
+    document.addEventListener('keydown', e => {
+      if (lightbox.hidden) return;
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowLeft') navLightbox(-1);
+      else if (e.key === 'ArrowRight') navLightbox(1);
+    });
 
     // Edición de tags dentro del lightbox (quitar / añadir)
     lightboxMeta.addEventListener('click', async e => {
@@ -681,28 +725,43 @@
     function writeCache(items) {
       try { localStorage.setItem(STOCK_CACHE_KEY, JSON.stringify({ items, ts: Date.now() })); } catch {}
     }
+    async function fetchSource(src, timeoutMs) {
+      const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      const to = ctrl ? setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, timeoutMs || 8000) : null;
+      try {
+        const r = await fetch(src, { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const data = await r.json();
+        if (!data || !Array.isArray(data.items)) throw new Error('respuesta sin items');
+        return data.items;
+      } finally { if (to) clearTimeout(to); }
+    }
     async function fetchList() {
-      // 3 intentos con backoff: un único fetch fallido (hipo de red o arranque
-      // en frío del worker) NO debe vaciar la vista ni parecer pérdida de datos.
-      // Primero el índice estático en r2.dev (no bloqueado, rapidísimo);
-      // si aún no existe (worker antiguo) cae al endpoint del worker.
+      // FUSIÓN de dos fuentes (dedupe por id): el índice estático en r2.dev
+      // (rápido, no bloqueado) + el listado vivo del worker (/stock/list), que
+      // trae lo recién publicado que el índice estático aún no tiene. Antes solo
+      // se leía la primera que respondía → el índice estático stale ocultaba los
+      // furni nuevos. Si una fuente falla, se usa la otra; reintento por fuente.
       let lastErr;
-      const sources = [STOCK_LIST_URL, STOCK_LIST_FALLBACK];
       for (let attempt = 1; attempt <= 3; attempt++) {
-        for (const src of sources) {
-          try {
-            const r = await fetch(src, { cache: 'no-store' });
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            const data = await r.json();
-            if (!data || !Array.isArray(data.items)) throw new Error('respuesta sin items');
-            return data.items.slice(0, 200);
-          } catch (e) {
-            lastErr = e;
+        const settled = await Promise.allSettled([
+          fetchSource(STOCK_LIST_URL, 8000),
+          fetchSource(STOCK_LIST_FALLBACK, 9000),
+        ]);
+        const ok = settled.filter(s => s.status === 'fulfilled').map(s => s.value);
+        lastErr = (settled.find(s => s.status === 'rejected') || {}).reason || lastErr;
+        if (ok.length) {
+          // El índice estático va primero → gana en el dedupe (urls r2.dev, no
+          // bloqueadas); el worker añade solo los ids que falten (lo nuevo).
+          const byId = new Map();
+          for (const list of ok) for (const it of list) {
+            if (it && it.id && !byId.has(it.id)) byId.set(it.id, it);
           }
+          return Array.from(byId.values()).slice(0, 400);
         }
         if (attempt < 3) await new Promise(res => setTimeout(res, attempt * 800));
       }
-      throw lastErr;
+      throw lastErr || new Error('no se pudo cargar el stock');
     }
     function feedMatrix() {
       window.MATRIX_TITLES_FEED = allItems
