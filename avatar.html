@@ -61,14 +61,14 @@
       <article class="avatar-poster" data-avatar-card="mother">
         <div class="avatar-label">Avatar A</div>
         <img src="assets/avatar-mother.png" alt="Avatar femenino Pixeria" loading="eager">
-        <button type="button" class="avatar-reveal" data-reveal="mother"><span>Play</span><strong>Reveal</strong></button>
-        <button type="button" class="avatar-sound" data-sound="mother">Sound</button>
+        <button type="button" class="avatar-reveal" data-reveal="mother" aria-label="Revelar avatar A"><span>Play</span><strong>Reveal</strong></button>
+        <button type="button" class="avatar-sound" data-sound="mother" aria-label="Activar sonido del avatar A">Sound</button>
       </article>
       <article class="avatar-poster" data-avatar-card="father">
         <div class="avatar-label">Avatar B</div>
         <img src="assets/avatar-father.png" alt="Avatar masculino Pixeria" loading="eager">
-        <button type="button" class="avatar-reveal" data-reveal="father"><span>Play</span><strong>Reveal</strong></button>
-        <button type="button" class="avatar-sound" data-sound="father">Sound</button>
+        <button type="button" class="avatar-reveal" data-reveal="father" aria-label="Revelar avatar B"><span>Play</span><strong>Reveal</strong></button>
+        <button type="button" class="avatar-sound" data-sound="father" aria-label="Activar sonido del avatar B">Sound</button>
       </article>
     </section>
 
@@ -101,13 +101,13 @@
 
     <section class="avatar-console">
       <div class="live-avatars" role="group" aria-label="Seleccion de avatar activo">
-        <button type="button" class="live-avatar active" data-live="mother" aria-pressed="true">
+        <button type="button" class="live-avatar active" data-live="mother" aria-pressed="true" aria-label="Seleccionar avatar A">
           <span class="live-led">live</span>
           <span class="face face-mother"><span class="eyes"></span><span class="mouth"></span></span>
           <strong>Avatar A</strong>
           <small>Replies</small>
         </button>
-        <button type="button" class="live-avatar" data-live="father" aria-pressed="false">
+        <button type="button" class="live-avatar" data-live="father" aria-pressed="false" aria-label="Seleccionar avatar B">
           <span class="live-led">live</span>
           <span class="face face-father"><span class="eyes"></span><span class="mouth"></span></span>
           <strong>Avatar B</strong>

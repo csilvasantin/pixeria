@@ -74,9 +74,9 @@
     <section class="stock-toolbar">
       <nav class="stock-pager stock-pager-top" aria-label="Vista, filtros, búsqueda, orden y paginación">
         <div class="stock-view" role="group" aria-label="Tamaño de vista">
-          <button type="button" class="stock-view-btn" data-view="list" title="Lista">☰</button>
-          <button type="button" class="stock-view-btn" data-view="compact" title="Compacto · más vídeos de un vistazo">▦</button>
-          <button type="button" class="stock-view-btn" data-view="medium" title="Medio">◻</button>
+          <button type="button" class="stock-view-btn" data-view="list" title="Lista" aria-label="Vista de lista">☰</button>
+          <button type="button" class="stock-view-btn" data-view="compact" title="Compacto · más vídeos de un vistazo" aria-label="Vista compacta">▦</button>
+          <button type="button" class="stock-view-btn" data-view="medium" title="Medio" aria-label="Vista media">◻</button>
         </div>
         <div class="stock-pager-search">
           <label for="stockSearch" class="sr-only">Búsqueda por prompt, comentario o etiqueta</label>
@@ -112,13 +112,13 @@
           <button type="button" class="stock-sort-th" data-key="date">Fecha <span class="stock-sort-arrow">⇅</span></button>
         </div>
         <div class="stock-pager-controls">
-          <button type="button" class="stock-pager-btn" data-page="first" title="Primera página">«</button>
-          <button type="button" class="stock-pager-btn" data-page="prev" title="Anterior">‹</button>
+          <button type="button" class="stock-pager-btn" data-page="first" title="Primera página" aria-label="Primera página">«</button>
+          <button type="button" class="stock-pager-btn" data-page="prev" title="Anterior" aria-label="Página anterior">‹</button>
           <span class="stock-pager-info">— / —</span>
-          <button type="button" class="stock-pager-btn" data-page="next" title="Siguiente">›</button>
-          <button type="button" class="stock-pager-btn" data-page="last" title="Última página">»</button>
+          <button type="button" class="stock-pager-btn" data-page="next" title="Siguiente" aria-label="Página siguiente">›</button>
+          <button type="button" class="stock-pager-btn" data-page="last" title="Última página" aria-label="Última página">»</button>
         </div>
-        <button type="button" class="btn stock-refresh-icon" id="stockRefresh" title="Refrescar — volver a pedir la lista">↻</button>
+        <button type="button" class="btn stock-refresh-icon" id="stockRefresh" title="Refrescar — volver a pedir la lista" aria-label="Refrescar stock">↻</button>
       </nav>
       <div id="stockStatus" class="stock-status" role="status" aria-live="polite"></div>
     </section>
@@ -143,11 +143,11 @@
           </select>
         </div>
         <div class="stock-pager-controls">
-          <button type="button" class="stock-pager-btn" data-page="first" title="Primera página">«</button>
-          <button type="button" class="stock-pager-btn" data-page="prev" title="Anterior">‹</button>
+          <button type="button" class="stock-pager-btn" data-page="first" title="Primera página" aria-label="Primera página">«</button>
+          <button type="button" class="stock-pager-btn" data-page="prev" title="Anterior" aria-label="Página anterior">‹</button>
           <span class="stock-pager-info">— / —</span>
-          <button type="button" class="stock-pager-btn" data-page="next" title="Siguiente">›</button>
-          <button type="button" class="stock-pager-btn" data-page="last" title="Última página">»</button>
+          <button type="button" class="stock-pager-btn" data-page="next" title="Siguiente" aria-label="Página siguiente">›</button>
+          <button type="button" class="stock-pager-btn" data-page="last" title="Última página" aria-label="Última página">»</button>
         </div>
       </nav>
     </section>
@@ -386,11 +386,11 @@
           <header>
             <span class="stock-type ${typeLabel}">${typeLabel}</span>
             <div class="stock-card-actions">
-              <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Abrir en AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
-              <button type="button" class="stock-card-btn" data-act="feed" title="Enviar al Pixer Feed (pantallas / gemelo)"><span aria-hidden="true">📺</span></button>
-              <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Abrir asset en pestaña nueva" data-act="open"><span aria-hidden="true">↗</span></a>
-              <button type="button" class="stock-card-btn" data-act="max" title="Maximizar"><span aria-hidden="true">⛶</span></button>
-              <button type="button" class="stock-card-btn danger" data-act="del" title="Eliminar"><span aria-hidden="true">🗑</span></button>
+              <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Abrir en AINimation" aria-label="Abrir en AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
+              <button type="button" class="stock-card-btn" data-act="feed" title="Enviar al Pixer Feed (pantallas / gemelo)" aria-label="Enviar al Pixer Feed"><span aria-hidden="true">📺</span></button>
+              <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Abrir asset en pestaña nueva" aria-label="Abrir asset en pestaña nueva" data-act="open"><span aria-hidden="true">↗</span></a>
+              <button type="button" class="stock-card-btn" data-act="max" title="Maximizar" aria-label="Maximizar asset"><span aria-hidden="true">⛶</span></button>
+              <button type="button" class="stock-card-btn danger" data-act="del" title="Eliminar" aria-label="Eliminar asset"><span aria-hidden="true">🗑</span></button>
             </div>
             ${titleInline}
             <span class="stock-head-meta">${headMeta}</span>

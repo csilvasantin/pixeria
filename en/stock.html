@@ -14,6 +14,17 @@
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
   <script defer src="https://csilvasantin.github.io/admira-design/contact-panel.js"></script>
   <link rel="stylesheet" href="../workspace.css?v=20260608-video-fit">
+  <style>
+    .stock-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);z-index:30;width:54px;height:84px;display:flex;align-items:center;justify-content:center;
+      border:1px solid rgba(118,185,0,.4);border-radius:12px;background:rgba(8,16,8,.72);color:#b8e577;font-size:34px;line-height:1;cursor:pointer;
+      font-family:inherit;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);transition:background .15s,border-color .15s,opacity .15s;user-select:none}
+    .stock-lightbox-nav:hover{background:rgba(118,185,0,.18);border-color:#76b900;color:#dfffae}
+    .stock-lightbox-nav.prev{left:18px}
+    .stock-lightbox-nav.next{right:18px}
+    .stock-lightbox-nav[disabled]{opacity:0;pointer-events:none}
+    .stock-lightbox[hidden] .stock-lightbox-nav{display:none}
+    @media (max-width:640px){ .stock-lightbox-nav{width:42px;height:64px;font-size:26px} .stock-lightbox-nav.prev{left:8px} .stock-lightbox-nav.next{right:8px} }
+  </style>
 </head>
 <body data-page="stock">
   <!-- Banda superior del grupo Admira · Xperience -->
@@ -62,9 +73,9 @@
     <section class="stock-toolbar">
       <nav class="stock-pager stock-pager-top" aria-label="Vista, filtros, búsqueda, orden y paginación">
         <div class="stock-view" role="group" aria-label="Tamaño de vista">
-          <button type="button" class="stock-view-btn" data-view="list" title="Lista">☰</button>
-          <button type="button" class="stock-view-btn" data-view="compact" title="Compacto · más vídeos de un vistazo">▦</button>
-          <button type="button" class="stock-view-btn" data-view="medium" title="Medio">◻</button>
+          <button type="button" class="stock-view-btn" data-view="list" title="List" aria-label="List view">☰</button>
+          <button type="button" class="stock-view-btn" data-view="compact" title="Compact · more videos at once" aria-label="Compact view">▦</button>
+          <button type="button" class="stock-view-btn" data-view="medium" title="Medium" aria-label="Medium view">◻</button>
         </div>
         <div class="stock-pager-search">
           <label for="stockSearch" class="sr-only">Búsqueda por prompt, comentario o etiqueta</label>
@@ -100,13 +111,13 @@
           <button type="button" class="stock-sort-th" data-key="date">Fecha <span class="stock-sort-arrow">⇅</span></button>
         </div>
         <div class="stock-pager-controls">
-          <button type="button" class="stock-pager-btn" data-page="first" title="Primera página">«</button>
-          <button type="button" class="stock-pager-btn" data-page="prev" title="Anterior">‹</button>
+          <button type="button" class="stock-pager-btn" data-page="first" title="First page" aria-label="First page">«</button>
+          <button type="button" class="stock-pager-btn" data-page="prev" title="Previous" aria-label="Previous page">‹</button>
           <span class="stock-pager-info">— / —</span>
-          <button type="button" class="stock-pager-btn" data-page="next" title="Siguiente">›</button>
-          <button type="button" class="stock-pager-btn" data-page="last" title="Última página">»</button>
+          <button type="button" class="stock-pager-btn" data-page="next" title="Next" aria-label="Next page">›</button>
+          <button type="button" class="stock-pager-btn" data-page="last" title="Last page" aria-label="Last page">»</button>
         </div>
-        <button type="button" class="btn stock-refresh-icon" id="stockRefresh" title="Refrescar — volver a pedir la lista">↻</button>
+        <button type="button" class="btn stock-refresh-icon" id="stockRefresh" title="Refresh — fetch the list again" aria-label="Refresh stock">↻</button>
       </nav>
       <div id="stockStatus" class="stock-status" role="status" aria-live="polite"></div>
     </section>
@@ -131,17 +142,19 @@
           </select>
         </div>
         <div class="stock-pager-controls">
-          <button type="button" class="stock-pager-btn" data-page="first" title="Primera página">«</button>
-          <button type="button" class="stock-pager-btn" data-page="prev" title="Anterior">‹</button>
+          <button type="button" class="stock-pager-btn" data-page="first" title="First page" aria-label="First page">«</button>
+          <button type="button" class="stock-pager-btn" data-page="prev" title="Previous" aria-label="Previous page">‹</button>
           <span class="stock-pager-info">— / —</span>
-          <button type="button" class="stock-pager-btn" data-page="next" title="Siguiente">›</button>
-          <button type="button" class="stock-pager-btn" data-page="last" title="Última página">»</button>
+          <button type="button" class="stock-pager-btn" data-page="next" title="Next" aria-label="Next page">›</button>
+          <button type="button" class="stock-pager-btn" data-page="last" title="Last page" aria-label="Last page">»</button>
         </div>
       </nav>
     </section>
 
     <div id="stockLightbox" class="stock-lightbox" hidden aria-hidden="true">
-      <button type="button" class="stock-lightbox-close" id="stockLightboxClose" aria-label="Cerrar">✕</button>
+      <button type="button" class="stock-lightbox-close" id="stockLightboxClose" aria-label="Close">✕</button>
+      <button type="button" class="stock-lightbox-nav prev" id="stockLightboxPrev" aria-label="Previous">‹</button>
+      <button type="button" class="stock-lightbox-nav next" id="stockLightboxNext" aria-label="Next">›</button>
       <div class="stock-lightbox-inner" id="stockLightboxInner"></div>
       <div class="stock-lightbox-meta" id="stockLightboxMeta"></div>
     </div>
@@ -205,6 +218,8 @@
     const lightbox = document.getElementById('stockLightbox');
     const lightboxInner = document.getElementById('stockLightboxInner');
     const lightboxMeta = document.getElementById('stockLightboxMeta');
+    const lightboxPrev = document.getElementById('stockLightboxPrev');
+    const lightboxNext = document.getElementById('stockLightboxNext');
     const STOCK_BASE = 'https://pixer-eleven.csilvasantin.workers.dev';
     // Spanish ISPs block the *.workers.dev IP range (LaLiga case, Jun 2026).
     // The gallery reads the static index + blobs from the public r2.dev
@@ -214,6 +229,7 @@
     const STOCK_LIST_FALLBACK = STOCK_BASE + '/stock/list?limit=200';
     const TYPE_ORDER = { audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
     let allItems = [];
+    let currentView = [];
     let filters = { type: '', motor: '', q: '', tag: '', dateQuick: '', dateFrom: '', dateTo: '' };
     let sortMode = 'date-desc';
     let pageSize = 10; // 0 = mostrar todos
@@ -362,11 +378,11 @@
           <header>
             <span class="stock-type ${typeLabel}">${typeLabel}</span>
             <div class="stock-card-actions">
-              <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Abrir en AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
-              <button type="button" class="stock-card-btn" data-act="feed" title="Enviar al Pixer Feed (pantallas / gemelo)"><span aria-hidden="true">📺</span></button>
-              <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Abrir asset en pestaña nueva" data-act="open"><span aria-hidden="true">↗</span></a>
-              <button type="button" class="stock-card-btn" data-act="max" title="Maximizar"><span aria-hidden="true">⛶</span></button>
-              <button type="button" class="stock-card-btn danger" data-act="del" title="Eliminar"><span aria-hidden="true">🗑</span></button>
+              <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Open in AINimation" aria-label="Open in AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
+              <button type="button" class="stock-card-btn" data-act="feed" title="Send to Pixer Feed (screens / twin)" aria-label="Send to Pixer Feed"><span aria-hidden="true">📺</span></button>
+              <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Open asset in a new tab" aria-label="Open asset in a new tab" data-act="open"><span aria-hidden="true">↗</span></a>
+              <button type="button" class="stock-card-btn" data-act="max" title="Maximize" aria-label="Maximize asset"><span aria-hidden="true">⛶</span></button>
+              <button type="button" class="stock-card-btn danger" data-act="del" title="Delete" aria-label="Delete asset"><span aria-hidden="true">🗑</span></button>
             </div>
             ${titleInline}
             <span class="stock-head-meta">${headMeta}</span>
@@ -445,6 +461,7 @@
         return true;
       });
       const sorted = sortItems(items, sortMode);
+      currentView = sorted;
 
       // Paginación (0 = todos)
       const totalPages = pageSize > 0 ? Math.max(1, Math.ceil(sorted.length / pageSize)) : 1;
@@ -518,6 +535,9 @@
           <a class="btn" href="${it.url}" target="_blank" rel="noopener">↗ Abrir asset</a>
         </div>`;
       window.__lightboxItemId = it.id || null;
+      const i = currentView.findIndex(x => x.id === it.id);
+      lightboxPrev.disabled = !(i > 0);
+      lightboxNext.disabled = !(i >= 0 && i < currentView.length - 1);
       lightbox.hidden = false;
       lightbox.setAttribute('aria-hidden', 'false');
       document.body.classList.add('stock-lightbox-open');
@@ -529,9 +549,22 @@
       lightboxMeta.innerHTML = '';
       document.body.classList.remove('stock-lightbox-open');
     }
+    function navLightbox(step) {
+      const id = window.__lightboxItemId;
+      const i = currentView.findIndex(x => x.id === id);
+      const next = currentView[i + step];
+      if (next) openLightbox(next);
+    }
     document.getElementById('stockLightboxClose').addEventListener('click', closeLightbox);
+    lightboxPrev.addEventListener('click', e => { e.stopPropagation(); navLightbox(-1); });
+    lightboxNext.addEventListener('click', e => { e.stopPropagation(); navLightbox(1); });
     lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !lightbox.hidden) closeLightbox(); });
+    document.addEventListener('keydown', e => {
+      if (lightbox.hidden) return;
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowLeft') navLightbox(-1);
+      else if (e.key === 'ArrowRight') navLightbox(1);
+    });
 
     // Edición de tags dentro del lightbox (quitar / añadir)
     lightboxMeta.addEventListener('click', async e => {
