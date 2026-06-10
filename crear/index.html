@@ -691,8 +691,8 @@
       studio.style.display = 'block';
       studio.classList.add('active');
 
-      // Set user badge
-      document.getElementById('user-badge').textContent = currentUser + ' · equipo';
+      // User badge intentionally hidden in the public Assets workspace.
+      document.getElementById('user-badge').textContent = '';
 
       // init studio bits
       initFormatChips();
@@ -1524,7 +1524,7 @@
       if (gate) gate.style.display = 'none';
       const studio = document.getElementById('studio');
       if (studio) { studio.style.display = 'block'; studio.classList.add('active'); }
-      const ub = document.getElementById('user-badge'); if (ub) ub.textContent = 'Pixeria · equipo';
+      const ub = document.getElementById('user-badge'); if (ub) ub.textContent = '';
       const logoutBtn = document.querySelector('button[onclick="logout()"]'); if (logoutBtn) logoutBtn.style.display = 'none';
       try { initFormatChips(); } catch (e) {}
       try { applyFurniPreset(currentFurniPreset); } catch (e) {}
