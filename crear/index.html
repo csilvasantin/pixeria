@@ -430,7 +430,7 @@
               <button class="button secondary" onclick="clearPrompt()" style="flex:1; font-size:13px;">Limpiar</button>
             </div>
 
-            <button class="generate-btn" onclick="focusFurniComposer()">Preparar mobiliario</button>
+            <button class="generate-btn" onclick="generateFurnitureFromBrief()">Generar mobiliario</button>
             <div style="font-size:11px; color:var(--muted); margin-top:8px; text-align:center;">Exportación orientada a gemelos digitales XpaceOS</div>
           </div>
 
@@ -648,6 +648,17 @@
       if (prompt && furniPrompt) furniPrompt.value = prompt.value;
       document.getElementById('furni-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       document.getElementById('furni-prompt')?.focus();
+    }
+
+    async function generateFurnitureFromBrief() {
+      currentFormat = 'mobiliario';
+      const prompt = document.getElementById('prompt');
+      const furniPrompt = document.getElementById('furni-prompt');
+      if (prompt && furniPrompt) {
+        furniPrompt.value = (prompt.value || furniPrompt.value || '').trim();
+      }
+      document.getElementById('furni-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      await furniGenerateAI();
     }
 
     function doLogin(e) {
