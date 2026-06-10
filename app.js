@@ -20,6 +20,7 @@
     if (motorId === 'elevenlabs-flash-v2-5') return true; // proxied vía worker pixer-eleven
     if (motorId === 'elevenlabs-v3') return true; // proxied vía worker pixer-eleven
     if (motorId === 'grok-imagine-image-pro') return true; // proxied vía worker
+    if (motorId === 'grok-imagine-video') return true; // xAI vídeo · proxied vía worker (/xai/video)
     if (motorId === 'imagen-4.0-ultra-generate-001') return true; // Gemini API key
     if (motorId === 'nano-banana') return true; // Gemini 2.5 Flash Image via worker
     if (motorId === 'nano-banana-pro') return true; // Gemini 3 Pro Image via worker
@@ -159,7 +160,8 @@
     video: [
       { id: 'veo-3.0-fast-generate-001',     nombre: 'Veo 3 Fast (Google)',  tipo: 'pro', badge: 'Good',   coste: '~$0.15 / segundo', desc: 'audio nativo · rápido · 720p' },
       { id: 'veo-3.0-generate-001',          nombre: 'Veo 3 (Google)',       tipo: 'pro', badge: 'Better', coste: '~$0.40 / segundo', desc: 'audio nativo · más calidad · 720p' },
-      { id: 'veo-3.0-generate-001@1080p',    nombre: 'Veo 3 · 1080p (Google)', tipo: 'pro', badge: 'Best',  coste: '~$0.40 / segundo', desc: 'audio nativo · máxima resolución · 1080p' },
+      { id: 'veo-3.0-generate-001@1080p',    nombre: 'Veo 3 · 1080p (Google)', tipo: 'pro', badge: 'Better', coste: '~$0.40 / segundo', desc: 'audio nativo · máxima resolución · 1080p' },
+      { id: 'grok-imagine-video',            nombre: 'Grok Imagine Video (xAI)', tipo: 'pro', badge: 'Best', coste: 'premium · vía worker xAI', desc: 'Grok Imagine · vídeo cinemático · hasta 1080p' },
     ],
   };
 
@@ -280,6 +282,7 @@
         const ok = hasKeyFor(motor.id);
         const keyLabel = motor.id.startsWith('elevenlabs-') ? 'WORKER pixer-eleven'
                        : motor.id === 'grok-imagine-image-pro' ? 'WORKER pixer-eleven'
+                       : motor.id === 'grok-imagine-video' ? 'WORKER pixer-eleven (xAI)'
                        : motor.id.startsWith('suno-local-') ? 'PROXY suno-local:3777'
                        : motor.id === 'lyria-3-pro-preview' ? 'WORKER pixer-eleven (GCP)'
                        : motor.id === 'nano-banana' ? 'WORKER pixer-eleven (Gemini)'
@@ -1409,6 +1412,80 @@
       </div>`);
   }
 
+  // ─── Grok Imagine Video (xAI) ───────────────────────────────────
+  // Flujo 2 pasos vía worker: POST /xai/video → { request_id }; luego polling
+  // GET /xai/video/{id} hasta status "done" → video.url (https://vidgen.x.ai/…).
+  async function genGrokVideoRaw(prompt, aspect, durationSeconds, resolution, onTick) {
+    try {
+      const r = await fetch(ELEVEN_WORKER_URL + '/xai/video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, duration: durationSeconds, aspect_ratio: aspect, resolution }),
+      });
+      if (!r.ok) return { ok: false, error: `gen ${r.status}: ${(await r.text()).slice(0, 200)}` };
+      const startData = await r.json();
+      const reqId = startData.request_id || startData.id;
+      if (!reqId) return { ok: false, error: 'sin request_id: ' + JSON.stringify(startData).slice(0, 200) };
+      const t0 = Date.now();
+      let attempt = 0;
+      while (true) {
+        await new Promise(res => setTimeout(res, 5000));
+        attempt++;
+        const elapsed = ((Date.now() - t0) / 1000).toFixed(0);
+        if (onTick) onTick(elapsed, attempt);
+        const pollR = await fetch(`${ELEVEN_WORKER_URL}/xai/video/${encodeURIComponent(reqId)}`);
+        if (!pollR.ok) return { ok: false, error: `poll ${pollR.status}` };
+        const poll = await pollR.json();
+        const status = poll.status || poll.state;
+        if (status === 'done' || status === 'completed' || status === 'succeeded') {
+          const url = poll?.video?.url || poll?.url;
+          if (!url) return { ok: false, error: 'sin URL: ' + JSON.stringify(poll).slice(0, 200) };
+          return { ok: true, url, elapsed };
+        }
+        if (status === 'failed' || status === 'expired' || status === 'error') {
+          return { ok: false, error: `xAI ${status}: ${JSON.stringify(poll).slice(0, 200)}` };
+        }
+        if (attempt > 60) return { ok: false, error: 'timeout (>5min)' };
+      }
+    } catch (e) {
+      return { ok: false, error: String(e) };
+    }
+  }
+
+  async function playGrokVideo(s) {
+    const aspect = ASPECT_VEO[s.canal] || '16:9';
+    const dur = veoDuration(s);
+    const resolution = '1080p';
+    const prompt = buildVeoPrompt(s);
+    if (!(await confirmPro('Grok Imagine Video (xAI)', `${dur}s · ${resolution} · vía worker xAI`))) return;
+
+    showPlayer(`
+      <div class="player-card">
+        <div class="player-head">▶ VIDEO · Grok Imagine (xAI) · ${aspect} · ${dur}s · ${resolution}</div>
+        ${progressHtml('Enviando a Grok Imagine...', 'grokvid', 180000)}
+      </div>`);
+    const stop = startProgress('grokvid');
+    const res = await genGrokVideoRaw(prompt, aspect, dur, resolution,
+      (elapsed, attempt) => setProgressLabel('grokvid', `Generando · ${elapsed}s · intento ${attempt}`));
+    if (!res.ok) {
+      stop(false);
+      showPlayer(`<div class="player-card"><div class="player-head">▶ VIDEO · Grok Imagine · ERROR</div><pre class="player-body">${String(res.error).replace(/</g,'&lt;').slice(0,500)}</pre></div>`);
+      return;
+    }
+    stop(true);
+    const gTitle = deriveAssetTitle('video', loadStore());
+    const pubMeta = { type: 'video', motor: 'grok-imagine-video', prompt, costEst: 'xAI · vía worker', url: res.url, mime: 'video/mp4' };
+    showPlayer(`
+      <div class="player-card">
+        <div class="player-head">▶ VIDEO · Grok Imagine (xAI) · ${aspect} · ${dur}s · ${resolution}</div>
+        <video controls autoplay src="${res.url}" data-pixer-title="${escAttr(gTitle)}" style="width:100%; max-height:55vh; border:1px solid var(--matrix); box-shadow:0 0 24px rgba(0,255,65,.30);"></video>
+        <pre class="player-body">${prompt.replace(/</g,'&lt;')}</pre>
+        <a class="btn" download="grok-${Date.now()}.mp4" href="${res.url}">⬇ Descargar MP4</a>
+        ${publishBtnHTML(pubMeta)}
+        <small class="player-foot">// xAI Grok Imagine · ${res.elapsed}s de procesado</small>
+      </div>`);
+  }
+
   // Compara N motores de vídeo (Veo) en paralelo, side-by-side. Cada celda
   // arranca su propia generación y muestra el <video> + publicar en Stock cuando
   // llega. Espejo de compareSelectedImages pero asíncrono (operaciones largas).
@@ -1481,6 +1558,10 @@
     // 2+ motores Veo seleccionados → grid comparativa.
     if (motorsList.length > 1 && motorsList.every(m => m.startsWith('veo-3.0-'))) {
       return compareSelectedVideos(motorsList, s);
+    }
+
+    if (motor === 'grok-imagine-video') {
+      return playGrokVideo(s);
     }
 
     if (motor.startsWith('veo-3.0-')) {
