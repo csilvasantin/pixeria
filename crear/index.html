@@ -222,9 +222,21 @@
       margin-top: 12px;
       font-size: 14px;
     }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
   </style>
 </head>
 <body>
+  <h1 class="sr-only">Assets · Pixeria Studio</h1>
   <canvas id="matrix-rain" aria-hidden="true"></canvas>
   <header class="site-header">
     <a class="brand" href="/" aria-label="Pixeria inicio">
