@@ -355,7 +355,7 @@
         <!-- MOBILIARIO (furni) — Fase A: Pixeria → Stock → gemelo -->
         <div class="studio-panel" id="furni-panel" style="display:none; margin-top:16px;">
           <h4>🛋 Mobiliario para el Xpacio (gemelo)</h4>
-          <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Crea un elemento pixelado y publícalo como <code>furni</code>. Aparece en el gemelo con <code>/importar catalogo</code>.</p>
+          <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Crea un elemento pixelado, se recorta el fondo a <b>transparente</b> automáticamente y se publica como <code>furni</code> con las proporciones listas para el gemelo (aparece con <code>/importar catalogo</code>, sin retoques).</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
             <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Nombre</label><input id="furni-title" class="model-select" placeholder="Ej: Sofá retro" style="width:100%;"></div>
             <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Alto (px)</label><input id="furni-ph" class="model-select" type="number" value="46" min="12" max="200" style="width:100%;"></div>
@@ -363,7 +363,7 @@
             <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Huella fondo (tiles)</label><select id="furni-fpd" class="model-select"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
           </div>
           <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Prompt (para generar con IA)</label>
-          <textarea id="furni-prompt" placeholder="Ej: silla de madera, pixel-art isométrico, vista frontal, fondo blanco liso" style="min-height:70px;"></textarea>
+          <textarea id="furni-prompt" placeholder="Ej: silla de madera, pixel-art isométrico, vista frontal (el fondo se recorta solo a transparente)" style="min-height:70px;"></textarea>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
             <button class="button secondary" id="furni-upload-btn" style="flex:1;">🖼 Subir PNG</button>
             <input id="furni-file" type="file" accept="image/png,image/webp" style="display:none;">
@@ -1090,9 +1090,88 @@
 
     // ── MOBILIARIO (furni) — Fase A: crear y publicar al Stock como 'furni' ──
     let furniAsset = null; // { base64?, sourceUrl?, mime }
+
+    // ── Fase E: recorte de fondo + autocrop ──────────────────────────────
+    // Convierte un sprite con fondo sólido en un PNG con fondo TRANSPARENTE y
+    // recortado a su contenido, para que entre limpio en el gemelo (xpaceos.com)
+    // sin retoques. El gemelo conserva el aspect ratio y escala por la altura,
+    // así que basta con dejar el sprite a sangre y sin fondo.
+    function furniLoadImg(src) {
+      return new Promise((res, rej) => {
+        const im = new Image();
+        im.onload = () => res(im);
+        im.onerror = () => rej(new Error('no se pudo cargar la imagen'));
+        im.src = src;
+      });
+    }
+    async function processFurniImage(srcDataUrl, opts) {
+      opts = opts || {};
+      const tol = opts.tolerance != null ? opts.tolerance : 62; // tolerancia color de fondo
+      const maxSide = opts.maxSide || 256;                       // cota del PNG final
+      const im = await furniLoadImg(srcDataUrl);
+      let W = im.naturalWidth, H = im.naturalHeight;
+      if (!W || !H) throw new Error('imagen vacía');
+      const workMax = 768;
+      const sc = Math.min(1, workMax / Math.max(W, H));
+      const cw = Math.max(1, Math.round(W * sc)), ch = Math.max(1, Math.round(H * sc));
+      const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(im, 0, 0, cw, ch);
+      const id = ctx.getImageData(0, 0, cw, ch);
+      const d = id.data;
+      const idx = (x, y) => (y * cw + x) * 4;
+      // Si las esquinas ya son transparentes, el PNG ya trae alfa → solo autocrop.
+      const cornerA = [d[idx(0,0)+3], d[idx(cw-1,0)+3], d[idx(0,ch-1)+3], d[idx(cw-1,ch-1)+3]];
+      const alreadyTransparent = cornerA.every(a => a < 16);
+      if (!alreadyTransparent) {
+        // Color de fondo = mediana de las 4 esquinas.
+        const corners = [[0,0],[cw-1,0],[0,ch-1],[cw-1,ch-1]].map(p => {
+          const i = idx(p[0], p[1]); return [d[i], d[i+1], d[i+2]];
+        });
+        const bg = [0,1,2].map(k => {
+          const v = corners.map(cc => cc[k]).sort((a,b) => a-b); return Math.round((v[1]+v[2])/2);
+        });
+        const tol2 = tol * tol;
+        const seen = new Uint8Array(cw * ch);
+        const stack = [];
+        for (let x = 0; x < cw; x++) { stack.push(x); stack.push((ch-1)*cw + x); }
+        for (let y = 0; y < ch; y++) { stack.push(y*cw); stack.push(y*cw + cw-1); }
+        // Flood fill 4-conex desde los bordes: solo el fondo CONECTADO se borra,
+        // así no se agujerea el interior del objeto del mismo color.
+        while (stack.length) {
+          const p = stack.pop();
+          if (seen[p]) continue; seen[p] = 1;
+          const i = p * 4;
+          const dr = d[i]-bg[0], dg = d[i+1]-bg[1], db = d[i+2]-bg[2];
+          if (dr*dr + dg*dg + db*db > tol2) continue;
+          d[i+3] = 0;
+          const x = p % cw, y = (p - x) / cw;
+          if (x > 0) stack.push(p-1);
+          if (x < cw-1) stack.push(p+1);
+          if (y > 0) stack.push(p-cw);
+          if (y < ch-1) stack.push(p+cw);
+        }
+      }
+      ctx.putImageData(id, 0, 0);
+      // bbox del contenido (alpha > 12)
+      let minX = cw, minY = ch, maxX = -1, maxY = -1;
+      for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) {
+        if (d[idx(x,y)+3] > 12) { if (x<minX)minX=x; if (x>maxX)maxX=x; if (y<minY)minY=y; if (y>maxY)maxY=y; }
+      }
+      if (maxX < minX) throw new Error('el sprite quedó vacío (prueba a subir la tolerancia)');
+      const bw = maxX-minX+1, bh = maxY-minY+1;
+      const outScale = Math.min(1, maxSide / Math.max(bw, bh));
+      const ow = Math.max(1, Math.round(bw*outScale)), oh = Math.max(1, Math.round(bh*outScale));
+      const oc = document.createElement('canvas'); oc.width = ow; oc.height = oh;
+      const octx = oc.getContext('2d'); octx.imageSmoothingEnabled = false;
+      octx.drawImage(c, minX, minY, bw, bh, 0, 0, ow, oh);
+      return { dataUrl: oc.toDataURL('image/png'), w: ow, h: oh };
+    }
     function furniSetPreview(src, label) {
       const p = document.getElementById('furni-preview');
-      p.innerHTML = '<img src="' + src + '" style="max-height:120px;image-rendering:pixelated;border-radius:4px;"><div style="margin-left:10px;font-size:12px;color:#9fe7ff;">' + (label || '') + '</div>';
+      // Damero para que se vea la transparencia del sprite.
+      p.innerHTML = '<img src="' + src + '" style="max-height:120px;image-rendering:pixelated;border-radius:4px;background:repeating-conic-gradient(#2a2f36 0% 25%, #161a1f 0% 50%) 50% / 16px 16px;"><div style="margin-left:10px;font-size:12px;color:#9fe7ff;">' + (label || '') + '</div>';
       document.getElementById('furni-publish-btn').disabled = false;
     }
     function furniSetStatus(t) { const s = document.getElementById('furni-status'); if (s) s.textContent = t || ''; }
@@ -1102,11 +1181,20 @@
       if (fileBtn && file && !fileBtn.dataset.wired) {
         fileBtn.dataset.wired = '1';
         fileBtn.onclick = () => file.click();
-        file.onchange = () => {
+        file.onchange = async () => {
           const f = file.files && file.files[0]; if (!f) return;
-          const rd = new FileReader();
-          rd.onload = () => { furniAsset = { base64: rd.result.split(',')[1], mime: f.type || 'image/png' }; furniSetPreview(rd.result, f.name); furniSetStatus('PNG listo: ' + f.name); };
-          rd.readAsDataURL(f);
+          furniSetStatus('Procesando ' + f.name + '…');
+          const raw = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+          try {
+            const out = await processFurniImage(raw);
+            furniAsset = { base64: out.dataUrl.split(',')[1], mime: 'image/png' };
+            furniSetPreview(out.dataUrl, f.name + ' · ' + out.w + '×' + out.h + ' · fondo recortado');
+            furniSetStatus('✅ PNG con fondo transparente listo.');
+          } catch (e) {
+            furniAsset = { base64: raw.split(',')[1], mime: f.type || 'image/png' };
+            furniSetPreview(raw, f.name);
+            furniSetStatus('Aviso: no se pudo recortar (' + e.message + '). Se usa la imagen tal cual.');
+          }
         };
       }
       const aiBtn = document.getElementById('furni-ai-btn'); if (aiBtn) aiBtn.onclick = furniGenerateAI;
@@ -1115,18 +1203,23 @@
     async function furniGenerateAI() {
       const prompt = (document.getElementById('furni-prompt').value || '').trim();
       if (!prompt) { alert('Escribe un prompt para generar.'); return; }
-      const full = 'isometric pixel-art furniture sprite, front view, ' + prompt + ', clean solid flat background, centered, single object, 16-bit retro game asset';
+      // Fondo chroma (magenta) sólido: lejos de los colores típicos de mobiliario,
+      // así el recorte queda limpio. Pedimos b64 para procesar sin "tainting" CORS.
+      const full = 'isometric pixel-art furniture sprite, front view, ' + prompt + ', single centered object, on a solid flat magenta (#ff00ff) background, no shadow, no floor, no text, 16-bit retro game asset';
       const btn = document.getElementById('furni-ai-btn'); btn.disabled = true; const old = btn.textContent; btn.textContent = '⏳ generando…';
       furniSetStatus('Generando con Grok Imagine…');
       try {
-        const r = await fetch(ELEVEN_WORKER_URL + '/xai/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: full, model: 'grok-imagine-image' }) });
+        const r = await fetch(ELEVEN_WORKER_URL + '/xai/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: full, model: 'grok-imagine-image', b64: true }) });
         const data = await r.json().catch(() => ({}));
         const first = data && data.data && data.data[0];
-        const url = first && (first.url || (first.b64_json ? 'data:image/jpeg;base64,' + first.b64_json : null));
-        if (!r.ok || !url) throw new Error(data && data.error ? (data.error.message || JSON.stringify(data.error)) : 'sin imagen');
-        if (url.startsWith('data:')) { furniAsset = { base64: url.split(',')[1], mime: 'image/jpeg' }; }
-        else { furniAsset = { sourceUrl: url, mime: 'image/jpeg' }; }
-        furniSetPreview(url, 'Generado con IA'); furniSetStatus('Imagen generada. Revisa y publica. (Recorte de fondo: Fase E)');
+        const b64 = first && first.b64_json;
+        if (!r.ok || !b64) throw new Error(data && data.error ? (data.error.message || JSON.stringify(data.error)) : 'sin imagen base64');
+        const srcUrl = 'data:' + (first.mime || 'image/jpeg') + ';base64,' + b64;
+        furniSetStatus('Recortando el fondo…');
+        const out = await processFurniImage(srcUrl);
+        furniAsset = { base64: out.dataUrl.split(',')[1], mime: 'image/png' };
+        furniSetPreview(out.dataUrl, 'IA · ' + out.w + '×' + out.h + ' · fondo recortado');
+        furniSetStatus('✅ Sprite con fondo transparente listo. Revisa y publica.');
       } catch (e) { furniSetStatus('Error IA: ' + e.message); alert('Generación falló: ' + e.message); }
       finally { btn.disabled = false; btn.textContent = old; }
     }
