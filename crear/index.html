@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Assets · Pixeria Studio</title>
-  <meta name="description" content="Herramienta de creación de Pixeria. Inicia sesión para acceder al estudio de generación de contenido con IA.">
+  <meta name="description" content="Assets de Pixeria para crear mobiliario y elementos listos para gemelos digitales XpaceOS.">
   <meta name="theme-color" content="#0b1117">
   <link rel="canonical" href="https://www.pixeria.com/crear/">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
@@ -118,27 +118,102 @@
       white-space: normal;
       overflow-wrap: anywhere;
     }
+    .studio-panel input,
+    .studio-panel textarea,
+    .studio-panel select {
+      width: 100%;
+      max-width: 100%;
+    }
     .format-grid-small {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      grid-template-columns: 1fr;
+      gap: 10px;
     }
     .format-chip {
-      padding: 8px 10px;
-      background: rgba(11,17,23,0.5);
-      border: 1px solid var(--line);
+      min-height: 54px;
+      padding: 10px 12px;
+      background:
+        linear-gradient(90deg, rgba(0,255,65,0.12), rgba(11,17,23,0.68)),
+        radial-gradient(circle at 92% 18%, rgba(104,220,233,0.18), transparent 30%);
+      border: 1px solid rgba(0,255,65,0.36);
       border-radius: 6px;
       font-size: 13px;
-      text-align: center;
+      text-align: left;
       cursor: pointer;
       transition: all .15s;
       min-width: 0;
       overflow-wrap: anywhere;
       line-height: 1.2;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      align-items: center;
+      gap: 10px;
+      color: #c9ffd4;
+      box-shadow: inset 0 0 20px rgba(0,255,65,0.04);
     }
     .format-chip.active, .format-chip:hover {
-      border-color: var(--cyan);
-      background: rgba(104,220,233,0.1);
+      border-color: #00ff41;
+      background:
+        linear-gradient(90deg, rgba(0,255,65,0.22), rgba(11,17,23,0.82)),
+        radial-gradient(circle at 90% 20%, rgba(104,220,233,0.28), transparent 32%);
+      box-shadow: 0 0 0 1px rgba(0,255,65,0.2), 0 0 22px rgba(0,255,65,0.13);
+    }
+    .format-chip strong {
+      display: block;
+      color: #f4f0e8;
+      font-size: 13px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .format-chip small {
+      display: block;
+      margin-top: 3px;
+      color: rgba(201,255,212,0.68);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+    .matrix-icon {
+      width: 32px;
+      height: 32px;
+      border: 1px solid rgba(0,255,65,0.64);
+      border-radius: 4px;
+      display: grid;
+      place-items: center;
+      color: #00ff41;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-weight: 800;
+      font-size: 14px;
+      text-shadow: 0 0 8px #00ff41;
+      background:
+        linear-gradient(180deg, rgba(0,255,65,0.14), rgba(0,0,0,0.08)),
+        repeating-linear-gradient(90deg, rgba(0,255,65,0.12) 0 1px, transparent 1px 5px);
+    }
+    .xpace-focus {
+      border-color: rgba(0,255,65,0.42);
+      background:
+        linear-gradient(135deg, rgba(0,255,65,0.1), rgba(104,220,233,0.05) 48%, rgba(0,0,0,0.18)),
+        rgba(244,240,232,0.035);
+    }
+    .furni-copy {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      margin: 0 0 14px;
+    }
+    .matrix-status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .matrix-status span {
+      border: 1px solid rgba(0,255,65,0.24);
+      color: #9dffb4;
+      background: rgba(0,255,65,0.06);
+      border-radius: 4px;
+      padding: 5px 8px;
+      font: 700 11px "JetBrains Mono", ui-monospace, monospace;
+      text-transform: uppercase;
     }
     .model-select {
       width: 100%;
@@ -295,65 +370,75 @@
 
         <div class="studio-grid">
           <!-- CONFIG -->
-          <div class="studio-panel">
-            <h4>Configuración</h4>
+          <div class="studio-panel xpace-focus">
+            <h4>Mobiliario XpaceOS</h4>
+            <p class="furni-copy">Assets se concentra en elementos físicos para gemelos digitales: piezas recortadas, proporción limpia y publicación directa como <code>furni</code>.</p>
 
             <div style="margin-bottom:14px;">
-              <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Formato</label>
+              <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Tipo de elemento</label>
               <div class="format-grid-small" id="format-chips">
-                <div class="format-chip" data-format="video">Video</div>
-                <div class="format-chip" data-format="imagen">Imagen</div>
-                <div class="format-chip" data-format="audio">Audio</div>
-                <div class="format-chip" data-format="texto">Texto</div>
-                <div class="format-chip" data-format="marketing">Marketing</div>
-                <div class="format-chip" data-format="operaciones">Operaciones</div>
-                <div class="format-chip" data-format="mobiliario">🛋 Mobiliario</div>
+                <div class="format-chip" data-format="mobiliario" data-preset="sofa">
+                  <span class="matrix-icon">SO</span>
+                  <span><strong>Mobiliario</strong><small>Sofas, sillas, mesas, mostradores</small></span>
+                </div>
+                <div class="format-chip" data-format="mobiliario" data-preset="display">
+                  <span class="matrix-icon">DX</span>
+                  <span><strong>Displays</strong><small>LEDs, kioskos, vending, paneles</small></span>
+                </div>
+                <div class="format-chip" data-format="mobiliario" data-preset="retail">
+                  <span class="matrix-icon">RT</span>
+                  <span><strong>Retail</strong><small>Gondolas, vitrinas, expositores</small></span>
+                </div>
+                <div class="format-chip" data-format="mobiliario" data-preset="decor">
+                  <span class="matrix-icon">MX</span>
+                  <span><strong>Decoración</strong><small>Plantas, senaletica, props de escena</small></span>
+                </div>
+              </div>
+              <div class="matrix-status" aria-label="Estado de exportacion">
+                <span>fondo alpha</span>
+                <span>sprite limpio</span>
+                <span>xpaceos ready</span>
               </div>
             </div>
 
             <div style="margin-bottom:14px;">
-              <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Modelo (auto: mejor gratuito según formato)</label>
+              <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Motor</label>
               <select id="model" class="model-select">
-                <option>Kling 2.1 (Video - free tier limitado)</option>
-                <option>Runway Gen-4 (Video - créditos gratis)</option>
-                <option>Midjourney v7 (Imagen)</option>
-                <option>Flux Pro 1.1 (Imagen - gratuito vía HF/Grok)</option>
-                <option>ElevenLabs Multilingual v3 (Voz - plan free)</option>
-                <option>Suno v4 (Música - free tier)</option>
-                <option>Browser Web Speech API (Voz - 100% gratuito y nativo)</option>
+                <option>Grok Sprite XpaceOS</option>
+                <option>Pixeria Alpha Cleaner</option>
+                <option>Manual PNG · Validación furni</option>
               </select>
             </div>
 
             <div>
-              <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Aspecto / Duración</label>
+              <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Vista</label>
               <select id="aspect" class="model-select">
-                <option>16:9 — Horizontal</option>
-                <option>9:16 — Vertical (Reels/TikTok)</option>
-                <option>1:1 — Cuadrado</option>
-                <option>4:3 — Clásico</option>
+                <option>Isométrica frontal — gemelo XpaceOS</option>
+                <option>Frontal pixel-art — catálogo furni</option>
+                <option>Top-down suave — mapa operativo</option>
               </select>
             </div>
           </div>
 
           <!-- PROMPT -->
           <div class="studio-panel prompt-area">
-            <h4>Prompt / Brief</h4>
-            <textarea id="prompt" placeholder="Describe la pieza que quieres crear. Ej: Campaña de producto con modelo de lujo en entorno minimalista, tono sofisticado, iluminación cinematográfica..."></textarea>
+            <h4>Brief de pieza</h4>
+            <textarea id="prompt" placeholder="Describe el mueble o elemento para el gemelo XpaceOS. Ej: mostrador de estanco en madera oscura, pantalla LED integrada, estilo pixel-art isométrico, sin fondo, sin sombras externas."></textarea>
 
             <div style="display:flex; gap:8px; margin-top:8px;">
-              <button class="button secondary" onclick="useMethodPrompt()" style="flex:1; font-size:13px;">Usar prompt del Método</button>
+              <button class="button secondary" onclick="useMethodPrompt()" style="flex:1; font-size:13px;">Preset Matrix</button>
               <button class="button secondary" onclick="clearPrompt()" style="flex:1; font-size:13px;">Limpiar</button>
             </div>
 
-            <button class="generate-btn" onclick="generateContent()">Generar con Pixeria</button>
-            <div style="font-size:11px; color:var(--muted); margin-top:8px; text-align:center;">Modelos sincronizados con el Radar • Junio 2026</div>
+            <button class="generate-btn" onclick="focusFurniComposer()">Preparar mobiliario</button>
+            <div style="font-size:11px; color:var(--muted); margin-top:8px; text-align:center;">Exportación orientada a gemelos digitales XpaceOS</div>
           </div>
 
           <!-- OUTPUT -->
           <div class="studio-panel">
             <h4>Resultado</h4>
             <div id="output" class="output">
-              <div>El resultado de la generación aparecerá aquí.<br>Elige formato, modelo y escribe un prompt.</div>
+              <div>El sprite final aparecerá aquí despues de generar o subir un PNG.</div>
             </div>
 
             <div id="output-actions" style="display:none; margin-top:14px; gap:8px;">
@@ -365,9 +450,9 @@
         </div>
 
         <!-- MOBILIARIO (furni) — Fase A: Pixeria → Stock → gemelo -->
-        <div class="studio-panel" id="furni-panel" style="display:none; margin-top:16px;">
-          <h4>🛋 Mobiliario para el Xpacio (gemelo)</h4>
-          <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Crea un elemento pixelado, se recorta el fondo a <b>transparente</b> automáticamente y se publica como <code>furni</code> con las proporciones listas para el gemelo (aparece con <code>/importar catalogo</code>, sin retoques).</p>
+        <div class="studio-panel xpace-focus" id="furni-panel" style="display:block; margin-top:16px;">
+          <h4>Mobiliario para el gemelo XpaceOS</h4>
+          <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Crea un elemento pixelado, se recorta el fondo a <b>transparente</b> automáticamente y se publica como <code>furni</code> con proporciones listas para el gemelo.</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
             <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Nombre</label><input id="furni-title" class="model-select" placeholder="Ej: Sofá retro" style="width:100%;"></div>
             <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Alto (px)</label><input id="furni-ph" class="model-select" type="number" value="46" min="12" max="200" style="width:100%;"></div>
@@ -375,14 +460,14 @@
             <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Huella fondo (tiles)</label><select id="furni-fpd" class="model-select"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
           </div>
           <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Prompt (para generar con IA)</label>
-          <textarea id="furni-prompt" placeholder="Ej: silla de madera, pixel-art isométrico, vista frontal (el fondo se recorta solo a transparente)" style="min-height:70px;"></textarea>
+          <textarea id="furni-prompt" placeholder="Ej: silla de madera, pixel-art isométrico, vista frontal, fondo magenta plano para recorte alpha" style="min-height:70px;"></textarea>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-            <button class="button secondary" id="furni-upload-btn" style="flex:1;">🖼 Subir PNG</button>
+            <button class="button secondary" id="furni-upload-btn" style="flex:1;">Subir PNG</button>
             <input id="furni-file" type="file" accept="image/png,image/webp" style="display:none;">
-            <button class="button secondary" id="furni-ai-btn" style="flex:1;">✨ Generar con IA</button>
+            <button class="button secondary" id="furni-ai-btn" style="flex:1;">Generar furni IA</button>
           </div>
           <div id="furni-preview" style="margin-top:12px;min-height:80px;display:flex;align-items:center;justify-content:center;background:#0b1117;border:1px dashed #28323a;border-radius:6px;color:#5a6a72;font-size:12px;padding:8px;">Sube un PNG o genera con IA…</div>
-          <button class="button primary" id="furni-publish-btn" style="width:100%;margin-top:12px;" disabled>📌 Publicar como Mobiliario (furni)</button>
+          <button class="button primary" id="furni-publish-btn" style="width:100%;margin-top:12px;" disabled>Publicar como Mobiliario (furni)</button>
           <div id="furni-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;min-height:16px;"></div>
         </div>
 
@@ -425,13 +510,17 @@
     })();
 
     let currentUser = null;
-    let currentFormat = 'video';
+    let currentFormat = 'mobiliario';
+    let currentFurniPreset = 'sofa';
     let history = [];
 
     function autoSelectBestFreeModel(format) {
       const modelSelect = document.getElementById('model');
       let recommended = '';
 
+      if (format === 'mobiliario') {
+        recommended = 'Grok Imagine · Sprite isométrico XpaceOS';
+      } else
       if (format === 'video') {
         recommended = 'Runway Gen-4 (Video - créditos gratis)';
       } else if (format === 'imagen' || format === 'marketing') {
@@ -480,7 +569,9 @@
           chips.forEach(c => c.classList.remove('active'));
           chip.classList.add('active');
           currentFormat = chip.dataset.format;
+          currentFurniPreset = chip.dataset.preset || 'sofa';
           autoSelectBestFreeModel(currentFormat);
+          applyFurniPreset(currentFurniPreset);
           updateFurniMode();
         });
       });
@@ -497,8 +588,66 @@
       const fp = document.getElementById('furni-panel');
       if (fp) fp.style.display = isFurni ? 'block' : 'none';
       document.querySelectorAll('.studio-panel.prompt-area, #output-actions').forEach(el => {
-        if (el) el.style.opacity = isFurni ? '0.35' : '1';
+        if (el) el.style.opacity = '1';
       });
+    }
+
+    function applyFurniPreset(preset) {
+      const title = document.getElementById('furni-title');
+      const prompt = document.getElementById('furni-prompt');
+      const mainPrompt = document.getElementById('prompt');
+      const ph = document.getElementById('furni-ph');
+      const fpw = document.getElementById('furni-fpw');
+      const fpd = document.getElementById('furni-fpd');
+      const presets = {
+        sofa: {
+          title: 'Sofa Matrix modular',
+          prompt: 'sofa modular negro con ribetes verde Matrix, pixel-art isometrico, pieza unica centrada, sin suelo, sin sombra externa',
+          ph: 52, fpw: 2, fpd: 1
+        },
+        display: {
+          title: 'Kiosko LED XpaceOS',
+          prompt: 'kiosko digital vertical con pantalla verde Matrix, base metalica oscura, pixel-art isometrico, pieza unica centrada, sin suelo',
+          ph: 72, fpw: 1, fpd: 1
+        },
+        retail: {
+          title: 'Gondola retail digital',
+          prompt: 'gondola de tienda con estantes iluminados y micro pantallas LED, pixel-art isometrico, mueble de retail premium, sin fondo',
+          ph: 64, fpw: 2, fpd: 1
+        },
+        decor: {
+          title: 'Prop Matrix de escena',
+          prompt: 'elemento decorativo futurista para gemelo digital, acabado negro, acentos verde Matrix, pixel-art isometrico, objeto limpio sin fondo',
+          ph: 44, fpw: 1, fpd: 1
+        }
+      };
+      const p = presets[preset] || presets.sofa;
+      if (title && (!title.value || title.dataset.autofill === '1')) {
+        title.value = p.title;
+        title.dataset.autofill = '1';
+      }
+      if (prompt && (!prompt.value || prompt.dataset.autofill === '1')) {
+        prompt.value = p.prompt;
+        prompt.dataset.autofill = '1';
+      }
+      if (mainPrompt && (!mainPrompt.value || mainPrompt.dataset.autofill === '1')) {
+        mainPrompt.value = p.prompt;
+        mainPrompt.dataset.autofill = '1';
+      }
+      if (ph) ph.value = p.ph;
+      if (fpw) fpw.value = String(p.fpw);
+      if (fpd) fpd.value = String(p.fpd);
+    }
+
+    function focusFurniComposer() {
+      currentFormat = 'mobiliario';
+      applyFurniPreset(currentFurniPreset);
+      updateFurniMode();
+      const prompt = document.getElementById('prompt');
+      const furniPrompt = document.getElementById('furni-prompt');
+      if (prompt && furniPrompt) furniPrompt.value = prompt.value;
+      document.getElementById('furni-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('furni-prompt')?.focus();
     }
 
     function doLogin(e) {
@@ -561,15 +710,24 @@
         'audio': 'Locución cálida y autoritaria en español neutro, 18 segundos. Música ambiente sutil de sintetizadores y percusión ligera. Final con sting de marca.',
         'texto': 'Copy para post de Instagram + caption largo. Tono sofisticado, aspiracional pero cercano. Incluye 3 CTAs diferentes y hashtags estratégicos.',
         'marketing': 'Variantes A/B para campaña paid: 3 headlines + 3 visuals descriptions + 2 versiones de copy largo para landing.',
-        'operaciones': 'Guion de briefing interno + checklist de producción para equipo de 4 personas. Incluye tiempos, assets necesarios y puntos de control de calidad.'
+        'operaciones': 'Guion de briefing interno + checklist de producción para equipo de 4 personas. Incluye tiempos, assets necesarios y puntos de control de calidad.',
+        'mobiliario': 'mostrador modular para estanco digital XpaceOS, madera oscura y metal negro, pantalla LED verde Matrix integrada, pixel-art isometrico, objeto unico centrado, fondo magenta plano para recorte alpha, sin suelo, sin sombra externa'
       };
       const ta = document.getElementById('prompt');
       ta.value = prompts[currentFormat] || prompts['video'];
+      ta.dataset.autofill = '1';
+      const furniPrompt = document.getElementById('furni-prompt');
+      if (furniPrompt && currentFormat === 'mobiliario') {
+        furniPrompt.value = ta.value;
+        furniPrompt.dataset.autofill = '1';
+      }
       ta.focus();
     }
 
     function clearPrompt() {
       document.getElementById('prompt').value = '';
+      const fp = document.getElementById('furni-prompt');
+      if (fp) fp.value = '';
     }
 
     function playFreeTTS(text) {
@@ -1188,6 +1346,13 @@
     }
     function furniSetStatus(t) { const s = document.getElementById('furni-status'); if (s) s.textContent = t || ''; }
     function setupFurniPanel() {
+      ['furni-title', 'furni-prompt', 'prompt'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.dataset.manualWired) {
+          el.dataset.manualWired = '1';
+          el.addEventListener('input', () => { el.dataset.autofill = '0'; });
+        }
+      });
       const fileBtn = document.getElementById('furni-upload-btn');
       const file = document.getElementById('furni-file');
       if (fileBtn && file && !fileBtn.dataset.wired) {
@@ -1348,6 +1513,7 @@
       const ub = document.getElementById('user-badge'); if (ub) ub.textContent = 'Pixeria · equipo';
       const logoutBtn = document.querySelector('button[onclick="logout()"]'); if (logoutBtn) logoutBtn.style.display = 'none';
       try { initFormatChips(); } catch (e) {}
+      try { applyFurniPreset(currentFurniPreset); } catch (e) {}
       const oa = document.getElementById('output-actions'); if (oa) oa.style.display = 'none';
     })();
     console.log('%c[Pixeria Studio] Acceso libre · creation tool ready.', 'color:#555');
