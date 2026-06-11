@@ -502,6 +502,7 @@
           </div>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
             <button class="button primary" id="distro-save" style="flex:1;">💾 Guardar y publicar</button>
+            <button class="button secondary" id="distro-iso" style="flex:1;" title="Ver la distribución en isométrico, con el motor real del gemelo (XpaceOS.com)">📐 Perspectiva isométrica</button>
             <button class="button secondary" id="distro-clear" style="flex:1;">🧹 Vaciar rejilla</button>
           </div>
           <div id="distro-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;min-height:16px;"></div>
@@ -1652,6 +1653,40 @@
           loadLib();
         }catch(e){ status('❌ '+e.message,'#e06a6a'); }
       }
+      // Vista isométrica "exactamente igual que XpaceOS.com": publicamos el estado
+      // actual del editor a un id de preview y embebemos el GEMELO real (su motor)
+      // con ?distro=<id>&preview=1. Cero reimplementación → fidelidad total.
+      function twinUrl(){ return window.DISTRO_TWIN_URL || 'https://www.xpaceos.com/admira-xp/'; }
+      function frameSrc(id){ const b=twinUrl(); const sep=b.includes('?')?'&':'?'; return b+sep+'distro='+encodeURIComponent(id)+'&preview=1&ts='+Date.now(); }
+      async function openIso(){
+        if(!st.items.length){ status('Coloca al menos un mueble para ver el isométrico.','#e0a14a'); return; }
+        const body={ id:'preview-pixeria', name:'(vista previa)', client:($('distro-client').value||'').trim()||null, source:'pixeria',
+          config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
+          furniture: st.items.map(i=>({ id:i.id, type:i.type, col:i.col, row:i.row, sx:1, sy:1, label:i.label })) };
+        status('⏳ preparando vista isométrica…');
+        try{
+          const r=await fetch(dBase()+'/layout/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+          const d=await r.json(); if(!r.ok||!d.ok) throw new Error(d.error||('HTTP '+r.status));
+          showIsoModal('preview-pixeria');
+          status('Vista isométrica abierta (motor real del gemelo).','#7ee0a0');
+        }catch(e){ status('❌ '+e.message,'#e06a6a'); }
+      }
+      function showIsoModal(id){
+        let m=document.getElementById('distro-iso-modal');
+        if(!m){
+          m=document.createElement('div'); m.id='distro-iso-modal';
+          m.style.cssText='position:fixed;inset:0;z-index:1000000;background:rgba(0,0,0,.93);display:flex;flex-direction:column;';
+          m.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;color:#cfe;font-family:monospace;font-size:13px;border-bottom:1px solid #28323a;background:#0b1117;">'+
+            '<span>📐 Perspectiva isométrica · motor real del gemelo (XpaceOS)</span>'+
+            '<span style="display:flex;gap:8px;align-items:center;"><button id="distro-iso-reload" class="button secondary" style="padding:4px 10px;font-size:12px;">↻ recargar</button><button id="distro-iso-close" class="button secondary" style="padding:4px 12px;font-size:12px;">✕ cerrar</button></span></div>'+
+            '<iframe id="distro-iso-frame" title="Vista isométrica del gemelo" style="flex:1;width:100%;border:0;background:#0a0e12;" allow="autoplay; fullscreen"></iframe>';
+          document.body.appendChild(m);
+          m.querySelector('#distro-iso-close').onclick=()=>{ m.style.display='none'; const f=document.getElementById('distro-iso-frame'); if(f) f.src='about:blank'; };
+          m.querySelector('#distro-iso-reload').onclick=()=>{ const f=document.getElementById('distro-iso-frame'); if(f) f.src=frameSrc(id); };
+        }
+        m.style.display='flex';
+        document.getElementById('distro-iso-frame').src=frameSrc(id);
+      }
       function miniPreview(counts,cols,rows){
         const c=Math.max(1,cols||14), r=Math.max(1,rows||8);
         return '<div style="display:grid;grid-template-columns:repeat('+c+',4px);grid-auto-rows:4px;gap:1px;justify-content:center;padding:6px;background:#0e1620;border-radius:4px;">'+
@@ -1695,7 +1730,7 @@
         lib.innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:12px;text-align:center;padding:10px;">⏳ cargando librería…</div>';
         try{
           const r=await fetch(dBase()+'/layout/list?ts='+Date.now(),{cache:'no-store'});
-          const d=await r.json(); const items=Array.isArray(d.items)?d.items:[];
+          const d=await r.json(); const items=(Array.isArray(d.items)?d.items:[]).filter(x=>!String(x.id||'').startsWith('preview-'));
           if(!items.length){ lib.innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:12px;text-align:center;padding:10px;">Aún no hay distribuciones. Diseña una arriba y pulsa «Guardar y publicar».</div>'; return; }
           lib.innerHTML='';
           items.forEach(it=>{
@@ -1723,6 +1758,7 @@
         const wire=(id,fn)=>{ const e=$(id); if(e) e.onclick=fn; };
         wire('distro-apply-size',applySize);
         wire('distro-save',saveDistro);
+        wire('distro-iso',openIso);
         wire('distro-clear',()=>{ st.items=[]; renderGrid(); status('Rejilla vaciada'); });
         wire('distro-refresh',loadLib);
         loadLib();
