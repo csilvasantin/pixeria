@@ -534,6 +534,10 @@
             </div>
             <div style="font-size:12px;color:#7ee0a0;text-align:right;white-space:nowrap;">💰 Saldo: <b id="market-balance">—</b> cr. · 🛋 Mis muebles: <b id="market-owned-count">0</b><br><span id="market-recargar" style="cursor:pointer;text-decoration:underline;opacity:.85;font-size:11px;">+1000 créditos</span></div>
           </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;">
+            <button type="button" class="button secondary" id="market-reprocesar" style="font-size:12px;padding:5px 12px;" title="Recorta el fondo a transparente de todos los muebles antiguos que aún tienen fondo">🧼 Hacer todos transparentes</button>
+            <span id="market-reproc-status" style="font-size:11px;color:var(--muted);"></span>
+          </div>
           <div id="market-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:14px;">
             <div style="grid-column:1/-1;color:var(--muted);text-align:center;padding:14px;">Pulsa «Marketplace» para cargar el catálogo.</div>
           </div>
@@ -1348,11 +1352,39 @@
     function furniLoadImg(src) {
       return new Promise((res, rej) => {
         const im = new Image();
+        // URLs remotas (assets del stock): crossOrigin para poder leer píxeles
+        // del canvas (el worker manda CORS en /stock/asset).
+        if (/^https?:\/\//i.test(src)) { try { im.crossOrigin = 'anonymous'; } catch (_) {} }
         im.onload = () => res(im);
         im.onerror = () => rej(new Error('no se pudo cargar la imagen'));
         im.src = src;
       });
     }
+    // ── Pasada de transparencia: reprocesa todos los muebles del Stock que aún
+    // tienen fondo (JPEG) y los deja PNG transparentes, sin duplicar (in-place). ──
+    window.reprocesarTransparenciaFurni = async function (onStatus) {
+      const say = onStatus || ((m) => console.log('[reproc]', m));
+      let items = [];
+      try {
+        const r = await fetch(ELEVEN_WORKER_URL + '/stock/list?type=furni&limit=200&ts=' + Date.now(), { cache: 'no-store' });
+        const d = await r.json(); items = (d.items || []).filter(it => it.url && /jpe?g/i.test(it.mime || ''));
+      } catch (e) { say('❌ no se pudo listar: ' + e.message); return { done: 0, fail: 0 }; }
+      if (!items.length) { say('✅ Todos los muebles ya son transparentes (PNG).'); return { done: 0, fail: 0 }; }
+      let done = 0, fail = 0;
+      for (const it of items) {
+        try {
+          const out = await processFurniImage(it.url, { maxSide: 256 });
+          const resp = await fetch(ELEVEN_WORKER_URL + '/stock/reasset', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: it.id, base64: out.dataUrl.split(',')[1], mime: 'image/png' })
+          });
+          if (resp.ok) done++; else fail++;
+        } catch (e) { fail++; }
+        say('🧼 Reprocesando… ' + (done + fail) + '/' + items.length + ' (✓' + done + (fail ? ' ✗' + fail : '') + ')');
+      }
+      say('✅ Transparencia aplicada a ' + done + ' mueble(s)' + (fail ? (' · ' + fail + ' no se pudieron') : '') + '.');
+      return { done, fail };
+    };
     async function processFurniImage(srcDataUrl, opts) {
       opts = opts || {};
       const maxSide = opts.maxSide || 256;                       // cota del PNG final
@@ -1455,6 +1487,15 @@
       document.getElementById('furni-publish-btn').disabled = false;
     }
     function furniSetStatus(t) { const s = document.getElementById('furni-status'); if (s) s.textContent = t || ''; }
+    // Auto-título: deriva un nombre del prompt/archivo si el usuario no puso uno
+    // (o si el anterior era auto). Evita que todos los muebles salgan con el mismo
+    // nombre heredado (p.ej. "Sofa Matrix" en todos).
+    function furniMaybeAutoTitle(text) {
+      const t = document.getElementById('furni-title'); if (!t) return;
+      if (t.value.trim() && t.dataset.autofill !== '1') return;   // respeta el nombre escrito a mano
+      const w = String(text || '').trim().split(/[,.\n]/)[0].trim();
+      if (w) { t.value = w.charAt(0).toUpperCase() + w.slice(1, 40); t.dataset.autofill = '1'; }
+    }
     function setupFurniPanel() {
       ['furni-title', 'furni-prompt', 'prompt'].forEach(id => {
         const el = document.getElementById(id);
@@ -1479,6 +1520,7 @@
             const out = await processFurniImage(raw);
             furniAsset = { base64: out.dataUrl.split(',')[1], mime: 'image/png' };
             furniAutoFootprint(out.w, out.h);
+            furniMaybeAutoTitle((f.name || '').replace(/\.[^.]+$/, ''));
             furniSetPreview(out.dataUrl, f.name + ' · ' + out.w + '×' + out.h + ' · fondo recortado');
             furniSetStatus('✅ PNG con fondo transparente listo.');
           } catch (e) {
@@ -1510,6 +1552,7 @@
         const out = await processFurniImage(srcUrl);
         furniAsset = { base64: out.dataUrl.split(',')[1], mime: 'image/png' };
         furniAutoFootprint(out.w, out.h);
+        furniMaybeAutoTitle(prompt);
         furniSetPreview(out.dataUrl, 'IA · ' + out.w + '×' + out.h + ' · fondo recortado');
         furniSetStatus('✅ Sprite con fondo transparente listo. Revisa y publica.');
       } catch (e) { furniSetStatus('Error IA: ' + e.message); alert('Generación falló: ' + e.message); }
@@ -1548,7 +1591,17 @@
           r = await fetch(STOCK_PUBLISH_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fallback) });
           data = await r.json().catch(() => ({}));
         }
-        if (r.ok && (data.ok || data.id)) { furniSetStatus('✅ Publicado · id ' + data.id + ' · ya en el gemelo con /importar catalogo'); }
+        if (r.ok && (data.ok || data.id)) {
+          furniSetStatus('✅ Publicado · id ' + data.id + ' · ya en el Marketplace y el gemelo');
+          // Limpiar el formulario para el siguiente mueble (si no, todos heredan
+          // el mismo nombre/imagen — era el bug de "todos salen como Sofa Matrix").
+          const t = document.getElementById('furni-title'); if (t) { t.value = ''; t.dataset.autofill = '1'; }
+          const pr = document.getElementById('furni-prompt'); if (pr) pr.value = '';
+          furniAsset = null;
+          const prev = document.getElementById('furni-preview'); if (prev) prev.innerHTML = 'Sube un PNG o genera con IA…';
+          const pb = document.getElementById('furni-publish-btn'); if (pb) pb.disabled = true;
+          const phh = document.getElementById('furni-ph'); if (phh) { phh.value = '46'; delete phh.dataset.userset; }
+        }
         else { furniSetStatus('Error: ' + (data.error || r.statusText)); alert('Error al publicar: ' + (data.error || r.statusText)); }
       } catch (e) { furniSetStatus('Fallo de red: ' + e.message); }
       finally { btn.disabled = false; btn.textContent = old; }
@@ -1908,6 +1961,12 @@
         wire('tab-distribucion',()=>setView('distribucion'));
         wire('tab-marketplace',()=>setView('marketplace'));
         wire('market-recargar',recargarCreditos);
+        wire('market-reprocesar',async()=>{
+          const st=$('market-reproc-status'); const set=m=>{ if(st) st.textContent=m; };
+          const btn=$('market-reprocesar'); if(btn) btn.disabled=true;
+          try{ if(typeof window.reprocesarTransparenciaFurni==='function'){ await window.reprocesarTransparenciaFurni(set); await loadMarket(); } }
+          finally{ if(btn) btn.disabled=false; }
+        });
         loadWallet();
         setView('creacion');
         loadLib();
