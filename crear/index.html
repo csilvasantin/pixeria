@@ -79,6 +79,10 @@
       font-size: 13px;
       color: var(--muted);
     }
+    /* Submenús del Assets: Distribución / Marketplace (separados de Creación) */
+    .assets-tab{ font-family:inherit; font-size:13px; letter-spacing:.04em; padding:7px 18px; border:1px solid #2e7d46; background:rgba(18,40,24,.45); color:#7ee0a0; border-radius:6px; cursor:pointer; transition:background .15s,box-shadow .15s,color .15s; white-space:nowrap; }
+    .assets-tab:hover{ background:rgba(40,90,55,.55); }
+    .assets-tab.active{ background:#2ee06a; color:#04140a; font-weight:700; box-shadow:0 0 16px rgba(46,224,106,.45); border-color:#2ee06a; }
     .studio-header > div,
     .prompt-area > div {
       min-width: 0;
@@ -366,12 +370,14 @@
           <div>
             <strong style="font-size:22px;">Pixeria Studio Assets</strong>
           </div>
-          <div>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <button type="button" class="assets-tab" id="tab-distribucion">Distribución</button>
+            <button type="button" class="assets-tab" id="tab-marketplace">Marketplace</button>
             <span id="user-badge" class="user"></span>
           </div>
         </div>
 
-        <div class="studio-grid">
+        <div class="studio-grid" data-view="creacion">
           <!-- CONFIG -->
           <div class="studio-panel xpace-focus">
             <h4>Mobiliario XpaceOS</h4>
@@ -453,7 +459,7 @@
         </div>
 
         <!-- MOBILIARIO (furni) — Fase A: Pixeria → Stock → gemelo -->
-        <div class="studio-panel xpace-focus" id="furni-panel" style="display:block; margin-top:16px;">
+        <div class="studio-panel xpace-focus" id="furni-panel" data-view="creacion" style="display:block; margin-top:16px;">
           <h4>Mobiliario para el gemelo XpaceOS</h4>
           <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Crea un elemento pixelado, se recorta el fondo a <b>transparente</b> automáticamente y se publica como <code>furni</code> con proporciones listas para el gemelo.</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
@@ -475,7 +481,7 @@
         </div>
 
         <!-- DISTRIBUCIONES — sala entera (config + mobiliario + staff) ⇄ gemelos -->
-        <div class="studio-panel xpace-focus" id="distro-panel" style="display:block; margin-top:16px;">
+        <div class="studio-panel xpace-focus" id="distro-panel" data-view="distribucion" style="display:none; margin-top:0;">
           <h4>Distribución estándar · sala entera ⇄ gemelos</h4>
           <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Diseña una <b>distribución</b> (tamaño de sala + mobiliario colocado) y publícala a la librería compartida. Los gemelos la aplican con <code>/distribucion aplicar &lt;id&gt;</code>; las que publican los gemelos también aparecen aquí. Canal: worker <code>/layout/*</code>.</p>
 
@@ -517,6 +523,20 @@
           </div>
         </div>
 
+        <!-- MARKETPLACE — comprar muebles para tu Xpacio (catálogo = stock furni) -->
+        <div class="studio-panel xpace-focus" id="market-panel" data-view="marketplace" style="display:none; margin-top:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div>
+              <h4 style="margin:0;">Marketplace · muebles para tu Xpacio</h4>
+              <p style="font-size:12px;color:var(--muted);margin:4px 0 0;">Compra muebles del catálogo y quedan en <b>Mis muebles</b>, listos para colocar en el editor de <b>Distribución</b>.</p>
+            </div>
+            <div style="font-size:12px;color:#7ee0a0;white-space:nowrap;">🛋 Mis muebles: <b id="market-owned-count">0</b></div>
+          </div>
+          <div id="market-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:14px;">
+            <div style="grid-column:1/-1;color:var(--muted);text-align:center;padding:14px;">Pulsa «Marketplace» para cargar el catálogo.</div>
+          </div>
+        </div>
+
         <!-- Fullscreen image modal for generated IA images -->
         <div id="ia-fullscreen-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:999999; align-items:center; justify-content:center; flex-direction:column; padding:20px;">
           <img id="ia-fullscreen-img" style="max-width:95vw; max-height:85vh; object-fit:contain; box-shadow:0 0 40px rgba(0,0,0,0.8); cursor:zoom-out;" alt="Imagen generada con IA - doble click o ESC para cerrar">
@@ -526,7 +546,7 @@
         </div>
 
         <!-- HISTORY -->
-        <div class="history">
+        <div class="history" data-view="creacion">
           <h4 style="margin: 20px 0 10px; font-size:14px; color:var(--cyan);">Historial de esta sesión</h4>
           <div id="history-list"></div>
         </div>
@@ -1592,20 +1612,78 @@
       const FMAP={}; FURNI.forEach(f=>FMAP[f.type]=f);
       const iconFor=t=>(FMAP[t]&&FMAP[t].icon)||'▪️';
       const CELL=30;
-      const st={ cols:14, rows:8, sel:'counter', items:[], _n:1, wall:'#e0d4b8', floor:'#b8bcc0' };
+      const st={ cols:14, rows:8, sel:'counter', selFurni:null, items:[], _n:1, wall:'#e0d4b8', floor:'#b8bcc0' };
       const $=id=>document.getElementById(id);
       function status(msg,col){ const s=$('distro-status'); if(s){ s.textContent=msg||''; s.style.color=col||'var(--muted)'; } }
+      function distroItemOut(i){ const o={ id:i.id, type:i.type, col:i.col, row:i.row, sx:1, sy:1, label:i.label }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; } return o; }
+
+      // ── Mis muebles (comprados en el Marketplace) ──
+      const OWNED_KEY='xpace_owned_furni';
+      function ownedFurni(){ try{ return JSON.parse(localStorage.getItem(OWNED_KEY)||'[]'); }catch(_){ return []; } }
+      function saveOwned(a){ try{ localStorage.setItem(OWNED_KEY, JSON.stringify(a.slice(0,200))); }catch(_){} }
+      function isOwned(url){ return ownedFurni().some(o=>o.url===url); }
+      function buyFurni(meta){ const a=ownedFurni(); if(a.some(o=>o.url===meta.url)) return; a.unshift(meta); saveOwned(a); updateOwnedCount(); }
+      function updateOwnedCount(){ const e=$('market-owned-count'); if(e) e.textContent=ownedFurni().length; }
+      async function loadMarket(){
+        updateOwnedCount();
+        const g=$('market-grid'); if(!g) return;
+        g.innerHTML='<div style="grid-column:1/-1;color:var(--muted);text-align:center;padding:14px;">⏳ cargando catálogo…</div>';
+        try{
+          const r=await fetch(ELEVEN_WORKER_URL+'/stock/list?type=furni&limit=60&ts='+Date.now(),{cache:'no-store'});
+          const d=await r.json(); const items=Array.isArray(d.items)?d.items:[];
+          if(!items.length){ g.innerHTML='<div style="grid-column:1/-1;color:var(--muted);text-align:center;padding:14px;">Aún no hay muebles en el catálogo. Crea alguno en «Creación».</div>'; return; }
+          g.innerHTML='';
+          items.forEach(it=>{
+            const url=it.url||it.src||''; if(!url) return; const title=it.title||it.prompt||'Mueble';
+            const card=document.createElement('div'); card.style.cssText='background:#0b1117;border:1px solid #28323a;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;';
+            card.innerHTML='<div style="height:90px;display:flex;align-items:center;justify-content:center;background:#0e1620;border-radius:6px;overflow:hidden;"><img src="'+url+'" alt="'+title+'" style="max-width:100%;max-height:90px;object-fit:contain;image-rendering:pixelated;"></div>'+
+              '<div style="font-size:12px;font-weight:600;color:#dfe;line-height:1.2;min-height:28px;">'+title+'</div>'+
+              '<div style="font-size:10px;color:var(--muted);">'+(Array.isArray(it.fp)?('huella '+it.fp[0]+'×'+it.fp[1]):'')+(it.ph?(' · '+it.ph+'px'):'')+'</div>';
+            const btn=document.createElement('button'); btn.className='button secondary';
+            const own=isOwned(url);
+            btn.textContent=own?'✓ En mis muebles':'🛒 Comprar';
+            btn.disabled=own; btn.style.cssText='width:100%;font-size:12px;padding:6px;'+(own?'opacity:.65;':'');
+            btn.onclick=()=>{ buyFurni({url,title,fp:Array.isArray(it.fp)?it.fp:[1,1],ph:it.ph||46,type:'custom'}); btn.textContent='✓ En mis muebles'; btn.disabled=true; btn.style.opacity='.65'; status('🛒 «'+title+'» en Mis muebles — ya puedes colocarlo en Distribución.','#7ee0a0'); };
+            card.appendChild(btn); g.appendChild(card);
+          });
+        }catch(e){ g.innerHTML='<div style="grid-column:1/-1;color:#e06a6a;text-align:center;padding:14px;">❌ '+e.message+'</div>'; }
+      }
+
+      // ── Conmutador de vistas (Creación / Distribución / Marketplace) ──
+      let currentView='creacion';
+      function setView(name){
+        currentView=name;
+        document.querySelectorAll('[data-view]').forEach(el=>{ el.style.display=(el.getAttribute('data-view')===name)?'':'none'; });
+        const td=$('tab-distribucion'), tm=$('tab-marketplace');
+        if(td) td.classList.toggle('active',name==='distribucion');
+        if(tm) tm.classList.toggle('active',name==='marketplace');
+        if(name==='marketplace') loadMarket();
+        if(name==='distribucion'){ renderPalette(); renderGrid(); }
+      }
 
       function renderPalette(){
         const p=$('distro-palette'); if(!p) return; p.innerHTML='';
         FURNI.forEach(f=>{
+          const sel=(st.sel===f.type && !st.selFurni);
           const b=document.createElement('button'); b.type='button';
-          b.textContent=f.icon+' '+f.label;
-          b.title=f.type;
-          b.style.cssText='font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer;border:1px solid '+(st.sel===f.type?'var(--cyan)':'#28323a')+';background:'+(st.sel===f.type?'rgba(0,200,255,.12)':'#0b1117')+';color:var(--text,#cfe);';
-          b.onclick=()=>{ st.sel=f.type; renderPalette(); };
+          b.textContent=f.icon+' '+f.label; b.title=f.type;
+          b.style.cssText='font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer;border:1px solid '+(sel?'var(--cyan)':'#28323a')+';background:'+(sel?'rgba(0,200,255,.12)':'#0b1117')+';color:var(--text,#cfe);';
+          b.onclick=()=>{ st.sel=f.type; st.selFurni=null; renderPalette(); };
           p.appendChild(b);
         });
+        // Muebles comprados en el Marketplace → colocables en la rejilla
+        const owned=ownedFurni();
+        if(owned.length){
+          const sep=document.createElement('span'); sep.textContent='Mis muebles:'; sep.style.cssText='font-size:11px;color:#7ee0a0;align-self:center;margin-left:4px;'; p.appendChild(sep);
+          owned.forEach(o=>{
+            const active=(st.sel==='custom'&&st.selFurni&&st.selFurni.url===o.url);
+            const b=document.createElement('button'); b.type='button'; b.title=o.title||'mueble comprado';
+            b.innerHTML='<img src="'+o.url+'" style="width:15px;height:15px;object-fit:contain;vertical-align:middle;image-rendering:pixelated;margin-right:3px;">'+String(o.title||'mueble').slice(0,12);
+            b.style.cssText='font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer;border:1px solid '+(active?'var(--cyan)':'#3a5a3a')+';background:'+(active?'rgba(0,200,255,.12)':'rgba(20,40,25,.4)')+';color:#cfe;';
+            b.onclick=()=>{ st.sel='custom'; st.selFurni=o; renderPalette(); };
+            p.appendChild(b);
+          });
+        }
       }
       function itemAt(col,row){ return st.items.find(i=>i.col===col&&i.row===row); }
       function renderGrid(){
@@ -1617,11 +1695,15 @@
             const cell=document.createElement('div');
             const it=itemAt(col,row);
             cell.style.cssText='width:'+CELL+'px;height:'+CELL+'px;display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid #1b2530;border-radius:3px;cursor:pointer;background:'+(it?'rgba(0,200,255,.10)':'#0e1620')+';';
-            if(it){ cell.textContent=iconFor(it.type); cell.title=it.type+' ('+col+','+row+') — clic para quitar'; }
-            else { cell.title=col+','+row; }
+            if(it){
+              if(it.type==='custom'&&it.img){ cell.innerHTML='<img src="'+it.img+'" style="width:'+(CELL-6)+'px;height:'+(CELL-6)+'px;object-fit:contain;image-rendering:pixelated;">'; }
+              else { cell.textContent=iconFor(it.type); }
+              cell.title=(it.label||it.type)+' ('+col+','+row+') — clic para quitar';
+            } else { cell.title=col+','+row; }
             cell.onclick=()=>{
               const ex=itemAt(col,row);
               if(ex){ st.items=st.items.filter(i=>i!==ex); }
+              else if(st.sel==='custom'&&st.selFurni){ st.items.push({ id:'custom-'+(st._n++), type:'custom', col, row, sx:1, sy:1, label:st.selFurni.title||'mueble', img:st.selFurni.url, fp:st.selFurni.fp||[1,1], ph:st.selFurni.ph||46, custom:true }); }
               else { st.items.push({ id:st.sel+'-'+(st._n++), type:st.sel, col, row, sx:1, sy:1, label:(FMAP[st.sel]&&FMAP[st.sel].label)||st.sel }); }
               renderGrid();
               status(st.items.length+' muebles colocados');
@@ -1644,7 +1726,7 @@
         if(!st.items.length){ status('Coloca al menos un mueble antes de guardar.','#e0a14a'); return; }
         const body={ name, client, source:'pixeria',
           config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
-          furniture: st.items.map(i=>({ id:i.id, type:i.type, col:i.col, row:i.row, sx:1, sy:1, label:i.label })) };
+          furniture: st.items.map(distroItemOut) };
         status('⏳ publicando…');
         try{
           const r=await fetch(dBase()+'/layout/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -1662,7 +1744,7 @@
         if(!st.items.length){ status('Coloca al menos un mueble para ver el isométrico.','#e0a14a'); return; }
         const body={ id:'preview-pixeria', name:'(vista previa)', client:($('distro-client').value||'').trim()||null, source:'pixeria',
           config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
-          furniture: st.items.map(i=>({ id:i.id, type:i.type, col:i.col, row:i.row, sx:1, sy:1, label:i.label })) };
+          furniture: st.items.map(distroItemOut) };
         status('⏳ preparando vista isométrica…');
         try{
           const r=await fetch(dBase()+'/layout/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -1701,7 +1783,7 @@
           st.cols=Math.max(6,Math.min(24,cfg.cols||14)); st.rows=Math.max(4,Math.min(16,cfg.rows||8));
           st.wall=cfg.longWallColor&&cfg.longWallColor!=='transparent'?cfg.longWallColor:'#e0d4b8';
           st.floor=cfg.floorColor&&cfg.floorColor!=='transparent'?cfg.floorColor:'#b8bcc0';
-          st.items=(d.furniture||[]).filter(i=>i&&i.type&&i.col<st.cols&&i.row<st.rows).map(i=>({ id:i.id||(i.type+'-'+(st._n++)), type:i.type, col:i.col|0, row:i.row|0, sx:1, sy:1, label:i.label||i.type }));
+          st.items=(d.furniture||[]).filter(i=>i&&i.type&&i.col<st.cols&&i.row<st.rows).map(i=>{ const o={ id:i.id||(i.type+'-'+(st._n++)), type:i.type, col:i.col|0, row:i.row|0, sx:1, sy:1, label:i.label||i.type }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; } return o; });
           $('distro-name').value=d.name||''; $('distro-client').value=d.client||'';
           $('distro-cols').value=st.cols; $('distro-rows').value=st.rows; $('distro-wallcol').value=st.wall; $('distro-floorcol').value=st.floor;
           renderGrid(); status('Cargada «'+(d.name||id)+'» — '+st.items.length+' muebles. Edítala y vuelve a guardar.','#7ee0a0');
@@ -1761,6 +1843,11 @@
         wire('distro-iso',openIso);
         wire('distro-clear',()=>{ st.items=[]; renderGrid(); status('Rejilla vaciada'); });
         wire('distro-refresh',loadLib);
+        // Submenús: Distribución / Marketplace (clic en el activo → vuelve a Creación)
+        wire('tab-distribucion',()=>setView(currentView==='distribucion'?'creacion':'distribucion'));
+        wire('tab-marketplace',()=>setView(currentView==='marketplace'?'creacion':'marketplace'));
+        updateOwnedCount();
+        setView('creacion');
         loadLib();
       }
       if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
