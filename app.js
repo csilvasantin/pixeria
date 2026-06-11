@@ -2125,7 +2125,95 @@
         if (data.segment) setAudienceSegment(data.segment, { confidence: data.confidence, source: data.source || 'XpaceOS LiveCam', autoplay: data.autoplay !== false });
       });
     } catch {}
+    bindAdmiraCampaign();
     updateSegmentedAdUi();
+  }
+
+  // === CREAR CAMPAÑA · handoff desde admira.app (fase 2) ===
+  // admira.app abre publicidad.html?from=admira&product=&segmentation=&combos=
+  // → construimos UN target por cada combinación de los criterios del circuito
+  // y, al generar, sacamos UNA versión IA por target, publicada al Stock
+  // etiquetada por su segmento (audience/edad/franja/emplazamiento).
+  const ADM_AGE_TO_BAND = { nino:'18-24', joven:'18-24', adulto:'35-44', senior:'55+', vejez:'55+' };
+  const ADM_DIM_ORDER = ['genders','ages','timeSlots','placements'];
+  const ADM_LABELS = {
+    genders:{hombre:'Hombre',mujer:'Mujer'}, ages:{nino:'Niño',joven:'Joven',adulto:'Adulto',senior:'Senior',vejez:'Vejez'},
+    timeSlots:{manana:'Mañana',mediodia:'Mediodía',tarde:'Tarde',noche:'Noche'}, placements:{exterior:'Exterior',interior:'Interior'},
+  };
+  function admCombos(seg) {
+    const dims = ADM_DIM_ORDER.map(k => [k, Array.isArray(seg && seg[k]) ? seg[k] : []]).filter(([, v]) => v.length);
+    let combos = [{}];
+    dims.forEach(([k, vals]) => { const n = []; combos.forEach(c => vals.forEach(v => n.push({ ...c, [k]: v }))); combos = n; });
+    return combos;
+  }
+  function admComboLabel(c) {
+    return ADM_DIM_ORDER.filter(k => c[k]).map(k => (ADM_LABELS[k] && ADM_LABELS[k][c[k]]) || c[k]).join(' · ');
+  }
+  function bindAdmiraCampaign() {
+    const params = new URLSearchParams(location.search);
+    if (params.get('from') !== 'admira') return;
+    let seg = {}; try { seg = JSON.parse(params.get('segmentation') || '{}'); } catch {}
+    const product = (params.get('product') || '').trim();
+    const combos = admCombos(seg);
+    if (!product || !combos.length) return;
+    // Construir targets desde los combos y persistirlos
+    const targets = combos.map((c, i) => ({
+      id: 'adm-' + i,
+      gender: c.genders || 'todos',
+      ageBand: ADM_AGE_TO_BAND[c.ages] || 'todos',
+      persona: [c.timeSlots && ADM_LABELS.timeSlots[c.timeSlots], c.placements && ADM_LABELS.placements[c.placements]].filter(Boolean).join(' · '),
+      label: admComboLabel(c),
+      offer: product,
+      _seg: { audience: c.genders === 'hombre' ? 'm' : c.genders === 'mujer' ? 'f' : 'all', age: c.ages || '', timeSlot: c.timeSlots || '', placement: c.placements || '' },
+    }));
+    const store = loadStore();
+    store.publicidad = { ...(store.publicidad || {}), targets, campaign: params.get('campaign') || product, product, mode: 'campaign' };
+    saveStore(store);
+    if (typeof renderTargetsList === 'function') renderTargetsList();
+    // Banner + botón de generación batch
+    const host = document.querySelector('.segmented-layout') || document.querySelector('main') || document.body;
+    let banner = document.getElementById('admCampaignBanner');
+    if (!banner) { banner = document.createElement('div'); banner.id = 'admCampaignBanner'; host.insertBefore(banner, host.firstChild); }
+    banner.style.cssText = 'background:linear-gradient(90deg,rgba(120,243,255,.1),rgba(255,216,102,.08));border:1px solid rgba(120,243,255,.35);border-radius:10px;padding:12px 14px;margin:0 0 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap';
+    banner.innerHTML = `<div><b style="color:#ffd866">Campaña desde Admira:</b> ${product} · <b>${combos.length}</b> versiones (una por segmento del circuito)</div>
+      <button type="button" id="admGenBtn" class="btn play" style="white-space:nowrap">✨ GENERAR ${combos.length} VERSIONES → STOCK</button>
+      <div id="admGenProgress" style="flex-basis:100%;font-size:12px;color:#9effa0"></div>`;
+    document.getElementById('admGenBtn').addEventListener('click', () => generateAdmiraCampaign(targets, store.publicidad.campaign));
+  }
+  async function generateAdmiraCampaign(targets, campaign) {
+    const btn = document.getElementById('admGenBtn');
+    const prog = document.getElementById('admGenProgress');
+    if (btn) { btn.disabled = true; }
+    let ok = 0, fail = 0;
+    for (let i = 0; i < targets.length; i++) {
+      const t = targets[i];
+      if (prog) prog.textContent = `Generando ${i + 1}/${targets.length} · ${t.label}…  (✓${ok} ✗${fail})`;
+      const prompt = `Anuncio publicitario de ${t.offer}. Público objetivo: ${t.gender}, ${t.ageBand}${t.persona ? ', ' + t.persona : ''}. Estilo retail premium, composición limpia, llamada a la acción clara, alta calidad fotográfica.`;
+      try {
+        const r = await fetch(XAI_WORKER_URL + '/xai/image', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, model: 'grok-imagine-image', b64: true }),
+        });
+        const d = await r.json();
+        const b64 = d.b64 || d.base64 || (d.image && d.image.b64) || null;
+        if (!b64) throw new Error('sin imagen');
+        const pr = await fetch(STOCK_PUBLISH_URL, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'image', motor: 'PixerIA · Campaña segmentada', prompt,
+            title: `${t.offer} · ${t.label}`, mime: 'image/png', base64: b64,
+            tags: ['campaña', t.offer, t._seg.audience, t._seg.age, t._seg.timeSlot].filter(Boolean),
+            audience: t._seg.audience,
+            segmentation: { audiences: [t._seg.audience], ageBuckets: [t._seg.age].filter(Boolean), timeSlots: [t._seg.timeSlot].filter(Boolean), typologies: [t._seg.placement].filter(Boolean) },
+            campaign,
+          }),
+        });
+        if ((await pr.json()).ok) ok++; else fail++;
+      } catch { fail++; }
+    }
+    if (prog) prog.textContent = `✅ Campaña generada: ${ok} versiones en el Stock` + (fail ? ` · ${fail} fallidas` : '') + '. Vuelve a admira.app para venderlas por segmento.';
+    if (btn) btn.disabled = false;
+    if (typeof showToast === 'function') showToast(`${ok} versiones publicadas al Stock`);
   }
 
   // === UI para Targets (nuevo modelo de Publicidad con Target) ===
