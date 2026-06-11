@@ -474,6 +474,48 @@
           <div id="furni-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;min-height:16px;"></div>
         </div>
 
+        <!-- DISTRIBUCIONES — sala entera (config + mobiliario + staff) ⇄ gemelos -->
+        <div class="studio-panel xpace-focus" id="distro-panel" style="display:block; margin-top:16px;">
+          <h4>Distribución estándar · sala entera ⇄ gemelos</h4>
+          <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Diseña una <b>distribución</b> (tamaño de sala + mobiliario colocado) y publícala a la librería compartida. Los gemelos la aplican con <code>/distribucion aplicar &lt;id&gt;</code>; las que publican los gemelos también aparecen aquí. Canal: worker <code>/layout/*</code>.</p>
+
+          <!-- Barra: nombre, cliente, tamaño -->
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:10px;">
+            <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Nombre de la distribución</label><input id="distro-name" class="model-select" placeholder="Ej: Estanco estándar v1" style="width:100%;"></div>
+            <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Cliente</label><input id="distro-client" class="model-select" placeholder="xtanco" style="width:100%;"></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:10px;">
+            <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">Ancho (cols)</label><input id="distro-cols" class="model-select" type="number" min="6" max="24" value="14" style="width:80px;"></div>
+            <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">Fondo (rows)</label><input id="distro-rows" class="model-select" type="number" min="4" max="16" value="8" style="width:80px;"></div>
+            <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">Pared</label><input id="distro-wallcol" type="color" value="#e0d4b8" style="width:42px;height:34px;padding:2px;background:#0b1117;border:1px solid #28323a;border-radius:6px;"></div>
+            <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">Suelo</label><input id="distro-floorcol" type="color" value="#b8bcc0" style="width:42px;height:34px;padding:2px;background:#0b1117;border:1px solid #28323a;border-radius:6px;"></div>
+            <button class="button secondary" id="distro-apply-size" style="height:34px;">Aplicar tamaño</button>
+          </div>
+
+          <!-- Paleta de mobiliario -->
+          <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">Mobiliario — elige una pieza y haz clic en la rejilla para colocarla (clic en una colocada para quitarla)</label>
+          <div id="distro-palette" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+
+          <!-- Rejilla editor -->
+          <div style="overflow:auto;background:#0b1117;border:1px solid #28323a;border-radius:8px;padding:10px;">
+            <div id="distro-grid" style="display:grid;gap:2px;width:max-content;margin:0 auto;"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            <button class="button primary" id="distro-save" style="flex:1;">💾 Guardar y publicar</button>
+            <button class="button secondary" id="distro-clear" style="flex:1;">🧹 Vaciar rejilla</button>
+          </div>
+          <div id="distro-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;min-height:16px;"></div>
+
+          <!-- Librería -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px;">
+            <h5 style="margin:0;font-size:13px;color:var(--cyan);">Librería de distribuciones</h5>
+            <button class="button secondary" id="distro-refresh" style="padding:4px 10px;font-size:12px;">🔄 Refrescar</button>
+          </div>
+          <div id="distro-lib" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;">
+            <div style="grid-column:1/-1;color:var(--muted);font-size:12px;text-align:center;padding:10px;">Pulsa «Refrescar» para cargar la librería compartida.</div>
+          </div>
+        </div>
+
         <!-- Fullscreen image modal for generated IA images -->
         <div id="ia-fullscreen-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:999999; align-items:center; justify-content:center; flex-direction:column; padding:20px;">
           <img id="ia-fullscreen-img" style="max-width:95vw; max-height:85vh; object-fit:contain; box-shadow:0 0 40px rgba(0,0,0,0.8); cursor:zoom-out;" alt="Imagen generada con IA - doble click o ESC para cerrar">
@@ -1531,6 +1573,162 @@
       const oa = document.getElementById('output-actions'); if (oa) oa.style.display = 'none';
     })();
     console.log('%c[Pixeria Studio Assets] Acceso libre · creation tool ready.', 'color:#555');
+
+    // ── DISTRIBUCIONES — editor de sala + librería compartida (worker /layout/*) ──
+    (function distroModule(){
+      function dBase(){ return window.LAYOUT_BASE || ELEVEN_WORKER_URL; }
+      const FURNI=[
+        {type:'counter',label:'Mostrador',icon:'🧾'},{type:'shelves',label:'Estantería',icon:'🗄️'},
+        {type:'wineRack',label:'Botellero',icon:'🍷'},{type:'lottery',label:'Lotería',icon:'🎫'},
+        {type:'vending',label:'Vending',icon:'🥤'},{type:'magazines',label:'Revistero',icon:'📰'},
+        {type:'manager',label:'Escritorio',icon:'🧑‍💼'},{type:'plant',label:'Planta',icon:'🪴'},
+        {type:'floorLamp',label:'Lámpara',icon:'💡'},{type:'rug',label:'Alfombra',icon:'🟦'},
+        {type:'led',label:'LED',icon:'📟'},{type:'tft',label:'TFT',icon:'📺'},
+        {type:'metahuman',label:'Metahuman',icon:'🤖'},{type:'tablet',label:'Tablet',icon:'📋'},
+        {type:'turnKiosk',label:'Turnos',icon:'🎟️'},{type:'aroma',label:'Aroma',icon:'🌸'},
+        {type:'djBooth',label:'Mesa DJ',icon:'🎧'},{type:'door',label:'Puerta',icon:'🚪'},
+      ];
+      const FMAP={}; FURNI.forEach(f=>FMAP[f.type]=f);
+      const iconFor=t=>(FMAP[t]&&FMAP[t].icon)||'▪️';
+      const CELL=30;
+      const st={ cols:14, rows:8, sel:'counter', items:[], _n:1, wall:'#e0d4b8', floor:'#b8bcc0' };
+      const $=id=>document.getElementById(id);
+      function status(msg,col){ const s=$('distro-status'); if(s){ s.textContent=msg||''; s.style.color=col||'var(--muted)'; } }
+
+      function renderPalette(){
+        const p=$('distro-palette'); if(!p) return; p.innerHTML='';
+        FURNI.forEach(f=>{
+          const b=document.createElement('button'); b.type='button';
+          b.textContent=f.icon+' '+f.label;
+          b.title=f.type;
+          b.style.cssText='font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer;border:1px solid '+(st.sel===f.type?'var(--cyan)':'#28323a')+';background:'+(st.sel===f.type?'rgba(0,200,255,.12)':'#0b1117')+';color:var(--text,#cfe);';
+          b.onclick=()=>{ st.sel=f.type; renderPalette(); };
+          p.appendChild(b);
+        });
+      }
+      function itemAt(col,row){ return st.items.find(i=>i.col===col&&i.row===row); }
+      function renderGrid(){
+        const g=$('distro-grid'); if(!g) return;
+        g.style.gridTemplateColumns='repeat('+st.cols+','+CELL+'px)';
+        g.innerHTML='';
+        for(let row=0; row<st.rows; row++){
+          for(let col=0; col<st.cols; col++){
+            const cell=document.createElement('div');
+            const it=itemAt(col,row);
+            cell.style.cssText='width:'+CELL+'px;height:'+CELL+'px;display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid #1b2530;border-radius:3px;cursor:pointer;background:'+(it?'rgba(0,200,255,.10)':'#0e1620')+';';
+            if(it){ cell.textContent=iconFor(it.type); cell.title=it.type+' ('+col+','+row+') — clic para quitar'; }
+            else { cell.title=col+','+row; }
+            cell.onclick=()=>{
+              const ex=itemAt(col,row);
+              if(ex){ st.items=st.items.filter(i=>i!==ex); }
+              else { st.items.push({ id:st.sel+'-'+(st._n++), type:st.sel, col, row, sx:1, sy:1, label:(FMAP[st.sel]&&FMAP[st.sel].label)||st.sel }); }
+              renderGrid();
+              status(st.items.length+' muebles colocados');
+            };
+            g.appendChild(cell);
+          }
+        }
+      }
+      function applySize(){
+        st.cols=Math.max(6,Math.min(24,parseInt($('distro-cols').value,10)||14));
+        st.rows=Math.max(4,Math.min(16,parseInt($('distro-rows').value,10)||8));
+        st.wall=$('distro-wallcol').value||'#e0d4b8';
+        st.floor=$('distro-floorcol').value||'#b8bcc0';
+        st.items=st.items.filter(i=>i.col<st.cols&&i.row<st.rows);
+        renderGrid();
+      }
+      async function saveDistro(){
+        const name=($('distro-name').value||'').trim()||'Distribución sin nombre';
+        const client=($('distro-client').value||'').trim()||null;
+        if(!st.items.length){ status('Coloca al menos un mueble antes de guardar.','#e0a14a'); return; }
+        const body={ name, client, source:'pixeria',
+          config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
+          furniture: st.items.map(i=>({ id:i.id, type:i.type, col:i.col, row:i.row, sx:1, sy:1, label:i.label })) };
+        status('⏳ publicando…');
+        try{
+          const r=await fetch(dBase()+'/layout/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+          const d=await r.json(); if(!r.ok||!d.ok) throw new Error(d.error||('HTTP '+r.status));
+          status('✅ «'+d.name+'» publicada (id '+d.id+'). Aplícala en un gemelo con /distribucion aplicar '+d.id,'#7ee0a0');
+          loadLib();
+        }catch(e){ status('❌ '+e.message,'#e06a6a'); }
+      }
+      function miniPreview(counts,cols,rows){
+        const c=Math.max(1,cols||14), r=Math.max(1,rows||8);
+        return '<div style="display:grid;grid-template-columns:repeat('+c+',4px);grid-auto-rows:4px;gap:1px;justify-content:center;padding:6px;background:#0e1620;border-radius:4px;">'+
+          Array.from({length:c*r}).map((_,k)=>'<div style="width:4px;height:4px;border-radius:1px;background:'+(k<(counts||0)?'#39d0ff':'#1b2530')+'"></div>').join('')+'</div>';
+      }
+      async function loadDistroIntoEditor(id){
+        status('⏳ cargando…');
+        try{
+          const r=await fetch(dBase()+'/layout/get?id='+encodeURIComponent(id)+'&ts='+Date.now(),{cache:'no-store'});
+          const d=await r.json(); if(!r.ok) throw new Error(d.error||('HTTP '+r.status));
+          const cfg=d.config||{};
+          st.cols=Math.max(6,Math.min(24,cfg.cols||14)); st.rows=Math.max(4,Math.min(16,cfg.rows||8));
+          st.wall=cfg.longWallColor&&cfg.longWallColor!=='transparent'?cfg.longWallColor:'#e0d4b8';
+          st.floor=cfg.floorColor&&cfg.floorColor!=='transparent'?cfg.floorColor:'#b8bcc0';
+          st.items=(d.furniture||[]).filter(i=>i&&i.type&&i.col<st.cols&&i.row<st.rows).map(i=>({ id:i.id||(i.type+'-'+(st._n++)), type:i.type, col:i.col|0, row:i.row|0, sx:1, sy:1, label:i.label||i.type }));
+          $('distro-name').value=d.name||''; $('distro-client').value=d.client||'';
+          $('distro-cols').value=st.cols; $('distro-rows').value=st.rows; $('distro-wallcol').value=st.wall; $('distro-floorcol').value=st.floor;
+          renderGrid(); status('Cargada «'+(d.name||id)+'» — '+st.items.length+' muebles. Edítala y vuelve a guardar.','#7ee0a0');
+          $('distro-panel').scrollIntoView({behavior:'smooth',block:'start'});
+        }catch(e){ status('❌ '+e.message,'#e06a6a'); }
+      }
+      async function delDistro(id){
+        if(!confirm('¿Borrar la distribución '+id+' de la librería?')) return;
+        try{ await fetch(dBase()+'/layout/delete?id='+encodeURIComponent(id),{method:'POST'}); loadLib(); }catch(e){}
+      }
+      // Snapshot a repo (versionado): descarga el JSON canónico para commitear en
+      // layouts/distribuciones/<id>.json del repo del gemelo (el "ambos": KV vivo + git).
+      async function downloadDistro(id){
+        try{
+          const r=await fetch(dBase()+'/layout/get?id='+encodeURIComponent(id)+'&ts='+Date.now(),{cache:'no-store'});
+          const d=await r.json(); if(!r.ok) throw new Error(d.error||('HTTP '+r.status));
+          const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+          const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+          a.download='distribucion-'+id+'.json'; document.body.appendChild(a); a.click();
+          setTimeout(()=>{ try{ document.body.removeChild(a); URL.revokeObjectURL(a.href); }catch(_){} },800);
+          status('⬇ JSON descargado. Commitéalo en layouts/distribuciones/ para versionarlo.','#7ee0a0');
+        }catch(e){ status('❌ '+e.message,'#e06a6a'); }
+      }
+      async function loadLib(){
+        const lib=$('distro-lib'); if(!lib) return;
+        lib.innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:12px;text-align:center;padding:10px;">⏳ cargando librería…</div>';
+        try{
+          const r=await fetch(dBase()+'/layout/list?ts='+Date.now(),{cache:'no-store'});
+          const d=await r.json(); const items=Array.isArray(d.items)?d.items:[];
+          if(!items.length){ lib.innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:12px;text-align:center;padding:10px;">Aún no hay distribuciones. Diseña una arriba y pulsa «Guardar y publicar».</div>'; return; }
+          lib.innerHTML='';
+          items.forEach(it=>{
+            const fc=(it.counts&&it.counts.furniture)||0;
+            const card=document.createElement('div');
+            card.style.cssText='background:#0b1117;border:1px solid #28323a;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;';
+            const srcBadge=it.source==='gemelo'?'<span style="font-size:9px;background:rgba(0,200,255,.15);color:#7ee0ff;border-radius:4px;padding:1px 5px;">gemelo</span>':'<span style="font-size:9px;background:rgba(150,255,160,.12);color:#9effa0;border-radius:4px;padding:1px 5px;">pixeria</span>';
+            card.innerHTML=miniPreview(fc,14,8)+
+              '<div style="font-size:12px;font-weight:600;color:var(--text,#dfe);line-height:1.2;">'+(it.name||'(sin nombre)')+'</div>'+
+              '<div style="font-size:10px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;">'+srcBadge+'<span>'+fc+' muebles'+(it.client?' · '+it.client:'')+'</span></div>'+
+              '<div style="font-size:9px;color:#56636d;word-break:break-all;">'+it.id+'</div>';
+            const row=document.createElement('div'); row.style.cssText='display:flex;gap:5px;';
+            const bL=document.createElement('button'); bL.className='button secondary'; bL.textContent='Cargar'; bL.style.cssText='flex:1;padding:4px;font-size:11px;'; bL.onclick=()=>loadDistroIntoEditor(it.id);
+            const bJ=document.createElement('button'); bJ.className='button secondary'; bJ.textContent='⬇'; bJ.title='Descargar JSON para versionar en el repo (layouts/distribuciones/)'; bJ.style.cssText='padding:4px 8px;font-size:11px;'; bJ.onclick=()=>downloadDistro(it.id);
+            const bD=document.createElement('button'); bD.className='button secondary'; bD.textContent='🗑'; bD.style.cssText='padding:4px 8px;font-size:11px;'; bD.onclick=()=>delDistro(it.id);
+            row.appendChild(bL); row.appendChild(bJ); row.appendChild(bD); card.appendChild(row);
+            lib.appendChild(card);
+          });
+        }catch(e){ lib.innerHTML='<div style="grid-column:1/-1;color:#e06a6a;font-size:12px;text-align:center;padding:10px;">❌ '+e.message+'</div>'; }
+      }
+
+      function init(){
+        if(!$('distro-grid')) return;
+        renderPalette(); renderGrid();
+        const wire=(id,fn)=>{ const e=$(id); if(e) e.onclick=fn; };
+        wire('distro-apply-size',applySize);
+        wire('distro-save',saveDistro);
+        wire('distro-clear',()=>{ st.items=[]; renderGrid(); status('Rejilla vaciada'); });
+        wire('distro-refresh',loadLib);
+        loadLib();
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+    })();
   </script>
   <script src="/assets/matrix-rain.js?v=20260608-sides"></script>
 </body>
