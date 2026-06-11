@@ -2184,34 +2184,38 @@
     const btn = document.getElementById('admGenBtn');
     const prog = document.getElementById('admGenProgress');
     if (btn) { btn.disabled = true; }
-    let ok = 0, fail = 0;
+    let ok = 0, fail = 0, lastErr = '';
     for (let i = 0; i < targets.length; i++) {
       const t = targets[i];
       if (prog) prog.textContent = `Generando ${i + 1}/${targets.length} · ${t.label}…  (✓${ok} ✗${fail})`;
-      const prompt = `Anuncio publicitario de ${t.offer}. Público objetivo: ${t.gender}, ${t.ageBand}${t.persona ? ', ' + t.persona : ''}. Estilo retail premium, composición limpia, llamada a la acción clara, alta calidad fotográfica.`;
+      const prompt = `Anuncio publicitario de ${t.offer} dirigido a: ${t.label}. Estilo retail premium, composición limpia, llamada a la acción clara, alta calidad fotográfica, sin texto ilegible.`;
       try {
         const r = await fetch(XAI_WORKER_URL + '/xai/image', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt, model: 'grok-imagine-image', b64: true }),
         });
-        const d = await r.json();
-        const b64 = d.b64 || d.base64 || (d.image && d.image.b64) || null;
-        if (!b64) throw new Error('sin imagen');
+        const d = await r.json().catch(() => ({}));
+        // /xai/image (grok-imagine) responde { data:[{ b64_json, mime }] }
+        const first = d && d.data && d.data[0];
+        const b64 = first && first.b64_json;
+        if (!r.ok || !b64) throw new Error((d && d.error && (d.error.message || JSON.stringify(d.error))) || 'sin imagen');
+        const imgMime = (first && first.mime) || 'image/jpeg';
         const pr = await fetch(STOCK_PUBLISH_URL, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             type: 'image', motor: 'PixerIA · Campaña segmentada', prompt,
-            title: `${t.offer} · ${t.label}`, mime: 'image/png', base64: b64,
+            title: `${t.offer} · ${t.label}`, mime: imgMime, base64: b64,
             tags: ['campaña', t.offer, t._seg.audience, t._seg.age, t._seg.timeSlot].filter(Boolean),
             audience: t._seg.audience,
             segmentation: { audiences: [t._seg.audience], ageBuckets: [t._seg.age].filter(Boolean), timeSlots: [t._seg.timeSlot].filter(Boolean), typologies: [t._seg.placement].filter(Boolean) },
             campaign,
           }),
         });
-        if ((await pr.json()).ok) ok++; else fail++;
-      } catch { fail++; }
+        const pj = await pr.json().catch(() => ({}));
+        if (pj.ok) ok++; else { fail++; if (!lastErr) lastErr = 'publish: ' + (pj.error || pr.status); }
+      } catch (e) { fail++; if (!lastErr) lastErr = String(e.message || e); }
     }
-    if (prog) prog.textContent = `✅ Campaña generada: ${ok} versiones en el Stock` + (fail ? ` · ${fail} fallidas` : '') + '. Vuelve a admira.app para venderlas por segmento.';
+    if (prog) prog.textContent = (ok ? '✅' : '⚠️') + ` Campaña: ${ok} versiones en el Stock` + (fail ? ` · ${fail} fallidas` : '') + (fail && lastErr ? ` (${lastErr.slice(0, 90)})` : '') + (ok ? '. Vuelve a admira.app para venderlas por segmento.' : '');
     if (btn) btn.disabled = false;
     if (typeof showToast === 'function') showToast(`${ok} versiones publicadas al Stock`);
   }
