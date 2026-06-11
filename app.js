@@ -2135,10 +2135,17 @@
   // y, al generar, sacamos UNA versión IA por target, publicada al Stock
   // etiquetada por su segmento (audience/edad/franja/emplazamiento).
   const ADM_AGE_TO_BAND = { nino:'18-24', joven:'18-24', adulto:'35-44', senior:'55+', vejez:'55+' };
-  const ADM_DIM_ORDER = ['genders','ages','timeSlots','placements'];
+  // Dimensiones que generan versiones (mismo orden que admira.app): género × edad × franja × contexto.
+  const ADM_DIM_ORDER = ['genders','ages','temporales','contextuales','timeSlots','placements'];
   const ADM_LABELS = {
     genders:{hombre:'Hombre',mujer:'Mujer'}, ages:{nino:'Niño',joven:'Joven',adulto:'Adulto',senior:'Senior',vejez:'Vejez'},
+    temporales:{manana:'Mañana',tarde:'Tarde',noche:'Noche'}, contextuales:{exterior:'Exterior',interior:'Interior'},
     timeSlots:{manana:'Mañana',mediodia:'Mediodía',tarde:'Tarde',noche:'Noche'}, placements:{exterior:'Exterior',interior:'Interior'},
+  };
+  // Tipología + Data-Driven = CONTEXTO compartido (no multiplica): enriquece prompt y tags.
+  const ADM_CTX_LABELS = {
+    tipologia:{supermercados:'supermercados',estancos:'estancos',bancos:'bancos',gimnasios:'gimnasios',mupi:'MUPI',correos:'Correos',transporte:'transporte',retail:'retail',moda:'moda'},
+    datadriven:{clima:'clima',trafico:'tráfico',moviles:'móviles',inventario:'inventario de tienda'},
   };
   function admCombos(seg) {
     const dims = ADM_DIM_ORDER.map(k => [k, Array.isArray(seg && seg[k]) ? seg[k] : []]).filter(([, v]) => v.length);
@@ -2149,33 +2156,52 @@
   function admComboLabel(c) {
     return ADM_DIM_ORDER.filter(k => c[k]).map(k => (ADM_LABELS[k] && ADM_LABELS[k][c[k]]) || c[k]).join(' · ');
   }
+  // Extrae el contexto (tipología/data-driven/hora/pases) del parámetro ?content=.
+  function admContext(content) {
+    const arr = k => Array.isArray(content && content[k]) ? content[k] : [];
+    const tipologia = arr('tipologia').map(v => ADM_CTX_LABELS.tipologia[v] || v);
+    const datadriven = arr('datadriven').map(v => ADM_CTX_LABELS.datadriven[v] || v);
+    const phrases = [];
+    if (tipologia.length) phrases.push(`pensado para puntos de ${tipologia.join(', ')}`);
+    if (datadriven.length) phrases.push(`con creatividad sensible a ${datadriven.join(', ')}`);
+    return { tipologia, datadriven, hora: (content && content.hora) || '', pases: (content && content.pases) || '', promptSuffix: phrases.join('; '), tags: [...tipologia, ...datadriven] };
+  }
   function bindAdmiraCampaign() {
     const params = new URLSearchParams(location.search);
     if (params.get('from') !== 'admira') return;
     let seg = {}; try { seg = JSON.parse(params.get('segmentation') || '{}'); } catch {}
+    let content = {}; try { content = JSON.parse(params.get('content') || '{}'); } catch {}
+    const ctx = admContext(content);
     const product = (params.get('product') || '').trim();
     const combos = admCombos(seg);
     if (!product || !combos.length) return;
-    // Construir targets desde los combos y persistirlos
-    const targets = combos.map((c, i) => ({
-      id: 'adm-' + i,
-      gender: c.genders || 'todos',
-      ageBand: ADM_AGE_TO_BAND[c.ages] || 'todos',
-      persona: [c.timeSlots && ADM_LABELS.timeSlots[c.timeSlots], c.placements && ADM_LABELS.placements[c.placements]].filter(Boolean).join(' · '),
-      label: admComboLabel(c),
-      offer: product,
-      _seg: { audience: c.genders === 'hombre' ? 'm' : c.genders === 'mujer' ? 'f' : 'all', age: c.ages || '', timeSlot: c.timeSlots || '', placement: c.placements || '' },
-    }));
+    // Construir targets desde los combos y persistirlos. La franja sale de
+    // `temporales` (nuevo panel) o `timeSlots` (legado); el contexto, de `contextuales`/`placements`.
+    const targets = combos.map((c, i) => {
+      const timeSlot = c.temporales || c.timeSlots || '';
+      const placement = c.contextuales || c.placements || '';
+      return {
+        id: 'adm-' + i,
+        gender: c.genders || 'todos',
+        ageBand: ADM_AGE_TO_BAND[c.ages] || 'todos',
+        persona: [timeSlot && (ADM_LABELS.temporales[timeSlot] || ADM_LABELS.timeSlots[timeSlot]), placement && (ADM_LABELS.contextuales[placement] || ADM_LABELS.placements[placement])].filter(Boolean).join(' · '),
+        label: admComboLabel(c),
+        offer: product,
+        _seg: { audience: c.genders === 'hombre' ? 'm' : c.genders === 'mujer' ? 'f' : 'all', age: c.ages || '', timeSlot, placement },
+        _ctx: ctx,
+      };
+    });
     const store = loadStore();
-    store.publicidad = { ...(store.publicidad || {}), targets, campaign: params.get('campaign') || product, product, mode: 'campaign' };
+    store.publicidad = { ...(store.publicidad || {}), targets, campaign: params.get('campaign') || product, product, mode: 'campaign', context: ctx };
     saveStore(store);
+    const ctxLine = [ctx.tipologia.join(', '), ctx.datadriven.join(', '), ctx.hora && ('hora ' + ctx.hora), ctx.pases && (ctx.pases + ' pases')].filter(Boolean).join(' · ');
     if (typeof renderTargetsList === 'function') renderTargetsList();
     // Banner + botón de generación batch
     const host = document.querySelector('.segmented-layout') || document.querySelector('main') || document.body;
     let banner = document.getElementById('admCampaignBanner');
     if (!banner) { banner = document.createElement('div'); banner.id = 'admCampaignBanner'; host.insertBefore(banner, host.firstChild); }
     banner.style.cssText = 'background:linear-gradient(90deg,rgba(120,243,255,.1),rgba(255,216,102,.08));border:1px solid rgba(120,243,255,.35);border-radius:10px;padding:12px 14px;margin:0 0 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap';
-    banner.innerHTML = `<div><b style="color:#ffd866">Campaña desde Admira:</b> ${product} · <b>${combos.length}</b> versiones (una por segmento del circuito)</div>
+    banner.innerHTML = `<div><b style="color:#ffd866">Campaña desde Admira:</b> ${product} · <b>${combos.length}</b> versiones (una por segmento del circuito)${ctxLine ? `<div style="font-size:11.5px;color:#9ad8ff;margin-top:3px">Contexto en todas: <span style="color:#ffd866">${ctxLine}</span></div>` : ''}</div>
       <button type="button" id="admGenBtn" class="btn play" style="white-space:nowrap">✨ GENERAR ${combos.length} VERSIONES → STOCK</button>
       <div id="admGenProgress" style="flex-basis:100%;font-size:12px;color:#9effa0"></div>`;
     document.getElementById('admGenBtn').addEventListener('click', () => generateAdmiraCampaign(targets, store.publicidad.campaign));
@@ -2188,7 +2214,8 @@
     for (let i = 0; i < targets.length; i++) {
       const t = targets[i];
       if (prog) prog.textContent = `Generando ${i + 1}/${targets.length} · ${t.label}…  (✓${ok} ✗${fail})`;
-      const prompt = `Anuncio publicitario de ${t.offer} dirigido a: ${t.label}. Estilo retail premium, composición limpia, llamada a la acción clara, alta calidad fotográfica, sin texto ilegible.`;
+      const ctxSuffix = (t._ctx && t._ctx.promptSuffix) ? ' ' + t._ctx.promptSuffix.charAt(0).toUpperCase() + t._ctx.promptSuffix.slice(1) + '.' : '';
+      const prompt = `Anuncio publicitario de ${t.offer} dirigido a: ${t.label}.${ctxSuffix} Estilo retail premium, composición limpia, llamada a la acción clara, alta calidad fotográfica, sin texto ilegible.`;
       try {
         const r = await fetch(XAI_WORKER_URL + '/xai/image', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2205,9 +2232,9 @@
           body: JSON.stringify({
             type: 'image', motor: 'PixerIA · Campaña segmentada', prompt,
             title: `${t.offer} · ${t.label}`, mime: imgMime, base64: b64,
-            tags: ['campaña', t.offer, t._seg.audience, t._seg.age, t._seg.timeSlot].filter(Boolean),
+            tags: ['campaña', t.offer, t._seg.audience, t._seg.age, t._seg.timeSlot, t._seg.placement, ...((t._ctx && t._ctx.tags) || [])].filter(Boolean),
             audience: t._seg.audience,
-            segmentation: { audiences: [t._seg.audience], ageBuckets: [t._seg.age].filter(Boolean), timeSlots: [t._seg.timeSlot].filter(Boolean), typologies: [t._seg.placement].filter(Boolean) },
+            segmentation: { audiences: [t._seg.audience], ageBuckets: [t._seg.age].filter(Boolean), timeSlots: [t._seg.timeSlot].filter(Boolean), typologies: [t._seg.placement, ...((t._ctx && t._ctx.tipologia) || [])].filter(Boolean), dataSignals: ((t._ctx && t._ctx.datadriven) || []) },
             campaign,
           }),
         });
