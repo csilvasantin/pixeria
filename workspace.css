@@ -1779,8 +1779,12 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
   flex: 0 1 auto;
 }
-.stock-pager-search { flex: 1 1 220px; min-width: 160px; }
-.stock-pager-search input[type="text"] { width: 100%; }
+.stock-pager-search { display: flex; align-items: center; gap: 6px; flex: 1 1 220px; min-width: 160px; }
+.stock-pager-search input[type="text"] { width: 100%; flex: 1 1 auto; min-width: 0; }
+/* Botón importar 📥 al final de la caja, compacto y en línea con el input */
+.stock-pager-search .stock-import-btn {
+  flex: 0 0 auto; padding: 0 10px; height: 34px; font-size: 15px; line-height: 1; margin: 0;
+}
 .stock-pager-filters { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .stock-pager-filters select {
   background: #000; color: var(--matrix); border: 1px solid var(--line-bright);
@@ -1805,7 +1809,7 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
   justify-content: flex-start; gap: 8px;
 }
 .stock-toolbar .stock-pager-sort { flex-wrap: nowrap; }
-.stock-toolbar .stock-pager-search { flex: 1 1 140px; min-width: 120px; }
+.stock-toolbar .stock-pager-search { flex: 1 1 200px; min-width: 150px; max-width: 420px; }
 .stock-toolbar .stock-pager-controls { gap: 4px; }
 .stock-toolbar .stock-sort-th { padding: 5px 9px; }
 .stock-toolbar .stock-pager-size select { padding: 4px 6px; }
