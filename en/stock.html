@@ -76,14 +76,13 @@
   <main>
     <section class="stock-toolbar">
       <nav class="stock-pager stock-pager-top" aria-label="Vista, filtros, búsqueda, orden y paginación">
-        <div class="stock-view" role="group" aria-label="Tamaño de vista">
-          <button type="button" class="stock-view-btn" data-view="list" title="List" aria-label="List view">☰</button>
-          <button type="button" class="stock-view-btn" data-view="compact" title="Compact · more videos at once" aria-label="Compact view">▦</button>
-          <button type="button" class="stock-view-btn" data-view="medium" title="Medium" aria-label="Medium view">◻</button>
+        <div class="stock-view" role="group" aria-label="View">
+          <button type="button" class="stock-view-btn" id="stockViewToggle" title="Toggle view: detail ↔ grid" aria-label="Toggle view">▦</button>
         </div>
         <div class="stock-pager-search">
-          <label for="stockSearch" class="sr-only">Búsqueda por prompt, comentario o etiqueta</label>
-          <input id="stockSearch" type="text" placeholder="🔍 buscar en prompts, comentarios, tags…" autocomplete="off">
+          <label for="stockSearch" class="sr-only">Search by prompt/comment/tag, or URL to import</label>
+          <input id="stockSearch" type="text" placeholder="🔍 search… or paste a URL to import →" autocomplete="off">
+          <button type="button" class="btn primary stock-import-btn" id="stockImportFromSearch" title="Import the URL in the search box (yt-dlp · same as AdmiraXP on Telegram)" aria-label="Import URL">📥</button>
         </div>
         <div class="stock-pager-filters">
           <select id="stockTypeFilter" title="Filtrar por tipo" aria-label="Filtrar por tipo">
@@ -91,22 +90,9 @@
             <option value="audio">Audio</option>
             <option value="music">Música</option>
             <option value="image">Imágenes</option>
-            <option value="video">Video</option>
+            <option value="video" selected>Video</option>
             <option value="animation">Animaciones</option>
             <option value="furni">Mobiliario</option>
-          </select>
-          <select id="stockMotorFilter" title="Filtrar por motor" aria-label="Filtrar por motor">
-            <option value="">Todos los motores</option>
-          </select>
-        </div>
-        <div class="stock-pager-size">
-          <select class="stock-page-size" title="Resultados por página" aria-label="Resultados por página">
-            <option value="10" selected>10</option>
-            <option value="12">12</option>
-            <option value="24">24</option>
-            <option value="48">48</option>
-            <option value="96">96</option>
-            <option value="0">todos</option>
           </select>
         </div>
         <div class="stock-pager-sort" id="stockSortBar" role="group" aria-label="Ordenar por">
@@ -121,8 +107,6 @@
           <button type="button" class="stock-pager-btn" data-page="next" title="Next" aria-label="Next page">›</button>
           <button type="button" class="stock-pager-btn" data-page="last" title="Last page" aria-label="Last page">»</button>
         </div>
-        <button type="button" class="btn primary js-open-import stock-import-btn" title="Import from URL (yt-dlp · same as AdmiraXP on Telegram)" aria-label="Import from URL">📥 Import</button>
-        <button type="button" class="btn stock-refresh-icon" id="stockRefresh" title="Refresh — fetch the list again" aria-label="Refresh stock">↻</button>
       </nav>
       <div id="stockStatus" class="stock-status" role="status" aria-live="polite"></div>
     </section>
@@ -136,16 +120,6 @@
       </div>
 
       <nav class="stock-pager stock-pager-bottom" hidden aria-label="Paginación (abajo)">
-        <div class="stock-pager-size">
-          <select class="stock-page-size" title="Resultados por página" aria-label="Resultados por página">
-            <option value="10" selected>10</option>
-            <option value="12">12</option>
-            <option value="24">24</option>
-            <option value="48">48</option>
-            <option value="96">96</option>
-            <option value="0">todos</option>
-          </select>
-        </div>
         <div class="stock-pager-controls">
           <button type="button" class="stock-pager-btn" data-page="first" title="First page" aria-label="First page">«</button>
           <button type="button" class="stock-pager-btn" data-page="prev" title="Previous" aria-label="Previous page">‹</button>
@@ -153,7 +127,6 @@
           <button type="button" class="stock-pager-btn" data-page="next" title="Next" aria-label="Next page">›</button>
           <button type="button" class="stock-pager-btn" data-page="last" title="Last page" aria-label="Last page">»</button>
         </div>
-        <button type="button" class="btn primary js-open-import stock-import-btn" title="Import from URL (yt-dlp · same as AdmiraXP on Telegram)" aria-label="Import from URL">📥 Import</button>
       </nav>
     </section>
 
@@ -236,7 +209,7 @@
     const TYPE_ORDER = { audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
     let allItems = [];
     let currentView = [];
-    let filters = { type: '', motor: '', q: '', tag: '', dateQuick: '', dateFrom: '', dateTo: '' };
+    let filters = { type: 'video', motor: '', q: '', tag: '', dateQuick: '', dateFrom: '', dateTo: '' };
     let sortMode = 'date-desc';
     let pageSize = 10; // 0 = mostrar todos
     let currentPage = 1;
@@ -699,6 +672,7 @@
       if (item) openLightbox(item);
     });
     function buildMotorOptions() {
+      if (!motorFilter) return;   // el combo de motores se quitó del Stock
       const motors = Array.from(new Set(allItems.map(i => i.motor).filter(Boolean))).sort();
       const cur = filters.motor;
       motorFilter.innerHTML = `<option value="">Todos los motores</option>`
@@ -768,10 +742,20 @@
       }
     }
     typeFilter.addEventListener('change', () => { filters.type = typeFilter.value; applyFilters(true); });
-    motorFilter.addEventListener('change', () => { filters.motor = motorFilter.value; applyFilters(true); });
+    if (motorFilter) motorFilter.addEventListener('change', () => { filters.motor = motorFilter.value; applyFilters(true); });
     search.addEventListener('input', () => {
       filters.q = search.value.trim().toLowerCase();
       applyFilters(true);
+    });
+    const importFromSearch = document.getElementById('stockImportFromSearch');
+    if (importFromSearch) importFromSearch.addEventListener('click', () => {
+      const dlg = document.getElementById('importModal'); if (!dlg) return;
+      const v = (search.value || '').trim();
+      const stat = document.getElementById('importStatus'); if (stat) { stat.style.display = 'none'; stat.textContent = ''; }
+      const pw = document.getElementById('importProgress'); if (pw) pw.hidden = true;
+      const urlField = document.getElementById('import-url');
+      if (/^https?:\/\//i.test(v) && urlField) { urlField.value = v; search.value = ''; filters.q = ''; applyFilters(true); }
+      dlg.showModal();
     });
     // Cabezales ordenables (Nombre / Fecha / Tipo / Motor) — clic alterna asc/desc
     const SORT_DEFAULT_DIR = { name: 'asc', date: 'desc' };
@@ -796,23 +780,27 @@
     }));
     try { const s = localStorage.getItem('stockSort'); if (s && SORT_VALID.has(s)) sortMode = s; } catch {}
     applySortIndicators();
-    document.getElementById('stockRefresh').addEventListener('click', load);
+    document.getElementById('stockRefresh')?.addEventListener('click', load);
 
-    // Densidad de vista: lista / compacto / medio (persistida en localStorage).
-    // La clase va en #stockGrid; render() solo cambia innerHTML y la clase
-    // stock-grid-grouped, así que la vista se conserva entre renders.
-    const viewBtns = document.querySelectorAll('.stock-view-btn');
+    // Vista: UN SOLO toggle detalle (lista) ↔ cuadrícula (compacto).
+    const viewToggle = document.getElementById('stockViewToggle');
     function applyStockView(v) {
-      const view = (v === 'list' || v === 'compact') ? v : 'medium';
+      const view = (v === 'compact') ? 'compact' : 'list';
       grid.classList.remove('view-list', 'view-compact', 'view-medium');
       grid.classList.add('view-' + view);
-      viewBtns.forEach(b => b.classList.toggle('active', b.dataset.view === view));
+      if (viewToggle) {
+        viewToggle.textContent = (view === 'list') ? '▦' : '☰';
+        viewToggle.title = (view === 'list') ? 'Switch to grid' : 'Switch to detail';
+      }
       try { localStorage.setItem('stockView', view); } catch {}
     }
-    viewBtns.forEach(b => b.addEventListener('click', () => applyStockView(b.dataset.view)));
+    if (viewToggle) viewToggle.addEventListener('click', () => {
+      const cur = grid.classList.contains('view-list') ? 'list' : 'compact';
+      applyStockView(cur === 'list' ? 'compact' : 'list');
+    });
     let savedView = 'list';
     try { savedView = localStorage.getItem('stockView') || 'list'; } catch {}
-    applyStockView(savedView);
+    applyStockView(savedView === 'compact' ? 'compact' : 'list');
 
     // Pager (arriba y abajo, sincronizados)
     pageSizeSels.forEach(sel => sel.addEventListener('change', () => {
