@@ -371,6 +371,7 @@
             <strong style="font-size:22px;">Pixeria Studio Assets</strong>
           </div>
           <div style="display:flex;gap:12px;align-items:center;">
+            <button type="button" class="assets-tab" id="tab-creacion">Creación</button>
             <button type="button" class="assets-tab" id="tab-distribucion">Distribución</button>
             <button type="button" class="assets-tab" id="tab-marketplace">Marketplace</button>
             <span id="user-badge" class="user"></span>
@@ -1712,7 +1713,8 @@
       function setView(name){
         currentView=name;
         document.querySelectorAll('[data-view]').forEach(el=>{ el.style.display=(el.getAttribute('data-view')===name)?'':'none'; });
-        const td=$('tab-distribucion'), tm=$('tab-marketplace');
+        const tc=$('tab-creacion'), td=$('tab-distribucion'), tm=$('tab-marketplace');
+        if(tc) tc.classList.toggle('active',name==='creacion');
         if(td) td.classList.toggle('active',name==='distribucion');
         if(tm) tm.classList.toggle('active',name==='marketplace');
         if(name==='marketplace') loadMarket();
@@ -1902,8 +1904,9 @@
         wire('distro-clear',()=>{ st.items=[]; renderGrid(); status('Rejilla vaciada'); });
         wire('distro-refresh',loadLib);
         // Submenús: Distribución / Marketplace (clic en el activo → vuelve a Creación)
-        wire('tab-distribucion',()=>setView(currentView==='distribucion'?'creacion':'distribucion'));
-        wire('tab-marketplace',()=>setView(currentView==='marketplace'?'creacion':'marketplace'));
+        wire('tab-creacion',()=>setView('creacion'));
+        wire('tab-distribucion',()=>setView('distribucion'));
+        wire('tab-marketplace',()=>setView('marketplace'));
         wire('market-recargar',recargarCreditos);
         loadWallet();
         setView('creacion');
