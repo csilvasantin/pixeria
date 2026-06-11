@@ -2762,9 +2762,10 @@
 
   function bindImportModal() {
     const dlg = document.getElementById('importModal');
-    const open = document.getElementById('openImport');
-    if (!dlg || !open) return;
-    open.addEventListener('click', () => {
+    if (!dlg) return;
+    // Abridor del modal: cualquier botón #openImport o .js-open-import (hay uno
+    // en el paginado de arriba y otro en el de abajo del Stock).
+    const openFn = () => {
       const stat = document.getElementById('importStatus');
       if (stat) { stat.style.display = 'none'; stat.textContent = ''; }
       const progressWrap = document.getElementById('importProgress');
@@ -2776,7 +2777,10 @@
       const rb = document.getElementById('retryImport');
       if (rb) rb.hidden = true;
       dlg.showModal();
-    });
+    };
+    const openers = [document.getElementById('openImport'), ...document.querySelectorAll('.js-open-import')]
+      .filter((el, i, a) => el && a.indexOf(el) === i);
+    openers.forEach(o => o.addEventListener('click', openFn));
     document.getElementById('closeImport')?.addEventListener('click', () => dlg.close());
     // Helpers para la barra de progreso del modal
     function importProgressStart(fmt) {
