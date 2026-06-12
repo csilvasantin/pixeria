@@ -76,32 +76,8 @@
       <article class="module">
         <div class="module-head"><h3><span class="accent" style="background: var(--music);"></span>Música</h3><small>identidad + loop + energía</small></div>
         <div data-motor-section="musica"></div>
-        <div class="field"><label>Mapa emocional</label>
-          <div class="chips" data-name="musica.emocion">
-            <label class="chip"><input type="checkbox" value="Calma">Calma</label>
-            <label class="chip"><input type="checkbox" value="Tension">Tensión</label>
-            <label class="chip"><input type="checkbox" value="Descubrimiento">Descubrimiento</label>
-            <label class="chip"><input type="checkbox" value="Celebracion">Celebración</label>
-            <label class="chip"><input type="checkbox" value="Marca">Marca</label>
-            <label class="chip"><input type="checkbox" value="Transicion">Transición</label>
-          </div>
-        </div>
-        <div class="field"><label>Capas</label>
-          <div class="chips" data-name="musica.capas">
-            <label class="chip"><input type="checkbox" value="Base">Base</label>
-            <label class="chip"><input type="checkbox" value="Percusion">Percusión</label>
-            <label class="chip"><input type="checkbox" value="Melodia">Melodía</label>
-            <label class="chip"><input type="checkbox" value="Stinger">Stinger</label>
-            <label class="chip"><input type="checkbox" value="Pad">Pad</label>
-            <label class="chip"><input type="checkbox" value="Bed">Bed</label>
-          </div>
-        </div>
-        <div class="row2">
-          <div class="field"><label for="m-bpm">BPM</label><input id="m-bpm" name="musica.bpm" type="text" placeholder="92"></div>
-          <div class="field"><label for="m-tonalidad">Tonalidad</label><input id="m-tonalidad" name="musica.tonalidad" type="text" placeholder="C menor"></div>
-        </div>
         <div class="field"><label for="m-versiones">Versiones a entregar</label><input id="m-versiones" name="musica.versiones" type="text" placeholder="Loop limpio, versión 30s, versión extendida 2min"></div>
-        <div class="field"><label for="m-uso">Uso en experiencia</label><input id="m-uso" name="musica.uso" type="text" placeholder="Bed de menú + stinger de cierre"></div>
+        <div class="field"><label for="m-uso">Styles</label><input id="m-uso" name="musica.uso" type="text" placeholder="Estilo para Suno: género, voz, instrumentos, ritmo, tonalidad (ej. balada pop, voz masculina, piano suave, 92 bpm, C menor)"></div>
         <div class="field">
           <label for="m-letra">Letra <button type="button" class="btn" id="genLyrics" style="font-size:10px;padding:4px 8px;margin-left:8px;vertical-align:middle;">✏️ GENERAR CON GEMINI</button></label>
           <textarea id="m-letra" name="musica.letra" rows="10" placeholder="[Verse 1]&#10;...&#10;&#10;[Chorus]&#10;..." style="font-family:inherit;"></textarea>
@@ -180,6 +156,6 @@
     </form>
   </dialog>
   <script src="/matrix-rain.js?v=20260608-sides"></script>
-  <script src="app.js?v=20260612-suno3"></script>
+  <script src="app.js?v=20260612-suno4"></script>
 </body>
 </html>

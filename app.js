@@ -756,12 +756,8 @@
   }
 
   async function playSunoLocal(s, model) {
-    const guion = [
-      s.uso, s.tonalidad && `tonalidad ${s.tonalidad}`, s.bpm && `${s.bpm}bpm`,
-      ...(Array.isArray(s.emocion) ? s.emocion : []),
-      ...(Array.isArray(s.capas) ? s.capas : []),
-    ].filter(Boolean).join(', ');
-    const prompt = guion || 'matrix synthwave, ambient, electronic';
+    // El campo "Styles" (s.uso) va directo a la caja Styles de Suno. La Letra va a Lyrics.
+    const prompt = (s.uso || '').trim() || 'soft ambient, gentle, instrumental';
     const lyrics = (s.letra || '').trim();
     // Si hay letra escrita la enviamos en custom mode (Suno usa el campo prompt
     // como letra y tags como estilo). Sin letra, instrumental segun "versiones".
