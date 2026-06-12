@@ -948,7 +948,8 @@
     const motor = s.motor || 'pixer-loop';
     if (motor === 'suno-local-v45')       return playSunoLocal(s, 'chirp-v4-5');
     if (motor === 'suno-local-v5')        return playSunoLocal(s, 'chirp-v5');
-    if (motor === 'lyria-3-pro-preview')  return playLyria3(s);
+    // Carlos 2026-06-12: la tarjeta "Gemini"/Better genera con Suno v4.5; la "Best" con Suno v5.
+    if (motor === 'lyria-3-pro-preview')  return playSunoLocal(s, 'chirp-v4-5');
     // default: Pixer Loop (Web Audio)
     const bpm = parseInt(s.bpm, 10) || 92;
     stopMusic();
