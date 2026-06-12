@@ -592,6 +592,21 @@
     if (isProUnlocked()) return true;
     return await unlockPro();
   }
+  // Devuelve el password PRO guardado (token para el proxy suno-local). Si PRO se
+  // desbloqueó en una versión antigua que no lo guardaba, lo pide una vez y lo guarda.
+  async function ensureProToken() {
+    let pw = '';
+    try { pw = localStorage.getItem('pixer_pro_pw') || ''; } catch (e) {}
+    if (pw) return pw;
+    const entered = prompt('🔒 Password PRO (necesario para generar con Suno):');
+    if (entered == null) return '';
+    if ((await _sha256(entered)) === PRO_PASSWORD_HASH) {
+      try { localStorage.setItem('pixer_pro_pw', entered); localStorage.setItem(PRO_LOCK_KEY, '1'); } catch (e) {}
+      return entered;
+    }
+    alert('Password PRO incorrecto.');
+    return '';
+  }
   // Badge insertado en .topnav-actions (al lado del estado XTORE) para no
   // solaparse con la banda superior Admira·Xperience. Cae a position:fixed
   // si no encuentra el contenedor.
@@ -775,6 +790,9 @@
     }
     if (!(await confirmPro('Suno (local)', `~2 canciones · créditos restantes: ${health.total_credits_left}`))) return;
 
+    const proToken = await ensureProToken();
+    if (!proToken) { showPlayer('<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · falta password PRO</div></div>'); return; }
+
     showPlayer(`
       <div class="player-card">
         <div class="player-head">▶ MÚSICA · Suno ${model.replace('chirp-','')} · ${prompt.slice(0,60)}</div>
@@ -785,7 +803,7 @@
       const r = await fetch(SUNO_LOCAL_URL + '/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, lyrics, title: titleHint, instrumental: isInstrumental, model, token: (localStorage.getItem('pixer_pro_pw') || '') }),
+        body: JSON.stringify({ prompt, lyrics, title: titleHint, instrumental: isInstrumental, model, token: proToken }),
       });
       if (!r.ok) {
         stop(false);
