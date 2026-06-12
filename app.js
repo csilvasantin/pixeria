@@ -756,12 +756,16 @@
   }
 
   async function playSunoLocal(s, model) {
-    // El campo "Styles" (s.uso) va directo a la caja Styles de Suno. La Letra va a Lyrics.
-    const prompt = (s.uso || '').trim() || 'soft ambient, gentle, instrumental';
+    // El campo "Styles" (s.uso) va a la caja Styles de Suno. La Letra va a Lyrics.
+    // "Versiones a entregar" define tipo (canción/loop/stinger) + pista de duración.
     const lyrics = (s.letra || '').trim();
-    // Si hay letra escrita la enviamos en custom mode (Suno usa el campo prompt
-    // como letra y tags como estilo). Sin letra, instrumental segun "versiones".
-    const isInstrumental = lyrics ? false : (!s.versiones || /instrumental|loop|bed/i.test(s.versiones));
+    const ver = (s.versiones || '').trim();
+    const isInstrumental = /loop|stinger|instrumental|bed/i.test(ver) || (!lyrics && !/canci/i.test(ver));
+    let durHint = '';
+    const mMin = ver.match(/(\d+)\s*min/i), mSec = ver.match(/(\d+)\s*s\b/i);
+    if (mMin) durHint = `duración aproximada ${mMin[1]} min`;
+    else if (mSec) durHint = `duración aproximada ${mSec[1]} segundos`;
+    const prompt = [(s.uso || '').trim() || 'soft ambient, gentle', durHint].filter(Boolean).join(', ');
     const titleHint = (s.cliente || s.uso || '').slice(0, 60);
 
     const health = await sunoLocalAlive();
@@ -818,7 +822,7 @@
                 const dur = (c.metadata && (c.metadata.duration_formatted || c.metadata.duration)) || '';
                 const pickedUrl = c.video_url || c.audio_url;
                 const pickedMime = c.video_url ? 'video/mp4' : 'audio/mpeg';
-                const pubMeta = { type: 'music', motor: `suno-local-${model.replace('chirp-v','v')}`, prompt: `${cTitle} · ${prompt}`.slice(0,200), costEst: '~10 cred', url: pickedUrl, mime: pickedMime, thumbnail: cover || null };
+                const pubMeta = { type: 'music', motor: `suno-local-${model.replace('chirp-v','v')}`, prompt: `${cTitle} · ${prompt}`.slice(0,200), costEst: '~10 cred', url: pickedUrl, mime: pickedMime, thumbnail: cover || null, clipId: c.id };
                 // Suno devuelve video_url (mp4 con cover estatico + audio embebido):
                 // lo preferimos porque al enviarlo a Pixer Feed lleva caratula sin
                 // depender del worker. Si solo hay audio_url, fallback a audio + img.
@@ -2488,6 +2492,22 @@
             cv.getContext('2d').drawImage(imgEl, 0, 0);
             meta = Object.assign({}, meta, { url: cv.toDataURL('image/png'), mime: 'image/png' });
           } catch (_) { /* canvas tainted → seguirá por sourceUrl */ }
+        }
+      }
+      // Música Suno: la URL del botón puede ser la de streaming (audiopipe, NO
+      // descargable por el worker). Re-resolvemos a la URL final (cdn) por el id
+      // del clip, esperando a que esté "complete" si hace falta.
+      if (meta.type === 'music' && meta.clipId && (!meta.url || /audiopipe\.suno/.test(meta.url) || /streaming/.test(meta.url))) {
+        for (let i = 0; i < 12; i++) {
+          try {
+            const sr = await fetch(SUNO_LOCAL_URL + '/status?ids=' + encodeURIComponent(meta.clipId));
+            const arr = await sr.json();
+            const c = Array.isArray(arr) ? arr.find(x => x.id === meta.clipId) : null;
+            const fin = c && (c.video_url || (c.audio_url && /cdn\d?\.suno|\.mp3/.test(c.audio_url)));
+            if (fin) { meta = Object.assign({}, meta, { url: c.video_url || c.audio_url, mime: c.video_url ? 'video/mp4' : 'audio/mpeg' }); break; }
+          } catch (_) {}
+          if (btn) btn.textContent = '⏳ esperando render… ' + (i + 1);
+          await new Promise(r => setTimeout(r, 4000));
         }
       }
       const payload = {

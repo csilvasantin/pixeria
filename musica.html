@@ -76,7 +76,16 @@
       <article class="module">
         <div class="module-head"><h3><span class="accent" style="background: var(--music);"></span>Música</h3><small>identidad + loop + energía</small></div>
         <div data-motor-section="musica"></div>
-        <div class="field"><label for="m-versiones">Versiones a entregar</label><input id="m-versiones" name="musica.versiones" type="text" placeholder="Loop limpio, versión 30s, versión extendida 2min"></div>
+        <div class="field"><label for="m-versiones">Versiones a entregar</label>
+          <select id="m-versiones" name="musica.versiones">
+            <option value="Canción ~2 min">Canción ~2 min</option>
+            <option value="Canción ~1 min">Canción ~1 min</option>
+            <option value="Canción ~3 min">Canción ~3 min</option>
+            <option value="Canción completa">Canción completa</option>
+            <option value="Loop instrumental ~15s">Loop instrumental ~15s</option>
+            <option value="Stinger ~3s">Stinger ~3s</option>
+          </select>
+        </div>
         <div class="field"><label for="m-uso">Styles</label><input id="m-uso" name="musica.uso" type="text" placeholder="Estilo para Suno: género, voz, instrumentos, ritmo, tonalidad (ej. balada pop, voz masculina, piano suave, 92 bpm, C menor)"></div>
         <div class="field">
           <label for="m-letra">Letra <button type="button" class="btn" id="genLyrics" style="font-size:10px;padding:4px 8px;margin-left:8px;vertical-align:middle;">✏️ GENERAR CON GEMINI</button></label>
@@ -156,6 +165,6 @@
     </form>
   </dialog>
   <script src="/matrix-rain.js?v=20260608-sides"></script>
-  <script src="app.js?v=20260612-suno5"></script>
+  <script src="app.js?v=20260612-suno6"></script>
 </body>
 </html>
