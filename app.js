@@ -838,6 +838,7 @@
                   ${publishBtnHTML(pubMeta)}
                 </div>`;
               }).join('')}
+              ${lyrics ? `<details open style="margin-top:8px;"><summary style="cursor:pointer;color:var(--matrix);text-shadow:var(--glow);">📝 LETRA</summary><pre class="brief" style="white-space:pre-wrap;max-height:320px;overflow:auto;font-size:12px;margin-top:6px;">${escAttr(lyrics)}</pre><button type="button" class="btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent);this.textContent='✓ copiada'" style="margin-top:4px;font-size:10px;padding:4px 8px;">COPIAR LETRA</button></details>` : ''}
               <small class="player-foot">// Suno · ${prompt.slice(0,80)}</small>
             </div>`);
           return;
