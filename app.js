@@ -582,6 +582,7 @@
     const h = await _sha256(pw);
     if (h === PRO_PASSWORD_HASH) {
       setProUnlocked(true);
+      try { localStorage.setItem('pixer_pro_pw', pw); } catch (e) {} // token para el proxy suno-local
       return true;
     }
     alert('Password incorrecto. Modelos PRO siguen bloqueados.');
@@ -784,7 +785,7 @@
       const r = await fetch(SUNO_LOCAL_URL + '/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, lyrics, title: titleHint, instrumental: isInstrumental, model }),
+        body: JSON.stringify({ prompt, lyrics, title: titleHint, instrumental: isInstrumental, model, token: (localStorage.getItem('pixer_pro_pw') || '') }),
       });
       if (!r.ok) {
         stop(false);
