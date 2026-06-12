@@ -946,10 +946,14 @@
   function playMusica() {
     const s = loadStore().musica || {};
     const motor = s.motor || 'pixer-loop';
+    // Carlos 2026-06-12 (cuenta Pro csilva@admira.com, sin cambiar los textos de las tarjetas):
+    //   Good (Pixer Loop)  → Suno v4.5
+    //   Better (Gemini)    → Suno v5.0
+    //   Best (Suno local)  → Suno v5.5
+    if (motor === 'pixer-loop')           return playSunoLocal(s, 'chirp-v4-5');
+    if (motor === 'lyria-3-pro-preview')  return playSunoLocal(s, 'chirp-v5');
+    if (motor === 'suno-local-v5')        return playSunoLocal(s, 'chirp-v5-5');
     if (motor === 'suno-local-v45')       return playSunoLocal(s, 'chirp-v4-5');
-    if (motor === 'suno-local-v5')        return playSunoLocal(s, 'chirp-v5');
-    // Carlos 2026-06-12: la tarjeta "Gemini"/Better genera con Suno v4.5; la "Best" con Suno v5.
-    if (motor === 'lyria-3-pro-preview')  return playSunoLocal(s, 'chirp-v4-5');
     // default: Pixer Loop (Web Audio)
     const bpm = parseInt(s.bpm, 10) || 92;
     stopMusic();
