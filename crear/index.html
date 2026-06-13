@@ -483,11 +483,17 @@
           <h4>Distribución estándar · sala entera ⇄ gemelos</h4>
           <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Diseña una <b>distribución</b> (tamaño de sala + mobiliario colocado) y publícala a la librería compartida. Los gemelos la aplican con <code>/distribucion aplicar &lt;id&gt;</code>; las que publican los gemelos también aparecen aquí. Canal: worker <code>/layout/*</code>.</p>
 
-          <!-- Barra: nombre, cliente, tamaño -->
+          <!-- Barra: nombre, circuito (sincronizado con admira.app), tamaño -->
           <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:10px;">
             <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Nombre de la distribución</label><input id="distro-name" class="model-select" placeholder="Ej: Estanco estándar v1" style="width:100%;"></div>
-            <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Cliente</label><input id="distro-client" class="model-select" placeholder="xtanco" style="width:100%;"></div>
+            <div>
+              <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Circuito · cliente <span style="opacity:.6;font-size:10px;">(de admira.app)</span></label>
+              <select id="distro-circuit" class="model-select" style="width:100%;"><option value="">Cargando circuitos…</option></select>
+              <input id="distro-client" type="hidden">
+            </div>
           </div>
+          <!-- Resumen de segmentación + destino del circuito elegido (sincronizado con admira.app) -->
+          <div id="distro-circuit-info" style="display:none;margin:-2px 0 12px;padding:9px 11px;border:1px solid rgba(120,243,255,.22);border-radius:8px;background:rgba(120,243,255,.05);font-size:11px;color:var(--muted);line-height:1.5;"></div>
           <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:10px;">
             <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">Ancho (cols)</label><input id="distro-cols" class="model-select" type="number" min="6" max="24" value="14" style="width:80px;"></div>
             <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">Fondo (rows)</label><input id="distro-rows" class="model-select" type="number" min="4" max="16" value="8" style="width:80px;"></div>
@@ -1833,7 +1839,9 @@
         const name=($('distro-name').value||'').trim()||'Distribución sin nombre';
         const client=($('distro-client').value||'').trim()||null;
         if(!st.items.length){ status('Coloca al menos un mueble antes de guardar.','#e0a14a'); return; }
+        const cc=window.CircuitSync&&window.CircuitSync.selected();
         const body={ name, client, source:'pixeria',
+          circuit: cc ? { id:cc.id, scope:cc.scope, label:cc.label, segmentation:cc.segmentation, targetScreens:cc.screens||[], pointCount:cc.pointCount } : null,
           config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
           furniture: st.items.map(distroItemOut) };
         status('⏳ publicando…');
@@ -1894,6 +1902,7 @@
           st.floor=cfg.floorColor&&cfg.floorColor!=='transparent'?cfg.floorColor:'#b8bcc0';
           st.items=(d.furniture||[]).filter(i=>i&&i.type&&i.col<st.cols&&i.row<st.rows).map(i=>{ const o={ id:i.id||(i.type+'-'+(st._n++)), type:i.type, col:i.col|0, row:i.row|0, sx:1, sy:1, label:i.label||i.type }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; } return o; });
           $('distro-name').value=d.name||''; $('distro-client').value=d.client||'';
+          window.CircuitSync && window.CircuitSync.syncFromClient(d.client||'');
           $('distro-cols').value=st.cols; $('distro-rows').value=st.rows; $('distro-wallcol').value=st.wall; $('distro-floorcol').value=st.floor;
           renderGrid(); status('Cargada «'+(d.name||id)+'» — '+st.items.length+' muebles. Edítala y vuelve a guardar.','#7ee0a0');
           $('distro-panel').scrollIntoView({behavior:'smooth',block:'start'});
@@ -1943,9 +1952,36 @@
         }catch(e){ lib.innerHTML='<div style="grid-column:1/-1;color:#e06a6a;font-size:12px;text-align:center;padding:10px;">❌ '+e.message+'</div>'; }
       }
 
+      // ── Sincronización con los circuitos de admira.app ──────────────────
+      // Lee el manifiesto compartido circuits.json (fuente única en admira.app):
+      // puebla el selector de circuito, muestra su segmentación y deriva el
+      // cliente + las pantallas destino. Circuitos nuevos en admira.app aparecen
+      // aquí solos al regenerar el manifiesto.
+      window.CircuitSync = (function(){
+        // Manifiesto publicado en admira.app (apex; GitHub Pages sirve CORS *).
+        // Usamos el apex directo porque www→apex es un 301.
+        const SRC = 'https://admira.app/circuits.json';
+        let circuits=[], selectedId='';
+        const lang=()=>((document.documentElement.lang||'es').slice(0,2)==='en')?'en':'es';
+        const label=c=>(c.label&&(c.label[lang()]||c.label.es||c.label.en))||c.id;
+        const ES={exterior:'exterior',interior:'interior',hombre:'hombre',mujer:'mujer',nino:'niño',joven:'joven',adulto:'adulto',senior:'senior',vejez:'vejez',manana:'mañana',mediodia:'mediodía',tarde:'tarde',noche:'noche'};
+        const chip=a=>((a||[]).map(x=>ES[x]||x).join(', '))||'—';
+        const selected=()=>circuits.find(c=>c.id===selectedId)||null;
+        function fillSelect(){ const sel=$('distro-circuit'); if(!sel) return; sel.innerHTML='<option value="">— elige circuito —</option>'+circuits.map(c=>'<option value="'+c.id+'">'+label(c)+' · '+c.pointCount+' pts</option>').join(''); }
+        function renderInfo(){ const box=$('distro-circuit-info'); if(!box) return; const c=selected(); if(!c){ box.style.display='none'; return; } const s=c.segmentation||{}; const scr=(c.screens||[]).length; box.style.display='block'; box.innerHTML='<b style="color:#7ee0ff;">'+label(c)+'</b> · cliente <code>'+c.client+'</code> · '+c.pointCount+' Xpacios · '+scr+' pantalla(s) real(es)'+(scr?' ('+(c.screens||[]).join(', ')+')':'')+'<br>🎯 Segmentación (admira.app): emplazamiento <b>'+chip(s.typologies)+'</b> · género <b>'+chip(s.genders)+'</b> · edad <b>'+chip(s.ages)+'</b> · franja <b>'+chip(s.timeSlots)+'</b>'+(s.schedule?' · horario '+s.schedule.start+'–'+s.schedule.end:''); }
+        function select(id){ selectedId=id||''; const c=selected(); const hid=$('distro-client'); if(hid) hid.value=c?c.client:''; renderInfo(); }
+        function syncFromClient(client){ const c=circuits.find(x=>x.client===client); selectedId=c?c.id:''; const sel=$('distro-circuit'); if(sel&&c) sel.value=c.id; renderInfo(); }
+        async function init(){ const sel=$('distro-circuit'); if(!sel) return; sel.onchange=()=>select(sel.value);
+          try{ const r=await fetch(SRC,{cache:'no-store'}); const d=await r.json(); circuits=Array.isArray(d.circuits)?d.circuits:[]; }catch(e){ circuits=[]; }
+          if(!circuits.length){ sel.innerHTML='<option value="">(circuits.json no disponible)</option>'; return; }
+          fillSelect(); }
+        return { init, selected, select, syncFromClient };
+      })();
+
       function init(){
         if(!$('distro-grid')) return;
         renderPalette(); renderGrid();
+        window.CircuitSync && window.CircuitSync.init();
         const wire=(id,fn)=>{ const e=$(id); if(e) e.onclick=fn; };
         wire('distro-apply-size',applySize);
         wire('distro-save',saveDistro);
