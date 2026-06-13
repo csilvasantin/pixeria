@@ -499,16 +499,25 @@
           <h4>Distribución estándar · sala entera ⇄ gemelos</h4>
           <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Diseña una <b>distribución</b> (tamaño de sala + mobiliario colocado) y publícala a la librería compartida. Los gemelos la aplican con <code>/distribucion aplicar &lt;id&gt;</code>; las que publican los gemelos también aparecen aquí. Canal: worker <code>/layout/*</code>.</p>
 
-          <!-- Barra: nombre, circuito (sincronizado con admira.app), tamaño -->
-          <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:10px;">
-            <div><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Nombre de la distribución</label><input id="distro-name" class="model-select" placeholder="Ej: Estanco estándar v1" style="width:100%;"></div>
+          <!-- Nombre -->
+          <div style="margin-bottom:10px;"><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Nombre de la distribución</label><input id="distro-name" class="model-select" placeholder="Ej: Estanco estándar v1" style="width:100%;"></div>
+          <!-- Cascada igual que admira.app: Alcance → Circuito → Ubicación -->
+          <div style="display:grid;grid-template-columns:1fr 1.4fr 1.4fr;gap:10px;margin-bottom:10px;">
             <div>
-              <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Circuito · cliente <span style="opacity:.6;font-size:10px;">(de admira.app)</span></label>
-              <select id="distro-circuit" class="model-select" style="width:100%;"><option value="">Cargando circuitos…</option></select>
+              <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Alcance</label>
+              <select id="distro-scope" class="model-select" style="width:100%;"><option value="">—</option></select>
+            </div>
+            <div>
+              <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Circuito · cliente <span style="opacity:.6;font-size:10px;">(admira.app)</span></label>
+              <select id="distro-circuit" class="model-select" style="width:100%;"><option value="">Cargando…</option></select>
               <input id="distro-client" type="hidden">
             </div>
+            <div>
+              <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Ubicación</label>
+              <select id="distro-location" class="model-select" style="width:100%;"><option value="">— todo el circuito —</option></select>
+            </div>
           </div>
-          <!-- Resumen de segmentación + destino del circuito elegido (sincronizado con admira.app) -->
+          <!-- Resumen de segmentación + destino del circuito/ubicación elegido (sincronizado con admira.app) -->
           <div id="distro-circuit-info" style="display:none;margin:-2px 0 12px;padding:9px 11px;border:1px solid rgba(120,243,255,.22);border-radius:8px;background:rgba(120,243,255,.05);font-size:11px;color:var(--muted);line-height:1.5;"></div>
           <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:10px;">
             <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">Ancho (cols)</label><input id="distro-cols" class="model-select" type="number" min="6" max="24" value="14" style="width:80px;"></div>
@@ -1871,7 +1880,9 @@
         if(!st.items.length){ status('Coloca al menos un mueble antes de guardar.','#e0a14a'); return; }
         const cc=window.CircuitSync&&window.CircuitSync.selected();
         const body={ name, client, source:'pixeria',
-          circuit: cc ? { id:cc.id, scope:cc.scope, label:cc.label, segmentation:cc.segmentation, targetScreens:cc.screens||[], pointCount:cc.pointCount } : null,
+          circuit: cc ? { id:cc.id, scope:cc.scope, label:cc.label, segmentation:cc.segmentation,
+            targetScreens: (cc.location && cc.location.id) ? [] : (cc.screens||[]), pointCount:cc.pointCount,
+            location: cc.location ? { id:cc.location.id, name:cc.location.name, addr:cc.location.addr } : null } : null,
           config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
           furniture: st.items.map(distroItemOut) };
         status('⏳ publicando…');
@@ -1982,30 +1993,38 @@
         }catch(e){ lib.innerHTML='<div style="grid-column:1/-1;color:#e06a6a;font-size:12px;text-align:center;padding:10px;">❌ '+e.message+'</div>'; }
       }
 
-      // ── Sincronización con los circuitos de admira.app ──────────────────
+      // ── Sincronización con admira.app: cascada Alcance → Circuito → Ubicación ──
       // Lee el manifiesto compartido circuits.json (fuente única en admira.app):
-      // puebla el selector de circuito, muestra su segmentación y deriva el
-      // cliente + las pantallas destino. Circuitos nuevos en admira.app aparecen
-      // aquí solos al regenerar el manifiesto.
+      // mismo Alcance (All/Global/National/City/Local) que admira.app, filtra los
+      // circuitos por alcance, y al elegir circuito lista sus ubicaciones reales.
+      // Deriva cliente + pantallas destino + segmentación. Circuitos nuevos dados
+      // de alta en admira.app aparecen aquí al regenerar el manifiesto.
       window.CircuitSync = (function(){
-        // Manifiesto publicado en admira.app (apex; GitHub Pages sirve CORS *).
-        // Usamos el apex directo porque www→apex es un 301.
-        const SRC = 'https://admira.app/circuits.json';
-        let circuits=[], selectedId='';
+        const SRC = 'https://admira.app/circuits.json';   // apex (www→apex es 301); GitHub Pages sirve CORS *
+        let circuits=[], scopes=null, scopeId='', selectedId='', locId='';
         const lang=()=>((document.documentElement.lang||'es').slice(0,2)==='en')?'en':'es';
         const label=c=>(c.label&&(c.label[lang()]||c.label.es||c.label.en))||c.id;
         const ES={exterior:'exterior',interior:'interior',hombre:'hombre',mujer:'mujer',nino:'niño',joven:'joven',adulto:'adulto',senior:'senior',vejez:'vejez',manana:'mañana',mediodia:'mediodía',tarde:'tarde',noche:'noche'};
         const chip=a=>((a||[]).map(x=>ES[x]||x).join(', '))||'—';
-        const selected=()=>circuits.find(c=>c.id===selectedId)||null;
-        function fillSelect(){ const sel=$('distro-circuit'); if(!sel) return; sel.innerHTML='<option value="">— elige circuito —</option>'+circuits.map(c=>'<option value="'+c.id+'">'+label(c)+' · '+c.pointCount+' pts</option>').join(''); }
-        function renderInfo(){ const box=$('distro-circuit-info'); if(!box) return; const c=selected(); if(!c){ box.style.display='none'; return; } const s=c.segmentation||{}; const scr=(c.screens||[]).length; box.style.display='block'; box.innerHTML='<b style="color:#7ee0ff;">'+label(c)+'</b> · cliente <code>'+c.client+'</code> · '+c.pointCount+' Xpacios · '+scr+' pantalla(s) real(es)'+(scr?' ('+(c.screens||[]).join(', ')+')':'')+'<br>🎯 Segmentación (admira.app): emplazamiento <b>'+chip(s.typologies)+'</b> · género <b>'+chip(s.genders)+'</b> · edad <b>'+chip(s.ages)+'</b> · franja <b>'+chip(s.timeSlots)+'</b>'+(s.schedule?' · horario '+s.schedule.start+'–'+s.schedule.end:''); }
-        function select(id){ selectedId=id||''; const c=selected(); const hid=$('distro-client'); if(hid) hid.value=c?c.client:''; renderInfo(); }
-        function syncFromClient(client){ const c=circuits.find(x=>x.client===client); selectedId=c?c.id:''; const sel=$('distro-circuit'); if(sel&&c) sel.value=c.id; renderInfo(); }
-        async function init(){ const sel=$('distro-circuit'); if(!sel) return; sel.onchange=()=>select(sel.value);
-          try{ const r=await fetch(SRC,{cache:'no-store'}); const d=await r.json(); circuits=Array.isArray(d.circuits)?d.circuits:[]; }catch(e){ circuits=[]; }
-          if(!circuits.length){ sel.innerHTML='<option value="">(circuits.json no disponible)</option>'; return; }
-          fillSelect(); }
-        return { init, selected, select, syncFromClient };
+        const byId=id=>circuits.find(c=>c.id===id)||null;
+        const selected=()=>{ const c=byId(selectedId); if(!c) return null; const loc=locId&&(c.points||[]).find(p=>p.id===locId); return loc?Object.assign({},c,{location:loc}):c; };
+        // Circuitos visibles según el alcance elegido (mapa scopes.circuitIds de admira.app)
+        function circuitsForScope(){ if(!scopeId||!scopes) return circuits.slice(); const ids=(scopes.circuitIds&&scopes.circuitIds[scopeId])||[]; return circuits.filter(c=>ids.indexOf(c.id)>=0); }
+        function fillScopes(){ const sel=$('distro-scope'); if(!sel||!scopes) return; const ord=scopes.order||Object.keys(scopes.labels||{}); sel.innerHTML=ord.map(s=>{ const l=(scopes.labels&&scopes.labels[s]&&(scopes.labels[s][lang()]||scopes.labels[s].es))||s; return '<option value="'+s+'">'+l+'</option>'; }).join(''); }
+        function fillCircuits(){ const sel=$('distro-circuit'); if(!sel) return; const list=circuitsForScope(); sel.innerHTML='<option value="">— elige circuito —</option>'+list.map(c=>'<option value="'+c.id+'">'+label(c)+' · '+c.pointCount+' pts</option>').join(''); }
+        function fillLocations(){ const sel=$('distro-location'); if(!sel) return; const c=byId(selectedId); if(!c){ sel.innerHTML='<option value="">— todo el circuito —</option>'; return; } const pts=c.points||[]; const trunc=c.pointsTruncated?' (primeras '+pts.length+' de '+c.pointCount+')':''; sel.innerHTML='<option value="">— todo el circuito ('+c.pointCount+' Xpacios)'+trunc+' —</option>'+pts.map(p=>'<option value="'+p.id+'">'+(p.name||p.id)+(p.addr?' · '+p.addr:'')+(p.screens?' · '+p.screens+'📺':'')+'</option>').join(''); }
+        function renderInfo(){ const box=$('distro-circuit-info'); if(!box) return; const c=byId(selectedId); if(!c){ box.style.display='none'; return; } const s=c.segmentation||{}; const loc=locId&&(c.points||[]).find(p=>p.id===locId); const scr=(c.screens||[]).length; box.style.display='block';
+          box.innerHTML='<b style="color:#7ee0ff;">'+label(c)+'</b> · cliente <code>'+c.client+'</code> · '+(loc?('📍 '+(loc.name||loc.id)+(loc.addr?' ('+loc.addr+')':'')):(c.pointCount+' Xpacios · '+scr+' pantalla(s) real(es)'+(scr?' ('+(c.screens||[]).join(', ')+')':'')))+'<br>🎯 Segmentación (admira.app): emplazamiento <b>'+chip(s.typologies)+'</b> · género <b>'+chip(s.genders)+'</b> · edad <b>'+chip(s.ages)+'</b> · franja <b>'+chip(s.timeSlots)+'</b>'+(s.schedule?' · horario '+s.schedule.start+'–'+s.schedule.end:''); }
+        function selectCircuit(id){ selectedId=id||''; locId=''; const hid=$('distro-client'); if(hid) hid.value=byId(selectedId)?byId(selectedId).client:''; fillLocations(); renderInfo(); }
+        function selectScope(s){ scopeId=s||''; selectedId=''; locId=''; fillCircuits(); fillLocations(); const hid=$('distro-client'); if(hid) hid.value=''; renderInfo(); }
+        function selectLocation(id){ locId=id||''; renderInfo(); }
+        function syncFromClient(client){ const c=circuits.find(x=>x.client===client); selectedId=c?c.id:''; locId=''; if(c){ scopeId=c.scope; const ss=$('distro-scope'); if(ss) ss.value=scopeId; fillCircuits(); const cs=$('distro-circuit'); if(cs) cs.value=c.id; const hid=$('distro-client'); if(hid) hid.value=c.client; } fillLocations(); renderInfo(); }
+        async function init(){ const sc=$('distro-scope'), cs=$('distro-circuit'), lo=$('distro-location'); if(!cs) return;
+          if(sc) sc.onchange=()=>selectScope(sc.value); cs.onchange=()=>selectCircuit(cs.value); if(lo) lo.onchange=()=>selectLocation(lo.value);
+          try{ const r=await fetch(SRC,{cache:'no-store'}); const d=await r.json(); circuits=Array.isArray(d.circuits)?d.circuits:[]; scopes=d.scopes||null; }catch(e){ circuits=[]; }
+          if(!circuits.length){ cs.innerHTML='<option value="">(circuits.json no disponible)</option>'; return; }
+          fillScopes(); if(sc&&scopes){ scopeId=(scopes.order&&scopes.order[0])||''; sc.value=scopeId; } fillCircuits(); fillLocations(); }
+        return { init, selected, selectScope, selectCircuit, selectLocation, syncFromClient };
       })();
 
       function init(){
