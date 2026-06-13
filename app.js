@@ -775,7 +775,9 @@
     // "Versiones a entregar" define tipo (canción/loop/stinger) + pista de duración.
     const lyrics = (s.letra || '').trim();
     const ver = (s.versiones || '').trim();
-    const isInstrumental = /loop|stinger|instrumental|bed/i.test(ver) || (!lyrics && !/canci/i.test(ver));
+    // Si hay letra escrita, es una CANCIÓN (nunca instrumental), aunque la versión
+    // elegida diga "loop/instrumental" → evita el conflicto letra+instrumental.
+    const isInstrumental = !lyrics && (/loop|stinger|instrumental|bed/i.test(ver) || !/canci/i.test(ver));
     let durHint = '';
     const mMin = ver.match(/(\d+)\s*min/i), mSec = ver.match(/(\d+)\s*s\b/i);
     if (mMin) durHint = `duración aproximada ${mMin[1]} min`;
