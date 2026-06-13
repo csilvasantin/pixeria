@@ -584,6 +584,11 @@
               <div style="overflow:auto;background:repeating-conic-gradient(#11161c 0% 25%, #0b0f14 0% 50%) 50% / 16px 16px;border:1px solid #28323a;border-radius:8px;padding:8px;max-height:52vh;">
                 <canvas id="edit-canvas" style="image-rendering:pixelated;display:block;cursor:crosshair;"></canvas>
               </div>
+              <div style="display:flex;gap:6px;align-items:center;margin-top:10px;">
+                <span style="font-size:13px;white-space:nowrap;">✨ IA:</span>
+                <input id="edit-ai-prompt" type="text" placeholder="ej. la moto ahora rosa · quítale el fondo · hazla de noche" class="model-select" style="flex:1;min-width:220px;">
+                <button type="button" class="button primary" id="edit-ai-go" style="font-size:12px;padding:6px 14px;white-space:nowrap;">Aplicar IA</button>
+              </div>
               <div style="display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin-top:10px;">
                 <div><label style="display:block;font-size:11px;color:var(--muted);">Altura (px)</label><input id="edit-ph" type="number" min="8" max="400" value="46" class="model-select" style="width:80px;"></div>
                 <div><label style="display:block;font-size:11px;color:var(--muted);">Ancho (tiles)</label><input id="edit-fpw" type="number" min="1" max="6" value="1" class="model-select" style="width:70px;"></div>
@@ -2461,6 +2466,40 @@
           editStatus('✅ Guardado'+(patch.img?' (imagen + ':' (')+'altura '+ph+' · footprint '+fp[0]+'×'+fp[1]+'). Actualizado en paleta/plano/gemelo.','#7ee0a0');
         }catch(e){ editStatus('❌ '+e.message,'#e06a6a'); }
       }
+      // Quita el fondo (flood-fill desde las 4 esquinas, color ~uniforme → alfa 0).
+      // La IA suele devolver fondo opaco; esto deja el mueble recortado.
+      function removeBgFlood(canvas,tol){
+        const w=canvas.width,h=canvas.height,g=canvas.getContext('2d'); let im;
+        try{ im=g.getImageData(0,0,w,h); }catch(e){ return false; }
+        const d=im.data; const corners=[0,(w-1)*4,(h-1)*w*4,((h*w)-1)*4];
+        let br=0,bg=0,bb=0,n=0; corners.forEach(i=>{ if(d[i+3]>0){ br+=d[i];bg+=d[i+1];bb+=d[i+2];n++; } });
+        if(!n) return false; br/=n;bg/=n;bb/=n;
+        const T=tol||42, seen=new Uint8Array(w*h), stack=[];
+        const push=(x,y)=>{ if(x<0||y<0||x>=w||y>=h) return; const id=y*w+x; if(seen[id]) return; seen[id]=1; const i=id*4; if(Math.abs(d[i]-br)<=T&&Math.abs(d[i+1]-bg)<=T&&Math.abs(d[i+2]-bb)<=T){ d[i+3]=0; stack.push(x,y); } };
+        push(0,0);push(w-1,0);push(0,h-1);push(w-1,h-1);
+        while(stack.length){ const y=stack.pop(),x=stack.pop(); push(x+1,y);push(x-1,y);push(x,y+1);push(x,y-1); }
+        g.putImageData(im,0,0); return true;
+      }
+      async function aiEdit(){
+        if(!EDIT.item||!EDIT.sc.width){ editStatus('Abre un mueble primero.','#e0a14a'); return; }
+        if(EDIT.tainted){ editStatus('Imagen sin acceso a píxeles (CORS): no puedo enviarla a la IA.','#e0a14a'); return; }
+        const prompt=($('edit-ai-prompt').value||'').trim(); if(!prompt){ editStatus('Escribe qué cambiar (ej. «la moto ahora rosa»).','#e0a14a'); return; }
+        let dataUrl; try{ dataUrl=EDIT.sc.toDataURL('image/png'); }catch(e){ editStatus('No puedo leer la imagen (CORS).','#e0a14a'); return; }
+        const btn=$('edit-ai-go'); if(btn) btn.disabled=true;
+        editStatus('✨ IA pintando «'+prompt+'»… (~10-20s)');
+        try{
+          const r=await fetch(dBase()+'/image/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ image:dataUrl, prompt })});
+          const d=await r.json(); if(!r.ok||!d.ok||!d.image) throw new Error(d.error||d.detail||('HTTP '+r.status));
+          await new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>{
+            const MAX=256; let w=im.naturalWidth||64,h=im.naturalHeight||64; const s=Math.min(1,MAX/Math.max(w,h)); w=Math.max(1,Math.round(w*s)); h=Math.max(1,Math.round(h*s));
+            EDIT.sc.width=w; EDIT.sc.height=h; const g=EDIT.sc.getContext('2d'); g.clearRect(0,0,w,h); g.imageSmoothingEnabled=true; g.drawImage(im,0,0,w,h); EDIT.tainted=false;
+            try{ removeBgFlood(EDIT.sc); }catch(_){}   // quita el fondo opaco que mete la IA
+            editFitZoom(); renderEdit(); res();
+          }; im.onerror=()=>rej(new Error('no se pudo cargar la imagen IA')); im.src=d.image; });
+          editStatus('✨ IA aplicada (fondo recortado). Retoca y pulsa Guardar.','#7ee0a0');
+        }catch(e){ editStatus('❌ IA: '+e.message,'#e06a6a'); }
+        finally{ if(btn) btn.disabled=false; }
+      }
       function initEdit(){
         document.querySelectorAll('.edit-tool').forEach(b=>b.addEventListener('click',()=>{ EDIT.tool=b.dataset.tool; document.querySelectorAll('.edit-tool').forEach(x=>x.style.background=''); b.style.background='rgba(0,200,255,.18)'; }));
         const cv=$('edit-canvas');
@@ -2469,6 +2508,8 @@
         const zo=$('edit-zoom-out'); if(zo) zo.onclick=()=>{ EDIT.zoom=Math.max(1,EDIT.zoom-1); renderEdit(); };
         const tr=$('edit-trim'); if(tr) tr.onclick=trimEdit;
         const sv=$('edit-save'); if(sv) sv.onclick=saveEdit;
+        const ai=$('edit-ai-go'); if(ai) ai.onclick=aiEdit;
+        const aip=$('edit-ai-prompt'); if(aip) aip.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); aiEdit(); } });
       }
       function init(){
         if(!$('distro-grid')) return;
