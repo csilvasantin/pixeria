@@ -381,6 +381,7 @@
           </div>
           <div style="display:flex;gap:12px;align-items:center;">
             <button type="button" class="assets-tab" id="tab-creacion">Creación</button>
+            <button type="button" class="assets-tab" id="tab-edicion">Edición</button>
             <button type="button" class="assets-tab" id="tab-distribucion">Redistribución</button>
             <button type="button" class="assets-tab" id="tab-marketplace">Marketplace</button>
             <span id="user-badge" class="user"></span>
@@ -556,6 +557,41 @@
           </div>
           <div id="distro-lib" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;">
             <div style="grid-column:1/-1;color:var(--muted);font-size:12px;text-align:center;padding:10px;">Pulsa «Refrescar» para cargar la librería compartida.</div>
+          </div>
+        </div>
+
+        <!-- EDICIÓN — editor pixel-art de los muebles (Mis muebles): pintar + proporción/recorte -->
+        <div class="studio-panel xpace-focus" id="edit-panel" data-view="edicion" style="display:none;margin-top:0;">
+          <h4>🎨 Edición de muebles · pixel art</h4>
+          <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Retoca tus muebles: pinta píxel a píxel, <b>recorta el margen transparente</b> (arregla el efecto «flotando») y ajusta <b>altura</b> y <b>footprint</b> (tamaño en la sala). Guarda y se actualiza en la paleta, el plano y el gemelo.</p>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
+            <div style="flex:0 0 190px;">
+              <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Mis muebles</label>
+              <div id="edit-list" style="display:flex;flex-direction:column;gap:6px;max-height:460px;overflow:auto;"></div>
+            </div>
+            <div style="flex:1;min-width:340px;">
+              <div id="edit-toolbar" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+                <button type="button" class="button secondary edit-tool" data-tool="paint" style="font-size:12px;padding:5px 10px;">✏️ Pincel</button>
+                <button type="button" class="button secondary edit-tool" data-tool="erase" style="font-size:12px;padding:5px 10px;">🩹 Borrar</button>
+                <button type="button" class="button secondary edit-tool" data-tool="pick" style="font-size:12px;padding:5px 10px;">💧 Cuentagotas</button>
+                <input type="color" id="edit-color" value="#39d0ff" style="width:36px;height:30px;padding:2px;background:#0b1117;border:1px solid #28323a;border-radius:6px;">
+                <span style="width:1px;height:24px;background:#28323a;"></span>
+                <button type="button" class="button secondary" id="edit-zoom-out" style="font-size:12px;padding:5px 9px;">➖</button>
+                <span id="edit-zoom-lbl" style="font-size:11px;color:var(--muted);">×8</span>
+                <button type="button" class="button secondary" id="edit-zoom-in" style="font-size:12px;padding:5px 9px;">➕</button>
+                <button type="button" class="button secondary" id="edit-trim" style="font-size:12px;padding:5px 10px;" title="Recorta el margen transparente alrededor del dibujo (arregla el flotando)">✂️ Recortar transparencia</button>
+              </div>
+              <div style="overflow:auto;background:repeating-conic-gradient(#11161c 0% 25%, #0b0f14 0% 50%) 50% / 16px 16px;border:1px solid #28323a;border-radius:8px;padding:8px;max-height:52vh;">
+                <canvas id="edit-canvas" style="image-rendering:pixelated;display:block;cursor:crosshair;"></canvas>
+              </div>
+              <div style="display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin-top:10px;">
+                <div><label style="display:block;font-size:11px;color:var(--muted);">Altura (px)</label><input id="edit-ph" type="number" min="8" max="400" value="46" class="model-select" style="width:80px;"></div>
+                <div><label style="display:block;font-size:11px;color:var(--muted);">Ancho (tiles)</label><input id="edit-fpw" type="number" min="1" max="6" value="1" class="model-select" style="width:70px;"></div>
+                <div><label style="display:block;font-size:11px;color:var(--muted);">Fondo (tiles)</label><input id="edit-fpd" type="number" min="1" max="6" value="1" class="model-select" style="width:70px;"></div>
+                <button type="button" class="button primary" id="edit-save" style="height:34px;">💾 Guardar cambios</button>
+              </div>
+              <div id="edit-status" style="font-size:12px;color:var(--muted);margin-top:8px;min-height:16px;">Elige un mueble de «Mis muebles» para editarlo.</div>
+            </div>
           </div>
         </div>
 
@@ -1901,11 +1937,13 @@
       function setView(name){
         currentView=name;
         document.querySelectorAll('[data-view]').forEach(el=>{ el.style.display=(el.getAttribute('data-view')===name)?'':'none'; });
-        const tc=$('tab-creacion'), td=$('tab-distribucion'), tm=$('tab-marketplace');
+        const tc=$('tab-creacion'), te=$('tab-edicion'), td=$('tab-distribucion'), tm=$('tab-marketplace');
         if(tc) tc.classList.toggle('active',name==='creacion');
+        if(te) te.classList.toggle('active',name==='edicion');
         if(td) td.classList.toggle('active',name==='distribucion');
         if(tm) tm.classList.toggle('active',name==='marketplace');
         if(name==='marketplace') loadMarket();
+        if(name==='edicion'){ loadWallet().then(loadEditList); }
         if(name==='distribucion'){ renderPalette(); renderGrid(); loadWallet().then(()=>renderPalette()); }
       }
 
@@ -1926,7 +1964,7 @@
           owned.forEach(o=>{
             const active=(st.sel==='custom'&&st.selFurni&&st.selFurni.url===o.url);
             const b=document.createElement('button'); b.type='button'; b.title=o.title||'mueble comprado';
-            b.innerHTML='<span style="display:inline-block;width:15px;height:15px;vertical-align:middle;margin-right:3px;'+window.furniFrameStyle(o.url,o.frames||1,0)+'"></span>'+String(o.title||'mueble').slice(0,12)+((o.frames>1)?' 🔄':'');
+            b.innerHTML='<span style="display:inline-block;width:15px;height:15px;vertical-align:middle;margin-right:3px;'+window.furniFrameStyle(o.img||o.url,o.frames||1,0)+'"></span>'+String(o.title||'mueble').slice(0,12)+((o.frames>1)?' 🔄':'');
             b.style.cssText='font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer;border:1px solid '+(active?'var(--cyan)':'#3a5a3a')+';background:'+(active?'rgba(0,200,255,.12)':'rgba(20,40,25,.4)')+';color:#cfe;';
             b.onclick=()=>{ st.sel='custom'; st.selFurni=o; renderPalette(); };
             p.appendChild(b);
@@ -1951,7 +1989,7 @@
       }
       function placeAt(col,row){
         let item;
-        if(st.sel==='custom'&&st.selFurni){ item={ id:'custom-'+(st._n++), type:'custom', col, row, sx:1, sy:1, rot:0, label:st.selFurni.title||'mueble', img:st.selFurni.url, fp:st.selFurni.fp||[1,1], ph:st.selFurni.ph||46, frames:st.selFurni.frames||1, orientation:0, custom:true }; }
+        if(st.sel==='custom'&&st.selFurni){ item={ id:'custom-'+(st._n++), type:'custom', col, row, sx:1, sy:1, rot:0, label:st.selFurni.title||'mueble', img:(st.selFurni.img||st.selFurni.url), fp:st.selFurni.fp||[1,1], ph:st.selFurni.ph||46, frames:st.selFurni.frames||1, orientation:0, custom:true }; }
         else if(st.sel){ item={ id:st.sel+'-'+(st._n++), type:st.sel, col, row, sx:1, sy:1, rot:0, label:(FMAP[st.sel]&&FMAP[st.sel].label)||st.sel }; }
         else { status('Elige una pieza de la paleta para colocar.','#e0a14a'); return; }
         const fp=fpFor(item);
@@ -2342,6 +2380,96 @@
         return { init, selected, selectScope, selectCircuit, selectLocation, syncFromClient };
       })();
 
+      // ── EDICIÓN · editor pixel-art de Mis muebles ─────────────────────────
+      const EDIT={ item:null, sc:document.createElement('canvas'), zoom:8, tool:'paint', drawing:false, tainted:false };
+      function editStatus(m,c){ const e=$('edit-status'); if(e){ e.textContent=m||''; e.style.color=c||'var(--muted)'; } }
+      function loadEditList(){
+        const box=$('edit-list'); if(!box) return;
+        const owned=ownedFurni();
+        if(!owned.length){ box.innerHTML='<div style="font-size:12px;color:var(--muted);">No tienes muebles propios todavía. Crea en «Creación» o compra en «Marketplace».</div>'; return; }
+        box.innerHTML='';
+        owned.forEach(o=>{
+          const b=document.createElement('button'); b.type='button';
+          b.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 7px;border:1px solid '+((EDIT.item&&EDIT.item.url===o.url)?'var(--cyan)':'#28323a')+';background:#0b1117;border-radius:6px;cursor:pointer;color:#cfe;text-align:left;';
+          b.innerHTML='<span style="width:26px;height:26px;flex:none;border-radius:4px;background-color:#0a0f14;'+window.furniFrameStyle(o.img||o.url,o.frames||1,0)+'"></span><span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+String(o.title||'mueble').slice(0,18)+'</span>';
+          b.onclick=()=>openEdit(o);
+          box.appendChild(b);
+        });
+      }
+      function editFitZoom(){ const maxPx=420, m=Math.max(EDIT.sc.width||1,EDIT.sc.height||1); EDIT.zoom=Math.max(1,Math.min(20,Math.floor(maxPx/m)||8)); }
+      function openEdit(o){
+        EDIT.item=o; loadEditList();
+        $('edit-ph').value=o.ph||46; const fp=Array.isArray(o.fp)?o.fp:[1,1]; $('edit-fpw').value=fp[0]||1; $('edit-fpd').value=fp[1]||1;
+        editStatus('⏳ cargando imagen…');
+        const img=new Image(); img.crossOrigin='anonymous';
+        img.onload=()=>{
+          const w=img.naturalWidth||64, h=img.naturalHeight||64;
+          EDIT.sc.width=w; EDIT.sc.height=h;
+          const g=EDIT.sc.getContext('2d'); g.clearRect(0,0,w,h); g.imageSmoothingEnabled=false; g.drawImage(img,0,0);
+          try{ g.getImageData(0,0,1,1); EDIT.tainted=false; }catch(e){ EDIT.tainted=true; }
+          editFitZoom(); renderEdit();
+          editStatus(EDIT.tainted?'⚠ Sin permiso de píxeles (CORS): puedes ajustar altura/footprint, pero no pintar/recortar esta imagen.':('Editando «'+(o.title||'mueble')+'» · '+w+'×'+h+' px'), EDIT.tainted?'#e0a14a':'#7ee0a0');
+        };
+        img.onerror=()=>editStatus('❌ no se pudo cargar la imagen','#e06a6a');
+        img.src=o.img||o.url;
+      }
+      function renderEdit(){
+        const cv=$('edit-canvas'); if(!cv||!EDIT.sc.width) return;
+        const z=EDIT.zoom; cv.width=EDIT.sc.width*z; cv.height=EDIT.sc.height*z;
+        const x=cv.getContext('2d'); x.imageSmoothingEnabled=false; x.clearRect(0,0,cv.width,cv.height);
+        x.drawImage(EDIT.sc,0,0,cv.width,cv.height);
+        x.strokeStyle='rgba(120,180,200,.14)'; x.lineWidth=1;
+        for(let i=0;i<=EDIT.sc.width;i++){ x.beginPath(); x.moveTo(i*z+.5,0); x.lineTo(i*z+.5,cv.height); x.stroke(); }
+        for(let j=0;j<=EDIT.sc.height;j++){ x.beginPath(); x.moveTo(0,j*z+.5); x.lineTo(cv.width,j*z+.5); x.stroke(); }
+        const zl=$('edit-zoom-lbl'); if(zl) zl.textContent='×'+z;
+      }
+      function editPixelAt(ev){
+        const cv=$('edit-canvas'); if(!cv||!EDIT.sc.width) return; const r=cv.getBoundingClientRect();
+        const px=Math.floor((ev.clientX-r.left)/EDIT.zoom), py=Math.floor((ev.clientY-r.top)/EDIT.zoom);
+        if(px<0||py<0||px>=EDIT.sc.width||py>=EDIT.sc.height) return;
+        if(EDIT.tainted){ editStatus('No puedo pintar esta imagen (CORS).','#e0a14a'); return; }
+        const g=EDIT.sc.getContext('2d');
+        if(EDIT.tool==='pick'){ try{ const d=g.getImageData(px,py,1,1).data; if(d[3]>0) $('edit-color').value='#'+[d[0],d[1],d[2]].map(n=>n.toString(16).padStart(2,'0')).join(''); }catch(e){} return; }
+        if(EDIT.tool==='erase'){ g.clearRect(px,py,1,1); }
+        else { g.fillStyle=$('edit-color').value; g.fillRect(px,py,1,1); }
+        renderEdit();
+      }
+      function trimEdit(){
+        if(EDIT.tainted||!EDIT.sc.width){ editStatus('No puedo recortar (sin acceso a píxeles).','#e0a14a'); return; }
+        const w=EDIT.sc.width,h=EDIT.sc.height,g=EDIT.sc.getContext('2d');
+        let data; try{ data=g.getImageData(0,0,w,h).data; }catch(e){ editStatus('No puedo recortar (CORS).','#e0a14a'); return; }
+        let minx=w,miny=h,maxx=-1,maxy=-1;
+        for(let y=0;y<h;y++)for(let x2=0;x2<w;x2++){ if(data[(y*w+x2)*4+3]>8){ if(x2<minx)minx=x2; if(x2>maxx)maxx=x2; if(y<miny)miny=y; if(y>maxy)maxy=y; } }
+        if(maxx<0){ editStatus('La imagen está vacía.','#e0a14a'); return; }
+        const nw=maxx-minx+1, nh=maxy-miny+1, tmp=document.createElement('canvas'); tmp.width=nw; tmp.height=nh;
+        tmp.getContext('2d').drawImage(EDIT.sc,minx,miny,nw,nh,0,0,nw,nh);
+        EDIT.sc.width=nw; EDIT.sc.height=nh; EDIT.sc.getContext('2d').drawImage(tmp,0,0);
+        editFitZoom(); renderEdit(); editStatus('✂️ Recortado a '+nw+'×'+nh+' px (ya no flotará). Pulsa Guardar.','#7ee0a0');
+      }
+      async function saveEdit(){
+        if(!EDIT.item){ editStatus('Elige un mueble primero.','#e0a14a'); return; }
+        let dataUrl=null; if(!EDIT.tainted){ try{ dataUrl=EDIT.sc.toDataURL('image/png'); }catch(e){ dataUrl=null; } }
+        const ph=Math.max(8,Math.min(400,+$('edit-ph').value||46));
+        const fp=[Math.max(1,Math.min(6,+$('edit-fpw').value||1)), Math.max(1,Math.min(6,+$('edit-fpd').value||1))];
+        editStatus('⏳ guardando…');
+        try{
+          const patch={ ph, fp }; if(dataUrl && dataUrl.length<700000) patch.img=dataUrl;
+          const r=await fetch(dBase()+'/xpacio/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ id:xpacioId(), url:EDIT.item.url, patch })});
+          const d=await r.json(); if(!r.ok||!d.ok) throw new Error(d.error||('HTTP '+r.status));
+          wallet=d.wallet||wallet; EDIT.item=ownedFurni().find(o=>o.url===EDIT.item.url)||EDIT.item;
+          loadEditList(); try{ renderPalette(); }catch(_){}
+          editStatus('✅ Guardado'+(patch.img?' (imagen + ':' (')+'altura '+ph+' · footprint '+fp[0]+'×'+fp[1]+'). Actualizado en paleta/plano/gemelo.','#7ee0a0');
+        }catch(e){ editStatus('❌ '+e.message,'#e06a6a'); }
+      }
+      function initEdit(){
+        document.querySelectorAll('.edit-tool').forEach(b=>b.addEventListener('click',()=>{ EDIT.tool=b.dataset.tool; document.querySelectorAll('.edit-tool').forEach(x=>x.style.background=''); b.style.background='rgba(0,200,255,.18)'; }));
+        const cv=$('edit-canvas');
+        if(cv){ cv.addEventListener('mousedown',e=>{ EDIT.drawing=true; editPixelAt(e); }); cv.addEventListener('mousemove',e=>{ if(EDIT.drawing&&EDIT.tool!=='pick') editPixelAt(e); }); window.addEventListener('mouseup',()=>{ EDIT.drawing=false; }); }
+        const zi=$('edit-zoom-in'); if(zi) zi.onclick=()=>{ EDIT.zoom=Math.min(24,EDIT.zoom+1); renderEdit(); };
+        const zo=$('edit-zoom-out'); if(zo) zo.onclick=()=>{ EDIT.zoom=Math.max(1,EDIT.zoom-1); renderEdit(); };
+        const tr=$('edit-trim'); if(tr) tr.onclick=trimEdit;
+        const sv=$('edit-save'); if(sv) sv.onclick=saveEdit;
+      }
       function init(){
         if(!$('distro-grid')) return;
         renderPalette(); renderGrid();
@@ -2357,8 +2485,10 @@
         wire('distro-refresh',loadLib);
         // Submenús: Distribución / Marketplace (clic en el activo → vuelve a Creación)
         wire('tab-creacion',()=>setView('creacion'));
+        wire('tab-edicion',()=>setView('edicion'));
         wire('tab-distribucion',()=>setView('distribucion'));
         wire('tab-marketplace',()=>setView('marketplace'));
+        initEdit();
         wire('market-recargar',recargarCreditos);
         wire('market-reprocesar',async()=>{
           const st=$('market-reproc-status'); const set=m=>{ if(st) st.textContent=m; };
