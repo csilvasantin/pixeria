@@ -119,6 +119,11 @@
     .pl-saved-row .pl-meta{ color:var(--muted); font-size:11px; }
     .pl-mini{ border:1px solid var(--line-bright); background:transparent; color:var(--matrix); border-radius:6px; padding:5px 9px; font-size:11px; cursor:pointer; font-family:inherit; }
     .pl-mini.danger{ color:#ff8866; border-color:#7a3a2a; }
+    .pl-smart-note{ font-size:11px; color:#c8b4ff; background:rgba(170,136,255,.10); border:1px solid #aa88ff; border-radius:6px; padding:6px 9px; }
+    .pl-smart-note b{ color:#fff; }
+    .pl-smart-clear{ border:1px solid var(--line-bright); background:transparent; color:var(--muted); border-radius:5px; padding:2px 7px; font-size:10px; cursor:pointer; font-family:inherit; margin-left:4px; }
+    .pl-smart-clear:hover{ border-color:#ff8866; color:#ff8866; }
+    .pl-smart-badge{ color:#c8b4ff; border:1px solid #aa88ff; background:rgba(170,136,255,.12); border-radius:999px; padding:1px 6px; font-size:10px; }
     .dist-source{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
     .dist-source select{ flex:1; background:var(--bg); border:1px solid var(--line-bright); color:var(--matrix); border-radius:6px; padding:6px 8px; font-family:inherit; font-size:12px; }
 
@@ -405,6 +410,7 @@
         <div class="pl-row">
           <div class="pl-field" style="grid-column:1/-1;"><label>Nombre de la playlist</label><input id="plName" class="model-select" placeholder="Ej: Spot estanco mañana" style="width:100%;background:var(--bg);border:1px solid var(--line-bright);color:var(--matrix);border-radius:6px;padding:7px 9px;font-family:inherit;"></div>
         </div>
+        <div id="plSmartNote" class="pl-smart-note" hidden></div>
 
         <div>
           <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;">Elementos a añadir — elige tipo:</label>
@@ -754,7 +760,7 @@
       const plBtn = banner.querySelector('.stock-tag-playlist');
       if (plBtn) plBtn.addEventListener('click', () => {
         if (!matching.length) { alert('No hay assets con #' + filters.tag); return; }
-        if (window.PL) PL.open(matching, { name: filters.tag });
+        if (window.PL) PL.open(matching, { name: filters.tag, tag: filters.tag });
       });
     }
     // "animation" es un tipo virtual: ainimation.studio publica como type=video
@@ -1679,7 +1685,7 @@
       const SRC = 'https://admira.app/circuits.json';
       const $ = id => document.getElementById(id);
       let playlists = [];
-      let draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '' };
+      let draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '', criterionTag: '' };
       let circuits = [], scopes = null;
       const lang = () => ((document.documentElement.lang || 'es').slice(0, 2) === 'en') ? 'en' : 'es';
       const clabel = c => (c.label && (c.label[lang()] || c.label.es || c.label.en)) || c.id;
@@ -1724,19 +1730,45 @@
       function renderSaved() {
         const box = $('plSaved'); if (!box) return;
         if (!playlists.length) { box.innerHTML = ''; return; }
-        box.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;">Tus playlists:</div>' + playlists.map(p =>
-          '<div class="pl-saved-row" data-id="' + escAttr(p.id) + '"><span class="pl-nm">🎵 ' + escAttr(p.name || 'playlist') + '</span><span class="pl-meta">' + (p.items || []).length + ' items' + (p.circuit ? ' · ' + escAttr((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '') + '</span>'
-          + '<button type="button" class="pl-mini" data-act="edit">editar</button><button type="button" class="pl-mini" data-act="dist">📡 distribuir</button><button type="button" class="pl-mini danger" data-act="del">✕</button></div>').join('');
+        box.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;">Tus playlists:</div>' + playlists.map(p => {
+          const live = p.criterionTag ? liveItemsForTag(p.criterionTag).length : (p.items || []).length;
+          const smart = p.criterionTag ? '<span class="pl-smart-badge" title="Playlist inteligente: se actualiza sola con #' + escAttr(p.criterionTag) + '">🏷️ #' + escAttr(p.criterionTag) + '</span> ' : '';
+          return '<div class="pl-saved-row" data-id="' + escAttr(p.id) + '"><span class="pl-nm">🎵 ' + escAttr(p.name || 'playlist') + '</span><span class="pl-meta">' + smart + live + ' items' + (p.criterionTag ? ' · auto' : '') + (p.circuit ? ' · ' + escAttr((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '') + '</span>'
+          + '<button type="button" class="pl-mini" data-act="edit">editar</button><button type="button" class="pl-mini" data-act="dist">📡 distribuir</button><button type="button" class="pl-mini danger" data-act="del">✕</button></div>';
+        }).join('');
       }
 
       function addItem(it) { if (it && !draft.items.some(x => x.id === it.id)) { draft.items.push({ id: it.id, type: displayType(it), url: it.url, title: it.title || it.prompt || it.id, mime: it.mime || null }); renderItems(); renderPick(); } }
       function removeItem(id) { draft.items = draft.items.filter(x => x.id !== id); renderItems(); renderPick(); }
 
+      // Assets vivos que llevan una etiqueta (para playlists inteligentes). Se
+      // recalcula desde allItems → recoge lo recién publicado con ese tag.
+      function liveItemsForTag(tag) {
+        const tl = String(tag || '').toLowerCase();
+        if (!tl) return [];
+        return (typeof allItems !== 'undefined' ? allItems : [])
+          .filter(it => Array.isArray(it.tags) && it.tags.some(t => String(t).toLowerCase() === tl))
+          .map(it => ({ id: it.id, type: displayType(it), url: it.url, title: it.title || it.prompt || it.id, mime: it.mime || null }));
+      }
+      // Aviso "playlist inteligente" en el builder + botón para convertirla en fija.
+      function renderSmartNote() {
+        const box = $('plSmartNote'); if (!box) return;
+        if (!draft.criterionTag) { box.hidden = true; box.innerHTML = ''; return; }
+        box.hidden = false;
+        const safe = String(draft.criterionTag).replace(/</g, '&lt;');
+        box.innerHTML = '🏷️ <b>Playlist inteligente</b> — se actualiza sola con <b>#' + safe + '</b> (' + draft.items.length + ' assets ahora). '
+          + '<button type="button" class="pl-smart-clear" title="Convertir en lista fija (deja de auto-actualizarse)">hacer fija ✕</button>';
+        const clr = box.querySelector('.pl-smart-clear');
+        if (clr) clr.addEventListener('click', () => { draft.criterionTag = ''; renderSmartNote(); });
+      }
+
       function currentCircuitObj() { const c = byId(draft.circuitId); if (!c) return null; const loc = draft.locId && (c.points || []).find(p => p.id === draft.locId); return { circuit: { id: c.id, client: c.client, scope: c.scope, label: c.label, screens: c.screens || [] }, location: loc ? { id: loc.id, name: loc.name, addr: loc.addr } : null }; }
       function persistDraft() {
+        // Inteligente: refresca los items desde la etiqueta antes de guardar.
+        if (draft.criterionTag) draft.items = liveItemsForTag(draft.criterionTag);
         if (!draft.items.length) { status.textContent = '// la playlist no tiene elementos'; return null; }
         const cc = currentCircuitObj();
-        const p = { id: draft.id || ('pl-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)), name: (draft.name || $('plName').value || 'Playlist').trim().slice(0, 60), items: draft.items.slice(), circuit: cc ? cc.circuit : null, location: cc ? cc.location : null, updatedAt: Date.now() };
+        const p = { id: draft.id || ('pl-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)), name: (draft.name || $('plName').value || 'Playlist').trim().slice(0, 60), items: draft.items.slice(), criterionTag: draft.criterionTag || null, circuit: cc ? cc.circuit : null, location: cc ? cc.location : null, updatedAt: Date.now() };
         const i = playlists.findIndex(x => x.id === p.id);
         if (i >= 0) playlists[i] = p; else playlists.unshift(p);
         save(); renderSaved();
@@ -1745,20 +1777,28 @@
 
       function open(seedItems, opts) {
         load();
-        draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '' };
+        draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '', criterionTag: '' };
+        // Criterio de etiqueta → playlist INTELIGENTE (se auto-actualiza). Si viene
+        // un tag, los items se derivan en vivo de él (ignora seedItems sueltos).
+        if (opts && opts.tag) { draft.criterionTag = String(opts.tag); seedItems = liveItemsForTag(draft.criterionTag); }
         if (seedItems && seedItems.length) seedItems.forEach(it => { if (!draft.items.some(x => x.id === it.id)) draft.items.push({ id: it.id, type: displayType(it), url: it.url, title: it.title || it.prompt || it.id, mime: it.mime || null }); });
         $('plName').value = '';
         // Nombre sugerido (p.ej. al crear la playlist desde un filtro de etiqueta).
         if (opts && opts.name) { draft.name = String(opts.name); $('plName').value = draft.name; }
-        renderSaved(); renderItems(); pickType = ''; document.querySelectorAll('.pl-type').forEach(b => b.classList.toggle('active', b.dataset.t === '')); renderPick();
+        renderSaved(); renderItems(); renderSmartNote(); pickType = ''; document.querySelectorAll('.pl-type').forEach(b => b.classList.toggle('active', b.dataset.t === '')); renderPick();
         const dlg = $('plModal'); if (dlg && !dlg.open) dlg.showModal();
         loadCircuits().then(() => { fillScopes(); fillCircuits(); fillLocations(); renderCircuitInfo(); });
       }
-      function editPlaylist(id) { const p = get(id); if (!p) return; draft = { id: p.id, name: p.name, items: (p.items || []).slice(), scope: (p.circuit && p.circuit.scope) || '', circuitId: (p.circuit && p.circuit.id) || '', locId: (p.location && p.location.id) || '' }; $('plName').value = p.name || ''; renderItems(); renderPick(); fillScopes(); fillCircuits(); fillLocations(); renderCircuitInfo(); }
+      function editPlaylist(id) { const p = get(id); if (!p) return; draft = { id: p.id, name: p.name, items: (p.items || []).slice(), scope: (p.circuit && p.circuit.scope) || '', circuitId: (p.circuit && p.circuit.id) || '', locId: (p.location && p.location.id) || '', criterionTag: p.criterionTag || '' }; if (draft.criterionTag) draft.items = liveItemsForTag(draft.criterionTag); $('plName').value = p.name || ''; renderItems(); renderSmartNote(); renderPick(); fillScopes(); fillCircuits(); fillLocations(); renderCircuitInfo(); }
       function distributePlaylist(id) {
         const p = get(id); if (!p) return;
+        // Inteligente: recoge los assets actuales con la etiqueta (incluye lo
+        // recién publicado) y guarda el refresco antes de distribuir.
+        if (p.criterionTag) { p.items = liveItemsForTag(p.criterionTag); p.updatedAt = Date.now(); save(); renderSaved(); }
+        const items = (p.items || []).slice();
+        if (!items.length) { status.textContent = '// la playlist «' + (p.name || '') + '» no tiene assets' + (p.criterionTag ? ' con #' + p.criterionTag : ''); return; }
         const dlg = $('plModal'); if (dlg && dlg.open) dlg.close();
-        DIST.open((p.items || []).slice(), { label: '🎵 ' + (p.name || 'playlist') + ' · ' + (p.items || []).length + ' items' + (p.location ? ' → ' + p.location.name : (p.circuit ? ' → ' + ((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '')), targetScreens: resolveScreens(p) });
+        DIST.open(items, { label: '🎵 ' + (p.name || 'playlist') + ' · ' + items.length + ' items' + (p.location ? ' → ' + p.location.name : (p.circuit ? ' → ' + ((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '')), targetScreens: resolveScreens(p) });
       }
 
       function init() {
