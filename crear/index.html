@@ -1637,8 +1637,17 @@
         if (rot4) {
           // 2 vistas IA (frente ¾ + espalda ¾) → 4 caras con espejo horizontal.
           const front = await furniGenOneFacing(prompt, 'front three-quarter view facing right');
+          // Progresivo: muestra ya la cara 1 (publicable como sprite simple) sin
+          // esperar a las 4. Si la espalda falla, al menos queda el frente.
+          furniAsset = { base64: front.dataUrl.split(',')[1], mime: 'image/png', frames: 1 };
+          furniAutoFootprint(front.w, front.h);
+          furniMaybeAutoTitle(prompt);
+          furniSetPreview(front.dataUrl, 'IA · cara 1/4 lista · generando el resto…', 1);
+          furniSetStatus('Cara 1/4 lista. Generando la espalda…');
           furniProgressPhase('🎨 CARA 2/2 · ESPALDA');
-          const back = await furniGenOneFacing(prompt, 'rear three-quarter view facing right');
+          // Misma pieza, rotada: insistimos en idéntico objeto/colores/materiales
+          // para que el "giro" no salga otra pieza distinta (limitación: sin img2img).
+          const back = await furniGenOneFacing(prompt, 'the exact SAME object, identical model, identical colors and materials, seen from the BACK — rear three-quarter view facing right, consistent design');
           furniProgressPhase('✂️ MONTANDO 4 CARAS');
           const frontL = await furniFlipH(front.dataUrl);
           const backL = await furniFlipH(back.dataUrl);
@@ -1646,7 +1655,6 @@
           const sheet = await furniComposeSheet([front.dataUrl, frontL, backL, back.dataUrl]);
           furniAsset = { base64: sheet.dataUrl.split(',')[1], mime: 'image/png', frames: sheet.frames, frameW: sheet.frameW };
           furniAutoFootprint(sheet.frameW, sheet.frameH);
-          furniMaybeAutoTitle(prompt);
           furniSetPreview(sheet.dataUrl, 'IA · 4 caras girable · ' + sheet.frameW + '×' + sheet.frameH + '/cara', sheet.frames);
           furniSetStatus('✅ Mueble girable (4 caras) listo. Pulsa ↻ para verlo girar y publica.');
         } else {
