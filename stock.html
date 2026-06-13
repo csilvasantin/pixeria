@@ -124,6 +124,24 @@
     .pl-smart-clear{ border:1px solid var(--line-bright); background:transparent; color:var(--muted); border-radius:5px; padding:2px 7px; font-size:10px; cursor:pointer; font-family:inherit; margin-left:4px; }
     .pl-smart-clear:hover{ border-color:#ff8866; color:#ff8866; }
     .pl-smart-badge{ color:#c8b4ff; border:1px solid #aa88ff; background:rgba(170,136,255,.12); border-radius:999px; padding:1px 6px; font-size:10px; }
+    /* Banner multi-etiqueta */
+    .stock-tagf-wrap{ flex:1; display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+    .stock-tagf{ border:1px solid #aa88ff; background:rgba(170,136,255,.18); color:#fff; border-radius:999px; padding:2px 8px; font-size:11px; cursor:pointer; font-family:inherit; }
+    .stock-tagf:hover{ background:rgba(255,136,102,.25); border-color:#ff8866; }
+    .stock-tagf-join{ color:var(--muted); font-size:10px; }
+    .stock-tagmode{ border:1px solid var(--line-bright); background:transparent; color:var(--matrix); border-radius:5px; padding:2px 8px; font-size:10px; cursor:pointer; font-family:inherit; }
+    .stock-tagmode:hover{ border-color:var(--matrix); }
+    /* Gestor de etiquetas */
+    .tm-suggest{ margin-bottom:8px; }
+    .tm-sub{ font-size:11px; color:var(--muted); margin:4px 0; }
+    .tm-clu{ display:flex; align-items:center; gap:10px; padding:6px 8px; border:1px solid #aa88ff; background:rgba(170,136,255,.08); border-radius:6px; font-size:11px; margin-bottom:4px; }
+    .tm-clu-info{ flex:1; color:#c8b4ff; }
+    .tm-clu-info b{ color:#fff; }
+    .tm-list{ max-height:46vh; overflow:auto; display:flex; flex-direction:column; gap:4px; }
+    .tm-row{ display:flex; align-items:center; gap:8px; padding:5px 8px; border:1px solid var(--line); border-radius:6px; font-size:12px; }
+    .tm-name{ flex:1; text-align:left; border:none; background:transparent; color:var(--matrix); font-family:inherit; font-size:12px; cursor:pointer; padding:0; }
+    .tm-name:hover{ text-decoration:underline; }
+    .tm-count{ color:var(--muted); font-size:11px; min-width:24px; text-align:right; }
     .dist-source{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
     .dist-source select{ flex:1; background:var(--bg); border:1px solid var(--line-bright); color:var(--matrix); border-radius:6px; padding:6px 8px; font-family:inherit; font-size:12px; }
 
@@ -235,6 +253,7 @@
             <option value="animation">Animaciones</option>
             <option value="furni">Mobiliario</option>
           </select>
+          <button type="button" class="stock-pager-btn" id="tagMgrBtn" title="Gestor de etiquetas: renombrar, fusionar variaciones y borrar en todo el Stock">🏷️ Etiquetas</button>
         </div>
         <div class="stock-pager-sort" id="stockSortBar" role="group" aria-label="Ordenar por">
           <span class="stock-sortbar-label">Ordenar:</span>
@@ -447,6 +466,20 @@
     </form>
   </dialog>
 
+  <!-- Gestor de etiquetas -->
+  <dialog id="tagMgrModal" class="keys-modal">
+    <form method="dialog" class="keys-form" style="max-width:580px;">
+      <h3>🏷️ ETIQUETAS</h3>
+      <p class="keys-warn">Renombra, <b>fusiona variaciones</b> (robots/robot/robotics) y borra etiquetas en TODO el Stock. Los cambios se guardan en el servidor.</p>
+      <input id="tmSearch" type="text" placeholder="🔍 filtrar etiquetas…" autocomplete="off" style="width:100%;background:var(--bg);border:1px solid var(--line-bright);color:var(--matrix);border-radius:6px;padding:7px 9px;font-family:inherit;margin-bottom:8px;">
+      <div id="tmSuggest" class="tm-suggest"></div>
+      <div id="tmList" class="tm-list"></div>
+      <div class="keys-actions">
+        <button type="button" class="btn" id="tmClose">Cerrar</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="/matrix-rain.js?v=20260608-sides"></script>
   <script src="app.js?v=20260611-camp2"></script>
   <script>
@@ -476,7 +509,7 @@
     const TYPE_ORDER = { audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
     let allItems = [];
     let currentView = []; // lista filtrada+ordenada actual (para navegar el lightbox)
-    let filters = { type: 'video', motor: '', q: '', tag: '', dateQuick: '', dateFrom: '', dateTo: '' };
+    let filters = { type: 'video', motor: '', q: '', tags: [], tagMode: 'or', dateQuick: '', dateFrom: '', dateTo: '' };
     let sortMode = 'date-desc';
     let pageSize = 10; // 0 = mostrar todos
     let currentPage = 1;
@@ -598,7 +631,7 @@
         <button type="button" class="stock-tag-add" data-act="add-tag" title="Añadir etiqueta">+ etiqueta</button>
       </div>`;
     }
-    async function saveTags(id, tags) {
+    async function saveTags(id, tags, opts) {
       try {
         const r = await fetch(`${STOCK_BASE}/stock/${encodeURIComponent(id)}/tags`, {
           method: 'POST',
@@ -612,9 +645,33 @@
         if (it) it.tags = d.tags || [];
         return d.tags || [];
       } catch (e) {
-        alert('Error guardando etiquetas: ' + e.message);
+        if (!(opts && opts.silent)) alert('Error guardando etiquetas: ' + e.message);
         return null;
       }
+    }
+    // Motor de guardado en LOTE: aplica buildNext(item)→tags[] a varios assets en
+    // paralelo (concurrencia limitada), con progreso en la barra de estado y SIN
+    // cortarse al primer error (cuenta fallos). Lo usan el renombrado masivo y el
+    // gestor de etiquetas. Devuelve {ok, fail}.
+    async function runTagSaves(targets, buildNext, label) {
+      const total = targets.length;
+      if (!total) return { ok: 0, fail: 0 };
+      let ok = 0, fail = 0;
+      const queue = targets.slice();
+      const set = () => { if (status) status.textContent = `🏷️ ${label}: ${ok + fail}/${total}` + (fail ? ` · ${fail} fallo(s)` : '') + '…'; };
+      set();
+      const CONC = Math.min(6, total);
+      const worker = async () => {
+        while (queue.length) {
+          const it = queue.shift();
+          const r = await saveTags(it.id, buildNext(it), { silent: true });
+          if (r) ok++; else fail++;
+          set();
+        }
+      };
+      await Promise.all(Array.from({ length: CONC }, worker));
+      if (status) status.textContent = `🏷️ ${label}: ${ok} ok` + (fail ? ` · ${fail} fallo(s)` : '') + ' ✓';
+      return { ok, fail };
     }
     function currentItemInLightbox() {
       const id = window.__lightboxItemId;
@@ -657,6 +714,18 @@
     }
     // Renombra oldTag→newTag en un asset (o en todos los que la tienen, si el
     // usuario lo confirma). Reusa saveTags(/stock/{id}/tags); deduplica.
+    // Construye el array de tags de un item con oldTag→newTag (dedup, case-insens).
+    function tagReplacer(oldL, newTag) {
+      return it => {
+        const next = [];
+        for (const t of (it.tags || [])) {
+          const tl = String(t).toLowerCase();
+          if (tl === oldL) { if (!next.some(n => n.toLowerCase() === newTag.toLowerCase())) next.push(newTag); }
+          else if (!next.some(n => n.toLowerCase() === tl)) next.push(t);
+        }
+        return next;
+      };
+    }
     async function renameTag(id, oldTag, newTag) {
       const oldL = String(oldTag).toLowerCase();
       const has = it => Array.isArray(it.tags) && it.tags.some(t => String(t).toLowerCase() === oldL);
@@ -666,17 +735,28 @@
         const all = confirm(`Renombrar #${oldTag} → #${newTag}\n\nEsta etiqueta está en ${affected.length} assets.\n\nAceptar = normalizar en los ${affected.length}\nCancelar = solo en este`);
         if (all) targets = affected;
       }
-      for (const it of targets) {
-        const next = [];
-        for (const t of it.tags) {
-          const tl = String(t).toLowerCase();
-          if (tl === oldL) { if (!next.some(n => n.toLowerCase() === newTag.toLowerCase())) next.push(newTag); }
-          else if (!next.some(n => n.toLowerCase() === tl)) next.push(t);
-        }
-        await saveTags(it.id, next);
-      }
-      if (filters.tag && filters.tag.toLowerCase() === oldL) { filters.tag = newTag; renderActiveTagBanner(); }
+      await runTagSaves(targets, tagReplacer(oldL, newTag), `renombrar #${oldTag}→#${newTag}`);
+      const i = filters.tags.indexOf(oldL);
+      if (i >= 0) { filters.tags.splice(i, 1); if (!filters.tags.includes(newTag.toLowerCase())) filters.tags.push(newTag.toLowerCase()); renderActiveTagBanner(); }
       applyFilters(false);
+    }
+    // Renombrar/borrar una etiqueta en TODO el Stock (para el gestor de etiquetas).
+    async function renameTagGlobal(oldTag, newTag) {
+      const oldL = String(oldTag).toLowerCase(); const nn = String(newTag).trim().replace(/^#+/, '');
+      if (!nn || nn.toLowerCase() === oldL) return { ok: 0, fail: 0 };
+      const targets = allItems.filter(it => Array.isArray(it.tags) && it.tags.some(t => String(t).toLowerCase() === oldL));
+      const r = await runTagSaves(targets, tagReplacer(oldL, nn), `#${oldTag}→#${nn}`);
+      const i = filters.tags.indexOf(oldL); if (i >= 0) { filters.tags.splice(i, 1); if (!filters.tags.includes(nn.toLowerCase())) filters.tags.push(nn.toLowerCase()); }
+      renderActiveTagBanner(); applyFilters(false);
+      return r;
+    }
+    async function deleteTagGlobal(tag) {
+      const tl = String(tag).toLowerCase();
+      const targets = allItems.filter(it => Array.isArray(it.tags) && it.tags.some(t => String(t).toLowerCase() === tl));
+      const r = await runTagSaves(targets, it => (it.tags || []).filter(t => String(t).toLowerCase() !== tl), `borrar #${tag}`);
+      const i = filters.tags.indexOf(tl); if (i >= 0) filters.tags.splice(i, 1);
+      renderActiveTagBanner(); applyFilters(false);
+      return r;
     }
     function renderCard(it) {
       const idAttr = String(it.id || '').replace(/[^A-Za-z0-9-]/g, '');
@@ -739,28 +819,38 @@
       return sorted;
     }
 
+    // Assets que cumplen un criterio de etiquetas (array + modo and/or).
+    function matchItemsByTags(tags, mode) {
+      const ls = (tags || []).map(t => String(t).toLowerCase()).filter(Boolean);
+      if (!ls.length) return [];
+      return (typeof allItems !== 'undefined' ? allItems : []).filter(it => {
+        const its = Array.isArray(it.tags) ? it.tags.map(t => String(t).toLowerCase()) : [];
+        return mode === 'and' ? ls.every(x => its.includes(x)) : ls.some(x => its.includes(x));
+      });
+    }
     function renderActiveTagBanner() {
       let banner = document.getElementById('stockTagBanner');
-      if (!filters.tag) { if (banner) banner.remove(); return; }
+      if (!filters.tags || !filters.tags.length) { if (banner) banner.remove(); return; }
       if (!banner) {
         banner = document.createElement('div');
         banner.id = 'stockTagBanner';
         banner.className = 'stock-tag-banner';
         document.querySelector('.stock-toolbar').appendChild(banner);
       }
-      const tagL = filters.tag.toLowerCase();
-      const matching = (typeof allItems !== 'undefined' ? allItems : []).filter(it => Array.isArray(it.tags) && it.tags.some(t => String(t).toLowerCase() === tagL));
-      const safeTag = filters.tag.replace(/</g, '&lt;');
-      banner.innerHTML = `<span style="flex:1;">Filtrando por <b>#${safeTag}</b></span><button type="button" class="stock-tag-playlist" title="Crear una playlist con los ${matching.length} assets que tienen #${safeTag}">🎵 Playlist con #${safeTag} (${matching.length})</button><button type="button" class="stock-tag-clear">✕ limpiar</button>`;
-      banner.querySelector('.stock-tag-clear').addEventListener('click', () => {
-        filters.tag = '';
-        renderActiveTagBanner();
-        applyFilters(true);
-      });
+      const matching = matchItemsByTags(filters.tags, filters.tagMode);
+      const joiner = filters.tagMode === 'and' ? ' Y ' : ' O ';
+      const chips = filters.tags.map(t => `<button type="button" class="stock-tagf" data-tagf="${escAttr(t)}" title="Quitar #${escAttr(t)}">#${String(t).replace(/</g, '&lt;')} ✕</button>`).join(`<span class="stock-tagf-join">${joiner}</span>`);
+      const modeBtn = filters.tags.length >= 2 ? `<button type="button" class="stock-tagmode" title="Alternar Y (todas) / O (cualquiera)">${filters.tagMode === 'and' ? 'Y · todas' : 'O · cualquiera'}</button>` : '';
+      const critName = filters.tags.join(filters.tagMode === 'and' ? ' + ' : ' / ');
+      banner.innerHTML = `<span class="stock-tagf-wrap">Filtrando: ${chips} ${modeBtn}</span><button type="button" class="stock-tag-playlist" title="Crear playlist con los ${matching.length} assets del criterio">🎵 Playlist (${matching.length})</button><button type="button" class="stock-tag-clear">✕ limpiar</button>`;
+      banner.querySelectorAll('.stock-tagf').forEach(b => b.addEventListener('click', () => { const i = filters.tags.indexOf(b.dataset.tagf); if (i >= 0) filters.tags.splice(i, 1); renderActiveTagBanner(); applyFilters(true); }));
+      const mb = banner.querySelector('.stock-tagmode');
+      if (mb) mb.addEventListener('click', () => { filters.tagMode = filters.tagMode === 'and' ? 'or' : 'and'; renderActiveTagBanner(); applyFilters(true); });
+      banner.querySelector('.stock-tag-clear').addEventListener('click', () => { filters.tags = []; renderActiveTagBanner(); applyFilters(true); });
       const plBtn = banner.querySelector('.stock-tag-playlist');
       if (plBtn) plBtn.addEventListener('click', () => {
-        if (!matching.length) { alert('No hay assets con #' + filters.tag); return; }
-        if (window.PL) PL.open(matching, { name: filters.tag, tag: filters.tag });
+        if (!matching.length) { alert('No hay assets para ese criterio'); return; }
+        if (window.PL) PL.open(matching, { name: critName, tags: filters.tags.slice(), tagMode: filters.tagMode });
       });
     }
     // "animation" es un tipo virtual: ainimation.studio publica como type=video
@@ -781,9 +871,12 @@
       const items = allItems.filter(it => {
         if (!matchesType(it, filters.type)) return false;
         if (filters.motor && it.motor !== filters.motor) return false;
-        if (filters.tag) {
+        if (filters.tags && filters.tags.length) {
           const tags = Array.isArray(it.tags) ? it.tags.map(t => String(t).toLowerCase()) : [];
-          if (!tags.includes(filters.tag.toLowerCase())) return false;
+          const ok = filters.tagMode === 'and'
+            ? filters.tags.every(ft => tags.includes(ft))
+            : filters.tags.some(ft => tags.includes(ft));
+          if (!ok) return false;
         }
         if (filters.q) {
           const hay = (
@@ -989,10 +1082,11 @@
         e.preventDefault();
         e.stopPropagation();
         if (tagBtn.dataset.editing === '1') return;
-        const t = tagBtn.dataset.tag || '';
+        const t = (tagBtn.dataset.tag || '').toLowerCase();
         clearTimeout(window.__tagClickTimer);
         window.__tagClickTimer = setTimeout(() => {
-          filters.tag = (filters.tag === t) ? '' : t; // toggle
+          const i = filters.tags.indexOf(t);   // toggle dentro del conjunto activo
+          if (i >= 0) filters.tags.splice(i, 1); else filters.tags.push(t);
           renderActiveTagBanner();
           applyFilters(true);
         }, 220);
@@ -1685,7 +1779,14 @@
       const SRC = 'https://admira.app/circuits.json';
       const $ = id => document.getElementById(id);
       let playlists = [];
-      let draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '', criterionTag: '' };
+      let draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '', criterionTags: [], criterionMode: 'or' };
+      // Criterio normalizado de una playlist/draft (soporta el legacy criterionTag).
+      const critTags = p => {
+        if (p && Array.isArray(p.criterionTags) && p.criterionTags.length) return { tags: p.criterionTags, mode: p.criterionMode || 'or' };
+        if (p && p.criterionTag) return { tags: [p.criterionTag], mode: 'or' };
+        return null;
+      };
+      const critLabel = c => c.tags.map(t => '#' + t).join(c.mode === 'and' ? ' Y ' : ' O ');
       let circuits = [], scopes = null;
       const lang = () => ((document.documentElement.lang || 'es').slice(0, 2) === 'en') ? 'en' : 'es';
       const clabel = c => (c.label && (c.label[lang()] || c.label.es || c.label.en)) || c.id;
@@ -1731,9 +1832,10 @@
         const box = $('plSaved'); if (!box) return;
         if (!playlists.length) { box.innerHTML = ''; return; }
         box.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;">Tus playlists:</div>' + playlists.map(p => {
-          const live = p.criterionTag ? liveItemsForTag(p.criterionTag).length : (p.items || []).length;
-          const smart = p.criterionTag ? '<span class="pl-smart-badge" title="Playlist inteligente: se actualiza sola con #' + escAttr(p.criterionTag) + '">🏷️ #' + escAttr(p.criterionTag) + '</span> ' : '';
-          return '<div class="pl-saved-row" data-id="' + escAttr(p.id) + '"><span class="pl-nm">🎵 ' + escAttr(p.name || 'playlist') + '</span><span class="pl-meta">' + smart + live + ' items' + (p.criterionTag ? ' · auto' : '') + (p.circuit ? ' · ' + escAttr((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '') + '</span>'
+          const c = critTags(p);
+          const live = c ? liveItemsForCriterion(c.tags, c.mode).length : (p.items || []).length;
+          const smart = c ? '<span class="pl-smart-badge" title="Playlist inteligente: se actualiza sola con ' + escAttr(critLabel(c)) + '">🏷️ ' + c.tags.map(t => '#' + escAttr(t)).join(c.mode === 'and' ? ' Y ' : ' O ') + '</span> ' : '';
+          return '<div class="pl-saved-row" data-id="' + escAttr(p.id) + '"><span class="pl-nm">🎵 ' + escAttr(p.name || 'playlist') + '</span><span class="pl-meta">' + smart + live + ' items' + (c ? ' · auto' : '') + (p.circuit ? ' · ' + escAttr((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '') + '</span>'
           + '<button type="button" class="pl-mini" data-act="edit">editar</button><button type="button" class="pl-mini" data-act="dist">📡 distribuir</button><button type="button" class="pl-mini danger" data-act="del">✕</button></div>';
         }).join('');
       }
@@ -1741,34 +1843,32 @@
       function addItem(it) { if (it && !draft.items.some(x => x.id === it.id)) { draft.items.push({ id: it.id, type: displayType(it), url: it.url, title: it.title || it.prompt || it.id, mime: it.mime || null }); renderItems(); renderPick(); } }
       function removeItem(id) { draft.items = draft.items.filter(x => x.id !== id); renderItems(); renderPick(); }
 
-      // Assets vivos que llevan una etiqueta (para playlists inteligentes). Se
-      // recalcula desde allItems → recoge lo recién publicado con ese tag.
-      function liveItemsForTag(tag) {
-        const tl = String(tag || '').toLowerCase();
-        if (!tl) return [];
-        return (typeof allItems !== 'undefined' ? allItems : [])
-          .filter(it => Array.isArray(it.tags) && it.tags.some(t => String(t).toLowerCase() === tl))
-          .map(it => ({ id: it.id, type: displayType(it), url: it.url, title: it.title || it.prompt || it.id, mime: it.mime || null }));
+      // Assets vivos que cumplen un criterio de etiquetas (para playlists
+      // inteligentes). Se recalcula desde allItems → recoge lo recién publicado.
+      function liveItemsForCriterion(tags, mode) {
+        return matchItemsByTags(tags, mode).map(it => ({ id: it.id, type: displayType(it), url: it.url, title: it.title || it.prompt || it.id, mime: it.mime || null }));
       }
       // Aviso "playlist inteligente" en el builder + botón para convertirla en fija.
       function renderSmartNote() {
         const box = $('plSmartNote'); if (!box) return;
-        if (!draft.criterionTag) { box.hidden = true; box.innerHTML = ''; return; }
+        const c = critTags(draft);
+        if (!c) { box.hidden = true; box.innerHTML = ''; return; }
         box.hidden = false;
-        const safe = String(draft.criterionTag).replace(/</g, '&lt;');
-        box.innerHTML = '🏷️ <b>Playlist inteligente</b> — se actualiza sola con <b>#' + safe + '</b> (' + draft.items.length + ' assets ahora). '
+        const txt = c.tags.map(t => '#' + String(t).replace(/</g, '&lt;')).join(c.mode === 'and' ? ' Y ' : ' O ');
+        box.innerHTML = '🏷️ <b>Playlist inteligente</b> — se actualiza sola con <b>' + txt + '</b> (' + draft.items.length + ' assets ahora). '
           + '<button type="button" class="pl-smart-clear" title="Convertir en lista fija (deja de auto-actualizarse)">hacer fija ✕</button>';
         const clr = box.querySelector('.pl-smart-clear');
-        if (clr) clr.addEventListener('click', () => { draft.criterionTag = ''; renderSmartNote(); });
+        if (clr) clr.addEventListener('click', () => { draft.criterionTags = []; draft.criterionMode = 'or'; renderSmartNote(); });
       }
 
       function currentCircuitObj() { const c = byId(draft.circuitId); if (!c) return null; const loc = draft.locId && (c.points || []).find(p => p.id === draft.locId); return { circuit: { id: c.id, client: c.client, scope: c.scope, label: c.label, screens: c.screens || [] }, location: loc ? { id: loc.id, name: loc.name, addr: loc.addr } : null }; }
       function persistDraft() {
-        // Inteligente: refresca los items desde la etiqueta antes de guardar.
-        if (draft.criterionTag) draft.items = liveItemsForTag(draft.criterionTag);
+        // Inteligente: refresca los items desde el criterio antes de guardar.
+        const dc = critTags(draft);
+        if (dc) draft.items = liveItemsForCriterion(dc.tags, dc.mode);
         if (!draft.items.length) { status.textContent = '// la playlist no tiene elementos'; return null; }
         const cc = currentCircuitObj();
-        const p = { id: draft.id || ('pl-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)), name: (draft.name || $('plName').value || 'Playlist').trim().slice(0, 60), items: draft.items.slice(), criterionTag: draft.criterionTag || null, circuit: cc ? cc.circuit : null, location: cc ? cc.location : null, updatedAt: Date.now() };
+        const p = { id: draft.id || ('pl-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)), name: (draft.name || $('plName').value || 'Playlist').trim().slice(0, 60), items: draft.items.slice(), criterionTags: dc ? dc.tags.slice() : null, criterionMode: dc ? dc.mode : null, circuit: cc ? cc.circuit : null, location: cc ? cc.location : null, updatedAt: Date.now() };
         const i = playlists.findIndex(x => x.id === p.id);
         if (i >= 0) playlists[i] = p; else playlists.unshift(p);
         save(); renderSaved();
@@ -1777,10 +1877,13 @@
 
       function open(seedItems, opts) {
         load();
-        draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '', criterionTag: '' };
-        // Criterio de etiqueta → playlist INTELIGENTE (se auto-actualiza). Si viene
-        // un tag, los items se derivan en vivo de él (ignora seedItems sueltos).
-        if (opts && opts.tag) { draft.criterionTag = String(opts.tag); seedItems = liveItemsForTag(draft.criterionTag); }
+        draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '', criterionTags: [], criterionMode: 'or' };
+        // Criterio de etiqueta(s) → playlist INTELIGENTE (se auto-actualiza). Si
+        // viene criterio, los items se derivan en vivo (ignora seedItems sueltos).
+        let crit = null;
+        if (opts && Array.isArray(opts.tags) && opts.tags.length) crit = { tags: opts.tags.slice(), mode: opts.tagMode || 'or' };
+        else if (opts && opts.tag) crit = { tags: [String(opts.tag)], mode: 'or' };
+        if (crit) { draft.criterionTags = crit.tags; draft.criterionMode = crit.mode; seedItems = liveItemsForCriterion(crit.tags, crit.mode); }
         if (seedItems && seedItems.length) seedItems.forEach(it => { if (!draft.items.some(x => x.id === it.id)) draft.items.push({ id: it.id, type: displayType(it), url: it.url, title: it.title || it.prompt || it.id, mime: it.mime || null }); });
         $('plName').value = '';
         // Nombre sugerido (p.ej. al crear la playlist desde un filtro de etiqueta).
@@ -1789,14 +1892,15 @@
         const dlg = $('plModal'); if (dlg && !dlg.open) dlg.showModal();
         loadCircuits().then(() => { fillScopes(); fillCircuits(); fillLocations(); renderCircuitInfo(); });
       }
-      function editPlaylist(id) { const p = get(id); if (!p) return; draft = { id: p.id, name: p.name, items: (p.items || []).slice(), scope: (p.circuit && p.circuit.scope) || '', circuitId: (p.circuit && p.circuit.id) || '', locId: (p.location && p.location.id) || '', criterionTag: p.criterionTag || '' }; if (draft.criterionTag) draft.items = liveItemsForTag(draft.criterionTag); $('plName').value = p.name || ''; renderItems(); renderSmartNote(); renderPick(); fillScopes(); fillCircuits(); fillLocations(); renderCircuitInfo(); }
+      function editPlaylist(id) { const p = get(id); if (!p) return; const ec = critTags(p); draft = { id: p.id, name: p.name, items: (p.items || []).slice(), scope: (p.circuit && p.circuit.scope) || '', circuitId: (p.circuit && p.circuit.id) || '', locId: (p.location && p.location.id) || '', criterionTags: ec ? ec.tags.slice() : [], criterionMode: ec ? ec.mode : 'or' }; if (ec) draft.items = liveItemsForCriterion(ec.tags, ec.mode); $('plName').value = p.name || ''; renderItems(); renderSmartNote(); renderPick(); fillScopes(); fillCircuits(); fillLocations(); renderCircuitInfo(); }
       function distributePlaylist(id) {
         const p = get(id); if (!p) return;
-        // Inteligente: recoge los assets actuales con la etiqueta (incluye lo
-        // recién publicado) y guarda el refresco antes de distribuir.
-        if (p.criterionTag) { p.items = liveItemsForTag(p.criterionTag); p.updatedAt = Date.now(); save(); renderSaved(); }
+        // Inteligente: recoge los assets actuales del criterio (incluye lo recién
+        // publicado) y guarda el refresco antes de distribuir.
+        const pc = critTags(p);
+        if (pc) { p.items = liveItemsForCriterion(pc.tags, pc.mode); p.updatedAt = Date.now(); save(); renderSaved(); }
         const items = (p.items || []).slice();
-        if (!items.length) { status.textContent = '// la playlist «' + (p.name || '') + '» no tiene assets' + (p.criterionTag ? ' con #' + p.criterionTag : ''); return; }
+        if (!items.length) { status.textContent = '// la playlist «' + (p.name || '') + '» no tiene assets' + (pc ? ' con el criterio ' + critLabel(pc) : ''); return; }
         const dlg = $('plModal'); if (dlg && dlg.open) dlg.close();
         DIST.open(items, { label: '🎵 ' + (p.name || 'playlist') + ' · ' + items.length + ' items' + (p.location ? ' → ' + p.location.name : (p.circuit ? ' → ' + ((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '')), targetScreens: resolveScreens(p) });
       }
@@ -1818,9 +1922,85 @@
     })();
     window.PL = PL;
 
+    // ── GESTOR DE ETIQUETAS ───────────────────────────────────────────────────
+    // Vista global de todas las etiquetas con recuento, detección de casi-
+    // duplicados (deburr + distancia de edición) para fusionarlos, y renombrar/
+    // borrar en todo el Stock. Base limpia para filtros y playlists por metadata.
+    const TM = (function () {
+      const $ = id => document.getElementById(id);
+      let q = '';
+      const deburr = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      function lev(a, b) {
+        const m = a.length, n = b.length; if (!m) return n; if (!n) return m;
+        let prev = Array.from({ length: n + 1 }, (_, j) => j), cur = new Array(n + 1);
+        for (let i = 1; i <= m; i++) { cur[0] = i; for (let j = 1; j <= n; j++) { const c = a[i - 1] === b[j - 1] ? 0 : 1; cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + c); } [prev, cur] = [cur, prev]; }
+        return prev[n];
+      }
+      function aggregate() {
+        const m = new Map();
+        (typeof allItems !== 'undefined' ? allItems : []).forEach(it => { if (!Array.isArray(it.tags)) return; it.tags.forEach(t => { const key = String(t).toLowerCase(); const e = m.get(key) || { tag: String(t), count: 0 }; e.count++; m.set(key, e); }); });
+        return [...m.values()].sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+      }
+      function similar(a, b) {
+        const da = deburr(a), db = deburr(b); if (da === db) return true;
+        const mn = Math.min(da.length, db.length); if (mn < 3) return false;
+        if (mn >= 4 && (da.startsWith(db) || db.startsWith(da))) return true;
+        // Distancia de edición solo para tags de ≥5 letras (los cortos como
+        // gpu/cpu, sol/sal dan falsos positivos con distancia 1).
+        if (mn >= 5) return lev(da, db) <= (mn <= 6 ? 1 : 2);
+        return false;
+      }
+      function clusters(list) {
+        const n = list.length, parent = list.map((_, i) => i);
+        const find = x => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
+        for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (similar(list[i].tag, list[j].tag)) { const ri = find(i), rj = find(j); if (ri !== rj) parent[ri] = rj; }
+        const groups = new Map();
+        for (let i = 0; i < n; i++) { const r = find(i); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(list[i]); }
+        return [...groups.values()].filter(g => g.length > 1).map(g => ({ canon: g.slice().sort((a, b) => b.count - a.count || a.tag.length - b.tag.length || a.tag.localeCompare(b.tag))[0], members: g }));
+      }
+      function render() {
+        const list = aggregate();
+        const sug = $('tmSuggest'), lst = $('tmList');
+        if (sug) {
+          const cls = clusters(list);
+          sug.innerHTML = cls.length ? ('<div class="tm-sub">Posibles duplicados — fusiona en uno:</div>' + cls.map(c => {
+            const members = c.members.map(m => '#' + escAttr(m.tag) + ' (' + m.count + ')').join(', ');
+            return '<div class="tm-clu"><span class="tm-clu-info">' + members + ' → <b>#' + escAttr(c.canon.tag) + '</b></span><button type="button" class="pl-mini" data-tm="merge" data-canon="' + escAttr(c.canon.tag) + '" data-members="' + escAttr(c.members.map(m => m.tag).join('|')) + '">fusionar</button></div>';
+          }).join('')) : '';
+        }
+        const ql = q.toLowerCase(), rows = list.filter(e => !ql || e.tag.toLowerCase().includes(ql));
+        if (lst) lst.innerHTML = rows.length ? rows.map(e =>
+          '<div class="tm-row"><button type="button" class="tm-name" data-tm="filter" data-tag="' + escAttr(e.tag) + '" title="Filtrar por #' + escAttr(e.tag) + '">#' + escAttr(e.tag) + '</button><span class="tm-count">' + e.count + '</span><button type="button" class="pl-mini" data-tm="rename" data-tag="' + escAttr(e.tag) + '">renombrar</button><button type="button" class="pl-mini danger" data-tm="del" data-tag="' + escAttr(e.tag) + '">borrar</button></div>'
+        ).join('') : '<div class="pl-empty">Sin etiquetas que coincidan.</div>';
+      }
+      async function merge(canon, members) {
+        const others = members.filter(t => t.toLowerCase() !== canon.toLowerCase());
+        if (!others.length) return;
+        if (!confirm('Fusionar ' + others.map(t => '#' + t).join(', ') + ' en #' + canon + '?\n\nSe renombran en todo el Stock.')) return;
+        for (const t of others) await renameTagGlobal(t, canon);
+        render();
+      }
+      function open() { q = ''; if ($('tmSearch')) $('tmSearch').value = ''; render(); const d = $('tagMgrModal'); if (d && !d.open) d.showModal(); }
+      function init() {
+        const btn = $('tagMgrBtn'); if (btn) btn.addEventListener('click', open);
+        const close = $('tmClose'); if (close) close.addEventListener('click', () => { const d = $('tagMgrModal'); if (d && d.open) d.close(); });
+        const s = $('tmSearch'); if (s) s.addEventListener('input', () => { q = s.value.trim(); render(); });
+        const sug = $('tmSuggest'); if (sug) sug.addEventListener('click', e => { const b = e.target.closest('[data-tm="merge"]'); if (b) merge(b.dataset.canon, (b.dataset.members || '').split('|').filter(Boolean)); });
+        const lst = $('tmList'); if (lst) lst.addEventListener('click', async e => {
+          const b = e.target.closest('[data-tm]'); if (!b) return; const tag = b.dataset.tag;
+          if (b.dataset.tm === 'filter') { const tl = tag.toLowerCase(); if (!filters.tags.includes(tl)) filters.tags.push(tl); renderActiveTagBanner(); applyFilters(true); const d = $('tagMgrModal'); if (d && d.open) d.close(); }
+          else if (b.dataset.tm === 'rename') { const nv = prompt('Renombrar #' + tag + ' en todo el Stock a:', tag); if (nv && nv.trim() && nv.trim().toLowerCase() !== tag.toLowerCase()) { await renameTagGlobal(tag, nv.trim()); render(); } }
+          else if (b.dataset.tm === 'del') { if (confirm('Borrar #' + tag + ' de TODOS los assets que la tienen?')) { await deleteTagGlobal(tag); render(); } }
+        });
+      }
+      return { open, init, render };
+    })();
+    window.TM = TM;
+
     (async () => {
       DIST.init();
       PL.init();
+      TM.init();
       await load();
       setTimeout(highlightFromQuery, 80);
     })();
