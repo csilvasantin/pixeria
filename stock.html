@@ -1062,13 +1062,18 @@
     //  · programar pases por franja/hora (cola local persistida en localStorage)
     const DIST = (function () {
       const SCHED_KEY = 'pixeriaDistQueue_v1';
+      // Scheduler robusto: la cola vive aquí y un cron de 1 min dispara los
+      // pases SIN tener la pestaña abierta. La cola local (SCHED_KEY) queda como
+      // fallback solo cuando el scheduler no responde.
+      const SCHED_BASE = 'https://pixer-scheduler.csilvasantin.workers.dev';
       const ALL = '__ALL__'; // marcador de broadcast a todas
       const sel = new Set();       // ids de assets seleccionados (lote)
       const tsel = new Set();      // ids de pantallas destino elegidas
       let screens = [];            // [{screen, role, online, age_seconds, now}]
       let screensAt = 0;
       let modalItems = [];         // assets a distribuir en la apertura actual
-      let queue = [];              // tareas programadas
+      let queue = [];              // tareas en fallback local (scheduler caído)
+      let serverTasks = [];        // tareas en el scheduler (fuente de verdad)
 
       const $ = id => document.getElementById(id);
       const kindOf = it => (it.type === 'video' || it.type === 'animation') ? 'video'
@@ -1201,31 +1206,61 @@
       function saveHistory() { try { localStorage.setItem(HIST_KEY, JSON.stringify(history.slice(0, 200))); } catch {} }
       function logHistory(rec) { history.unshift(rec); if (history.length > 200) history.length = 200; saveHistory(); }
 
-      // ── Programación (cola local) ──
+      // ── Programación ──
+      // Fuente de verdad = scheduler en el servidor. La cola local (SCHED_KEY)
+      // solo guarda tareas que NO pudieron subir (servidor caído) y las dispara
+      // el tick del navegador como fallback.
       function loadQueue() { try { queue = JSON.parse(localStorage.getItem(SCHED_KEY) || '[]') || []; } catch { queue = []; } }
       function saveQueue() { try { localStorage.setItem(SCHED_KEY, JSON.stringify(queue)); } catch {} }
-      function enqueue(snaps, targets, fireAt, passes, everyMin) {
-        queue.push({
-          qid: `${fireAt}-${Math.random().toString(36).slice(2, 7)}`,
-          items: snaps, targets, fireAt, passesLeft: passes, everyMin, total: passes,
-          label: snaps.length === 1 ? snaps[0].label : `${snaps.length} assets`,
-        });
-        saveQueue();
+      async function refreshServer() {
+        try {
+          const r = await fetch(`${SCHED_BASE}/schedule`, { cache: 'no-store' });
+          const d = await r.json();
+          serverTasks = Array.isArray(d.tasks) ? d.tasks : [];
+        } catch { /* deja la última copia */ }
         renderQueueStatus();
       }
+      async function enqueue(snaps, targets, fireAt, passes, everyMin) {
+        const payload = { items: snaps, targets, fireAt, passes, everyMin,
+          label: snaps.length === 1 ? snaps[0].label : `${snaps.length} assets` };
+        try {
+          const r = await fetch(`${SCHED_BASE}/schedule`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+          });
+          const d = await r.json();
+          if (!(r.ok && d.ok)) throw new Error(d.error || ('HTTP ' + r.status));
+          await refreshServer();
+          return { server: true };
+        } catch (e) {
+          // Fallback local: el navegador lo disparará mientras esté abierto.
+          queue.push({ qid: `loc-${fireAt}-${Math.random().toString(36).slice(2, 7)}`,
+            items: snaps, targets, fireAt, passesLeft: passes, everyMin, total: passes, label: payload.label, local: true });
+          saveQueue(); renderQueueStatus();
+          return { server: false };
+        }
+      }
+      // tick: SOLO dispara las tareas en fallback local (las del servidor las
+      // dispara su cron). Reintenta subirlas al servidor antes de disparar.
       async function tick() {
         if (!queue.length) return;
         const now = Date.now(); let changed = false;
         for (const t of queue.slice()) {
           if (now < t.fireAt || t.passesLeft <= 0) continue;
-          await distributeNow(t.items, t.targets, 'programado');
+          await distributeNow(t.items, t.targets, 'local');
           t.passesLeft--; changed = true;
           if (t.passesLeft > 0) t.fireAt = now + (t.everyMin || 5) * 60000;
           else queue = queue.filter(x => x.qid !== t.qid);
         }
         if (changed) { saveQueue(); renderQueueStatus(); }
       }
-      function pendingCount() { return queue.filter(t => t.passesLeft > 0).length; }
+      // Vista combinada: scheduler (servidor) + fallback local. Las locales se
+      // marcan para distinguir su origen y saber dónde cancelarlas.
+      function allTasks() {
+        const loc = queue.filter(t => t.passesLeft > 0).map(t => ({ ...t, _local: true }));
+        const srv = serverTasks.map(t => ({ ...t, _local: false }));
+        return srv.concat(loc).sort((a, b) => a.fireAt - b.fireAt);
+      }
+      function pendingCount() { return serverTasks.length + queue.filter(t => t.passesLeft > 0).length; }
       function renderQueueStatus() {
         const pend = pendingCount();
         const chip = $('distQueueChip');
@@ -1238,13 +1273,14 @@
       }
       function renderQueuePanel() {
         const box = $('distqQueue'); if (!box) return;
-        const pend = queue.filter(t => t.passesLeft > 0).sort((a, b) => a.fireAt - b.fireAt);
+        const pend = allTasks();
         if (!pend.length) { box.innerHTML = `<div class="distq-empty">// sin envíos programados.<br>Usa 📡 → ⏰ Programar en cualquier asset.</div>`; return; }
         box.innerHTML = pend.map(t => {
           const when = new Date(t.fireAt).toLocaleString('es', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
           const passes = t.total > 1 ? ` · pase ${t.total - t.passesLeft + 1}/${t.total} (cada ${t.everyMin}m)` : '';
-          return `<div class="distq-row" data-qid="${escAttr(t.qid)}">
-            <span class="ql"><b>${escAttr(t.label)}</b><span class="qmeta">⏰ ${when} → ${escAttr(fmtTargets(t.targets))}${passes}</span></span>
+          const tag = t._local ? ' · 📍 local (esta pestaña)' : '';
+          return `<div class="distq-row" data-qid="${escAttr(t.qid)}" data-local="${t._local ? '1' : '0'}">
+            <span class="ql"><b>${escAttr(t.label)}</b><span class="qmeta">⏰ ${when} → ${escAttr(fmtTargets(t.targets))}${passes}${tag}</span></span>
             <span class="qact">
               <button type="button" class="distq-mini" data-qact="fire" title="Enviar ahora">▶ ahora</button>
               <button type="button" class="distq-mini danger" data-qact="cancel" title="Cancelar">✕</button>
@@ -1261,21 +1297,26 @@
             <span class="${h.ok ? 'ok' : 'fail'}">${h.ok ? '✓ OK' : '✕ fallo'}</span></div>`;
         }).join('');
       }
-      async function fireTaskNow(qid) {
-        const t = queue.find(x => x.qid === qid); if (!t) return;
+      async function fireTaskNow(qid, isLocal) {
+        const t = (isLocal ? queue : serverTasks).find(x => x.qid === qid); if (!t) return;
         status.textContent = `// enviando "${t.label}" ahora…`;
         const r = await distributeNow(t.items, t.targets, 'cola→ahora');
-        queue = queue.filter(x => x.qid !== qid);
-        saveQueue(); renderQueueStatus(); renderQueuePanel();
+        await cancelTask(qid, isLocal);
         status.textContent = `📡 "${t.label}": ${r.ok} OK${r.fail ? ` · ${r.fail} fallo(s)` : ''}`;
       }
-      function cancelTask(qid) {
-        queue = queue.filter(x => x.qid !== qid);
-        saveQueue(); renderQueueStatus(); renderQueuePanel();
+      async function cancelTask(qid, isLocal) {
+        if (isLocal) {
+          queue = queue.filter(x => x.qid !== qid); saveQueue();
+        } else {
+          try { await fetch(`${SCHED_BASE}/schedule/${encodeURIComponent(qid)}`, { method: 'DELETE' }); } catch {}
+          serverTasks = serverTasks.filter(x => x.qid !== qid);
+        }
+        renderQueueStatus(); renderQueuePanel();
       }
-      function openQueue() {
+      async function openQueue() {
         renderQueuePanel(); renderHistory();
         const d = $('distQueueModal'); if (d && !d.open) d.showModal();
+        await refreshServer(); renderQueuePanel();
       }
 
       // ── Modal ──
@@ -1314,9 +1355,10 @@
             if (!fireAt || fireAt < Date.now() - 60000) { status.textContent = '// la hora ya pasó'; if (goBtn) goBtn.disabled = false; return; }
             const passes = Math.max(1, Math.min(50, parseInt($('distPasses').value, 10) || 1));
             const everyMin = Math.max(1, Math.min(240, parseInt($('distEvery').value, 10) || 5));
-            enqueue(snaps, targets, fireAt, passes, everyMin);
+            const res = await enqueue(snaps, targets, fireAt, passes, everyMin);
             const d = new Date(fireAt);
-            status.textContent = `⏰ programado para ${d.toLocaleString('es')} · ${passes} pase(s) cada ${everyMin}m`;
+            const where = res.server ? 'en el servidor (saldrá aunque cierres)' : '📍 local (requiere esta pestaña abierta)';
+            status.textContent = `⏰ programado ${where} para ${d.toLocaleString('es')} · ${passes} pase(s) cada ${everyMin}m`;
           }
           close();
           clearSelection();
@@ -1329,7 +1371,9 @@
         loadHistory();
         renderHistory();
         renderQueueStatus();
-        setInterval(tick, 20000);
+        refreshServer();                       // cola del scheduler (servidor)
+        setInterval(refreshServer, 30000);     // refresco periódico
+        setInterval(tick, 20000);              // dispara solo el fallback local
         setTimeout(tick, 2000);
 
         // Barra de lote
@@ -1364,7 +1408,8 @@
         $('distqClose').addEventListener('click', () => { const d = $('distQueueModal'); if (d && d.open) d.close(); });
         $('distQueueModal').addEventListener('click', e => {
           const row = e.target.closest('.distq-row'); const act = e.target.closest('[data-qact]');
-          if (row && act) { const qid = row.dataset.qid; if (act.dataset.qact === 'fire') fireTaskNow(qid); else cancelTask(qid); }
+          if (row && act) { const qid = row.dataset.qid; const isLocal = row.dataset.local === '1';
+            if (act.dataset.qact === 'fire') fireTaskNow(qid, isLocal); else cancelTask(qid, isLocal); }
         });
         document.querySelectorAll('.distq-tab').forEach(tab => tab.addEventListener('click', () => {
           document.querySelectorAll('.distq-tab').forEach(t => t.classList.toggle('active', t === tab));
