@@ -96,6 +96,32 @@
     .dist-group-head .gcount{ margin-left:auto; opacity:.8; }
     .dist-group-head .gtick{ width:16px; }
 
+    /* ── Playlists ── */
+    #plModal{ width:min(680px,95vw); max-height:90vh; }
+    #plModal .pl-body{ display:flex; flex-direction:column; gap:12px; max-height:calc(90vh - 130px); overflow:auto; }
+    .pl-row{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+    .pl-row .pl-field label{ display:block; font-size:11px; color:var(--muted); margin-bottom:3px; }
+    .pl-types{ display:flex; flex-wrap:wrap; gap:6px; }
+    .pl-type{ padding:5px 10px; border:1px solid var(--line-bright); border-radius:20px; background:transparent; color:var(--muted); cursor:pointer; font-size:12px; font-family:inherit; }
+    .pl-type.active{ border-color:var(--matrix); background:var(--matrix); color:#020602; }
+    .pl-pick{ border:1px solid var(--line); border-radius:8px; max-height:170px; overflow:auto; }
+    .pl-pick .pl-pick-row{ display:flex; align-items:center; gap:8px; padding:6px 10px; border-bottom:1px solid var(--line); cursor:pointer; font-size:12px; }
+    .pl-pick .pl-pick-row:hover{ background:rgba(0,255,65,.05); }
+    .pl-pick .pl-pick-row .t{ font-size:9px; color:var(--muted); text-transform:uppercase; border:1px solid var(--line-bright); border-radius:4px; padding:0 5px; }
+    .pl-pick .pl-pick-row.added{ opacity:.5; }
+    .pl-items{ display:flex; flex-wrap:wrap; gap:6px; min-height:32px; padding:8px; border:1px dashed var(--line-bright); border-radius:8px; }
+    .pl-chip{ display:flex; align-items:center; gap:6px; padding:4px 8px; border:1px solid var(--matrix); border-radius:16px; font-size:11px; color:var(--matrix); background:rgba(0,255,65,.06); }
+    .pl-chip button{ background:none; border:0; color:#ff8866; cursor:pointer; font-size:13px; line-height:1; padding:0; }
+    .pl-empty{ color:var(--muted); font-size:12px; padding:6px; }
+    .pl-saved{ display:flex; flex-direction:column; gap:6px; }
+    .pl-saved-row{ display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:12px; }
+    .pl-saved-row .pl-nm{ flex:1; color:var(--matrix); font-weight:700; }
+    .pl-saved-row .pl-meta{ color:var(--muted); font-size:11px; }
+    .pl-mini{ border:1px solid var(--line-bright); background:transparent; color:var(--matrix); border-radius:6px; padding:5px 9px; font-size:11px; cursor:pointer; font-family:inherit; }
+    .pl-mini.danger{ color:#ff8866; border-color:#7a3a2a; }
+    .dist-source{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
+    .dist-source select{ flex:1; background:var(--bg); border:1px solid var(--line-bright); color:var(--matrix); border-radius:6px; padding:6px 8px; font-family:inherit; font-size:12px; }
+
     /* Chip flotante "Programados" (abajo-izquierda) */
     .dist-queue-chip{ position:fixed; left:22px; bottom:22px; z-index:39; display:none; align-items:center; gap:8px;
       padding:10px 14px; background:var(--panel-2); border:1px solid var(--line-bright); border-radius:10px;
@@ -287,6 +313,7 @@
   <div class="dist-batchbar" id="distBatchBar" role="region" aria-label="Selección en lote">
     <span class="count"><b id="distBatchCount">0</b> seleccionados</span>
     <button type="button" class="btn primary" id="distBatchSend">Distribuir →</button>
+    <button type="button" class="btn" id="distBatchPlaylist">🎵 A playlist</button>
     <button type="button" class="btn" id="distBatchClear">Limpiar</button>
   </div>
 
@@ -297,6 +324,10 @@
       <p class="dist-items-note" id="distItemsNote">—</p>
 
       <div class="dist-modal-body">
+        <div class="dist-source" id="distSource">
+          <label for="distSourceSel">Origen:</label>
+          <select id="distSourceSel" aria-label="Qué distribuir"><option value="asset">Assets seleccionados</option></select>
+        </div>
         <div class="dist-mode" role="radiogroup" aria-label="Cuándo distribuir">
           <label><input type="radio" name="dist-mode" value="now" checked> ▶ Ahora</label>
           <label><input type="radio" name="dist-mode" value="sched"> ⏰ Programar</label>
@@ -350,6 +381,52 @@
       <div class="dist-actions">
         <button type="button" class="distq-mini danger" id="distqClearHist" hidden>Vaciar historial</button>
         <button type="button" class="btn" id="distqClose">Cerrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Builder de Playlist -->
+  <dialog id="plModal" class="keys-modal">
+    <form method="dialog" class="keys-form">
+      <h3>🎵 PLAYLIST</h3>
+      <div class="pl-body">
+        <div class="pl-saved" id="plSaved"></div>
+
+        <div class="pl-row">
+          <div class="pl-field" style="grid-column:1/-1;"><label>Nombre de la playlist</label><input id="plName" class="model-select" placeholder="Ej: Spot estanco mañana" style="width:100%;background:var(--bg);border:1px solid var(--line-bright);color:var(--matrix);border-radius:6px;padding:7px 9px;font-family:inherit;"></div>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;">Elementos a añadir — elige tipo:</label>
+          <div class="pl-types" id="plTypes">
+            <button type="button" class="pl-type active" data-t="">Todos</button>
+            <button type="button" class="pl-type" data-t="audio">Audio</button>
+            <button type="button" class="pl-type" data-t="music">Música</button>
+            <button type="button" class="pl-type" data-t="image">Imágenes</button>
+            <button type="button" class="pl-type" data-t="video">Video</button>
+            <button type="button" class="pl-type" data-t="publicidad">Publicidad</button>
+            <button type="button" class="pl-type" data-t="avatar">Avatar</button>
+            <button type="button" class="pl-type" data-t="furni">Mueble</button>
+          </div>
+          <div class="pl-pick" id="plPick"></div>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;">En la playlist (<b id="plCount">0</b>):</label>
+          <div class="pl-items" id="plItems"><span class="pl-empty">Aún sin elementos. Añade desde la lista de arriba.</span></div>
+        </div>
+
+        <div class="pl-row">
+          <div class="pl-field"><label>Alcance</label><select id="plScope" class="model-select" style="width:100%;background:var(--bg);border:1px solid var(--line-bright);color:var(--matrix);border-radius:6px;padding:6px;font-family:inherit;font-size:12px;"><option value="">—</option></select></div>
+          <div class="pl-field"><label>Circuito</label><select id="plCircuit" class="model-select" style="width:100%;background:var(--bg);border:1px solid var(--line-bright);color:var(--matrix);border-radius:6px;padding:6px;font-family:inherit;font-size:12px;"><option value="">— circuito —</option></select></div>
+          <div class="pl-field"><label>Ubicación (punto)</label><select id="plLocation" class="model-select" style="width:100%;background:var(--bg);border:1px solid var(--line-bright);color:var(--matrix);border-radius:6px;padding:6px;font-family:inherit;font-size:12px;"><option value="">— todo el circuito —</option></select></div>
+        </div>
+        <div id="plCircuitInfo" style="font-size:11px;color:var(--muted);"></div>
+      </div>
+      <div class="dist-actions">
+        <button type="button" class="btn primary" id="plSave">💾 Guardar playlist</button>
+        <button type="button" class="btn" id="plSaveDist">💾 + 📡 Guardar y distribuir</button>
+        <button type="button" class="btn" id="plCancel">Cerrar</button>
       </div>
     </form>
   </dialog>
@@ -538,6 +615,7 @@
             <span class="stock-type ${typeLabel}">${typeLabel}</span>
             <div class="stock-card-actions">
               <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Abrir en AINimation" aria-label="Abrir en AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
+              <button type="button" class="stock-card-btn" data-act="playlist" title="Añadir a una playlist" aria-label="Añadir a playlist"><span aria-hidden="true">🎵</span></button>
               <button type="button" class="stock-card-btn" data-act="feed" title="Distribuir a pantallas (elegir destino, ahora o programado)" aria-label="Distribuir a pantallas"><span aria-hidden="true">📡</span></button>
               <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Abrir asset en pestaña nueva" aria-label="Abrir asset en pestaña nueva" data-act="open"><span aria-hidden="true">↗</span></a>
               <button type="button" class="stock-card-btn" data-act="max" title="Maximizar" aria-label="Maximizar asset"><span aria-hidden="true">⛶</span></button>
@@ -822,6 +900,7 @@
         if (btn.dataset.act === 'max') { e.preventDefault(); openLightbox(item); }
         else if (btn.dataset.act === 'del') { e.preventDefault(); deleteAsset(id, card); }
         else if (btn.dataset.act === 'feed') { e.preventDefault(); DIST.open([item]); }
+        else if (btn.dataset.act === 'playlist') { e.preventDefault(); PL.open([item]); }
         // 'open' es <a target=_blank> → deja burbujear sin preventDefault
         e.stopPropagation();
         return;
@@ -1320,19 +1399,48 @@
       }
 
       // ── Modal ──
-      function open(items) {
+      function applyTargets(targetScreens) {
+        tsel.clear();
+        if (Array.isArray(targetScreens) && targetScreens.length) targetScreens.forEach(s => tsel.add(s));
+        else tsel.add(ALL); // por defecto broadcast
+      }
+      function setItemsNote(label) {
+        $('distItemsNote').textContent = label || (modalItems.length === 1
+          ? `Asset: “${labelOf(modalItems[0])}”` : `${modalItems.length} assets`);
+      }
+      // Rellena el selector de origen: "Assets seleccionados" + las playlists guardadas.
+      function populateSource(currentLabel) {
+        const sel = $('distSourceSel'); if (!sel) return;
+        const pls = (window.PL && window.PL.list) ? window.PL.list() : [];
+        sel.innerHTML = '<option value="asset">' + (currentLabel || 'Assets seleccionados') + '</option>'
+          + pls.map(p => '<option value="pl:' + p.id + '">🎵 ' + (p.name || 'playlist') + ' · ' + (p.items || []).length + ' items</option>').join('');
+        sel.value = 'asset';
+      }
+      function open(items, opts) {
+        opts = opts || {};
         modalItems = (items && items.length) ? items : selectedItems();
         if (!modalItems.length) { status.textContent = '// nada que distribuir: selecciona o usa 📡 en una tarjeta'; return; }
-        tsel.clear(); tsel.add(ALL); // por defecto broadcast
-        $('distItemsNote').textContent = modalItems.length === 1
-          ? `Asset: “${labelOf(modalItems[0])}”` : `${modalItems.length} assets seleccionados`;
-        // reset modo
+        applyTargets(opts.targetScreens);
+        setItemsNote(opts.label);
+        populateSource(opts.label);
         const nowRadio = document.querySelector('input[name="dist-mode"][value="now"]'); if (nowRadio) nowRadio.checked = true;
         $('distSched').classList.remove('show');
         document.querySelectorAll('.dist-franja').forEach(f => f.classList.remove('active'));
         renderScreens();
         const dlg = $('distModal'); if (dlg && !dlg.open) dlg.showModal();
         loadScreens(false);
+      }
+      // Cambio del selector de origen: asset(s) actuales o una playlist guardada.
+      function onSourceChange(val) {
+        if (!val || val === 'asset') return;
+        if (val.indexOf('pl:') === 0 && window.PL) {
+          const p = window.PL.get(val.slice(3)); if (!p) return;
+          modalItems = (p.items || []).slice();
+          const screens = (window.PL.resolveScreens && window.PL.resolveScreens(p)) || [];
+          applyTargets(screens.length ? screens : null);
+          setItemsNote('🎵 ' + (p.name || 'playlist') + ' · ' + modalItems.length + ' items' + (p.location ? ' → ' + (p.location.name) : (p.circuit ? ' → ' + (p.circuit.label && (p.circuit.label.es || p.circuit.label) || p.circuit.id) : '')));
+          renderScreens();
+        }
       }
       function close() { const d = $('distModal'); if (d && d.open) d.close(); }
 
@@ -1379,6 +1487,8 @@
         // Barra de lote
         $('distBatchSend').addEventListener('click', () => open(selectedItems()));
         $('distBatchClear').addEventListener('click', clearSelection);
+        const bpl = $('distBatchPlaylist'); if (bpl) bpl.addEventListener('click', () => { if (window.PL) window.PL.open(selectedItems()); });
+        const ssel = $('distSourceSel'); if (ssel) ssel.addEventListener('change', () => onSourceChange(ssel.value));
 
         // Modal: destino (delegado) — pantalla individual o cabecera de grupo/circuito
         $('distScreens').addEventListener('click', e => {
@@ -1438,8 +1548,116 @@
       return { isSelected, toggleSelect, clearSelection, open, init };
     })();
 
+    // ── PLAYLISTS ────────────────────────────────────────────────────────────
+    // Una playlist es un BUNDLE de assets (audio/música/imágenes/video/publicidad/
+    // avatar/mueble) atado a un circuito → punto. Distribuirla = empujar sus assets
+    // al destino (ahora o programado), vía el mismo DIST. Cascada Alcance→Circuito→
+    // Ubicación tomada del manifiesto compartido admira.app/circuits.json.
+    const PL = (function () {
+      const KEY = 'pixeriaPlaylists_v1';
+      const SRC = 'https://admira.app/circuits.json';
+      const $ = id => document.getElementById(id);
+      let playlists = [];
+      let draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '' };
+      let circuits = [], scopes = null;
+      const lang = () => ((document.documentElement.lang || 'es').slice(0, 2) === 'en') ? 'en' : 'es';
+      const clabel = c => (c.label && (c.label[lang()] || c.label.es || c.label.en)) || c.id;
+      const byId = id => circuits.find(c => c.id === id) || null;
+
+      function load() { try { playlists = JSON.parse(localStorage.getItem(KEY) || '[]') || []; } catch { playlists = []; } }
+      function save() { try { localStorage.setItem(KEY, JSON.stringify(playlists.slice(0, 100))); } catch {} }
+      function list() { return playlists.slice(); }
+      function get(id) { return playlists.find(p => p.id === id) || null; }
+      // Pantallas destino de una playlist: las de su circuito (o vacío = broadcast).
+      function resolveScreens(p) {
+        if (!p || !p.circuit) return [];
+        const c = byId(p.circuit.id) || p.circuit;
+        return Array.isArray(c.screens) ? c.screens : [];
+      }
+
+      async function loadCircuits() {
+        if (circuits.length) return;
+        try { const r = await fetch(SRC, { cache: 'no-store' }); const d = await r.json(); circuits = Array.isArray(d.circuits) ? d.circuits : []; scopes = d.scopes || null; } catch { circuits = []; }
+      }
+      function circuitsForScope() { if (!draft.scope || !scopes) return circuits.slice(); const ids = (scopes.circuitIds && scopes.circuitIds[draft.scope]) || []; return circuits.filter(c => ids.indexOf(c.id) >= 0); }
+      function fillScopes() { const s = $('plScope'); if (!s || !scopes) return; const ord = scopes.order || Object.keys(scopes.labels || {}); s.innerHTML = ord.map(x => '<option value="' + x + '">' + ((scopes.labels && scopes.labels[x] && (scopes.labels[x][lang()] || scopes.labels[x].es)) || x) + '</option>').join(''); if (!draft.scope) draft.scope = (scopes.order && scopes.order[0]) || ''; s.value = draft.scope; }
+      function fillCircuits() { const s = $('plCircuit'); if (!s) return; const ls = circuitsForScope(); s.innerHTML = '<option value="">— circuito —</option>' + ls.map(c => '<option value="' + c.id + '">' + clabel(c) + ' · ' + c.pointCount + ' pts</option>').join(''); s.value = draft.circuitId; }
+      function fillLocations() { const s = $('plLocation'); if (!s) return; const c = byId(draft.circuitId); if (!c) { s.innerHTML = '<option value="">— todo el circuito —</option>'; return; } const pts = c.points || []; s.innerHTML = '<option value="">— todo el circuito (' + c.pointCount + ') —</option>' + pts.map(p => '<option value="' + p.id + '">' + (p.name || p.id) + (p.addr ? ' · ' + p.addr : '') + '</option>').join(''); s.value = draft.locId; }
+      function renderCircuitInfo() { const box = $('plCircuitInfo'); if (!box) return; const c = byId(draft.circuitId); if (!c) { box.textContent = ''; return; } const loc = draft.locId && (c.points || []).find(p => p.id === draft.locId); const scr = (c.screens || []).length; box.innerHTML = 'cliente <code>' + c.client + '</code> · ' + (loc ? '📍 ' + (loc.name || loc.id) : c.pointCount + ' Xpacios') + ' · ' + scr + ' pantalla(s) real(es)'; }
+
+      // Lista de assets del stock filtrada por tipo (para añadir a la playlist).
+      let pickType = '';
+      function renderPick() {
+        const box = $('plPick'); if (!box) return;
+        const items = (typeof allItems !== 'undefined' ? allItems : []).filter(it => !pickType || displayType(it) === pickType).slice(0, 80);
+        if (!items.length) { box.innerHTML = '<div class="pl-empty">Sin assets de ese tipo en el Stock.</div>'; return; }
+        const has = id => draft.items.some(x => x.id === id);
+        box.innerHTML = items.map(it => '<div class="pl-pick-row' + (has(it.id) ? ' added' : '') + '" data-id="' + escAttr(it.id) + '"><span class="t">' + displayType(it) + '</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escAttr((it.title || it.prompt || it.id || 'asset').slice(0, 64)) + '</span><span>' + (has(it.id) ? '✓' : '＋') + '</span></div>').join('');
+      }
+      function renderItems() {
+        const box = $('plItems'); if (!box) return;
+        $('plCount').textContent = draft.items.length;
+        if (!draft.items.length) { box.innerHTML = '<span class="pl-empty">Aún sin elementos. Añade desde la lista de arriba.</span>'; return; }
+        box.innerHTML = draft.items.map(it => '<span class="pl-chip" data-id="' + escAttr(it.id) + '">' + escAttr((it.title || it.id || 'asset').slice(0, 28)) + '<button type="button" data-x="' + escAttr(it.id) + '" title="Quitar">✕</button></span>').join('');
+      }
+      function renderSaved() {
+        const box = $('plSaved'); if (!box) return;
+        if (!playlists.length) { box.innerHTML = ''; return; }
+        box.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;">Tus playlists:</div>' + playlists.map(p =>
+          '<div class="pl-saved-row" data-id="' + escAttr(p.id) + '"><span class="pl-nm">🎵 ' + escAttr(p.name || 'playlist') + '</span><span class="pl-meta">' + (p.items || []).length + ' items' + (p.circuit ? ' · ' + escAttr((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '') + '</span>'
+          + '<button type="button" class="pl-mini" data-act="edit">editar</button><button type="button" class="pl-mini" data-act="dist">📡 distribuir</button><button type="button" class="pl-mini danger" data-act="del">✕</button></div>').join('');
+      }
+
+      function addItem(it) { if (it && !draft.items.some(x => x.id === it.id)) { draft.items.push({ id: it.id, type: displayType(it), url: it.url, title: it.title || it.prompt || it.id, mime: it.mime || null }); renderItems(); renderPick(); } }
+      function removeItem(id) { draft.items = draft.items.filter(x => x.id !== id); renderItems(); renderPick(); }
+
+      function currentCircuitObj() { const c = byId(draft.circuitId); if (!c) return null; const loc = draft.locId && (c.points || []).find(p => p.id === draft.locId); return { circuit: { id: c.id, client: c.client, scope: c.scope, label: c.label, screens: c.screens || [] }, location: loc ? { id: loc.id, name: loc.name, addr: loc.addr } : null }; }
+      function persistDraft() {
+        if (!draft.items.length) { status.textContent = '// la playlist no tiene elementos'; return null; }
+        const cc = currentCircuitObj();
+        const p = { id: draft.id || ('pl-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)), name: (draft.name || $('plName').value || 'Playlist').trim().slice(0, 60), items: draft.items.slice(), circuit: cc ? cc.circuit : null, location: cc ? cc.location : null, updatedAt: Date.now() };
+        const i = playlists.findIndex(x => x.id === p.id);
+        if (i >= 0) playlists[i] = p; else playlists.unshift(p);
+        save(); renderSaved();
+        return p;
+      }
+
+      function open(seedItems) {
+        load();
+        draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '' };
+        if (seedItems && seedItems.length) seedItems.forEach(it => { if (!draft.items.some(x => x.id === it.id)) draft.items.push({ id: it.id, type: displayType(it), url: it.url, title: it.title || it.prompt || it.id, mime: it.mime || null }); });
+        $('plName').value = '';
+        renderSaved(); renderItems(); pickType = ''; document.querySelectorAll('.pl-type').forEach(b => b.classList.toggle('active', b.dataset.t === '')); renderPick();
+        const dlg = $('plModal'); if (dlg && !dlg.open) dlg.showModal();
+        loadCircuits().then(() => { fillScopes(); fillCircuits(); fillLocations(); renderCircuitInfo(); });
+      }
+      function editPlaylist(id) { const p = get(id); if (!p) return; draft = { id: p.id, name: p.name, items: (p.items || []).slice(), scope: (p.circuit && p.circuit.scope) || '', circuitId: (p.circuit && p.circuit.id) || '', locId: (p.location && p.location.id) || '' }; $('plName').value = p.name || ''; renderItems(); renderPick(); fillScopes(); fillCircuits(); fillLocations(); renderCircuitInfo(); }
+      function distributePlaylist(id) {
+        const p = get(id); if (!p) return;
+        const dlg = $('plModal'); if (dlg && dlg.open) dlg.close();
+        DIST.open((p.items || []).slice(), { label: '🎵 ' + (p.name || 'playlist') + ' · ' + (p.items || []).length + ' items' + (p.location ? ' → ' + p.location.name : (p.circuit ? ' → ' + ((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '')), targetScreens: resolveScreens(p) });
+      }
+
+      function init() {
+        load(); renderSaved();
+        $('plTypes').addEventListener('click', e => { const b = e.target.closest('.pl-type'); if (!b) return; pickType = b.dataset.t || ''; document.querySelectorAll('.pl-type').forEach(x => x.classList.toggle('active', x === b)); renderPick(); });
+        $('plPick').addEventListener('click', e => { const row = e.target.closest('.pl-pick-row'); if (!row) return; const it = (typeof allItems !== 'undefined' ? allItems : []).find(x => x.id === row.dataset.id); if (it) addItem(it); });
+        $('plItems').addEventListener('click', e => { const x = e.target.closest('[data-x]'); if (x) removeItem(x.dataset.x); });
+        $('plScope').addEventListener('change', () => { draft.scope = $('plScope').value; draft.circuitId = ''; draft.locId = ''; fillCircuits(); fillLocations(); renderCircuitInfo(); });
+        $('plCircuit').addEventListener('change', () => { draft.circuitId = $('plCircuit').value; draft.locId = ''; fillLocations(); renderCircuitInfo(); });
+        $('plLocation').addEventListener('change', () => { draft.locId = $('plLocation').value; renderCircuitInfo(); });
+        $('plSaved').addEventListener('click', e => { const row = e.target.closest('.pl-saved-row'); const act = e.target.closest('[data-act]'); if (!row || !act) return; const id = row.dataset.id; if (act.dataset.act === 'edit') editPlaylist(id); else if (act.dataset.act === 'dist') distributePlaylist(id); else if (act.dataset.act === 'del') { playlists = playlists.filter(x => x.id !== id); save(); renderSaved(); } });
+        $('plSave').addEventListener('click', () => { const p = persistDraft(); if (p) { status.textContent = '🎵 playlist «' + p.name + '» guardada (' + p.items.length + ' items)'; const d = $('plModal'); if (d && d.open) d.close(); } });
+        $('plSaveDist').addEventListener('click', () => { const p = persistDraft(); if (p) distributePlaylist(p.id); });
+        $('plCancel').addEventListener('click', () => { const d = $('plModal'); if (d && d.open) d.close(); });
+      }
+      return { open, init, list, get, resolveScreens };
+    })();
+    window.PL = PL;
+
     (async () => {
       DIST.init();
+      PL.init();
       await load();
       setTimeout(highlightFromQuery, 80);
     })();
