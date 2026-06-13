@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
   <script defer src="https://csilvasantin.github.io/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=20260611-bar">
+  <link rel="stylesheet" href="workspace.css?v=20260613-tagedit">
   <style>
     /* Flechas anterior/siguiente del lightbox del Stock */
     .stock-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);z-index:30;width:54px;height:84px;display:flex;align-items:center;justify-content:center;
@@ -578,7 +578,7 @@
       if (!Array.isArray(tags) || tags.length === 0) return '';
       return `<div class="stock-tags">${tags.map(t => {
         const safe = String(t).replace(/</g, '&lt;');
-        return `<button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Filtrar por #${escAttr(t)}">#${safe}</button>`;
+        return `<button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Clic: filtrar por #${escAttr(t)} · Doble-clic: renombrar">#${safe}</button>`;
       }).join('')}</div>`;
     }
     function renderTagsEditorHtml(id, tags) {
@@ -613,6 +613,64 @@
     function currentItemInLightbox() {
       const id = window.__lightboxItemId;
       return id ? allItems.find(i => i.id === id) : null;
+    }
+    // Doble-clic en un chip de la lista → editar/renombrar la etiqueta inline.
+    // Sirve para normalizar variaciones (robots/robot/robotics) y tener una base
+    // de metadata limpia para filtrar y armar playlists. Al guardar, si la
+    // etiqueta vieja está en varios assets, ofrece normalizar en TODOS.
+    function startTagRename(tagBtn) {
+      if (!tagBtn || tagBtn.dataset.editing === '1') return;
+      const card = tagBtn.closest('.stock-card');
+      const id = card && card.dataset.id;
+      if (!id) return;
+      const oldTag = tagBtn.dataset.tag || '';
+      tagBtn.dataset.editing = '1';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'stock-tag-rename';
+      input.value = oldTag;
+      input.size = Math.max(4, oldTag.length + 1);
+      input.setAttribute('aria-label', 'Renombrar etiqueta ' + oldTag);
+      tagBtn.replaceWith(input);
+      input.focus(); input.select();
+      let done = false;
+      const restore = () => { if (done) return; done = true; input.replaceWith(tagBtn); tagBtn.dataset.editing = ''; };
+      const commit = async () => {
+        if (done) return;
+        const next = input.value.trim().toLowerCase().replace(/^#+/, '');
+        if (!next || next === oldTag.toLowerCase()) { restore(); return; }
+        done = true;
+        input.disabled = true;
+        await renameTag(id, oldTag, next);
+      };
+      input.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
+        else if (ev.key === 'Escape') { ev.preventDefault(); restore(); }
+      });
+      input.addEventListener('blur', commit);
+    }
+    // Renombra oldTag→newTag en un asset (o en todos los que la tienen, si el
+    // usuario lo confirma). Reusa saveTags(/stock/{id}/tags); deduplica.
+    async function renameTag(id, oldTag, newTag) {
+      const oldL = String(oldTag).toLowerCase();
+      const has = it => Array.isArray(it.tags) && it.tags.some(t => String(t).toLowerCase() === oldL);
+      const affected = allItems.filter(has);
+      let targets = affected.filter(it => it.id === id);
+      if (affected.length > 1) {
+        const all = confirm(`Renombrar #${oldTag} → #${newTag}\n\nEsta etiqueta está en ${affected.length} assets.\n\nAceptar = normalizar en los ${affected.length}\nCancelar = solo en este`);
+        if (all) targets = affected;
+      }
+      for (const it of targets) {
+        const next = [];
+        for (const t of it.tags) {
+          const tl = String(t).toLowerCase();
+          if (tl === oldL) { if (!next.some(n => n.toLowerCase() === newTag.toLowerCase())) next.push(newTag); }
+          else if (!next.some(n => n.toLowerCase() === tl)) next.push(t);
+        }
+        await saveTags(it.id, next);
+      }
+      if (filters.tag && filters.tag.toLowerCase() === oldL) { filters.tag = newTag; renderActiveTagBanner(); }
+      applyFilters(false);
     }
     function renderCard(it) {
       const idAttr = String(it.id || '').replace(/[^A-Za-z0-9-]/g, '');
@@ -909,15 +967,21 @@
         const badge = box.querySelector('.furni-rot-badge'); if (badge) badge.textContent = (idx + 1) + '/' + fr + ' 🔄';
         return;
       }
-      // Click en chip de tag → activa filtro por ese tag (no abre lightbox)
+      // Click en chip de tag → filtra por ese tag (no abre lightbox). Se aplaza
+      // ~220ms: si llega un doble-clic se cancela y se edita en su lugar (evita
+      // que applyFilters re-pinte el chip antes de poder editarlo).
       const tagBtn = e.target.closest('.stock-tag');
       if (tagBtn) {
         e.preventDefault();
         e.stopPropagation();
+        if (tagBtn.dataset.editing === '1') return;
         const t = tagBtn.dataset.tag || '';
-        filters.tag = (filters.tag === t) ? '' : t; // toggle
-        renderActiveTagBanner();
-        applyFilters(true);
+        clearTimeout(window.__tagClickTimer);
+        window.__tagClickTimer = setTimeout(() => {
+          filters.tag = (filters.tag === t) ? '' : t; // toggle
+          renderActiveTagBanner();
+          applyFilters(true);
+        }, 220);
         return;
       }
       // Casilla de selección en lote (no es .stock-card-btn) → togglear, sin lightbox
@@ -954,6 +1018,15 @@
       if (!card) return;
       const item = allItems.find(i => i.id === card.dataset.id);
       if (item) openLightbox(item);
+    });
+    // Doble-clic en un chip → renombrar inline (cancela el filtro aplazado).
+    grid.addEventListener('dblclick', e => {
+      const tagBtn = e.target.closest('.stock-tag');
+      if (!tagBtn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      clearTimeout(window.__tagClickTimer);
+      startTagRename(tagBtn);
     });
     grid.addEventListener('keydown', e => {
       if (e.key !== 'Enter' && e.key !== ' ') return;

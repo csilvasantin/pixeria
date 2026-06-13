@@ -1976,6 +1976,19 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
   color: #fff;
   background: rgba(170, 136, 255, .25);
 }
+/* Input inline al renombrar una etiqueta (doble-clic en el chip) */
+.stock-tag-rename {
+  border: 1px solid #aa88ff;
+  background: rgba(170, 136, 255, .18);
+  color: #fff;
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: .04em;
+  padding: 2px 6px;
+  border-radius: 999px;
+  outline: none;
+  min-width: 48px;
+}
 .stock-tags-editor {
   display: flex;
   flex-wrap: wrap;
