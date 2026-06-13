@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
   <script defer src="https://csilvasantin.github.io/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=20260613-tagedit">
+  <link rel="stylesheet" href="workspace.css?v=20260613-plfilter">
   <style>
     /* Flechas anterior/siguiente del lightbox del Stock */
     .stock-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);z-index:30;width:54px;height:84px;display:flex;align-items:center;justify-content:center;
@@ -742,11 +742,19 @@
         banner.className = 'stock-tag-banner';
         document.querySelector('.stock-toolbar').appendChild(banner);
       }
-      banner.innerHTML = `Filtrando por <b>#${filters.tag.replace(/</g,'&lt;')}</b> <button type="button" class="stock-tag-clear">✕ limpiar</button>`;
+      const tagL = filters.tag.toLowerCase();
+      const matching = (typeof allItems !== 'undefined' ? allItems : []).filter(it => Array.isArray(it.tags) && it.tags.some(t => String(t).toLowerCase() === tagL));
+      const safeTag = filters.tag.replace(/</g, '&lt;');
+      banner.innerHTML = `<span style="flex:1;">Filtrando por <b>#${safeTag}</b></span><button type="button" class="stock-tag-playlist" title="Crear una playlist con los ${matching.length} assets que tienen #${safeTag}">🎵 Playlist con #${safeTag} (${matching.length})</button><button type="button" class="stock-tag-clear">✕ limpiar</button>`;
       banner.querySelector('.stock-tag-clear').addEventListener('click', () => {
         filters.tag = '';
         renderActiveTagBanner();
         applyFilters(true);
+      });
+      const plBtn = banner.querySelector('.stock-tag-playlist');
+      if (plBtn) plBtn.addEventListener('click', () => {
+        if (!matching.length) { alert('No hay assets con #' + filters.tag); return; }
+        if (window.PL) PL.open(matching, { name: filters.tag });
       });
     }
     // "animation" es un tipo virtual: ainimation.studio publica como type=video
@@ -1735,11 +1743,13 @@
         return p;
       }
 
-      function open(seedItems) {
+      function open(seedItems, opts) {
         load();
         draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '' };
         if (seedItems && seedItems.length) seedItems.forEach(it => { if (!draft.items.some(x => x.id === it.id)) draft.items.push({ id: it.id, type: displayType(it), url: it.url, title: it.title || it.prompt || it.id, mime: it.mime || null }); });
         $('plName').value = '';
+        // Nombre sugerido (p.ej. al crear la playlist desde un filtro de etiqueta).
+        if (opts && opts.name) { draft.name = String(opts.name); $('plName').value = draft.name; }
         renderSaved(); renderItems(); pickType = ''; document.querySelectorAll('.pl-type').forEach(b => b.classList.toggle('active', b.dataset.t === '')); renderPick();
         const dlg = $('plModal'); if (dlg && !dlg.open) dlg.showModal();
         loadCircuits().then(() => { fillScopes(); fillCircuits(); fillLocations(); renderCircuitInfo(); });

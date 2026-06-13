@@ -2069,6 +2069,18 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
   cursor: pointer;
 }
 .stock-tag-clear:hover { border-color: var(--matrix); color: var(--matrix); }
+.stock-tag-playlist {
+  appearance: none;
+  border: 1px solid #aa88ff;
+  background: rgba(170, 136, 255, .18);
+  color: #fff;
+  font: inherit;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.stock-tag-playlist:hover { background: rgba(170, 136, 255, .32); border-color: #c8b4ff; }
 .stock-comment {
   margin: 10px -14px -12px;
   padding: 10px 14px;
