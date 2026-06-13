@@ -2007,22 +2007,36 @@
         st.items=st.items.filter(i=>i.col<st.cols&&i.row<st.rows);
         renderGrid();
       }
+      // "Layout NN" → número (00..04); null si no casa. Los Xpacios tienen como
+      // mucho 5 layouts: Layout 00 (por defecto) … Layout 04.
+      function layoutNum(name){ const m=/^layout\s+(\d{1,2})$/i.exec(String(name||'').trim()); return m?parseInt(m[1],10):null; }
+      function xpacioKey(){ const cc=window.CircuitSync&&window.CircuitSync.selected(); return (cc&&cc.client)||($('distro-client').value||'').trim()||'generic'; }
+      async function layoutsOf(client){
+        try{ const r=await fetch(dBase()+'/layout/list?client='+encodeURIComponent(client)+'&ts='+Date.now(),{cache:'no-store'}); const d=await r.json();
+          return (Array.isArray(d.items)?d.items:[]).filter(x=>!String(x.id||'').startsWith('preview-')).filter(x=>(x.client||'generic')===client); }
+        catch(_){ return []; }
+      }
       async function saveDistro(){
-        const name=($('distro-name').value||'').trim()||'Distribución sin nombre';
-        const client=($('distro-client').value||'').trim()||null;
         if(!st.items.length){ status('Coloca al menos un mueble antes de guardar.','#e0a14a'); return; }
         const cc=window.CircuitSync&&window.CircuitSync.selected();
+        const client=xpacioKey();
+        // Numeración por Xpacio: siguiente Layout libre 00..04; tope 5.
+        const mine=await layoutsOf(client);
+        const used=new Set(mine.map(x=>layoutNum(x.name)).filter(n=>n!=null));
+        let nn=null; for(let i=0;i<5;i++){ if(!used.has(i)){ nn=i; break; } }
+        if(nn===null){ status('Máx 5 layouts por Xpacio «'+client+'». Borra uno (✕) antes de guardar.','#e0a14a'); return; }
+        const name='Layout '+String(nn).padStart(2,'0');
         const body={ name, client, source:'pixeria',
           circuit: cc ? { id:cc.id, scope:cc.scope, label:cc.label, segmentation:cc.segmentation,
             targetScreens: (cc.location && cc.location.id) ? [] : (cc.screens||[]), pointCount:cc.pointCount,
             location: cc.location ? { id:cc.location.id, name:cc.location.name, addr:cc.location.addr } : null } : null,
           config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
           furniture: st.items.map(distroItemOut) };
-        status('⏳ publicando…');
+        status('⏳ guardando '+name+'…');
         try{
           const r=await fetch(dBase()+'/layout/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
           const d=await r.json(); if(!r.ok||!d.ok) throw new Error(d.error||('HTTP '+r.status));
-          status('✅ «'+d.name+'» publicada (id '+d.id+'). Aplícala en un gemelo con /distribucion aplicar '+d.id,'#7ee0a0');
+          status('✅ «'+name+'» guardado para «'+client+'» ('+(nn===0?'por defecto':'extra')+').','#7ee0a0');
           loadLib();
         }catch(e){ status('❌ '+e.message,'#e06a6a'); }
       }
@@ -2167,8 +2181,9 @@
           status('✏️ Renombrada a «'+nm+'»','#7ee0a0'); loadLib();
         }catch(e){ status('❌ '+e.message,'#e06a6a'); }
       }
-      async function delDistro(id){
-        if(!confirm('¿Borrar la distribución '+id+' de la librería?')) return;
+      async function delDistro(id,name){
+        if(layoutNum(name)===0){ status('El Layout 00 es el por defecto y no se puede borrar.','#e0a14a'); return; }
+        if(!confirm('¿Borrar «'+(name||id)+'» de la librería?')) return;
         try{ await fetch(dBase()+'/layout/delete?id='+encodeURIComponent(id),{method:'POST'}); loadLib(); }catch(e){}
       }
       // Snapshot a repo (versionado): descarga el JSON canónico para commitear en
@@ -2195,18 +2210,28 @@
           items.forEach(it=>{
             const fc=(it.counts&&it.counts.furniture)||0;
             const card=document.createElement('div');
-            card.style.cssText='background:#0b1117;border:1px solid #28323a;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;';
+            card.style.cssText='position:relative;background:#0b1117;border:1px solid #28323a;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;';
+            const num=layoutNum(it.name); const isDefault=(num===0);
             const srcBadge=it.source==='gemelo'?'<span style="font-size:9px;background:rgba(0,200,255,.15);color:#7ee0ff;border-radius:4px;padding:1px 5px;">gemelo</span>':'<span style="font-size:9px;background:rgba(150,255,160,.12);color:#9effa0;border-radius:4px;padding:1px 5px;">pixeria</span>';
+            const defBadge=isDefault?'<span style="font-size:9px;background:rgba(46,224,106,.20);color:#9effa0;border-radius:4px;padding:1px 5px;margin-right:4px;">por defecto</span>':'';
             card.innerHTML=miniPreview(fc,14,8)+
-              '<div style="font-size:12px;font-weight:600;color:var(--text,#dfe);line-height:1.2;">'+(it.name||'(sin nombre)')+'</div>'+
+              '<div style="font-size:12px;font-weight:600;color:var(--text,#dfe);line-height:1.2;">'+defBadge+(it.name||'(sin nombre)')+'</div>'+
               '<div style="font-size:10px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;">'+srcBadge+'<span>'+fc+' muebles'+(it.client?' · '+it.client:'')+'</span></div>'+
               '<div style="font-size:9px;color:#56636d;word-break:break-all;">'+it.id+'</div>';
+            // ✕ en la esquina = borrar. El Layout 00 (por defecto) está protegido (🔒).
+            if(isDefault){
+              const lock=document.createElement('span'); lock.textContent='🔒'; lock.title='Layout 00 · por defecto (no se puede borrar)';
+              lock.style.cssText='position:absolute;top:5px;right:7px;font-size:11px;opacity:.7;'; card.appendChild(lock);
+            } else {
+              const x=document.createElement('button'); x.textContent='✕'; x.title='Eliminar este layout';
+              x.style.cssText='position:absolute;top:4px;right:4px;width:20px;height:20px;line-height:1;border:1px solid #7a3a2a;background:rgba(40,12,8,.9);color:#ff8866;border-radius:50%;cursor:pointer;font-size:11px;padding:0;z-index:2;';
+              x.onclick=()=>delDistro(it.id,it.name); card.appendChild(x);
+            }
             const row=document.createElement('div'); row.style.cssText='display:flex;gap:5px;';
             const bL=document.createElement('button'); bL.className='button secondary'; bL.textContent='Cargar'; bL.style.cssText='flex:1;padding:4px;font-size:11px;'; bL.onclick=()=>loadDistroIntoEditor(it.id);
-            const bJ=document.createElement('button'); bJ.className='button secondary'; bJ.textContent='⬇'; bJ.title='Descargar JSON para versionar en el repo (layouts/distribuciones/)'; bJ.style.cssText='padding:4px 8px;font-size:11px;'; bJ.onclick=()=>downloadDistro(it.id);
             const bR=document.createElement('button'); bR.className='button secondary'; bR.textContent='✏️'; bR.title='Renombrar'; bR.style.cssText='padding:4px 8px;font-size:11px;'; bR.onclick=()=>renameDistro(it.id,it.name);
-            const bD=document.createElement('button'); bD.className='button secondary'; bD.textContent='🗑'; bD.style.cssText='padding:4px 8px;font-size:11px;'; bD.onclick=()=>delDistro(it.id);
-            row.appendChild(bL); row.appendChild(bR); row.appendChild(bJ); row.appendChild(bD); card.appendChild(row);
+            const bJ=document.createElement('button'); bJ.className='button secondary'; bJ.textContent='⬇'; bJ.title='Descargar JSON para versionar en el repo (layouts/distribuciones/)'; bJ.style.cssText='padding:4px 8px;font-size:11px;'; bJ.onclick=()=>downloadDistro(it.id);
+            row.appendChild(bL); row.appendChild(bR); row.appendChild(bJ); card.appendChild(row);
             lib.appendChild(card);
           });
         }catch(e){ lib.innerHTML='<div style="grid-column:1/-1;color:#e06a6a;font-size:12px;text-align:center;padding:10px;">❌ '+e.message+'</div>'; }
