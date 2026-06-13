@@ -25,6 +25,67 @@
     .stock-lightbox-nav[disabled]{opacity:0;pointer-events:none}
     .stock-lightbox[hidden] .stock-lightbox-nav{display:none}
     @media (max-width:640px){ .stock-lightbox-nav{width:42px;height:64px;font-size:26px} .stock-lightbox-nav.prev{left:8px} .stock-lightbox-nav.next{right:8px} }
+
+    /* ── Distribuidor de assets ───────────────────────────────── */
+    /* Casilla de selección en lote sobre cada tarjeta */
+    .stock-card{ position:relative; }
+    .stock-select{ position:absolute; top:8px; left:8px; z-index:6; width:24px; height:24px;
+      display:grid; place-items:center; border:1px solid var(--line-bright); border-radius:6px;
+      background:rgba(0,0,0,.7); color:var(--matrix); cursor:pointer; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+      font-size:14px; line-height:1; transition:border-color .15s,background .15s,transform .15s; opacity:.55; }
+    .stock-card:hover .stock-select{ opacity:1; }
+    .stock-select:hover{ border-color:var(--matrix); transform:scale(1.08); }
+    .stock-card.is-selected .stock-select{ opacity:1; background:var(--matrix); color:#020602; border-color:var(--matrix); box-shadow:var(--glow); }
+    .stock-card.is-selected{ outline:1px solid var(--matrix); outline-offset:2px; }
+
+    /* Barra flotante de lote */
+    .dist-batchbar{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(120%);
+      z-index:40; display:flex; gap:14px; align-items:center; padding:12px 18px;
+      background:var(--panel-2); border:1px solid var(--matrix); border-radius:12px; box-shadow:var(--glow);
+      font-size:13px; color:var(--matrix); transition:transform .22s ease; }
+    .dist-batchbar.show{ transform:translateX(-50%) translateY(0); }
+    .dist-batchbar .count{ font-weight:700; letter-spacing:.04em; }
+    .dist-batchbar .count b{ font-size:16px; }
+
+    /* Modal de distribución */
+    #distModal{ width:min(620px,94vw); max-height:88vh; }
+    #distModal .dist-modal-body{ display:flex; flex-direction:column; gap:14px; max-height:calc(88vh - 120px); overflow:hidden; }
+    .dist-mode{ display:flex; gap:8px; }
+    .dist-mode label{ flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 10px;
+      border:1px solid var(--line-bright); border-radius:8px; cursor:pointer; color:var(--muted); font-size:12px;
+      text-transform:uppercase; letter-spacing:.08em; transition:all .15s; }
+    .dist-mode label:has(input:checked){ border-color:var(--matrix); color:var(--matrix); background:rgba(0,255,65,.08); }
+    .dist-mode input{ position:absolute; opacity:0; pointer-events:none; }
+    .dist-sched{ display:none; flex-direction:column; gap:10px; padding:10px; border:1px dashed var(--line-bright); border-radius:8px; }
+    .dist-sched.show{ display:flex; }
+    .dist-franjas{ display:flex; gap:6px; flex-wrap:wrap; }
+    .dist-franja{ padding:6px 12px; border:1px solid var(--line-bright); border-radius:20px; background:transparent;
+      color:var(--muted); cursor:pointer; font-size:12px; font-family:inherit; transition:all .15s; }
+    .dist-franja:hover{ border-color:var(--matrix); color:var(--matrix); }
+    .dist-franja.active{ border-color:var(--matrix); color:#020602; background:var(--matrix); }
+    .dist-sched-row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:12px; color:var(--muted); }
+    .dist-sched-row input[type="datetime-local"], .dist-sched-row input[type="number"]{
+      background:var(--bg); border:1px solid var(--line-bright); color:var(--matrix); border-radius:6px; padding:6px 8px; font-family:inherit; font-size:12px; }
+    .dist-sched-row input[type="number"]{ width:64px; }
+    .dist-sched-note{ font-size:11px; color:var(--muted); opacity:.85; }
+
+    .dist-screens-head{ display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--muted); }
+    .dist-screens-head a{ color:var(--matrix); cursor:pointer; text-decoration:underline; }
+    .dist-screens{ overflow:auto; display:flex; flex-direction:column; gap:6px; border:1px solid var(--line); border-radius:8px; padding:8px; min-height:60px; }
+    .dist-screen{ display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:6px;
+      cursor:pointer; transition:border-color .15s,background .15s; }
+    .dist-screen:hover{ border-color:var(--line-bright); }
+    .dist-screen.sel{ border-color:var(--matrix); background:rgba(0,255,65,.06); }
+    .dist-screen .dot{ width:9px; height:9px; border-radius:50%; flex:none; background:#555; }
+    .dist-screen.online .dot{ background:var(--matrix); box-shadow:0 0 8px var(--matrix); }
+    .dist-screen .sid{ font-weight:700; color:var(--matrix); font-size:12px; }
+    .dist-screen .srole{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+    .dist-screen .snow{ margin-left:auto; font-size:11px; color:var(--muted); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .dist-screen.all-row{ border-style:dashed; }
+    .dist-screen.all-row .sid{ color:#c8ffd0; }
+    .dist-items-note{ font-size:11px; color:var(--muted); }
+    .dist-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:4px; }
+    .dist-empty{ color:var(--muted); font-size:12px; text-align:center; padding:14px; }
   </style>
   <script defer src="/assets/analytics.js?v=20260611-gtm"></script>
 </head>
@@ -181,6 +242,55 @@
         <button type="button" class="btn" id="closeImport">Cerrar</button>
       </div>
       <pre class="brief" id="importStatus" style="display:none;font-size:11px;max-height:200px;"></pre>
+    </form>
+  </dialog>
+
+  <!-- Barra flotante de selección en lote -->
+  <div class="dist-batchbar" id="distBatchBar" role="region" aria-label="Selección en lote">
+    <span class="count"><b id="distBatchCount">0</b> seleccionados</span>
+    <button type="button" class="btn primary" id="distBatchSend">Distribuir →</button>
+    <button type="button" class="btn" id="distBatchClear">Limpiar</button>
+  </div>
+
+  <!-- Modal de distribución de assets a pantallas -->
+  <dialog id="distModal" class="keys-modal">
+    <form method="dialog" class="keys-form">
+      <h3>📡 DISTRIBUIR A PANTALLAS</h3>
+      <p class="dist-items-note" id="distItemsNote">—</p>
+
+      <div class="dist-modal-body">
+        <div class="dist-mode" role="radiogroup" aria-label="Cuándo distribuir">
+          <label><input type="radio" name="dist-mode" value="now" checked> ▶ Ahora</label>
+          <label><input type="radio" name="dist-mode" value="sched"> ⏰ Programar</label>
+        </div>
+
+        <div class="dist-sched" id="distSched">
+          <div class="dist-franjas" aria-label="Franja rápida (hoy)">
+            <button type="button" class="dist-franja" data-h="9">🌅 Mañana 09:00</button>
+            <button type="button" class="dist-franja" data-h="15">☀️ Tarde 15:00</button>
+            <button type="button" class="dist-franja" data-h="21">🌙 Noche 21:00</button>
+          </div>
+          <div class="dist-sched-row">
+            <label>Fecha y hora <input type="datetime-local" id="distWhen"></label>
+          </div>
+          <div class="dist-sched-row">
+            <label>Nº de pases <input type="number" id="distPasses" min="1" max="50" value="1"></label>
+            <label>cada <input type="number" id="distEvery" min="1" max="240" value="5"> min</label>
+          </div>
+          <p class="dist-sched-note">La programación es local: corre mientras esta pestaña esté abierta. La cola sobrevive a recargas.</p>
+        </div>
+
+        <div class="dist-screens-head">
+          <span>Destino · <span id="distScreensSummary">cargando pantallas…</span></span>
+          <a id="distReload" role="button" tabindex="0">↻ recargar</a>
+        </div>
+        <div class="dist-screens" id="distScreens"></div>
+      </div>
+
+      <div class="dist-actions">
+        <button type="button" class="btn primary" id="distGo">Distribuir</button>
+        <button type="button" class="btn" id="distCancel">Cancelar</button>
+      </div>
     </form>
   </dialog>
 
@@ -357,7 +467,9 @@
         ? `<p class="stock-comment" title="${escAttr(commentRaw)}">💬 ${commentSafe.slice(0, 200)}${commentRaw.length > 200 ? '…' : ''}</p>`
         : '';
       const tagsBlock = renderTagsHtml(it.tags);
-      return `<article class="stock-card" data-type="${typeLabel}" data-motor="${it.motor}" data-id="${idAttr}" tabindex="0" role="button" aria-label="Maximizar ${typeLabel}">
+      const selected = DIST.isSelected(it.id) ? ' is-selected' : '';
+      return `<article class="stock-card${selected}" data-type="${typeLabel}" data-motor="${it.motor}" data-id="${idAttr}" tabindex="0" role="button" aria-label="Maximizar ${typeLabel}">
+        <button type="button" class="stock-select" data-act="select" title="Seleccionar para distribuir en lote" aria-label="Seleccionar asset" aria-pressed="${DIST.isSelected(it.id) ? 'true' : 'false'}"><span aria-hidden="true">${DIST.isSelected(it.id) ? '✓' : '+'}</span></button>
         <div class="stock-card-media">
           ${renderPreview(it)}
         </div>
@@ -366,7 +478,7 @@
             <span class="stock-type ${typeLabel}">${typeLabel}</span>
             <div class="stock-card-actions">
               <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Abrir en AINimation" aria-label="Abrir en AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
-              <button type="button" class="stock-card-btn" data-act="feed" title="Enviar al Pixer Feed (pantallas / gemelo)" aria-label="Enviar al Pixer Feed"><span aria-hidden="true">📺</span></button>
+              <button type="button" class="stock-card-btn" data-act="feed" title="Distribuir a pantallas (elegir destino, ahora o programado)" aria-label="Distribuir a pantallas"><span aria-hidden="true">📡</span></button>
               <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Abrir asset en pestaña nueva" aria-label="Abrir asset en pestaña nueva" data-act="open"><span aria-hidden="true">↗</span></a>
               <button type="button" class="stock-card-btn" data-act="max" title="Maximizar" aria-label="Maximizar asset"><span aria-hidden="true">⛶</span></button>
               <button type="button" class="stock-card-btn danger" data-act="del" title="Eliminar" aria-label="Eliminar asset"><span aria-hidden="true">🗑</span></button>
@@ -615,34 +727,8 @@
       }
     }
 
-    // Envía un asset del Stock al Pixer Feed (signage) → lo pollean las
-    // pantallas y el gemelo (/signage/feed). Broadcast (sin target = todas).
-    async function sendToPixerFeed(it, btn) {
-      if (!it || !it.url) return;
-      const kind = (it.type === 'video' || it.type === 'animation') ? 'video'
-                 : (it.type === 'audio' || it.type === 'music') ? 'audio'
-                 : 'image'; // image y furni → image
-      const label = (it.title || it.prompt || it.id || '').slice(0, 60);
-      status.textContent = `// enviando "${label}" al Pixer Feed…`;
-      if (btn) btn.disabled = true;
-      try {
-        const r = await fetch(`${STOCK_BASE}/signage/push`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ kind, src: it.url, title: it.title || it.prompt || '', mime: it.mime || null }),
-        });
-        const data = await r.json().catch(() => ({}));
-        if (r.ok && data.ok) {
-          status.textContent = `📺 "${label}" enviado al Pixer Feed — aparecerá en pantallas y en el gemelo`;
-        } else {
-          status.textContent = `// ERROR feed ${r.status}: ${String(data.error || '').slice(0, 120)}`;
-        }
-      } catch (e) {
-        status.textContent = `// ERROR red Pixer Feed: ${e}`;
-      } finally {
-        if (btn) btn.disabled = false;
-      }
-    }
+    // (El antiguo "broadcast ciego" sendToPixerFeed quedó sustituido por DIST,
+    //  el distribuidor con destino por pantalla, lote y programación — más abajo.)
 
     grid.addEventListener('click', e => {
       // Click en chip de tag → activa filtro por ese tag (no abre lightbox)
@@ -656,6 +742,15 @@
         applyFilters(true);
         return;
       }
+      // Casilla de selección en lote (no es .stock-card-btn) → togglear, sin lightbox
+      const selBtn = e.target.closest('.stock-select');
+      if (selBtn) {
+        e.preventDefault(); e.stopPropagation();
+        const card = selBtn.closest('.stock-card');
+        const item = card && allItems.find(i => i.id === card.dataset.id);
+        if (item) DIST.toggleSelect(item.id, card);
+        return;
+      }
       // Botones de acciones (max/del/open) — el "open" es un <a> y deja burbujear,
       // pero detenemos para no abrir también el lightbox.
       const btn = e.target.closest('.stock-card-btn');
@@ -666,7 +761,7 @@
         if (!item) return;
         if (btn.dataset.act === 'max') { e.preventDefault(); openLightbox(item); }
         else if (btn.dataset.act === 'del') { e.preventDefault(); deleteAsset(id, card); }
-        else if (btn.dataset.act === 'feed') { e.preventDefault(); sendToPixerFeed(item, btn); }
+        else if (btn.dataset.act === 'feed') { e.preventDefault(); DIST.open([item]); }
         // 'open' es <a target=_blank> → deja burbujear sin preventDefault
         e.stopPropagation();
         return;
@@ -899,7 +994,243 @@
       try { history.replaceState({}, '', location.pathname); } catch {}
     }
 
+    // ── DISTRIBUIDOR DE ASSETS ────────────────────────────────────────────
+    // Reemplaza el viejo "broadcast ciego" del botón 📺 por un panel real:
+    //  · elegir pantalla destino (lee /signage/screens, push con target)
+    //  · multi-selección + envío en lote
+    //  · preview de qué hay "ahora" en cada pantalla (/signage/now) + online
+    //  · programar pases por franja/hora (cola local persistida en localStorage)
+    const DIST = (function () {
+      const SCHED_KEY = 'pixeriaDistQueue_v1';
+      const ALL = '__ALL__'; // marcador de broadcast a todas
+      const sel = new Set();       // ids de assets seleccionados (lote)
+      const tsel = new Set();      // ids de pantallas destino elegidas
+      let screens = [];            // [{screen, role, online, age_seconds, now}]
+      let screensAt = 0;
+      let modalItems = [];         // assets a distribuir en la apertura actual
+      let queue = [];              // tareas programadas
+
+      const $ = id => document.getElementById(id);
+      const kindOf = it => (it.type === 'video' || it.type === 'animation') ? 'video'
+                         : (it.type === 'audio' || it.type === 'music') ? 'audio' : 'image';
+      const labelOf = it => (it.title || it.prompt || it.id || 'asset').toString().slice(0, 60);
+      const snap = it => ({ kind: kindOf(it), src: it.url, title: it.title || it.prompt || '', mime: it.mime || null, label: labelOf(it) });
+
+      // ── Selección en lote ──
+      function isSelected(id) { return sel.has(id); }
+      function toggleSelect(id, card) {
+        if (sel.has(id)) sel.delete(id); else sel.add(id);
+        if (card) {
+          const on = sel.has(id);
+          card.classList.toggle('is-selected', on);
+          const b = card.querySelector('.stock-select');
+          if (b) { b.setAttribute('aria-pressed', on ? 'true' : 'false'); const s = b.querySelector('span'); if (s) s.textContent = on ? '✓' : '+'; }
+        }
+        renderBatchBar();
+      }
+      function clearSelection() {
+        sel.clear();
+        document.querySelectorAll('.stock-card.is-selected').forEach(c => {
+          c.classList.remove('is-selected');
+          const b = c.querySelector('.stock-select'); if (b) { b.setAttribute('aria-pressed', 'false'); const s = b.querySelector('span'); if (s) s.textContent = '+'; }
+        });
+        renderBatchBar();
+      }
+      function renderBatchBar() {
+        const bar = $('distBatchBar'); if (!bar) return;
+        $('distBatchCount').textContent = sel.size;
+        bar.classList.toggle('show', sel.size > 0);
+      }
+      function selectedItems() { return allItems.filter(i => sel.has(i.id)); }
+
+      // ── Pantallas ──
+      async function loadScreens(force) {
+        const fresh = (Date.now() - screensAt) < 15000;
+        if (!force && fresh && screens.length) { renderScreens(); return; }
+        $('distScreensSummary').textContent = 'cargando pantallas…';
+        try {
+          const r = await fetch(`${STOCK_BASE}/signage/screens`, { cache: 'no-store' });
+          const d = await r.json();
+          screens = Array.isArray(d.screens) ? d.screens : [];
+          screensAt = Date.now();
+          // "ahora reproduciendo" por pantalla (solo online, para ahorrar)
+          await Promise.all(screens.filter(s => s.online).map(async s => {
+            try {
+              const rr = await fetch(`${STOCK_BASE}/signage/now?screen=${encodeURIComponent(s.screen)}`, { cache: 'no-store' });
+              const dd = await rr.json();
+              s.now = dd && dd.item ? (dd.item.title || dd.item.kind || '—') : null;
+            } catch { s.now = null; }
+          }));
+        } catch (e) {
+          screens = [];
+          $('distScreensSummary').textContent = 'error al cargar pantallas';
+        }
+        renderScreens();
+      }
+      function renderScreens() {
+        const box = $('distScreens'); if (!box) return;
+        const online = screens.filter(s => s.online).length;
+        $('distScreensSummary').textContent = screens.length
+          ? `${online} online · ${screens.length} total` : 'sin pantallas registradas';
+        let html = `<div class="dist-screen all-row${tsel.has(ALL) ? ' sel' : ''}" data-sid="${ALL}">
+          <span class="dot" style="background:#c8ffd0"></span>
+          <span class="sid">📢 TODAS (broadcast)</span>
+          <span class="srole">a cada pantalla viva</span></div>`;
+        if (!screens.length) {
+          html += `<div class="dist-empty">No hay pantallas con heartbeat reciente.<br>Abre <code>signage.html</code> en un display o arranca el gemelo. Puedes usar “TODAS”.</div>`;
+        } else {
+          html += screens.map(s => {
+            const id = escAttr(s.screen);
+            const age = s.online ? 'online' : (s.age_seconds != null ? `hace ${Math.floor(s.age_seconds / 60)}m` : 'offline');
+            const now = s.now ? `▶ ${escAttr(String(s.now).slice(0, 40))}` : '';
+            return `<div class="dist-screen${s.online ? ' online' : ''}${tsel.has(s.screen) ? ' sel' : ''}" data-sid="${id}">
+              <span class="dot"></span>
+              <span><span class="sid">${id}</span> <span class="srole">${escAttr(s.role || 'signage')} · ${age}</span></span>
+              <span class="snow">${now}</span></div>`;
+          }).join('');
+        }
+        box.innerHTML = html;
+      }
+
+      // ── Envío ──
+      async function pushOne(s, target) {
+        const body = { kind: s.kind, src: s.src, title: s.title, mime: s.mime };
+        if (target && target !== ALL) body.target = target;
+        const r = await fetch(`${STOCK_BASE}/signage/push`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!(r.ok && d.ok)) throw new Error(d.error || ('HTTP ' + r.status));
+        return d;
+      }
+      async function distributeNow(snaps, targets) {
+        let ok = 0, fail = 0;
+        for (const s of snaps) {
+          for (const t of targets) {
+            try { await pushOne(s, t); ok++; } catch { fail++; }
+          }
+        }
+        return { ok, fail };
+      }
+
+      // ── Programación (cola local) ──
+      function loadQueue() { try { queue = JSON.parse(localStorage.getItem(SCHED_KEY) || '[]') || []; } catch { queue = []; } }
+      function saveQueue() { try { localStorage.setItem(SCHED_KEY, JSON.stringify(queue)); } catch {} }
+      function enqueue(snaps, targets, fireAt, passes, everyMin) {
+        queue.push({
+          qid: `${fireAt}-${Math.random().toString(36).slice(2, 7)}`,
+          items: snaps, targets, fireAt, passesLeft: passes, everyMin, total: passes,
+          label: snaps.length === 1 ? snaps[0].label : `${snaps.length} assets`,
+        });
+        saveQueue();
+        renderQueueStatus();
+      }
+      async function tick() {
+        if (!queue.length) return;
+        const now = Date.now(); let changed = false;
+        for (const t of queue.slice()) {
+          if (now < t.fireAt || t.passesLeft <= 0) continue;
+          await distributeNow(t.items, t.targets);
+          t.passesLeft--; changed = true;
+          if (t.passesLeft > 0) t.fireAt = now + (t.everyMin || 5) * 60000;
+          else queue = queue.filter(x => x.qid !== t.qid);
+        }
+        if (changed) { saveQueue(); renderQueueStatus(); }
+      }
+      function renderQueueStatus() {
+        const pend = queue.filter(t => t.passesLeft > 0).length;
+        if (pend) status.textContent = `⏰ ${pend} envío(s) programado(s) en cola · pase(s) restantes`;
+      }
+
+      // ── Modal ──
+      function open(items) {
+        modalItems = (items && items.length) ? items : selectedItems();
+        if (!modalItems.length) { status.textContent = '// nada que distribuir: selecciona o usa 📡 en una tarjeta'; return; }
+        tsel.clear(); tsel.add(ALL); // por defecto broadcast
+        $('distItemsNote').textContent = modalItems.length === 1
+          ? `Asset: “${labelOf(modalItems[0])}”` : `${modalItems.length} assets seleccionados`;
+        // reset modo
+        const nowRadio = document.querySelector('input[name="dist-mode"][value="now"]'); if (nowRadio) nowRadio.checked = true;
+        $('distSched').classList.remove('show');
+        document.querySelectorAll('.dist-franja').forEach(f => f.classList.remove('active'));
+        renderScreens();
+        const dlg = $('distModal'); if (dlg && !dlg.open) dlg.showModal();
+        loadScreens(false);
+      }
+      function close() { const d = $('distModal'); if (d && d.open) d.close(); }
+
+      async function go() {
+        const mode = (document.querySelector('input[name="dist-mode"]:checked') || {}).value || 'now';
+        const targets = tsel.has(ALL) ? [ALL] : Array.from(tsel);
+        if (!targets.length) { status.textContent = '// elige al menos una pantalla (o TODAS)'; return; }
+        const snaps = modalItems.map(snap).filter(s => s.src);
+        if (!snaps.length) { status.textContent = '// los assets no tienen URL'; return; }
+        const goBtn = $('distGo'); if (goBtn) goBtn.disabled = true;
+        try {
+          if (mode === 'now') {
+            status.textContent = `// distribuyendo ${snaps.length} asset(s) a ${targets.includes(ALL) ? 'todas' : targets.length + ' pantalla(s)'}…`;
+            const r = await distributeNow(snaps, targets);
+            status.textContent = `📡 distribuido: ${r.ok} envío(s) OK${r.fail ? ` · ${r.fail} fallo(s)` : ''} ${targets.includes(ALL) ? '(broadcast)' : ''}`;
+          } else {
+            const whenVal = $('distWhen').value;
+            if (!whenVal) { status.textContent = '// elige fecha/hora o una franja'; if (goBtn) goBtn.disabled = false; return; }
+            const fireAt = new Date(whenVal).getTime();
+            if (!fireAt || fireAt < Date.now() - 60000) { status.textContent = '// la hora ya pasó'; if (goBtn) goBtn.disabled = false; return; }
+            const passes = Math.max(1, Math.min(50, parseInt($('distPasses').value, 10) || 1));
+            const everyMin = Math.max(1, Math.min(240, parseInt($('distEvery').value, 10) || 5));
+            enqueue(snaps, targets, fireAt, passes, everyMin);
+            const d = new Date(fireAt);
+            status.textContent = `⏰ programado para ${d.toLocaleString('es')} · ${passes} pase(s) cada ${everyMin}m`;
+          }
+          close();
+          clearSelection();
+        } finally { if (goBtn) goBtn.disabled = false; }
+      }
+
+      // ── Wiring ──
+      function init() {
+        loadQueue();
+        renderQueueStatus();
+        setInterval(tick, 20000);
+        setTimeout(tick, 2000);
+
+        // Barra de lote
+        $('distBatchSend').addEventListener('click', () => open(selectedItems()));
+        $('distBatchClear').addEventListener('click', clearSelection);
+
+        // Modal: destino (delegado)
+        $('distScreens').addEventListener('click', e => {
+          const row = e.target.closest('.dist-screen'); if (!row) return;
+          const sid = row.dataset.sid;
+          if (sid === ALL) { tsel.clear(); tsel.add(ALL); }
+          else { tsel.delete(ALL); if (tsel.has(sid)) tsel.delete(sid); else tsel.add(sid); if (!tsel.size) tsel.add(ALL); }
+          renderScreens();
+        });
+        $('distReload').addEventListener('click', () => loadScreens(true));
+        $('distGo').addEventListener('click', go);
+        $('distCancel').addEventListener('click', close);
+
+        // Modo ahora/programar
+        document.querySelectorAll('input[name="dist-mode"]').forEach(r => r.addEventListener('change', () => {
+          $('distSched').classList.toggle('show', r.value === 'sched' && r.checked);
+        }));
+        // Franjas rápidas (hoy a la hora indicada; si ya pasó, mañana)
+        document.querySelectorAll('.dist-franja').forEach(f => f.addEventListener('click', () => {
+          const h = parseInt(f.dataset.h, 10);
+          const d = new Date(); d.setHours(h, 0, 0, 0);
+          if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1);
+          const pad = n => String(n).padStart(2, '0');
+          $('distWhen').value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          document.querySelectorAll('.dist-franja').forEach(x => x.classList.remove('active'));
+          f.classList.add('active');
+        }));
+      }
+
+      return { isSelected, toggleSelect, clearSelection, open, init };
+    })();
+
     (async () => {
+      DIST.init();
       await load();
       setTimeout(highlightFromQuery, 80);
     })();
