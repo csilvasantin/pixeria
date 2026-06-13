@@ -2199,8 +2199,13 @@
           status('✏️ Renombrada a «'+nm+'»','#7ee0a0'); loadLib();
         }catch(e){ status('❌ '+e.message,'#e06a6a'); }
       }
-      async function delDistro(id,name){
+      async function delDistro(id,name,client){
         if(layoutNum(name)===0){ status('El Layout 00 es el por defecto y no se puede borrar.','#e0a14a'); return; }
+        // SIEMPRE debe quedar al menos un layout (el Default) por Xpacio: no se
+        // puede borrar el último.
+        const cl=(client||'generic');
+        const mine=await layoutsOf(cl);
+        if(mine.length<=1){ status('No puedes borrar el último layout de «'+cl+'» — siempre debe quedar el Layout Default. Guarda otro antes.','#e0a14a'); return; }
         if(!confirm('¿Borrar «'+(name||id)+'» de la librería?')) return;
         try{ await fetch(dBase()+'/layout/delete?id='+encodeURIComponent(id),{method:'POST'}); loadLib(); }catch(e){}
       }
@@ -2243,7 +2248,7 @@
             } else {
               const x=document.createElement('button'); x.textContent='✕'; x.title='Eliminar este layout';
               x.style.cssText='position:absolute;top:4px;right:4px;width:20px;height:20px;line-height:1;border:1px solid #7a3a2a;background:rgba(40,12,8,.9);color:#ff8866;border-radius:50%;cursor:pointer;font-size:11px;padding:0;z-index:2;';
-              x.onclick=()=>delDistro(it.id,it.name); card.appendChild(x);
+              x.onclick=()=>delDistro(it.id,it.name,it.client); card.appendChild(x);
             }
             const row=document.createElement('div'); row.style.cssText='display:flex;gap:5px;';
             const bL=document.createElement('button'); bL.className='button secondary'; bL.textContent='Cargar'; bL.style.cssText='flex:1;padding:4px;font-size:11px;'; bL.onclick=()=>loadDistroIntoEditor(it.id);
