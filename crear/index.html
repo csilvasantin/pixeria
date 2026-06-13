@@ -2133,16 +2133,31 @@
         if(!quiet) $('distro-panel').scrollIntoView({behavior:'smooth',block:'start'});
       }
       // ── EN VIVO: refleja en el plano cenital lo que se edita en el gemelo ──
+      // Hay que ASOCIARLO a una pantalla (Xpacio): se sigue st.loadedScreen, y si
+      // no hay, se pide el id (/xpace en el gemelo). El gemelo debe estar en build
+      // ≥0004 (recárgalo) para que reporte al mover mobiliario.
       let __liveTimer=null, __liveTs=0;
       async function liveTick(){
         const scr=st.loadedScreen; if(!scr){ stopLive(); return; }
-        try{ const cur=await fetchCurrentLayout(scr,''); if(cur && cur.ts && cur.ts>__liveTs){ __liveTs=cur.ts; setEditorFromLayout(cur,true); } }catch(_){}
+        try{
+          const cur=await fetchCurrentLayout(scr,'');
+          if(cur && cur.ts && cur.ts>__liveTs){
+            __liveTs=cur.ts; setEditorFromLayout(cur,true);
+            status('🔴 EN VIVO · '+scr+' · '+(cur.furniture.length)+' muebles · actualizado '+new Date().toLocaleTimeString('es'),'#7ee0a0');
+          }
+        }catch(_){}
       }
       function startLive(){
-        if(!st.loadedScreen){ status('Carga un Xpacio con 📥 Estado actual primero (para saber qué pantalla seguir).','#e0a14a'); return; }
-        __liveTs=0; liveTick(); __liveTimer=setInterval(liveTick,2000);
+        let scr=st.loadedScreen;
+        if(!scr){
+          scr=(prompt('EN VIVO — ¿qué Xpacio sigo?\nPega el id de pantalla del gemelo (en XpaceOS escribe /xpace), ej. xtore-mny4b7:','')||'').trim().toLowerCase();
+          if(!scr){ status('EN VIVO cancelado.','#e0a14a'); return; }
+          st.loadedScreen=scr;
+        }
+        __liveTs=0;
         const b=$('distro-live'); if(b){ b.textContent='🔴 EN VIVO'; b.style.background='#ff3b3b'; b.style.color='#fff'; b.style.borderColor='#ff3b3b'; }
-        status('🔴 EN VIVO · mueve mobiliario en XpaceOS y lo verás moverse aquí ('+st.loadedScreen+')','#ff8866');
+        status('🔴 EN VIVO · siguiendo '+st.loadedScreen+' · mueve mobiliario en XpaceOS (recárgalo si no responde)…','#ff8866');
+        liveTick(); __liveTimer=setInterval(liveTick,2000);
       }
       function stopLive(){ if(__liveTimer){ clearInterval(__liveTimer); __liveTimer=null; } const b=$('distro-live'); if(b){ b.textContent='⚪ En vivo'; b.style.background=''; b.style.color=''; b.style.borderColor=''; } }
       function toggleLive(){ if(__liveTimer) stopLive(); else startLive(); }
