@@ -1998,8 +1998,15 @@
       async function mudanza(){
         if(!st.items.length){ status('Coloca al menos un mueble antes de la mudanza.','#e0a14a'); return; }
         const cc=window.CircuitSync&&window.CircuitSync.selected();
-        const targets=(cc&&Array.isArray(cc.screens))?cc.screens.slice():[];
-        if(!targets.length){ status('El circuito elegido no tiene pantallas reales (gemelos) asociadas. Elige un circuito con pantallas.','#e0a14a'); return; }
+        let targets=(cc&&Array.isArray(cc.screens))?cc.screens.slice():[];
+        // Sin circuito: devuelve al Xtanco que cargaste con 📥 Estado actual; si
+        // tampoco, pide el id de pantalla (el que da /xpacio en el gemelo).
+        if(!targets.length && st.loadedScreen) targets=[st.loadedScreen];
+        if(!targets.length){
+          const scr=(prompt('¿A qué pantalla envío la mudanza?\nPega el id (en el gemelo: /xpacio), ej. xtore-mny4b7:','')||'').trim().toLowerCase();
+          if(!scr){ status('Mudanza cancelada.','#e0a14a'); return; }
+          targets=[scr];
+        }
         const name=($('distro-name').value||'').trim()||'Distribución sin nombre';
         const client=($('distro-client').value||'').trim()||null;
         const body={ name, client, source:'pixeria',
@@ -2104,7 +2111,8 @@
             if(!cur){ status('La pantalla «'+scr+'» aún no ha reportado su distribución (abre/recarga el gemelo del Xtanco y reintenta).','#e0a14a'); return; }
           }
           setEditorFromLayout(cur);
-          status('📥 Estado actual cargado · '+cur.furniture.length+' muebles'+(cur.ts?' · '+new Date(cur.ts).toLocaleString('es'):'')+'. Edítalo y pulsa Mudanza para devolverlo.','#7ee0a0');
+          st.loadedScreen=cur.screen||'';   // recuerda el Xtanco de origen → Mudanza lo devuelve a ESA pantalla
+          status('📥 Estado actual cargado · '+cur.furniture.length+' muebles'+(cur.ts?' · '+new Date(cur.ts).toLocaleString('es'):'')+(st.loadedScreen?' · pantalla '+st.loadedScreen:'')+'. Edítalo y pulsa 🚚 Mudanza para devolverlo al Xtanco.','#7ee0a0');
         }catch(e){ status('❌ '+e.message,'#e06a6a'); }
       }
       async function delDistro(id){
