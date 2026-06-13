@@ -2081,17 +2081,28 @@
       }
       // REPRESENTAR ESTADO ACTUAL: carga en la rejilla la distribución VIVA del
       // Xpacio elegido (la que el gemelo está usando ahora mismo y reportó).
+      async function fetchCurrentLayout(screen,client){
+        const q=screen?('screen='+encodeURIComponent(screen)):('client='+encodeURIComponent(client));
+        const r=await fetch(dBase()+'/layout/current?'+q+'&ts='+Date.now(),{cache:'no-store'});
+        const d=await r.json(); const cur=d&&d.current;
+        return (cur&&Array.isArray(cur.furniture)&&cur.furniture.length)?cur:null;
+      }
       async function loadCurrent(){
         const cc=window.CircuitSync&&window.CircuitSync.selected();
         const screen=(cc&&Array.isArray(cc.screens)&&cc.screens[0])||'';
         const client=(cc&&cc.client)||'';
-        if(!screen && !client){ status('Elige un circuito para cargar su distribución actual.','#e0a14a'); return; }
         status('⏳ cargando distribución actual del Xpacio…');
         try{
-          const q=screen?('screen='+encodeURIComponent(screen)):('client='+encodeURIComponent(client));
-          const r=await fetch(dBase()+'/layout/current?'+q+'&ts='+Date.now(),{cache:'no-store'});
-          const d=await r.json(); const cur=d&&d.current;
-          if(!cur||!Array.isArray(cur.furniture)||!cur.furniture.length){ status('Ese Xpacio aún no ha reportado su distribución (abre/recarga el gemelo del Xtanco y reintenta).','#e0a14a'); return; }
+          let cur=null;
+          if(screen) cur=await fetchCurrentLayout(screen,'');
+          if(!cur && client) cur=await fetchCurrentLayout('',client);
+          // No casa por circuito → pedir el id de pantalla (el que da /xpacio en el gemelo).
+          if(!cur){
+            const scr=(prompt('No encuentro la distribución por el circuito.\n\nPega el ID de pantalla del Xpacio (en el gemelo escribe /xpacio a la IA y te lo dice, ej. xtore-mny4b7):','')||'').trim().toLowerCase();
+            if(!scr){ status('Cancelado. Usa /xpacio en el gemelo para saber el id de pantalla.','#e0a14a'); return; }
+            cur=await fetchCurrentLayout(scr,'');
+            if(!cur){ status('La pantalla «'+scr+'» aún no ha reportado su distribución (abre/recarga el gemelo del Xtanco y reintenta).','#e0a14a'); return; }
+          }
           setEditorFromLayout(cur);
           status('📥 Estado actual cargado · '+cur.furniture.length+' muebles'+(cur.ts?' · '+new Date(cur.ts).toLocaleString('es'):'')+'. Edítalo y pulsa Mudanza para devolverlo.','#7ee0a0');
         }catch(e){ status('❌ '+e.message,'#e06a6a'); }
