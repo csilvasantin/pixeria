@@ -531,6 +531,7 @@
             <button class="button secondary" id="distro-apply-size" style="height:34px;">Aplicar tamaño</button>
             <button class="button secondary" id="distro-current" style="height:34px;" title="Carga en la rejilla la distribución que el Xpacio elegido tiene AHORA mismo (estado vivo del gemelo)">📥 Estado actual</button>
             <button class="button primary" id="distro-mudanza" style="height:34px;" title="Envía esta distribución a los gemelos del circuito/ubicación elegidos para que la apliquen (re-colocan la sala)">🚚 Mudanza</button>
+            <button class="button secondary" id="distro-live" style="height:34px;" title="EN VIVO: refleja aquí, en el plano cenital, lo que muevas en el gemelo (XpaceOS). Carga antes un Xpacio con 📥 Estado actual.">⚪ En vivo</button>
           </div>
 
           <!-- Paleta de mobiliario -->
@@ -2112,8 +2113,9 @@
         return '<div style="display:grid;grid-template-columns:repeat('+c+',4px);grid-auto-rows:4px;gap:1px;justify-content:center;padding:6px;background:#0e1620;border-radius:4px;">'+
           Array.from({length:c*r}).map((_,k)=>'<div style="width:4px;height:4px;border-radius:1px;background:'+(k<(counts||0)?'#39d0ff':'#1b2530')+'"></div>').join('')+'</div>';
       }
-      // Vuelca una distribución (objeto {config,furniture,name,client}) a la rejilla.
-      function setEditorFromLayout(d){
+      // Vuelca una distribución a la rejilla. quiet=true (modo EN VIVO) no toca
+      // nombre/cliente ni hace scroll: solo repinta la sala (mirror del gemelo).
+      function setEditorFromLayout(d,quiet){
         const cfg=d.config||{};
         st.cols=Math.max(6,Math.min(24,cfg.cols||14)); st.rows=Math.max(4,Math.min(16,cfg.rows||8));
         st.wall=cfg.longWallColor&&cfg.longWallColor!=='transparent'?cfg.longWallColor:'#e0d4b8';
@@ -2122,12 +2124,28 @@
         // Todo Xpacio tiene entrada/salida: si la distribución no trae puerta, la
         // ponemos por defecto en el borde izquierdo (se ve marcada con su flecha).
         if(!st.items.some(i=>i.type==='door')) st.items.push({ id:'door-'+(st._n++), type:'door', col:0, row:Math.max(0,st.rows-2), sx:1, sy:1, label:'Puerta' });
-        $('distro-name').value=d.name||''; $('distro-client').value=d.client||'';
-        window.CircuitSync && window.CircuitSync.syncFromClient(d.client||'');
         $('distro-cols').value=st.cols; $('distro-rows').value=st.rows; $('distro-wallcol').value=st.wall; $('distro-floorcol').value=st.floor;
+        if(!quiet){
+          $('distro-name').value=d.name||''; $('distro-client').value=d.client||'';
+          window.CircuitSync && window.CircuitSync.syncFromClient(d.client||'');
+        }
         renderGrid();
-        $('distro-panel').scrollIntoView({behavior:'smooth',block:'start'});
+        if(!quiet) $('distro-panel').scrollIntoView({behavior:'smooth',block:'start'});
       }
+      // ── EN VIVO: refleja en el plano cenital lo que se edita en el gemelo ──
+      let __liveTimer=null, __liveTs=0;
+      async function liveTick(){
+        const scr=st.loadedScreen; if(!scr){ stopLive(); return; }
+        try{ const cur=await fetchCurrentLayout(scr,''); if(cur && cur.ts && cur.ts>__liveTs){ __liveTs=cur.ts; setEditorFromLayout(cur,true); } }catch(_){}
+      }
+      function startLive(){
+        if(!st.loadedScreen){ status('Carga un Xpacio con 📥 Estado actual primero (para saber qué pantalla seguir).','#e0a14a'); return; }
+        __liveTs=0; liveTick(); __liveTimer=setInterval(liveTick,2000);
+        const b=$('distro-live'); if(b){ b.textContent='🔴 EN VIVO'; b.style.background='#ff3b3b'; b.style.color='#fff'; b.style.borderColor='#ff3b3b'; }
+        status('🔴 EN VIVO · mueve mobiliario en XpaceOS y lo verás moverse aquí ('+st.loadedScreen+')','#ff8866');
+      }
+      function stopLive(){ if(__liveTimer){ clearInterval(__liveTimer); __liveTimer=null; } const b=$('distro-live'); if(b){ b.textContent='⚪ En vivo'; b.style.background=''; b.style.color=''; b.style.borderColor=''; } }
+      function toggleLive(){ if(__liveTimer) stopLive(); else startLive(); }
       async function loadDistroIntoEditor(id){
         status('⏳ cargando…');
         try{
@@ -2279,6 +2297,7 @@
         wire('distro-apply-size',applySize);
         wire('distro-current',loadCurrent);
         wire('distro-mudanza',mudanza);
+        wire('distro-live',toggleLive);
         wire('distro-save',saveDistro);
         wire('distro-iso',openIso);
         wire('distro-clear',()=>{ st.items=[]; renderGrid(); status('Rejilla vaciada'); });
