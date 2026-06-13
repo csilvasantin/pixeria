@@ -133,6 +133,10 @@
     .pl-player-media video, .pl-player-media img{ max-width:100%; max-height:62vh; object-fit:contain; }
     .pl-player-cover{ font-size:64px; }
     .pl-player-foot{ display:flex; align-items:center; gap:8px; }
+    /* Botón Prioridad 0 (envío que interrumpe) */
+    .prio0-btn{ border-color:#ff6644 !important; color:#ffd6cc !important; background:rgba(255,70,40,.10) !important; }
+    .prio0-btn:hover{ background:rgba(255,70,40,.26) !important; color:#fff !important; }
+    #distModal.dist-prio0{ border:1px solid #ff6644; box-shadow:0 0 30px rgba(255,70,40,.3); }
     /* Banner multi-etiqueta */
     .stock-tagf-wrap{ flex:1; display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
     .stock-tagf{ border:1px solid #aa88ff; background:rgba(170,136,255,.18); color:#fff; border-radius:999px; padding:2px 8px; font-size:11px; cursor:pointer; font-family:inherit; }
@@ -974,7 +978,7 @@
         <div class="stock-lightbox-actions">
           <a class="btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener">AI Abrir en AINimation</a>
           <a class="btn" href="${it.url}" target="_blank" rel="noopener" download>⬇ Descargar archivo</a>
-          <a class="btn" href="${it.url}" target="_blank" rel="noopener">↗ Abrir asset</a>
+          <button type="button" class="btn prio0-btn" data-act="prio0" title="Envía este asset AHORA al destino que elijas e interrumpe lo que se esté emitiendo">⚠ Prioridad 0 · interrumpir</button>
         </div>`;
       window.__lightboxItemId = it.id || null;
       lightbox.hidden = false;
@@ -1020,6 +1024,17 @@
 
     // Edición de tags dentro del lightbox (quitar / añadir)
     lightboxMeta.addEventListener('click', async e => {
+      // ⚠ Prioridad 0: enviar AHORA al destino que se elija, interrumpiendo lo
+      // que se esté emitiendo. Abre el distribuidor en modo prioridad-0.
+      const prio0Btn = e.target.closest('[data-act="prio0"]');
+      if (prio0Btn) {
+        e.preventDefault(); e.stopPropagation();
+        const it = currentItemInLightbox();
+        if (!it) return;
+        closeLightbox();
+        DIST.open([it], { priority0: true });
+        return;
+      }
       const removeBtn = e.target.closest('[data-act="remove-tag"]');
       const addBtn = e.target.closest('[data-act="add-tag"]');
       if (!removeBtn && !addBtn) return;
@@ -1399,6 +1414,7 @@
       let screens = [];            // [{screen, role, online, age_seconds, now}]
       let screensAt = 0;
       let modalItems = [];         // assets a distribuir en la apertura actual
+      let priorityZero = false;    // envío Prioridad 0: AHORA + interrumpe lo emitido
       let queue = [];              // tareas en fallback local (scheduler caído)
       let serverTasks = [];        // tareas en el scheduler (fuente de verdad)
 
@@ -1506,6 +1522,8 @@
       async function pushOne(s, target) {
         const body = { kind: s.kind, src: s.src, title: s.title, mime: s.mime };
         if (target && target !== ALL) body.target = target;
+        // Prioridad 0 → la pantalla interrumpe lo que esté emitiendo y muestra esto ya.
+        if (priorityZero) { body.priority = 0; body.interrupt = true; }
         const r = await fetch(`${STOCK_BASE}/signage/push`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
         });
@@ -1666,12 +1684,14 @@
       }
       function open(items, opts) {
         opts = opts || {};
+        priorityZero = !!opts.priority0;
         modalItems = (items && items.length) ? items : selectedItems();
         if (!modalItems.length) { status.textContent = '// nada que distribuir: selecciona o usa 📡 en una tarjeta'; return; }
         applyTargets(opts.targetScreens);
-        setItemsNote(opts.label);
+        setItemsNote(priorityZero ? ('⚠ PRIORIDAD 0 (interrumpe lo que se emite) · ' + (opts.label || (modalItems.length + ' asset(s)'))) : opts.label);
         populateSource(opts.label);
         const nowRadio = document.querySelector('input[name="dist-mode"][value="now"]'); if (nowRadio) nowRadio.checked = true;
+        const modal = $('distModal'); if (modal) modal.classList.toggle('dist-prio0', priorityZero);
         $('distSched').classList.remove('show');
         document.querySelectorAll('.dist-franja').forEach(f => f.classList.remove('active'));
         renderScreens();
@@ -1702,8 +1722,10 @@
         try {
           if (mode === 'now') {
             status.textContent = `// distribuyendo ${snaps.length} asset(s) a ${targets.includes(ALL) ? 'todas' : targets.length + ' pantalla(s)'}…`;
-            const r = await distributeNow(snaps, targets);
-            status.textContent = `📡 distribuido: ${r.ok} envío(s) OK${r.fail ? ` · ${r.fail} fallo(s)` : ''} ${targets.includes(ALL) ? '(broadcast)' : ''}`;
+            const r = await distributeNow(snaps, targets, priorityZero ? 'prio0' : 'now');
+            status.textContent = priorityZero
+              ? `⚠ PRIORIDAD 0 enviada · interrumpido en ${targets.includes(ALL) ? 'TODAS las pantallas' : targets.length + ' pantalla(s)'} (${r.ok} OK${r.fail ? ` · ${r.fail} fallo(s)` : ''})`
+              : `📡 distribuido: ${r.ok} envío(s) OK${r.fail ? ` · ${r.fail} fallo(s)` : ''} ${targets.includes(ALL) ? '(broadcast)' : ''}`;
           } else {
             const whenVal = $('distWhen').value;
             if (!whenVal) { status.textContent = '// elige fecha/hora o una franja'; if (goBtn) goBtn.disabled = false; return; }
