@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
   <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/contact-panel.css">
   <script defer src="https://csilvasantin.github.io/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=20260613-plfilter">
+  <link rel="stylesheet" href="workspace.css?v=20260613-play">
   <style>
     /* Flechas anterior/siguiente del lightbox del Stock */
     .stock-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);z-index:30;width:54px;height:84px;display:flex;align-items:center;justify-content:center;
@@ -124,6 +124,15 @@
     .pl-smart-clear{ border:1px solid var(--line-bright); background:transparent; color:var(--muted); border-radius:5px; padding:2px 7px; font-size:10px; cursor:pointer; font-family:inherit; margin-left:4px; }
     .pl-smart-clear:hover{ border-color:#ff8866; color:#ff8866; }
     .pl-smart-badge{ color:#c8b4ff; border:1px solid #aa88ff; background:rgba(170,136,255,.12); border-radius:999px; padding:1px 6px; font-size:10px; }
+    /* Reproductor de playlist (overlay) */
+    .pl-player{ position:fixed; inset:0; width:100vw; max-width:100vw; height:100vh; max-height:100vh; margin:0; border:none; z-index:60; background:rgba(0,0,0,.86); display:flex; align-items:center; justify-content:center; padding:20px; }
+    .pl-player::backdrop{ background:rgba(0,0,0,.5); }
+    .pl-player-box{ width:min(760px,94vw); background:#050a05; border:1px solid var(--matrix); border-radius:10px; box-shadow:0 0 40px rgba(0,255,65,.25); display:flex; flex-direction:column; gap:10px; padding:14px; }
+    .pl-player-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--matrix); font-size:13px; }
+    .pl-player-media{ background:#000; border:1px solid var(--line); border-radius:8px; min-height:200px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:8px; }
+    .pl-player-media video, .pl-player-media img{ max-width:100%; max-height:62vh; object-fit:contain; }
+    .pl-player-cover{ font-size:64px; }
+    .pl-player-foot{ display:flex; align-items:center; gap:8px; }
     /* Banner multi-etiqueta */
     .stock-tagf-wrap{ flex:1; display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
     .stock-tagf{ border:1px solid #aa88ff; background:rgba(170,136,255,.18); color:#fff; border-radius:999px; padding:2px 8px; font-size:11px; cursor:pointer; font-family:inherit; }
@@ -459,6 +468,7 @@
         <div id="plCircuitInfo" style="font-size:11px;color:var(--muted);"></div>
       </div>
       <div class="dist-actions">
+        <button type="button" class="btn" id="plPlay">▶ Reproducir playlist</button>
         <button type="button" class="btn primary" id="plSave">💾 Guardar playlist</button>
         <button type="button" class="btn" id="plSaveDist">💾 + 📡 Guardar y distribuir</button>
         <button type="button" class="btn" id="plCancel">Cerrar</button>
@@ -562,7 +572,10 @@
         // Lazy: el src se asigna solo cuando la tarjeta entra en viewport
         // (IntersectionObserver de abajo) → la rejilla pinta al instante y
         // solo se piden los metadatos de los vídeos visibles.
-        return `<video class="stock-video-preview" data-src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} preload="metadata" muted playsinline></video>`;
+        // El ▶ verde es un BOTÓN real: reproduce AQUÍ (inline, pequeño). Clic en
+        // la imagen abre el detalle. Por eso NO usamos el ::after pseudo.
+        return `<video class="stock-video-preview" data-src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} preload="metadata" muted playsinline></video>
+                <button type="button" class="stock-media-play" data-act="playmini" title="Reproducir aquí (pequeño)" aria-label="Reproducir aquí">▶</button>`;
       }
       if (it.type === 'audio' || it.type === 'music') {
         const cover = it.thumbnail || '';
@@ -1090,6 +1103,20 @@
           renderActiveTagBanner();
           applyFilters(true);
         }, 220);
+        return;
+      }
+      // ▶ verde → reproducir AQUÍ (inline, pequeño), NO abrir el detalle.
+      const playMini = e.target.closest('[data-act="playmini"]');
+      if (playMini) {
+        e.preventDefault(); e.stopPropagation();
+        const media = playMini.closest('.stock-card-media');
+        const v = media && media.querySelector('video');
+        if (v) {
+          if (v.dataset.src && !v.src) v.src = v.dataset.src;
+          v.controls = true; v.muted = false; v.style.pointerEvents = 'auto';
+          v.play().catch(() => {});
+        }
+        playMini.remove();
         return;
       }
       // Casilla de selección en lote (no es .stock-card-btn) → togglear, sin lightbox
@@ -1836,7 +1863,7 @@
           const live = c ? liveItemsForCriterion(c.tags, c.mode).length : (p.items || []).length;
           const smart = c ? '<span class="pl-smart-badge" title="Playlist inteligente: se actualiza sola con ' + escAttr(critLabel(c)) + '">🏷️ ' + c.tags.map(t => '#' + escAttr(t)).join(c.mode === 'and' ? ' Y ' : ' O ') + '</span> ' : '';
           return '<div class="pl-saved-row" data-id="' + escAttr(p.id) + '"><span class="pl-nm">🎵 ' + escAttr(p.name || 'playlist') + '</span><span class="pl-meta">' + smart + live + ' items' + (c ? ' · auto' : '') + (p.circuit ? ' · ' + escAttr((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '') + '</span>'
-          + '<button type="button" class="pl-mini" data-act="edit">editar</button><button type="button" class="pl-mini" data-act="dist">📡 distribuir</button><button type="button" class="pl-mini danger" data-act="del">✕</button></div>';
+          + '<button type="button" class="pl-mini" data-act="play">▶</button><button type="button" class="pl-mini" data-act="edit">editar</button><button type="button" class="pl-mini" data-act="dist">📡 distribuir</button><button type="button" class="pl-mini danger" data-act="del">✕</button></div>';
         }).join('');
       }
 
@@ -1905,6 +1932,57 @@
         DIST.open(items, { label: '🎵 ' + (p.name || 'playlist') + ' · ' + items.length + ' items' + (p.location ? ' → ' + p.location.name : (p.circuit ? ' → ' + ((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '')), targetScreens: resolveScreens(p) });
       }
 
+      // Reproduce una playlist en un overlay (vista previa secuencial, como se
+      // verá en pantalla): vídeo/audio avanzan al terminar, las imágenes 5s. Con
+      // botón "Distribuir" para, si está OK, empujarla a la red/punto (DIST →
+      // circuitos de admira.app/xpaceos.com).
+      function playPreview(items, onDistribute) {
+        items = (items || []).filter(it => it && it.url);
+        if (!items.length) { status.textContent = '// la playlist no tiene assets que reproducir'; return; }
+        const old = document.getElementById('plPlayer'); if (old) { try { old.close(); } catch (_) {} old.remove(); }
+        // <dialog> + showModal → top layer, ENCIMA del modal builder (un z-index
+        // normal quedaría por debajo de otro dialog abierto).
+        const ov = document.createElement('dialog'); ov.id = 'plPlayer'; ov.className = 'pl-player'; document.body.appendChild(ov);
+        try { ov.showModal(); } catch (_) {}
+        let idx = 0, timer = null;
+        const clear = () => { if (timer) { clearTimeout(timer); timer = null; } };
+        const close = () => { clear(); try { ov.close(); } catch (_) {} ov.remove(); };
+        ov.addEventListener('close', () => { clear(); if (ov.isConnected) ov.remove(); });   // Escape
+        const next = () => { clear(); if (idx + 1 < items.length) { idx++; render(); } };
+        const prev = () => { clear(); if (idx > 0) { idx--; render(); } };
+        function render() {
+          const it = items[idx];
+          const isVid = it.type === 'video' || it.type === 'animation';
+          const isAud = it.type === 'audio' || it.type === 'music';
+          const media = isVid ? `<video src="${escAttr(it.url)}" autoplay controls playsinline></video>`
+            : isAud ? `<div class="pl-player-cover">🎵</div><audio src="${escAttr(it.url)}" autoplay controls style="width:90%"></audio>`
+            : `<img src="${escAttr(it.url)}" alt="">`;
+          const last = idx + 1 >= items.length;
+          ov.innerHTML = `<div class="pl-player-box">
+            <div class="pl-player-head"><span>▶ ${idx + 1}/${items.length} · ${escAttr(String(it.title || 'asset').slice(0, 60))}</span><button type="button" class="pl-mini" data-plp="close">✕ cerrar</button></div>
+            <div class="pl-player-media">${media}</div>
+            <div class="pl-player-foot">
+              <button type="button" class="pl-mini" data-plp="prev" ${idx === 0 ? 'disabled' : ''}>‹ anterior</button>
+              <button type="button" class="pl-mini" data-plp="next" ${last ? 'disabled' : ''}>siguiente ›</button>
+              <span style="flex:1"></span>
+              ${onDistribute ? '<button type="button" class="btn primary" data-plp="dist">✓ Distribuir a pantallas</button>' : ''}
+            </div></div>`;
+          const m = ov.querySelector('video, audio');
+          if (m) { m.addEventListener('ended', next); m.play && m.play().catch(() => {}); }
+          else { timer = setTimeout(next, 5000); }   // imagen → 5s
+        }
+        ov.addEventListener('click', e => {
+          const b = e.target.closest('[data-plp]');
+          if (!b) { if (e.target === ov) close(); return; }
+          const a = b.dataset.plp;
+          if (a === 'close') close();
+          else if (a === 'next') next();
+          else if (a === 'prev') prev();
+          else if (a === 'dist') { close(); if (onDistribute) onDistribute(); }
+        });
+        render();
+      }
+
       function init() {
         load(); renderSaved();
         $('plTypes').addEventListener('click', e => { const b = e.target.closest('.pl-type'); if (!b) return; pickType = b.dataset.t || ''; document.querySelectorAll('.pl-type').forEach(x => x.classList.toggle('active', x === b)); renderPick(); });
@@ -1913,7 +1991,8 @@
         $('plScope').addEventListener('change', () => { draft.scope = $('plScope').value; draft.circuitId = ''; draft.locId = ''; fillCircuits(); fillLocations(); renderCircuitInfo(); });
         $('plCircuit').addEventListener('change', () => { draft.circuitId = $('plCircuit').value; draft.locId = ''; fillLocations(); renderCircuitInfo(); });
         $('plLocation').addEventListener('change', () => { draft.locId = $('plLocation').value; renderCircuitInfo(); });
-        $('plSaved').addEventListener('click', e => { const row = e.target.closest('.pl-saved-row'); const act = e.target.closest('[data-act]'); if (!row || !act) return; const id = row.dataset.id; if (act.dataset.act === 'edit') editPlaylist(id); else if (act.dataset.act === 'dist') distributePlaylist(id); else if (act.dataset.act === 'del') { playlists = playlists.filter(x => x.id !== id); save(); renderSaved(); } });
+        $('plSaved').addEventListener('click', e => { const row = e.target.closest('.pl-saved-row'); const act = e.target.closest('[data-act]'); if (!row || !act) return; const id = row.dataset.id; if (act.dataset.act === 'edit') editPlaylist(id); else if (act.dataset.act === 'dist') distributePlaylist(id); else if (act.dataset.act === 'play') { const p = get(id); if (p) { const pc = critTags(p); const items = pc ? liveItemsForCriterion(pc.tags, pc.mode) : (p.items || []); playPreview(items, () => distributePlaylist(id)); } } else if (act.dataset.act === 'del') { playlists = playlists.filter(x => x.id !== id); save(); renderSaved(); } });
+        const plPlay = $('plPlay'); if (plPlay) plPlay.addEventListener('click', () => { const dc = critTags(draft); const items = dc ? liveItemsForCriterion(dc.tags, dc.mode) : draft.items; playPreview(items, () => { const p = persistDraft(); if (p) distributePlaylist(p.id); }); });
         $('plSave').addEventListener('click', () => { const p = persistDraft(); if (p) { status.textContent = '🎵 playlist «' + p.name + '» guardada (' + p.items.length + ' items)'; const d = $('plModal'); if (d && d.open) d.close(); } });
         $('plSaveDist').addEventListener('click', () => { const p = persistDraft(); if (p) distributePlaylist(p.id); });
         $('plCancel').addEventListener('click', () => { const d = $('plModal'); if (d && d.open) d.close(); });
