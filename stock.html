@@ -86,6 +86,44 @@
     .dist-items-note{ font-size:11px; color:var(--muted); }
     .dist-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:4px; }
     .dist-empty{ color:var(--muted); font-size:12px; text-align:center; padding:14px; }
+
+    /* Cabecera de grupo/circuito en la lista de pantallas */
+    .dist-group-head{ display:flex; align-items:center; gap:8px; padding:6px 10px; margin-top:4px;
+      border:1px solid var(--line); border-radius:6px; background:rgba(0,255,65,.04); cursor:pointer;
+      font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); transition:border-color .15s; }
+    .dist-group-head:hover{ border-color:var(--line-bright); }
+    .dist-group-head.sel{ border-color:var(--matrix); color:var(--matrix); }
+    .dist-group-head .gcount{ margin-left:auto; opacity:.8; }
+    .dist-group-head .gtick{ width:16px; }
+
+    /* Chip flotante "Programados" (abajo-izquierda) */
+    .dist-queue-chip{ position:fixed; left:22px; bottom:22px; z-index:39; display:none; align-items:center; gap:8px;
+      padding:10px 14px; background:var(--panel-2); border:1px solid var(--line-bright); border-radius:10px;
+      color:var(--matrix); font-size:12px; cursor:pointer; box-shadow:var(--glow); transition:border-color .15s,transform .15s; }
+    .dist-queue-chip.show{ display:flex; }
+    .dist-queue-chip:hover{ border-color:var(--matrix); transform:translateY(-2px); }
+    .dist-queue-chip b{ font-size:14px; }
+
+    /* Panel Programados / Historial */
+    #distQueueModal{ width:min(640px,94vw); max-height:88vh; }
+    .distq-tabs{ display:flex; gap:6px; margin:6px 0 12px; }
+    .distq-tab{ flex:1; padding:8px; border:1px solid var(--line-bright); border-radius:8px; background:transparent;
+      color:var(--muted); cursor:pointer; font-family:inherit; font-size:12px; text-transform:uppercase; letter-spacing:.08em; transition:all .15s; }
+    .distq-tab.active{ border-color:var(--matrix); color:#020602; background:var(--matrix); }
+    .distq-list{ display:flex; flex-direction:column; gap:8px; max-height:56vh; overflow:auto; }
+    .distq-list[hidden]{ display:none; }
+    .distq-row{ display:flex; align-items:center; gap:10px; padding:10px; border:1px solid var(--line); border-radius:8px; font-size:12px; }
+    .distq-row .ql{ flex:1; min-width:0; }
+    .distq-row .ql b{ color:var(--matrix); }
+    .distq-row .ql .qmeta{ color:var(--muted); font-size:11px; display:block; margin-top:2px; }
+    .distq-row .qact{ display:flex; gap:6px; flex:none; }
+    .distq-mini{ border:1px solid var(--line-bright); background:transparent; color:var(--matrix); border-radius:6px;
+      padding:5px 9px; font-size:11px; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .distq-mini:hover{ border-color:var(--matrix); }
+    .distq-mini.danger{ color:#ff8866; border-color:#7a3a2a; }
+    .distq-mini.danger:hover{ border-color:#ff8866; }
+    .distq-empty{ color:var(--muted); font-size:12px; text-align:center; padding:24px; }
+    .distq-hist .ok{ color:var(--matrix); } .distq-hist .fail{ color:#ff8866; }
   </style>
   <script defer src="/assets/analytics.js?v=20260611-gtm"></script>
 </head>
@@ -290,6 +328,28 @@
       <div class="dist-actions">
         <button type="button" class="btn primary" id="distGo">Distribuir</button>
         <button type="button" class="btn" id="distCancel">Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Chip flotante: envíos programados pendientes -->
+  <button type="button" class="dist-queue-chip" id="distQueueChip" title="Ver envíos programados e historial">
+    ⏰ <b id="distQueueChipN">0</b> programados
+  </button>
+
+  <!-- Panel Programados / Historial -->
+  <dialog id="distQueueModal" class="keys-modal">
+    <form method="dialog" class="keys-form">
+      <h3>🗂 DISTRIBUCIÓN · COLA E HISTORIAL</h3>
+      <div class="distq-tabs" role="tablist">
+        <button type="button" class="distq-tab active" data-tab="queue">⏰ Programados</button>
+        <button type="button" class="distq-tab" data-tab="hist">📜 Historial</button>
+      </div>
+      <div class="distq-list" id="distqQueue"></div>
+      <div class="distq-list distq-hist" id="distqHist" hidden></div>
+      <div class="dist-actions">
+        <button type="button" class="distq-mini danger" id="distqClearHist" hidden>Vaciar historial</button>
+        <button type="button" class="btn" id="distqClose">Cerrar</button>
       </div>
     </form>
   </dialog>
@@ -1067,6 +1127,8 @@
         }
         renderScreens();
       }
+      // Nombre de circuito/grupo de una pantalla: ubicación si la hay, si no su rol.
+      const groupOf = s => (s.locName || s.loc || s.role || 'signage');
       function renderScreens() {
         const box = $('distScreens'); if (!box) return;
         const online = screens.filter(s => s.online).length;
@@ -1079,14 +1141,30 @@
         if (!screens.length) {
           html += `<div class="dist-empty">No hay pantallas con heartbeat reciente.<br>Abre <code>signage.html</code> en un display o arranca el gemelo. Puedes usar “TODAS”.</div>`;
         } else {
-          html += screens.map(s => {
-            const id = escAttr(s.screen);
-            const age = s.online ? 'online' : (s.age_seconds != null ? `hace ${Math.floor(s.age_seconds / 60)}m` : 'offline');
-            const now = s.now ? `▶ ${escAttr(String(s.now).slice(0, 40))}` : '';
-            return `<div class="dist-screen${s.online ? ' online' : ''}${tsel.has(s.screen) ? ' sel' : ''}" data-sid="${id}">
-              <span class="dot"></span>
-              <span><span class="sid">${id}</span> <span class="srole">${escAttr(s.role || 'signage')} · ${age}</span></span>
-              <span class="snow">${now}</span></div>`;
+          // Agrupar por circuito (ubicación o rol). Cada grupo lleva cabecera que
+          // selecciona/deselecciona todas sus pantallas de golpe.
+          const groups = {};
+          screens.forEach(s => { const g = groupOf(s); (groups[g] = groups[g] || []).push(s); });
+          const names = Object.keys(groups).sort();
+          html += names.map(g => {
+            const list = groups[g];
+            const ids = list.map(s => s.screen);
+            const allSel = ids.every(id => tsel.has(id)) && !tsel.has(ALL);
+            const onCount = list.filter(s => s.online).length;
+            const head = `<div class="dist-group-head${allSel ? ' sel' : ''}" data-group="${escAttr(g)}">
+              <span class="gtick">${allSel ? '✓' : '▸'}</span>
+              <span>${escAttr(g)}</span>
+              <span class="gcount">${onCount}/${list.length} online</span></div>`;
+            const rows = list.map(s => {
+              const id = escAttr(s.screen);
+              const age = s.online ? 'online' : (s.age_seconds != null ? `hace ${Math.floor(s.age_seconds / 60)}m` : 'offline');
+              const now = s.now ? `▶ ${escAttr(String(s.now).slice(0, 40))}` : '';
+              return `<div class="dist-screen${s.online ? ' online' : ''}${tsel.has(s.screen) ? ' sel' : ''}" data-sid="${id}">
+                <span class="dot"></span>
+                <span><span class="sid">${id}</span> <span class="srole">${escAttr(s.role || 'signage')} · ${age}</span></span>
+                <span class="snow">${now}</span></div>`;
+            }).join('');
+            return head + rows;
           }).join('');
         }
         box.innerHTML = html;
@@ -1103,15 +1181,25 @@
         if (!(r.ok && d.ok)) throw new Error(d.error || ('HTTP ' + r.status));
         return d;
       }
-      async function distributeNow(snaps, targets) {
+      async function distributeNow(snaps, targets, origin) {
         let ok = 0, fail = 0;
         for (const s of snaps) {
           for (const t of targets) {
-            try { await pushOne(s, t); ok++; } catch { fail++; }
+            let good = false;
+            try { await pushOne(s, t); ok++; good = true; } catch { fail++; }
+            logHistory({ ts: Date.now(), label: s.label, target: t, ok: good, via: origin || 'now' });
           }
         }
+        renderHistory();
         return { ok, fail };
       }
+
+      // ── Historial de envíos ──
+      const HIST_KEY = 'pixeriaDistHistory_v1';
+      let history = [];
+      function loadHistory() { try { history = JSON.parse(localStorage.getItem(HIST_KEY) || '[]') || []; } catch { history = []; } }
+      function saveHistory() { try { localStorage.setItem(HIST_KEY, JSON.stringify(history.slice(0, 200))); } catch {} }
+      function logHistory(rec) { history.unshift(rec); if (history.length > 200) history.length = 200; saveHistory(); }
 
       // ── Programación (cola local) ──
       function loadQueue() { try { queue = JSON.parse(localStorage.getItem(SCHED_KEY) || '[]') || []; } catch { queue = []; } }
@@ -1130,16 +1218,64 @@
         const now = Date.now(); let changed = false;
         for (const t of queue.slice()) {
           if (now < t.fireAt || t.passesLeft <= 0) continue;
-          await distributeNow(t.items, t.targets);
+          await distributeNow(t.items, t.targets, 'programado');
           t.passesLeft--; changed = true;
           if (t.passesLeft > 0) t.fireAt = now + (t.everyMin || 5) * 60000;
           else queue = queue.filter(x => x.qid !== t.qid);
         }
         if (changed) { saveQueue(); renderQueueStatus(); }
       }
+      function pendingCount() { return queue.filter(t => t.passesLeft > 0).length; }
       function renderQueueStatus() {
-        const pend = queue.filter(t => t.passesLeft > 0).length;
-        if (pend) status.textContent = `⏰ ${pend} envío(s) programado(s) en cola · pase(s) restantes`;
+        const pend = pendingCount();
+        const chip = $('distQueueChip');
+        if (chip) { chip.classList.toggle('show', pend > 0); $('distQueueChipN').textContent = pend; }
+        if ($('distQueueModal') && $('distQueueModal').open) renderQueuePanel();
+      }
+      function fmtTargets(targets) {
+        if (!targets || targets.includes(ALL)) return 'TODAS (broadcast)';
+        return targets.length > 2 ? `${targets.length} pantallas` : targets.join(', ');
+      }
+      function renderQueuePanel() {
+        const box = $('distqQueue'); if (!box) return;
+        const pend = queue.filter(t => t.passesLeft > 0).sort((a, b) => a.fireAt - b.fireAt);
+        if (!pend.length) { box.innerHTML = `<div class="distq-empty">// sin envíos programados.<br>Usa 📡 → ⏰ Programar en cualquier asset.</div>`; return; }
+        box.innerHTML = pend.map(t => {
+          const when = new Date(t.fireAt).toLocaleString('es', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+          const passes = t.total > 1 ? ` · pase ${t.total - t.passesLeft + 1}/${t.total} (cada ${t.everyMin}m)` : '';
+          return `<div class="distq-row" data-qid="${escAttr(t.qid)}">
+            <span class="ql"><b>${escAttr(t.label)}</b><span class="qmeta">⏰ ${when} → ${escAttr(fmtTargets(t.targets))}${passes}</span></span>
+            <span class="qact">
+              <button type="button" class="distq-mini" data-qact="fire" title="Enviar ahora">▶ ahora</button>
+              <button type="button" class="distq-mini danger" data-qact="cancel" title="Cancelar">✕</button>
+            </span></div>`;
+        }).join('');
+      }
+      function renderHistory() {
+        const box = $('distqHist'); if (!box) return;
+        if (!history.length) { box.innerHTML = `<div class="distq-empty">// sin envíos todavía.</div>`; return; }
+        box.innerHTML = history.slice(0, 100).map(h => {
+          const when = new Date(h.ts).toLocaleString('es', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+          const tgt = (h.target === ALL) ? 'TODAS' : h.target;
+          return `<div class="distq-row"><span class="ql"><b>${escAttr(h.label || 'asset')}</b><span class="qmeta">${when} → ${escAttr(tgt)} · ${escAttr(h.via || '')}</span></span>
+            <span class="${h.ok ? 'ok' : 'fail'}">${h.ok ? '✓ OK' : '✕ fallo'}</span></div>`;
+        }).join('');
+      }
+      async function fireTaskNow(qid) {
+        const t = queue.find(x => x.qid === qid); if (!t) return;
+        status.textContent = `// enviando "${t.label}" ahora…`;
+        const r = await distributeNow(t.items, t.targets, 'cola→ahora');
+        queue = queue.filter(x => x.qid !== qid);
+        saveQueue(); renderQueueStatus(); renderQueuePanel();
+        status.textContent = `📡 "${t.label}": ${r.ok} OK${r.fail ? ` · ${r.fail} fallo(s)` : ''}`;
+      }
+      function cancelTask(qid) {
+        queue = queue.filter(x => x.qid !== qid);
+        saveQueue(); renderQueueStatus(); renderQueuePanel();
+      }
+      function openQueue() {
+        renderQueuePanel(); renderHistory();
+        const d = $('distQueueModal'); if (d && !d.open) d.showModal();
       }
 
       // ── Modal ──
@@ -1190,6 +1326,8 @@
       // ── Wiring ──
       function init() {
         loadQueue();
+        loadHistory();
+        renderHistory();
         renderQueueStatus();
         setInterval(tick, 20000);
         setTimeout(tick, 2000);
@@ -1198,8 +1336,19 @@
         $('distBatchSend').addEventListener('click', () => open(selectedItems()));
         $('distBatchClear').addEventListener('click', clearSelection);
 
-        // Modal: destino (delegado)
+        // Modal: destino (delegado) — pantalla individual o cabecera de grupo/circuito
         $('distScreens').addEventListener('click', e => {
+          const head = e.target.closest('.dist-group-head');
+          if (head) {
+            const g = head.dataset.group;
+            const ids = screens.filter(s => groupOf(s) === g).map(s => s.screen);
+            tsel.delete(ALL);
+            const allSel = ids.length && ids.every(id => tsel.has(id));
+            ids.forEach(id => { if (allSel) tsel.delete(id); else tsel.add(id); });
+            if (!tsel.size) tsel.add(ALL);
+            renderScreens();
+            return;
+          }
           const row = e.target.closest('.dist-screen'); if (!row) return;
           const sid = row.dataset.sid;
           if (sid === ALL) { tsel.clear(); tsel.add(ALL); }
@@ -1209,6 +1358,21 @@
         $('distReload').addEventListener('click', () => loadScreens(true));
         $('distGo').addEventListener('click', go);
         $('distCancel').addEventListener('click', close);
+
+        // Chip + panel Programados/Historial
+        $('distQueueChip').addEventListener('click', openQueue);
+        $('distqClose').addEventListener('click', () => { const d = $('distQueueModal'); if (d && d.open) d.close(); });
+        $('distQueueModal').addEventListener('click', e => {
+          const row = e.target.closest('.distq-row'); const act = e.target.closest('[data-qact]');
+          if (row && act) { const qid = row.dataset.qid; if (act.dataset.qact === 'fire') fireTaskNow(qid); else cancelTask(qid); }
+        });
+        document.querySelectorAll('.distq-tab').forEach(tab => tab.addEventListener('click', () => {
+          document.querySelectorAll('.distq-tab').forEach(t => t.classList.toggle('active', t === tab));
+          const isHist = tab.dataset.tab === 'hist';
+          $('distqQueue').hidden = isHist; $('distqHist').hidden = !isHist;
+          $('distqClearHist').hidden = !isHist;
+        }));
+        $('distqClearHist').addEventListener('click', () => { history = []; saveHistory(); renderHistory(); });
 
         // Modo ahora/programar
         document.querySelectorAll('input[name="dist-mode"]').forEach(r => r.addEventListener('change', () => {
