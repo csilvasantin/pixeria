@@ -573,13 +573,13 @@
         return `<img src="${it.thumbnail || it.url}" alt="" loading="lazy">`;
       }
       if (it.type === 'video' || it.type === 'animation') {
-        // Lazy: el src se asigna solo cuando la tarjeta entra en viewport
-        // (IntersectionObserver de abajo) → la rejilla pinta al instante y
-        // solo se piden los metadatos de los vídeos visibles.
-        // El ▶ verde es un BOTÓN real: reproduce AQUÍ (inline, pequeño). Clic en
-        // la imagen abre el detalle. Por eso NO usamos el ::after pseudo.
-        return `<video class="stock-video-preview" data-src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} preload="metadata" muted playsinline></video>
-                <button type="button" class="stock-media-play" data-act="playmini" title="Reproducir aquí (pequeño)" aria-label="Reproducir aquí">▶</button>`;
+        // VELOCIDAD: la card NO carga un <video> (eso pedía metadatos de cada
+        // vídeo y ralentizaba la rejilla). Muestra solo el PÓSTER (imagen ligera);
+        // el ▶ verde crea el <video> y reproduce AQUÍ al pulsarlo (data-url). Clic
+        // en la imagen abre el detalle.
+        const poster = it.thumbnail || '';
+        return `${poster ? `<img class="stock-cover" src="${poster}" alt="" loading="lazy">` : '<div class="stock-cover-empty">▶</div>'}
+                <button type="button" class="stock-media-play" data-act="playmini" data-url="${escAttr(it.url)}" title="Reproducir aquí (pequeño)" aria-label="Reproducir aquí">▶</button>`;
       }
       if (it.type === 'audio' || it.type === 'music') {
         const cover = it.thumbnail || '';
@@ -1125,10 +1125,20 @@
       if (playMini) {
         e.preventDefault(); e.stopPropagation();
         const media = playMini.closest('.stock-card-media');
-        const v = media && media.querySelector('video');
-        if (v) {
-          if (v.dataset.src && !v.src) v.src = v.dataset.src;
-          v.controls = true; v.muted = false; v.style.pointerEvents = 'auto';
+        if (media) {
+          let v = media.querySelector('video');
+          if (!v) {
+            // La card solo tenía el póster → creamos el <video> al vuelo.
+            v = document.createElement('video');
+            v.src = playMini.dataset.url || '';
+            v.controls = true; v.autoplay = true; v.playsInline = true;
+            v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;';
+            media.appendChild(v);
+          } else {
+            if (v.dataset.src && !v.src) v.src = v.dataset.src;
+            v.controls = true; v.style.pointerEvents = 'auto';
+          }
+          v.muted = false;
           v.play().catch(() => {});
         }
         playMini.remove();
@@ -1246,9 +1256,22 @@
         .filter(Boolean);
     }
     async function load() {
-      status.textContent = '// cargando stock...';
       empty.hidden = true;
-      grid.innerHTML = '';
+      // 1) STALE-WHILE-REVALIDATE: pinta la copia guardada AL INSTANTE (sin esperar
+      //    a la red) → la galería aparece ya; luego refresca en segundo plano.
+      const cached = readCache();
+      const hadCache = !!(cached && cached.items.length);
+      if (hadCache) {
+        allItems = cached.items;
+        buildMotorOptions();
+        applyFilters();
+        feedMatrix();
+        status.textContent = '// actualizando…';
+      } else {
+        status.textContent = '// cargando stock...';
+        grid.innerHTML = '';
+      }
+      // 2) Refresco real en segundo plano.
       try {
         allItems = await fetchList();
         writeCache(allItems);
@@ -1257,13 +1280,8 @@
         status.textContent = '';
         feedMatrix();
       } catch (e) {
-        // Fallo de red/worker: NO es pérdida de datos. Si hay copia guardada, mostrarla.
-        const cached = readCache();
-        if (cached && cached.items.length) {
-          allItems = cached.items;
-          buildMotorOptions();
-          applyFilters();
-          feedMatrix();
+        // Fallo de red/worker: NO es pérdida de datos. Mantén la copia ya pintada.
+        if (hadCache) {
           const when = cached.ts ? fmtDate(new Date(cached.ts).toISOString()) : '';
           status.textContent = `// sin conexión con el servidor · mostrando copia guardada${when ? ' (' + when + ')' : ''} · pulsa ↻ para reintentar`;
         } else {
