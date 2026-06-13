@@ -312,6 +312,15 @@
       white-space: nowrap;
       border: 0;
     }
+    /* Barra de progreso de generación de mobiliario (como música/video) */
+    .furni-progress { display:none; gap:6px; margin-top:12px; padding:11px; border:1px solid var(--cyan); border-radius:6px; background:rgba(0,0,0,.45); }
+    .furni-progress.show { display:grid; }
+    .furni-progress-head { display:flex; justify-content:space-between; align-items:center; font-size:11px; letter-spacing:.06em; }
+    .furni-progress-kind { color:var(--cyan); font-weight:700; text-shadow:0 0 8px rgba(0,255,65,.4); }
+    .furni-progress-stats { color:var(--muted); font-variant-numeric:tabular-nums; }
+    .furni-progress-bar { position:relative; height:10px; border:1px solid var(--cyan); border-radius:999px; background:rgba(0,0,0,.7); overflow:hidden; }
+    .furni-progress-indet { position:absolute; inset:0; background:linear-gradient(90deg, transparent 0%, var(--cyan) 50%, transparent 100%); background-size:40% 100%; background-repeat:no-repeat; opacity:.55; animation:furniIndet 1.5s ease-in-out infinite; }
+    @keyframes furniIndet { 0%{ background-position:-40% 0; } 100%{ background-position:140% 0; } }
   </style>
   <script defer src="/assets/analytics.js?v=20260611-gtm"></script>
 </head>
@@ -464,6 +473,13 @@
             <h4>Resultado</h4>
             <div id="furni-preview" class="output" style="min-height:200px;display:flex;align-items:center;justify-content:center;text-align:center;color:#5a6a72;font-size:12px;padding:8px;">El sprite final aparecerá aquí después de generar o subir un PNG.</div>
             <div id="furni-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;min-height:16px;"></div>
+            <div class="furni-progress" id="furni-progress" role="progressbar" aria-label="Generando mobiliario">
+              <div class="furni-progress-head">
+                <span class="furni-progress-kind" id="furni-progress-kind">— GENERANDO —</span>
+                <span class="furni-progress-stats" id="furni-progress-stats">0s</span>
+              </div>
+              <div class="furni-progress-bar"><div class="furni-progress-indet"></div></div>
+            </div>
             <button class="button primary" id="furni-publish-btn" style="width:100%;margin-top:12px;" disabled>Publicar como Mobiliario (furni)</button>
             <div id="output" class="output" style="display:none;"></div>
             <div id="output-actions" style="display:none; margin-top:14px; gap:8px;">
@@ -1489,6 +1505,18 @@
       document.getElementById('furni-publish-btn').disabled = false;
     }
     function furniSetStatus(t) { const s = document.getElementById('furni-status'); if (s) s.textContent = t || ''; }
+    // Barra de progreso de generación (indeterminada + cronómetro), como en música/video.
+    let _furniProgT = null, _furniProgStart = 0;
+    function furniProgressStart(kind) {
+      const box = document.getElementById('furni-progress'); if (!box) return;
+      const k = document.getElementById('furni-progress-kind'); if (k) k.textContent = kind || '— GENERANDO —';
+      _furniProgStart = Date.now();
+      box.classList.add('show');
+      const tick = () => { const s = document.getElementById('furni-progress-stats'); if (s) s.textContent = Math.round((Date.now() - _furniProgStart) / 1000) + 's'; };
+      tick(); clearInterval(_furniProgT); _furniProgT = setInterval(tick, 250);
+    }
+    function furniProgressPhase(kind) { const k = document.getElementById('furni-progress-kind'); if (k) k.textContent = kind; }
+    function furniProgressDone() { clearInterval(_furniProgT); _furniProgT = null; const box = document.getElementById('furni-progress'); if (box) box.classList.remove('show'); }
     // Auto-título: deriva un nombre del prompt/archivo si el usuario no puso uno
     // (o si el anterior era auto). Evita que todos los muebles salgan con el mismo
     // nombre heredado (p.ej. "Sofa Matrix" en todos).
@@ -1542,6 +1570,7 @@
       // así el recorte queda limpio. Pedimos b64 para procesar sin "tainting" CORS.
       const full = 'isometric pixel-art furniture sprite, front view, ' + prompt + ', single object centered and filling most of the frame, on a UNIFORM PURE MAGENTA #ff00ff chroma background ONLY, flat solid magenta, no gradient, no surface, no floor, no scene, no shadow, no text, 16-bit retro game asset';
       const btn = document.getElementById('furni-ai-btn'); btn.disabled = true; const old = btn.textContent; btn.textContent = '⏳ generando…';
+      furniProgressStart('🎨 GENERANDO CON GROK IMAGINE');
       furniSetStatus('Generando con Grok Imagine…');
       try {
         const r = await fetch(ELEVEN_WORKER_URL + '/xai/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: full, model: 'grok-imagine-image', b64: true }) });
@@ -1550,6 +1579,7 @@
         const b64 = first && first.b64_json;
         if (!r.ok || !b64) throw new Error(data && data.error ? (data.error.message || JSON.stringify(data.error)) : 'sin imagen base64');
         const srcUrl = 'data:' + (first.mime || 'image/jpeg') + ';base64,' + b64;
+        furniProgressPhase('✂️ RECORTANDO EL FONDO');
         furniSetStatus('Recortando el fondo…');
         const out = await processFurniImage(srcUrl);
         furniAsset = { base64: out.dataUrl.split(',')[1], mime: 'image/png' };
@@ -1558,7 +1588,7 @@
         furniSetPreview(out.dataUrl, 'IA · ' + out.w + '×' + out.h + ' · fondo recortado');
         furniSetStatus('✅ Sprite con fondo transparente listo. Revisa y publica.');
       } catch (e) { furniSetStatus('Error IA: ' + e.message); alert('Generación falló: ' + e.message); }
-      finally { btn.disabled = false; btn.textContent = old; }
+      finally { furniProgressDone(); btn.disabled = false; btn.textContent = old; }
     }
     async function furniPublish() {
       if (!furniAsset) { alert('Sube o genera una imagen primero.'); return; }
