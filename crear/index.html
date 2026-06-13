@@ -1943,13 +1943,27 @@
             const it=itemAt(col,row);
             cell.style.cssText='width:'+CELL+'px;height:'+CELL+'px;display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid #1b2530;border-radius:3px;cursor:pointer;background:'+(it?'rgba(0,200,255,.10)':'#0e1620')+';';
             if(it){
-              if(it.type==='custom'&&it.img){
+              if(it.type==='door'){
+                // PUERTA = entrada/salida. La marcamos en verde con una FLECHA de
+                // por dónde entra la gente (hacia dentro de la sala según el borde)
+                // para poder orientarse en el plano cenital.
+                const dir=(col===0)?'→':(col===st.cols-1)?'←':(row===0)?'↓':(row===st.rows-1)?'↑':'↘';
+                const dirTxt={'→':'a la derecha','←':'a la izquierda','↓':'hacia abajo','↑':'hacia arriba','↘':'al interior'}[dir];
+                cell.style.background='rgba(46,224,106,.28)';
+                cell.style.borderColor='#2ee06a';
+                cell.style.boxShadow='inset 0 0 8px rgba(46,224,106,.55)';
+                cell.innerHTML='<span style="display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;"><span style="font-size:'+Math.round(CELL*0.6)+'px;color:#2ee06a;font-weight:700;">'+dir+'</span><span style="font-size:9px;">🚪</span></span>';
+                cell.title='Puerta · entrada/salida ('+col+','+row+') — la gente entra '+dirTxt+' · clic para quitar';
+              }
+              else if(it.type==='custom'&&it.img){
                 const fr=it.frames||1;
                 cell.innerHTML='<div style="width:'+(CELL-6)+'px;height:'+(CELL-6)+'px;'+window.furniFrameStyle(it.img,fr,it.orientation||0)+'"></div>';
               }
-              else { cell.textContent=iconFor(it.type); }
-              const rotMsg=(it.frames>1)?' · clic-derecho gira':'';
-              cell.title=(it.label||it.type)+' ('+col+','+row+') — clic para quitar'+rotMsg;
+              else {
+                cell.textContent=iconFor(it.type);
+                const rotMsg=(it.frames>1)?' · clic-derecho gira':'';
+                cell.title=(it.label||it.type)+' ('+col+','+row+') — clic para quitar'+rotMsg;
+              }
             } else { cell.title=col+','+row; }
             cell.onclick=()=>{
               const ex=itemAt(col,row);
@@ -2071,6 +2085,9 @@
         st.wall=cfg.longWallColor&&cfg.longWallColor!=='transparent'?cfg.longWallColor:'#e0d4b8';
         st.floor=cfg.floorColor&&cfg.floorColor!=='transparent'?cfg.floorColor:'#b8bcc0';
         st.items=(d.furniture||[]).filter(i=>i&&i.type&&i.col<st.cols&&i.row<st.rows).map(i=>{ const o={ id:i.id||(i.type+'-'+(st._n++)), type:i.type, col:i.col|0, row:i.row|0, sx:1, sy:1, label:i.label||i.type }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; });
+        // Todo Xpacio tiene entrada/salida: si la distribución no trae puerta, la
+        // ponemos por defecto en el borde izquierdo (se ve marcada con su flecha).
+        if(!st.items.some(i=>i.type==='door')) st.items.push({ id:'door-'+(st._n++), type:'door', col:0, row:Math.max(0,st.rows-2), sx:1, sy:1, label:'Puerta' });
         $('distro-name').value=d.name||''; $('distro-client').value=d.client||'';
         window.CircuitSync && window.CircuitSync.syncFromClient(d.client||'');
         $('distro-cols').value=st.cols; $('distro-rows').value=st.rows; $('distro-wallcol').value=st.wall; $('distro-floorcol').value=st.floor;
