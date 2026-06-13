@@ -381,7 +381,7 @@
           </div>
           <div style="display:flex;gap:12px;align-items:center;">
             <button type="button" class="assets-tab" id="tab-creacion">Creación</button>
-            <button type="button" class="assets-tab" id="tab-distribucion">Distribución</button>
+            <button type="button" class="assets-tab" id="tab-distribucion">Redistribución</button>
             <button type="button" class="assets-tab" id="tab-marketplace">Marketplace</button>
             <span id="user-badge" class="user"></span>
           </div>
@@ -529,6 +529,7 @@
             <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">Pared</label><input id="distro-wallcol" type="color" value="#e0d4b8" style="width:42px;height:34px;padding:2px;background:#0b1117;border:1px solid #28323a;border-radius:6px;"></div>
             <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">Suelo</label><input id="distro-floorcol" type="color" value="#b8bcc0" style="width:42px;height:34px;padding:2px;background:#0b1117;border:1px solid #28323a;border-radius:6px;"></div>
             <button class="button secondary" id="distro-apply-size" style="height:34px;">Aplicar tamaño</button>
+            <button class="button primary" id="distro-mudanza" style="height:34px;" title="Envía esta distribución a los gemelos del circuito/ubicación elegidos para que la apliquen (re-colocan la sala)">🚚 Mudanza</button>
           </div>
 
           <!-- Paleta de mobiliario -->
@@ -1990,6 +1991,32 @@
           loadLib();
         }catch(e){ status('❌ '+e.message,'#e06a6a'); }
       }
+      // MUDANZA: publica la distribución actual y la ENVÍA a los gemelos del
+      // circuito/ubicación elegidos para que la apliquen solos (vía /layout/assign;
+      // el gemelo sondea /layout/pending). "Mudanza" = la sala se recoloca sola.
+      async function mudanza(){
+        if(!st.items.length){ status('Coloca al menos un mueble antes de la mudanza.','#e0a14a'); return; }
+        const cc=window.CircuitSync&&window.CircuitSync.selected();
+        const targets=(cc&&Array.isArray(cc.screens))?cc.screens.slice():[];
+        if(!targets.length){ status('El circuito elegido no tiene pantallas reales (gemelos) asociadas. Elige un circuito con pantallas.','#e0a14a'); return; }
+        const name=($('distro-name').value||'').trim()||'Distribución sin nombre';
+        const client=($('distro-client').value||'').trim()||null;
+        const body={ name, client, source:'pixeria',
+          circuit: cc?{ id:cc.id, scope:cc.scope, label:cc.label, segmentation:cc.segmentation, pointCount:cc.pointCount,
+            location: cc.location?{ id:cc.location.id, name:cc.location.name, addr:cc.location.addr }:null }:null,
+          config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
+          furniture: st.items.map(distroItemOut) };
+        status('⏳ mudanza: publicando…');
+        try{
+          const r=await fetch(dBase()+'/layout/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+          const d=await r.json(); if(!r.ok||!d.ok) throw new Error(d.error||('HTTP '+r.status));
+          status('⏳ mudanza: enviando a '+targets.length+' gemelo(s)…');
+          const ra=await fetch(dBase()+'/layout/assign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:d.id,name:d.name,targets})});
+          const da=await ra.json(); if(!ra.ok||!da.ok) throw new Error(da.error||('HTTP '+ra.status));
+          status('🚚 Mudanza enviada a '+targets.length+' gemelo(s) ('+targets.join(', ')+'). La aplican en segundos.','#7ee0a0');
+          loadLib();
+        }catch(e){ status('❌ '+e.message,'#e06a6a'); }
+      }
       // Vista isométrica "exactamente igual que XpaceOS.com": publicamos el estado
       // actual del editor a un id de preview y embebemos el GEMELO real (su motor)
       // con ?distro=<id>&preview=1. Cero reimplementación → fidelidad total.
@@ -2130,6 +2157,7 @@
         window.CircuitSync && window.CircuitSync.init();
         const wire=(id,fn)=>{ const e=$(id); if(e) e.onclick=fn; };
         wire('distro-apply-size',applySize);
+        wire('distro-mudanza',mudanza);
         wire('distro-save',saveDistro);
         wire('distro-iso',openIso);
         wire('distro-clear',()=>{ st.items=[]; renderGrid(); status('Rejilla vaciada'); });
