@@ -1953,7 +1953,7 @@
                 cell.style.borderColor='#2ee06a';
                 cell.style.boxShadow='inset 0 0 8px rgba(46,224,106,.55)';
                 cell.innerHTML='<span style="display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;"><span style="font-size:'+Math.round(CELL*0.6)+'px;color:#2ee06a;font-weight:700;">'+dir+'</span><span style="font-size:9px;">🚪</span></span>';
-                cell.title='Puerta · entrada/salida ('+col+','+row+') — la gente entra '+dirTxt+' · clic para quitar';
+                cell.title='Puerta · entrada/salida ('+col+','+row+') — la gente entra '+dirTxt+' · arrastra para mover · doble-clic para borrar';
               }
               else if(it.type==='custom'&&it.img){
                 const fr=it.frames||1;
@@ -1962,18 +1962,38 @@
               else {
                 cell.textContent=iconFor(it.type);
                 const rotMsg=(it.frames>1)?' · clic-derecho gira':'';
-                cell.title=(it.label||it.type)+' ('+col+','+row+') — clic para quitar'+rotMsg;
+                cell.title=(it.label||it.type)+' ('+col+','+row+') — arrastra para mover · doble-clic para borrar'+rotMsg;
               }
             } else { cell.title=col+','+row; }
+            // Interacción: clic en vacío = colocar la pieza elegida · ARRASTRAR un
+            // mueble = moverlo (intercambia si la celda destino está ocupada) ·
+            // DOBLE-CLIC = borrar (con confirmación) · clic-derecho = girar.
+            if(it){
+              cell.draggable=true;
+              cell.ondragstart=(e)=>{ try{ e.dataTransfer.setData('text/plain',col+','+row); e.dataTransfer.effectAllowed='move'; }catch(_){ } cell.style.opacity='.5'; };
+              cell.ondragend=()=>{ cell.style.opacity=''; };
+              cell.ondblclick=()=>{ const ex=itemAt(col,row); if(ex && confirm('¿Eliminar '+(ex.label||ex.type)+'?')){ st.items=st.items.filter(i=>i!==ex); renderGrid(); status('🗑 Eliminado · '+st.items.length+' muebles'); } };
+            }
+            cell.ondragover=(e)=>{ e.preventDefault(); try{ e.dataTransfer.dropEffect='move'; }catch(_){ } };
+            cell.ondrop=(e)=>{
+              e.preventDefault();
+              let src=''; try{ src=e.dataTransfer.getData('text/plain'); }catch(_){ }
+              const p=src.split(','), sc=parseInt(p[0],10), sr=parseInt(p[1],10);
+              if(isNaN(sc)||isNaN(sr)||(sc===col&&sr===row)) return;
+              const moving=itemAt(sc,sr); if(!moving) return;
+              const target=itemAt(col,row);
+              moving.col=col; moving.row=row;
+              if(target){ target.col=sc; target.row=sr; }
+              renderGrid(); status('🔀 Movido'+(target?' (intercambiado)':''));
+            };
             cell.onclick=()=>{
-              const ex=itemAt(col,row);
-              if(ex){ st.items=st.items.filter(i=>i!==ex); }
-              else if(st.sel==='custom'&&st.selFurni){ st.items.push({ id:'custom-'+(st._n++), type:'custom', col, row, sx:1, sy:1, label:st.selFurni.title||'mueble', img:st.selFurni.url, fp:st.selFurni.fp||[1,1], ph:st.selFurni.ph||46, frames:st.selFurni.frames||1, orientation:0, custom:true }); }
-              else { st.items.push({ id:st.sel+'-'+(st._n++), type:st.sel, col, row, sx:1, sy:1, label:(FMAP[st.sel]&&FMAP[st.sel].label)||st.sel }); }
+              if(itemAt(col,row)) return;   // ocupado: arrastra para mover, doble-clic para borrar
+              if(st.sel==='custom'&&st.selFurni){ st.items.push({ id:'custom-'+(st._n++), type:'custom', col, row, sx:1, sy:1, label:st.selFurni.title||'mueble', img:st.selFurni.url, fp:st.selFurni.fp||[1,1], ph:st.selFurni.ph||46, frames:st.selFurni.frames||1, orientation:0, custom:true }); }
+              else if(st.sel){ st.items.push({ id:st.sel+'-'+(st._n++), type:st.sel, col, row, sx:1, sy:1, label:(FMAP[st.sel]&&FMAP[st.sel].label)||st.sel }); }
+              else { status('Elige una pieza de la paleta para colocar.','#e0a14a'); return; }
               renderGrid();
               status(st.items.length+' muebles colocados');
             };
-            // Clic derecho: girar el mueble si tiene varias caras (sin quitarlo).
             cell.oncontextmenu=(e)=>{ const ex=itemAt(col,row); if(ex&&ex.frames>1){ e.preventDefault(); ex.orientation=((ex.orientation||0)+1)%ex.frames; renderGrid(); status('Girado: cara '+((ex.orientation)+1)+'/'+ex.frames); } };
             g.appendChild(cell);
           }
@@ -2132,6 +2152,21 @@
           status('📥 Estado actual cargado · '+cur.furniture.length+' muebles'+(cur.ts?' · '+new Date(cur.ts).toLocaleString('es'):'')+(st.loadedScreen?' · pantalla '+st.loadedScreen:'')+'. Edítalo y pulsa 🚚 Mudanza para devolverlo al Xtanco.','#7ee0a0');
         }catch(e){ status('❌ '+e.message,'#e06a6a'); }
       }
+      // Renombra una distribución de la librería: la baja, le cambia el nombre y
+      // la re-publica con el MISMO id (el worker lo conserva → sobrescribe).
+      async function renameDistro(id,curName){
+        const nm=(prompt('Nuevo nombre de la distribución:',curName||'')||'').trim();
+        if(!nm||nm===curName) return;
+        status('⏳ renombrando…');
+        try{
+          const d=await (await fetch(dBase()+'/layout/get?id='+encodeURIComponent(id)+'&ts='+Date.now(),{cache:'no-store'})).json();
+          if(d.error) throw new Error(d.error);
+          const body={ id, name:nm, client:d.client||null, source:d.source||'pixeria', config:d.config||null, furniture:Array.isArray(d.furniture)?d.furniture:[], staff:Array.isArray(d.staff)?d.staff:[] };
+          const r=await fetch(dBase()+'/layout/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+          const rd=await r.json(); if(!r.ok||!rd.ok) throw new Error(rd.error||('HTTP '+r.status));
+          status('✏️ Renombrada a «'+nm+'»','#7ee0a0'); loadLib();
+        }catch(e){ status('❌ '+e.message,'#e06a6a'); }
+      }
       async function delDistro(id){
         if(!confirm('¿Borrar la distribución '+id+' de la librería?')) return;
         try{ await fetch(dBase()+'/layout/delete?id='+encodeURIComponent(id),{method:'POST'}); loadLib(); }catch(e){}
@@ -2169,8 +2204,9 @@
             const row=document.createElement('div'); row.style.cssText='display:flex;gap:5px;';
             const bL=document.createElement('button'); bL.className='button secondary'; bL.textContent='Cargar'; bL.style.cssText='flex:1;padding:4px;font-size:11px;'; bL.onclick=()=>loadDistroIntoEditor(it.id);
             const bJ=document.createElement('button'); bJ.className='button secondary'; bJ.textContent='⬇'; bJ.title='Descargar JSON para versionar en el repo (layouts/distribuciones/)'; bJ.style.cssText='padding:4px 8px;font-size:11px;'; bJ.onclick=()=>downloadDistro(it.id);
+            const bR=document.createElement('button'); bR.className='button secondary'; bR.textContent='✏️'; bR.title='Renombrar'; bR.style.cssText='padding:4px 8px;font-size:11px;'; bR.onclick=()=>renameDistro(it.id,it.name);
             const bD=document.createElement('button'); bD.className='button secondary'; bD.textContent='🗑'; bD.style.cssText='padding:4px 8px;font-size:11px;'; bD.onclick=()=>delDistro(it.id);
-            row.appendChild(bL); row.appendChild(bJ); row.appendChild(bD); card.appendChild(row);
+            row.appendChild(bL); row.appendChild(bR); row.appendChild(bJ); row.appendChild(bD); card.appendChild(row);
             lib.appendChild(card);
           });
         }catch(e){ lib.innerHTML='<div style="grid-column:1/-1;color:#e06a6a;font-size:12px;text-align:center;padding:10px;">❌ '+e.message+'</div>'; }
