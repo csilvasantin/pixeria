@@ -2752,7 +2752,20 @@
       });
 
       try {
-        let payload = { kind: asset.kind, title };
+        let payload = {
+          kind: asset.kind,
+          title,
+          meta: {
+            source: 'pixeria-studio',
+            page: page,
+            page_url: `${location.origin}${location.pathname}`,
+            asset_id: asset.id || '',
+            asset_label: title,
+            dispatch_mode: 'send-to-admiraxp',
+            selected_count: 1,
+            client: cliente,
+          },
+        };
         if (cover) payload.cover_url = cover; // worker quizas no lo persiste aun; harmless si lo descarta
         const isExternal = asset.src.startsWith('http://') || asset.src.startsWith('https://');
 

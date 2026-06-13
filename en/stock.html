@@ -611,7 +611,21 @@
         const r = await fetch(`${STOCK_BASE}/signage/push`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ kind, src: it.url, title: it.title || it.prompt || '', mime: it.mime || null }),
+          body: JSON.stringify({
+            kind,
+            src: it.url,
+            title: it.title || it.prompt || '',
+            mime: it.mime || null,
+            meta: {
+              source: 'pixeria-stock-en',
+              page: document.title || 'Pixeria Studio · Stock',
+              page_url: `${location.origin}${location.pathname}`,
+              asset_id: it.id || '',
+              asset_label: label,
+              dispatch_mode: 'feed-button',
+              selected_count: 1,
+            },
+          }),
         });
         const data = await r.json().catch(() => ({}));
         if (r.ok && data.ok) {

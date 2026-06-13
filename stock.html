@@ -1422,7 +1422,22 @@
       const kindOf = it => (it.type === 'video' || it.type === 'animation') ? 'video'
                          : (it.type === 'audio' || it.type === 'music') ? 'audio' : 'image';
       const labelOf = it => (it.title || it.prompt || it.id || 'asset').toString().slice(0, 60);
-      const snap = it => ({ kind: kindOf(it), src: it.url, title: it.title || it.prompt || '', mime: it.mime || null, label: labelOf(it) });
+      const pageUrl = () => `${location.origin}${location.pathname}`;
+      const sourceMeta = (s, extra) => Object.assign({
+        source: 'pixeria-stock',
+        page: document.title || 'Pixeria Studio · Stock',
+        page_url: pageUrl(),
+        asset_id: s.assetId || '',
+        asset_label: s.label || s.title || '',
+      }, extra || {});
+      const snap = it => ({
+        kind: kindOf(it),
+        src: it.url,
+        title: it.title || it.prompt || '',
+        mime: it.mime || null,
+        label: labelOf(it),
+        assetId: it.id || '',
+      });
 
       // ── Selección en lote ──
       function isSelected(id) { return sel.has(id); }
@@ -1519,8 +1534,14 @@
       }
 
       // ── Envío ──
-      async function pushOne(s, target) {
-        const body = { kind: s.kind, src: s.src, title: s.title, mime: s.mime };
+      async function pushOne(s, target, origin, batchSize) {
+        const body = {
+          kind: s.kind, src: s.src, title: s.title, mime: s.mime,
+          meta: sourceMeta(s, {
+            dispatch_mode: origin || 'now',
+            selected_count: batchSize || 1,
+          }),
+        };
         if (target && target !== ALL) body.target = target;
         // Prioridad 0 → la pantalla interrumpe lo que esté emitiendo y muestra esto ya.
         if (priorityZero) { body.priority = 0; body.interrupt = true; }
@@ -1536,7 +1557,7 @@
         for (const s of snaps) {
           for (const t of targets) {
             let good = false;
-            try { await pushOne(s, t); ok++; good = true; } catch { fail++; }
+            try { await pushOne(s, t, origin, snaps.length); ok++; good = true; } catch { fail++; }
             logHistory({ ts: Date.now(), label: s.label, target: t, ok: good, via: origin || 'now' });
           }
         }
