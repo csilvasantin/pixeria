@@ -1843,7 +1843,7 @@
       const st={ cols:14, rows:8, sel:'counter', selFurni:null, items:[], _n:1, wall:'#e0d4b8', floor:'#b8bcc0' };
       const $=id=>document.getElementById(id);
       function status(msg,col){ const s=$('distro-status'); if(s){ s.textContent=msg||''; s.style.color=col||'var(--muted)'; } }
-      function distroItemOut(i){ const o={ id:i.id, type:i.type, col:i.col, row:i.row, sx:1, sy:1, label:i.label }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; }
+      function distroItemOut(i){ const o={ id:i.id, type:i.type, col:i.col, row:i.row, sx:i.sx||1, sy:i.sy||1, label:i.label }; if(i.rot) o.rot=i.rot; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; }
 
       // ── Monedero del Xpacio + Mis muebles (KV en el worker /xpacio/*) ──
       function xpacioId(){ let id=localStorage.getItem('xpace_xpacio_id'); if(!id){ id='xp-'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4); try{ localStorage.setItem('xpace_xpacio_id',id); }catch(_){} } return id; }
@@ -1933,71 +1933,88 @@
           });
         }
       }
+      // Footprint real por tipo (tiles [ancho,fondo]) — MISMO mapa que el gemelo
+      // (FURNITURE_SIZE en game.html) para que la proporción cuadre y no se solapen.
+      const FURNITURE_SIZE={ counter:[1,2], shelves:[1,2], wineRack:[2,1], lottery:[2,1], vending:[1,1], magazines:[2,1], manager:[2,1], plant:[1,1], floorLamp:[1,1], rug:[2,2], djBooth:[2,1], tablet:[1,1], turnKiosk:[1,1], aroma:[1,1], metahuman:[1,1], led:[1,1], tft:[1,1], door:[1,1] };
+      function fpFor(it){
+        const base=(it.type==='custom'&&Array.isArray(it.fp)&&it.fp.length===2)?it.fp:(FURNITURE_SIZE[it.type]||[1,1]);
+        let w=Math.max(1,Math.ceil(base[0]*Math.max(0.2,it.sx||1)));
+        let d=Math.max(1,Math.ceil(base[1]*Math.max(0.2,it.sy||1)));
+        if(((it.rot||0)%2)===1){ const t=w; w=d; d=t; }   // girado 90° → intercambia ancho/fondo
+        return {w,d};
+      }
       function itemAt(col,row){ return st.items.find(i=>i.col===col&&i.row===row); }
+      // ¿libre el rectángulo (col,row,w,d) salvo `except`? (footprints reales)
+      function footprintFree(col,row,w,d,except){
+        for(const it of st.items){ if(it===except) continue; const f=fpFor(it); const iw=Math.min(f.w,st.cols-it.col), id=Math.min(f.d,st.rows-it.row); if(col<it.col+iw && col+w>it.col && row<it.row+id && row+d>it.row) return false; }
+        return true;
+      }
+      function placeAt(col,row){
+        let item;
+        if(st.sel==='custom'&&st.selFurni){ item={ id:'custom-'+(st._n++), type:'custom', col, row, sx:1, sy:1, rot:0, label:st.selFurni.title||'mueble', img:st.selFurni.url, fp:st.selFurni.fp||[1,1], ph:st.selFurni.ph||46, frames:st.selFurni.frames||1, orientation:0, custom:true }; }
+        else if(st.sel){ item={ id:st.sel+'-'+(st._n++), type:st.sel, col, row, sx:1, sy:1, rot:0, label:(FMAP[st.sel]&&FMAP[st.sel].label)||st.sel }; }
+        else { status('Elige una pieza de la paleta para colocar.','#e0a14a'); return; }
+        const fp=fpFor(item);
+        if(col+fp.w>st.cols||row+fp.d>st.rows){ status('No cabe ahí (ocupa '+fp.w+'×'+fp.d+').','#e0a14a'); return; }
+        if(!footprintFree(col,row,fp.w,fp.d,null)){ status('Ese hueco está ocupado.','#e0a14a'); return; }
+        st.items.push(item); renderGrid(); pushLiveDebounced(); status(st.items.length+' muebles colocados');
+      }
+      function handleDrop(e,col,row){
+        let src=''; try{ src=e.dataTransfer.getData('text/plain'); }catch(_){ }
+        const p=src.split(','), sc=parseInt(p[0],10), sr=parseInt(p[1],10);
+        if(isNaN(sc)||isNaN(sr)||(sc===col&&sr===row)) return;
+        const moving=st.items.find(i=>i.col===sc&&i.row===sr); if(!moving) return;
+        const fp=fpFor(moving);
+        if(col+fp.w>st.cols||row+fp.d>st.rows){ status('No cabe ahí.','#e0a14a'); return; }
+        if(!footprintFree(col,row,fp.w,fp.d,moving)){ status('Destino ocupado.','#e0a14a'); return; }
+        moving.col=col; moving.row=row; renderGrid(); pushLiveDebounced(); status('🔀 Movido');
+      }
       function renderGrid(){
         const g=$('distro-grid'); if(!g) return;
+        g.style.display='grid';
         g.style.gridTemplateColumns='repeat('+st.cols+','+CELL+'px)';
+        g.style.gridAutoRows=CELL+'px';
+        g.style.gap='2px';
         g.innerHTML='';
+        // ── Capa 1: celdas de fondo (colocar en hueco vacío + soltar) ──
         for(let row=0; row<st.rows; row++){
           for(let col=0; col<st.cols; col++){
             const cell=document.createElement('div');
-            const it=itemAt(col,row);
-            cell.style.cssText='width:'+CELL+'px;height:'+CELL+'px;display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid #1b2530;border-radius:3px;cursor:pointer;background:'+(it?'rgba(0,200,255,.10)':'#0e1620')+';';
-            if(it){
-              if(it.type==='door'){
-                // PUERTA = entrada/salida. La marcamos en verde con una FLECHA de
-                // por dónde entra la gente (hacia dentro de la sala según el borde)
-                // para poder orientarse en el plano cenital.
-                const dir=(col===0)?'→':(col===st.cols-1)?'←':(row===0)?'↓':(row===st.rows-1)?'↑':'↘';
-                const dirTxt={'→':'a la derecha','←':'a la izquierda','↓':'hacia abajo','↑':'hacia arriba','↘':'al interior'}[dir];
-                cell.style.background='rgba(46,224,106,.28)';
-                cell.style.borderColor='#2ee06a';
-                cell.style.boxShadow='inset 0 0 8px rgba(46,224,106,.55)';
-                cell.innerHTML='<span style="display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;"><span style="font-size:'+Math.round(CELL*0.6)+'px;color:#2ee06a;font-weight:700;">'+dir+'</span><span style="font-size:9px;">🚪</span></span>';
-                cell.title='Puerta · entrada/salida ('+col+','+row+') — la gente entra '+dirTxt+' · arrastra para mover · doble-clic para borrar';
-              }
-              else if(it.type==='custom'&&it.img){
-                const fr=it.frames||1;
-                cell.innerHTML='<div style="width:'+(CELL-6)+'px;height:'+(CELL-6)+'px;'+window.furniFrameStyle(it.img,fr,it.orientation||0)+'"></div>';
-              }
-              else {
-                cell.textContent=iconFor(it.type);
-                const rotMsg=(it.frames>1)?' · clic-derecho gira':'';
-                cell.title=(it.label||it.type)+' ('+col+','+row+') — arrastra para mover · doble-clic para borrar'+rotMsg;
-              }
-            } else { cell.title=col+','+row; }
-            // Interacción: clic en vacío = colocar la pieza elegida · ARRASTRAR un
-            // mueble = moverlo (intercambia si la celda destino está ocupada) ·
-            // DOBLE-CLIC = borrar (con confirmación) · clic-derecho = girar.
-            if(it){
-              cell.draggable=true;
-              cell.ondragstart=(e)=>{ try{ e.dataTransfer.setData('text/plain',col+','+row); e.dataTransfer.effectAllowed='move'; }catch(_){ } cell.style.opacity='.5'; };
-              cell.ondragend=()=>{ cell.style.opacity=''; };
-              cell.ondblclick=()=>{ const ex=itemAt(col,row); if(ex && confirm('¿Eliminar '+(ex.label||ex.type)+'?')){ st.items=st.items.filter(i=>i!==ex); renderGrid(); pushLiveDebounced(); status('🗑 Eliminado · '+st.items.length+' muebles'); } };
-            }
+            cell.style.cssText='grid-column:'+(col+1)+';grid-row:'+(row+1)+';border:1px solid #1b2530;border-radius:3px;background:#0e1620;cursor:pointer;';
+            cell.title=col+','+row;
             cell.ondragover=(e)=>{ e.preventDefault(); try{ e.dataTransfer.dropEffect='move'; }catch(_){ } };
-            cell.ondrop=(e)=>{
-              e.preventDefault();
-              let src=''; try{ src=e.dataTransfer.getData('text/plain'); }catch(_){ }
-              const p=src.split(','), sc=parseInt(p[0],10), sr=parseInt(p[1],10);
-              if(isNaN(sc)||isNaN(sr)||(sc===col&&sr===row)) return;
-              const moving=itemAt(sc,sr); if(!moving) return;
-              const target=itemAt(col,row);
-              moving.col=col; moving.row=row;
-              if(target){ target.col=sc; target.row=sr; }
-              renderGrid(); pushLiveDebounced(); status('🔀 Movido'+(target?' (intercambiado)':''));
-            };
-            cell.onclick=()=>{
-              if(itemAt(col,row)) return;   // ocupado: arrastra para mover, doble-clic para borrar
-              if(st.sel==='custom'&&st.selFurni){ st.items.push({ id:'custom-'+(st._n++), type:'custom', col, row, sx:1, sy:1, label:st.selFurni.title||'mueble', img:st.selFurni.url, fp:st.selFurni.fp||[1,1], ph:st.selFurni.ph||46, frames:st.selFurni.frames||1, orientation:0, custom:true }); }
-              else if(st.sel){ st.items.push({ id:st.sel+'-'+(st._n++), type:st.sel, col, row, sx:1, sy:1, label:(FMAP[st.sel]&&FMAP[st.sel].label)||st.sel }); }
-              else { status('Elige una pieza de la paleta para colocar.','#e0a14a'); return; }
-              renderGrid(); pushLiveDebounced();
-              status(st.items.length+' muebles colocados');
-            };
-            cell.oncontextmenu=(e)=>{ const ex=itemAt(col,row); if(ex&&ex.frames>1){ e.preventDefault(); ex.orientation=((ex.orientation||0)+1)%ex.frames; renderGrid(); pushLiveDebounced(); status('Girado: cara '+((ex.orientation)+1)+'/'+ex.frames); } };
+            cell.ondrop=(e)=>{ e.preventDefault(); handleDrop(e,col,row); };
+            cell.onclick=()=>placeAt(col,row);
             g.appendChild(cell);
           }
+        }
+        // ── Capa 2: muebles ocupando su FOOTPRINT real (encima) ──
+        for(const it of st.items){
+          const fp=fpFor(it);
+          const w=Math.max(1,Math.min(fp.w, st.cols-it.col)), d=Math.max(1,Math.min(fp.d, st.rows-it.row));
+          const el=document.createElement('div');
+          el.style.cssText='grid-column:'+(it.col+1)+' / span '+w+';grid-row:'+(it.row+1)+' / span '+d+';z-index:2;display:flex;align-items:center;justify-content:center;border-radius:3px;cursor:grab;overflow:hidden;background:rgba(0,200,255,.12);border:1px solid #2a6a7a;font-size:16px;';
+          if(it.type==='door'){
+            const dir=(it.col===0)?'→':(it.col===st.cols-1)?'←':(it.row===0)?'↓':(it.row===st.rows-1)?'↑':'↘';
+            const dirTxt={'→':'a la derecha','←':'a la izquierda','↓':'hacia abajo','↑':'hacia arriba','↘':'al interior'}[dir];
+            el.style.background='rgba(46,224,106,.28)'; el.style.borderColor='#2ee06a'; el.style.boxShadow='inset 0 0 8px rgba(46,224,106,.55)';
+            el.innerHTML='<span style="display:flex;flex-direction:column;align-items:center;line-height:1;"><span style="font-size:'+Math.round(CELL*0.6)+'px;color:#2ee06a;font-weight:700;">'+dir+'</span><span style="font-size:9px;">🚪</span></span>';
+            el.title='Puerta · entrada/salida — la gente entra '+dirTxt+' · arrastra para mover · doble-clic para borrar';
+          } else if(it.type==='custom'&&it.img){
+            el.innerHTML='<div style="width:92%;height:92%;'+window.furniFrameStyle(it.img,it.frames||1,it.orientation||0)+'"></div>';
+            el.title=(it.label||'mueble')+' ('+it.col+','+it.row+') '+w+'×'+d+' — arrastra para mover · doble-clic para borrar';
+          } else {
+            el.textContent=iconFor(it.type);
+            el.title=(it.label||it.type)+' ('+it.col+','+it.row+') '+w+'×'+d+' — arrastra para mover · doble-clic para borrar · clic-derecho gira';
+          }
+          el.draggable=true;
+          el.ondragstart=(e)=>{ try{ e.dataTransfer.setData('text/plain',it.col+','+it.row); e.dataTransfer.effectAllowed='move'; }catch(_){ } el.style.opacity='.5'; };
+          el.ondragend=()=>{ el.style.opacity=''; };
+          el.ondblclick=()=>{ if(confirm('¿Eliminar '+(it.label||it.type)+'?')){ st.items=st.items.filter(i=>i!==it); renderGrid(); pushLiveDebounced(); status('🗑 Eliminado · '+st.items.length+' muebles'); } };
+          el.oncontextmenu=(e)=>{ e.preventDefault(); it.rot=((it.rot||0)+1)%4; if(it.frames>1) it.orientation=((it.orientation||0)+1)%it.frames; renderGrid(); pushLiveDebounced(); status('Girado'); };
+          el.ondragover=(e)=>{ e.preventDefault(); };
+          el.ondrop=(e)=>{ e.preventDefault(); handleDrop(e,it.col,it.row); };
+          g.appendChild(el);
         }
       }
       function applySize(){
@@ -2120,7 +2137,7 @@
         st.cols=Math.max(6,Math.min(24,cfg.cols||14)); st.rows=Math.max(4,Math.min(16,cfg.rows||8));
         st.wall=cfg.longWallColor&&cfg.longWallColor!=='transparent'?cfg.longWallColor:'#e0d4b8';
         st.floor=cfg.floorColor&&cfg.floorColor!=='transparent'?cfg.floorColor:'#b8bcc0';
-        st.items=(d.furniture||[]).filter(i=>i&&i.type&&i.col<st.cols&&i.row<st.rows).map(i=>{ const o={ id:i.id||(i.type+'-'+(st._n++)), type:i.type, col:i.col|0, row:i.row|0, sx:1, sy:1, label:i.label||i.type }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; });
+        st.items=(d.furniture||[]).filter(i=>i&&i.type&&i.col<st.cols&&i.row<st.rows).map(i=>{ const o={ id:i.id||(i.type+'-'+(st._n++)), type:i.type, col:i.col|0, row:i.row|0, sx:i.sx||1, sy:i.sy||1, rot:i.rot||0, label:i.label||i.type }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; });
         // Todo Xpacio tiene entrada/salida: si la distribución no trae puerta, la
         // ponemos por defecto en el borde izquierdo (se ve marcada con su flecha).
         if(!st.items.some(i=>i.type==='door')) st.items.push({ id:'door-'+(st._n++), type:'door', col:0, row:Math.max(0,st.rows-2), sx:1, sy:1, label:'Puerta' });
