@@ -1973,7 +1973,7 @@
               cell.draggable=true;
               cell.ondragstart=(e)=>{ try{ e.dataTransfer.setData('text/plain',col+','+row); e.dataTransfer.effectAllowed='move'; }catch(_){ } cell.style.opacity='.5'; };
               cell.ondragend=()=>{ cell.style.opacity=''; };
-              cell.ondblclick=()=>{ const ex=itemAt(col,row); if(ex && confirm('¿Eliminar '+(ex.label||ex.type)+'?')){ st.items=st.items.filter(i=>i!==ex); renderGrid(); status('🗑 Eliminado · '+st.items.length+' muebles'); } };
+              cell.ondblclick=()=>{ const ex=itemAt(col,row); if(ex && confirm('¿Eliminar '+(ex.label||ex.type)+'?')){ st.items=st.items.filter(i=>i!==ex); renderGrid(); pushLiveDebounced(); status('🗑 Eliminado · '+st.items.length+' muebles'); } };
             }
             cell.ondragover=(e)=>{ e.preventDefault(); try{ e.dataTransfer.dropEffect='move'; }catch(_){ } };
             cell.ondrop=(e)=>{
@@ -1985,17 +1985,17 @@
               const target=itemAt(col,row);
               moving.col=col; moving.row=row;
               if(target){ target.col=sc; target.row=sr; }
-              renderGrid(); status('🔀 Movido'+(target?' (intercambiado)':''));
+              renderGrid(); pushLiveDebounced(); status('🔀 Movido'+(target?' (intercambiado)':''));
             };
             cell.onclick=()=>{
               if(itemAt(col,row)) return;   // ocupado: arrastra para mover, doble-clic para borrar
               if(st.sel==='custom'&&st.selFurni){ st.items.push({ id:'custom-'+(st._n++), type:'custom', col, row, sx:1, sy:1, label:st.selFurni.title||'mueble', img:st.selFurni.url, fp:st.selFurni.fp||[1,1], ph:st.selFurni.ph||46, frames:st.selFurni.frames||1, orientation:0, custom:true }); }
               else if(st.sel){ st.items.push({ id:st.sel+'-'+(st._n++), type:st.sel, col, row, sx:1, sy:1, label:(FMAP[st.sel]&&FMAP[st.sel].label)||st.sel }); }
               else { status('Elige una pieza de la paleta para colocar.','#e0a14a'); return; }
-              renderGrid();
+              renderGrid(); pushLiveDebounced();
               status(st.items.length+' muebles colocados');
             };
-            cell.oncontextmenu=(e)=>{ const ex=itemAt(col,row); if(ex&&ex.frames>1){ e.preventDefault(); ex.orientation=((ex.orientation||0)+1)%ex.frames; renderGrid(); status('Girado: cara '+((ex.orientation)+1)+'/'+ex.frames); } };
+            cell.oncontextmenu=(e)=>{ const ex=itemAt(col,row); if(ex&&ex.frames>1){ e.preventDefault(); ex.orientation=((ex.orientation||0)+1)%ex.frames; renderGrid(); pushLiveDebounced(); status('Girado: cara '+((ex.orientation)+1)+'/'+ex.frames); } };
             g.appendChild(cell);
           }
         }
@@ -2141,9 +2141,9 @@
         const scr=st.loadedScreen; if(!scr){ stopLive(); return; }
         try{
           const cur=await fetchCurrentLayout(scr,'');
-          if(cur && cur.ts && cur.ts>__liveTs){
+          if(cur && cur.ts && cur.ts>__liveTs && cur.origin!=='pixeria'){
             __liveTs=cur.ts; setEditorFromLayout(cur,true);
-            status('🔴 EN VIVO · '+scr+' · '+(cur.furniture.length)+' muebles · actualizado '+new Date().toLocaleTimeString('es'),'#7ee0a0');
+            status('🔴 EN VIVO · '+scr+' · '+(cur.furniture.length)+' muebles · ←XpaceOS '+new Date().toLocaleTimeString('es'),'#7ee0a0');
           }
         }catch(_){}
       }
@@ -2160,6 +2160,22 @@
         liveTick(); __liveTimer=setInterval(liveTick,2000);
       }
       function stopLive(){ if(__liveTimer){ clearInterval(__liveTimer); __liveTimer=null; } const b=$('distro-live'); if(b){ b.textContent='⚪ En vivo'; b.style.background=''; b.style.color=''; b.style.borderColor=''; } }
+      // Empuja la edición de pixeria al gemelo (bidireccional). Solo en EN VIVO,
+      // con anti-rebote; origin:'pixeria' para que el gemelo la aplique y pixeria
+      // ignore su propio eco. Se llama desde las acciones de usuario en la rejilla
+      // (NO desde setEditorFromLayout, que es la rama de "aplicar lo remoto").
+      let __pushT=null;
+      function pushLiveDebounced(){
+        if(!__liveTimer || !st.loadedScreen) return;
+        if(__pushT) clearTimeout(__pushT);
+        __pushT=setTimeout(()=>{
+          const snap={ name:($('distro-name').value||'Layout'), client:($('distro-client').value||'').trim()||'generic',
+            config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
+            furniture: st.items.map(distroItemOut) };
+          fetch(dBase()+'/layout/report',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({screen:st.loadedScreen, client:snap.client, origin:'pixeria', snapshot:snap})}).catch(()=>{});
+        },600);
+      }
       function toggleLive(){ if(__liveTimer) stopLive(); else startLive(); }
       async function loadDistroIntoEditor(id){
         status('⏳ cargando…');
