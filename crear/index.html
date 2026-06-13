@@ -464,6 +464,10 @@
               <button class="button secondary" id="furni-ai-btn" style="flex:1;">Generar furni IA</button>
             </div>
 
+            <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted);cursor:pointer;">
+              <input type="checkbox" id="furni-rot4" checked style="width:16px;height:16px;accent-color:var(--cyan);">
+              🔄 Generar 4 caras (girable como 3D) <span style="opacity:.6;font-size:10px;">(2 imágenes IA + espejo)</span>
+            </label>
             <button class="generate-btn" onclick="generateFurnitureFromBrief()">Generar mobiliario</button>
             <div style="font-size:11px; color:var(--muted); margin-top:8px; text-align:center;">Exportación orientada a gemelos digitales XpaceOS</div>
           </div>
@@ -1495,6 +1499,36 @@
       octx.drawImage(c, minX, minY, bw, bh, 0, 0, ow, oh);
       return { dataUrl: oc.toDataURL('image/png'), w: ow, h: oh };
     }
+    // ── Muebles "girables" (4 caras isométricas) ────────────────────────────
+    // Espeja un sprite en horizontal (cara der ↔ izq).
+    async function furniFlipH(dataUrl) {
+      const im = await furniLoadImg(dataUrl);
+      const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+      const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = false;
+      ctx.translate(c.width, 0); ctx.scale(-1, 1); ctx.drawImage(im, 0, 0);
+      return c.toDataURL('image/png');
+    }
+    // Compone N frames (mismo orden = giro) en un sprite-sheet HORIZONTAL: cada
+    // frame en su celda, centrado en X y alineado abajo (los "pies" cuadran).
+    async function furniComposeSheet(frameUrls) {
+      const ims = await Promise.all(frameUrls.map(furniLoadImg));
+      const fw = Math.max.apply(null, ims.map(i => i.naturalWidth));
+      const fh = Math.max.apply(null, ims.map(i => i.naturalHeight));
+      const c = document.createElement('canvas'); c.width = fw * ims.length; c.height = fh;
+      const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = false;
+      ims.forEach((im, i) => { const x = i * fw + Math.round((fw - im.naturalWidth) / 2); const y = fh - im.naturalHeight; ctx.drawImage(im, x, y); });
+      return { dataUrl: c.toDataURL('image/png'), frames: ims.length, frameW: fw, frameH: fh };
+    }
+    // Estilo CSS para mostrar UN frame de un sheet horizontal en una caja.
+    // frames<=1 → imagen completa. Compartido por preview/paleta/rejilla/market.
+    window.furniFrameStyle = function (url, frames, idx) {
+      const n = Math.max(1, frames | 0);
+      if (n <= 1) return "background-image:url('" + url + "');background-repeat:no-repeat;background-position:center;background-size:contain;image-rendering:pixelated;";
+      const i = ((idx | 0) % n + n) % n;
+      const pos = n > 1 ? (i / (n - 1)) * 100 : 0;
+      return "background-image:url('" + url + "');background-repeat:no-repeat;background-size:" + (n * 100) + "% 100%;background-position:" + pos + "% center;image-rendering:pixelated;";
+    };
+
     // Proporción: ajusta la huella (tiles) al aspecto real del sprite recortado,
     // para que en el gemelo el mueble no quede desproporcionado con su footprint.
     function furniAutoFootprint(w, h) {
@@ -1507,10 +1541,20 @@
         if (phEl && !phEl.dataset.userset) { phEl.value = String(Math.max(20, Math.min(120, Math.round(38 * Math.max(0.6, Math.min(2.2, h / Math.max(1, w) + 0.6)))))); }
       } catch (_) {}
     }
-    function furniSetPreview(src, label) {
-      const p = document.getElementById('furni-preview');
-      // Damero para que se vea la transparencia del sprite.
-      p.innerHTML = '<img src="' + src + '" style="max-height:120px;image-rendering:pixelated;border-radius:4px;background:repeating-conic-gradient(#2a2f36 0% 25%, #161a1f 0% 50%) 50% / 16px 16px;"><div style="margin-left:10px;font-size:12px;color:#9fe7ff;">' + (label || '') + '</div>';
+    let furniPreviewState = { url: null, frames: 1, idx: 0 };
+    function furniRenderPreview() {
+      const p = document.getElementById('furni-preview'); if (!p) return;
+      const s = furniPreviewState; const damero = 'background:repeating-conic-gradient(#2a2f36 0% 25%, #161a1f 0% 50%) 50% / 16px 16px;';
+      const box = '<div style="width:128px;height:128px;border-radius:4px;' + damero + window.furniFrameStyle(s.url, s.frames, s.idx) + '"></div>';
+      let ctl = '';
+      if (s.frames > 1) ctl = '<button type="button" class="button secondary" id="furni-rotate-btn" style="margin-top:8px;font-size:12px;">↻ girar (cara ' + (s.idx + 1) + '/' + s.frames + ')</button>';
+      p.innerHTML = box + '<div style="margin-left:10px;font-size:12px;color:#9fe7ff;">' + (s.label || '') + '</div>' + ctl;
+      const rb = document.getElementById('furni-rotate-btn');
+      if (rb) rb.onclick = () => { furniPreviewState.idx = (furniPreviewState.idx + 1) % furniPreviewState.frames; furniRenderPreview(); };
+    }
+    function furniSetPreview(src, label, frames) {
+      furniPreviewState = { url: src, frames: frames || 1, idx: 0, label: label };
+      furniRenderPreview();
       document.getElementById('furni-publish-btn').disabled = false;
     }
     function furniSetStatus(t) { const s = document.getElementById('furni-status'); if (s) s.textContent = t || ''; }
@@ -1572,30 +1616,49 @@
       const aiBtn = document.getElementById('furni-ai-btn'); if (aiBtn) aiBtn.onclick = furniGenerateAI;
       const pubBtn = document.getElementById('furni-publish-btn'); if (pubBtn) pubBtn.onclick = furniPublish;
     }
+    // Genera UNA cara con Grok Imagine y la recorta a PNG transparente.
+    async function furniGenOneFacing(prompt, view) {
+      const full = 'isometric pixel-art furniture sprite, ' + view + ', ' + prompt + ', single object centered and filling most of the frame, on a UNIFORM PURE MAGENTA #ff00ff chroma background ONLY, flat solid magenta, no gradient, no surface, no floor, no scene, no shadow, no text, 16-bit retro game asset';
+      const r = await fetch(ELEVEN_WORKER_URL + '/xai/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: full, model: 'grok-imagine-image', b64: true }) });
+      const data = await r.json().catch(() => ({}));
+      const first = data && data.data && data.data[0];
+      const b64 = first && first.b64_json;
+      if (!r.ok || !b64) throw new Error(data && data.error ? (data.error.message || JSON.stringify(data.error)) : 'sin imagen base64');
+      return await processFurniImage('data:' + (first.mime || 'image/jpeg') + ';base64,' + b64);
+    }
     async function furniGenerateAI() {
       const prompt = (document.getElementById('furni-prompt').value || '').trim();
       if (!prompt) { alert('Escribe un prompt para generar.'); return; }
-      // Fondo chroma (magenta) sólido: lejos de los colores típicos de mobiliario,
-      // así el recorte queda limpio. Pedimos b64 para procesar sin "tainting" CORS.
-      const full = 'isometric pixel-art furniture sprite, front view, ' + prompt + ', single object centered and filling most of the frame, on a UNIFORM PURE MAGENTA #ff00ff chroma background ONLY, flat solid magenta, no gradient, no surface, no floor, no scene, no shadow, no text, 16-bit retro game asset';
+      const rot4 = !!(document.getElementById('furni-rot4') || {}).checked;
       const btn = document.getElementById('furni-ai-btn'); btn.disabled = true; const old = btn.textContent; btn.textContent = '⏳ generando…';
-      furniProgressStart('🎨 GENERANDO CON GROK IMAGINE');
+      furniProgressStart(rot4 ? '🎨 CARA 1/2 · FRENTE' : '🎨 GENERANDO CON GROK IMAGINE');
       furniSetStatus('Generando con Grok Imagine…');
       try {
-        const r = await fetch(ELEVEN_WORKER_URL + '/xai/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: full, model: 'grok-imagine-image', b64: true }) });
-        const data = await r.json().catch(() => ({}));
-        const first = data && data.data && data.data[0];
-        const b64 = first && first.b64_json;
-        if (!r.ok || !b64) throw new Error(data && data.error ? (data.error.message || JSON.stringify(data.error)) : 'sin imagen base64');
-        const srcUrl = 'data:' + (first.mime || 'image/jpeg') + ';base64,' + b64;
-        furniProgressPhase('✂️ RECORTANDO EL FONDO');
-        furniSetStatus('Recortando el fondo…');
-        const out = await processFurniImage(srcUrl);
-        furniAsset = { base64: out.dataUrl.split(',')[1], mime: 'image/png' };
-        furniAutoFootprint(out.w, out.h);
-        furniMaybeAutoTitle(prompt);
-        furniSetPreview(out.dataUrl, 'IA · ' + out.w + '×' + out.h + ' · fondo recortado');
-        furniSetStatus('✅ Sprite con fondo transparente listo. Revisa y publica.');
+        if (rot4) {
+          // 2 vistas IA (frente ¾ + espalda ¾) → 4 caras con espejo horizontal.
+          const front = await furniGenOneFacing(prompt, 'front three-quarter view facing right');
+          furniProgressPhase('🎨 CARA 2/2 · ESPALDA');
+          const back = await furniGenOneFacing(prompt, 'rear three-quarter view facing right');
+          furniProgressPhase('✂️ MONTANDO 4 CARAS');
+          const frontL = await furniFlipH(front.dataUrl);
+          const backL = await furniFlipH(back.dataUrl);
+          // Orden de giro: frente-der → frente-izq → espalda-izq → espalda-der
+          const sheet = await furniComposeSheet([front.dataUrl, frontL, backL, back.dataUrl]);
+          furniAsset = { base64: sheet.dataUrl.split(',')[1], mime: 'image/png', frames: sheet.frames, frameW: sheet.frameW };
+          furniAutoFootprint(sheet.frameW, sheet.frameH);
+          furniMaybeAutoTitle(prompt);
+          furniSetPreview(sheet.dataUrl, 'IA · 4 caras girable · ' + sheet.frameW + '×' + sheet.frameH + '/cara', sheet.frames);
+          furniSetStatus('✅ Mueble girable (4 caras) listo. Pulsa ↻ para verlo girar y publica.');
+        } else {
+          furniProgressPhase('✂️ RECORTANDO EL FONDO');
+          furniSetStatus('Recortando el fondo…');
+          const out = await furniGenOneFacing(prompt, 'front view');
+          furniAsset = { base64: out.dataUrl.split(',')[1], mime: 'image/png', frames: 1 };
+          furniAutoFootprint(out.w, out.h);
+          furniMaybeAutoTitle(prompt);
+          furniSetPreview(out.dataUrl, 'IA · ' + out.w + '×' + out.h + ' · fondo recortado', 1);
+          furniSetStatus('✅ Sprite con fondo transparente listo. Revisa y publica.');
+        }
       } catch (e) { furniSetStatus('Error IA: ' + e.message); alert('Generación falló: ' + e.message); }
       finally { furniProgressDone(); btn.disabled = false; btn.textContent = old; }
     }
@@ -1606,6 +1669,7 @@
       const fpw = parseInt(document.getElementById('furni-fpw').value, 10) || 1;
       const fpd = parseInt(document.getElementById('furni-fpd').value, 10) || 1;
       const price = Math.max(0, parseInt((document.getElementById('furni-price')||{}).value, 10) || 0);
+      const frames = (furniAsset && furniAsset.frames) || 1;
       const payload = {
         type: 'furni',
         stockType: 'furni',
@@ -1613,12 +1677,14 @@
         category: 'furni',
         motor: 'Pixeria Studio Assets',
         title: title,
-        tags: ['furni', 'mobiliario', 'pixeria'],
+        tags: frames > 1 ? ['furni', 'mobiliario', 'pixeria', 'rot4', 'girable'] : ['furni', 'mobiliario', 'pixeria'],
         prompt: (document.getElementById('furni-prompt').value || '').slice(0, 300),
         fp: [fpw, fpd],
         ph: ph,
+        frames: frames,                       // nº de caras del sprite-sheet horizontal (1 = una sola)
+        frameW: (furniAsset && furniAsset.frameW) || null,
         price: price,
-        comment: 'Mobiliario creado en Pixeria · tipo:furni'
+        comment: 'Mobiliario creado en Pixeria · tipo:furni' + (frames > 1 ? ' · ' + frames + ' caras (girable)' : '')
       };
       if (furniAsset.base64) { payload.base64 = furniAsset.base64; payload.mime = furniAsset.mime; }
       else if (furniAsset.sourceUrl) { payload.sourceUrl = furniAsset.sourceUrl; payload.mime = furniAsset.mime || null; }
@@ -1749,7 +1815,7 @@
       const st={ cols:14, rows:8, sel:'counter', selFurni:null, items:[], _n:1, wall:'#e0d4b8', floor:'#b8bcc0' };
       const $=id=>document.getElementById(id);
       function status(msg,col){ const s=$('distro-status'); if(s){ s.textContent=msg||''; s.style.color=col||'var(--muted)'; } }
-      function distroItemOut(i){ const o={ id:i.id, type:i.type, col:i.col, row:i.row, sx:1, sy:1, label:i.label }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; } return o; }
+      function distroItemOut(i){ const o={ id:i.id, type:i.type, col:i.col, row:i.row, sx:1, sy:1, label:i.label }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; }
 
       // ── Monedero del Xpacio + Mis muebles (KV en el worker /xpacio/*) ──
       function xpacioId(){ let id=localStorage.getItem('xpace_xpacio_id'); if(!id){ id='xp-'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4); try{ localStorage.setItem('xpace_xpacio_id',id); }catch(_){} } return id; }
@@ -1787,16 +1853,16 @@
           g.innerHTML='';
           items.forEach(it=>{
             const url=it.url||it.src||''; if(!url) return; const title=it.title||it.prompt||'Mueble';
-            const fp=Array.isArray(it.fp)?it.fp:[1,1]; const price=furniDisplayPrice(it);
+            const fp=Array.isArray(it.fp)?it.fp:[1,1]; const price=furniDisplayPrice(it); const frames=it.frames||1;
             const card=document.createElement('div'); card.style.cssText='background:#0b1117;border:1px solid #28323a;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;';
-            card.innerHTML='<div style="height:90px;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#1a1f26 0% 25%, #12161b 0% 50%) 50% / 14px 14px;border-radius:6px;overflow:hidden;"><img src="'+url+'" alt="'+title+'" style="max-width:100%;max-height:90px;object-fit:contain;image-rendering:pixelated;"></div>'+
-              '<div style="font-size:12px;font-weight:600;color:#dfe;line-height:1.2;min-height:28px;">'+title+'</div>'+
+            card.innerHTML='<div style="height:90px;background:repeating-conic-gradient(#1a1f26 0% 25%, #12161b 0% 50%) 50% / 14px 14px;border-radius:6px;overflow:hidden;'+window.furniFrameStyle(url,frames,0)+'"></div>'+
+              '<div style="font-size:12px;font-weight:600;color:#dfe;line-height:1.2;min-height:28px;">'+title+((frames>1)?' <span title="girable · '+frames+' caras">🔄</span>':'')+'</div>'+
               '<div style="font-size:11px;display:flex;justify-content:space-between;"><span style="color:#7ee0a0;">💰 '+price+' cr.</span><span style="color:var(--muted);">'+(fp[0]+'×'+fp[1])+(it.ph?(' · '+it.ph+'px'):'')+'</span></div>';
             const btn=document.createElement('button'); btn.className='button secondary';
             const own=isOwned(url);
             btn.textContent=own?'✓ En mis muebles':'🛒 Comprar';
             btn.disabled=own; btn.style.cssText='width:100%;font-size:12px;padding:6px;'+(own?'opacity:.65;':'');
-            btn.onclick=()=>buyFurni({ url, title, fp, ph:it.ph||46, price }, btn);
+            btn.onclick=()=>buyFurni({ url, title, fp, ph:it.ph||46, price, frames, frameW:it.frameW||null }, btn);
             card.appendChild(btn); g.appendChild(card);
           });
         }catch(e){ g.innerHTML='<div style="grid-column:1/-1;color:#e06a6a;text-align:center;padding:14px;">❌ '+e.message+'</div>'; }
@@ -1832,7 +1898,7 @@
           owned.forEach(o=>{
             const active=(st.sel==='custom'&&st.selFurni&&st.selFurni.url===o.url);
             const b=document.createElement('button'); b.type='button'; b.title=o.title||'mueble comprado';
-            b.innerHTML='<img src="'+o.url+'" style="width:15px;height:15px;object-fit:contain;vertical-align:middle;image-rendering:pixelated;margin-right:3px;">'+String(o.title||'mueble').slice(0,12);
+            b.innerHTML='<span style="display:inline-block;width:15px;height:15px;vertical-align:middle;margin-right:3px;'+window.furniFrameStyle(o.url,o.frames||1,0)+'"></span>'+String(o.title||'mueble').slice(0,12)+((o.frames>1)?' 🔄':'');
             b.style.cssText='font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer;border:1px solid '+(active?'var(--cyan)':'#3a5a3a')+';background:'+(active?'rgba(0,200,255,.12)':'rgba(20,40,25,.4)')+';color:#cfe;';
             b.onclick=()=>{ st.sel='custom'; st.selFurni=o; renderPalette(); };
             p.appendChild(b);
@@ -1850,18 +1916,24 @@
             const it=itemAt(col,row);
             cell.style.cssText='width:'+CELL+'px;height:'+CELL+'px;display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid #1b2530;border-radius:3px;cursor:pointer;background:'+(it?'rgba(0,200,255,.10)':'#0e1620')+';';
             if(it){
-              if(it.type==='custom'&&it.img){ cell.innerHTML='<img src="'+it.img+'" style="width:'+(CELL-6)+'px;height:'+(CELL-6)+'px;object-fit:contain;image-rendering:pixelated;">'; }
+              if(it.type==='custom'&&it.img){
+                const fr=it.frames||1;
+                cell.innerHTML='<div style="width:'+(CELL-6)+'px;height:'+(CELL-6)+'px;'+window.furniFrameStyle(it.img,fr,it.orientation||0)+'"></div>';
+              }
               else { cell.textContent=iconFor(it.type); }
-              cell.title=(it.label||it.type)+' ('+col+','+row+') — clic para quitar';
+              const rotMsg=(it.frames>1)?' · clic-derecho gira':'';
+              cell.title=(it.label||it.type)+' ('+col+','+row+') — clic para quitar'+rotMsg;
             } else { cell.title=col+','+row; }
             cell.onclick=()=>{
               const ex=itemAt(col,row);
               if(ex){ st.items=st.items.filter(i=>i!==ex); }
-              else if(st.sel==='custom'&&st.selFurni){ st.items.push({ id:'custom-'+(st._n++), type:'custom', col, row, sx:1, sy:1, label:st.selFurni.title||'mueble', img:st.selFurni.url, fp:st.selFurni.fp||[1,1], ph:st.selFurni.ph||46, custom:true }); }
+              else if(st.sel==='custom'&&st.selFurni){ st.items.push({ id:'custom-'+(st._n++), type:'custom', col, row, sx:1, sy:1, label:st.selFurni.title||'mueble', img:st.selFurni.url, fp:st.selFurni.fp||[1,1], ph:st.selFurni.ph||46, frames:st.selFurni.frames||1, orientation:0, custom:true }); }
               else { st.items.push({ id:st.sel+'-'+(st._n++), type:st.sel, col, row, sx:1, sy:1, label:(FMAP[st.sel]&&FMAP[st.sel].label)||st.sel }); }
               renderGrid();
               status(st.items.length+' muebles colocados');
             };
+            // Clic derecho: girar el mueble si tiene varias caras (sin quitarlo).
+            cell.oncontextmenu=(e)=>{ const ex=itemAt(col,row); if(ex&&ex.frames>1){ e.preventDefault(); ex.orientation=((ex.orientation||0)+1)%ex.frames; renderGrid(); status('Girado: cara '+((ex.orientation)+1)+'/'+ex.frames); } };
             g.appendChild(cell);
           }
         }
@@ -1941,7 +2013,7 @@
           st.cols=Math.max(6,Math.min(24,cfg.cols||14)); st.rows=Math.max(4,Math.min(16,cfg.rows||8));
           st.wall=cfg.longWallColor&&cfg.longWallColor!=='transparent'?cfg.longWallColor:'#e0d4b8';
           st.floor=cfg.floorColor&&cfg.floorColor!=='transparent'?cfg.floorColor:'#b8bcc0';
-          st.items=(d.furniture||[]).filter(i=>i&&i.type&&i.col<st.cols&&i.row<st.rows).map(i=>{ const o={ id:i.id||(i.type+'-'+(st._n++)), type:i.type, col:i.col|0, row:i.row|0, sx:1, sy:1, label:i.label||i.type }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; } return o; });
+          st.items=(d.furniture||[]).filter(i=>i&&i.type&&i.col<st.cols&&i.row<st.rows).map(i=>{ const o={ id:i.id||(i.type+'-'+(st._n++)), type:i.type, col:i.col|0, row:i.row|0, sx:1, sy:1, label:i.label||i.type }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; });
           $('distro-name').value=d.name||''; $('distro-client').value=d.client||'';
           window.CircuitSync && window.CircuitSync.syncFromClient(d.client||'');
           $('distro-cols').value=st.cols; $('distro-rows').value=st.rows; $('distro-wallcol').value=st.wall; $('distro-floorcol').value=st.floor;
