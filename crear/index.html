@@ -1508,6 +1508,19 @@
       ctx.translate(c.width, 0); ctx.scale(-1, 1); ctx.drawImage(im, 0, 0);
       return c.toDataURL('image/png');
     }
+    // Corta una imagen en N columnas iguales → array de dataURLs (sin procesar).
+    async function furniSliceColumns(dataUrl, n) {
+      const im = await furniLoadImg(dataUrl);
+      const W = im.naturalWidth, H = im.naturalHeight, cw = Math.floor(W / n);
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        const c = document.createElement('canvas'); c.width = cw; c.height = H;
+        const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(im, i * cw, 0, cw, H, 0, 0, cw, H);
+        out.push(c.toDataURL('image/png'));
+      }
+      return out;
+    }
     // Compone N frames (mismo orden = giro) en un sprite-sheet HORIZONTAL: cada
     // frame en su celda, centrado en X y alineado abajo (los "pies" cuadran).
     async function furniComposeSheet(frameUrls) {
@@ -1616,15 +1629,19 @@
       const aiBtn = document.getElementById('furni-ai-btn'); if (aiBtn) aiBtn.onclick = furniGenerateAI;
       const pubBtn = document.getElementById('furni-publish-btn'); if (pubBtn) pubBtn.onclick = furniPublish;
     }
-    // Genera UNA cara con Grok Imagine y la recorta a PNG transparente.
-    async function furniGenOneFacing(prompt, view) {
-      const full = 'isometric pixel-art furniture sprite, ' + view + ', ' + prompt + ', single object centered and filling most of the frame, on a UNIFORM PURE MAGENTA #ff00ff chroma background ONLY, flat solid magenta, no gradient, no surface, no floor, no scene, no shadow, no text, 16-bit retro game asset';
+    // Llama a Grok Imagine y devuelve la imagen CRUDA (dataURL, sin recortar).
+    async function furniGenRaw(full) {
       const r = await fetch(ELEVEN_WORKER_URL + '/xai/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: full, model: 'grok-imagine-image', b64: true }) });
       const data = await r.json().catch(() => ({}));
       const first = data && data.data && data.data[0];
       const b64 = first && first.b64_json;
       if (!r.ok || !b64) throw new Error(data && data.error ? (data.error.message || JSON.stringify(data.error)) : 'sin imagen base64');
-      return await processFurniImage('data:' + (first.mime || 'image/jpeg') + ';base64,' + b64);
+      return 'data:' + (first.mime || 'image/jpeg') + ';base64,' + b64;
+    }
+    // Genera UNA cara con Grok Imagine y la recorta a PNG transparente.
+    async function furniGenOneFacing(prompt, view) {
+      const full = 'isometric pixel-art furniture sprite, ' + view + ', ' + prompt + ', single object centered and filling most of the frame, on a UNIFORM PURE MAGENTA #ff00ff chroma background ONLY, flat solid magenta, no gradient, no surface, no floor, no scene, no shadow, no text, 16-bit retro game asset';
+      return await processFurniImage(await furniGenRaw(full));
     }
     async function furniGenerateAI() {
       const prompt = (document.getElementById('furni-prompt').value || '').trim();
