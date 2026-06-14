@@ -782,8 +782,12 @@
     const mMin = ver.match(/(\d+)\s*min/i), mSec = ver.match(/(\d+)\s*s\b/i);
     if (mMin) durHint = `duración aproximada ${mMin[1]} min`;
     else if (mSec) durHint = `duración aproximada ${mSec[1]} segundos`;
-    const prompt = [(s.uso || '').trim() || 'soft ambient, gentle', durHint].filter(Boolean).join(', ');
-    const titleHint = (s.cliente || s.uso || '').slice(0, 60);
+    // Estilo = texto libre (s.uso) si lo hay, si no el preset (s.style, def. blues).
+    // La voz/cantante (s.singer) se antepone para que Suno la cante como toca.
+    const voice = (s.singer || '').trim();
+    const styleText = (s.uso || '').trim() || (s.style || '').trim() || 'blues';
+    const prompt = [voice, styleText, durHint].filter(Boolean).join(', ');
+    const titleHint = (s.cliente || styleText || '').slice(0, 60);
 
     const health = await sunoLocalAlive();
     if (!health.ok) {
@@ -896,8 +900,11 @@
   async function playLyria3(s) {
     const moods = (Array.isArray(s.emocion) ? s.emocion.map(e => EMO_EN[e] || e.toLowerCase()) : []);
     const layers = (Array.isArray(s.capas) ? s.capas.map(c => CAPA_EN[c] || c.toLowerCase()) : []);
+    const voice = (s.singer || '').trim();
+    const styleText = (s.uso || '').trim() || (s.style || '').trim();
     const styleParts = [
-      'electronic music with vocals',
+      styleText || 'electronic music with vocals',
+      voice,
       tempoLabel(s.bpm),
       ...moods,
       layers.length ? `featuring ${layers.join(' and ')}` : '',
@@ -2428,7 +2435,7 @@
     if (!fn) { btn.hidden = true; return; }
     const labels = {
       audio: '▶ REPRODUCIR DE NUEVO',
-      musica: '▶ REPRODUCIR DE NUEVO',
+      musica: '🎵 CREAR MÚSICA',
       imagenes: '✨ GENERAR OTRA',
       video: '▶ REPRODUCIR DE NUEVO',
       plataforma: '▶ REPRODUCIR TODO DE NUEVO',

@@ -76,17 +76,40 @@
       <article class="module">
         <div class="module-head"><h3><span class="accent" style="background: var(--music);"></span>Música</h3><small>identidad + loop + energía</small></div>
         <div data-motor-section="musica"></div>
-        <div class="field"><label for="m-versiones">Versiones a entregar</label>
-          <select id="m-versiones" name="musica.versiones">
-            <option value="Canción ~2 min">Canción ~2 min</option>
-            <option value="Canción ~1 min">Canción ~1 min</option>
-            <option value="Canción ~3 min">Canción ~3 min</option>
-            <option value="Canción completa">Canción completa</option>
-            <option value="Loop instrumental ~15s">Loop instrumental ~15s</option>
-            <option value="Stinger ~3s">Stinger ~3s</option>
-          </select>
+        <div class="field" style="display:flex;gap:14px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <label for="m-versiones">Versiones a entregar</label>
+            <select id="m-versiones" name="musica.versiones">
+              <option value="Canción ~2 min">Canción ~2 min</option>
+              <option value="Canción ~1 min">Canción ~1 min</option>
+              <option value="Canción ~3 min">Canción ~3 min</option>
+              <option value="Canción completa">Canción completa</option>
+              <option value="Loop instrumental ~15s">Loop instrumental ~15s</option>
+              <option value="Stinger ~3s">Stinger ~3s</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:170px;">
+            <label for="m-singer">Voz / cantante</label>
+            <select id="m-singer" name="musica.singer">
+              <option value="voz masculina">Hombre</option>
+              <option value="voz femenina">Mujer</option>
+              <option value="dúo vocal (hombre y mujer)">Dúo</option>
+              <option value="coro">Coro</option>
+            </select>
+          </div>
         </div>
-        <div class="field"><label for="m-uso">Styles</label><input id="m-uso" name="musica.uso" type="text" placeholder="Estilo para Suno: género, voz, instrumentos, ritmo, tonalidad (ej. balada pop, voz masculina, piano suave, 92 bpm, C menor)"></div>
+        <div class="field"><label for="m-uso">Estilo</label>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+            <select id="m-style" name="musica.style" style="flex:0 0 180px;">
+              <option value="blues" selected>Blues</option>
+              <option value="flamenco">Flamenco</option>
+              <option value="samba">Samba</option>
+              <option value="rap">Rap</option>
+              <option value="techno">Techno</option>
+            </select>
+            <input id="m-uso" name="musica.uso" type="text" placeholder="…o escríbelo libre: género, instrumentos, ritmo, bpm, tonalidad (ej. balada pop, piano suave, 92 bpm, C menor)" style="flex:1;min-width:220px;">
+          </div>
+        </div>
         <div class="field">
           <label for="m-letra">Letra <button type="button" class="btn" id="genLyrics" style="font-size:10px;padding:4px 8px;margin-left:8px;vertical-align:middle;">✏️ GENERAR CON GEMINI</button></label>
           <textarea id="m-letra" name="musica.letra" rows="10" placeholder="[Verse 1]&#10;...&#10;&#10;[Chorus]&#10;..." style="font-family:inherit;"></textarea>
@@ -95,17 +118,12 @@
 
       <div class="brief-area">
         <div class="brief-head">
-          <h3>Brief de Música</h3>
           <div class="brief-actions">
-            <button class="btn play" type="button" id="playOutput"><span class="play-label">✨ CREAR</span></button>
-            <button class="btn" type="button" id="genBrief">Generar brief</button>
-            <button class="btn" type="button" id="copyBrief">Copiar JSON</button>
-            <button class="btn" type="button" id="copyMd">Copiar Markdown</button>
-            <button class="btn" type="button" id="dlBrief">Descargar .json</button>
+            <button class="btn play" type="button" id="playOutput"><span class="play-label">🎵 CREAR MÚSICA</span></button>
             <button class="btn" type="button" id="clearAll">Limpiar Música</button>
           </div>
         </div>
-        <pre class="brief" id="briefOut">// Rellena los campos y pulsa "Generar brief".</pre>
+        <pre class="brief" id="briefOut" hidden></pre>
       </div>
       <div id="player" class="player-area" hidden></div>
     </form>
@@ -165,6 +183,6 @@
     </form>
   </dialog>
   <script src="/matrix-rain.js?v=20260608-sides"></script>
-  <script src="app.js?v=20260613-suno8"></script>
+  <script src="app.js?v=20260614-music2"></script>
 </body>
 </html>
