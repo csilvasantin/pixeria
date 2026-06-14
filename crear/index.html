@@ -598,6 +598,9 @@
                 <span id="edit-zoom-lbl" style="font-size:11px;color:var(--muted);">×8</span>
                 <button type="button" class="button secondary" id="edit-zoom-in" style="font-size:12px;padding:5px 9px;">➕</button>
                 <button type="button" class="button secondary" id="edit-trim" style="font-size:12px;padding:5px 10px;" title="Recorta el margen transparente alrededor del dibujo (arregla el flotando)">✂️ Recortar transparencia</button>
+                <span style="width:1px;height:24px;background:#28323a;"></span>
+                <button type="button" class="button secondary" id="edit-undo" style="font-size:12px;padding:5px 10px;" disabled title="Deshacer (⌘Z)">↶ Deshacer</button>
+                <button type="button" class="button secondary" id="edit-redo" style="font-size:12px;padding:5px 10px;" disabled title="Rehacer (⌘⇧Z)">↷ Rehacer</button>
               </div>
               <div style="overflow:auto;background:repeating-conic-gradient(#11161c 0% 25%, #0b0f14 0% 50%) 50% / 16px 16px;border:1px solid #28323a;border-radius:8px;padding:8px;max-height:52vh;">
                 <canvas id="edit-canvas" style="image-rendering:pixelated;display:block;cursor:crosshair;"></canvas>
@@ -2405,8 +2408,46 @@
       })();
 
       // ── EDICIÓN · editor pixel-art de Mis muebles ─────────────────────────
-      const EDIT={ item:null, sc:document.createElement('canvas'), zoom:8, tool:'paint', drawing:false, tainted:false };
+      const EDIT={ item:null, sc:document.createElement('canvas'), zoom:8, tool:'paint', drawing:false, tainted:false, undo:[], redo:[] };
       function editStatus(m,c){ const e=$('edit-status'); if(e){ e.textContent=m||''; e.style.color=c||'var(--muted)'; } }
+      // ── Historial UNDO/REDO del lienzo (snapshots de píxeles) ──────────────
+      const EDIT_HIST_MAX=30;
+      function editSnapshot(){
+        if(!EDIT.sc.width) return null;
+        try{ return { w:EDIT.sc.width, h:EDIT.sc.height, img:EDIT.sc.getContext('2d').getImageData(0,0,EDIT.sc.width,EDIT.sc.height) }; }
+        catch(e){ return null; }  // tainted (CORS) → no se puede snapshotear
+      }
+      function editRestore(s){
+        if(!s) return;
+        EDIT.sc.width=s.w; EDIT.sc.height=s.h;
+        EDIT.sc.getContext('2d').putImageData(s.img,0,0); EDIT.tainted=false;
+        editFitZoom(); renderEdit();
+      }
+      function editUpdateUndoButtons(){
+        const u=$('edit-undo'), r=$('edit-redo');
+        if(u) u.disabled=!EDIT.undo.length;
+        if(r) r.disabled=!EDIT.redo.length;
+      }
+      // Llamar ANTES de cada cambio destructivo (trazo, IA, recorte…).
+      function editPushUndo(){
+        const s=editSnapshot(); if(!s) return;
+        EDIT.undo.push(s); if(EDIT.undo.length>EDIT_HIST_MAX) EDIT.undo.shift();
+        EDIT.redo.length=0; editUpdateUndoButtons();
+      }
+      // Reset del historial al abrir/importar un asset nuevo (su estado = base).
+      function editResetHistory(){ EDIT.undo.length=0; EDIT.redo.length=0; editUpdateUndoButtons(); }
+      function editUndo(){
+        if(!EDIT.undo.length){ editStatus('Nada que deshacer.','#e0a14a'); return; }
+        const cur=editSnapshot(); if(cur) EDIT.redo.push(cur);
+        editRestore(EDIT.undo.pop()); editUpdateUndoButtons();
+        editStatus('↶ Deshecho.','#7ee0a0');
+      }
+      function editRedo(){
+        if(!EDIT.redo.length){ editStatus('Nada que rehacer.','#e0a14a'); return; }
+        const cur=editSnapshot(); if(cur) EDIT.undo.push(cur);
+        editRestore(EDIT.redo.pop()); editUpdateUndoButtons();
+        editStatus('↷ Rehecho.','#7ee0a0');
+      }
       // Botón de item para las listas «últimos 3» (thumb + título + acción).
       function editRecentBtn(thumbStyle, title, sel, onclick){
         const b=document.createElement('button'); b.type='button';
@@ -2464,7 +2505,7 @@
           EDIT.sc.width=w; EDIT.sc.height=h;
           const g=EDIT.sc.getContext('2d'); g.clearRect(0,0,w,h); g.imageSmoothingEnabled=false; g.drawImage(img,0,0);
           try{ g.getImageData(0,0,1,1); EDIT.tainted=false; }catch(e){ EDIT.tainted=true; }
-          editFitZoom(); renderEdit();
+          editResetHistory(); editFitZoom(); renderEdit();
           editStatus(EDIT.tainted?'⚠ Sin permiso de píxeles (CORS): puedes ajustar altura/footprint, pero no pintar/recortar esta imagen.':('Editando «'+(o.title||'mueble')+'» · '+w+'×'+h+' px'), EDIT.tainted?'#e0a14a':'#7ee0a0');
         };
         img.onerror=()=>editStatus('❌ no se pudo cargar la imagen','#e06a6a');
@@ -2495,6 +2536,7 @@
         if(EDIT.tainted||!EDIT.sc.width){ editStatus('No puedo recortar (sin acceso a píxeles).','#e0a14a'); return; }
         const w=EDIT.sc.width,h=EDIT.sc.height,g=EDIT.sc.getContext('2d');
         let data; try{ data=g.getImageData(0,0,w,h).data; }catch(e){ editStatus('No puedo recortar (CORS).','#e0a14a'); return; }
+        editPushUndo();
         let minx=w,miny=h,maxx=-1,maxy=-1;
         for(let y=0;y<h;y++)for(let x2=0;x2<w;x2++){ if(data[(y*w+x2)*4+3]>8){ if(x2<minx)minx=x2; if(x2>maxx)maxx=x2; if(y<miny)miny=y; if(y>maxy)maxy=y; } }
         if(maxx<0){ editStatus('La imagen está vacía.','#e0a14a'); return; }
@@ -2547,6 +2589,7 @@
           const r=await fetch(dBase()+'/image/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ image:dataUrl, prompt })});
           const d=await r.json(); if(!r.ok||!d.ok||!d.image) throw new Error(d.error||d.detail||('HTTP '+r.status));
           const preMax=Math.max(EDIT.sc.width||0,EDIT.sc.height||0)||256;  // conserva el tamaño con el que se trabajaba (no encoger a 256)
+          editPushUndo();  // permite deshacer el cambio de la IA
           await new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>{
             const MAX=Math.min(1024,preMax); let w=im.naturalWidth||64,h=im.naturalHeight||64; const s=Math.min(1,MAX/Math.max(w,h)); w=Math.max(1,Math.round(w*s)); h=Math.max(1,Math.round(h*s));
             EDIT.sc.width=w; EDIT.sc.height=h; const g=EDIT.sc.getContext('2d'); g.clearRect(0,0,w,h); g.imageSmoothingEnabled=true; g.drawImage(im,0,0,w,h); EDIT.tainted=false;
@@ -2570,7 +2613,7 @@
           try{ g.getImageData(0,0,1,1); EDIT.tainted=false; }catch(e){ EDIT.tainted=true; }
           EDIT.item={ url:null, img:null, title:meta.title||'importada', ph:46, fp:[1,1], imported:true };
           $('edit-ph').value=46; $('edit-fpw').value=1; $('edit-fpd').value=1;
-          loadEditList(); editFitZoom(); renderEdit();
+          loadEditList(); editResetHistory(); editFitZoom(); renderEdit();
           if(EDIT.tainted) editStatus('⚠ Imagen sin permiso de píxeles (CORS): no puedo retocarla ni guardarla. Prueba con «Traer URL» (usa el proxy).','#e0a14a');
           else editStatus('📥 Importada «'+(meta.title||'imagen')+'» · '+w+'×'+h+' px'+(s<1?' (reescalada)':'')+'. Retoca, recorta y pulsa «Guardar en Stock».','#7ee0a0');
         };
@@ -2609,7 +2652,7 @@
       function initEdit(){
         document.querySelectorAll('.edit-tool').forEach(b=>b.addEventListener('click',()=>{ EDIT.tool=b.dataset.tool; document.querySelectorAll('.edit-tool').forEach(x=>x.style.background=''); b.style.background='rgba(0,200,255,.18)'; }));
         const cv=$('edit-canvas');
-        if(cv){ cv.addEventListener('mousedown',e=>{ EDIT.drawing=true; editPixelAt(e); }); cv.addEventListener('mousemove',e=>{ if(EDIT.drawing&&EDIT.tool!=='pick') editPixelAt(e); }); window.addEventListener('mouseup',()=>{ EDIT.drawing=false; }); }
+        if(cv){ cv.addEventListener('mousedown',e=>{ if(EDIT.tool!=='pick'&&!EDIT.tainted) editPushUndo(); EDIT.drawing=true; editPixelAt(e); }); cv.addEventListener('mousemove',e=>{ if(EDIT.drawing&&EDIT.tool!=='pick') editPixelAt(e); }); window.addEventListener('mouseup',()=>{ EDIT.drawing=false; }); }
         const zi=$('edit-zoom-in'); if(zi) zi.onclick=()=>{ EDIT.zoom=Math.min(24,EDIT.zoom+1); renderEdit(); };
         const zo=$('edit-zoom-out'); if(zo) zo.onclick=()=>{ EDIT.zoom=Math.max(1,EDIT.zoom-1); renderEdit(); };
         const tr=$('edit-trim'); if(tr) tr.onclick=trimEdit;
@@ -2621,6 +2664,15 @@
         const iuf=$('edit-import-url'); if(iuf) iuf.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); importFromUrl(); } });
         const ifb=$('edit-import-file-btn'); if(ifb) ifb.onclick=()=>$('edit-import-file').click();
         const iff=$('edit-import-file'); if(iff) iff.onchange=importFromFile;
+        const un=$('edit-undo'); if(un) un.onclick=editUndo;
+        const re=$('edit-redo'); if(re) re.onclick=editRedo;
+        // Atajos ⌘Z / ⌘⇧Z (o Ctrl) solo cuando la pestaña Edición está visible.
+        document.addEventListener('keydown',e=>{
+          const panel=$('edit-panel'); if(!panel||panel.style.display==='none') return;
+          const t=e.target, typing=t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'); if(typing) return;
+          if((e.metaKey||e.ctrlKey)&&(e.key==='z'||e.key==='Z')){ e.preventDefault(); if(e.shiftKey) editRedo(); else editUndo(); }
+          else if((e.metaKey||e.ctrlKey)&&(e.key==='y'||e.key==='Y')){ e.preventDefault(); editRedo(); }
+        });
       }
       function init(){
         if(!$('distro-grid')) return;
