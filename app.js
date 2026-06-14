@@ -2572,6 +2572,20 @@
     return `<button type="button" class="btn publish-btn" data-publish-meta='${json}' title="Sube este asset al stock público (R2)">📌 PUBLICAR EN STOCK</button>`;
   }
 
+  // Calidad (good/better/best) del asset según el badge del motor que lo creó.
+  // Si no se reconoce el motor → 'good' por defecto.
+  function motorQuality(motorStr) {
+    const m = String(motorStr || '').toLowerCase();
+    if (!m) return 'good';
+    const entries = [];
+    for (const sec of Object.values(MOTORES)) for (const o of sec) entries.push([String(o.id).toLowerCase(), String(o.badge || 'Good').toLowerCase()]);
+    entries.sort((a, b) => b[0].length - a[0].length); // ids más específicos primero (nano-banana-pro antes que nano-banana)
+    for (const [id, badge] of entries) {
+      if (m === id || m.startsWith(id) || m.includes(id)) return ['good', 'better', 'best'].includes(badge) ? badge : 'good';
+    }
+    return 'good';
+  }
+
   async function publishToStock(meta, btn) {
     if (btn) { btn.disabled = true; btn.dataset.origLabel = btn.textContent; btn.textContent = '⏳ subiendo...'; }
     try {
@@ -2616,6 +2630,7 @@
         tags: Array.isArray(meta.tags) ? meta.tags : null,
         costEst: meta.costEst || null,
         thumbnail: meta.thumbnail || null,
+        quality: meta.quality || motorQuality(meta.motor),  // good/better/best (default good)
       };
       if (meta.url && (meta.url.startsWith('data:') || meta.url.startsWith('blob:'))) {
         const { mime, base64 } = await urlToBase64(meta.url);
