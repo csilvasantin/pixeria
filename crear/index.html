@@ -565,13 +565,17 @@
           <h4>🎨 Edición de muebles · pixel art</h4>
           <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Retoca tus muebles: pinta píxel a píxel, <b>recorta el margen transparente</b> (arregla el efecto «flotando») y ajusta <b>altura</b> y <b>footprint</b> (tamaño en la sala). Guarda y se actualiza en la paleta, el plano y el gemelo.</p>
           <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
-            <div style="flex:0 0 190px;">
-              <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Mis muebles</label>
-              <div id="edit-list" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;"></div>
-              <div style="margin-top:12px;border-top:1px solid #28323a;padding-top:10px;">
-                <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">🖼️ Mis imágenes <span style="opacity:.6;">· últimas 5 del Stock</span></label>
-                <div id="edit-img-list" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow:auto;"></div>
-              </div>
+            <div style="flex:0 0 200px;">
+              <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">🪑 Muebles <span style="opacity:.6;">· últimos 3</span></label>
+              <div id="edit-list" style="display:flex;flex-direction:column;gap:5px;"></div>
+              <label style="display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;">🖼️ Imágenes <span style="opacity:.6;">· últimas 3</span></label>
+              <div id="edit-list-image" style="display:flex;flex-direction:column;gap:5px;"></div>
+              <label style="display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;">🎬 Vídeos <span style="opacity:.6;">· últimos 3</span></label>
+              <div id="edit-list-video" style="display:flex;flex-direction:column;gap:5px;"></div>
+              <label style="display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;">🎵 Música <span style="opacity:.6;">· últimas 3</span></label>
+              <div id="edit-list-music" style="display:flex;flex-direction:column;gap:5px;"></div>
+              <label style="display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;">🔊 Audio <span style="opacity:.6;">· últimos 3</span></label>
+              <div id="edit-list-audio" style="display:flex;flex-direction:column;gap:5px;"></div>
               <div style="margin-top:12px;border-top:1px solid #28323a;padding-top:10px;">
                 <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">📥 Importar imagen</label>
                 <input id="edit-import-url" type="text" placeholder="pega una URL de imagen…" class="model-select" style="width:100%;font-size:11px;margin-bottom:6px;">
@@ -1963,7 +1967,7 @@
         if(td) td.classList.toggle('active',name==='distribucion');
         if(tm) tm.classList.toggle('active',name==='marketplace');
         if(name==='marketplace') loadMarket();
-        if(name==='edicion'){ loadWallet().then(loadEditList); loadEditImages(); }
+        if(name==='edicion'){ loadWallet().then(loadEditList); loadRecentLists(); }
         if(name==='distribucion'){ renderPalette(); renderGrid(); loadWallet().then(()=>renderPalette()); }
       }
 
@@ -2403,41 +2407,52 @@
       // ── EDICIÓN · editor pixel-art de Mis muebles ─────────────────────────
       const EDIT={ item:null, sc:document.createElement('canvas'), zoom:8, tool:'paint', drawing:false, tainted:false };
       function editStatus(m,c){ const e=$('edit-status'); if(e){ e.textContent=m||''; e.style.color=c||'var(--muted)'; } }
+      // Botón de item para las listas «últimos 3» (thumb + título + acción).
+      function editRecentBtn(thumbStyle, title, sel, onclick){
+        const b=document.createElement('button'); b.type='button';
+        b.style.cssText='display:flex;align-items:center;gap:8px;padding:4px 7px;border:1px solid '+(sel?'var(--cyan)':'#28323a')+';background:#0b1117;border-radius:6px;cursor:pointer;color:#cfe;text-align:left;';
+        b.innerHTML='<span style="width:24px;height:24px;flex:none;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:13px;background-color:#0a0f14;'+(thumbStyle||'')+'"></span><span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+String(title||'asset').slice(0,18)+'</span>';
+        b.onclick=onclick; return b;
+      }
+      // Muebles propios (del wallet): solo los 3 más recientes → al editor.
       function loadEditList(){
         const box=$('edit-list'); if(!box) return;
-        const owned=ownedFurni();
-        if(!owned.length){ box.innerHTML='<div style="font-size:12px;color:var(--muted);">No tienes muebles propios todavía. Crea en «Creación» o compra en «Marketplace».</div>'; return; }
+        const owned=ownedFurni().slice().sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,3);
+        if(!owned.length){ box.innerHTML='<div style="font-size:11px;color:var(--muted);">Sin muebles. Crea o compra.</div>'; return; }
         box.innerHTML='';
         owned.forEach(o=>{
-          const b=document.createElement('button'); b.type='button';
-          b.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 7px;border:1px solid '+((EDIT.item&&EDIT.item.url===o.url)?'var(--cyan)':'#28323a')+';background:#0b1117;border-radius:6px;cursor:pointer;color:#cfe;text-align:left;';
-          b.innerHTML='<span style="width:26px;height:26px;flex:none;border-radius:4px;background-color:#0a0f14;'+window.furniFrameStyle(o.img||o.url,o.frames||1,0)+'"></span><span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+String(o.title||'mueble').slice(0,18)+'</span>';
-          b.onclick=()=>openEdit(o);
-          box.appendChild(b);
+          const sel=EDIT.item&&EDIT.item.url===o.url;
+          box.appendChild(editRecentBtn(window.furniFrameStyle(o.img||o.url,o.frames||1,0), o.title||'mueble', sel, ()=>openEdit(o)));
         });
       }
-      // Últimas 5 imágenes del Stock (importadas o generadas) para retocarlas.
-      async function loadEditImages(){
-        const box=$('edit-img-list'); if(!box) return;
-        box.innerHTML='<div style="font-size:11px;color:var(--muted);">cargando…</div>';
+      // Últimos 3 de un tipo del Stock. image → al editor; video/música/audio → abrir/previsualizar.
+      async function loadRecentType(type, boxId){
+        const box=$(boxId); if(!box) return;
+        box.innerHTML='<div style="font-size:10px;color:var(--muted);">cargando…</div>';
         try{
-          const r=await fetch(ELEVEN_WORKER_URL+'/stock/list?type=image&limit=200');
+          const r=await fetch(ELEVEN_WORKER_URL+'/stock/list?type='+type+'&limit=30');
           const d=await r.json().catch(()=>({})); let items=Array.isArray(d)?d:(d.items||d.assets||[]);
-          items=items.filter(x=>x&&x.type==='image'&&!((x.tags||[]).includes('furni'))&&(x.url||x.thumbnail));
+          items=items.filter(x=>x&&x.type===type&&(type!=='image'||!((x.tags||[]).includes('furni')))&&(x.url||x.thumbnail));
           items.sort((a,b)=>new Date(b.createdAt||b.ts||0)-new Date(a.createdAt||a.ts||0));
-          items=items.slice(0,5);
-          if(!items.length){ box.innerHTML='<div style="font-size:11px;color:var(--muted);">Aún no hay imágenes en Stock.</div>'; return; }
+          items=items.slice(0,3);
+          if(!items.length){ box.innerHTML='<div style="font-size:10px;color:var(--muted);opacity:.6;">— sin assets —</div>'; return; }
           box.innerHTML='';
+          const emoji={ image:'🖼️', video:'🎬', music:'🎵', audio:'🔊' }[type]||'📦';
           items.forEach(it=>{
-            const thumb=it.thumbnail||it.url;
-            const b=document.createElement('button'); b.type='button';
-            b.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 7px;border:1px solid #28323a;background:#0b1117;border-radius:6px;cursor:pointer;color:#cfe;text-align:left;';
-            b.innerHTML='<span style="width:26px;height:26px;flex:none;border-radius:4px;background:#0a0f14 center/cover no-repeat;background-image:url(\''+thumb+'\');"></span><span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+String(it.title||'imagen').slice(0,18)+'</span>';
-            b.onclick=()=>editLoadInto(it.url,{ title:it.title||'imagen' });
+            // el campo thumbnail del Stock viene recortado (500 chars) → inservible.
+            // Para imágenes usamos la URL real del asset; el resto, emoji.
+            const hasThumb=type==='image'&&it.url;
+            const thumbStyle=hasThumb?('background:#0a0f14 center/cover no-repeat;background-image:url(\''+it.url+'\');'):'';
+            const b=editRecentBtn(thumbStyle, it.title||type, false, ()=>{
+              if(type==='image') editLoadInto(it.url,{ title:it.title||'imagen' });
+              else window.open(it.url,'_blank');
+            });
+            if(!hasThumb) b.querySelector('span').textContent=emoji;
             box.appendChild(b);
           });
-        }catch(e){ box.innerHTML='<div style="font-size:11px;color:#e06a6a;">Error al cargar imágenes.</div>'; }
+        }catch(e){ box.innerHTML='<div style="font-size:10px;color:#e06a6a;">error</div>'; }
       }
+      function loadRecentLists(){ ['image','video','music','audio'].forEach(t=>loadRecentType(t,'edit-list-'+t)); }
       function editFitZoom(){ const maxPx=420, m=Math.max(EDIT.sc.width||1,EDIT.sc.height||1); EDIT.zoom=Math.max(1,Math.min(20,Math.floor(maxPx/m)||1)); }
       function openEdit(o){
         EDIT.item=o; loadEditList();
@@ -2527,8 +2542,9 @@
         try{
           const r=await fetch(dBase()+'/image/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ image:dataUrl, prompt })});
           const d=await r.json(); if(!r.ok||!d.ok||!d.image) throw new Error(d.error||d.detail||('HTTP '+r.status));
+          const preMax=Math.max(EDIT.sc.width||0,EDIT.sc.height||0)||256;  // conserva el tamaño con el que se trabajaba (no encoger a 256)
           await new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>{
-            const MAX=256; let w=im.naturalWidth||64,h=im.naturalHeight||64; const s=Math.min(1,MAX/Math.max(w,h)); w=Math.max(1,Math.round(w*s)); h=Math.max(1,Math.round(h*s));
+            const MAX=Math.min(1024,preMax); let w=im.naturalWidth||64,h=im.naturalHeight||64; const s=Math.min(1,MAX/Math.max(w,h)); w=Math.max(1,Math.round(w*s)); h=Math.max(1,Math.round(h*s));
             EDIT.sc.width=w; EDIT.sc.height=h; const g=EDIT.sc.getContext('2d'); g.clearRect(0,0,w,h); g.imageSmoothingEnabled=true; g.drawImage(im,0,0,w,h); EDIT.tainted=false;
             try{ removeBgFlood(EDIT.sc); }catch(_){}   // quita el fondo opaco que mete la IA
             editFitZoom(); renderEdit(); res();
@@ -2582,7 +2598,7 @@
           const r=await fetch(ELEVEN_WORKER_URL+'/stock/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
           const d=await r.json().catch(()=>({})); if(!r.ok||!(d.ok||d.id)) throw new Error(d.error||('HTTP '+r.status));
           editStatus('✅ Guardado en Stock · id '+d.id+' (Biblioteca/Marketplace).','#7ee0a0');
-          try{ loadEditImages(); }catch(_){}
+          try{ loadRecentLists(); }catch(_){}
         }catch(e){ editStatus('❌ Stock: '+e.message,'#e06a6a'); }
         finally{ if(btn) btn.disabled=false; }
       }
