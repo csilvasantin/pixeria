@@ -539,9 +539,14 @@
           <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">Mobiliario — elige una pieza y haz clic en la rejilla para colocarla (clic en una colocada para quitarla)</label>
           <div id="distro-palette" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
 
-          <!-- Rejilla editor -->
-          <div style="overflow:auto;background:#0b1117;border:1px solid #28323a;border-radius:8px;padding:10px;">
-            <div id="distro-grid" style="display:grid;gap:2px;width:max-content;margin:0 auto;"></div>
+          <!-- Rejilla editor + ficha del mueble (hover) -->
+          <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+            <div style="overflow:auto;background:#0b1117;border:1px solid #28323a;border-radius:8px;padding:10px;flex:1;min-width:0;">
+              <div id="distro-grid" style="display:grid;gap:2px;width:max-content;margin:0 auto;"></div>
+            </div>
+            <aside id="distro-hoverinfo" style="flex:0 0 230px;background:#0b1117;border:1px solid #28323a;border-radius:8px;padding:12px;font-size:12px;color:#cfe;min-height:170px;align-self:stretch;">
+              <div style="font-size:11px;color:var(--muted);opacity:.7;line-height:1.5;">🛈 Pasa el ratón por un mueble del plano para ver su ficha.</div>
+            </aside>
           </div>
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
             <button class="button primary" id="distro-save" style="flex:1;">💾 Guardar y publicar</button>
@@ -2034,6 +2039,26 @@
         if(!footprintFree(col,row,fp.w,fp.d,moving)){ status('Destino ocupado.','#e0a14a'); return; }
         moving.col=col; moving.row=row; renderGrid(); pushLiveDebounced(); status('🔀 Movido');
       }
+      // ── Ficha del mueble al pasar el ratón (panel derecho) ──
+      const FURNI_LABEL={}; try{ FURNI.forEach(f=>{ FURNI_LABEL[f.type]=f.label; }); }catch(_){}
+      function furniName(it){ return (it&&(it.label||FURNI_LABEL[it.type]||it.type))||'mueble'; }
+      function furniInfoClear(){ const b=$('distro-hoverinfo'); if(b) b.innerHTML='<div style="font-size:11px;color:var(--muted);opacity:.7;line-height:1.5;">🛈 Pasa el ratón por un mueble del plano para ver su ficha.</div>'; }
+      function furniInfoFill(it){
+        const b=$('distro-hoverinfo'); if(!b||!it) return;
+        const fp=fpFor(it);
+        const w=Math.max(1,Math.min(fp.w,st.cols-it.col)), d=Math.max(1,Math.min(fp.d,st.rows-it.row));
+        const price=(it.price!=null&&isFinite(+it.price))?+it.price:(50+30*Math.max(1,(fp.w||1)*(fp.d||1)));
+        const fecha=it.ts?new Date(it.ts).toLocaleDateString('es-ES'):'—';
+        const garantia=it.warranty||(it.type==='door'?'—':'2 años');
+        const alto=it.ph?(' · '+it.ph+'px alto'):'';
+        const row=(k,v)=>'<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #1b2530;"><span style="color:var(--muted);">'+k+'</span><span style="text-align:right;color:#dfe;font-weight:600;">'+v+'</span></div>';
+        b.innerHTML='<div style="font-size:11px;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;">'+iconFor(it.type)+' FICHA DEL MUEBLE</div>'
+          +row('Denominación',furniName(it))
+          +row('Tamaño',w+'×'+d+' casillas'+alto)
+          +row('Coste',price+' cr.')
+          +row('Fecha de compra',fecha)
+          +row('Garantía',garantia);
+      }
       function renderGrid(){
         const g=$('distro-grid'); if(!g) return;
         g.style.display='grid';
@@ -2072,6 +2097,8 @@
             el.textContent=iconFor(it.type);
             el.title=(it.label||it.type)+' ('+it.col+','+it.row+') '+w+'×'+d+' — arrastra para mover · doble-clic para borrar · clic-derecho gira';
           }
+          el.onmouseenter=()=>furniInfoFill(it);
+          el.onmouseleave=furniInfoClear;
           el.draggable=true;
           el.ondragstart=(e)=>{ try{ e.dataTransfer.setData('text/plain',it.col+','+it.row); e.dataTransfer.effectAllowed='move'; }catch(_){ } el.style.opacity='.5'; };
           el.ondragend=()=>{ el.style.opacity=''; };
