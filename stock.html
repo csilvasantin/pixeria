@@ -260,6 +260,7 @@
           <select id="stockTypeFilter" title="Filtrar por tipo" aria-label="Filtrar por tipo">
             <option value="">Todos los tipos</option>
             <option value="audio">Audio</option>
+            <option value="locucion">Locución</option>
             <option value="music">Música</option>
             <option value="image">Imagen</option>
             <option value="video" selected>Video</option>
@@ -449,6 +450,7 @@
           <div class="pl-types" id="plTypes">
             <button type="button" class="pl-type active" data-t="">Todos</button>
             <button type="button" class="pl-type" data-t="audio">Audio</button>
+            <button type="button" class="pl-type" data-t="locucion">Locución</button>
             <button type="button" class="pl-type" data-t="music">Música</button>
             <button type="button" class="pl-type" data-t="image">Imagen</button>
             <button type="button" class="pl-type" data-t="video">Video</button>
@@ -495,7 +497,7 @@
   </dialog>
 
   <script src="/matrix-rain.js?v=20260608-sides"></script>
-  <script src="app.js?v=20260614-music3"></script>
+  <script src="app.js?v=20260614-locucion"></script>
   <script>
   (function () {
     const grid = document.getElementById('stockGrid');
@@ -581,7 +583,7 @@
         return `${poster ? `<img class="stock-cover" src="${poster}" alt="" loading="lazy">` : '<div class="stock-cover-empty">▶</div>'}
                 <button type="button" class="stock-media-play" data-act="playmini" data-url="${escAttr(it.url)}" title="Reproducir aquí (pequeño)" aria-label="Reproducir aquí">▶</button>`;
       }
-      if (it.type === 'audio' || it.type === 'music') {
+      if (it.type === 'audio' || it.type === 'locucion' || it.type === 'music') {
         const cover = it.thumbnail || '';
         return `${cover ? `<img class="stock-cover" src="${cover}" alt="" loading="lazy">` : '<div class="stock-cover-empty">▶</div>'}
                 <audio src="${it.url}" preload="none" controls></audio>`;
@@ -952,7 +954,7 @@
         media = `<img src="${it.thumbnail || it.url}" alt="">`;
       } else if (it.type === 'video' || it.type === 'animation') {
         media = `<video src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} controls autoplay></video>`;
-      } else if (it.type === 'audio' || it.type === 'music') {
+      } else if (it.type === 'audio' || it.type === 'locucion' || it.type === 'music') {
         const cover = it.thumbnail || '';
         media = `${cover ? `<img class="stock-cover" src="${cover}" alt="">` : '<div class="stock-cover-empty">▶</div>'}
                  <audio src="${it.url}" controls autoplay></audio>`;
@@ -1438,7 +1440,7 @@
 
       const $ = id => document.getElementById(id);
       const kindOf = it => (it.type === 'video' || it.type === 'animation') ? 'video'
-                         : (it.type === 'audio' || it.type === 'music') ? 'audio' : 'image';
+                         : (it.type === 'audio' || it.type === 'locucion' || it.type === 'music') ? 'audio' : 'image';
       const labelOf = it => (it.title || it.prompt || it.id || 'asset').toString().slice(0, 60);
       const pageUrl = () => `${location.origin}${location.pathname}`;
       const sourceMeta = (s, extra) => Object.assign({
@@ -2014,7 +2016,7 @@
         function render() {
           const it = items[idx];
           const isVid = it.type === 'video' || it.type === 'animation';
-          const isAud = it.type === 'audio' || it.type === 'music';
+          const isAud = it.type === 'audio' || it.type === 'locucion' || it.type === 'music';
           const media = isVid ? `<video src="${escAttr(it.url)}" autoplay controls playsinline></video>`
             : isAud ? `<div class="pl-player-cover">🎵</div><audio src="${escAttr(it.url)}" autoplay controls style="width:90%"></audio>`
             : `<img src="${escAttr(it.url)}" alt="">`;

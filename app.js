@@ -410,7 +410,7 @@
       // primer clip del reproductor (reusa todo el flujo de publishToStock).
       sendToStock: () => {
         const pb = document.querySelector('#player .publish-btn:not(.done)');
-        if (!pb) { showToast('Crea música primero (o ya está en Stock)'); return; }
+        if (!pb) { showToast('Crea el contenido primero (o ya está en Stock)'); return; }
         pb.click();
       },
       genBrief: () => { out.textContent = JSON.stringify(current(), null, 2); },
@@ -710,7 +710,7 @@
         const audioTitle = deriveAssetTitle('audio', loadStore());
         const audioCover = pollinationsCoverFor('audio', loadStore());
         const est = (text.length * pricePer1k / 1000).toFixed(4);
-        const pubMeta = { type: 'audio', motor, prompt: text, costEst: `~$${est}`, url, mime: 'audio/mpeg', thumbnail: audioCover || null };
+        const pubMeta = { type: 'locucion', motor, prompt: text, costEst: `~$${est}`, url, mime: 'audio/mpeg', thumbnail: audioCover || null };
         showPlayer(`
           <div class="player-card">
             <div class="player-head">▶ AUDIO · ${label} · voice ${voiceId}</div>
@@ -2441,7 +2441,7 @@
     const fn = map[page];
     if (!fn) { btn.hidden = true; return; }
     const labels = {
-      audio: '▶ REPRODUCIR DE NUEVO',
+      audio: '🎙️ CREAR LOCUCIÓN',
       musica: '🎵 CREAR MÚSICA',
       imagenes: '✨ GENERAR OTRA',
       video: '▶ REPRODUCIR DE NUEVO',
