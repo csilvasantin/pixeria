@@ -98,16 +98,20 @@
             </select>
           </div>
         </div>
-        <div class="field"><label for="m-uso">Estilo</label>
-          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
-            <select id="m-style" name="musica.style" style="flex:0 0 180px;">
+        <div class="field" style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="flex:0 0 180px;">
+            <label for="m-style">Estilo</label>
+            <select id="m-style" name="musica.style" style="width:100%;">
               <option value="blues" selected>Blues</option>
               <option value="flamenco">Flamenco</option>
               <option value="samba">Samba</option>
               <option value="rap">Rap</option>
               <option value="techno">Techno</option>
             </select>
-            <input id="m-uso" name="musica.uso" type="text" placeholder="…o escríbelo libre: género, instrumentos, ritmo, bpm, tonalidad (ej. balada pop, piano suave, 92 bpm, C menor)" style="flex:1;min-width:220px;">
+          </div>
+          <div style="flex:1;min-width:220px;">
+            <label for="m-titulo">Título de la canción</label>
+            <input id="m-titulo" name="musica.titulo" type="text" placeholder="Ej. Blues de medianoche">
           </div>
         </div>
         <div class="field">
@@ -121,6 +125,7 @@
           <div class="brief-actions">
             <button class="btn play" type="button" id="playOutput"><span class="play-label">🎵 CREAR MÚSICA</span></button>
             <button class="btn" type="button" id="clearAll">Limpiar Música</button>
+            <button class="btn" type="button" id="sendToStock" title="Publica en Stock la música creada">📌 Enviar a Stock</button>
           </div>
         </div>
         <pre class="brief" id="briefOut" hidden></pre>
@@ -183,6 +188,6 @@
     </form>
   </dialog>
   <script src="/matrix-rain.js?v=20260608-sides"></script>
-  <script src="app.js?v=20260614-music2"></script>
+  <script src="app.js?v=20260614-music3"></script>
 </body>
 </html>

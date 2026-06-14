@@ -406,6 +406,13 @@
   function bindBriefActions(out, scopeKeys) {
     function current() { return buildBrief(scopeKeys); }
     const map = {
+      // Publica en Stock la música ya creada: dispara el botón «publicar» del
+      // primer clip del reproductor (reusa todo el flujo de publishToStock).
+      sendToStock: () => {
+        const pb = document.querySelector('#player .publish-btn:not(.done)');
+        if (!pb) { showToast('Crea música primero (o ya está en Stock)'); return; }
+        pb.click();
+      },
       genBrief: () => { out.textContent = JSON.stringify(current(), null, 2); },
       copyBrief: async () => { await navigator.clipboard.writeText(JSON.stringify(current(), null, 2)); showToast('JSON copiado'); },
       copyMd: async () => { await navigator.clipboard.writeText(toMarkdown(current())); showToast('Markdown copiado'); },
@@ -782,12 +789,12 @@
     const mMin = ver.match(/(\d+)\s*min/i), mSec = ver.match(/(\d+)\s*s\b/i);
     if (mMin) durHint = `duración aproximada ${mMin[1]} min`;
     else if (mSec) durHint = `duración aproximada ${mSec[1]} segundos`;
-    // Estilo = texto libre (s.uso) si lo hay, si no el preset (s.style, def. blues).
-    // La voz/cantante (s.singer) se antepone para que Suno la cante como toca.
+    // Estilo = preset (s.style, def. blues). La voz/cantante (s.singer) se
+    // antepone para que Suno la cante como toca. El título lo fija s.titulo.
     const voice = (s.singer || '').trim();
-    const styleText = (s.uso || '').trim() || (s.style || '').trim() || 'blues';
+    const styleText = (s.style || '').trim() || 'blues';
     const prompt = [voice, styleText, durHint].filter(Boolean).join(', ');
-    const titleHint = (s.cliente || styleText || '').slice(0, 60);
+    const titleHint = (s.titulo || s.cliente || styleText || '').slice(0, 60);
 
     const health = await sunoLocalAlive();
     if (!health.ok) {
@@ -901,7 +908,7 @@
     const moods = (Array.isArray(s.emocion) ? s.emocion.map(e => EMO_EN[e] || e.toLowerCase()) : []);
     const layers = (Array.isArray(s.capas) ? s.capas.map(c => CAPA_EN[c] || c.toLowerCase()) : []);
     const voice = (s.singer || '').trim();
-    const styleText = (s.uso || '').trim() || (s.style || '').trim();
+    const styleText = (s.style || '').trim();
     const styleParts = [
       styleText || 'electronic music with vocals',
       voice,
