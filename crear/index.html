@@ -567,7 +567,11 @@
           <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
             <div style="flex:0 0 190px;">
               <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Mis muebles</label>
-              <div id="edit-list" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;"></div>
+              <div id="edit-list" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;"></div>
+              <div style="margin-top:12px;border-top:1px solid #28323a;padding-top:10px;">
+                <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">🖼️ Mis imágenes <span style="opacity:.6;">· últimas 5 del Stock</span></label>
+                <div id="edit-img-list" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow:auto;"></div>
+              </div>
               <div style="margin-top:12px;border-top:1px solid #28323a;padding-top:10px;">
                 <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">📥 Importar imagen</label>
                 <input id="edit-import-url" type="text" placeholder="pega una URL de imagen…" class="model-select" style="width:100%;font-size:11px;margin-bottom:6px;">
@@ -1959,7 +1963,7 @@
         if(td) td.classList.toggle('active',name==='distribucion');
         if(tm) tm.classList.toggle('active',name==='marketplace');
         if(name==='marketplace') loadMarket();
-        if(name==='edicion'){ loadWallet().then(loadEditList); }
+        if(name==='edicion'){ loadWallet().then(loadEditList); loadEditImages(); }
         if(name==='distribucion'){ renderPalette(); renderGrid(); loadWallet().then(()=>renderPalette()); }
       }
 
@@ -2412,7 +2416,29 @@
           box.appendChild(b);
         });
       }
-      function editFitZoom(){ const maxPx=420, m=Math.max(EDIT.sc.width||1,EDIT.sc.height||1); EDIT.zoom=Math.max(1,Math.min(20,Math.floor(maxPx/m)||8)); }
+      // Últimas 5 imágenes del Stock (importadas o generadas) para retocarlas.
+      async function loadEditImages(){
+        const box=$('edit-img-list'); if(!box) return;
+        box.innerHTML='<div style="font-size:11px;color:var(--muted);">cargando…</div>';
+        try{
+          const r=await fetch(ELEVEN_WORKER_URL+'/stock/list?type=image&limit=200');
+          const d=await r.json().catch(()=>({})); let items=Array.isArray(d)?d:(d.items||d.assets||[]);
+          items=items.filter(x=>x&&x.type==='image'&&!((x.tags||[]).includes('furni'))&&(x.url||x.thumbnail));
+          items.sort((a,b)=>new Date(b.createdAt||b.ts||0)-new Date(a.createdAt||a.ts||0));
+          items=items.slice(0,5);
+          if(!items.length){ box.innerHTML='<div style="font-size:11px;color:var(--muted);">Aún no hay imágenes en Stock.</div>'; return; }
+          box.innerHTML='';
+          items.forEach(it=>{
+            const thumb=it.thumbnail||it.url;
+            const b=document.createElement('button'); b.type='button';
+            b.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 7px;border:1px solid #28323a;background:#0b1117;border-radius:6px;cursor:pointer;color:#cfe;text-align:left;';
+            b.innerHTML='<span style="width:26px;height:26px;flex:none;border-radius:4px;background:#0a0f14 center/cover no-repeat;background-image:url(\''+thumb+'\');"></span><span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+String(it.title||'imagen').slice(0,18)+'</span>';
+            b.onclick=()=>editLoadInto(it.url,{ title:it.title||'imagen' });
+            box.appendChild(b);
+          });
+        }catch(e){ box.innerHTML='<div style="font-size:11px;color:#e06a6a;">Error al cargar imágenes.</div>'; }
+      }
+      function editFitZoom(){ const maxPx=420, m=Math.max(EDIT.sc.width||1,EDIT.sc.height||1); EDIT.zoom=Math.max(1,Math.min(20,Math.floor(maxPx/m)||1)); }
       function openEdit(o){
         EDIT.item=o; loadEditList();
         $('edit-ph').value=o.ph||46; const fp=Array.isArray(o.fp)?o.fp:[1,1]; $('edit-fpw').value=fp[0]||1; $('edit-fpd').value=fp[1]||1;
@@ -2556,6 +2582,7 @@
           const r=await fetch(ELEVEN_WORKER_URL+'/stock/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
           const d=await r.json().catch(()=>({})); if(!r.ok||!(d.ok||d.id)) throw new Error(d.error||('HTTP '+r.status));
           editStatus('✅ Guardado en Stock · id '+d.id+' (Biblioteca/Marketplace).','#7ee0a0');
+          try{ loadEditImages(); }catch(_){}
         }catch(e){ editStatus('❌ Stock: '+e.message,'#e06a6a'); }
         finally{ if(btn) btn.disabled=false; }
       }
