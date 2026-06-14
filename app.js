@@ -778,12 +778,28 @@
     }
   }
 
-  // Portada generada por Suno → figura #m-cover a la derecha de la Letra.
+  // Portada (#m-cover, a la derecha de la Letra). Por defecto una imagen Matrix
+  // aleatoria; cuando Suno termina, su carátula la sustituye.
+  // Pool de imágenes Matrix (digital rain) fiables de Wikimedia Commons.
+  const MATRIX_COVERS = [
+    'https://upload.wikimedia.org/wikipedia/commons/c/c3/Digital_rain_animation_medium_letters_2_clear.gif',
+    'https://upload.wikimedia.org/wikipedia/commons/0/0a/Digital_rain_animation_medium_letters_clear.gif',
+  ];
+  function randomMatrixCover() { return MATRIX_COVERS[Math.floor(Math.random() * MATRIX_COVERS.length)]; }
+  function setCoverCaption(txt) { const f = document.getElementById('m-cover'); const c = f && f.querySelector('figcaption'); if (c) c.textContent = txt; }
+  function setDefaultMatrixCover() {
+    const fig = document.getElementById('m-cover'); if (!fig) return;
+    const img = fig.querySelector('img'); if (!img) return;
+    // si la elegida fallara, prueba la otra del pool
+    img.onerror = () => { img.onerror = null; img.src = MATRIX_COVERS[0]; };
+    img.src = randomMatrixCover();
+    fig.hidden = false; setCoverCaption('Portada · Matrix');
+  }
   function setMusicCover(url) {
     const fig = document.getElementById('m-cover'); if (!fig) return;
     const img = fig.querySelector('img');
-    if (url && img) { img.src = url; fig.hidden = false; }
-    else { fig.hidden = true; if (img) img.removeAttribute('src'); }
+    if (url && img) { img.onerror = null; img.src = url; fig.hidden = false; setCoverCaption('Portada · Suno'); }
+    else setDefaultMatrixCover();   // sin carátula real → vuelve al Matrix por defecto
   }
 
   async function playSunoLocal(s, model) {
@@ -3368,6 +3384,7 @@
       const scope = scopeMap[page] || null;
       if (out) bindBriefActions(out, scope);
       bindPlay(page);
+      if (page === 'musica') setDefaultMatrixCover();   // portada Matrix por defecto
       bindGenLyrics();
       bindSegmentedAds();
       bindSendToAdmiraXP();
