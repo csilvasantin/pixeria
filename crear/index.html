@@ -2039,11 +2039,19 @@
         if(!footprintFree(col,row,fp.w,fp.d,moving)){ status('Destino ocupado.','#e0a14a'); return; }
         moving.col=col; moving.row=row; renderGrid(); pushLiveDebounced(); status('🔀 Movido');
       }
-      // ── Ficha del mueble al pasar el ratón (panel derecho) ──
+      // ── Ficha del mueble (hover) + incidencias IoT (clic = fija y editable) ──
       const FURNI_LABEL={}; try{ FURNI.forEach(f=>{ FURNI_LABEL[f.type]=f.label; }); }catch(_){}
+      const IOT_TYPES={led:1,tft:1,tablet:1,turnKiosk:1,vending:1,metahuman:1,aroma:1,djBooth:1};
+      const DEFAULT_SUPPORT='Soporte Admira · soporte@admira.com';
+      let distroPinned=null;
       function furniName(it){ return (it&&(it.label||FURNI_LABEL[it.type]||it.type))||'mueble'; }
-      function furniInfoClear(){ const b=$('distro-hoverinfo'); if(b) b.innerHTML='<div style="font-size:11px;color:var(--muted);opacity:.7;line-height:1.5;">🛈 Pasa el ratón por un mueble del plano para ver su ficha.</div>'; }
-      function furniInfoFill(it){
+      function fiEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+      function furniInfoClear(){
+        if(distroPinned){ furniInfoFill(distroPinned,true); return; }
+        const b=$('distro-hoverinfo'); if(b) b.innerHTML='<div style="font-size:11px;color:var(--muted);opacity:.7;line-height:1.5;">🛈 Pasa el ratón por un mueble del plano para ver su ficha.<br>Haz <b>clic</b> en un mueble para fijar su ficha y gestionar incidencias.</div>';
+      }
+      function furniInfoPin(it){ if(distroPinned===it){ distroPinned=null; furniInfoClear(); } else { distroPinned=it; furniInfoFill(it,true); } }
+      function furniInfoFill(it, pinned){
         const b=$('distro-hoverinfo'); if(!b||!it) return;
         const fp=fpFor(it);
         const w=Math.max(1,Math.min(fp.w,st.cols-it.col)), d=Math.max(1,Math.min(fp.d,st.rows-it.row));
@@ -2051,16 +2059,56 @@
         const fecha=it.ts?new Date(it.ts).toLocaleDateString('es-ES'):'—';
         const garantia=it.warranty||(it.type==='door'?'—':'2 años');
         const alto=it.ph?(' · '+it.ph+'px alto'):'';
+        const iot=!!IOT_TYPES[it.type];
+        const inc=it.incident||null;
         const row=(k,v)=>'<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #1b2530;"><span style="color:var(--muted);">'+k+'</span><span style="text-align:right;color:#dfe;font-weight:600;">'+v+'</span></div>';
-        b.innerHTML='<div style="font-size:11px;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;">'+iconFor(it.type)+' FICHA DEL MUEBLE</div>'
+        const lbl=t=>'<label style="display:block;font-size:10px;color:var(--muted);margin:7px 0 2px;">'+t+'</label>';
+        const fmtDate=ts=>ts?new Date(ts).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+        const estado=inc?(inc.status==='resolved'?'✅ Resuelta':'🔴 Abierta'):(iot?'🟢 Operativo':'—');
+        let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-size:11px;letter-spacing:.06em;color:var(--muted);">'+iconFor(it.type)+' FICHA DEL MUEBLE</span>'+(pinned?'<span style="font-size:10px;color:#7ee0a0;cursor:pointer;" id="fi-unpin" title="Soltar">📌 fijada ✕</span>':'')+'</div>'
           +row('Denominación',furniName(it))
           +row('Tamaño',w+'×'+d+' casillas'+alto)
           +row('Coste',price+' cr.')
           +row('Fecha de compra',fecha)
-          +row('Garantía',garantia);
+          +row('Garantía',garantia)
+          +'<div style="margin-top:10px;font-size:10px;letter-spacing:.06em;color:var(--muted);">🔧 INCIDENCIAS</div>'
+          +row('IoT', iot?'<span style="color:#7ee0a0;">🟢 Sí (conectado)</span>':'<span style="color:var(--muted);">⚪ No</span>')
+          +row('Estado', estado);
+        if(!pinned){
+          html+=row('Contacto', fiEsc((inc&&inc.contact)||DEFAULT_SUPPORT))
+            +row('Inicio', inc?fmtDate(inc.start):'—')
+            +row('Notas', fiEsc((inc&&inc.notes)||'—'))
+            +row('Resolución', fiEsc((inc&&inc.resolution)||'—'))
+            +'<div style="font-size:10px;color:var(--muted);opacity:.6;margin-top:6px;">Clic en el mueble para fijar y gestionar la incidencia.</div>';
+          b.innerHTML=html; return;
+        }
+        // Fijada → incidencia editable
+        const open=inc&&inc.status==='open', resolved=inc&&inc.status==='resolved';
+        const inStyle='width:100%;font-size:11px;background:#0a0f14;border:1px solid #28323a;border-radius:5px;color:#dfe;padding:4px 6px;box-sizing:border-box;';
+        html+=lbl('Contacto en caso de incidencia')+'<input id="fi-contact" value="'+fiEsc((inc&&inc.contact)||DEFAULT_SUPPORT)+'" style="'+inStyle+'">';
+        if(inc&&inc.start) html+=row('Empezó', fmtDate(inc.start));
+        if(resolved&&inc.resolvedAt) html+=row('Resuelta', fmtDate(inc.resolvedAt));
+        html+=lbl('Notas / seguimiento')+'<textarea id="fi-notes" rows="2" style="'+inStyle+'resize:vertical;">'+fiEsc((inc&&inc.notes)||'')+'</textarea>';
+        html+=lbl('Resolución')+'<textarea id="fi-res" rows="2" style="'+inStyle+'resize:vertical;">'+fiEsc((inc&&inc.resolution)||'')+'</textarea>';
+        html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">';
+        if(!open&&!resolved) html+='<button type="button" class="button secondary" id="fi-open" style="flex:1;font-size:11px;padding:5px;">🔧 Abrir incidencia</button>';
+        if(open) html+='<button type="button" class="button primary" id="fi-resolve" style="flex:1;font-size:11px;padding:5px;">✅ Marcar resuelta</button>';
+        if(inc) html+='<button type="button" class="button secondary" id="fi-clearinc" style="font-size:11px;padding:5px 8px;">🗑</button>';
+        html+='</div>';
+        b.innerHTML=html;
+        const save=()=>{ try{ pushLiveDebounced(); }catch(_){} };
+        const ensureInc=()=>{ if(!it.incident) it.incident={contact:DEFAULT_SUPPORT,status:null,notes:'',resolution:''}; return it.incident; };
+        const up=b.querySelector('#fi-unpin'); if(up) up.onclick=()=>{ distroPinned=null; furniInfoClear(); };
+        const ci=b.querySelector('#fi-contact'); if(ci) ci.oninput=()=>{ ensureInc().contact=ci.value; save(); };
+        const nt=b.querySelector('#fi-notes'); if(nt) nt.oninput=()=>{ ensureInc().notes=nt.value; save(); };
+        const rs=b.querySelector('#fi-res'); if(rs) rs.oninput=()=>{ ensureInc().resolution=rs.value; save(); };
+        const ob=b.querySelector('#fi-open'); if(ob) ob.onclick=()=>{ const i=ensureInc(); i.status='open'; i.start=Date.now(); save(); furniInfoFill(it,true); };
+        const rb=b.querySelector('#fi-resolve'); if(rb) rb.onclick=()=>{ const i=ensureInc(); i.status='resolved'; i.resolvedAt=Date.now(); save(); furniInfoFill(it,true); };
+        const cb=b.querySelector('#fi-clearinc'); if(cb) cb.onclick=()=>{ delete it.incident; save(); furniInfoFill(it,true); };
       }
       function renderGrid(){
         const g=$('distro-grid'); if(!g) return;
+        if(distroPinned && st.items.indexOf(distroPinned)<0){ distroPinned=null; try{ furniInfoClear(); }catch(_){} }
         g.style.display='grid';
         g.style.gridTemplateColumns='repeat('+st.cols+','+CELL+'px)';
         g.style.gridAutoRows=CELL+'px';
@@ -2097,8 +2145,9 @@
             el.textContent=iconFor(it.type);
             el.title=(it.label||it.type)+' ('+it.col+','+it.row+') '+w+'×'+d+' — arrastra para mover · doble-clic para borrar · clic-derecho gira';
           }
-          el.onmouseenter=()=>furniInfoFill(it);
+          el.onmouseenter=()=>{ if(!distroPinned) furniInfoFill(it); };
           el.onmouseleave=furniInfoClear;
+          el.onclick=(e)=>{ e.stopPropagation(); furniInfoPin(it); };
           el.draggable=true;
           el.ondragstart=(e)=>{ try{ e.dataTransfer.setData('text/plain',it.col+','+it.row); e.dataTransfer.effectAllowed='move'; }catch(_){ } el.style.opacity='.5'; };
           el.ondragend=()=>{ el.style.opacity=''; };
