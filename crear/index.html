@@ -567,7 +567,17 @@
           <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
             <div style="flex:0 0 190px;">
               <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Mis muebles</label>
-              <div id="edit-list" style="display:flex;flex-direction:column;gap:6px;max-height:460px;overflow:auto;"></div>
+              <div id="edit-list" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;"></div>
+              <div style="margin-top:12px;border-top:1px solid #28323a;padding-top:10px;">
+                <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">📥 Importar imagen</label>
+                <input id="edit-import-url" type="text" placeholder="pega una URL de imagen…" class="model-select" style="width:100%;font-size:11px;margin-bottom:6px;">
+                <div style="display:flex;gap:6px;">
+                  <button type="button" class="button secondary" id="edit-import-url-btn" style="flex:1;font-size:12px;padding:5px 8px;">🌐 Traer URL</button>
+                  <button type="button" class="button secondary" id="edit-import-file-btn" style="flex:1;font-size:12px;padding:5px 8px;">📁 Subir archivo</button>
+                </div>
+                <input id="edit-import-file" type="file" accept="image/*" style="display:none;">
+                <p style="font-size:10px;color:var(--muted);margin:6px 0 0;line-height:1.4;">Trae una imagen de otra web para retocarla aquí y guardarla en Stock.</p>
+              </div>
             </div>
             <div style="flex:1;min-width:340px;">
               <div id="edit-toolbar" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
@@ -594,6 +604,7 @@
                 <div><label style="display:block;font-size:11px;color:var(--muted);">Ancho (tiles)</label><input id="edit-fpw" type="number" min="1" max="6" value="1" class="model-select" style="width:70px;"></div>
                 <div><label style="display:block;font-size:11px;color:var(--muted);">Fondo (tiles)</label><input id="edit-fpd" type="number" min="1" max="6" value="1" class="model-select" style="width:70px;"></div>
                 <button type="button" class="button primary" id="edit-save" style="height:34px;">💾 Guardar cambios</button>
+                <button type="button" class="button secondary" id="edit-save-stock" style="height:34px;" title="Publica el lienzo actual como un asset nuevo en Stock (Biblioteca/Marketplace)">📦 Guardar en Stock</button>
               </div>
               <div id="edit-status" style="font-size:12px;color:var(--muted);margin-top:8px;min-height:16px;">Elige un mueble de «Mis muebles» para editarlo.</div>
             </div>
@@ -2500,6 +2511,54 @@
         }catch(e){ editStatus('❌ IA: '+e.message,'#e06a6a'); }
         finally{ if(btn) btn.disabled=false; }
       }
+      // ── Importar imagen externa (URL via proxy del worker, o archivo local) ──
+      function editLoadInto(src, meta){
+        meta=meta||{};
+        editStatus('⏳ cargando imagen…');
+        const img=new Image(); if(/^https?:/i.test(src)) img.crossOrigin='anonymous';
+        img.onload=()=>{
+          const MAX=1024; let w=img.naturalWidth||64,h=img.naturalHeight||64;
+          const s=Math.min(1,MAX/Math.max(w,h)); w=Math.max(1,Math.round(w*s)); h=Math.max(1,Math.round(h*s));
+          EDIT.sc.width=w; EDIT.sc.height=h;
+          const g=EDIT.sc.getContext('2d'); g.clearRect(0,0,w,h); g.imageSmoothingEnabled=true; g.drawImage(img,0,0,w,h);
+          try{ g.getImageData(0,0,1,1); EDIT.tainted=false; }catch(e){ EDIT.tainted=true; }
+          EDIT.item={ url:null, img:null, title:meta.title||'importada', ph:46, fp:[1,1], imported:true };
+          $('edit-ph').value=46; $('edit-fpw').value=1; $('edit-fpd').value=1;
+          loadEditList(); editFitZoom(); renderEdit();
+          if(EDIT.tainted) editStatus('⚠ Imagen sin permiso de píxeles (CORS): no puedo retocarla ni guardarla. Prueba con «Traer URL» (usa el proxy).','#e0a14a');
+          else editStatus('📥 Importada «'+(meta.title||'imagen')+'» · '+w+'×'+h+' px'+(s<1?' (reescalada)':'')+'. Retoca, recorta y pulsa «Guardar en Stock».','#7ee0a0');
+        };
+        img.onerror=()=>editStatus('❌ no se pudo cargar la imagen'+(meta.viaProxy?' (¿la URL es una imagen directa?)':'')+'.','#e06a6a');
+        img.src=src;
+      }
+      function importFromUrl(){
+        const raw=($('edit-import-url').value||'').trim(); if(!raw){ editStatus('Pega una URL de imagen.','#e0a14a'); return; }
+        let u; try{ u=new URL(raw); }catch(e){ editStatus('URL no válida.','#e0a14a'); return; }
+        if(u.protocol!=='http:'&&u.protocol!=='https:'){ editStatus('Solo URLs http(s).','#e0a14a'); return; }
+        editLoadInto(dBase()+'/image/proxy?url='+encodeURIComponent(u.toString()), { title:((u.pathname.split('/').pop()||'importada').replace(/\.[^.]+$/,''))||'importada', viaProxy:true });
+      }
+      function importFromFile(){
+        const inp=$('edit-import-file'); const f=inp&&inp.files&&inp.files[0]; if(!f) return;
+        const r=new FileReader(); r.onload=()=>editLoadInto(r.result,{ title:(f.name||'importada').replace(/\.[^.]+$/,'') }); r.onerror=()=>editStatus('❌ no se pudo leer el archivo','#e06a6a'); r.readAsDataURL(f);
+        inp.value='';
+      }
+      async function saveEditToStock(){
+        if(!EDIT.sc.width){ editStatus('Importa o abre una imagen primero.','#e0a14a'); return; }
+        if(EDIT.tainted){ editStatus('Imagen sin acceso a píxeles (CORS): no puedo publicarla.','#e0a14a'); return; }
+        let dataUrl; try{ dataUrl=EDIT.sc.toDataURL('image/png'); }catch(e){ editStatus('No puedo leer la imagen (CORS).','#e0a14a'); return; }
+        const title=(EDIT.item&&EDIT.item.title)||'Asset Pixeria';
+        const ph=Math.max(8,Math.min(400,+$('edit-ph').value||46));
+        const fp=[Math.max(1,Math.min(6,+$('edit-fpw').value||1)), Math.max(1,Math.min(6,+$('edit-fpd').value||1))];
+        const btn=$('edit-save-stock'); if(btn) btn.disabled=true;
+        editStatus('📦 publicando en Stock…');
+        try{
+          const payload={ type:'image', motor:'Pixeria Import', title, tags:['pixeria','import'], prompt:'importado/retocado en el editor de Assets', fp, ph, base64:dataUrl.split(',')[1], mime:'image/png' };
+          const r=await fetch(ELEVEN_WORKER_URL+'/stock/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+          const d=await r.json().catch(()=>({})); if(!r.ok||!(d.ok||d.id)) throw new Error(d.error||('HTTP '+r.status));
+          editStatus('✅ Guardado en Stock · id '+d.id+' (Biblioteca/Marketplace).','#7ee0a0');
+        }catch(e){ editStatus('❌ Stock: '+e.message,'#e06a6a'); }
+        finally{ if(btn) btn.disabled=false; }
+      }
       function initEdit(){
         document.querySelectorAll('.edit-tool').forEach(b=>b.addEventListener('click',()=>{ EDIT.tool=b.dataset.tool; document.querySelectorAll('.edit-tool').forEach(x=>x.style.background=''); b.style.background='rgba(0,200,255,.18)'; }));
         const cv=$('edit-canvas');
@@ -2508,8 +2567,13 @@
         const zo=$('edit-zoom-out'); if(zo) zo.onclick=()=>{ EDIT.zoom=Math.max(1,EDIT.zoom-1); renderEdit(); };
         const tr=$('edit-trim'); if(tr) tr.onclick=trimEdit;
         const sv=$('edit-save'); if(sv) sv.onclick=saveEdit;
+        const svs=$('edit-save-stock'); if(svs) svs.onclick=saveEditToStock;
         const ai=$('edit-ai-go'); if(ai) ai.onclick=aiEdit;
         const aip=$('edit-ai-prompt'); if(aip) aip.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); aiEdit(); } });
+        const iu=$('edit-import-url-btn'); if(iu) iu.onclick=importFromUrl;
+        const iuf=$('edit-import-url'); if(iuf) iuf.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); importFromUrl(); } });
+        const ifb=$('edit-import-file-btn'); if(ifb) ifb.onclick=()=>$('edit-import-file').click();
+        const iff=$('edit-import-file'); if(iff) iff.onchange=importFromFile;
       }
       function init(){
         if(!$('distro-grid')) return;
