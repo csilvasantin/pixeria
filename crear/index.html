@@ -2051,8 +2051,15 @@
         const b=$('distro-hoverinfo'); if(b) b.innerHTML='<div style="font-size:11px;color:var(--muted);opacity:.7;line-height:1.5;">🛈 Pasa el ratón por un mueble del plano para ver su ficha.<br>Haz <b>clic</b> en un mueble para fijar su ficha y gestionar incidencias.</div>';
       }
       function furniInfoPin(it){ if(distroPinned===it){ distroPinned=null; furniInfoClear(); } else { distroPinned=it; furniInfoFill(it,true); } }
+      // Limita la ficha a la altura de la rejilla con scroll interno → la caja de
+      // detalle (y los botones de abajo) no se mueven aunque la incidencia sea larga.
+      function syncHoverHeight(){
+        const b=$('distro-hoverinfo'); if(!b) return;
+        try{ const gw=$('distro-grid'); const box=gw&&gw.parentElement; if(box&&box.offsetHeight>0){ b.style.maxHeight=box.offsetHeight+'px'; b.style.overflowY='auto'; } }catch(_){}
+      }
       function furniInfoFill(it, pinned){
         const b=$('distro-hoverinfo'); if(!b||!it) return;
+        syncHoverHeight();
         const fp=fpFor(it);
         const w=Math.max(1,Math.min(fp.w,st.cols-it.col)), d=Math.max(1,Math.min(fp.d,st.rows-it.row));
         const price=(it.price!=null&&isFinite(+it.price))?+it.price:(50+30*Math.max(1,(fp.w||1)*(fp.d||1)));
