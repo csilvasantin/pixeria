@@ -106,17 +106,13 @@
 
       <div class="brief-area">
         <div class="brief-head">
-          <h3>Brief de Video</h3>
           <div class="brief-actions">
-            <button class="btn play" type="button" id="playOutput"><span class="play-label">✨ CREAR</span></button>
-            <button class="btn" type="button" id="genBrief">Generar brief</button>
-            <button class="btn" type="button" id="copyBrief">Copiar JSON</button>
-            <button class="btn" type="button" id="copyMd">Copiar Markdown</button>
-            <button class="btn" type="button" id="dlBrief">Descargar .json</button>
+            <button class="btn play" type="button" id="playOutput"><span class="play-label">✨ CREAR VÍDEO</span></button>
             <button class="btn" type="button" id="clearAll">Limpiar Video</button>
+            <button class="btn" type="button" id="sendToStock" title="Publica en Stock el vídeo creado">📌 Enviar a Stock</button>
           </div>
         </div>
-        <pre class="brief" id="briefOut">// Rellena los campos y pulsa "Generar brief".</pre>
+        <pre class="brief" id="briefOut" hidden></pre>
       </div>
       <div id="player" class="player-area" hidden></div>
     </form>
@@ -176,6 +172,6 @@
     </form>
   </dialog>
   <script src="/matrix-rain.js?v=20260608-sides"></script>
-  <script src="app.js?v=20260614-quality"></script>
+  <script src="app.js?v=20260614-barclean"></script>
 </body>
 </html>

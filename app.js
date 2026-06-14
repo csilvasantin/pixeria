@@ -2506,8 +2506,8 @@
     const labels = {
       audio: '🎙️ CREAR LOCUCIÓN',
       musica: '🎵 CREAR MÚSICA',
-      imagenes: '✨ GENERAR OTRA',
-      video: '▶ REPRODUCIR DE NUEVO',
+      imagenes: '✨ CREAR IMAGEN',
+      video: '✨ CREAR VÍDEO',
       plataforma: '▶ REPRODUCIR TODO DE NUEVO',
       publicidad: '✨ REGENERAR ANUNCIO',
     };
