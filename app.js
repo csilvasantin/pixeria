@@ -447,6 +447,7 @@
         document.querySelectorAll('input[type=text], select, textarea').forEach(el => { if (el.name) el.value = ''; });
         document.querySelectorAll('.chip input').forEach(i => { i.checked = false; i.closest('.chip')?.classList.remove('active'); });
         if (out) out.textContent = '// Rellena los campos y pulsa "Generar brief".';
+        try { setMusicCover(''); } catch (_) {}
         showToast('Limpiado');
       },
     };
@@ -777,7 +778,16 @@
     }
   }
 
+  // Portada generada por Suno → figura #m-cover a la derecha de la Letra.
+  function setMusicCover(url) {
+    const fig = document.getElementById('m-cover'); if (!fig) return;
+    const img = fig.querySelector('img');
+    if (url && img) { img.src = url; fig.hidden = false; }
+    else { fig.hidden = true; if (img) img.removeAttribute('src'); }
+  }
+
   async function playSunoLocal(s, model) {
+    setMusicCover('');  // limpia la portada anterior al empezar
     // El campo "Styles" (s.uso) va a la caja Styles de Suno. La Letra va a Lyrics.
     // "Versiones a entregar" define tipo (canción/loop/stinger) + pista de duración.
     const lyrics = (s.letra || '').trim();
@@ -843,6 +853,8 @@
         setProgressLabel('suno', `Suno · intento ${attempt} · ${ready.length}/${clips.length} listos`);
         if (ready.length >= 1) {
           stop(true);
+          // Portada que devuelve Suno → a la derecha de la Letra cuando termina.
+          setMusicCover(ready.map(c => c.image_large_url || c.image_url).find(Boolean) || '');
           const briefTitle = deriveAssetTitle('musica', loadStore());
           showPlayer(`
             <div class="player-card">

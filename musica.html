@@ -116,7 +116,13 @@
         </div>
         <div class="field">
           <label for="m-letra">Letra <button type="button" class="btn" id="genLyrics" style="font-size:10px;padding:4px 8px;margin-left:8px;vertical-align:middle;">✏️ GENERAR CON GEMINI</button></label>
-          <textarea id="m-letra" name="musica.letra" rows="10" placeholder="[Verse 1]&#10;...&#10;&#10;[Chorus]&#10;..." style="font-family:inherit;"></textarea>
+          <div style="display:flex;gap:14px;align-items:stretch;flex-wrap:wrap;">
+            <textarea id="m-letra" name="musica.letra" rows="10" placeholder="[Verse 1]&#10;...&#10;&#10;[Chorus]&#10;..." style="font-family:inherit;flex:1;min-width:280px;"></textarea>
+            <figure id="m-cover" hidden style="flex:0 0 240px;margin:0;display:flex;flex-direction:column;gap:6px;">
+              <img alt="Portada generada por Suno" style="width:100%;aspect-ratio:1/1;object-fit:cover;border:1px solid var(--matrix,#0f0);border-radius:6px;box-shadow:0 0 12px rgba(0,255,65,.3);">
+              <figcaption style="font-size:10px;color:var(--muted);text-align:center;">Portada · Suno</figcaption>
+            </figure>
+          </div>
         </div>
       </article>
 
@@ -188,6 +194,6 @@
     </form>
   </dialog>
   <script src="/matrix-rain.js?v=20260608-sides"></script>
-  <script src="app.js?v=20260614-locucion"></script>
+  <script src="app.js?v=20260614-cover"></script>
 </body>
 </html>
