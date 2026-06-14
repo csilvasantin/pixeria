@@ -603,9 +603,9 @@
                 <canvas id="edit-canvas" style="image-rendering:pixelated;display:block;cursor:crosshair;"></canvas>
               </div>
               <div style="display:flex;gap:6px;align-items:center;margin-top:10px;">
-                <span style="font-size:13px;white-space:nowrap;">✨ IA:</span>
+                <span style="font-size:13px;white-space:nowrap;" title="Edición con IA mediante Gemini 2.5 Flash Image">✨ IA <span style="font-size:10px;color:var(--muted);">(Gemini 2.5 Flash)</span>:</span>
                 <input id="edit-ai-prompt" type="text" placeholder="ej. la moto ahora rosa · quítale el fondo · hazla de noche" class="model-select" style="flex:1;min-width:220px;">
-                <button type="button" class="button primary" id="edit-ai-go" style="font-size:12px;padding:6px 14px;white-space:nowrap;">Aplicar IA</button>
+                <button type="button" class="button primary" id="edit-ai-go" style="font-size:12px;padding:6px 14px;white-space:nowrap;">Aplicar</button>
               </div>
               <div style="display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin-top:10px;">
                 <div><label style="display:block;font-size:11px;color:var(--muted);">Altura (px)</label><input id="edit-ph" type="number" min="8" max="400" value="46" class="model-select" style="width:80px;"></div>
@@ -2533,12 +2533,16 @@
         g.putImageData(im,0,0); return true;
       }
       async function aiEdit(){
+        if(EDIT.aiBusy){ editStatus('⏳ La IA ya está procesando, espera a que termine…','#e0a14a'); return; }
         if(!EDIT.item||!EDIT.sc.width){ editStatus('Abre un mueble primero.','#e0a14a'); return; }
         if(EDIT.tainted){ editStatus('Imagen sin acceso a píxeles (CORS): no puedo enviarla a la IA.','#e0a14a'); return; }
         const prompt=($('edit-ai-prompt').value||'').trim(); if(!prompt){ editStatus('Escribe qué cambiar (ej. «la moto ahora rosa»).','#e0a14a'); return; }
         let dataUrl; try{ dataUrl=EDIT.sc.toDataURL('image/png'); }catch(e){ editStatus('No puedo leer la imagen (CORS).','#e0a14a'); return; }
-        const btn=$('edit-ai-go'); if(btn) btn.disabled=true;
-        editStatus('✨ IA pintando «'+prompt+'»… (~10-20s)');
+        EDIT.aiBusy=true;
+        const btn=$('edit-ai-go'), inp=$('edit-ai-prompt'); const btnTxt=btn?btn.textContent:'';
+        if(btn){ btn.disabled=true; btn.textContent='⏳ Procesando…'; }
+        if(inp) inp.disabled=true;
+        let dots=0; const tick=setInterval(()=>{ dots=(dots+1)%4; editStatus('✨ Gemini pintando «'+prompt+'»'+'·'.repeat(dots)+' (~10-20s)'); },500);
         try{
           const r=await fetch(dBase()+'/image/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ image:dataUrl, prompt })});
           const d=await r.json(); if(!r.ok||!d.ok||!d.image) throw new Error(d.error||d.detail||('HTTP '+r.status));
@@ -2551,7 +2555,7 @@
           }; im.onerror=()=>rej(new Error('no se pudo cargar la imagen IA')); im.src=d.image; });
           editStatus('✨ IA aplicada (fondo recortado). Retoca y pulsa Guardar.','#7ee0a0');
         }catch(e){ editStatus('❌ IA: '+e.message,'#e06a6a'); }
-        finally{ if(btn) btn.disabled=false; }
+        finally{ clearInterval(tick); EDIT.aiBusy=false; if(btn){ btn.disabled=false; btn.textContent=btnTxt||'Aplicar'; } if(inp) inp.disabled=false; }
       }
       // ── Importar imagen externa (URL via proxy del worker, o archivo local) ──
       function editLoadInto(src, meta){
