@@ -2009,6 +2009,9 @@
         const ov = document.createElement('dialog'); ov.id = 'plPlayer'; ov.className = 'pl-player'; document.body.appendChild(ov);
         try { ov.showModal(); } catch (_) {}
         let idx = 0, timer = null;
+        // Silencio GLOBAL de la playlist: un solo botón muta todos los vídeos/audios
+        // del previo (antes había que mutearlos uno a uno). Recuerda la preferencia.
+        let muted = false; try { muted = localStorage.getItem('pl_player_muted') === '1'; } catch (_) {}
         const clear = () => { if (timer) { clearTimeout(timer); timer = null; } };
         const close = () => { clear(); try { ov.close(); } catch (_) {} ov.remove(); };
         ov.addEventListener('close', () => { clear(); if (ov.isConnected) ov.remove(); });   // Escape
@@ -2023,7 +2026,7 @@
             : `<img src="${escAttr(it.url)}" alt="">`;
           const last = idx + 1 >= items.length;
           ov.innerHTML = `<div class="pl-player-box">
-            <div class="pl-player-head"><span>▶ ${idx + 1}/${items.length} · ${escAttr(String(it.title || 'asset').slice(0, 60))}</span><button type="button" class="pl-mini" data-plp="close">✕ cerrar</button></div>
+            <div class="pl-player-head"><span>▶ ${idx + 1}/${items.length} · ${escAttr(String(it.title || 'asset').slice(0, 60))}</span><span style="flex:1"></span><button type="button" class="pl-mini" data-plp="mute" title="Silencia toda la playlist">${muted ? '🔇 Silenciado' : '🔊 Sonido'}</button><button type="button" class="pl-mini" data-plp="close">✕ cerrar</button></div>
             <div class="pl-player-media">${media}</div>
             <div class="pl-player-foot">
               <button type="button" class="pl-mini" data-plp="prev" ${idx === 0 ? 'disabled' : ''}>‹ anterior</button>
@@ -2032,7 +2035,7 @@
               ${onDistribute ? '<button type="button" class="btn primary" data-plp="dist">✓ Distribuir a pantallas</button>' : ''}
             </div></div>`;
           const m = ov.querySelector('video, audio');
-          if (m) { m.addEventListener('ended', next); m.play && m.play().catch(() => {}); }
+          if (m) { m.muted = muted; m.addEventListener('ended', next); m.play && m.play().catch(() => {}); }
           else { timer = setTimeout(next, 5000); }   // imagen → 5s
         }
         ov.addEventListener('click', e => {
@@ -2042,6 +2045,11 @@
           if (a === 'close') close();
           else if (a === 'next') next();
           else if (a === 'prev') prev();
+          else if (a === 'mute') {   // silencio global, en vivo (sin reiniciar el vídeo)
+            muted = !muted; try { localStorage.setItem('pl_player_muted', muted ? '1' : '0'); } catch (_) {}
+            const m = ov.querySelector('video, audio'); if (m) m.muted = muted;
+            b.textContent = muted ? '🔇 Silenciado' : '🔊 Sonido';
+          }
           else if (a === 'dist') { close(); if (onDistribute) onDistribute(); }
         });
         render();
