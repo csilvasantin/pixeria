@@ -1919,7 +1919,10 @@
       const st={ cols:14, rows:8, sel:'counter', selFurni:null, items:[], staff:[], _n:1, wall:'#e0d4b8', floor:'#b8bcc0' };
       const $=id=>document.getElementById(id);
       function status(msg,col){ const s=$('distro-status'); if(s){ s.textContent=msg||''; s.style.color=col||'var(--muted)'; } }
-      function distroItemOut(i){ const o={ id:i.id, type:i.type, col:i.col, row:i.row, sx:i.sx||1, sy:i.sy||1, label:i.label }; if(i.rot) o.rot=i.rot; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; }
+      function distroItemOut(i){ const o={ id:i.id, type:i.type, col:i.col, row:i.row, sx:i.sx||1, sy:i.sy||1, label:i.label }; if(i.rot) o.rot=i.rot; if(i.plv&&i.plv!=='auto') o.plv=i.plv; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; }
+      // PLV: creatividades fijables por pantalla (LED/TFT). 'auto' = targeting reactivo.
+      const PLV_OPTS=[['auto','Auto (reactivo al aforo)'],['chuches','🍬 Chuches'],['vapeo','💨 Vapeo'],['prensa','📰 Prensa · Lotería'],['perfume_m','🧴 Perfume hombre'],['perfume_f','💄 Perfume mujer']];
+      function isScreenType(t){ return t==='led'||t==='tft'; }
 
       // ── EQUIPO (roles, acciones, zonas de influencia) ──────────────────────
       // shopStaffPos del gemelo es tile-based {col,row,label,color} y shopStaffZones
@@ -2221,6 +2224,11 @@
         // Fijada → incidencia editable
         const open=inc&&inc.status==='open', resolved=inc&&inc.status==='resolved';
         const inStyle='width:100%;font-size:11px;background:#0a0f14;border:1px solid #28323a;border-radius:5px;color:#dfe;padding:4px 6px;box-sizing:border-box;';
+        // PLV: fija qué creatividad muestra esta pantalla (idea #3). 'auto' = reactivo.
+        if(isScreenType(it.type)){
+          const cur=it.plv||'auto';
+          html+=lbl('📡 Contenido PLV de esta pantalla')+'<select id="fi-plv" style="'+inStyle+'">'+PLV_OPTS.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>';
+        }
         html+=lbl('Contacto en caso de incidencia')+'<input id="fi-contact" value="'+fiEsc((inc&&inc.contact)||DEFAULT_SUPPORT)+'" style="'+inStyle+'">';
         if(inc&&inc.start) html+=row('Empezó', fmtDate(inc.start));
         if(resolved&&inc.resolvedAt) html+=row('Resuelta', fmtDate(inc.resolvedAt));
@@ -2234,6 +2242,7 @@
         b.innerHTML=html;
         const save=()=>{ try{ pushLiveDebounced(); }catch(_){} };
         const ensureInc=()=>{ if(!it.incident) it.incident={contact:DEFAULT_SUPPORT,status:null,notes:'',resolution:''}; return it.incident; };
+        const plvSel=b.querySelector('#fi-plv'); if(plvSel) plvSel.onchange=()=>{ it.plv=plvSel.value; pushLiveDebounced(); status('📡 PLV '+furniName(it)+': '+plvSel.value,'#7ee0a0'); };
         const up=b.querySelector('#fi-unpin'); if(up) up.onclick=()=>{ distroPinned=null; furniInfoClear(); };
         const ci=b.querySelector('#fi-contact'); if(ci) ci.oninput=()=>{ ensureInc().contact=ci.value; save(); };
         const nt=b.querySelector('#fi-notes'); if(nt) nt.oninput=()=>{ ensureInc().notes=nt.value; save(); };
@@ -2435,7 +2444,7 @@
         st.cols=Math.max(6,Math.min(24,cfg.cols||14)); st.rows=Math.max(4,Math.min(16,cfg.rows||8));
         st.wall=cfg.longWallColor&&cfg.longWallColor!=='transparent'?cfg.longWallColor:'#e0d4b8';
         st.floor=cfg.floorColor&&cfg.floorColor!=='transparent'?cfg.floorColor:'#b8bcc0';
-        st.items=(d.furniture||[]).filter(i=>i&&i.type&&i.col<st.cols&&i.row<st.rows).map(i=>{ const o={ id:i.id||(i.type+'-'+(st._n++)), type:i.type, col:i.col|0, row:i.row|0, sx:i.sx||1, sy:i.sy||1, rot:i.rot||0, label:i.label||i.type }; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; });
+        st.items=(d.furniture||[]).filter(i=>i&&i.type&&i.col<st.cols&&i.row<st.rows).map(i=>{ const o={ id:i.id||(i.type+'-'+(st._n++)), type:i.type, col:i.col|0, row:i.row|0, sx:i.sx||1, sy:i.sy||1, rot:i.rot||0, label:i.label||i.type }; if(i.plv) o.plv=i.plv; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; });
         // Todo Xpacio tiene entrada/salida: si la distribución no trae puerta, la
         // ponemos por defecto en el borde izquierdo (se ve marcada con su flecha).
         if(!st.items.some(i=>i.type==='door')) st.items.push({ id:'door-'+(st._n++), type:'door', col:0, row:Math.max(0,st.rows-2), sx:1, sy:1, label:'Puerta' });
