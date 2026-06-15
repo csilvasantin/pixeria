@@ -1908,6 +1908,9 @@
       const FMAP={}; FURNI.forEach(f=>FMAP[f.type]=f);
       const iconFor=t=>(FMAP[t]&&FMAP[t].icon)||'▪️';
       const CELL=30;
+      // Xtanco inicial: screenId fijo del gemelo digital por defecto (standalone, sin ?loc).
+      // Si no se pega ningún id, las acciones (Estado actual / Mudanza / En vivo) lo atacan a él.
+      const XTANCO_INICIAL='xtore-inicial';
       const st={ cols:14, rows:8, sel:'counter', selFurni:null, items:[], _n:1, wall:'#e0d4b8', floor:'#b8bcc0' };
       const $=id=>document.getElementById(id);
       function status(msg,col){ const s=$('distro-status'); if(s){ s.textContent=msg||''; s.style.color=col||'var(--muted)'; } }
@@ -2217,8 +2220,7 @@
         // tampoco, pide el id de pantalla (el que da /xpacio en el gemelo).
         if(!targets.length && st.loadedScreen) targets=[st.loadedScreen];
         if(!targets.length){
-          const scr=(prompt('¿A qué pantalla envío la mudanza?\nPega el id (en el gemelo: /xpacio), ej. xtore-mny4b7:','')||'').trim().toLowerCase();
-          if(!scr){ status('Mudanza cancelada.','#e0a14a'); return; }
+          const scr=(prompt('¿A qué pantalla envío la mudanza?\nPega el id (en el gemelo: /xpacio), ej. xtore-mny4b7.\n\nDéjalo VACÍO para enviarla al Xtanco inicial (gemelo por defecto).','')||'').trim().toLowerCase() || XTANCO_INICIAL;
           targets=[scr];
         }
         const name=($('distro-name').value||'').trim()||'Distribución sin nombre';
@@ -2315,8 +2317,7 @@
       function startLive(){
         let scr=st.loadedScreen;
         if(!scr){
-          scr=(prompt('EN VIVO — ¿qué Xpacio sigo?\nPega el id de pantalla del gemelo (en XpaceOS escribe /xpace), ej. xtore-mny4b7:','')||'').trim().toLowerCase();
-          if(!scr){ status('EN VIVO cancelado.','#e0a14a'); return; }
+          scr=(prompt('EN VIVO — ¿qué Xpacio sigo?\nPega el id de pantalla del gemelo (en XpaceOS escribe /xpace), ej. xtore-mny4b7.\n\nDéjalo VACÍO para seguir el Xtanco inicial (gemelo por defecto).','')||'').trim().toLowerCase() || XTANCO_INICIAL;
           st.loadedScreen=scr;
         }
         __liveTs=0;
@@ -2368,12 +2369,15 @@
           let cur=null;
           if(screen) cur=await fetchCurrentLayout(screen,'');
           if(!cur && client) cur=await fetchCurrentLayout('',client);
-          // No casa por circuito → pedir el id de pantalla (el que da /xpacio en el gemelo).
+          // No casa por circuito → pedir el id de pantalla. Si lo dejas VACÍO,
+          // atacamos por defecto el gemelo digital: el «Xtanco inicial» (xtore-inicial).
           if(!cur){
-            const scr=(prompt('No encuentro la distribución por el circuito.\n\nPega el ID de pantalla del Xpacio (en el gemelo escribe /xpacio a la IA y te lo dice, ej. xtore-mny4b7):','')||'').trim().toLowerCase();
-            if(!scr){ status('Cancelado. Usa /xpacio en el gemelo para saber el id de pantalla.','#e0a14a'); return; }
+            const scr=(prompt('Pega el ID de pantalla del Xpacio (en el gemelo escribe /xpacio a la IA y te lo dice, ej. xtore-mny4b7).\n\nDéjalo VACÍO para atacar el Xtanco inicial (gemelo por defecto).','')||'').trim().toLowerCase() || XTANCO_INICIAL;
             cur=await fetchCurrentLayout(scr,'');
-            if(!cur){ status('La pantalla «'+scr+'» aún no ha reportado su distribución (abre/recarga el gemelo del Xtanco y reintenta).','#e0a14a'); return; }
+            if(!cur){
+              const esInicial = scr===XTANCO_INICIAL;
+              status('La pantalla «'+scr+'» aún no ha reportado su distribución ('+(esInicial?'abre/recarga el gemelo por defecto (sin ?loc) para que publique el Xtanco inicial':'abre/recarga el gemelo del Xtanco')+' y reintenta).','#e0a14a'); return;
+            }
           }
           setEditorFromLayout(cur);
           st.loadedScreen=cur.screen||'';   // recuerda el Xtanco de origen → Mudanza lo devuelve a ESA pantalla
