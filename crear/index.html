@@ -555,6 +555,7 @@
           <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
             <button class="button primary" id="distro-save" style="flex:1;">💾 Guardar y publicar</button>
             <button class="button secondary" id="distro-iso" style="flex:1;" title="Ver la distribución en isométrico, con el motor real del gemelo (XpaceOS.com)">📐 Perspectiva isométrica</button>
+            <button class="button secondary" id="distro-alzado" style="flex:1;" title="Alzado/sección: vista lateral local para analizar las ALTURAS de los muebles y los elementos de la pared">📏 Alzado</button>
             <button class="button secondary" id="distro-clear" style="flex:1;">🧹 Vaciar rejilla</button>
           </div>
           <div id="distro-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;min-height:16px;"></div>
@@ -1939,6 +1940,59 @@
       function staffOut(){ return (st.staff||[]).map(s=>({ col:s.col, row:s.row, label:s.label, color:s.color, role:s.role, name:s.name||s.label, action:s.action||'' })); }
       function zonesOut(){ return (st.staff||[]).map(s=>({ col:s.col, row:s.row, radius:Math.max(0,Math.min(4,s.zoneRadius==null?2:s.zoneRadius)) })); }
       function hexA(hex,a){ try{ const h=hex.replace('#',''); const n=parseInt(h.length===3?h.replace(/(.)/g,'$1$1'):h,16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }catch(_){ return 'rgba(120,243,255,'+a+')'; } }
+
+      // ── ALZADO (sección lateral para analizar ALTURAS) ────────────────────
+      // Mapa de alturas LOCAL (px), espejo de las funciones de dibujo del gemelo
+      // (5º arg de drawIsoBlock). /crear no tiene las alturas → se replican aquí.
+      // Pared ISO = 165. Custom usa su ph. Mantener en sync si cambian en el gemelo.
+      const WALL_H=165;
+      const FURNI_H={ counter:16, shelves:55, wineRack:48, lottery:22, vending:44, magazines:42,
+        manager:20, plant:38, floorLamp:52, metahuman:72, tablet:22, turnKiosk:40, djBooth:26,
+        rug:1, door:0 };
+      // Wall-mounted: {alto del elemento, base = altura desde el suelo a su borde inferior}
+      const WALL_ITEMS={ tft:{h:46,base:95}, led:{h:16,base:120}, aroma:{h:18,base:70} };
+      function itemHeight(it){ if(it.type==='custom') return Math.max(8,it.ph||46); return FURNI_H[it.type]!=null?FURNI_H[it.type]:24; }
+      function renderAlzado(){
+        let ov=document.getElementById('alzado-modal');
+        if(!ov){ ov=document.createElement('div'); ov.id='alzado-modal';
+          ov.style.cssText='position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;background:rgba(2,6,9,.92);padding:20px;';
+          ov.onclick=(e)=>{ if(e.target===ov) ov.style.display='none'; };
+          document.body.appendChild(ov);
+        }
+        ov.style.display='flex';
+        const PADL=44, PADR=16, PADT=24, PADB=40, colW=Math.max(26,Math.min(54,Math.round(760/st.cols)));
+        const Wd=PADL+st.cols*colW+PADR, scale=150/WALL_H, wallPx=WALL_H*scale, Hd=PADT+wallPx+PADB;
+        const baseY=PADT+wallPx;   // línea de suelo
+        function yTop(hpx){ return baseY-hpx*scale; }
+        let svg='';
+        // Pared (fondo) + regla de alturas
+        svg+='<rect x="'+PADL+'" y="'+PADT+'" width="'+(st.cols*colW)+'" height="'+wallPx+'" fill="'+hexA(st.wall||'#e0d4b8',0.18)+'" stroke="#2a3a44"/>';
+        [0,50,100,150].forEach(h=>{ const y=yTop(h); svg+='<line x1="'+(PADL-4)+'" y1="'+y+'" x2="'+(PADL+st.cols*colW)+'" y2="'+y+'" stroke="#1f3a44" stroke-dasharray="3,4"/><text x="'+(PADL-7)+'" y="'+(y+3)+'" fill="#6d8a96" font-size="9" text-anchor="end">'+h+'</text>'; });
+        // Suelo
+        svg+='<line x1="'+PADL+'" y1="'+baseY+'" x2="'+(PADL+st.cols*colW)+'" y2="'+baseY+'" stroke="#7da0b0" stroke-width="2"/>';
+        // Elementos de PARED (proyectados por columna)
+        for(const it of st.items){ const w=WALL_ITEMS[it.type]; if(!w) continue;
+          const x=PADL+it.col*colW+2, ww=colW-4, y=yTop(w.base+w.h), hh=w.h*scale;
+          svg+='<rect x="'+x+'" y="'+y+'" width="'+ww+'" height="'+hh+'" rx="2" fill="'+hexA('#78f3ff',0.35)+'" stroke="#78f3ff"/>';
+          svg+='<text x="'+(x+ww/2)+'" y="'+(y-3)+'" fill="#9fe7ff" font-size="8" text-anchor="middle">'+iconFor(it.type)+'</text>';
+        }
+        // Muebles de SUELO (barra por columna a su altura real)
+        const floor=st.items.filter(it=>!WALL_ITEMS[it.type]&&it.type!=='rug'&&it.type!=='door').sort((a,b)=>a.col-b.col);
+        for(const it of floor){ const fp=fpFor(it); const hpx=itemHeight(it);
+          const x=PADL+it.col*colW+2, ww=Math.max(10,Math.min(st.cols-it.col,fp.w)*colW-4), y=yTop(hpx), hh=hpx*scale;
+          svg+='<rect x="'+x+'" y="'+y+'" width="'+ww+'" height="'+hh+'" rx="2" fill="'+hexA('#2ee06a',0.30)+'" stroke="#2ee06a"/>';
+          svg+='<text x="'+(x+ww/2)+'" y="'+(y-3)+'" fill="#bfe9c9" font-size="8" text-anchor="middle">'+iconFor(it.type)+' '+hpx+'</text>';
+        }
+        // Etiquetas de columna
+        for(let c=0;c<st.cols;c++) svg+='<text x="'+(PADL+c*colW+colW/2)+'" y="'+(baseY+13)+'" fill="#5a6a72" font-size="8" text-anchor="middle">'+c+'</text>';
+        ov.innerHTML='<div style="background:#04101a;border:2px solid #2f8d8d;border-radius:14px;padding:16px 18px;max-width:94vw;max-height:90vh;overflow:auto;box-shadow:0 0 40px rgba(47,141,141,.3);">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;color:#7dffd0;font-weight:700;">📏 Alzado · alturas (px) — verde: suelo · cian: pared'
+          +'<button id="alzado-close" style="cursor:pointer;background:#0e2a22;border:1px solid #2f8d8d;color:#7dffd0;border-radius:8px;padding:5px 12px;font:700 12px monospace;">Cerrar ✕</button></div>'
+          +'<svg viewBox="0 0 '+Wd+' '+Hd+'" style="width:'+Math.min(Wd,860)+'px;max-width:88vw;height:auto;display:block;background:#071019;border-radius:8px;">'+svg+'</svg>'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;">Proyección lateral por columna: cada pieza a su altura real (revistero 42 · estantería 55 · mostrador 16…). Los elementos de pared (LED/TFT/aroma) van sobre el fondo a su altura de montaje.</div>'
+          +'</div>';
+        const cb=document.getElementById('alzado-close'); if(cb) cb.onclick=()=>{ ov.style.display='none'; };
+      }
       function freeTile(){ // primer tile sin mueble ni miembro (centro hacia fuera)
         const taken=new Set(); for(const it of st.items) taken.add(it.col+','+it.row); for(const s of st.staff) taken.add(s.col+','+s.row);
         const c0=st.cols>>1, r0=st.rows>>1;
@@ -2874,6 +2928,7 @@
         wire('distro-live',toggleLive);
         wire('distro-save',saveDistro);
         wire('distro-iso',openIso);
+        wire('distro-alzado',renderAlzado);
         wire('distro-clear',()=>{ st.items=[]; st.staff=[]; selStaff=null; renderGrid(); status('Rejilla vaciada'); });
         wire('distro-refresh',loadLib);
         // Submenús: Distribución / Marketplace (clic en el activo → vuelve a Creación)
