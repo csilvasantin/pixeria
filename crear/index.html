@@ -539,6 +539,10 @@
           <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">Mobiliario — elige una pieza y haz clic en la rejilla para colocarla (clic en una colocada para quitarla)</label>
           <div id="distro-palette" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
 
+          <!-- Equipo: añade miembros al plano; clic en su círculo para fijar zona de influencia y acción -->
+          <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">👥 Equipo — añade un rol y colócalo; clic en su círculo del plano para ajustar <b>zona de influencia</b> y <b>acción</b></label>
+          <div id="distro-team" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+
           <!-- Rejilla editor + ficha del mueble (hover) -->
           <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
             <div style="overflow:auto;background:#0b1117;border:1px solid #28323a;border-radius:8px;padding:10px;flex:1;min-width:0;">
@@ -1911,10 +1915,61 @@
       // Xtanco inicial: screenId fijo del gemelo digital por defecto (standalone, sin ?loc).
       // Si no se pega ningún id, las acciones (Estado actual / Mudanza / En vivo) lo atacan a él.
       const XTANCO_INICIAL='xtore-inicial';
-      const st={ cols:14, rows:8, sel:'counter', selFurni:null, items:[], _n:1, wall:'#e0d4b8', floor:'#b8bcc0' };
+      const st={ cols:14, rows:8, sel:'counter', selFurni:null, items:[], staff:[], _n:1, wall:'#e0d4b8', floor:'#b8bcc0' };
       const $=id=>document.getElementById(id);
       function status(msg,col){ const s=$('distro-status'); if(s){ s.textContent=msg||''; s.style.color=col||'var(--muted)'; } }
       function distroItemOut(i){ const o={ id:i.id, type:i.type, col:i.col, row:i.row, sx:i.sx||1, sy:i.sy||1, label:i.label }; if(i.rot) o.rot=i.rot; if(i.type==='custom'){ o.custom=true; if(i.img)o.img=i.img; if(i.fp)o.fp=i.fp; if(i.ph)o.ph=i.ph; if(i.frames>1){ o.frames=i.frames; o.orientation=i.orientation||0; } } return o; }
+
+      // ── EQUIPO (roles, acciones, zonas de influencia) ──────────────────────
+      // shopStaffPos del gemelo es tile-based {col,row,label,color} y shopStaffZones
+      // {col,row,radius} → /crear los edita directos. 'action' es campo extra que
+      // viaja en el round-trip (el gemelo lo conserva). Iconos/colores espejo del gemelo.
+      const STAFF_ROLES=[
+        {role:0,label:'Cajera',    color:'#ff88aa',icon:'💳',acts:['Atender caja','Cobro rápido','Upselling']},
+        {role:1,label:'Repositor', color:'#88aaff',icon:'📦',acts:['Reponer','Revisar stock','Frente de lineal']},
+        {role:2,label:'Azafata',   color:'#ffcc44',icon:'🎀',acts:['Recibir clientes','Promocionar','Degustación']},
+        {role:3,label:'Manager',   color:'#aaffaa',icon:'🧑‍💼',acts:['Supervisar','Flash promo','Formar equipo']},
+        {role:4,label:'DJ',        color:'#ff88ff',icon:'🎧',acts:['Ambiente','Subir energía']},
+      ];
+      const STAFF_ZONE_DEF=[1,2,2,2,1];
+      function roleDef(r){ return STAFF_ROLES[r]||STAFF_ROLES[0]; }
+      let selStaff=null;   // miembro del equipo seleccionado para editar
+      // Construye el array `staff` (= shopStaffPos) y `zones` (= shopStaffZones) que
+      // entiende el gemelo, a partir de st.staff.
+      function staffOut(){ return (st.staff||[]).map(s=>({ col:s.col, row:s.row, label:s.label, color:s.color, role:s.role, name:s.name||s.label, action:s.action||'' })); }
+      function zonesOut(){ return (st.staff||[]).map(s=>({ col:s.col, row:s.row, radius:Math.max(0,Math.min(4,s.zoneRadius==null?2:s.zoneRadius)) })); }
+      function hexA(hex,a){ try{ const h=hex.replace('#',''); const n=parseInt(h.length===3?h.replace(/(.)/g,'$1$1'):h,16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }catch(_){ return 'rgba(120,243,255,'+a+')'; } }
+      function freeTile(){ // primer tile sin mueble ni miembro (centro hacia fuera)
+        const taken=new Set(); for(const it of st.items) taken.add(it.col+','+it.row); for(const s of st.staff) taken.add(s.col+','+s.row);
+        const c0=st.cols>>1, r0=st.rows>>1;
+        for(let rad=0;rad<Math.max(st.cols,st.rows);rad++) for(let dr=-rad;dr<=rad;dr++) for(let dc=-rad;dc<=rad;dc++){
+          const c=c0+dc, r=r0+dr; if(c<0||r<0||c>=st.cols||r>=st.rows) continue; if(!taken.has(c+','+r)) return {col:c,row:r};
+        }
+        return {col:c0,row:r0};
+      }
+      function addStaffMember(role){
+        const rd=roleDef(role), t=freeTile();
+        const s={ role, col:t.col, row:t.row, label:rd.label, color:rd.color, name:rd.label, action:rd.acts[0], zoneRadius:STAFF_ZONE_DEF[role]||2 };
+        st.staff.push(s); selStaff=s; renderGrid(); staffEditPanel(); pushLiveDebounced(); status('👤 '+rd.label+' añadido · equipo '+st.staff.length);
+      }
+      // Panel de edición del miembro seleccionado (en el aside #distro-hoverinfo).
+      function staffEditPanel(){
+        const b=$('distro-hoverinfo'); if(!b) return; const s=selStaff;
+        if(!s){ return; }
+        const rd=roleDef(s.role);
+        const actOpts=rd.acts.map(a=>'<option'+(a===s.action?' selected':'')+'>'+a+'</option>').join('');
+        b.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-size:20px;">'+rd.icon+'</span>'+
+          '<div><div style="font-weight:700;color:'+s.color+';">'+(s.name||s.label)+'</div><div style="font-size:10px;color:var(--muted);">'+rd.label+' · ('+s.col+','+s.row+')</div></div></div>'+
+          '<label style="display:block;font-size:11px;color:var(--muted);margin:8px 0 3px;">Zona de influencia: <b id="staff-zr-val" style="color:#cfe;">'+(s.zoneRadius==null?2:s.zoneRadius)+'</b> tiles</label>'+
+          '<input id="staff-zr" type="range" min="0" max="4" step="1" value="'+(s.zoneRadius==null?2:s.zoneRadius)+'" style="width:100%;accent-color:'+s.color+';">'+
+          '<label style="display:block;font-size:11px;color:var(--muted);margin:10px 0 3px;">Acción</label>'+
+          '<select id="staff-act" style="width:100%;background:#0b1117;border:1px solid #28323a;border-radius:6px;color:#cfe;padding:6px;font-size:12px;">'+actOpts+'</select>'+
+          '<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;">Arrastra el círculo en el plano para recolocarlo · doble-clic lo quita.</div>'+
+          '<button class="button secondary" id="staff-remove" style="width:100%;margin-top:8px;height:30px;">Quitar del equipo</button>';
+        const zr=$('staff-zr'); if(zr) zr.oninput=()=>{ s.zoneRadius=parseInt(zr.value,10)||0; const v=$('staff-zr-val'); if(v) v.textContent=s.zoneRadius; renderGrid(); pushLiveDebounced(); };
+        const ac=$('staff-act'); if(ac) ac.onchange=()=>{ s.action=ac.value; pushLiveDebounced(); status('Acción de '+(s.name||s.label)+': '+s.action,'#7ee0a0'); };
+        const rm=$('staff-remove'); if(rm) rm.onclick=()=>{ st.staff=st.staff.filter(x=>x!==s); selStaff=null; renderGrid(); pushLiveDebounced(); furniInfoClear(); status('Miembro quitado · equipo '+st.staff.length); };
+      }
 
       // ── Monedero del Xpacio + Mis muebles (KV en el worker /xpacio/*) ──
       function xpacioId(){ let id=localStorage.getItem('xpace_xpacio_id'); if(!id){ id='xp-'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4); try{ localStorage.setItem('xpace_xpacio_id',id); }catch(_){} } return id; }
@@ -1979,9 +2034,20 @@
         if(tm) tm.classList.toggle('active',name==='marketplace');
         if(name==='marketplace') loadMarket();
         if(name==='edicion'){ loadWallet().then(loadEditList); loadRecentLists(); }
-        if(name==='distribucion'){ renderPalette(); renderGrid(); loadWallet().then(()=>renderPalette()); }
+        if(name==='distribucion'){ renderPalette(); renderTeamPalette(); renderGrid(); loadWallet().then(()=>renderPalette()); }
       }
 
+      function renderTeamPalette(){
+        const p=$('distro-team'); if(!p) return; p.innerHTML='';
+        STAFF_ROLES.forEach(rd=>{
+          const b=document.createElement('button'); b.type='button';
+          b.textContent=rd.icon+' '+rd.label;
+          b.title='Añadir '+rd.label+' al plano';
+          b.style.cssText='font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer;border:1px solid '+rd.color+'66;background:'+hexA(rd.color,0.10)+';color:#cfe;';
+          b.onclick=()=>addStaffMember(rd.role);
+          p.appendChild(b);
+        });
+      }
       function renderPalette(){
         const p=$('distro-palette'); if(!p) return; p.innerHTML='';
         FURNI.forEach(f=>{
@@ -2034,6 +2100,11 @@
       }
       function handleDrop(e,col,row){
         let src=''; try{ src=e.dataTransfer.getData('text/plain'); }catch(_){ }
+        // Mover un miembro del equipo (payload 'staff:idx').
+        if(src.indexOf('staff:')===0){
+          const idx=parseInt(src.slice(6),10); const s=st.staff[idx]; if(!s) return;
+          s.col=col; s.row=row; selStaff=s; renderGrid(); staffEditPanel(); pushLiveDebounced(); status('👤 '+(s.name||s.label)+' → ('+col+','+row+')'); return;
+        }
         const p=src.split(','), sc=parseInt(p[0],10), sr=parseInt(p[1],10);
         if(isNaN(sc)||isNaN(sr)||(sc===col&&sr===row)) return;
         const moving=st.items.find(i=>i.col===sc&&i.row===sr); if(!moving) return;
@@ -2051,6 +2122,7 @@
       function fiEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
       function furniInfoClear(){
         if(distroPinned){ furniInfoFill(distroPinned,true); return; }
+        if(selStaff){ staffEditPanel(); return; }   // mantén el panel del miembro seleccionado
         const b=$('distro-hoverinfo'); if(b) b.innerHTML='<div style="font-size:11px;color:var(--muted);opacity:.7;line-height:1.5;">🛈 Pasa el ratón por un mueble del plano para ver su ficha.<br>Haz <b>clic</b> en un mueble para fijar su ficha y gestionar incidencias.</div>';
       }
       function furniInfoPin(it){ if(distroPinned===it){ distroPinned=null; furniInfoClear(); } else { distroPinned=it; furniInfoFill(it,true); } }
@@ -2167,6 +2239,28 @@
           el.ondrop=(e)=>{ e.preventDefault(); handleDrop(e,it.col,it.row); };
           g.appendChild(el);
         }
+        // ── Capa 3: ZONAS de influencia del equipo (overlay translúcido) ──
+        for(const s of (st.staff||[])){
+          const r=Math.max(0,Math.min(4,s.zoneRadius==null?2:s.zoneRadius)), sel=(s===selStaff);
+          for(let rr=Math.max(0,s.row-r); rr<=Math.min(st.rows-1,s.row+r); rr++)
+            for(let cc=Math.max(0,s.col-r); cc<=Math.min(st.cols-1,s.col+r); cc++){
+              const z=document.createElement('div');
+              z.style.cssText='grid-column:'+(cc+1)+';grid-row:'+(rr+1)+';z-index:3;pointer-events:none;border-radius:3px;background:'+hexA(s.color,sel?0.22:0.10)+';'+(sel?'box-shadow:inset 0 0 0 1px '+s.color+';':'');
+              g.appendChild(z);
+            }
+        }
+        // ── Capa 4: MIEMBROS del equipo (marcador redondo, clic = editar) ──
+        for(const s of (st.staff||[])){
+          const sel=(s===selStaff), el=document.createElement('div');
+          el.style.cssText='grid-column:'+(s.col+1)+';grid-row:'+(s.row+1)+';z-index:4;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;background:'+s.color+';border:2px solid '+(sel?'#fff':'#0b1117')+';box-shadow:0 0 '+(sel?'10px':'4px')+' '+s.color+';font-size:15px;';
+          el.textContent=roleDef(s.role).icon;
+          el.title=(s.name||s.label)+' · '+(s.action||'')+' · zona '+(s.zoneRadius==null?2:s.zoneRadius)+' — clic: editar · doble-clic: quitar · arrastra para mover';
+          el.onclick=(e)=>{ e.stopPropagation(); selStaff=s; renderGrid(); staffEditPanel(); };
+          el.ondblclick=(e)=>{ e.stopPropagation(); st.staff=st.staff.filter(x=>x!==s); if(selStaff===s) selStaff=null; renderGrid(); pushLiveDebounced(); status('Miembro quitado · equipo '+st.staff.length); };
+          el.draggable=true;
+          el.ondragstart=(e)=>{ try{ e.dataTransfer.setData('text/plain','staff:'+st.staff.indexOf(s)); e.dataTransfer.effectAllowed='move'; }catch(_){ } };
+          g.appendChild(el);
+        }
       }
       function applySize(){
         st.cols=Math.max(6,Math.min(24,parseInt($('distro-cols').value,10)||14));
@@ -2200,7 +2294,7 @@
             targetScreens: (cc.location && cc.location.id) ? [] : (cc.screens||[]), pointCount:cc.pointCount,
             location: cc.location ? { id:cc.location.id, name:cc.location.name, addr:cc.location.addr } : null } : null,
           config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
-          furniture: st.items.map(distroItemOut) };
+          furniture: st.items.map(distroItemOut), staff: staffOut(), zones: zonesOut() };
         status('⏳ guardando '+name+'…');
         try{
           const r=await fetch(dBase()+'/layout/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -2229,7 +2323,7 @@
           circuit: cc?{ id:cc.id, scope:cc.scope, label:cc.label, segmentation:cc.segmentation, pointCount:cc.pointCount,
             location: cc.location?{ id:cc.location.id, name:cc.location.name, addr:cc.location.addr }:null }:null,
           config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
-          furniture: st.items.map(distroItemOut) };
+          furniture: st.items.map(distroItemOut), staff: staffOut(), zones: zonesOut() };
         status('⏳ mudanza: publicando…');
         try{
           const r=await fetch(dBase()+'/layout/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -2250,7 +2344,7 @@
         if(!st.items.length){ status('Coloca al menos un mueble para ver el isométrico.','#e0a14a'); return; }
         const body={ id:'preview-pixeria', name:'(vista previa)', client:($('distro-client').value||'').trim()||null, source:'pixeria',
           config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
-          furniture: st.items.map(distroItemOut) };
+          furniture: st.items.map(distroItemOut), staff: staffOut(), zones: zonesOut() };
         status('⏳ preparando vista isométrica…');
         try{
           const r=await fetch(dBase()+'/layout/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -2291,6 +2385,14 @@
         // Todo Xpacio tiene entrada/salida: si la distribución no trae puerta, la
         // ponemos por defecto en el borde izquierdo (se ve marcada con su flecha).
         if(!st.items.some(i=>i.type==='door')) st.items.push({ id:'door-'+(st._n++), type:'door', col:0, row:Math.max(0,st.rows-2), sx:1, sy:1, label:'Puerta' });
+        // Equipo: staff[i] (col,row,label,color,role,action) + zones[i] (col,row,radius).
+        const _sf=Array.isArray(d.staff)?d.staff:[], _zn=Array.isArray(d.zones)?d.zones:[];
+        st.staff=_sf.filter(s=>s&&Number.isFinite(s.col)&&Number.isFinite(s.row)&&s.col<st.cols&&s.row<st.rows).map((s,i)=>{
+          const role=Number.isInteger(s.role)?s.role:(i<STAFF_ROLES.length?i:0); const rd=roleDef(role);
+          const z=_zn[i]||{}; return { role, col:s.col|0, row:s.row|0, label:s.label||rd.label, color:s.color||rd.color,
+            name:s.name||rd.label, action:s.action||rd.acts[0], zoneRadius:Number.isFinite(z.radius)?z.radius:(STAFF_ZONE_DEF[role]||2) };
+        });
+        selStaff=null;
         $('distro-cols').value=st.cols; $('distro-rows').value=st.rows; $('distro-wallcol').value=st.wall; $('distro-floorcol').value=st.floor;
         if(!quiet){
           $('distro-name').value=d.name||''; $('distro-client').value=d.client||'';
@@ -2337,7 +2439,7 @@
         __pushT=setTimeout(()=>{
           const snap={ name:($('distro-name').value||'Layout'), client:($('distro-client').value||'').trim()||'generic',
             config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
-            furniture: st.items.map(distroItemOut) };
+            furniture: st.items.map(distroItemOut), staff: staffOut(), zones: zonesOut() };
           fetch(dBase()+'/layout/report',{method:'POST',headers:{'Content-Type':'application/json'},
             body:JSON.stringify({screen:st.loadedScreen, client:snap.client, origin:'pixeria', snapshot:snap})}).catch(()=>{});
         },600);
@@ -2772,7 +2874,7 @@
         wire('distro-live',toggleLive);
         wire('distro-save',saveDistro);
         wire('distro-iso',openIso);
-        wire('distro-clear',()=>{ st.items=[]; renderGrid(); status('Rejilla vaciada'); });
+        wire('distro-clear',()=>{ st.items=[]; st.staff=[]; selStaff=null; renderGrid(); status('Rejilla vaciada'); });
         wire('distro-refresh',loadLib);
         // Submenús: Distribución / Marketplace (clic en el activo → vuelve a Creación)
         wire('tab-creacion',()=>setView('creacion'));
