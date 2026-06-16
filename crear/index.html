@@ -2517,8 +2517,8 @@
       function refreshCliKeyBtns(){
         const live=liveOnNow(); let hasKey=false; try{ hasKey=!!localStorage.getItem('xpace_remote_key'); }catch(_){}
         ['distro-cli-key-p','distro-cli-key'].forEach(id=>{ const b=document.getElementById(id); if(!b) return;
-          if(live){ b.textContent=hasKey?'🔴 live':'🔴 live (pon 🔑)'; b.style.color='#ff8866'; b.title='EN VIVO: los comandos del CLI van al Xpacio '+st.loadedScreen+(hasKey?'':' — falta la REMOTE_KEY (pulsa para pegarla)'); }
-          else { b.textContent=hasKey?'🔑 live ✓':'🔑 live'; b.style.color=hasKey?'#7ee0a0':''; b.title='Pega la REMOTE_KEY para enviar al Xpacio LIVE del punto. Vacío = solo preview.'; }
+          if(live){ b.textContent='🔴 live'; b.style.color='#7ee0a0'; b.title='EN VIVO: los comandos del CLI van al Xpacio '+st.loadedScreen+' por el canal KEYLESS (sin clave).'; }
+          else { b.textContent=hasKey?'🔑 live ✓':'🔑 live'; b.style.color=hasKey?'#7ee0a0':''; b.title='REMOTE_KEY = mandar a un punto SIN estar En vivo (canal bridge). En vivo NO necesita clave.'; }
         });
       }
       // Sondea (~12s) la respuesta del gemelo a un comando remoto y la pinta como feedback.
@@ -2531,6 +2531,18 @@
               if(d&&d.result&&d.result.text){ clearInterval(iv); logLine('<span style="color:#7ee0a0;">←</span> '+esc(d.result.text)); }
               else if(tries>=8){ clearInterval(iv); logLine('<span style="color:#8aa;">·</span> (sin respuesta aún · ¿el gemelo del punto está abierto y con el bridge Telegram ON?)'); }
             }).catch(()=>{ if(tries>=8) clearInterval(iv); });
+        },1500);
+      }
+      // Feedback del canal KEYLESS (EN VIVO): sondea /twin/result?screen=&id= en pixer-eleven.
+      function pollTwinResult(screen, id, logLine, esc){
+        let tries=0;
+        const iv=setInterval(()=>{
+          tries++;
+          fetch(dBase()+'/twin/result?screen='+encodeURIComponent(screen)+'&id='+encodeURIComponent(id)+'&ts='+Date.now(),{cache:'no-store'})
+            .then(r=>r.json()).then(d=>{
+              if(d&&d.result&&d.result.text){ clearInterval(iv); logLine('<span style="color:#7ee0a0;">←</span> '+esc(d.result.text)); }
+              else if(tries>=10){ clearInterval(iv); logLine('<span style="color:#8aa;">·</span> (sin respuesta · ¿el gemelo del punto «'+esc(screen)+'» está abierto?)'); }
+            }).catch(()=>{ if(tries>=10) clearInterval(iv); });
         },1500);
       }
       function xtancoCliSend(cmd, logLine){
@@ -2548,24 +2560,30 @@
           window.addEventListener('message',h); setTimeout(()=>window.removeEventListener('message',h),4000);
           try{ let to='*'; try{ to=new URL(twinUrl()).origin; }catch(_){ } f.contentWindow.postMessage({type:'xtcmd',cmd:cmd,id:id}, to); }catch(e){}
         }
-        // Xpacio LIVE: si estás EN VIVO (espejo activo) el live del CLI se AUTO-ENCIENDE;
-        // también si guardaste la REMOTE_KEY a mano. Si falta la clave, se pide una vez.
+        // Xpacio LIVE. EN VIVO → canal KEYLESS por pantalla (mismo worker pixer-eleven
+        // que el espejo; SIN clave). Fuera de En vivo, si guardaste REMOTE_KEY → canal
+        // bridge (a cualquier punto que sondee Telegram). Nunca abre popup en el envío.
         const live=liveOnNow();
-        let rkey=''; try{ rkey=localStorage.getItem('xpace_remote_key')||''; }catch(_){}
-        // NUNCA abrimos popup durante el envío (molestaba estando EN VIVO): la REMOTE_KEY
-        // se pone UNA SOLA VEZ con el botón 🔑 y se guarda. Con clave → manda al Xpacio y
-        // muestra el feedback. Sin clave + EN VIVO → aviso en línea (sin ventana).
-        if(rkey){
+        if(live){
           did=true;
-          const tgt=live?(' → '+st.loadedScreen):'';
-          fetch(BRIDGE_URL+'/remote/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:rkey,text:cmd})})
+          const scr=st.loadedScreen;
+          fetch(dBase()+'/twin/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({screen:scr,text:cmd})})
             .then(r=>r.json()).then(d=>{
-              if(d&&d.ok&&d.commandId){ logLine('<span style="color:#7ee0a0;">live ⇡</span> enviado'+esc(tgt)+' (#'+esc(String(d.commandId))+') · esperando respuesta…'); pollLiveResult(d.commandId, logLine, esc); }
-              else logLine('<span style="color:#e0a14a;">live</span> '+esc((d&&d.error)||'no encolado'));
+              if(d&&d.ok&&d.id){ logLine('<span style="color:#7ee0a0;">live ⇡</span> → '+esc(scr)+' (#'+esc(String(d.id))+') · esperando respuesta…'); pollTwinResult(scr,d.id,logLine,esc); }
+              else logLine('<span style="color:#e0a14a;">live</span> '+esc((d&&d.error)||'no enviado'));
             })
-            .catch(e=>logLine('<span style="color:#e0a14a;">live</span> '+esc(String(e&&e.message||e))+' · ¿worker bridge con CORS de pixeria desplegado?'));
-        } else if(live){
-          logLine('<span style="color:#e0a14a;">·</span> EN VIVO · pulsa <b>🔑</b> una vez para pegar la REMOTE_KEY (no se vuelve a pedir) y los comandos irán al Xpacio');
+            .catch(e=>logLine('<span style="color:#e0a14a;">live</span> '+esc(String(e&&e.message||e))));
+        } else {
+          let rkey=''; try{ rkey=localStorage.getItem('xpace_remote_key')||''; }catch(_){}
+          if(rkey){
+            did=true;
+            fetch(BRIDGE_URL+'/remote/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:rkey,text:cmd})})
+              .then(r=>r.json()).then(d=>{
+                if(d&&d.ok&&d.commandId){ logLine('<span style="color:#7ee0a0;">live ⇡</span> enviado (#'+esc(String(d.commandId))+') · esperando respuesta…'); pollLiveResult(d.commandId, logLine, esc); }
+                else logLine('<span style="color:#e0a14a;">live</span> '+esc((d&&d.error)||'no encolado'));
+              })
+              .catch(e=>logLine('<span style="color:#e0a14a;">live</span> '+esc(String(e&&e.message||e))+' · ¿worker bridge con CORS de pixeria desplegado?'));
+          }
         }
         if(!did) logLine('<span style="color:#e0a14a;">·</span> abre 📐 Perspectiva isométrica (preview) o conéctate ⚪ En vivo / 🔑 live (Xpacio real)');
       }
