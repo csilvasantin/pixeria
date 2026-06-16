@@ -2552,23 +2552,20 @@
         // también si guardaste la REMOTE_KEY a mano. Si falta la clave, se pide una vez.
         const live=liveOnNow();
         let rkey=''; try{ rkey=localStorage.getItem('xpace_remote_key')||''; }catch(_){}
-        if(live || rkey){
-          if(!rkey && live){
-            const v=(prompt('🔑 EN VIVO con «'+st.loadedScreen+'» — pega la REMOTE_KEY del stand para mandar comandos al Xpacio real (se guarda en este navegador):','')||'').trim();
-            if(v){ try{ localStorage.setItem('xpace_remote_key',v); }catch(_){} rkey=v; refreshCliKeyBtns(); }
-          }
-          if(rkey){
-            did=true;
-            const tgt=live?(' → '+st.loadedScreen):'';
-            fetch(BRIDGE_URL+'/remote/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:rkey,text:cmd})})
-              .then(r=>r.json()).then(d=>{
-                if(d&&d.ok&&d.commandId){ logLine('<span style="color:#7ee0a0;">live ⇡</span> enviado'+esc(tgt)+' (#'+esc(String(d.commandId))+') · esperando respuesta…'); pollLiveResult(d.commandId, logLine, esc); }
-                else logLine('<span style="color:#e0a14a;">live</span> '+esc((d&&d.error)||'no encolado'));
-              })
-              .catch(e=>logLine('<span style="color:#e0a14a;">live</span> '+esc(String(e&&e.message||e))+' · ¿worker bridge con CORS de pixeria desplegado?'));
-          } else if(live){
-            logLine('<span style="color:#e0a14a;">·</span> EN VIVO pero sin REMOTE_KEY → pulsa 🔑 para mandar al Xpacio real');
-          }
+        // NUNCA abrimos popup durante el envío (molestaba estando EN VIVO): la REMOTE_KEY
+        // se pone UNA SOLA VEZ con el botón 🔑 y se guarda. Con clave → manda al Xpacio y
+        // muestra el feedback. Sin clave + EN VIVO → aviso en línea (sin ventana).
+        if(rkey){
+          did=true;
+          const tgt=live?(' → '+st.loadedScreen):'';
+          fetch(BRIDGE_URL+'/remote/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:rkey,text:cmd})})
+            .then(r=>r.json()).then(d=>{
+              if(d&&d.ok&&d.commandId){ logLine('<span style="color:#7ee0a0;">live ⇡</span> enviado'+esc(tgt)+' (#'+esc(String(d.commandId))+') · esperando respuesta…'); pollLiveResult(d.commandId, logLine, esc); }
+              else logLine('<span style="color:#e0a14a;">live</span> '+esc((d&&d.error)||'no encolado'));
+            })
+            .catch(e=>logLine('<span style="color:#e0a14a;">live</span> '+esc(String(e&&e.message||e))+' · ¿worker bridge con CORS de pixeria desplegado?'));
+        } else if(live){
+          logLine('<span style="color:#e0a14a;">·</span> EN VIVO · pulsa <b>🔑</b> una vez para pegar la REMOTE_KEY (no se vuelve a pedir) y los comandos irán al Xpacio');
         }
         if(!did) logLine('<span style="color:#e0a14a;">·</span> abre 📐 Perspectiva isométrica (preview) o conéctate ⚪ En vivo / 🔑 live (Xpacio real)');
       }
