@@ -548,7 +548,7 @@
             <button class="button secondary" id="distro-apply-size" style="height:34px;">Aplicar tamaño</button>
             <button class="button secondary" id="distro-current" style="height:34px;" title="Carga en la rejilla la distribución que el Xpacio elegido tiene AHORA mismo (estado vivo del gemelo)">📥 Estado actual</button>
             <button class="button primary" id="distro-mudanza" style="height:34px;" title="Envía esta distribución a los gemelos del circuito/ubicación elegidos para que la apliquen (re-colocan la sala)">🚚 Mudanza</button>
-            <button class="button secondary" id="distro-live" style="height:34px;" title="EN VIVO: refleja aquí, en el plano cenital, lo que muevas en el gemelo (XpaceOS). Carga antes un Xpacio con 📥 Estado actual.">⚪ En vivo</button>
+            <button class="button secondary" id="distro-live" style="height:34px;" title="EN VIVO (SOLO ESPEJO/lectura): refleja aquí, en el plano cenital, lo que muevas en el gemelo (XpaceOS). NO escribe al gemelo — para aplicar usa 🚚 Mudanza. Carga antes un Xpacio con 📥 Estado actual.">⚪ En vivo</button>
           </div>
 
           <!-- Paleta de mobiliario (plegable) -->
@@ -2669,26 +2669,15 @@
         }
         __liveTs=0;
         const b=$('distro-live'); if(b){ b.textContent='🔴 EN VIVO'; b.style.background='#ff3b3b'; b.style.color='#fff'; b.style.borderColor='#ff3b3b'; }
-        status('🔴 EN VIVO · siguiendo '+st.loadedScreen+' · mueve mobiliario en XpaceOS (recárgalo si no responde)…','#ff8866');
+        status('🔴 EN VIVO · solo espejo (lectura) de '+st.loadedScreen+' · mueve el mobiliario en XpaceOS y se refleja aquí · para aplicar usa 🚚 Mudanza','#ff8866');
         liveTick(); __liveTimer=setInterval(liveTick,2000);
       }
       function stopLive(){ if(__liveTimer){ clearInterval(__liveTimer); __liveTimer=null; } const b=$('distro-live'); if(b){ b.textContent='⚪ En vivo'; b.style.background=''; b.style.color=''; b.style.borderColor=''; } }
-      // Empuja la edición de pixeria al gemelo (bidireccional). Solo en EN VIVO,
-      // con anti-rebote; origin:'pixeria' para que el gemelo la aplique y pixeria
-      // ignore su propio eco. Se llama desde las acciones de usuario en la rejilla
-      // (NO desde setEditorFromLayout, que es la rama de "aplicar lo remoto").
-      let __pushT=null;
-      function pushLiveDebounced(){
-        if(!__liveTimer || !st.loadedScreen) return;
-        if(__pushT) clearTimeout(__pushT);
-        __pushT=setTimeout(()=>{
-          const snap={ name:($('distro-name').value||'Layout'), client:($('distro-client').value||'').trim()||'generic',
-            config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
-            furniture: st.items.map(distroItemOut), staff: staffOut(), zones: zonesOut() };
-          fetch(dBase()+'/layout/report',{method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({screen:st.loadedScreen, client:snap.client, origin:'pixeria', snapshot:snap})}).catch(()=>{});
-        },600);
-      }
+      // EN VIVO = SOLO ESPEJO (decisión Carlos, 2026-06-16): conectar En vivo solo
+      // REFLEJA el gemelo en el editor (lectura); NUNCA escribe al gemelo. Aplicar al
+      // gemelo lo hace EXCLUSIVAMENTE 🚚 Mudanza (explícito). Por eso este push es un
+      // no-op; se conserva la función porque la llaman las acciones de la rejilla.
+      function pushLiveDebounced(){ /* no-op: En vivo es de solo lectura, no empuja al gemelo */ }
       function toggleLive(){ if(__liveTimer) stopLive(); else startLive(); }
       async function loadDistroIntoEditor(id){
         status('⏳ cargando…');
