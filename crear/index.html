@@ -504,6 +504,16 @@
           <h4>Distribución estándar · sala entera ⇄ gemelos</h4>
           <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Diseña una <b>distribución</b> (tamaño de sala + mobiliario colocado) y publícala a la librería compartida. Los gemelos la aplican con <code>/distribucion aplicar &lt;id&gt;</code>; las que publican los gemelos también aparecen aquí. Canal: worker <code>/layout/*</code>.</p>
 
+          <!-- Ciclo PixerIA → Xpacio (banner) + glosario -->
+          <div style="margin:0 0 12px;padding:9px 12px;border:1px solid rgba(120,243,255,.22);border-radius:8px;background:rgba(120,243,255,.04);font-size:11px;color:#bfe;line-height:1.6;">
+            🔗 <b>PixerIA → Xpacio:</b> PixerIA <b>crea</b> (muebles · distribución · creatividades) → se <b>publica/mude</b> al <b>Xpacio</b> (el gemelo de un punto) → se <b>ve</b> en sus pantallas.
+            <details style="margin-top:5px;"><summary style="cursor:pointer;color:#7ee0ff;user-select:none;">📖 ¿Qué es cada cosa?</summary>
+              <div style="margin-top:5px;color:var(--muted);">
+                <b>Xpacio</b> = el gemelo digital de un punto (una tienda) · <b>Pantalla</b> = una superficie del Xpacio (LED/TFT/escaparate) · <b>Circuito</b> = grupo de Xpacios (de admira.app) · <b>Distribución</b> = el layout (sala + muebles) de un Xpacio · <b>Mudanza</b> = enviar esta distribución al Xpacio.
+              </div>
+            </details>
+          </div>
+
           <!-- Nombre -->
           <div style="margin-bottom:10px;"><label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Nombre de la distribución</label><input id="distro-name" class="model-select" placeholder="Ej: Estanco estándar v1" style="width:100%;"></div>
           <!-- Cascada igual que admira.app: Alcance → Circuito → Ubicación -->
@@ -524,6 +534,12 @@
           </div>
           <!-- Resumen de segmentación + destino del circuito/ubicación elegido (sincronizado con admira.app) -->
           <div id="distro-circuit-info" style="display:none;margin:-2px 0 12px;padding:9px 11px;border:1px solid rgba(120,243,255,.22);border-radius:8px;background:rgba(120,243,255,.05);font-size:11px;color:var(--muted);line-height:1.5;"></div>
+          <!-- Xpacio activo: sobre qué Xpacio actúan Estado actual / Mudanza / En vivo -->
+          <div id="distro-xpacio" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 11px;border:1px solid rgba(46,224,106,.35);border-radius:8px;background:rgba(46,224,106,.06);font-size:12px;color:#cfe;">
+            <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">🎯 Xpacio activo</span>
+            <b id="distro-xpacio-name" style="color:#9effa0;">🪪 Xtanco inicial</b>
+            <span id="distro-xpacio-sub" style="color:var(--muted);font-size:11px;"></span>
+          </div>
           <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:10px;">
             <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">Ancho (cols)</label><input id="distro-cols" class="model-select" type="number" min="6" max="24" value="14" style="width:80px;"></div>
             <div><label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">Fondo (rows)</label><input id="distro-rows" class="model-select" type="number" min="4" max="16" value="8" style="width:80px;"></div>
@@ -2378,7 +2394,27 @@
           el.ondragstart=(e)=>{ try{ e.dataTransfer.setData('text/plain','staff:'+st.staff.indexOf(s)); e.dataTransfer.effectAllowed='move'; }catch(_){ } };
           g.appendChild(el);
         }
+        updateXpacioChip();
       }
+      // Chip "Xpacio activo" + etiquetas de dirección en los botones (asociación PixerIA↔Xpacio).
+      function updateXpacioChip(){
+        try{
+          const cc=window.CircuitSync&&window.CircuitSync.selected();
+          let name,sub,short;
+          if(cc&&cc.location){ name='📍 '+(cc.location.name||cc.location.id); sub='circuito '+(cc.client||cc.id)+(st.loadedScreen?(' · pantalla '+st.loadedScreen):''); short=(cc.location.name||cc.location.id); }
+          else if(cc){ name='🔗 Circuito '+(cc.client||cc.id); sub=(cc.pointCount||'?')+' Xpacios'+(st.loadedScreen?(' · pantalla '+st.loadedScreen):''); short='circuito '+(cc.client||cc.id); }
+          else if(st.loadedScreen){ name='🪪 '+st.loadedScreen; sub='pantalla cargada del gemelo'; short=st.loadedScreen; }
+          else { name='🪪 Xtanco inicial'; sub='gemelo por defecto · '+XTANCO_INICIAL; short='Xtanco inicial'; }
+          const nEl=$('distro-xpacio-name'), sEl=$('distro-xpacio-sub');
+          if(nEl) nEl.textContent=name; if(sEl) sEl.textContent=sub?('· '+sub):'';
+          const sh=(short||'').length>20?(short.slice(0,19)+'…'):short;
+          const b1=$('distro-current'), b2=$('distro-mudanza'), b3=$('distro-live');
+          if(b1) b1.textContent='📥 Estado actual ← '+sh;
+          if(b2) b2.textContent='🚚 Mudanza → '+sh;
+          if(b3 && (b3.textContent||'').indexOf('🔴')<0) b3.textContent='⚪ En vivo ⇄ '+sh;   // no pisar el "🔴 EN VIVO" activo
+        }catch(_){}
+      }
+      window.updateXpacioChip=updateXpacioChip;
       function applySize(){
         st.cols=Math.max(6,Math.min(24,parseInt($('distro-cols').value,10)||14));
         st.rows=Math.max(4,Math.min(16,parseInt($('distro-rows').value,10)||8));
@@ -2699,7 +2735,7 @@
         function fillScopes(){ const sel=$('distro-scope'); if(!sel||!scopes) return; const ord=scopes.order||Object.keys(scopes.labels||{}); sel.innerHTML=ord.map(s=>{ const l=(scopes.labels&&scopes.labels[s]&&(scopes.labels[s][lang()]||scopes.labels[s].es))||s; return '<option value="'+s+'">'+l+'</option>'; }).join(''); }
         function fillCircuits(){ const sel=$('distro-circuit'); if(!sel) return; const list=circuitsForScope(); sel.innerHTML='<option value="">— elige circuito —</option>'+list.map(c=>'<option value="'+c.id+'">'+label(c)+' · '+c.pointCount+' pts</option>').join(''); }
         function fillLocations(){ const sel=$('distro-location'); if(!sel) return; const c=byId(selectedId); if(!c){ sel.innerHTML='<option value="">— todo el circuito —</option>'; return; } const pts=c.points||[]; const trunc=c.pointsTruncated?' (primeras '+pts.length+' de '+c.pointCount+')':''; sel.innerHTML='<option value="">— todo el circuito ('+c.pointCount+' Xpacios)'+trunc+' —</option>'+pts.map(p=>'<option value="'+p.id+'">'+(p.name||p.id)+(p.addr?' · '+p.addr:'')+(p.screens?' · '+p.screens+'📺':'')+'</option>').join(''); }
-        function renderInfo(){ const box=$('distro-circuit-info'); if(!box) return; const c=byId(selectedId); if(!c){ box.style.display='none'; return; } const s=c.segmentation||{}; const loc=locId&&(c.points||[]).find(p=>p.id===locId); const scr=(c.screens||[]).length; box.style.display='block';
+        function renderInfo(){ try{ if(window.updateXpacioChip) window.updateXpacioChip(); }catch(_){ } const box=$('distro-circuit-info'); if(!box) return; const c=byId(selectedId); if(!c){ box.style.display='none'; return; } const s=c.segmentation||{}; const loc=locId&&(c.points||[]).find(p=>p.id===locId); const scr=(c.screens||[]).length; box.style.display='block';
           box.innerHTML='<b style="color:#7ee0ff;">'+label(c)+'</b> · cliente <code>'+c.client+'</code> · '+(loc?('📍 '+(loc.name||loc.id)+(loc.addr?' ('+loc.addr+')':'')):(c.pointCount+' Xpacios · '+scr+' pantalla(s) real(es)'+(scr?' ('+(c.screens||[]).join(', ')+')':'')))+'<br>🎯 Segmentación (admira.app): emplazamiento <b>'+chip(s.typologies)+'</b> · género <b>'+chip(s.genders)+'</b> · edad <b>'+chip(s.ages)+'</b> · franja <b>'+chip(s.timeSlots)+'</b>'+(s.schedule?' · horario '+s.schedule.start+'–'+s.schedule.end:''); }
         function selectCircuit(id){ selectedId=id||''; locId=''; const hid=$('distro-client'); if(hid) hid.value=byId(selectedId)?byId(selectedId).client:''; fillLocations(); renderInfo(); }
         function selectScope(s){ scopeId=s||''; selectedId=''; locId=''; fillCircuits(); fillLocations(); const hid=$('distro-client'); if(hid) hid.value=''; renderInfo(); }
