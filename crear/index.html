@@ -584,9 +584,10 @@
           <!-- CLI del Xtanco (plegable) -->
           <details class="distro-fold" id="distro-cli-fold" style="margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;">
             <summary style="cursor:pointer;font-size:12px;color:var(--muted);user-select:none;">⌨ <b style="color:var(--cyan);">CLI Xtanco</b> — teclea comandos como en la consola del gemelo (<code>/render real</code>, <code>/music on</code>, <code>/ladron</code>, <code>/help</code>); se ejecutan en el preview 📐 si está abierto y/o en el Xpacio LIVE con 🔑</summary>
+            <div id="distro-cli-chips-p" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;"></div>
             <div id="distro-cli-out-p" style="max-height:120px;overflow:auto;margin:8px 0 0;color:var(--muted);font-family:monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;"></div>
             <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
-              <input id="distro-cli-in-p" autocomplete="off" spellcheck="false" placeholder="/render real · /music on · /ladron · /help" style="flex:1;background:rgba(2,8,13,.6);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);font-family:monospace;font-size:13px;outline:none;">
+              <input id="distro-cli-in-p" autocomplete="off" spellcheck="false" placeholder="/velocidad 8 · /music on · /ladron · /help (lista todo)" style="flex:1;background:rgba(2,8,13,.6);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);font-family:monospace;font-size:13px;outline:none;">
               <button class="button secondary" id="distro-cli-key-p" style="padding:6px 10px;font-size:12px;white-space:nowrap;" title="Pega la REMOTE_KEY del stand para enviar TAMBIÉN al Xpacio LIVE del punto. Vacío = solo preview embebido.">🔑 live</button>
               <button class="button primary" id="distro-cli-send-p" style="padding:6px 12px;font-size:12px;white-space:nowrap;">enviar ⏎</button>
             </div>
@@ -2587,6 +2588,24 @@
         }
         if(!did) logLine('<span style="color:#e0a14a;">·</span> abre 📐 Perspectiva isométrica (preview) o conéctate ⚪ En vivo / 🔑 live (Xpacio real)');
       }
+      // Chips de comandos rápidos del CLI (un clic = enviar). Prioridad: ⏩ /velocidad
+      // para acelerar la simulación. Todo el vocabulario sigue disponible tecleando (/help).
+      const CLI_CHIPS=[
+        {l:'⏩ x1',c:'/velocidad 1'},{l:'⏩ x2',c:'/velocidad 2'},{l:'⏩ x4',c:'/velocidad 4'},{l:'⏩ x8',c:'/velocidad 8'},
+        {l:'🎵 on',c:'/music on'},{l:'🎵 off',c:'/music off'},
+        {l:'🦹 ladrón',c:'/ladron'},{l:'🎨 real',c:'/render real'},{l:'🧊 8bit',c:'/render 8bit'},
+        {l:'📊 status',c:'/status'},{l:'❓ help',c:'/help'}
+      ];
+      function buildCliChips(container, logLine){
+        if(!container) return; container.innerHTML='';
+        CLI_CHIPS.forEach(ch=>{
+          const b=document.createElement('button'); b.type='button'; b.textContent=ch.l; b.title='Enviar '+ch.c;
+          b.style.cssText='cursor:pointer;background:rgba(2,8,13,.6);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:4px 9px;font:600 12px monospace;white-space:nowrap;';
+          b.onmouseenter=()=>{ b.style.borderColor='var(--cyan)'; }; b.onmouseleave=()=>{ b.style.borderColor='var(--line)'; };
+          b.onclick=()=>{ try{ xtancoCliSend(ch.c, logLine); }catch(_){} };
+          container.appendChild(b);
+        });
+      }
       function frameSrc(id){ const b=twinUrl(); const sep=b.includes('?')?'&':'?'; return b+sep+'distro='+encodeURIComponent(id)+'&preview=1&ts='+Date.now(); }
       async function openIso(){
         if(!st.items.length){ status('Coloca al menos un mueble para ver el isométrico.','#e0a14a'); return; }
@@ -2610,6 +2629,7 @@
             '<span>📐 Perspectiva isométrica · motor real del gemelo (XpaceOS)</span>'+
             '<span style="display:flex;gap:8px;align-items:center;"><button id="distro-iso-reload" class="button secondary" style="padding:4px 10px;font-size:12px;">↻ recargar</button><button id="distro-iso-close" class="button secondary" style="padding:4px 12px;font-size:12px;">✕ cerrar</button></span></div>'+
             '<iframe id="distro-iso-frame" title="Vista isométrica del gemelo" style="flex:1;width:100%;border:0;background:#0a0e12;" allow="autoplay; fullscreen"></iframe>'+
+            '<div id="distro-cli-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 14px 0;"></div>'+
             '<div id="distro-cli-out" style="max-height:96px;overflow:auto;padding:6px 14px 0;background:#0b1117;color:#9fb0bd;font-family:monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;"></div>'+
             '<div style="display:flex;gap:8px;align-items:center;padding:8px 14px;border-top:1px solid #28323a;background:#0b1117;font-family:monospace;">'+
             '<span style="color:#7ee0a0;font-size:13px;white-space:nowrap;" title="Escribe comandos como en la consola del Xtanco (xtAPI). Se ejecutan EN VIVO en el gemelo embebido. /help lista los comandos.">⌨ Xtanco CLI</span>'+
@@ -2628,6 +2648,7 @@
             const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
             const out=m.querySelector('#distro-cli-out'), inp=m.querySelector('#distro-cli-in');
             const logLine=h=>{ if(!out) return; const p=document.createElement('div'); p.innerHTML=h; out.appendChild(p); out.scrollTop=out.scrollHeight; };
+            try{ buildCliChips(m.querySelector('#distro-cli-chips'), logLine); }catch(_){}   // chips de comandos rápidos
             window.addEventListener('message',function(ev){
               const r=ev&&ev.data; if(!r||r.type!=='xtcmd-result') return;
               if(r.ok) logLine('<span style="color:#7ee0a0;">←</span> '+esc(r.out||'ok'));
@@ -3171,6 +3192,7 @@
           const inp=$('distro-cli-in-p'), out=$('distro-cli-out-p'), kb=$('distro-cli-key-p'), sb=$('distro-cli-send-p');
           if(!inp||!sb) return;
           const logLine=h=>{ if(!out) return; const p=document.createElement('div'); p.innerHTML=h; out.appendChild(p); out.scrollTop=out.scrollHeight; };
+          try{ buildCliChips($('distro-cli-chips-p'), logLine); }catch(_){}   // chips de comandos rápidos
           const hist=[]; let hi=-1;
           const send=()=>{ const c=(inp.value||'').trim(); if(!c) return; hist.push(c); hi=hist.length; xtancoCliSend(c, logLine); inp.value=''; };
           sb.onclick=send;
