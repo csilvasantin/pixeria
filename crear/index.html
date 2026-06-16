@@ -535,13 +535,17 @@
             <button class="button secondary" id="distro-live" style="height:34px;" title="EN VIVO: refleja aquí, en el plano cenital, lo que muevas en el gemelo (XpaceOS). Carga antes un Xpacio con 📥 Estado actual.">⚪ En vivo</button>
           </div>
 
-          <!-- Paleta de mobiliario -->
-          <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">Mobiliario — elige una pieza y haz clic en la rejilla para colocarla (clic en una colocada para quitarla)</label>
-          <div id="distro-palette" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+          <!-- Paleta de mobiliario (plegable) -->
+          <details class="distro-fold" open>
+            <summary style="cursor:pointer;font-size:12px;color:var(--muted);margin-bottom:6px;user-select:none;">🪑 <b style="color:var(--cyan);">Mobiliario</b> — elige una pieza y haz clic en la rejilla para colocarla (clic en una colocada para quitarla)</summary>
+            <div id="distro-palette" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px;"></div>
+          </details>
 
-          <!-- Equipo: añade miembros al plano; clic en su círculo para fijar zona de influencia y acción -->
-          <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">👥 Equipo — añade un rol y colócalo; clic en su círculo del plano para ajustar <b>zona de influencia</b> y <b>acción</b></label>
-          <div id="distro-team" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+          <!-- Equipo (plegable; colapsado por defecto) -->
+          <details class="distro-fold">
+            <summary style="cursor:pointer;font-size:12px;color:var(--muted);margin-bottom:6px;user-select:none;">👥 <b style="color:var(--cyan);">Equipo</b> — añade un rol y colócalo; clic en su círculo del plano para ajustar <b>zona de influencia</b> y <b>acción</b></summary>
+            <div id="distro-team" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px;"></div>
+          </details>
 
           <!-- Rejilla editor + ficha del mueble (hover) -->
           <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
