@@ -2514,10 +2514,45 @@
           m.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;color:#cfe;font-family:monospace;font-size:13px;border-bottom:1px solid #28323a;background:#0b1117;">'+
             '<span>📐 Perspectiva isométrica · motor real del gemelo (XpaceOS)</span>'+
             '<span style="display:flex;gap:8px;align-items:center;"><button id="distro-iso-reload" class="button secondary" style="padding:4px 10px;font-size:12px;">↻ recargar</button><button id="distro-iso-close" class="button secondary" style="padding:4px 12px;font-size:12px;">✕ cerrar</button></span></div>'+
-            '<iframe id="distro-iso-frame" title="Vista isométrica del gemelo" style="flex:1;width:100%;border:0;background:#0a0e12;" allow="autoplay; fullscreen"></iframe>';
+            '<iframe id="distro-iso-frame" title="Vista isométrica del gemelo" style="flex:1;width:100%;border:0;background:#0a0e12;" allow="autoplay; fullscreen"></iframe>'+
+            '<div id="distro-cli-out" style="max-height:96px;overflow:auto;padding:6px 14px 0;background:#0b1117;color:#9fb0bd;font-family:monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;"></div>'+
+            '<div style="display:flex;gap:8px;align-items:center;padding:8px 14px;border-top:1px solid #28323a;background:#0b1117;font-family:monospace;">'+
+            '<span style="color:#7ee0a0;font-size:13px;white-space:nowrap;" title="Escribe comandos como en la consola del Xtanco (xtAPI). Se ejecutan EN VIVO en el gemelo embebido. /help lista los comandos.">⌨ Xtanco CLI</span>'+
+            '<input id="distro-cli-in" placeholder="/render real · /music on · /ladron · /help" autocomplete="off" spellcheck="false" style="flex:1;background:#0e1620;border:1px solid #28323a;color:#cfe;border-radius:6px;padding:6px 10px;font-family:monospace;font-size:13px;outline:none;">'+
+            '<button id="distro-cli-send" class="button primary" style="padding:5px 12px;font-size:12px;white-space:nowrap;">enviar ⏎</button></div>';
           document.body.appendChild(m);
           m.querySelector('#distro-iso-close').onclick=()=>{ m.style.display='none'; const f=document.getElementById('distro-iso-frame'); if(f) f.src='about:blank'; };
           m.querySelector('#distro-iso-reload').onclick=()=>{ const f=document.getElementById('distro-iso-frame'); if(f) f.src=frameSrc(id); };
+          // ── CLI del Xtanco: teclea comandos como en la consola del gemelo; se ejecutan
+          //    EN VIVO en el gemelo embebido (postMessage → su xtAPI.command) y se muestra
+          //    el resultado. Historial con ↑/↓. (El envío al Xpacio LIVE del punto, vía la
+          //    cola del worker, queda pendiente del endpoint del bridge — ver nota.) ──
+          (function(){
+            let cliId=0; const hist=[]; let hi=-1;
+            const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+            const out=m.querySelector('#distro-cli-out'), inp=m.querySelector('#distro-cli-in');
+            const logLine=h=>{ if(!out) return; const p=document.createElement('div'); p.innerHTML=h; out.appendChild(p); out.scrollTop=out.scrollHeight; };
+            window.addEventListener('message',function(ev){
+              const r=ev&&ev.data; if(!r||r.type!=='xtcmd-result') return;
+              if(r.ok) logLine('<span style="color:#7ee0a0;">←</span> '+esc(r.out||'ok'));
+              else logLine('<span style="color:#e06a6a;">✕</span> '+esc(r.err||'error'));
+            });
+            const cliSend=()=>{
+              const cmd=(inp.value||'').trim(); if(!cmd) return;
+              hist.push(cmd); hi=hist.length;
+              logLine('<span style="color:#39d0ff;">→</span> '+esc(cmd));
+              const f=document.getElementById('distro-iso-frame'); let posted=false;
+              try{ if(f&&f.contentWindow){ let to='*'; try{ to=new URL(twinUrl()).origin; }catch(_){ } f.contentWindow.postMessage({type:'xtcmd',cmd:cmd,id:++cliId}, to); posted=true; } }catch(e){}
+              if(!posted) logLine('<span style="color:#e0a14a;">·</span> abre la vista para ejecutar en el preview');
+              inp.value='';
+            };
+            m.querySelector('#distro-cli-send').onclick=cliSend;
+            inp.addEventListener('keydown',e=>{
+              if(e.key==='Enter'){ e.preventDefault(); cliSend(); }
+              else if(e.key==='ArrowUp'){ if(hi>0){ hi--; inp.value=hist[hi]||''; e.preventDefault(); } }
+              else if(e.key==='ArrowDown'){ if(hi<hist.length-1){ hi++; inp.value=hist[hi]||''; } else { hi=hist.length; inp.value=''; } e.preventDefault(); }
+            });
+          })();
         }
         m.style.display='flex';
         document.getElementById('distro-iso-frame').src=frameSrc(id);
