@@ -552,7 +552,7 @@
           </div>
 
           <!-- Paleta de mobiliario (plegable) -->
-          <details class="distro-fold" open>
+          <details class="distro-fold">
             <summary style="cursor:pointer;font-size:12px;color:var(--muted);margin-bottom:6px;user-select:none;">🪑 <b style="color:var(--cyan);">Mobiliario</b> — elige una pieza y haz clic en la rejilla para colocarla (clic en una colocada para quitarla)</summary>
             <div id="distro-palette" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px;"></div>
           </details>
@@ -580,6 +580,17 @@
             <button class="button secondary" id="distro-clear" style="flex:1;">🧹 Vaciar rejilla</button>
           </div>
           <div id="distro-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;min-height:16px;"></div>
+
+          <!-- CLI del Xtanco (plegable) -->
+          <details class="distro-fold" id="distro-cli-fold" style="margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;">
+            <summary style="cursor:pointer;font-size:12px;color:var(--muted);user-select:none;">⌨ <b style="color:var(--cyan);">CLI Xtanco</b> — teclea comandos como en la consola del gemelo (<code>/render real</code>, <code>/music on</code>, <code>/ladron</code>, <code>/help</code>); se ejecutan en el preview 📐 si está abierto y/o en el Xpacio LIVE con 🔑</summary>
+            <div id="distro-cli-out-p" style="max-height:120px;overflow:auto;margin:8px 0 0;color:var(--muted);font-family:monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;"></div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+              <input id="distro-cli-in-p" autocomplete="off" spellcheck="false" placeholder="/render real · /music on · /ladron · /help" style="flex:1;background:rgba(2,8,13,.6);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);font-family:monospace;font-size:13px;outline:none;">
+              <button class="button secondary" id="distro-cli-key-p" style="padding:6px 10px;font-size:12px;white-space:nowrap;" title="Pega la REMOTE_KEY del stand para enviar TAMBIÉN al Xpacio LIVE del punto. Vacío = solo preview embebido.">🔑 live</button>
+              <button class="button primary" id="distro-cli-send-p" style="padding:6px 12px;font-size:12px;white-space:nowrap;">enviar ⏎</button>
+            </div>
+          </details>
 
           <!-- Librería -->
           <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px;">
@@ -2492,6 +2503,32 @@
       // actual del editor a un id de preview y embebemos el GEMELO real (su motor)
       // con ?distro=<id>&preview=1. Cero reimplementación → fidelidad total.
       function twinUrl(){ return window.DISTRO_TWIN_URL || 'https://www.xpaceos.com/admira-xp/'; }
+      // Envía un comando del Xtanco: al gemelo EMBEBIDO (preview, si la vista 📐 está
+      // abierta → postMessage 'xtcmd' a su iframe) y/o al Xpacio LIVE del punto (cola del
+      // worker bridge /remote/cmd, si hay REMOTE_KEY guardada). logLine(html) pinta el log.
+      function xtancoCliSend(cmd, logLine){
+        cmd=String(cmd||'').trim(); if(!cmd) return;
+        const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+        logLine('<span style="color:#39d0ff;">→</span> '+esc(cmd));
+        let did=false;
+        const f=document.getElementById('distro-iso-frame');
+        const isoOpen=f&&f.contentWindow&&f.src&&f.src.indexOf('about:blank')<0;
+        if(isoOpen){
+          did=true;
+          const id='c'+Date.now()+Math.floor(Math.random()*1e4);
+          const h=ev=>{ const r=ev&&ev.data; if(!r||r.type!=='xtcmd-result'||r.id!==id) return; window.removeEventListener('message',h); if(r.ok) logLine('<span style="color:#7ee0a0;">←</span> '+esc(r.out||'ok')); else logLine('<span style="color:#e06a6a;">✕</span> '+esc(r.err||'error')); };
+          window.addEventListener('message',h); setTimeout(()=>window.removeEventListener('message',h),4000);
+          try{ let to='*'; try{ to=new URL(twinUrl()).origin; }catch(_){ } f.contentWindow.postMessage({type:'xtcmd',cmd:cmd,id:id}, to); }catch(e){}
+        }
+        let rkey=''; try{ rkey=localStorage.getItem('xpace_remote_key')||''; }catch(_){}
+        if(rkey){
+          did=true;
+          fetch('https://admira-telegram-bridge.csilvasantin.workers.dev/remote/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:rkey,text:cmd})})
+            .then(r=>r.json()).then(d=>{ if(d&&d.ok) logLine('<span style="color:#7ee0a0;">live ⇡</span> encolado al punto (#'+esc(String(d.commandId||'?'))+')'); else logLine('<span style="color:#e0a14a;">live</span> '+esc((d&&d.error)||'no encolado')); })
+            .catch(e=>logLine('<span style="color:#e0a14a;">live</span> '+esc(String(e&&e.message||e))+' · ¿worker con CORS de pixeria desplegado?'));
+        }
+        if(!did) logLine('<span style="color:#e0a14a;">·</span> abre 📐 Perspectiva isométrica (preview) o activa 🔑 live (Xpacio real)');
+      }
       function frameSrc(id){ const b=twinUrl(); const sep=b.includes('?')?'&':'?'; return b+sep+'distro='+encodeURIComponent(id)+'&preview=1&ts='+Date.now(); }
       async function openIso(){
         if(!st.items.length){ status('Coloca al menos un mueble para ver el isométrico.','#e0a14a'); return; }
@@ -3082,6 +3119,17 @@
         wire('distro-alzado',renderAlzado);
         wire('distro-clear',()=>{ st.items=[]; st.staff=[]; selStaff=null; renderGrid(); status('Rejilla vaciada'); });
         wire('distro-refresh',loadLib);
+        // CLI Xtanco del panel (plegable) — usa el helper compartido xtancoCliSend.
+        (function(){
+          const inp=$('distro-cli-in-p'), out=$('distro-cli-out-p'), kb=$('distro-cli-key-p'), sb=$('distro-cli-send-p');
+          if(!inp||!sb) return;
+          const logLine=h=>{ if(!out) return; const p=document.createElement('div'); p.innerHTML=h; out.appendChild(p); out.scrollTop=out.scrollHeight; };
+          const hist=[]; let hi=-1;
+          const send=()=>{ const c=(inp.value||'').trim(); if(!c) return; hist.push(c); hi=hist.length; xtancoCliSend(c, logLine); inp.value=''; };
+          sb.onclick=send;
+          inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); send(); } else if(e.key==='ArrowUp'){ if(hi>0){ hi--; inp.value=hist[hi]||''; e.preventDefault(); } } else if(e.key==='ArrowDown'){ if(hi<hist.length-1){ hi++; inp.value=hist[hi]||''; } else { hi=hist.length; inp.value=''; } e.preventDefault(); } });
+          if(kb){ const upd=()=>{ let has=false; try{ has=!!localStorage.getItem('xpace_remote_key'); }catch(_){} kb.textContent=has?'🔑 live ✓':'🔑 live'; kb.style.color=has?'#7ee0a0':''; }; kb.onclick=()=>{ let cur=''; try{ cur=localStorage.getItem('xpace_remote_key')||''; }catch(_){} const v=prompt('REMOTE_KEY del stand → envía también al Xpacio LIVE del punto (se guarda en este navegador). Vacío = solo preview:', cur); if(v===null) return; try{ if(v.trim()) localStorage.setItem('xpace_remote_key',v.trim()); else localStorage.removeItem('xpace_remote_key'); }catch(_){} upd(); }; upd(); }
+        })();
         // Submenús: Distribución / Marketplace (clic en el activo → vuelve a Creación)
         wire('tab-creacion',()=>setView('creacion'));
         wire('tab-edicion',()=>setView('edicion'));
