@@ -2510,11 +2510,35 @@
       // Envía un comando del Xtanco: al gemelo EMBEBIDO (preview, si la vista 📐 está
       // abierta → postMessage 'xtcmd' a su iframe) y/o al Xpacio LIVE del punto (cola del
       // worker bridge /remote/cmd, si hay REMOTE_KEY guardada). logLine(html) pinta el log.
+      const BRIDGE_URL='https://admira-telegram-bridge.csilvasantin.workers.dev';
+      function liveOnNow(){ try{ return !!(typeof __liveTimer!=='undefined' && __liveTimer && st && st.loadedScreen); }catch(_){ return false; } }
+      // Pinta los botones 🔑 del CLI: 🔴 si estás EN VIVO (el live se auto-enciende),
+      // ✓ si guardaste la REMOTE_KEY, o plano si nada. Llamado al conectar/parar En vivo.
+      function refreshCliKeyBtns(){
+        const live=liveOnNow(); let hasKey=false; try{ hasKey=!!localStorage.getItem('xpace_remote_key'); }catch(_){}
+        ['distro-cli-key-p','distro-cli-key'].forEach(id=>{ const b=document.getElementById(id); if(!b) return;
+          if(live){ b.textContent=hasKey?'🔴 live':'🔴 live (pon 🔑)'; b.style.color='#ff8866'; b.title='EN VIVO: los comandos del CLI van al Xpacio '+st.loadedScreen+(hasKey?'':' — falta la REMOTE_KEY (pulsa para pegarla)'); }
+          else { b.textContent=hasKey?'🔑 live ✓':'🔑 live'; b.style.color=hasKey?'#7ee0a0':''; b.title='Pega la REMOTE_KEY para enviar al Xpacio LIVE del punto. Vacío = solo preview.'; }
+        });
+      }
+      // Sondea (~12s) la respuesta del gemelo a un comando remoto y la pinta como feedback.
+      function pollLiveResult(commandId, logLine, esc){
+        let tries=0;
+        const iv=setInterval(()=>{
+          tries++;
+          fetch(BRIDGE_URL+'/remote/result?id='+encodeURIComponent(commandId),{cache:'no-store'})
+            .then(r=>r.json()).then(d=>{
+              if(d&&d.result&&d.result.text){ clearInterval(iv); logLine('<span style="color:#7ee0a0;">←</span> '+esc(d.result.text)); }
+              else if(tries>=8){ clearInterval(iv); logLine('<span style="color:#8aa;">·</span> (sin respuesta aún · ¿el gemelo del punto está abierto y con el bridge Telegram ON?)'); }
+            }).catch(()=>{ if(tries>=8) clearInterval(iv); });
+        },1500);
+      }
       function xtancoCliSend(cmd, logLine){
         cmd=String(cmd||'').trim(); if(!cmd) return;
         const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
         logLine('<span style="color:#39d0ff;">→</span> '+esc(cmd));
         let did=false;
+        // Preview embebido (si la vista 📐 está abierta) → feedback inmediato por postMessage.
         const f=document.getElementById('distro-iso-frame');
         const isoOpen=f&&f.contentWindow&&f.src&&f.src.indexOf('about:blank')<0;
         if(isoOpen){
@@ -2524,14 +2548,29 @@
           window.addEventListener('message',h); setTimeout(()=>window.removeEventListener('message',h),4000);
           try{ let to='*'; try{ to=new URL(twinUrl()).origin; }catch(_){ } f.contentWindow.postMessage({type:'xtcmd',cmd:cmd,id:id}, to); }catch(e){}
         }
+        // Xpacio LIVE: si estás EN VIVO (espejo activo) el live del CLI se AUTO-ENCIENDE;
+        // también si guardaste la REMOTE_KEY a mano. Si falta la clave, se pide una vez.
+        const live=liveOnNow();
         let rkey=''; try{ rkey=localStorage.getItem('xpace_remote_key')||''; }catch(_){}
-        if(rkey){
-          did=true;
-          fetch('https://admira-telegram-bridge.csilvasantin.workers.dev/remote/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:rkey,text:cmd})})
-            .then(r=>r.json()).then(d=>{ if(d&&d.ok) logLine('<span style="color:#7ee0a0;">live ⇡</span> encolado al punto (#'+esc(String(d.commandId||'?'))+')'); else logLine('<span style="color:#e0a14a;">live</span> '+esc((d&&d.error)||'no encolado')); })
-            .catch(e=>logLine('<span style="color:#e0a14a;">live</span> '+esc(String(e&&e.message||e))+' · ¿worker con CORS de pixeria desplegado?'));
+        if(live || rkey){
+          if(!rkey && live){
+            const v=(prompt('🔑 EN VIVO con «'+st.loadedScreen+'» — pega la REMOTE_KEY del stand para mandar comandos al Xpacio real (se guarda en este navegador):','')||'').trim();
+            if(v){ try{ localStorage.setItem('xpace_remote_key',v); }catch(_){} rkey=v; refreshCliKeyBtns(); }
+          }
+          if(rkey){
+            did=true;
+            const tgt=live?(' → '+st.loadedScreen):'';
+            fetch(BRIDGE_URL+'/remote/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:rkey,text:cmd})})
+              .then(r=>r.json()).then(d=>{
+                if(d&&d.ok&&d.commandId){ logLine('<span style="color:#7ee0a0;">live ⇡</span> enviado'+esc(tgt)+' (#'+esc(String(d.commandId))+') · esperando respuesta…'); pollLiveResult(d.commandId, logLine, esc); }
+                else logLine('<span style="color:#e0a14a;">live</span> '+esc((d&&d.error)||'no encolado'));
+              })
+              .catch(e=>logLine('<span style="color:#e0a14a;">live</span> '+esc(String(e&&e.message||e))+' · ¿worker bridge con CORS de pixeria desplegado?'));
+          } else if(live){
+            logLine('<span style="color:#e0a14a;">·</span> EN VIVO pero sin REMOTE_KEY → pulsa 🔑 para mandar al Xpacio real');
+          }
         }
-        if(!did) logLine('<span style="color:#e0a14a;">·</span> abre 📐 Perspectiva isométrica (preview) o activa 🔑 live (Xpacio real)');
+        if(!did) logLine('<span style="color:#e0a14a;">·</span> abre 📐 Perspectiva isométrica (preview) o conéctate ⚪ En vivo / 🔑 live (Xpacio real)');
       }
       function frameSrc(id){ const b=twinUrl(); const sep=b.includes('?')?'&':'?'; return b+sep+'distro='+encodeURIComponent(id)+'&preview=1&ts='+Date.now(); }
       async function openIso(){
@@ -2600,9 +2639,8 @@
             m.querySelector('#distro-cli-send').onclick=cliSend;
             (function(){
               const kb=m.querySelector('#distro-cli-key'); if(!kb) return;
-              const upd=()=>{ let has=false; try{ has=!!localStorage.getItem('xpace_remote_key'); }catch(_){} kb.textContent=has?'🔑 live ✓':'🔑 live'; kb.style.color=has?'#7ee0a0':''; };
-              kb.onclick=()=>{ let cur=''; try{ cur=localStorage.getItem('xpace_remote_key')||''; }catch(_){} const v=prompt('REMOTE_KEY del stand → envía TAMBIÉN al Xpacio LIVE del punto (se guarda en este navegador). Vacío = solo preview:', cur); if(v===null) return; try{ if(v.trim()) localStorage.setItem('xpace_remote_key',v.trim()); else localStorage.removeItem('xpace_remote_key'); }catch(_){} upd(); };
-              upd();
+              kb.onclick=()=>{ let cur=''; try{ cur=localStorage.getItem('xpace_remote_key')||''; }catch(_){} const v=prompt('REMOTE_KEY del stand → envía TAMBIÉN al Xpacio LIVE del punto (se guarda en este navegador). Vacío = solo preview:', cur); if(v===null) return; try{ if(v.trim()) localStorage.setItem('xpace_remote_key',v.trim()); else localStorage.removeItem('xpace_remote_key'); }catch(_){} try{ refreshCliKeyBtns(); }catch(_){} };
+              try{ refreshCliKeyBtns(); }catch(_){}
             })();
             inp.addEventListener('keydown',e=>{
               if(e.key==='Enter'){ e.preventDefault(); cliSend(); }
@@ -2671,8 +2709,9 @@
         const b=$('distro-live'); if(b){ b.textContent='🔴 EN VIVO'; b.style.background='#ff3b3b'; b.style.color='#fff'; b.style.borderColor='#ff3b3b'; }
         status('🔴 EN VIVO · solo espejo (lectura) de '+st.loadedScreen+' · mueve el mobiliario en XpaceOS y se refleja aquí · para aplicar usa 🚚 Mudanza','#ff8866');
         liveTick(); __liveTimer=setInterval(liveTick,2000);
+        try{ refreshCliKeyBtns(); }catch(_){}   // EN VIVO → auto-enciende el live del CLI
       }
-      function stopLive(){ if(__liveTimer){ clearInterval(__liveTimer); __liveTimer=null; } const b=$('distro-live'); if(b){ b.textContent='⚪ En vivo'; b.style.background=''; b.style.color=''; b.style.borderColor=''; } }
+      function stopLive(){ if(__liveTimer){ clearInterval(__liveTimer); __liveTimer=null; } const b=$('distro-live'); if(b){ b.textContent='⚪ En vivo'; b.style.background=''; b.style.color=''; b.style.borderColor=''; } try{ refreshCliKeyBtns(); }catch(_){} }
       // EN VIVO = SOLO ESPEJO (decisión Carlos, 2026-06-16): conectar En vivo solo
       // REFLEJA el gemelo en el editor (lectura); NUNCA escribe al gemelo. Aplicar al
       // gemelo lo hace EXCLUSIVAMENTE 🚚 Mudanza (explícito). Por eso este push es un
@@ -3121,7 +3160,7 @@
           const send=()=>{ const c=(inp.value||'').trim(); if(!c) return; hist.push(c); hi=hist.length; xtancoCliSend(c, logLine); inp.value=''; };
           sb.onclick=send;
           inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); send(); } else if(e.key==='ArrowUp'){ if(hi>0){ hi--; inp.value=hist[hi]||''; e.preventDefault(); } } else if(e.key==='ArrowDown'){ if(hi<hist.length-1){ hi++; inp.value=hist[hi]||''; } else { hi=hist.length; inp.value=''; } e.preventDefault(); } });
-          if(kb){ const upd=()=>{ let has=false; try{ has=!!localStorage.getItem('xpace_remote_key'); }catch(_){} kb.textContent=has?'🔑 live ✓':'🔑 live'; kb.style.color=has?'#7ee0a0':''; }; kb.onclick=()=>{ let cur=''; try{ cur=localStorage.getItem('xpace_remote_key')||''; }catch(_){} const v=prompt('REMOTE_KEY del stand → envía también al Xpacio LIVE del punto (se guarda en este navegador). Vacío = solo preview:', cur); if(v===null) return; try{ if(v.trim()) localStorage.setItem('xpace_remote_key',v.trim()); else localStorage.removeItem('xpace_remote_key'); }catch(_){} upd(); }; upd(); }
+          if(kb){ kb.onclick=()=>{ let cur=''; try{ cur=localStorage.getItem('xpace_remote_key')||''; }catch(_){} const v=prompt('REMOTE_KEY del stand → envía también al Xpacio LIVE del punto (se guarda en este navegador). Vacío = solo preview:', cur); if(v===null) return; try{ if(v.trim()) localStorage.setItem('xpace_remote_key',v.trim()); else localStorage.removeItem('xpace_remote_key'); }catch(_){} try{ refreshCliKeyBtns(); }catch(_){} }; try{ refreshCliKeyBtns(); }catch(_){} }
         })();
         // Submenús: Distribución / Marketplace (clic en el activo → vuelve a Creación)
         wire('tab-creacion',()=>setView('creacion'));
