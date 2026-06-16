@@ -2605,6 +2605,11 @@
           b.onclick=()=>{ try{ xtancoCliSend(ch.c, logLine); }catch(_){} };
           container.appendChild(b);
         });
+        // Enlace a la referencia COMPLETA (todos los comandos del CLI).
+        const a=document.createElement('a'); a.href='https://www.xpaceos.com/help'; a.target='_blank'; a.rel='noopener';
+        a.textContent='📖 todos los comandos'; a.title='Referencia completa de comandos del CLI (xpaceos.com/help)';
+        a.style.cssText='cursor:pointer;background:rgba(2,8,13,.6);border:1px solid var(--cyan);color:var(--cyan);border-radius:7px;padding:4px 9px;font:600 12px monospace;white-space:nowrap;text-decoration:none;';
+        container.appendChild(a);
       }
       function frameSrc(id){ const b=twinUrl(); const sep=b.includes('?')?'&':'?'; return b+sep+'distro='+encodeURIComponent(id)+'&preview=1&ts='+Date.now(); }
       async function openIso(){
