@@ -560,6 +560,7 @@
             <button class="button primary" id="distro-save" style="flex:1;">💾 Guardar y publicar</button>
             <button class="button secondary" id="distro-iso" style="flex:1;" title="Ver la distribución en isométrico, con el motor real del gemelo (XpaceOS.com)">📐 Perspectiva isométrica</button>
             <button class="button secondary" id="distro-alzado" style="flex:1;" title="Alzado/sección: vista lateral local para analizar las ALTURAS de los muebles y los elementos de la pared">📏 Alzado</button>
+            <button class="button secondary" id="distro-iso25" style="flex:1;" title="Vista 2.5D isométrica LOCAL: muebles a su altura real + pantallas en las paredes, sin abrir el gemelo">🧊 Vista 2.5D</button>
             <button class="button secondary" id="distro-clear" style="flex:1;">🧹 Vaciar rejilla</button>
           </div>
           <div id="distro-status" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;min-height:16px;"></div>
@@ -2000,6 +2001,55 @@
           +'</div>';
         const cb=document.getElementById('alzado-close'); if(cb) cb.onclick=()=>{ ov.style.display='none'; };
       }
+      // ── VISTA 2.5D ISOMÉTRICA LOCAL (alturas reales + pantallas de pared) ──
+      // Render SVG de la distribución actual en isométrico, usando el mapa de alturas
+      // local (FURNI_H/itemHeight). No abre el gemelo (eso es 📐 Perspectiva isométrica).
+      function renderIso25(){
+        let ov=document.getElementById('iso25-modal');
+        if(!ov){ ov=document.createElement('div'); ov.id='iso25-modal';
+          ov.style.cssText='position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;background:rgba(2,6,9,.93);padding:18px';
+          ov.onclick=e=>{ if(e.target===ov) ov.style.display='none'; };
+          document.body.appendChild(ov);
+        }
+        ov.style.display='flex';
+        const cols=st.cols, rows=st.rows, pad=26;
+        const hw=Math.max(10,Math.min(34,Math.round(680/(cols+rows)))), hh=Math.round(hw/2), hS=hw/40;
+        const WALL=165, wallPx=Math.round(WALL*hS), ox=rows*hw+pad, oy=wallPx+pad;
+        const Wd=(cols+rows)*hw+pad*2, Hd=(cols+rows)*hh+wallPx+pad*2;
+        const P=(c,r)=>({x:ox+(c-r)*hw, y:oy+(c+r)*hh}), up=(p,z)=>({x:p.x,y:p.y-z});
+        const shade=(hex,p)=>{ try{ const n=parseInt(hex.slice(1),16); let R=Math.max(0,Math.min(255,(n>>16)+p)),G=Math.max(0,Math.min(255,((n>>8)&255)+p)),B=Math.max(0,Math.min(255,(n&255)+p)); return '#'+((1<<24)+(R<<16)+(G<<8)+B).toString(16).slice(1); }catch(_){ return hex; } };
+        const poly=(pts,fill,stroke)=>'<polygon points="'+pts.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ')+'" fill="'+fill+'" stroke="'+(stroke||'rgba(0,0,0,.4)')+'" stroke-width="0.6"/>';
+        const COL={counter:'#8a5a2e',shelves:'#9a7a44',wineRack:'#7a2e3a',lottery:'#b89a3a',vending:'#2a9d8f',magazines:'#b8a060',manager:'#5a7a5a',plant:'#3a8a4a',floorLamp:'#c9a23a',djBooth:'#2a2a3a',tablet:'#3a5a6a',turnKiosk:'#6a6a7a',metahuman:'#6a3a7a',custom:'#a05ac0',door:'#5a3a18'};
+        const floorCol=st.floor||'#b8bcc0', wallCol=st.wall||'#e0d4b8';
+        let svg='';
+        svg+=poly([P(0,0),P(cols,0),P(cols,rows),P(0,rows)], shade(floorCol,-6), 'rgba(0,0,0,.35)');
+        for(let c=1;c<cols;c++) svg+='<line x1="'+P(c,0).x.toFixed(1)+'" y1="'+P(c,0).y.toFixed(1)+'" x2="'+P(c,rows).x.toFixed(1)+'" y2="'+P(c,rows).y.toFixed(1)+'" stroke="rgba(0,0,0,.18)" stroke-width="0.5"/>';
+        for(let r=1;r<rows;r++) svg+='<line x1="'+P(0,r).x.toFixed(1)+'" y1="'+P(0,r).y.toFixed(1)+'" x2="'+P(cols,r).x.toFixed(1)+'" y2="'+P(cols,r).y.toFixed(1)+'" stroke="rgba(0,0,0,.18)" stroke-width="0.5"/>';
+        svg+=poly([P(0,0),P(cols,0),up(P(cols,0),wallPx),up(P(0,0),wallPx)], shade(wallCol,-20), 'rgba(0,0,0,.35)');   // pared larga (row=0)
+        svg+=poly([P(0,0),P(0,rows),up(P(0,rows),wallPx),up(P(0,0),wallPx)], shade(wallCol,-4), 'rgba(0,0,0,.35)');     // pared lateral (col=0)
+        // Pantallas de pared (LED/TFT/aroma) sobre la pared larga, por columna y altura de montaje
+        for(const it of st.items){ const w=WALL_ITEMS[it.type]; if(!w) continue; const fp=fpFor(it);
+          const c0=it.col, c1=Math.min(cols,it.col+(fp.w||1)), zb=w.base*hS, zt=(w.base+w.h)*hS;
+          svg+=poly([up(P(c0,0),zb),up(P(c1,0),zb),up(P(c1,0),zt),up(P(c0,0),zt)], 'rgba(120,243,255,.55)', '#78f3ff');
+          const m=up(P((c0+c1)/2,0),(zb+zt)/2); svg+='<text x="'+m.x.toFixed(1)+'" y="'+m.y.toFixed(1)+'" font-size="9" text-anchor="middle" dominant-baseline="middle">'+iconFor(it.type)+'</text>';
+        }
+        // Muebles de suelo: cajas iso a su altura, ordenados por profundidad (col+row)
+        const floor=st.items.filter(it=>!WALL_ITEMS[it.type]&&it.type!=='rug'&&it.type!=='door').sort((a,b)=>(a.col+a.row)-(b.col+b.row));
+        for(const it of floor){ const fp=fpFor(it); const fw=Math.max(1,Math.min(cols-it.col,fp.w||1)), fd=Math.max(1,Math.min(rows-it.row,fp.d||1));
+          const bh=itemHeight(it)*hS, p=P(it.col,it.row), w=fw*hw, d=fd*hw, wh=fw*hh, dh=fd*hh, base=COL[it.type]||'#6e6a60';
+          svg+=poly([{x:p.x-d,y:p.y+dh-bh},{x:p.x+w-d,y:p.y+wh+dh-bh},{x:p.x+w-d,y:p.y+wh+dh},{x:p.x-d,y:p.y+dh}], shade(base,-26));        // izq
+          svg+=poly([{x:p.x+w-d,y:p.y+wh+dh-bh},{x:p.x+w,y:p.y+wh-bh},{x:p.x+w,y:p.y+wh},{x:p.x+w-d,y:p.y+wh+dh}], shade(base,-44));        // der
+          svg+=poly([{x:p.x,y:p.y-bh},{x:p.x+w,y:p.y+wh-bh},{x:p.x+w-d,y:p.y+wh+dh-bh},{x:p.x-d,y:p.y+dh-bh}], shade(base,16));            // top
+          const tx=(p.x+(w-d)/2).toFixed(1), ty=(p.y+(wh+dh)/2-bh).toFixed(1);
+          svg+='<text x="'+tx+'" y="'+ty+'" font-size="'+Math.max(8,Math.round(hw*0.5))+'" text-anchor="middle" dominant-baseline="middle">'+iconFor(it.type)+'</text>';
+        }
+        ov.innerHTML='<div style="background:#04101a;border:2px solid #2f8d8d;border-radius:14px;padding:16px 18px;max-width:96vw;max-height:92vh;overflow:auto;box-shadow:0 0 40px rgba(47,141,141,.3)">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;color:#7dffd0;font-weight:700">🧊 Vista 2.5D · alturas + pantallas de pared <button id="iso25-close" style="cursor:pointer;background:#0e2a22;border:1px solid #2f8d8d;color:#7dffd0;border-radius:8px;padding:5px 12px;font:700 12px monospace">Cerrar ✕</button></div>'
+          +'<svg viewBox="0 0 '+Wd+' '+Hd+'" style="width:'+Math.min(Wd,900)+'px;max-width:90vw;height:auto;display:block;background:#071019;border-radius:8px">'+svg+'</svg>'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">Render local de la distribución actual en isométrico: cada mueble a su altura real (mapa local, el mismo que el gemelo) y las pantallas LED/TFT/aroma sobre la pared. Para el motor real del gemelo usa 📐 Perspectiva isométrica.</div>'
+          +'</div>';
+        const cb=document.getElementById('iso25-close'); if(cb) cb.onclick=()=>{ ov.style.display='none'; };
+      }
       function freeTile(){ // primer tile sin mueble ni miembro (centro hacia fuera)
         const taken=new Set(); for(const it of st.items) taken.add(it.col+','+it.row); for(const s of st.staff) taken.add(s.col+','+s.row);
         const c0=st.cols>>1, r0=st.rows>>1;
@@ -2941,6 +2991,7 @@
         wire('distro-live',toggleLive);
         wire('distro-save',saveDistro);
         wire('distro-iso',openIso);
+        wire('distro-iso25',renderIso25);
         wire('distro-alzado',renderAlzado);
         wire('distro-clear',()=>{ st.items=[]; st.staff=[]; selStaff=null; renderGrid(); status('Rejilla vaciada'); });
         wire('distro-refresh',loadLib);
