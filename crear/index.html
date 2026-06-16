@@ -1889,8 +1889,12 @@
     // Keyboard support for demo
     document.addEventListener('keydown', function(e) {
       if (e.key === '/' && document.getElementById('studio').classList.contains('active')) {
+        // Si ya estás escribiendo en un campo (CLI Xtanco, nombre, etc.), el "/" se
+        // teclea normal — NO secuestrar el foco al prompt (bug: rompía el CLI).
+        const ae = document.activeElement;
+        if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable)) return;
         const ta = document.getElementById('prompt');
-        if (document.activeElement !== ta) {
+        if (ta && document.activeElement !== ta) {
           e.preventDefault();
           ta.focus();
         }
