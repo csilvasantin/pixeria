@@ -6,8 +6,26 @@
 (function () {
   var WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
   var ENDPOINT = WORKER + '/newsletter/subscribe';
-  var MAILTO = 'mailto:csilvasantin@gmail.com?subject=Pixeria%20radar%20mensual&body=Quiero%20recibir%20el%20radar%20de%20Pixeria.';
+  var MAILTO = 'mailto:csilvasantin@gmail.com?subject=Pixeria%20radar&body=I%20want%20to%20receive%20the%20Pixeria%20radar.';
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var isEN = (document.documentElement.lang || 'es').toLowerCase().indexOf('en') === 0;
+  var T = isEN ? {
+    sending: 'Sending…',
+    ok: 'Done. We will email you the next radar.',
+    already: 'You were already on the list. Thanks.',
+    invalid: 'Check the email, it looks incomplete.',
+    failGeneric: 'Could not complete. Please try again.',
+    fallback: 'We could not connect. Write us and we will add you: ',
+    fallbackLink: 'send email'
+  } : {
+    sending: 'Enviando…',
+    ok: 'Hecho. Te avisamos del proximo radar.',
+    already: 'Ya estabas en la lista. Gracias.',
+    invalid: 'Revisa el email, parece incompleto.',
+    failGeneric: 'No se pudo completar. Intenta de nuevo.',
+    fallback: 'No pudimos conectar. Escribenos y te damos de alta: ',
+    fallbackLink: 'enviar email'
+  };
 
   function setMsg(form, text, kind) {
     var el = form.querySelector('.news-msg');
@@ -22,8 +40,7 @@
     var el = form.querySelector('.news-msg');
     if (el) {
       el.className = 'news-msg is-err';
-      el.innerHTML = 'No pudimos conectar. Escribenos y te damos de alta: ' +
-        '<a href="' + link + '">enviar email</a>.';
+      el.innerHTML = T.fallback + '<a href="' + link + '">' + T.fallbackLink + '</a>.';
     }
   }
 
@@ -36,12 +53,12 @@
       var email = (input && input.value || '').trim().toLowerCase();
 
       // Honeypot relleno => bot. Fingimos exito sin enviar nada.
-      if (hp && hp.value) { setMsg(form, 'Hecho. Te avisamos del proximo radar.', 'ok'); form.reset(); return; }
+      if (hp && hp.value) { setMsg(form, T.ok, 'ok'); form.reset(); return; }
 
-      if (!EMAIL_RE.test(email)) { setMsg(form, 'Revisa el email, parece incompleto.', 'err'); return; }
+      if (!EMAIL_RE.test(email)) { setMsg(form, T.invalid, 'err'); return; }
 
       if (btn) { btn.disabled = true; }
-      setMsg(form, 'Enviando…', null);
+      setMsg(form, T.sending, null);
 
       var payload = {
         email: email,
@@ -63,12 +80,10 @@
           if (done) return; done = true; clearTimeout(timer);
           if (btn) btn.disabled = false;
           if (data && data.ok) {
-            setMsg(form, data.status === 'already'
-              ? 'Ya estabas en la lista. Gracias.'
-              : 'Hecho. Te avisamos del proximo radar.', 'ok');
+            setMsg(form, data.status === 'already' ? T.already : T.ok, 'ok');
             form.reset();
           } else {
-            setMsg(form, 'No se pudo completar. Intenta de nuevo.', 'err');
+            setMsg(form, T.failGeneric, 'err');
           }
         })
         .catch(function () {

@@ -464,81 +464,8 @@
 
       targets.forEach(el => io.observe(el));
     })();
-
-    // Radar vivo: carga modelos desde assets/radar.json con sello de fecha.
-    // Para actualizar el radar, edita SOLO ese JSON (no este HTML).
-    (function () {
-      const root = document.getElementById('radarLive');
-      if (!root || !('fetch' in window)) return;
-      const src = root.getAttribute('data-radar-src') || '/assets/radar.json';
-
-      const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio',
-        'agosto','septiembre','octubre','noviembre','diciembre'];
-
-      function fmtMonth(iso) {
-        const m = /^(\d{4})-(\d{2})/.exec(iso || '');
-        if (!m) return null;
-        return MONTHS[parseInt(m[2], 10) - 1] + ' ' + m[1];
-      }
-
-      function revealNodes(nodes) {
-        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-        if (reduce.matches || !('IntersectionObserver' in window)) return;
-        const io = new IntersectionObserver((entries, obs) => {
-          entries.forEach(e => {
-            if (e.isIntersecting) { e.target.classList.add('is-visible'); obs.unobserve(e.target); }
-          });
-        }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
-        nodes.forEach((el, i) => {
-          el.classList.add('reveal');
-          el.style.setProperty('--reveal-delay', (Math.min(i % 6, 5) * 60) + 'ms');
-          io.observe(el);
-        });
-      }
-
-      fetch(src, { cache: 'no-cache' })
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
-        .then(data => {
-          if (data.title) {
-            const t = document.getElementById('radarTitle');
-            if (t) t.textContent = data.title;
-          }
-          const month = fmtMonth(data.updated);
-          if (month) {
-            const u = document.getElementById('radarUpdated');
-            if (u) u.textContent = month;
-          }
-
-          const grid = document.getElementById('radarModels');
-          if (grid && Array.isArray(data.models) && data.models.length) {
-            const frag = document.createDocumentFragment();
-            const made = [];
-            data.models.forEach(m => {
-              const card = document.createElement('div');
-              card.className = 'model';
-              const tag = document.createElement('span');
-              tag.className = 'tag'; tag.textContent = m.category || '';
-              const name = document.createElement('strong');
-              name.textContent = m.name || '';
-              const note = document.createElement('small');
-              note.textContent = m.note || '';
-              card.append(tag, name, note);
-              frag.appendChild(card);
-              made.push(card);
-            });
-            grid.replaceChildren(frag);
-            revealNodes(made);
-          }
-
-          const noteEl = document.getElementById('radarNote');
-          if (noteEl && data.note) {
-            // Fuente propia y estatica: innerHTML controlado para conservar <strong>.
-            noteEl.innerHTML = String(data.note).replace('{watching}', data.watching || '');
-          }
-        })
-        .catch(() => { /* fallback estatico ya esta en el HTML */ });
-    })();
   </script>
+  <script defer src="/assets/radar.js?v=20260617"></script>
   <script src="/assets/matrix-rain.js?v=20260608-sides"></script>
   <script defer src="/assets/newsletter.js?v=20260617"></script>
 </body>
