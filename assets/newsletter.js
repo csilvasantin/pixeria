@@ -6,6 +6,8 @@
 (function () {
   var WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
   var ENDPOINT = WORKER + '/newsletter/subscribe';
+  var COUNT_ENDPOINT = WORKER + '/newsletter/count';
+  var PROOF_MIN = 25; // umbral: por debajo no mostramos prueba social (resta credibilidad)
   var MAILTO = 'mailto:csilvasantin@gmail.com?subject=Pixeria%20radar&body=I%20want%20to%20receive%20the%20Pixeria%20radar.';
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   var isEN = (document.documentElement.lang || 'es').toLowerCase().indexOf('en') === 0;
@@ -95,4 +97,34 @@
   }
 
   document.querySelectorAll('.news-form').forEach(handle);
+
+  // ── Prueba social: "Unete a N profesionales..." ───────────────
+  // Lee /newsletter/count y lo inyecta en cada form SOLO si N >= PROOF_MIN.
+  function proofText(n) {
+    return isEN
+      ? 'Join ' + n.toLocaleString('en-US') + ' professionals getting the radar every month.'
+      : 'Unete a ' + n.toLocaleString('es-ES') + ' profesionales que reciben el radar cada mes.';
+  }
+
+  function injectProof(n) {
+    document.querySelectorAll('.news-form').forEach(function (form) {
+      if (form.querySelector('.news-proof')) return;
+      var p = document.createElement('p');
+      p.className = 'news-proof';
+      p.textContent = proofText(n);
+      var eyebrow = form.querySelector('.eyebrow');
+      if (eyebrow && eyebrow.nextSibling) form.insertBefore(p, eyebrow.nextSibling);
+      else form.insertBefore(p, form.firstChild);
+    });
+  }
+
+  if (document.querySelector('.news-form')) {
+    fetch(COUNT_ENDPOINT, { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+      .then(function (d) {
+        var n = d && typeof d.count === 'number' ? d.count : 0;
+        if (n >= PROOF_MIN) injectProof(n);
+      })
+      .catch(function () { /* sin prueba social si falla */ });
+  }
 })();

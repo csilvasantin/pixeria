@@ -1824,3 +1824,10 @@ h1::after {
 }
 .news-msg.is-ok { color: var(--matrix); text-shadow: var(--glow); }
 .news-msg.is-err { color: #ff6b5c; }
+.news-proof {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: rgba(0, 255, 65, .72);
+  letter-spacing: .01em;
+}
+.news-proof::before { content: "// "; color: var(--muted); }
