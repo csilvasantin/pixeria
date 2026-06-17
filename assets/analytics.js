@@ -8,10 +8,22 @@
     window.dataLayer.push(arguments);
   };
 
+  // Consent Mode v2: denegado por defecto (RGPD/ePrivacy). GA no almacena ni
+  // envia nada hasta que el usuario acepta en el banner (assets/consent.js).
   window.gtag('consent', 'default', {
-    analytics_storage: 'granted',
-    ad_storage: 'denied'
+    analytics_storage: 'denied',
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    wait_for_update: 500
   });
+
+  // Si el usuario ya acepto en una visita anterior, restaurar el consentimiento.
+  try {
+    if (localStorage.getItem('pixeria_consent') === 'granted') {
+      window.gtag('consent', 'update', { analytics_storage: 'granted' });
+    }
+  } catch (e) {}
 
   window.dataLayer.push({
     'gtm.start': new Date().getTime(),

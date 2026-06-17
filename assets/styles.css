@@ -1164,7 +1164,7 @@ h1 {
   --bg: #020602;
   --bg-soft: rgba(2, 16, 6, 0.86);
   --ink: #c8ffd0;
-  --muted: #5f9a66;
+  --muted: #7cbe84;
   --line: rgba(47, 138, 62, 0.58);
   --cyan: #00ff41;
   --coral: #7dff9e;
@@ -1798,7 +1798,8 @@ h1::after {
   border-radius: 0;
 }
 .news-row input[type="email"]::placeholder {
-  color: rgba(0, 255, 65, .4);
+  color: #79b886; /* contraste WCAG AA sobre el fondo oscuro del input */
+  opacity: 1;
 }
 .news-row input[type="email"]:focus-visible {
   outline: 2px solid var(--matrix);
@@ -1827,7 +1828,61 @@ h1::after {
 .news-proof {
   margin: 0 0 14px;
   font-size: 13px;
-  color: rgba(0, 255, 65, .72);
+  color: #7cbe84;
   letter-spacing: .01em;
 }
 .news-proof::before { content: "// "; color: var(--muted); }
+
+/* ─── Banner de consentimiento de cookies ─────────────────────── */
+#cookie-consent {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 99999;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 20px;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 16px 18px;
+  background: rgba(2, 8, 4, 0.97);
+  border: 1px solid var(--matrix);
+  box-shadow: 0 0 24px rgba(0, 255, 65, .12);
+  backdrop-filter: blur(6px);
+}
+#cookie-consent .cc-text {
+  flex: 1 1 320px;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+#cookie-consent .cc-link {
+  color: var(--matrix);
+  text-decoration: underline;
+  white-space: nowrap;
+}
+#cookie-consent .cc-actions {
+  display: flex;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+#cookie-consent .cc-btn {
+  font: inherit;
+  font-size: 13px;
+  padding: 9px 16px;
+  border: 1px solid var(--matrix);
+  background: transparent;
+  color: var(--matrix);
+  cursor: pointer;
+  border-radius: 0;
+}
+#cookie-consent .cc-btn:hover { background: rgba(0, 255, 65, .12); }
+#cookie-consent .cc-btn.cc-accept {
+  background: var(--matrix);
+  color: #021006;
+  font-weight: 700;
+}
+#cookie-consent .cc-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
