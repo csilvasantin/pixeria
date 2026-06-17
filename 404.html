@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>404 · Pagina no encontrada — Pixeria</title>
+  <meta name="robots" content="noindex, follow">
+  <meta name="theme-color" content="#020602">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/favicon-180.png">
+  <link rel="preconnect" href="https://csilvasantin.github.io" crossorigin>
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/tokens.css">
+  <link rel="stylesheet" href="https://csilvasantin.github.io/admira-design/nav.css">
+  <link rel="stylesheet" href="/assets/styles.css?v=20260617-news">
+  <style>
+    .e404 {
+      min-height: calc(100vh - 120px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 18px;
+      padding: 48px 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .e404 .code {
+      font-size: clamp(72px, 18vw, 180px);
+      line-height: .9;
+      color: var(--matrix);
+      text-shadow: var(--glow);
+      letter-spacing: -.03em;
+      margin: 0;
+    }
+    .e404 h1 {
+      font-size: clamp(20px, 3vw, 32px);
+      margin: 0;
+    }
+    .e404 p.lead {
+      color: var(--muted);
+      max-width: 540px;
+      margin: 0 auto;
+    }
+    .e404 .lang { color: rgba(0,255,65,.55); font-size: 14px; }
+    .e404 .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
+
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Pixeria inicio">
+      <span class="brand-mark">P</span>
+      <span>Pixeria</span>
+    </a>
+    <div class="header-actions">
+      <a class="nav-action" href="/">Inicio</a>
+    </div>
+  </header>
+
+  <main class="e404">
+    <p class="eyebrow">Error 404</p>
+    <p class="code">404</p>
+    <h1>Esta senal se perdio entre el ruido.</h1>
+    <p class="lead">La pagina que buscas no existe o se movio. Vuelve al radar o al inicio para seguir creando con IA.</p>
+    <p class="lang">The page you were looking for doesn't exist or has moved.</p>
+    <div class="actions">
+      <a class="button primary" href="/">Volver al inicio</a>
+      <a class="button secondary" href="/radar/">Ver el radar</a>
+      <a class="button secondary" href="/crear/">Abrir Creador</a>
+      <a class="button secondary" href="/stock.html">Stock</a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <span>Pixeria</span>
+    <p>Creacion de contenidos con IA, dirigida con criterio humano.</p>
+    <a href="mailto:csilvasantin@gmail.com">csilvasantin@gmail.com</a>
+  </footer>
+
+  <script src="/assets/matrix-rain.js?v=20260608-sides"></script>
+</body>
+</html>
