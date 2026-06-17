@@ -1770,3 +1770,57 @@ h1::after {
     scroll-behavior: auto !important;
   }
 }
+
+/* ─── Newsletter (captura de emails del radar) ─────────────────── */
+.news-form {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 20px;
+  max-width: 560px;
+  box-shadow: 0 0 18px rgba(0, 255, 65, .06) inset;
+}
+.news-form .eyebrow {
+  margin-bottom: 12px;
+}
+.news-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.news-row input[type="email"] {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 12px 14px;
+  background: rgba(2, 6, 2, 0.6);
+  border: 1px solid var(--line);
+  color: var(--matrix);
+  font: inherit;
+  border-radius: 0;
+}
+.news-row input[type="email"]::placeholder {
+  color: rgba(0, 255, 65, .4);
+}
+.news-row input[type="email"]:focus-visible {
+  outline: 2px solid var(--matrix);
+  outline-offset: 1px;
+}
+.news-row .button {
+  flex: 0 0 auto;
+}
+/* honeypot anti-bots: fuera de pantalla, no visible */
+.news-hp {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.news-msg {
+  margin-top: 12px;
+  min-height: 1.2em;
+  font-size: 14px;
+  color: var(--muted);
+}
+.news-msg.is-ok { color: var(--matrix); text-shadow: var(--glow); }
+.news-msg.is-err { color: #ff6b5c; }
