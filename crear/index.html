@@ -548,7 +548,7 @@
             <button class="button secondary" id="distro-apply-size" style="height:34px;">Aplicar tamaño</button>
             <button class="button secondary" id="distro-current" style="height:34px;" title="Carga en la rejilla la distribución que el Xpacio elegido tiene AHORA mismo (estado vivo del gemelo)">📥 Estado actual</button>
             <button class="button primary" id="distro-mudanza" style="height:34px;" title="Envía esta distribución a los gemelos del circuito/ubicación elegidos para que la apliquen (re-colocan la sala)">🚚 Mudanza</button>
-            <button class="button secondary" id="distro-live" style="height:34px;" title="EN VIVO (SOLO ESPEJO/lectura): refleja aquí, en el plano cenital, lo que muevas en el gemelo (XpaceOS). NO escribe al gemelo — para aplicar usa 🚚 Mudanza. Carga antes un Xpacio con 📥 Estado actual.">⚪ En vivo</button>
+            <button class="button secondary" id="distro-live" style="height:34px;" title="EN VIVO (BIDIRECCIONAL): lo que muevas en el plano se aplica al gemelo (XpaceOS) en vivo, y lo que muevas en el gemelo se refleja aquí. 🚚 Mudanza sigue siendo el envío explícito a varios gemelos. Carga antes un Xpacio con 📥 Estado actual.">⚪ En vivo</button>
           </div>
 
           <!-- Paleta de mobiliario (plegable) -->
@@ -2793,16 +2793,35 @@
         }
         __liveTs=0;
         const b=$('distro-live'); if(b){ b.textContent='🔴 EN VIVO'; b.style.background='#ff3b3b'; b.style.color='#fff'; b.style.borderColor='#ff3b3b'; }
-        status('🔴 EN VIVO · solo espejo (lectura) de '+st.loadedScreen+' · mueve el mobiliario en XpaceOS y se refleja aquí · para aplicar usa 🚚 Mudanza','#ff8866');
+        status('🔴 EN VIVO ⇄ '+st.loadedScreen+' · bidireccional: lo que muevas aquí se aplica al gemelo y lo que muevas en XpaceOS se refleja aquí','#7ee0a0');
         liveTick(); __liveTimer=setInterval(liveTick,2000);
         try{ refreshCliKeyBtns(); }catch(_){}   // EN VIVO → auto-enciende el live del CLI
       }
       function stopLive(){ if(__liveTimer){ clearInterval(__liveTimer); __liveTimer=null; } const b=$('distro-live'); if(b){ b.textContent='⚪ En vivo'; b.style.background=''; b.style.color=''; b.style.borderColor=''; } try{ refreshCliKeyBtns(); }catch(_){} }
-      // EN VIVO = SOLO ESPEJO (decisión Carlos, 2026-06-16): conectar En vivo solo
-      // REFLEJA el gemelo en el editor (lectura); NUNCA escribe al gemelo. Aplicar al
-      // gemelo lo hace EXCLUSIVAMENTE 🚚 Mudanza (explícito). Por eso este push es un
-      // no-op; se conserva la función porque la llaman las acciones de la rejilla.
-      function pushLiveDebounced(){ /* no-op: En vivo es de solo lectura, no empuja al gemelo */ }
+      // EN VIVO = BIDIRECCIONAL (Carlos, 2026-06-17): además de reflejar el gemelo en
+      // el plano (liveTick, lectura), lo que muevas en el plano se EMPUJA al gemelo en
+      // vivo. Anti-bucle: cada lado ignora sus propios cambios por `origin`, y el gemelo
+      // marca __applyingRemoteLayout 2.5s al aplicar para no re-reportar. Canal:
+      // POST /layout/report {origin:'pixeria'} → el gemelo sondea /layout/current cada
+      // 3s (pollLayoutLive) y aplica. 🚚 Mudanza sigue siendo el push explícito/pesado.
+      let __livePushT=null;
+      function pushLiveDebounced(){
+        if(!liveOnNow()) return;                         // solo cuando estás EN VIVO con un Xpacio
+        if(__livePushT) clearTimeout(__livePushT);
+        __livePushT=setTimeout(async()=>{
+          const scr=st.loadedScreen; if(!scr) return;
+          const snapshot={
+            config:{ cols:st.cols, rows:st.rows, wallHeightTiles:6, longWallColor:st.wall, floorColor:st.floor },
+            furniture: st.items.map(distroItemOut), staff: staffOut(), zones: zonesOut()
+          };
+          const body={ screen:scr, client:(($('distro-client').value||'').trim()||null), origin:'pixeria', snapshot };
+          try{
+            const r=await fetch(dBase()+'/layout/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+            if(r.ok) status('🔴 EN VIVO ⇄ '+scr+' · '+st.items.length+' muebles enviados al gemelo','#7ee0a0');
+            else status('EN VIVO: el gemelo no aceptó el cambio (HTTP '+r.status+')','#e0a14a');
+          }catch(e){ status('EN VIVO: no se pudo enviar al gemelo (red)','#e0a14a'); }
+        }, 800);
+      }
       function toggleLive(){ if(__liveTimer) stopLive(); else startLive(); }
       async function loadDistroIntoEditor(id){
         status('⏳ cargando…');
