@@ -63,7 +63,7 @@
   // Banner
   const banner = document.createElement('div');
   banner.className = 'god-banner';
-  banner.textContent = '🛠 GOD MODE — Editable texts version (pixeria.com/god) — Changes saved in browser only';
+  banner.textContent = '🛠 BACKOFFICE — Editable texts version (pixeria.com/backoffice) — Changes saved in browser only';
   document.body.appendChild(banner);
 
   // Toolbar

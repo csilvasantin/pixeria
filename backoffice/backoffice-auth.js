@@ -1,14 +1,18 @@
 (function() {
   'use strict';
 
-  const ALLOWED_EMAIL = 'csilvasantin@gmail.com';
-  const STORAGE_KEY = 'god_user_email';
-  const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // <-- REEMPLAZA ESTO con tu Client ID de Google Cloud Console (OAuth 2.0)
+  const ALLOWED_DOMAIN = 'admira.com';
+  const STORAGE_KEY = 'backoffice_user_email';
+  const CLIENT_ID = '861856772040-quq6ut76k4mqj3fdq87h6g6caht3nm4l.apps.googleusercontent.com'; // OAuth 2.0 Web Client (proyecto admira-app). Orígenes JS autorizados deben incluir https://www.pixeria.com y https://pixeria.com
+
+  function emailAllowed(email) {
+    return typeof email === 'string' && email.toLowerCase().endsWith('@' + ALLOWED_DOMAIN);
+  }
 
   // Check if already logged in
   function isLoggedIn() {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored === ALLOWED_EMAIL;
+    return emailAllowed(stored);
   }
 
   function setLoggedIn(email) {
@@ -51,19 +55,15 @@
         <div style="margin-bottom: 24px;">
           <span style="display: inline-block; width: 48px; height: 48px; border: 2px solid #68dce9; background: rgba(104,220,233,0.1); color: #68dce9; font-size: 28px; line-height: 44px; border-radius: 8px; font-weight: 700;">G</span>
         </div>
-        <h2 style="margin: 0 0 8px; font-size: 28px;">God Mode</h2>
-        <p style="margin: 0 0 24px; color: #aeb9bd; font-size: 15px;">Acceso restringido a csilvasantin</p>
+        <h2 style="margin: 0 0 8px; font-size: 28px;">Backoffice</h2>
+        <p style="margin: 0 0 24px; color: #aeb9bd; font-size: 15px;">Acceso restringido a cuentas @admira.com</p>
 
         <div id="google-signin-button" style="margin: 20px 0;"></div>
 
         <p style="font-size: 12px; color: #6b7280; margin-top: 24px;">
-          Solo la cuenta <strong>csilvasantin@gmail.com</strong> puede acceder.<br>
-          Los cambios se guardan solo en tu navegador.
+          Solo cuentas <strong>@admira.com</strong> pueden acceder.<br>
+          Inicia sesión con Google para gestionar Pixeria.
         </p>
-
-        <div style="margin-top: 16px; font-size: 11px; color: #6b7280;">
-          ¿Problemas? Asegúrate de haber configurado el Client ID en god-auth.js
-        </div>
       </div>
     `;
 
@@ -97,6 +97,7 @@
         callback: handleGoogleCredentialResponse,
         auto_select: false,
         cancel_on_tap_outside: true,
+        hosted_domain: ALLOWED_DOMAIN,
       });
 
       // Render the button
@@ -122,8 +123,9 @@
 
     const email = payload.email;
     const emailVerified = payload.email_verified;
+    const hostedDomain = payload.hd;
 
-    if (email === ALLOWED_EMAIL && emailVerified) {
+    if (emailAllowed(email) && emailVerified && hostedDomain === ALLOWED_DOMAIN) {
       setLoggedIn(email);
 
       // Remove overlay
@@ -139,7 +141,7 @@
         window.__initGodMode();
       }
     } else {
-      alert('Acceso denegado. Solo csilvasantin@gmail.com puede entrar en God Mode.');
+      alert('Acceso denegado. Solo cuentas @admira.com pueden entrar en el backoffice.');
       // Optionally sign out from Google
       if (window.google && window.google.accounts && window.google.accounts.id) {
         window.google.accounts.id.disableAutoSelect();
