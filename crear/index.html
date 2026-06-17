@@ -585,6 +585,10 @@
           <details class="distro-fold" id="distro-cli-fold" style="margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;">
             <summary style="cursor:pointer;font-size:12px;color:var(--muted);user-select:none;">⌨ <b style="color:var(--cyan);">CLI Xtanco</b> — teclea comandos como en la consola del gemelo (<code>/render real</code>, <code>/music on</code>, <code>/ladron</code>, <code>/help</code>); se ejecutan en el preview 📐 si está abierto y/o en el Xpacio LIVE con 🔑</summary>
             <div id="distro-cli-chips-p" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;"></div>
+            <div style="display:flex;gap:8px;align-items:center;margin:8px 0 0;">
+              <button id="distro-cli-kpi-btn" class="button secondary" style="padding:4px 9px;font-size:12px;white-space:nowrap;" title="Estado del Xpacio EN VIVO (caja · satisfacción · clientes · hora). Pide /status cada 8s mientras estés En vivo; pausa si cambias de pestaña.">▶ estado en vivo</button>
+              <div id="distro-cli-kpi" style="flex:1;font-family:monospace;font-size:12px;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;"></div>
+            </div>
             <div id="distro-cli-out-p" style="max-height:120px;overflow:auto;margin:8px 0 0;color:var(--muted);font-family:monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;"></div>
             <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
               <input id="distro-cli-in-p" autocomplete="off" spellcheck="false" placeholder="/velocidad 8 · /music on · /ladron · /help (lista todo)" style="flex:1;background:rgba(2,8,13,.6);border:1px solid var(--line);border-radius:8px;padding:8px 10px;color:var(--ink);font-family:monospace;font-size:13px;outline:none;">
@@ -2546,6 +2550,46 @@
             }).catch(()=>{ if(tries>=10) clearInterval(iv); });
         },1500);
       }
+      // Ejecuta un comando keyless EN VIVO en SILENCIO (sin pintar el log) y resuelve con
+      // la respuesta del gemelo. Lo usa la tira de KPIs en vivo (no ensucia la consola).
+      function xtancoCliExecLive(cmd){
+        return new Promise(res=>{
+          if(!liveOnNow()){ res(null); return; }
+          const scr=st.loadedScreen;
+          fetch(dBase()+'/twin/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({screen:scr,text:cmd})})
+            .then(r=>r.json()).then(d=>{
+              if(!d||!d.ok||!d.id){ res(null); return; }
+              let tries=0; const iv=setInterval(()=>{ tries++;
+                fetch(dBase()+'/twin/result?screen='+encodeURIComponent(scr)+'&id='+encodeURIComponent(d.id)+'&ts='+Date.now(),{cache:'no-store'})
+                  .then(r=>r.json()).then(rr=>{ if(rr&&rr.result&&rr.result.text){ clearInterval(iv); res(rr.result.text); } else if(tries>=5){ clearInterval(iv); res(null); } })
+                  .catch(()=>{ if(tries>=5){ clearInterval(iv); res(null); } });
+              },1200);
+            }).catch(()=>res(null));
+        });
+      }
+      // Parse del texto de /status (formatStatus del gemelo) → KPIs para la tira.
+      function parseStatusKpis(txt){
+        const get=re=>{ const m=String(txt||'').match(re); return m?m[1].trim():null; };
+        return { caja:get(/Caja:\s*([^\n]+)/i), sat:get(/Satisfacci[oó]n:\s*([^\n]+)/i), fama:get(/Fama:\s*([^\n]+)/i),
+                 clientes:get(/Entran en tienda:\s*([^\n]+)/i), hora:get(/Hora tienda:\s*([^\n]+)/i) };
+      }
+      function renderKpiStrip(el, k, note){
+        if(!el) return;
+        if(note!=null){ el.innerHTML='<span style="color:var(--muted)">'+note+'</span>'; return; }
+        const cell=(lbl,val,col)=> val?('<span style="display:inline-flex;gap:4px;align-items:baseline;"><b style="color:'+(col||'var(--cyan)')+'">'+val+'</b><span style="color:var(--muted);font-size:11px">'+lbl+'</span></span>'):'';
+        el.innerHTML=[cell('caja',k.caja,'#ffd866'),cell('sat',k.sat,'#7ee0a0'),cell('fama',k.fama,'#c9a0ff'),cell('clientes',k.clientes,'#5fd0ff'),cell('hora',k.hora,'#cfe')].filter(Boolean).join('<span style="color:#2a3a33;margin:0 5px">·</span>')||'<span style="color:var(--muted)">sin datos</span>';
+      }
+      let __kpiTimer=null;
+      function stopLiveStatus(){ if(__kpiTimer){ clearInterval(__kpiTimer); __kpiTimer=null; } }
+      function startLiveStatus(el){
+        stopLiveStatus();
+        const tick=()=>{
+          if(document.hidden) return;                 // pausa si la pestaña no está visible (ahorra cuota KV)
+          if(!liveOnNow()){ renderKpiStrip(el,null,'conéctate ⚪ En vivo para ver el estado del Xpacio'); return; }
+          xtancoCliExecLive('/status').then(txt=>{ if(txt) renderKpiStrip(el, parseStatusKpis(txt)); });
+        };
+        tick(); __kpiTimer=setInterval(tick, 8000);
+      }
       function xtancoCliSend(cmd, logLine){
         cmd=String(cmd||'').trim(); if(!cmd) return;
         const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -3198,6 +3242,14 @@
           if(!inp||!sb) return;
           const logLine=h=>{ if(!out) return; const p=document.createElement('div'); p.innerHTML=h; out.appendChild(p); out.scrollTop=out.scrollHeight; };
           try{ buildCliChips($('distro-cli-chips-p'), logLine); }catch(_){}   // chips de comandos rápidos
+          // Tira de KPIs en vivo (toggle): caja/sat/clientes/hora del Xpacio, vía /status keyless.
+          (function(){
+            const kb=$('distro-cli-kpi-btn'), kel=$('distro-cli-kpi'); if(!kb||!kel) return; let on=false;
+            kb.onclick=()=>{ on=!on;
+              if(on){ kb.textContent='⏸ estado en vivo'; kb.style.color='#7ee0a0'; renderKpiStrip(kel,null,'⏳ pidiendo estado…'); startLiveStatus(kel); }
+              else { kb.textContent='▶ estado en vivo'; kb.style.color=''; stopLiveStatus(); renderKpiStrip(kel,null,''); }
+            };
+          })();
           const hist=[]; let hi=-1;
           const send=()=>{ const c=(inp.value||'').trim(); if(!c) return; hist.push(c); hi=hist.length; xtancoCliSend(c, logLine); inp.value=''; };
           sb.onclick=send;
