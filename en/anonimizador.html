@@ -28,8 +28,14 @@
     .anon-controls{display:flex;flex-direction:column;gap:10px;justify-content:center}
     .anon-controls .btn{width:100%;justify-content:center}
     .anon-controls .anon-opts{margin-top:6px;display:flex;flex-direction:column;gap:8px}
-    .anon-triptych{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    @media (max-width:760px){.anon-triptych{grid-template-columns:1fr}}
+    .anon-triptych{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    @media (max-width:900px){.anon-triptych{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:520px){.anon-triptych{grid-template-columns:1fr}}
+    .anon-prog{display:none;max-width:440px;margin:0 auto}
+    .anon-prog.on{display:block}
+    .anon-prog-track{height:8px;border:1px solid var(--line,#1c3a22);border-radius:999px;overflow:hidden;background:rgba(2,12,5,.6)}
+    .anon-prog-fill{height:100%;width:0;background:var(--accent,#39d353);transition:width .3s ease}
+    .anon-prog-label{font-family:var(--mono,ui-monospace,monospace);font-size:11px;color:var(--muted,#7fae8c);text-align:center;margin-top:5px}
     .anon-card{border:1px solid var(--line,#1c3a22);border-radius:14px;background:rgba(2,12,5,.55);overflow:hidden;display:flex;flex-direction:column}
     .anon-card.is-active{border-color:var(--accent,#39d353);box-shadow:0 0 0 1px var(--accent,#39d353)}
     .anon-card-head{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--line,#1c3a22);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
@@ -140,17 +146,21 @@
           <div class="anon-frame" id="frame1"><div class="ph">Your photo shows up here</div></div>
         </article>
         <article class="anon-card" id="card2">
-          <div class="anon-card-head"><span>Digital-twin NPC</span><span class="step">02 · pixel</span></div>
-          <div class="anon-frame is-pixel" id="frame2"><div class="ph">Pixel-art character<br>(identity wiped)</div></div>
+          <div class="anon-card-head"><span>8-bit NPC</span><span class="step">02 · pixel</span></div>
+          <div class="anon-frame is-pixel" id="frame2"><div class="ph">8-bit NPC<br>(NES)</div></div>
         </article>
         <article class="anon-card" id="card3">
-          <div class="anon-card-head"><span>Anonymous</span><span class="step">03 · new</span></div>
-          <div class="anon-frame" id="frame3"><div class="ph">Different realistic person</div></div>
+          <div class="anon-card-head"><span>16-bit NPC</span><span class="step">03 · pixel</span></div>
+          <div class="anon-frame is-pixel" id="frame3"><div class="ph">16-bit NPC<br>(detailed)</div></div>
+        </article>
+        <article class="anon-card" id="card4">
+          <div class="anon-card-head"><span>Anonymous</span><span class="step">04 · new</span></div>
+          <div class="anon-frame" id="frame4"><div class="ph">Different realistic person</div></div>
         </article>
       </div>
 
       <div class="anon-pipeline" aria-label="Anonymizer pipeline">
-        <span>Real photo</span><i>→</i><span>Digital-twin NPC</span><i>→</i><span>New person</span>
+        <span>Real photo</span><i>→</i><span>8-bit / 16-bit NPC</span><i>→</i><span>New person</span>
       </div>
 
       <div class="anon-go">
@@ -163,6 +173,7 @@
         <button type="button" class="btn" id="btnPublish" disabled>📤 Publish to Stock</button>
         <button type="button" class="btn" id="btnReset">↺ Reset</button>
       </div>
+      <div class="anon-prog" id="anonProg"><div class="anon-prog-track"><div class="anon-prog-fill" id="anonProgFill"></div></div><div class="anon-prog-label" id="anonProgLabel"></div></div>
 
       <div class="anon-privacy">
         <span aria-hidden="true">🔒</span>
@@ -179,8 +190,10 @@
     const $ = (s) => document.querySelector(s);
     const WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
 
-    const NPC_SYS = 'You are a sprite artist for a 16-bit shop-management game (Kairosoft style). From the given photo, generate a pixel-art NPC CHARACTER like the passers-by in the digital twin: chibi big-head style, full body facing front, limited palette, defined outlines, neutral or transparent background. KEEP the clothing colors, hair color and cut, the build and apparent age. Do NOT keep recognizable facial features or marks: it is an anonymous NPC, not a portrait.';
-    const NPC_PROMPT = 'Turn it into a full-body pixel-art NPC like the ones walking around the Admira XP digital twin.';
+    const NPC8_SYS = 'You are an 8-bit pixel-art artist (NES style). From the given photo, generate a full-body CHARACTER facing front with a VERY limited palette (few flat colors), large pixels and a hard outline, no gradients or antialiasing. Neutral background. KEEP clothing and hair color, build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC, not a portrait.';
+    const NPC8_PROMPT = 'Turn it into a full-body 8-bit (NES) pixel-art NPC, reduced palette and large pixels.';
+    const NPC16_SYS = 'You are a detailed 16-bit pixel-art artist (SNES/Kairosoft style). From the given photo, generate a full-body CHARACTER facing front with more colors, shading and lighting and a defined outline, on a blurred street like the passers-by of the digital twin. KEEP clothing and hair color, build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC, not a portrait.';
+    const NPC16_PROMPT = 'Turn it into a detailed full-body 16-bit pixel-art NPC, like the passers-by of the Admira XP digital twin on a street.';
 
     const HUMAN_SYS = 'You are a street photographer. From the given pixel-art sprite/figure, generate a REALISTIC PHOTO of a DIFFERENT REAL person: new face and new identity, NOT the same person as the sprite. Keep only a similar VIBE (approximate age, same clothing style and color, same hair color and type, similar build). No pixel, drawing or game 3D: realistic skin, fabric and light. Full body, vertical, neutral background or blurred street. Anonymous person, no text or logos.';
     const HUMAN_PROMPT = {
@@ -189,18 +202,21 @@
       full:  'A completely new person (different face, age and build), keeping only the garment type and color.'
     };
 
-    let stream = null, original = null, npc = null, anon = null, busy = false;
+    let stream = null, original = null, npc8 = null, npc16 = null, anon = null, busy = false;
 
     const els = {
       camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), hint: $('#camHint'),
       btnCam: $('#btnCam'), btnShot: $('#btnShot'), btnUpload: $('#btnUpload'), file: $('#fileInput'),
       go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'),
       download: $('#btnDownload'), publish: $('#btnPublish'), reset: $('#btnReset'),
-      frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'),
-      card1: $('#card1'), card2: $('#card2'), card3: $('#card3')
+      frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'), frame4: $('#frame4'),
+      card1: $('#card1'), card2: $('#card2'), card3: $('#card3'), card4: $('#card4'),
+      prog: $('#anonProg'), progFill: $('#anonProgFill'), progLabel: $('#anonProgLabel')
     };
 
     const setStatus = (t, err) => { els.status.textContent = t; els.status.classList.toggle('err', !!err); };
+    function progShow(on) { els.prog.classList.toggle('on', !!on); if (!on) els.progFill.style.width = '0'; }
+    function progSet(done, total, label) { els.progFill.style.width = Math.round(done / total * 100) + '%'; els.progLabel.textContent = label || (done + '/' + total); }
 
     function downscale(dataURL, max) {
       return new Promise((res) => {
@@ -219,10 +235,11 @@
     }
 
     function showOriginal(dataURL) {
-      original = dataURL; npc = null; anon = null;
+      original = dataURL; npc8 = null; npc16 = null; anon = null;
       els.frame1.innerHTML = '<img alt="Original" src="' + dataURL + '">';
-      els.frame2.innerHTML = '<div class="ph">Pixel-art character<br>(identity wiped)</div>';
-      els.frame3.innerHTML = '<div class="ph">Different realistic person</div>';
+      els.frame2.innerHTML = '<div class="ph">8-bit NPC<br>(NES)</div>';
+      els.frame3.innerHTML = '<div class="ph">16-bit NPC<br>(detailed)</div>';
+      els.frame4.innerHTML = '<div class="ph">Different realistic person</div>';
       els.go.disabled = false; els.download.disabled = true; els.publish.disabled = true;
       setStatus('Ready. Hit ANONYMIZE to run it through the twin.');
     }
@@ -235,7 +252,7 @@
       }
     }
     const activeCard = (card) => {
-      [els.card1, els.card2, els.card3].forEach(c => c.classList.remove('is-active'));
+      [els.card1, els.card2, els.card3, els.card4].forEach(c => c.classList.remove('is-active'));
       if (card) card.classList.add('is-active');
     };
 
@@ -280,37 +297,43 @@
       if (busy || !original) return;
       busy = true;
       els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
+      progShow(true); progSet(0, 3, 'Generating NPCs…');
       try {
-        activeCard(els.card2); frameSpin(els.frame2, 'Pixelating…');
-        setStatus('Step 1/2 · turning into a digital-twin NPC…');
-        npc = await imageEdit(original, NPC_SYS, NPC_PROMPT);
-        frameImg(els.frame2, npc);
+        // Step 1 — photo → 8-bit and 16-bit NPC (in parallel)
+        activeCard(els.card2); frameSpin(els.frame2, '8-bit…'); frameSpin(els.frame3, '16-bit…');
+        setStatus('Generating the 8-bit and 16-bit twin NPC…');
+        let done = 0; const bump = () => progSet(++done, 3, 'NPCs ' + done + '/2…');
+        const p8 = imageEdit(original, NPC8_SYS, NPC8_PROMPT).then(img => { npc8 = img; frameImg(els.frame2, img); bump(); });
+        const p16 = imageEdit(original, NPC16_SYS, NPC16_PROMPT).then(img => { npc16 = img; frameImg(els.frame3, img); bump(); });
+        await Promise.all([p8, p16]);
 
-        activeCard(els.card3); frameSpin(els.frame3, 'Rebuilding…');
-        setStatus('Step 2/2 · generating a new person…');
+        // Step 2 — 16-bit NPC → different realistic person
+        activeCard(els.card4); frameSpin(els.frame4, 'Rebuilding…');
+        setStatus('Generating a new person…');
         const prompt = HUMAN_PROMPT[els.strength.value] || HUMAN_PROMPT.aire;
-        anon = await imageEdit(npc, HUMAN_SYS, prompt);
-        frameImg(els.frame3, anon);
+        anon = await imageEdit(npc16, HUMAN_SYS, prompt);
+        frameImg(els.frame4, anon); progSet(3, 3, 'Done');
 
-        activeCard(els.card3);
-        setStatus('✓ Done. This person does not exist: similar in style, different in identity.');
+        activeCard(els.card4);
+        setStatus('✓ Done: 2 NPCs (8/16-bit) + a person who does not exist.');
         els.download.disabled = false; els.publish.disabled = false;
       } catch (e) {
         setStatus('Transform error: ' + e.message + '. (The engine only responds from pixeria.com.)', true);
         activeCard(null);
       } finally {
-        els.go.disabled = false; busy = false;
+        progShow(false); els.go.disabled = false; busy = false;
       }
     }
 
     function reset() {
       stopCam();
-      original = npc = anon = null;
+      original = npc8 = npc16 = anon = null;
       els.still.hidden = true; els.cam.hidden = true; els.hint.style.display = '';
       els.frame1.innerHTML = '<div class="ph">Your photo shows up here</div>';
-      els.frame2.innerHTML = '<div class="ph">Pixel-art character<br>(identity wiped)</div>';
-      els.frame3.innerHTML = '<div class="ph">Different realistic person</div>';
-      activeCard(null);
+      els.frame2.innerHTML = '<div class="ph">8-bit NPC<br>(NES)</div>';
+      els.frame3.innerHTML = '<div class="ph">16-bit NPC<br>(detailed)</div>';
+      els.frame4.innerHTML = '<div class="ph">Different realistic person</div>';
+      activeCard(null); progShow(false);
       els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
       setStatus('Capture or upload a photo to enable the button.');
     }
@@ -334,20 +357,26 @@
     }
     async function publish() {
       if (!anon) return;
-      els.publish.disabled = true; setStatus('Publishing to Stock…');
+      els.publish.disabled = true;
+      // The pixel-art NPCs go to "Twin NPCs"; the final person to "Digital Twins".
+      const jobs = [];
+      if (npc8) jobs.push(() => pubStock(npc8, 'twin-npc', 'Twin NPC 8-bit · Pixeria',
+        '8-bit pixel-art NPC of the Admira XP twin (Anonymizer step)',
+        ['twin-npc', '8bit', 'anonymizer'], 'Anonymizer 8-bit NPC: facial identity wiped.'));
+      if (npc16) jobs.push(() => pubStock(npc16, 'twin-npc', 'Twin NPC 16-bit · Pixeria',
+        '16-bit pixel-art NPC of the Admira XP twin (Anonymizer step)',
+        ['twin-npc', '16bit', 'anonymizer'], 'Anonymizer 16-bit NPC: facial identity wiped.'));
+      jobs.push(() => pubStock(anon, 'digital-twin', 'Digital Twin · Pixeria',
+        'Anonymized synthetic person (real photo → twin NPC → new person)',
+        ['digital-twin', 'anonymizer'], 'Anonymizer digital twin: new identity, matches no real person.'));
+      progShow(true); progSet(0, jobs.length, 'Uploading to Stock…');
+      setStatus('Publishing to Stock…');
       try {
-        // The pixel-art NPC goes to "Twin NPCs"; the final person to "Digital Twins".
-        if (npc) await pubStock(npc, 'twin-npc', 'Twin NPC · Pixeria',
-          'Pixel-art NPC of the Admira XP twin (Anonymizer intermediate step)',
-          ['twin-npc', 'anonymizer'],
-          'Anonymizer NPC sprite: facial identity wiped.');
-        await pubStock(anon, 'digital-twin', 'Digital Twin · Pixeria',
-          'Anonymized synthetic person (real photo → twin NPC → new person)',
-          ['digital-twin', 'anonymizer'],
-          'Anonymizer digital twin: new identity, matches no real person.');
-        setStatus('✓ Published to Stock: Twin NPC + Digital Twin.');
+        for (let i = 0; i < jobs.length; i++) { await jobs[i](); progSet(i + 1, jobs.length, 'Uploading to Stock ' + (i + 1) + '/' + jobs.length + '…'); }
+        setStatus('✓ Published to Stock: ' + (jobs.length - 1) + ' Twin NPC + Digital Twin.');
+        setTimeout(() => progShow(false), 700);
       } catch (e) {
-        setStatus('Could not publish: ' + e.message, true); els.publish.disabled = false;
+        progShow(false); setStatus('Could not publish: ' + e.message, true); els.publish.disabled = false;
       }
     }
 

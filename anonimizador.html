@@ -28,8 +28,14 @@
     .anon-controls{display:flex;flex-direction:column;gap:10px;justify-content:center}
     .anon-controls .btn{width:100%;justify-content:center}
     .anon-controls .anon-opts{margin-top:6px;display:flex;flex-direction:column;gap:8px}
-    .anon-triptych{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    @media (max-width:760px){.anon-triptych{grid-template-columns:1fr}}
+    .anon-triptych{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    @media (max-width:900px){.anon-triptych{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:520px){.anon-triptych{grid-template-columns:1fr}}
+    .anon-prog{display:none;max-width:440px;margin:0 auto}
+    .anon-prog.on{display:block}
+    .anon-prog-track{height:8px;border:1px solid var(--line,#1c3a22);border-radius:999px;overflow:hidden;background:rgba(2,12,5,.6)}
+    .anon-prog-fill{height:100%;width:0;background:var(--accent,#39d353);transition:width .3s ease}
+    .anon-prog-label{font-family:var(--mono,ui-monospace,monospace);font-size:11px;color:var(--muted,#7fae8c);text-align:center;margin-top:5px}
     .anon-card{border:1px solid var(--line,#1c3a22);border-radius:14px;background:rgba(2,12,5,.55);overflow:hidden;display:flex;flex-direction:column}
     .anon-card.is-active{border-color:var(--accent,#39d353);box-shadow:0 0 0 1px var(--accent,#39d353)}
     .anon-card-head{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--line,#1c3a22);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
@@ -140,17 +146,21 @@
           <div class="anon-frame" id="frame1"><div class="ph">Tu foto aparece aquí</div></div>
         </article>
         <article class="anon-card" id="card2">
-          <div class="anon-card-head"><span>NPC del gemelo</span><span class="step">02 · pixel</span></div>
-          <div class="anon-frame is-pixel" id="frame2"><div class="ph">Personaje pixel-art<br>(identidad borrada)</div></div>
+          <div class="anon-card-head"><span>NPC 8-bit</span><span class="step">02 · pixel</span></div>
+          <div class="anon-frame is-pixel" id="frame2"><div class="ph">NPC 8-bit<br>(NES)</div></div>
         </article>
         <article class="anon-card" id="card3">
-          <div class="anon-card-head"><span>Anónimo</span><span class="step">03 · nuevo</span></div>
-          <div class="anon-frame" id="frame3"><div class="ph">Persona realista distinta</div></div>
+          <div class="anon-card-head"><span>NPC 16-bit</span><span class="step">03 · pixel</span></div>
+          <div class="anon-frame is-pixel" id="frame3"><div class="ph">NPC 16-bit<br>(detallado)</div></div>
+        </article>
+        <article class="anon-card" id="card4">
+          <div class="anon-card-head"><span>Anónimo</span><span class="step">04 · nuevo</span></div>
+          <div class="anon-frame" id="frame4"><div class="ph">Persona realista distinta</div></div>
         </article>
       </div>
 
       <div class="anon-pipeline" aria-label="Pipeline del anonimizador">
-        <span>Foto real</span><i>→</i><span>NPC del gemelo</span><i>→</i><span>Persona nueva</span>
+        <span>Foto real</span><i>→</i><span>NPC 8-bit / 16-bit</span><i>→</i><span>Persona nueva</span>
       </div>
 
       <div class="anon-go">
@@ -163,6 +173,7 @@
         <button type="button" class="btn" id="btnPublish" disabled>📤 Publicar en Stock</button>
         <button type="button" class="btn" id="btnReset">↺ Reiniciar</button>
       </div>
+      <div class="anon-prog" id="anonProg"><div class="anon-prog-track"><div class="anon-prog-fill" id="anonProgFill"></div></div><div class="anon-prog-label" id="anonProgLabel"></div></div>
 
       <div class="anon-privacy">
         <span aria-hidden="true">🔒</span>
@@ -179,9 +190,11 @@
     const $ = (s) => document.querySelector(s);
     const WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
 
-    // ---- Prompts: el gemelo (NPC pixel-art) y la vuelta a humano anónimo ----
-    const NPC_SYS = 'Eres un artista de sprites de un juego de gestión de tienda estilo 16-bit (tipo Kairosoft). A partir de la foto dada, genera un PERSONAJE NPC pixel-art como los viandantes del gemelo digital: estilo chibi cabezón, cuerpo entero de frente, paleta limitada, contornos definidos, fondo neutro o transparente. MANTÉN el color de la ropa, el color y corte de pelo, la complexión y la edad aparente. NO conserves rasgos faciales reconocibles ni marcas: es un NPC anónimo, no un retrato.';
-    const NPC_PROMPT = 'Conviértelo en un NPC pixel-art de cuerpo entero como los que pasean por el gemelo digital Admira XP.';
+    // ---- Prompts: NPC 8-bit, NPC 16-bit, y la vuelta a humano anónimo ----
+    const NPC8_SYS = 'Eres un artista de pixel-art 8-bit (estilo NES). A partir de la foto, genera un PERSONAJE de cuerpo entero de frente con paleta MUY limitada (pocos colores planos), píxeles grandes y contorno duro, sin degradados ni antialias. Fondo neutro. MANTÉN color de ropa y pelo, complexión y edad aparente. NO conserves rasgos faciales reconocibles: es un NPC anónimo, no un retrato.';
+    const NPC8_PROMPT = 'Conviértelo en un NPC pixel-art 8-bit (NES) de cuerpo entero, paleta reducida y píxeles grandes.';
+    const NPC16_SYS = 'Eres un artista de pixel-art 16-bit detallado (estilo SNES/Kairosoft). A partir de la foto, genera un PERSONAJE de cuerpo entero de frente con más colores, sombreado e iluminación y contorno definido, sobre una calle desenfocada como los viandantes del gemelo digital. MANTÉN color de ropa y pelo, complexión y edad aparente. NO conserves rasgos faciales reconocibles: es un NPC anónimo, no un retrato.';
+    const NPC16_PROMPT = 'Conviértelo en un NPC pixel-art 16-bit detallado de cuerpo entero, como los viandantes del gemelo digital Admira XP en una calle.';
 
     const HUMAN_SYS = 'Eres un fotógrafo de calle. A partir del sprite/figura pixel-art dado, genera una FOTO REALISTA de una persona REAL DIFERENTE: cara nueva e identidad nueva, NO la misma persona del sprite. Conserva solo un AIRE parecido (edad aproximada, mismo estilo y color de ropa, mismo color y tipo de pelo, complexión similar). Nada de pixel, dibujo ni 3D de juego: piel, tela y luz realistas. Cuerpo entero, vertical, fondo neutro o calle desenfocada. Persona anónima, sin texto ni marcas.';
     const HUMAN_PROMPT = {
@@ -193,7 +206,8 @@
     // ---- Estado ----
     let stream = null;
     let original = null;   // dataURL foto real
-    let npc = null;        // dataURL NPC
+    let npc8 = null;       // dataURL NPC 8-bit
+    let npc16 = null;      // dataURL NPC 16-bit
     let anon = null;       // dataURL persona anónima final
     let busy = false;
 
@@ -202,11 +216,14 @@
       btnCam: $('#btnCam'), btnShot: $('#btnShot'), btnUpload: $('#btnUpload'), file: $('#fileInput'),
       go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'),
       download: $('#btnDownload'), publish: $('#btnPublish'), reset: $('#btnReset'),
-      frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'),
-      card1: $('#card1'), card2: $('#card2'), card3: $('#card3')
+      frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'), frame4: $('#frame4'),
+      card1: $('#card1'), card2: $('#card2'), card3: $('#card3'), card4: $('#card4'),
+      prog: $('#anonProg'), progFill: $('#anonProgFill'), progLabel: $('#anonProgLabel')
     };
 
     const setStatus = (t, err) => { els.status.textContent = t; els.status.classList.toggle('err', !!err); };
+    function progShow(on) { els.prog.classList.toggle('on', !!on); if (!on) els.progFill.style.width = '0'; }
+    function progSet(done, total, label) { els.progFill.style.width = Math.round(done / total * 100) + '%'; els.progLabel.textContent = label || (done + '/' + total); }
 
     // Reduce la imagen al lado mayor = max px (acelera la subida y el modelo)
     function downscale(dataURL, max) {
@@ -226,10 +243,11 @@
     }
 
     function showOriginal(dataURL) {
-      original = dataURL; npc = null; anon = null;
+      original = dataURL; npc8 = null; npc16 = null; anon = null;
       els.frame1.innerHTML = '<img alt="Original" src="' + dataURL + '">';
-      els.frame2.innerHTML = '<div class="ph">Personaje pixel-art<br>(identidad borrada)</div>';
-      els.frame3.innerHTML = '<div class="ph">Persona realista distinta</div>';
+      els.frame2.innerHTML = '<div class="ph">NPC 8-bit<br>(NES)</div>';
+      els.frame3.innerHTML = '<div class="ph">NPC 16-bit<br>(detallado)</div>';
+      els.frame4.innerHTML = '<div class="ph">Persona realista distinta</div>';
       els.go.disabled = false;
       els.download.disabled = true; els.publish.disabled = true;
       setStatus('Listo. Pulsa ANONIMIZAR para pasar por el gemelo.');
@@ -243,7 +261,7 @@
       }
     }
     const activeCard = (card) => {
-      [els.card1, els.card2, els.card3].forEach(c => c.classList.remove('is-active'));
+      [els.card1, els.card2, els.card3, els.card4].forEach(c => c.classList.remove('is-active'));
       if (card) card.classList.add('is-active');
     };
 
@@ -290,39 +308,43 @@
       if (busy || !original) return;
       busy = true;
       els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
+      progShow(true); progSet(0, 3, 'Generando NPCs…');
       try {
-        // Paso 1 — Foto → NPC del gemelo
-        activeCard(els.card2); frameSpin(els.frame2, 'Pixelando…');
-        setStatus('Paso 1/2 · convirtiendo en NPC del gemelo…');
-        npc = await imageEdit(original, NPC_SYS, NPC_PROMPT);
-        frameImg(els.frame2, npc);
+        // Paso 1 — Foto → NPC 8-bit y 16-bit (en paralelo)
+        activeCard(els.card2); frameSpin(els.frame2, '8-bit…'); frameSpin(els.frame3, '16-bit…');
+        setStatus('Generando el NPC 8-bit y el 16-bit del gemelo…');
+        let done = 0; const bump = () => progSet(++done, 3, 'NPCs ' + done + '/2…');
+        const p8 = imageEdit(original, NPC8_SYS, NPC8_PROMPT).then(img => { npc8 = img; frameImg(els.frame2, img); bump(); });
+        const p16 = imageEdit(original, NPC16_SYS, NPC16_PROMPT).then(img => { npc16 = img; frameImg(els.frame3, img); bump(); });
+        await Promise.all([p8, p16]);
 
-        // Paso 2 — NPC → persona realista distinta
-        activeCard(els.card3); frameSpin(els.frame3, 'Reconstruyendo…');
-        setStatus('Paso 2/2 · generando una persona nueva…');
+        // Paso 2 — NPC 16-bit → persona realista distinta
+        activeCard(els.card4); frameSpin(els.frame4, 'Reconstruyendo…');
+        setStatus('Generando una persona nueva…');
         const prompt = HUMAN_PROMPT[els.strength.value] || HUMAN_PROMPT.aire;
-        anon = await imageEdit(npc, HUMAN_SYS, prompt);
-        frameImg(els.frame3, anon);
+        anon = await imageEdit(npc16, HUMAN_SYS, prompt);
+        frameImg(els.frame4, anon); progSet(3, 3, 'Listo');
 
-        activeCard(els.card3);
-        setStatus('✓ Listo. Esta persona no existe: parecida en estilo, distinta en identidad.');
+        activeCard(els.card4);
+        setStatus('✓ Listo: 2 NPCs (8/16-bit) + una persona que no existe.');
         els.download.disabled = false; els.publish.disabled = false;
       } catch (e) {
         setStatus('Error al transformar: ' + e.message + '. (El motor solo responde desde pixeria.com.)', true);
         activeCard(null);
       } finally {
-        els.go.disabled = false; busy = false;
+        progShow(false); els.go.disabled = false; busy = false;
       }
     }
 
     function reset() {
       stopCam();
-      original = npc = anon = null;
+      original = npc8 = npc16 = anon = null;
       els.still.hidden = true; els.cam.hidden = true; els.hint.style.display = '';
       els.frame1.innerHTML = '<div class="ph">Tu foto aparece aquí</div>';
-      els.frame2.innerHTML = '<div class="ph">Personaje pixel-art<br>(identidad borrada)</div>';
-      els.frame3.innerHTML = '<div class="ph">Persona realista distinta</div>';
-      activeCard(null);
+      els.frame2.innerHTML = '<div class="ph">NPC 8-bit<br>(NES)</div>';
+      els.frame3.innerHTML = '<div class="ph">NPC 16-bit<br>(detallado)</div>';
+      els.frame4.innerHTML = '<div class="ph">Persona realista distinta</div>';
+      activeCard(null); progShow(false);
       els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
       setStatus('Captura o sube una foto para activar el botón.');
     }
@@ -346,20 +368,26 @@
     }
     async function publish() {
       if (!anon) return;
-      els.publish.disabled = true; setStatus('Publicando en Stock…');
+      els.publish.disabled = true;
+      // Los NPC pixel-art van a "Twin NPCs"; la persona final a "Digital Twins".
+      const jobs = [];
+      if (npc8) jobs.push(() => pubStock(npc8, 'twin-npc', 'Twin NPC 8-bit · Pixeria',
+        'NPC pixel-art 8-bit del gemelo Admira XP (paso del Anonimizador)',
+        ['twin-npc', '8bit', 'anonimizador'], 'NPC 8-bit del Anonimizador: identidad facial borrada.'));
+      if (npc16) jobs.push(() => pubStock(npc16, 'twin-npc', 'Twin NPC 16-bit · Pixeria',
+        'NPC pixel-art 16-bit del gemelo Admira XP (paso del Anonimizador)',
+        ['twin-npc', '16bit', 'anonimizador'], 'NPC 16-bit del Anonimizador: identidad facial borrada.'));
+      jobs.push(() => pubStock(anon, 'digital-twin', 'Digital Twin · Pixeria',
+        'Persona sintética anonimizada (foto real → NPC del gemelo → persona nueva)',
+        ['digital-twin', 'anonimizador'], 'Gemelo digital del Anonimizador: identidad nueva, no corresponde a nadie real.'));
+      progShow(true); progSet(0, jobs.length, 'Subiendo a Stock…');
+      setStatus('Publicando en Stock…');
       try {
-        // El NPC pixel-art va a la categoría "Twin NPCs"; la persona final a "Digital Twins".
-        if (npc) await pubStock(npc, 'twin-npc', 'Twin NPC · Pixeria',
-          'NPC pixel-art del gemelo Admira XP (paso intermedio del Anonimizador)',
-          ['twin-npc', 'anonimizador'],
-          'Sprite NPC del Anonimizador: identidad facial borrada.');
-        await pubStock(anon, 'digital-twin', 'Digital Twin · Pixeria',
-          'Persona sintética anonimizada (foto real → NPC del gemelo → persona nueva)',
-          ['digital-twin', 'anonimizador'],
-          'Gemelo digital del Anonimizador: identidad nueva, no corresponde a nadie real.');
-        setStatus('✓ Publicado en Stock: Twin NPC + Digital Twin.');
+        for (let i = 0; i < jobs.length; i++) { await jobs[i](); progSet(i + 1, jobs.length, 'Subiendo a Stock ' + (i + 1) + '/' + jobs.length + '…'); }
+        setStatus('✓ Publicado en Stock: ' + (jobs.length - 1) + ' Twin NPC + Digital Twin.');
+        setTimeout(() => progShow(false), 700);
       } catch (e) {
-        setStatus('No se pudo publicar: ' + e.message, true); els.publish.disabled = false;
+        progShow(false); setStatus('No se pudo publicar: ' + e.message, true); els.publish.disabled = false;
       }
     }
 
