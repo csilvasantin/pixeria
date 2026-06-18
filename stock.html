@@ -264,6 +264,8 @@
             <option value="locucion">Locución</option>
             <option value="music">Música</option>
             <option value="image">Imagen</option>
+            <option value="twin-npc">Twin NPCs</option>
+            <option value="digital-twin">Digital Twins</option>
             <option value="video" selected>Video</option>
             <option value="animation">Animaciones</option>
             <option value="furni">Mobiliario</option>
@@ -291,7 +293,7 @@
       <div id="stockGrid" class="stock-grid"></div>
       <div id="stockEmpty" class="stock-empty" hidden>
         <p>// Stock vacío.</p>
-        <p>Genera un asset en Audio/Música/Imágenes/Video y pulsa <strong>📌 PUBLICAR EN STOCK</strong>.</p>
+        <p>Genera un asset en Audio/Música/Imágenes/Video — o un gemelo en el <a href="anonimizador.html">Anonimizador</a> (Twin NPCs · Digital Twins) — y pulsa <strong>📌 PUBLICAR EN STOCK</strong>.</p>
       </div>
 
       <nav class="stock-pager stock-pager-bottom" hidden aria-label="Paginación (abajo)">
@@ -522,7 +524,10 @@
     const STOCK_PUBLIC_R2 = 'https://pub-bf043a4daa3b43b7a0b769617729d074.r2.dev';
     const STOCK_LIST_URL = STOCK_PUBLIC_R2 + '/stock/index.json';
     const STOCK_LIST_FALLBACK = STOCK_BASE + '/stock/list?limit=200';
-    const TYPE_ORDER = { audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
+    const TYPE_ORDER = { audio: 0, music: 1, image: 2, 'twin-npc': 3, 'digital-twin': 4, furni: 5, video: 6, animation: 7 };
+    // Etiquetas legibles para el badge de tipo (las demás se muestran tal cual).
+    const TYPE_LABELS = { 'twin-npc': 'Twin NPC', 'digital-twin': 'Digital Twin' };
+    const typeText = (t) => TYPE_LABELS[t] || t;
     let allItems = [];
     let currentView = []; // lista filtrada+ordenada actual (para navegar el lightbox)
     let filters = { type: 'video', motor: '', q: '', tags: [], tagMode: 'or', dateQuick: '', dateFrom: '', dateTo: '' };
@@ -571,7 +576,11 @@
         // Mobiliario del gemelo: sprite pixelado → render nítido.
         return `<img src="${it.url}" alt="" loading="lazy" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
       }
-      if (it.type === 'image') {
+      if (it.type === 'twin-npc') {
+        // NPC pixel-art del gemelo → render nítido (pixelado).
+        return `<img src="${it.url}" alt="" loading="lazy" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
+      }
+      if (it.type === 'image' || it.type === 'digital-twin') {
         return `<img src="${it.thumbnail || it.url}" alt="" loading="lazy">`;
       }
       if (it.type === 'video' || it.type === 'animation') {
@@ -802,7 +811,7 @@
         </div>
         <div class="stock-card-body">
           <header>
-            <span class="stock-type ${typeLabel}">${typeLabel}</span>
+            <span class="stock-type ${typeLabel}">${typeText(typeLabel)}</span>
             <div class="stock-card-actions">
               <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Abrir en AINimation" aria-label="Abrir en AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
               <button type="button" class="stock-card-btn" data-act="playlist" title="Añadir a una playlist" aria-label="Añadir a playlist"><span aria-hidden="true">🎵</span></button>
@@ -880,10 +889,16 @@
       // Animación = tipo real 'animation' o (compat) lo publicado por ainimation
       // como video con motor=ainimation antes de existir el tipo real.
       const isAnim = it.type === 'animation' || String(it.motor || '').toLowerCase() === 'ainimation';
+      const tagsLc = Array.isArray(it.tags) ? it.tags.map(x => String(x).toLowerCase()) : [];
+      // Gemelos del Anonimizador: NPC pixel-art (twin-npc) y persona sintética (digital-twin).
+      const isTwinNpc = it.type === 'twin-npc' || tagsLc.includes('twin-npc');
+      const isDigitalTwin = it.type === 'digital-twin' || tagsLc.includes('digital-twin');
+      if (t === 'twin-npc') return isTwinNpc;
+      if (t === 'digital-twin') return isDigitalTwin;
       if (t === 'animation') return isAnim;
       if (t === 'furni') return isFurni(it);
       if (t === 'video') return it.type === 'video' && !isAnim;
-      if (t === 'image') return it.type === 'image' && !isFurni(it);
+      if (t === 'image') return it.type === 'image' && !isFurni(it) && !isTwinNpc && !isDigitalTwin;
       // «Locución» = solo type locucion (las que creamos en la página Audio).
       // No se fusiona con el viejo bucket 'audio' porque ahí cayó también música
       // importada (canciones), que no son locuciones.
@@ -975,7 +990,7 @@
       const tagsEditor = renderTagsEditorHtml(it.id, it.tags);
       const typeLabel = displayType(it);
       lightboxMeta.innerHTML = `
-        <div><span class="stock-type ${typeLabel}">${typeLabel}</span> <span class="stock-motor">${it.motor || ''}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span></div>
+        <div><span class="stock-type ${typeLabel}">${typeText(typeLabel)}</span> <span class="stock-motor">${it.motor || ''}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span></div>
         ${titleBlock}
         ${tagsEditor}
         <p class="stock-prompt">${renderPromptHtml(it.prompt)}</p>

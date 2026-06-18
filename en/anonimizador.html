@@ -316,26 +316,31 @@
       a.href = anon; a.download = 'anonymous-pixeria-' + Date.now() + '.png'; a.click();
     }
 
+    function pubStock(dataURL, type, title, prompt, tags, comment) {
+      const m = /^data:([^;]+);base64,(.*)$/s.exec(dataURL || '');
+      if (!m) return Promise.reject(new Error('invalid image'));
+      return fetch(WORKER + '/stock/publish', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, motor: 'nano-banana', mime: m[1], base64: m[2], title, prompt, tags, quality: 'good', comment })
+      }).then(r => r.json().catch(() => ({})).then(d => {
+        if (r.ok && (d.ok || d.id)) return d;
+        throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status));
+      }));
+    }
     async function publish() {
       if (!anon) return;
-      const m = /^data:([^;]+);base64,(.*)$/s.exec(anon);
-      if (!m) { setStatus('Could not prepare the image for Stock.', true); return; }
       els.publish.disabled = true; setStatus('Publishing to Stock…');
       try {
-        const r = await fetch(WORKER + '/stock/publish', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'image', motor: 'nano-banana', mime: m[1], base64: m[2],
-            title: 'Anonymous person · Pixeria',
-            prompt: 'Anonymized synthetic person (real photo → Admira XP twin NPC → new person)',
-            tags: ['anonymizer', 'privacy', 'audience'],
-            quality: 'good',
-            comment: 'Generated with the Pixeria Anonymizer: new identity, matches no real person.'
-          })
-        });
-        const d = await r.json().catch(() => ({}));
-        if (r.ok && (d.ok || d.id)) { setStatus('✓ Published to Stock.'); }
-        else { throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status)); }
+        // The pixel-art NPC goes to "Twin NPCs"; the final person to "Digital Twins".
+        if (npc) await pubStock(npc, 'twin-npc', 'Twin NPC · Pixeria',
+          'Pixel-art NPC of the Admira XP twin (Anonymizer intermediate step)',
+          ['twin-npc', 'anonymizer'],
+          'Anonymizer NPC sprite: facial identity wiped.');
+        await pubStock(anon, 'digital-twin', 'Digital Twin · Pixeria',
+          'Anonymized synthetic person (real photo → twin NPC → new person)',
+          ['digital-twin', 'anonymizer'],
+          'Anonymizer digital twin: new identity, matches no real person.');
+        setStatus('✓ Published to Stock: Twin NPC + Digital Twin.');
       } catch (e) {
         setStatus('Could not publish: ' + e.message, true); els.publish.disabled = false;
       }

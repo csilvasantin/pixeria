@@ -328,26 +328,31 @@
       a.href = anon; a.download = 'anonimo-pixeria-' + Date.now() + '.png'; a.click();
     }
 
+    function pubStock(dataURL, type, title, prompt, tags, comment) {
+      const m = /^data:([^;]+);base64,(.*)$/s.exec(dataURL || '');
+      if (!m) return Promise.reject(new Error('imagen no válida'));
+      return fetch(WORKER + '/stock/publish', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, motor: 'nano-banana', mime: m[1], base64: m[2], title, prompt, tags, quality: 'good', comment })
+      }).then(r => r.json().catch(() => ({})).then(d => {
+        if (r.ok && (d.ok || d.id)) return d;
+        throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status));
+      }));
+    }
     async function publish() {
       if (!anon) return;
-      const m = /^data:([^;]+);base64,(.*)$/s.exec(anon);
-      if (!m) { setStatus('No se pudo preparar la imagen para Stock.', true); return; }
       els.publish.disabled = true; setStatus('Publicando en Stock…');
       try {
-        const r = await fetch(WORKER + '/stock/publish', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'image', motor: 'nano-banana', mime: m[1], base64: m[2],
-            title: 'Persona anónima · Pixeria',
-            prompt: 'Persona sintética anonimizada (foto real → NPC del gemelo Admira XP → persona nueva)',
-            tags: ['anonimizador', 'privacidad', 'audiencia'],
-            quality: 'good',
-            comment: 'Generada con el Anonimizador de Pixeria: identidad nueva, no corresponde a ninguna persona real.'
-          })
-        });
-        const d = await r.json().catch(() => ({}));
-        if (r.ok && (d.ok || d.id)) { setStatus('✓ Publicada en Stock.'); }
-        else { throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status)); }
+        // El NPC pixel-art va a la categoría "Twin NPCs"; la persona final a "Digital Twins".
+        if (npc) await pubStock(npc, 'twin-npc', 'Twin NPC · Pixeria',
+          'NPC pixel-art del gemelo Admira XP (paso intermedio del Anonimizador)',
+          ['twin-npc', 'anonimizador'],
+          'Sprite NPC del Anonimizador: identidad facial borrada.');
+        await pubStock(anon, 'digital-twin', 'Digital Twin · Pixeria',
+          'Persona sintética anonimizada (foto real → NPC del gemelo → persona nueva)',
+          ['digital-twin', 'anonimizador'],
+          'Gemelo digital del Anonimizador: identidad nueva, no corresponde a nadie real.');
+        setStatus('✓ Publicado en Stock: Twin NPC + Digital Twin.');
       } catch (e) {
         setStatus('No se pudo publicar: ' + e.message, true); els.publish.disabled = false;
       }
