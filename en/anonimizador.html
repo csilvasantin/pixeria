@@ -52,6 +52,10 @@
     .anon-pipeline span{border:1px solid var(--line,#1c3a22);border-radius:999px;padding:5px 12px}
     .anon-pipeline i{opacity:.6;font-style:normal}
     .anon-file{display:none}
+    .anon-drop{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(2,8,3,.82);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);pointer-events:none}
+    .anon-drop.is-active{display:flex}
+    .anon-drop-box{border:2px dashed var(--accent,#39d353);border-radius:18px;padding:36px 52px;color:var(--fg,#dffbe6);font-size:18px;text-align:center;background:rgba(2,12,5,.65)}
+    .anon-drop-box b{display:block;font-size:42px;margin-bottom:10px}
   </style>
 </head>
 <body data-page="anonimizador">
@@ -73,6 +77,7 @@
     </div>
   </nav>
   <canvas id="matrix-rain" aria-hidden="true"></canvas>
+  <div class="anon-drop" id="anonDrop" aria-hidden="true"><div class="anon-drop-box"><b>📥</b>Drop the image to anonymize it</div></div>
   <header class="topnav">
     <div class="brand"><a href="index.html" class="brand-link"><span class="brand-mark">P</span><span class="brand-name">Pixeria</span></a></div>
     <nav class="primary-nav">
@@ -106,7 +111,7 @@
         <div class="anon-cam" id="camWrap">
           <div class="anon-cam-hint" id="camHint">
             <b>📷</b>
-            <span>Turn on the camera or upload a photo to start.<br>The image is only used to transform it; nothing is stored.</span>
+            <span>Turn on the camera, upload a photo or <strong>drag one here</strong>.<br>The image is only used to transform it; nothing is stored.</span>
           </div>
           <video id="cam" autoplay playsinline muted hidden></video>
           <img id="camStill" alt="Captured photo" hidden>
@@ -349,17 +354,50 @@
     els.btnCam.addEventListener('click', () => stream ? stopCam() : startCam());
     els.btnShot.addEventListener('click', shoot);
     els.btnUpload.addEventListener('click', () => els.file.click());
+    function loadDataURL(url) {
+      stopCam();
+      els.still.src = url; els.still.hidden = false; els.cam.hidden = true; els.hint.style.display = 'none';
+      downscale(url, 768).then(showOriginal);
+    }
+    function loadImageFile(f) {
+      if (!f || !/^image\//.test(f.type)) { setStatus('That is not an image.', true); return; }
+      const rd = new FileReader(); rd.onload = () => loadDataURL(rd.result); rd.readAsDataURL(f);
+    }
     els.file.addEventListener('change', (e) => {
-      const f = e.target.files && e.target.files[0]; if (!f) return;
-      const rd = new FileReader();
-      rd.onload = () => {
-        stopCam();
-        els.still.src = rd.result; els.still.hidden = false; els.cam.hidden = true; els.hint.style.display = 'none';
-        downscale(rd.result, 768).then(showOriginal);
-      };
-      rd.readAsDataURL(f);
+      const f = e.target.files && e.target.files[0]; if (f) loadImageFile(f);
       e.target.value = '';
     });
+
+    // ── Drag and drop images (same as in the digital twin) ──
+    (function () {
+      const ov = document.getElementById('anonDrop');
+      let depth = 0;
+      const wants = (e) => {
+        const t = e.dataTransfer; if (!t || !t.types) return false;
+        for (let i = 0; i < t.types.length; i++) { if (t.types[i] === 'Files' || t.types[i] === 'text/uri-list') return true; }
+        return false;
+      };
+      window.addEventListener('dragenter', (e) => { if (!wants(e)) return; e.preventDefault(); depth++; ov.classList.add('is-active'); });
+      window.addEventListener('dragover', (e) => { if (!wants(e)) return; e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'; });
+      window.addEventListener('dragleave', (e) => { if (!wants(e)) return; depth = Math.max(0, depth - 1); if (!depth) ov.classList.remove('is-active'); });
+      window.addEventListener('drop', async (e) => {
+        if (!wants(e)) return; e.preventDefault(); depth = 0; ov.classList.remove('is-active');
+        const dt = e.dataTransfer; if (!dt) return;
+        const f = dt.files && dt.files[0];
+        if (f) { loadImageFile(f); return; }
+        // Image dragged from another site (URL) → fetch via the worker proxy (avoids CORS tainting)
+        const url = (dt.getData('text/uri-list') || dt.getData('text/plain') || '').trim().split('\n')[0];
+        if (!url) return;
+        try {
+          setStatus('Downloading dragged image…');
+          const r = await fetch(WORKER + '/image/proxy?url=' + encodeURIComponent(url));
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          const blob = await r.blob();
+          if (!/^image\//.test(blob.type)) throw new Error('not an image');
+          const rd = new FileReader(); rd.onload = () => loadDataURL(rd.result); rd.readAsDataURL(blob);
+        } catch (err) { setStatus('Could not fetch that image (' + err.message + '). Download and upload it.', true); }
+      });
+    })();
     els.go.addEventListener('click', run);
     els.download.addEventListener('click', download);
     els.publish.addEventListener('click', publish);
