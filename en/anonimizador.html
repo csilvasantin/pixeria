@@ -195,7 +195,7 @@
     const $ = (s) => document.querySelector(s);
     const WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
 
-    const NPC8_SYS = 'You are an 8-bit pixel-art artist (NES style). From the given photo, generate a full-body CHARACTER facing front with a VERY limited palette (few flat colors), large pixels and a hard outline, no gradients or antialiasing. Neutral background. KEEP clothing and hair color, build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC, not a portrait.';
+    const NPC8_SYS = 'You are an 8-bit pixel-art artist (NES style). From the given photo, generate a full-body CHARACTER facing front with a VERY limited palette (few flat colors), large pixels and a hard outline, no gradients or antialiasing. A SINGLE flat uniform background color (pure white), no shadows or gradients, so it can be cut out. KEEP clothing and hair color, build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC, not a portrait.';
     const NPC8_PROMPT = 'Turn it into a full-body 8-bit (NES) pixel-art NPC, reduced palette and large pixels.';
     const NPC16_SYS = 'You are a detailed 16-bit pixel-art artist (SNES/Kairosoft style). From the given photo, generate a full-body CHARACTER facing front with more colors, shading and lighting and a defined outline, on a blurred street like the passers-by of the digital twin. KEEP clothing and hair color, build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC, not a portrait.';
     const NPC16_PROMPT = 'Turn it into a detailed full-body 16-bit pixel-art NPC, like the passers-by of the Admira XP digital twin on a street.';
@@ -232,7 +232,8 @@
     function progShow(on) { els.prog.classList.toggle('on', !!on); if (!on) els.progFill.style.width = '0'; }
     function progSet(done, total, label) { els.progFill.style.width = Math.round(done / total * 100) + '%'; els.progLabel.textContent = label || (done + '/' + total); }
 
-    function downscale(dataURL, max) {
+    // mime='image/png' preserves transparency (for the twin sprite).
+    function downscale(dataURL, max, mime) {
       return new Promise((res) => {
         const im = new Image();
         im.onload = () => {
@@ -241,7 +242,35 @@
           w = Math.round(w * sc); h = Math.round(h * sc);
           const c = document.createElement('canvas'); c.width = w; c.height = h;
           c.getContext('2d').drawImage(im, 0, 0, w, h);
-          res(c.toDataURL('image/jpeg', 0.86));
+          res(mime === 'image/png' ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.86));
+        };
+        im.onerror = () => res(dataURL);
+        im.src = dataURL;
+      });
+    }
+    // Cut out the flat background (flood-fill from the edges) → transparent PNG.
+    // Only removes edge-connected background, never interior colors of the figure.
+    function makeTransparentBg(dataURL, tol) {
+      return new Promise((res) => {
+        const im = new Image();
+        im.onload = () => {
+          const w = im.naturalWidth, h = im.naturalHeight;
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+          let d; try { d = x.getImageData(0, 0, w, h); } catch (e) { res(dataURL); return; }
+          const px = d.data;
+          const corners = [0, (w - 1) * 4, (h - 1) * w * 4, ((h - 1) * w + (w - 1)) * 4];
+          let br = 0, bgc = 0, bb = 0; corners.forEach(i => { br += px[i]; bgc += px[i + 1]; bb += px[i + 2]; });
+          br /= 4; bgc /= 4; bb /= 4;
+          const T = tol || 50, T2 = T * T;
+          const match = (i) => { const dr = px[i] - br, dg = px[i + 1] - bgc, db = px[i + 2] - bb; return dr * dr + dg * dg + db * db <= T2; };
+          const seen = new Uint8Array(w * h), stack = [];
+          const push = (xx, yy) => { if (xx < 0 || yy < 0 || xx >= w || yy >= h) return; const p = yy * w + xx; if (seen[p]) return; seen[p] = 1; if (match(p * 4)) stack.push(p); };
+          for (let xx = 0; xx < w; xx++) { push(xx, 0); push(xx, h - 1); }
+          for (let yy = 0; yy < h; yy++) { push(0, yy); push(w - 1, yy); }
+          while (stack.length) { const p = stack.pop(); px[p * 4 + 3] = 0; const xx = p % w, yy = (p / w) | 0; push(xx + 1, yy); push(xx - 1, yy); push(xx, yy + 1); push(xx, yy - 1); }
+          x.putImageData(d, 0, 0);
+          res(c.toDataURL('image/png'));
         };
         im.onerror = () => res(dataURL);
         im.src = dataURL;
@@ -321,7 +350,7 @@
         activeCard(els.card2); frameSpin(els.frame2, '8-bit…'); frameSpin(els.frame3, '16-bit…');
         setStatus('Generating the 8-bit and 16-bit twin NPC…');
         let done = 0; const bump = () => progSet(++done, 3, 'NPCs ' + done + '/2…');
-        const p8 = imageEdit(original, NPC8_SYS, NPC8_PROMPT).then(img => { npc8 = img; frameImg(els.frame2, img); bump(); });
+        const p8 = imageEdit(original, NPC8_SYS, NPC8_PROMPT).then(async img => { npc8 = await makeTransparentBg(img, 52); frameImg(els.frame2, npc8); bump(); });
         const p16 = imageEdit(original, NPC16_SYS, NPC16_PROMPT).then(img => { npc16 = img; frameImg(els.frame3, img); bump(); });
         await Promise.all([p8, p16]);
 
@@ -356,7 +385,7 @@
       const btn = els.sendStore, label = btn.textContent;
       btn.disabled = true; setStatus('Sending the 8-bit NPC to the store…');
       try {
-        const sprite = await downscale(npc8, 256); // light sprite for the twin
+        const sprite = await downscale(npc8, 256, 'image/png'); // light, transparent sprite for the twin
         const r = await fetch(WORKER + '/twin/spawn', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: sprite, name: 'Anonymous' })
