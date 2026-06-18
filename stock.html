@@ -968,7 +968,9 @@
       let media = '';
       if (isFurni(it)) {
         media = `<img src="${it.url}" alt="" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
-      } else if (it.type === 'image') {
+      } else if (it.type === 'twin-npc') {
+        media = `<img src="${it.url}" alt="" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
+      } else if (it.type === 'image' || it.type === 'digital-twin') {
         media = `<img src="${it.thumbnail || it.url}" alt="">`;
       } else if (it.type === 'video' || it.type === 'animation') {
         media = `<video src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} controls autoplay></video>`;
