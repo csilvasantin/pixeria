@@ -62,6 +62,10 @@
     .anon-drop.is-active{display:flex}
     .anon-drop-box{border:2px dashed var(--accent,#39d353);border-radius:18px;padding:36px 52px;color:var(--fg,#dffbe6);font-size:18px;text-align:center;background:rgba(2,12,5,.65)}
     .anon-drop-box b{display:block;font-size:42px;margin-bottom:10px}
+    .btn.ok{background:var(--accent,#39d353)!important;color:#022!important;border-color:var(--accent,#39d353)!important}
+    .anon-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(18px);z-index:9998;background:rgba(2,18,6,.96);border:1px solid var(--accent,#39d353);border-radius:12px;padding:12px 18px;color:var(--fg,#dffbe6);font-size:14px;box-shadow:0 10px 34px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;max-width:92vw;text-align:center}
+    .anon-toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+    .anon-toast a{color:var(--accent,#39d353);font-weight:700;text-decoration:underline}
   </style>
 </head>
 <body data-page="anonimizador">
@@ -84,6 +88,7 @@
   </nav>
   <canvas id="matrix-rain" aria-hidden="true"></canvas>
   <div class="anon-drop" id="anonDrop" aria-hidden="true"><div class="anon-drop-box"><b>📥</b>Drop the image to anonymize it</div></div>
+  <div class="anon-toast" id="anonToast" role="status" aria-live="polite"></div>
   <header class="topnav">
     <div class="brand"><a href="index.html" class="brand-link"><span class="brand-mark">P</span><span class="brand-name">Pixeria</span></a></div>
     <nav class="primary-nav">
@@ -338,10 +343,18 @@
       }
     }
 
+    const STORE_URL = 'https://www.xpaceos.com/admira-xp/';
+    let __toastT = null;
+    function storeToast(html) {
+      const t = document.getElementById('anonToast'); if (!t) return;
+      t.innerHTML = html; t.classList.add('show');
+      clearTimeout(__toastT); __toastT = setTimeout(() => t.classList.remove('show'), 7000);
+    }
     // Send the 8-bit NPC to the twin (queue /twin/spawn → it walks into the store)
     async function sendStore() {
       if (!npc8) return;
-      els.sendStore.disabled = true; setStatus('Sending the 8-bit NPC to the store…');
+      const btn = els.sendStore, label = btn.textContent;
+      btn.disabled = true; setStatus('Sending the 8-bit NPC to the store…');
       try {
         const sprite = await downscale(npc8, 256); // light sprite for the twin
         const r = await fetch(WORKER + '/twin/spawn', {
@@ -350,9 +363,13 @@
         });
         const d = await r.json().catch(() => ({}));
         if (!r.ok || !d.ok) throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status));
-        setStatus('🏪 Sent! Your 8-bit NPC will walk into the twin in a few seconds. Open it if it is not open.');
-        els.sendStore.disabled = false;
-      } catch (e) { setStatus('Could not send to the store: ' + e.message, true); els.sendStore.disabled = false; }
+        // Clear feedback: button ✓ + toast + link to go see it.
+        btn.textContent = '✓ Sent to store'; btn.classList.add('ok');
+        els.status.classList.remove('err');
+        els.status.innerHTML = '🏪 <b>Sent.</b> Your 8-bit NPC will walk into the twin in a few seconds — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">open the store to see it ↗</a>';
+        storeToast('🏪 NPC sent to the store! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Open the store ↗</a>');
+        setTimeout(() => { btn.textContent = label; btn.classList.remove('ok'); btn.disabled = false; }, 3500);
+      } catch (e) { setStatus('Could not send to the store: ' + e.message, true); btn.disabled = false; }
     }
 
     function download() {
