@@ -171,7 +171,7 @@
       <div class="anon-result-actions">
         <button type="button" class="btn" id="btnDownload" disabled>⬇ Descargar anónimo</button>
         <button type="button" class="btn" id="btnPublish" disabled>📤 Publicar en Stock</button>
-        <button type="button" class="btn" id="btnReset">↺ Reiniciar</button>
+        <button type="button" class="btn primary" id="btnSendStore" disabled>🏪 Enviar a la tienda</button>
       </div>
       <div class="anon-prog" id="anonProg"><div class="anon-prog-track"><div class="anon-prog-fill" id="anonProgFill"></div></div><div class="anon-prog-label" id="anonProgLabel"></div></div>
 
@@ -215,7 +215,7 @@
       camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), hint: $('#camHint'),
       btnCam: $('#btnCam'), btnShot: $('#btnShot'), btnUpload: $('#btnUpload'), file: $('#fileInput'),
       go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'),
-      download: $('#btnDownload'), publish: $('#btnPublish'), reset: $('#btnReset'),
+      download: $('#btnDownload'), publish: $('#btnPublish'), sendStore: $('#btnSendStore'),
       frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'), frame4: $('#frame4'),
       card1: $('#card1'), card2: $('#card2'), card3: $('#card3'), card4: $('#card4'),
       prog: $('#anonProg'), progFill: $('#anonProgFill'), progLabel: $('#anonProgLabel')
@@ -258,7 +258,7 @@
       els.frame3.innerHTML = '<div class="ph">NPC 16-bit<br>(detallado)</div>';
       els.frame4.innerHTML = '<div class="ph">Persona realista distinta</div>';
       els.go.disabled = false;
-      els.download.disabled = true; els.publish.disabled = true;
+      els.download.disabled = true; els.publish.disabled = true; els.sendStore.disabled = true;
       run(); // auto-arranca en cuanto hay foto (no hace falta pulsar el botón)
     }
 
@@ -320,7 +320,7 @@
     async function run() {
       if (busy || !original) return;
       busy = true;
-      els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
+      els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true; els.sendStore.disabled = true;
       progShow(true); progSet(0, 3, 'Generando NPCs…');
       try {
         // Paso 1 — Foto → NPC 8-bit y 16-bit (en paralelo)
@@ -340,7 +340,7 @@
 
         activeCard(els.card4);
         setStatus('✓ Listo: 2 NPCs (8/16-bit) + una persona que no existe.');
-        els.download.disabled = false; els.publish.disabled = false;
+        els.download.disabled = false; els.publish.disabled = false; els.sendStore.disabled = false;
       } catch (e) {
         setStatus(errMsg(e), true);
         activeCard(null);
@@ -349,17 +349,21 @@
       }
     }
 
-    function reset() {
-      stopCam();
-      original = npc8 = npc16 = anon = null;
-      els.still.hidden = true; els.cam.hidden = true; els.hint.style.display = '';
-      els.frame1.innerHTML = '<div class="ph">Tu foto aparece aquí</div>';
-      els.frame2.innerHTML = '<div class="ph">NPC 8-bit<br>(NES)</div>';
-      els.frame3.innerHTML = '<div class="ph">NPC 16-bit<br>(detallado)</div>';
-      els.frame4.innerHTML = '<div class="ph">Persona realista distinta</div>';
-      activeCard(null); progShow(false);
-      els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
-      setStatus('Captura, sube o arrastra una foto y empiezo a anonimizar solo.');
+    // Enviar el NPC 8-bit al gemelo (cola /twin/spawn → aparece paseando por la tienda)
+    async function sendStore() {
+      if (!npc8) return;
+      els.sendStore.disabled = true; setStatus('Enviando el NPC 8-bit a la tienda…');
+      try {
+        const sprite = await downscale(npc8, 256); // sprite ligero para el gemelo
+        const r = await fetch(WORKER + '/twin/spawn', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: sprite, name: 'Anónimo' })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status));
+        setStatus('🏪 ¡Enviado! Tu NPC 8-bit aparecerá paseando por el gemelo en unos segundos. Ábrelo si no lo tienes abierto.');
+        els.sendStore.disabled = false;
+      } catch (e) { setStatus('No se pudo enviar a la tienda: ' + e.message, true); els.sendStore.disabled = false; }
     }
 
     function download() {
@@ -455,7 +459,7 @@
     els.go.addEventListener('click', run);
     els.download.addEventListener('click', download);
     els.publish.addEventListener('click', publish);
-    els.reset.addEventListener('click', reset);
+    els.sendStore.addEventListener('click', sendStore);
     window.addEventListener('beforeunload', stopCam);
   })();
   </script>

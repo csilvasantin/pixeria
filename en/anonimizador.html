@@ -171,7 +171,7 @@
       <div class="anon-result-actions">
         <button type="button" class="btn" id="btnDownload" disabled>⬇ Download anonymous</button>
         <button type="button" class="btn" id="btnPublish" disabled>📤 Publish to Stock</button>
-        <button type="button" class="btn" id="btnReset">↺ Reset</button>
+        <button type="button" class="btn primary" id="btnSendStore" disabled>🏪 Send to store</button>
       </div>
       <div class="anon-prog" id="anonProg"><div class="anon-prog-track"><div class="anon-prog-fill" id="anonProgFill"></div></div><div class="anon-prog-label" id="anonProgLabel"></div></div>
 
@@ -208,7 +208,7 @@
       camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), hint: $('#camHint'),
       btnCam: $('#btnCam'), btnShot: $('#btnShot'), btnUpload: $('#btnUpload'), file: $('#fileInput'),
       go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'),
-      download: $('#btnDownload'), publish: $('#btnPublish'), reset: $('#btnReset'),
+      download: $('#btnDownload'), publish: $('#btnPublish'), sendStore: $('#btnSendStore'),
       frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'), frame4: $('#frame4'),
       card1: $('#card1'), card2: $('#card2'), card3: $('#card3'), card4: $('#card4'),
       prog: $('#anonProg'), progFill: $('#anonProgFill'), progLabel: $('#anonProgLabel')
@@ -249,7 +249,7 @@
       els.frame2.innerHTML = '<div class="ph">8-bit NPC<br>(NES)</div>';
       els.frame3.innerHTML = '<div class="ph">16-bit NPC<br>(detailed)</div>';
       els.frame4.innerHTML = '<div class="ph">Different realistic person</div>';
-      els.go.disabled = false; els.download.disabled = true; els.publish.disabled = true;
+      els.go.disabled = false; els.download.disabled = true; els.publish.disabled = true; els.sendStore.disabled = true;
       run(); // auto-start as soon as there's a photo (no need to press the button)
     }
 
@@ -309,7 +309,7 @@
     async function run() {
       if (busy || !original) return;
       busy = true;
-      els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
+      els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true; els.sendStore.disabled = true;
       progShow(true); progSet(0, 3, 'Generating NPCs…');
       try {
         // Step 1 — photo → 8-bit and 16-bit NPC (in parallel)
@@ -329,7 +329,7 @@
 
         activeCard(els.card4);
         setStatus('✓ Done: 2 NPCs (8/16-bit) + a person who does not exist.');
-        els.download.disabled = false; els.publish.disabled = false;
+        els.download.disabled = false; els.publish.disabled = false; els.sendStore.disabled = false;
       } catch (e) {
         setStatus(errMsg(e), true);
         activeCard(null);
@@ -338,17 +338,21 @@
       }
     }
 
-    function reset() {
-      stopCam();
-      original = npc8 = npc16 = anon = null;
-      els.still.hidden = true; els.cam.hidden = true; els.hint.style.display = '';
-      els.frame1.innerHTML = '<div class="ph">Your photo shows up here</div>';
-      els.frame2.innerHTML = '<div class="ph">8-bit NPC<br>(NES)</div>';
-      els.frame3.innerHTML = '<div class="ph">16-bit NPC<br>(detailed)</div>';
-      els.frame4.innerHTML = '<div class="ph">Different realistic person</div>';
-      activeCard(null); progShow(false);
-      els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
-      setStatus('Capture, upload or drag a photo and I start anonymizing automatically.');
+    // Send the 8-bit NPC to the twin (queue /twin/spawn → it walks into the store)
+    async function sendStore() {
+      if (!npc8) return;
+      els.sendStore.disabled = true; setStatus('Sending the 8-bit NPC to the store…');
+      try {
+        const sprite = await downscale(npc8, 256); // light sprite for the twin
+        const r = await fetch(WORKER + '/twin/spawn', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: sprite, name: 'Anonymous' })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status));
+        setStatus('🏪 Sent! Your 8-bit NPC will walk into the twin in a few seconds. Open it if it is not open.');
+        els.sendStore.disabled = false;
+      } catch (e) { setStatus('Could not send to the store: ' + e.message, true); els.sendStore.disabled = false; }
     }
 
     function download() {
@@ -443,7 +447,7 @@
     els.go.addEventListener('click', run);
     els.download.addEventListener('click', download);
     els.publish.addEventListener('click', publish);
-    els.reset.addEventListener('click', reset);
+    els.sendStore.addEventListener('click', sendStore);
     window.addEventListener('beforeunload', stopCam);
   })();
   </script>
