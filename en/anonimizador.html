@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
+  <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
+  <link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
+  <title>Pixeria Studio · Anonymizer</title>
+  <meta name="description" content="Pixeria Anonymizer: turn a real photo into a digital-twin NPC and bring it back as a different realistic person. Privacy by design for signage and Pixer Feed.">
+  <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
+  <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
+  <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
+  <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
+  <link rel="stylesheet" href="../workspace.css?v=20260618-anon">
+  <script defer src="/assets/analytics.js?v=20260617-consent"></script>
+  <script defer src="/assets/consent.js?v=20260617"></script>
+  <style>
+    .anon-main{max-width:1080px;margin:0 auto;padding:0 20px 64px;display:flex;flex-direction:column;gap:22px}
+    .anon-stage-wrap{display:flex;flex-direction:column;gap:16px}
+    .anon-source{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:16px;align-items:stretch}
+    @media (max-width:760px){.anon-source{grid-template-columns:1fr}}
+    .anon-cam{position:relative;border:1px solid var(--line,#1c3a22);border-radius:14px;overflow:hidden;background:#020602;min-height:280px;display:flex;align-items:center;justify-content:center}
+    .anon-cam video,.anon-cam img{width:100%;height:100%;object-fit:cover;display:block}
+    .anon-cam video[hidden],.anon-cam img[hidden]{display:none}
+    .anon-cam .anon-cam-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted,#7fae8c);text-align:center;padding:24px;font-size:13px}
+    .anon-cam .anon-cam-hint b{color:var(--fg,#dffbe6);font-size:34px;line-height:1}
+    .anon-controls{display:flex;flex-direction:column;gap:10px;justify-content:center}
+    .anon-controls .btn{width:100%;justify-content:center}
+    .anon-controls .anon-opts{margin-top:6px;display:flex;flex-direction:column;gap:8px}
+    .anon-triptych{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    @media (max-width:760px){.anon-triptych{grid-template-columns:1fr}}
+    .anon-card{border:1px solid var(--line,#1c3a22);border-radius:14px;background:rgba(2,12,5,.55);overflow:hidden;display:flex;flex-direction:column}
+    .anon-card.is-active{border-color:var(--accent,#39d353);box-shadow:0 0 0 1px var(--accent,#39d353)}
+    .anon-card-head{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--line,#1c3a22);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+    .anon-card-head .step{color:var(--muted,#7fae8c)}
+    .anon-frame{position:relative;aspect-ratio:3/4;background:#030803;display:flex;align-items:center;justify-content:center}
+    .anon-frame img{width:100%;height:100%;object-fit:contain;display:block}
+    .anon-frame.is-pixel img{image-rendering:pixelated}
+    .anon-frame .ph{color:var(--muted,#5e8a6c);font-size:12px;text-align:center;padding:18px;line-height:1.5}
+    .anon-frame .spin{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,2,.7);color:var(--accent,#39d353);font-size:12px;letter-spacing:.1em;text-transform:uppercase;gap:10px}
+    .anon-frame .spin::before{content:"";width:16px;height:16px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:anonspin .8s linear infinite}
+    @keyframes anonspin{to{transform:rotate(360deg)}}
+    .anon-go{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:6px 0}
+    .anon-go .btn.play{font-size:15px;padding:13px 26px}
+    .anon-status{font-family:var(--mono,ui-monospace,monospace);font-size:12px;color:var(--muted,#7fae8c);min-height:18px;text-align:center}
+    .anon-status.err{color:#ff6b6b}
+    .anon-result-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+    .anon-privacy{display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--line,#1c3a22);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--muted,#9fc7ab);line-height:1.5}
+    .anon-privacy b{color:var(--fg,#dffbe6)}
+    .anon-pipeline{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7fae8c)}
+    .anon-pipeline span{border:1px solid var(--line,#1c3a22);border-radius:999px;padding:5px 12px}
+    .anon-pipeline i{opacity:.6;font-style:normal}
+    .anon-file{display:none}
+  </style>
+</head>
+<body data-page="anonimizador">
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KD696XW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  <nav class="admira-nav admira-nav-static" aria-label="Admira · Xperience">
+    <a class="admira-nav-brand" href="https://www.admira.app">
+      <span class="admira-nav-brand-name">Admira</span>
+      <span class="admira-nav-brand-tag">Xperience</span>
+    </a>
+    <div class="admira-nav-items">
+      <a class="admira-nav-link admira-nav-link-active" href="https://www.pixeria.com">Pixeria</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live/council-scumm.html">Council Live</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.xpaceos.com">XpaceOS</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.app">Xbusiness</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live">Live</a>
+      <a class="admira-nav-link admira-nav-link-cta" href="#contact" data-admira-contact>Contact</a>
+    </div>
+  </nav>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
+  <header class="topnav">
+    <div class="brand"><a href="index.html" class="brand-link"><span class="brand-mark">P</span><span class="brand-name">Pixeria</span></a></div>
+    <nav class="primary-nav">
+      <a href="audio.html" data-nav="audio">Audio</a>
+      <a href="musica.html" data-nav="musica">Music</a>
+      <a href="imagenes.html" data-nav="imagenes">Images</a>
+      <a href="video.html" data-nav="video">Video</a>
+      <a href="publicidad.html" data-nav="publicidad">Advertising</a>
+      <a href="avatar.html" data-nav="avatar">Avatar 3D</a>
+      <a href="anonimizador.html" data-nav="anonimizador">Anonymizer</a>
+      <a href="/crear/" data-nav="create">Assets</a>
+      <a href="stock.html" data-nav="stock">Stock</a>
+    </nav>
+    <div class="topnav-actions">
+      <div class="language-switcher" aria-label="Language selection">
+        <a class="lang-toggle" href="/anonimizador.html" aria-label="Switch to Spanish">ESP</a>
+      </div>
+      <a class="nav-action" href="#contact" data-admira-contact>Contact</a>
+    </div>
+  </header>
+
+  <header class="page-head">
+    <p class="eyebrow image">Privacy by design · Anonymizer</p>
+    <h1>From a real person to someone who doesn't exist.</h1>
+    <p class="lead">Take a photo, watch it turn into an NPC like the ones strolling through the digital twin, then watch it come back as a realistic person who is <strong>similar but different</strong>. The pixel pass wipes the real face: what you keep is no longer anyone. Built to use audiences and passers-by in signage and Pixer Feed without exposing identities.</p>
+  </header>
+
+  <main class="anon-main">
+    <section class="anon-stage-wrap">
+      <div class="anon-source">
+        <div class="anon-cam" id="camWrap">
+          <div class="anon-cam-hint" id="camHint">
+            <b>📷</b>
+            <span>Turn on the camera or upload a photo to start.<br>The image is only used to transform it; nothing is stored.</span>
+          </div>
+          <video id="cam" autoplay playsinline muted hidden></video>
+          <img id="camStill" alt="Captured photo" hidden>
+        </div>
+        <div class="anon-controls">
+          <button type="button" class="btn primary" id="btnCam">📷 Turn on camera</button>
+          <button type="button" class="btn" id="btnShot" disabled>📸 Capture</button>
+          <button type="button" class="btn" id="btnUpload">📁 Upload photo</button>
+          <input type="file" id="fileInput" class="anon-file" accept="image/*">
+          <div class="anon-opts">
+            <div class="field" style="margin:0">
+              <label for="optStrength">How similar the result is</label>
+              <select id="optStrength">
+                <option value="aire" selected>Same vibe (similar but another person)</option>
+                <option value="medio">Quite different</option>
+                <option value="full">Completely new person</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="anon-triptych">
+        <article class="anon-card" id="card1">
+          <div class="anon-card-head"><span>Original</span><span class="step">01 · real</span></div>
+          <div class="anon-frame" id="frame1"><div class="ph">Your photo shows up here</div></div>
+        </article>
+        <article class="anon-card" id="card2">
+          <div class="anon-card-head"><span>Digital-twin NPC</span><span class="step">02 · pixel</span></div>
+          <div class="anon-frame is-pixel" id="frame2"><div class="ph">Pixel-art character<br>(identity wiped)</div></div>
+        </article>
+        <article class="anon-card" id="card3">
+          <div class="anon-card-head"><span>Anonymous</span><span class="step">03 · new</span></div>
+          <div class="anon-frame" id="frame3"><div class="ph">Different realistic person</div></div>
+        </article>
+      </div>
+
+      <div class="anon-pipeline" aria-label="Anonymizer pipeline">
+        <span>Real photo</span><i>→</i><span>Digital-twin NPC</span><i>→</i><span>New person</span>
+      </div>
+
+      <div class="anon-go">
+        <button type="button" class="btn play" id="btnGo" disabled><span class="play-label">✨ ANONYMIZE</span></button>
+      </div>
+      <p class="anon-status" id="status" aria-live="polite">Capture or upload a photo to enable the button.</p>
+
+      <div class="anon-result-actions">
+        <button type="button" class="btn" id="btnDownload" disabled>⬇ Download anonymous</button>
+        <button type="button" class="btn" id="btnPublish" disabled>📤 Publish to Stock</button>
+        <button type="button" class="btn" id="btnReset">↺ Reset</button>
+      </div>
+
+      <div class="anon-privacy">
+        <span aria-hidden="true">🔒</span>
+        <div><b>Privacy by design.</b> The original photo travels to the image engine only to be transformed and is not stored in Pixeria. What you keep is a synthetic person matching no real individual: use it on screens, campaigns and Pixer Feed without processing biometric data of identifiable people.</div>
+      </div>
+    </section>
+  </main>
+
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.18-anon</a></footer>
+
+  <script src="/matrix-rain.js?v=20260608-sides"></script>
+  <script>
+  (function () {
+    const $ = (s) => document.querySelector(s);
+    const WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
+
+    const NPC_SYS = 'You are a sprite artist for a 16-bit shop-management game (Kairosoft style). From the given photo, generate a pixel-art NPC CHARACTER like the passers-by in the digital twin: chibi big-head style, full body facing front, limited palette, defined outlines, neutral or transparent background. KEEP the clothing colors, hair color and cut, the build and apparent age. Do NOT keep recognizable facial features or marks: it is an anonymous NPC, not a portrait.';
+    const NPC_PROMPT = 'Turn it into a full-body pixel-art NPC like the ones walking around the Admira XP digital twin.';
+
+    const HUMAN_SYS = 'You are a street photographer. From the given pixel-art sprite/figure, generate a REALISTIC PHOTO of a DIFFERENT REAL person: new face and new identity, NOT the same person as the sprite. Keep only a similar VIBE (approximate age, same clothing style and color, same hair color and type, similar build). No pixel, drawing or game 3D: realistic skin, fabric and light. Full body, vertical, neutral background or blurred street. Anonymous person, no text or logos.';
+    const HUMAN_PROMPT = {
+      aire:  'A different person who could walk past the store: similar in style and age, but clearly someone else with a different face.',
+      medio: 'A clearly different person (different face and features), keeping the clothing style and color and the hair type.',
+      full:  'A completely new person (different face, age and build), keeping only the garment type and color.'
+    };
+
+    let stream = null, original = null, npc = null, anon = null, busy = false;
+
+    const els = {
+      camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), hint: $('#camHint'),
+      btnCam: $('#btnCam'), btnShot: $('#btnShot'), btnUpload: $('#btnUpload'), file: $('#fileInput'),
+      go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'),
+      download: $('#btnDownload'), publish: $('#btnPublish'), reset: $('#btnReset'),
+      frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'),
+      card1: $('#card1'), card2: $('#card2'), card3: $('#card3')
+    };
+
+    const setStatus = (t, err) => { els.status.textContent = t; els.status.classList.toggle('err', !!err); };
+
+    function downscale(dataURL, max) {
+      return new Promise((res) => {
+        const im = new Image();
+        im.onload = () => {
+          let { width: w, height: h } = im;
+          const sc = Math.min(1, max / Math.max(w, h));
+          w = Math.round(w * sc); h = Math.round(h * sc);
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          c.getContext('2d').drawImage(im, 0, 0, w, h);
+          res(c.toDataURL('image/jpeg', 0.86));
+        };
+        im.onerror = () => res(dataURL);
+        im.src = dataURL;
+      });
+    }
+
+    function showOriginal(dataURL) {
+      original = dataURL; npc = null; anon = null;
+      els.frame1.innerHTML = '<img alt="Original" src="' + dataURL + '">';
+      els.frame2.innerHTML = '<div class="ph">Pixel-art character<br>(identity wiped)</div>';
+      els.frame3.innerHTML = '<div class="ph">Different realistic person</div>';
+      els.go.disabled = false; els.download.disabled = true; els.publish.disabled = true;
+      setStatus('Ready. Hit ANONYMIZE to run it through the twin.');
+    }
+
+    function frameImg(frame, dataURL) { frame.innerHTML = '<img src="' + dataURL + '" alt="">'; }
+    function frameSpin(frame, label) {
+      if (!frame.querySelector('.spin')) {
+        const d = document.createElement('div'); d.className = 'spin'; d.textContent = label;
+        frame.appendChild(d);
+      }
+    }
+    const activeCard = (card) => {
+      [els.card1, els.card2, els.card3].forEach(c => c.classList.remove('is-active'));
+      if (card) card.classList.add('is-active');
+    };
+
+    async function imageEdit(image, sys, prompt) {
+      const r = await fetch(WORKER + '/image/edit', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image, sys, prompt })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d || !d.ok || !d.image) {
+        throw new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
+      }
+      return d.image;
+    }
+
+    async function startCam() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 1280 }, audio: false });
+        els.cam.srcObject = stream; els.cam.hidden = false; els.still.hidden = true; els.hint.style.display = 'none';
+        els.btnShot.disabled = false; els.btnCam.textContent = '⛔ Turn off camera';
+        setStatus('Camera on. Frame yourself and hit Capture.');
+      } catch (e) {
+        setStatus('Could not open the camera (' + (e.name || e.message) + '). Upload a photo.', true);
+      }
+    }
+    function stopCam() {
+      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+      els.cam.hidden = true; els.btnShot.disabled = true; els.btnCam.textContent = '📷 Turn on camera';
+    }
+    function shoot() {
+      if (!stream) return;
+      const v = els.cam, c = document.createElement('canvas');
+      c.width = v.videoWidth; c.height = v.videoHeight;
+      c.getContext('2d').drawImage(v, 0, 0);
+      const url = c.toDataURL('image/jpeg', 0.92);
+      els.still.src = url; els.still.hidden = false; els.cam.hidden = true;
+      stopCam();
+      downscale(url, 768).then(showOriginal);
+    }
+
+    async function run() {
+      if (busy || !original) return;
+      busy = true;
+      els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
+      try {
+        activeCard(els.card2); frameSpin(els.frame2, 'Pixelating…');
+        setStatus('Step 1/2 · turning into a digital-twin NPC…');
+        npc = await imageEdit(original, NPC_SYS, NPC_PROMPT);
+        frameImg(els.frame2, npc);
+
+        activeCard(els.card3); frameSpin(els.frame3, 'Rebuilding…');
+        setStatus('Step 2/2 · generating a new person…');
+        const prompt = HUMAN_PROMPT[els.strength.value] || HUMAN_PROMPT.aire;
+        anon = await imageEdit(npc, HUMAN_SYS, prompt);
+        frameImg(els.frame3, anon);
+
+        activeCard(els.card3);
+        setStatus('✓ Done. This person does not exist: similar in style, different in identity.');
+        els.download.disabled = false; els.publish.disabled = false;
+      } catch (e) {
+        setStatus('Transform error: ' + e.message + '. (The engine only responds from pixeria.com.)', true);
+        activeCard(null);
+      } finally {
+        els.go.disabled = false; busy = false;
+      }
+    }
+
+    function reset() {
+      stopCam();
+      original = npc = anon = null;
+      els.still.hidden = true; els.cam.hidden = true; els.hint.style.display = '';
+      els.frame1.innerHTML = '<div class="ph">Your photo shows up here</div>';
+      els.frame2.innerHTML = '<div class="ph">Pixel-art character<br>(identity wiped)</div>';
+      els.frame3.innerHTML = '<div class="ph">Different realistic person</div>';
+      activeCard(null);
+      els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
+      setStatus('Capture or upload a photo to enable the button.');
+    }
+
+    function download() {
+      if (!anon) return;
+      const a = document.createElement('a');
+      a.href = anon; a.download = 'anonymous-pixeria-' + Date.now() + '.png'; a.click();
+    }
+
+    async function publish() {
+      if (!anon) return;
+      const m = /^data:([^;]+);base64,(.*)$/s.exec(anon);
+      if (!m) { setStatus('Could not prepare the image for Stock.', true); return; }
+      els.publish.disabled = true; setStatus('Publishing to Stock…');
+      try {
+        const r = await fetch(WORKER + '/stock/publish', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'image', motor: 'nano-banana', mime: m[1], base64: m[2],
+            title: 'Anonymous person · Pixeria',
+            prompt: 'Anonymized synthetic person (real photo → Admira XP twin NPC → new person)',
+            tags: ['anonymizer', 'privacy', 'audience'],
+            quality: 'good',
+            comment: 'Generated with the Pixeria Anonymizer: new identity, matches no real person.'
+          })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && (d.ok || d.id)) { setStatus('✓ Published to Stock.'); }
+        else { throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status)); }
+      } catch (e) {
+        setStatus('Could not publish: ' + e.message, true); els.publish.disabled = false;
+      }
+    }
+
+    els.btnCam.addEventListener('click', () => stream ? stopCam() : startCam());
+    els.btnShot.addEventListener('click', shoot);
+    els.btnUpload.addEventListener('click', () => els.file.click());
+    els.file.addEventListener('change', (e) => {
+      const f = e.target.files && e.target.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => {
+        stopCam();
+        els.still.src = rd.result; els.still.hidden = false; els.cam.hidden = true; els.hint.style.display = 'none';
+        downscale(rd.result, 768).then(showOriginal);
+      };
+      rd.readAsDataURL(f);
+      e.target.value = '';
+    });
+    els.go.addEventListener('click', run);
+    els.download.addEventListener('click', download);
+    els.publish.addEventListener('click', publish);
+    els.reset.addEventListener('click', reset);
+    window.addEventListener('beforeunload', stopCam);
+  })();
+  </script>
+</body>
+</html>
