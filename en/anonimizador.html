@@ -166,7 +166,7 @@
       <div class="anon-go">
         <button type="button" class="btn play" id="btnGo" disabled><span class="play-label">✨ ANONYMIZE</span></button>
       </div>
-      <p class="anon-status" id="status" aria-live="polite">Capture or upload a photo to enable the button.</p>
+      <p class="anon-status" id="status" aria-live="polite">Capture, upload or drag a photo and I start anonymizing automatically.</p>
 
       <div class="anon-result-actions">
         <button type="button" class="btn" id="btnDownload" disabled>⬇ Download anonymous</button>
@@ -215,6 +215,15 @@
     };
 
     const setStatus = (t, err) => { els.status.textContent = t; els.status.classList.toggle('err', !!err); };
+    // Human-readable messages by engine refusal reason.
+    const ERR_MAP = {
+      'image-declined': '🚫 The engine could not generate the image. This usually happens with recognizable people, celebrities or copyrighted characters. Try a photo of an anonymous person.',
+      'safety': '🚫 The engine rejected the image for sensitive content. Try another photo.',
+      'copyright': '🚫 Blocked for possible copyright. Try another photo.',
+      'empty': 'The engine returned no image. Retry or try another photo.',
+      'network': 'No connection to the engine. (Works from pixeria.com.)'
+    };
+    const errMsg = (e) => (e && ERR_MAP[e.reason]) || ('Error: ' + ((e && e.message) || 'unknown'));
     function progShow(on) { els.prog.classList.toggle('on', !!on); if (!on) els.progFill.style.width = '0'; }
     function progSet(done, total, label) { els.progFill.style.width = Math.round(done / total * 100) + '%'; els.progLabel.textContent = label || (done + '/' + total); }
 
@@ -241,7 +250,7 @@
       els.frame3.innerHTML = '<div class="ph">16-bit NPC<br>(detailed)</div>';
       els.frame4.innerHTML = '<div class="ph">Different realistic person</div>';
       els.go.disabled = false; els.download.disabled = true; els.publish.disabled = true;
-      setStatus('Ready. Hit ANONYMIZE to run it through the twin.');
+      run(); // auto-start as soon as there's a photo (no need to press the button)
     }
 
     function frameImg(frame, dataURL) { frame.innerHTML = '<img src="' + dataURL + '" alt="">'; }
@@ -257,15 +266,19 @@
     };
 
     async function imageEdit(image, sys, prompt) {
-      const r = await fetch(WORKER + '/image/edit', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image, sys, prompt })
-      });
+      let r;
+      try {
+        r = await fetch(WORKER + '/image/edit', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image, sys, prompt })
+        });
+      } catch (netErr) { const e = new Error('no connection to the engine'); e.reason = 'network'; throw e; }
       const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d || !d.ok || !d.image) {
-        throw new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
-      }
-      return d.image;
+      if (r.ok && d && d.ok && d.image) return d.image;
+      const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
+      e.reason = (d && d.reason) || null;
+      e.finishReason = d && d.finishReason;
+      throw e;
     }
 
     async function startCam() {
@@ -318,7 +331,7 @@
         setStatus('✓ Done: 2 NPCs (8/16-bit) + a person who does not exist.');
         els.download.disabled = false; els.publish.disabled = false;
       } catch (e) {
-        setStatus('Transform error: ' + e.message + '. (The engine only responds from pixeria.com.)', true);
+        setStatus(errMsg(e), true);
         activeCard(null);
       } finally {
         progShow(false); els.go.disabled = false; busy = false;
@@ -335,7 +348,7 @@
       els.frame4.innerHTML = '<div class="ph">Different realistic person</div>';
       activeCard(null); progShow(false);
       els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
-      setStatus('Capture or upload a photo to enable the button.');
+      setStatus('Capture, upload or drag a photo and I start anonymizing automatically.');
     }
 
     function download() {

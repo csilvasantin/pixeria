@@ -166,7 +166,7 @@
       <div class="anon-go">
         <button type="button" class="btn play" id="btnGo" disabled><span class="play-label">✨ ANONIMIZAR</span></button>
       </div>
-      <p class="anon-status" id="status" aria-live="polite">Captura o sube una foto para activar el botón.</p>
+      <p class="anon-status" id="status" aria-live="polite">Captura, sube o arrastra una foto y empiezo a anonimizar solo.</p>
 
       <div class="anon-result-actions">
         <button type="button" class="btn" id="btnDownload" disabled>⬇ Descargar anónimo</button>
@@ -222,6 +222,15 @@
     };
 
     const setStatus = (t, err) => { els.status.textContent = t; els.status.classList.toggle('err', !!err); };
+    // Mensajes humanos según el motivo de rechazo del motor de imagen.
+    const ERR_MAP = {
+      'image-declined': '🚫 El motor no pudo generar la imagen. Suele pasar con personas reconocibles, famosos o personajes con copyright. Prueba con una foto de una persona anónima.',
+      'safety': '🚫 El motor rechazó la imagen por contenido sensible. Prueba con otra foto.',
+      'copyright': '🚫 Bloqueado por posible copyright. Prueba con otra foto.',
+      'empty': 'El motor no devolvió imagen. Reinténtalo o prueba con otra foto.',
+      'network': 'Sin conexión con el motor. (Funciona desde pixeria.com.)'
+    };
+    const errMsg = (e) => (e && ERR_MAP[e.reason]) || ('Error: ' + ((e && e.message) || 'desconocido'));
     function progShow(on) { els.prog.classList.toggle('on', !!on); if (!on) els.progFill.style.width = '0'; }
     function progSet(done, total, label) { els.progFill.style.width = Math.round(done / total * 100) + '%'; els.progLabel.textContent = label || (done + '/' + total); }
 
@@ -250,7 +259,7 @@
       els.frame4.innerHTML = '<div class="ph">Persona realista distinta</div>';
       els.go.disabled = false;
       els.download.disabled = true; els.publish.disabled = true;
-      setStatus('Listo. Pulsa ANONIMIZAR para pasar por el gemelo.');
+      run(); // auto-arranca en cuanto hay foto (no hace falta pulsar el botón)
     }
 
     function frameImg(frame, dataURL) { frame.innerHTML = '<img src="' + dataURL + '" alt="">'; }
@@ -266,15 +275,19 @@
     };
 
     async function imageEdit(image, sys, prompt) {
-      const r = await fetch(WORKER + '/image/edit', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image, sys, prompt })
-      });
+      let r;
+      try {
+        r = await fetch(WORKER + '/image/edit', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image, sys, prompt })
+        });
+      } catch (netErr) { const e = new Error('sin conexión con el motor'); e.reason = 'network'; throw e; }
       const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d || !d.ok || !d.image) {
-        throw new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
-      }
-      return d.image;
+      if (r.ok && d && d.ok && d.image) return d.image;
+      const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
+      e.reason = (d && d.reason) || null;
+      e.finishReason = d && d.finishReason;
+      throw e;
     }
 
     // ---- Cámara ----
@@ -329,7 +342,7 @@
         setStatus('✓ Listo: 2 NPCs (8/16-bit) + una persona que no existe.');
         els.download.disabled = false; els.publish.disabled = false;
       } catch (e) {
-        setStatus('Error al transformar: ' + e.message + '. (El motor solo responde desde pixeria.com.)', true);
+        setStatus(errMsg(e), true);
         activeCard(null);
       } finally {
         progShow(false); els.go.disabled = false; busy = false;
@@ -346,7 +359,7 @@
       els.frame4.innerHTML = '<div class="ph">Persona realista distinta</div>';
       activeCard(null); progShow(false);
       els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true;
-      setStatus('Captura o sube una foto para activar el botón.');
+      setStatus('Captura, sube o arrastra una foto y empiezo a anonimizar solo.');
     }
 
     function download() {
