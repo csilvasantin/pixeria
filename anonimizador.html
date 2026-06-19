@@ -338,7 +338,17 @@
       if (card) card.classList.add('is-active');
     };
 
-    async function imageEdit(image, sys, prompt) {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    // Errores transitorios del motor (sobrecarga, no rechazo de contenido):
+    // "high demand", "try again later", 429/500/502/503, overloaded… → reintentar.
+    function isTransient(e) {
+      if (!e) return false;
+      const s = e.status;
+      if (s === 429 || s === 500 || s === 502 || s === 503 || s === 504) return true;
+      const m = ((e.message || '') + ' ' + (e.reason || '')).toLowerCase();
+      return /high demand|overload|try again|temporar|unavailable|resource_exhausted|rate.?limit|busy|503|429/.test(m);
+    }
+    async function imageEditOnce(image, sys, prompt) {
       let r;
       try {
         r = await fetch(WORKER + '/image/edit', {
@@ -351,7 +361,24 @@
       const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
       e.reason = (d && d.reason) || null;
       e.finishReason = d && d.finishReason;
+      e.status = r.status;
       throw e;
+    }
+    // Reintenta los errores transitorios con backoff (2s, 4s, 8s). Los rechazos
+    // de contenido (image-declined, safety…) NO se reintentan: fallan al instante.
+    async function imageEdit(image, sys, prompt, onRetry) {
+      const MAX = 4;
+      let lastErr;
+      for (let attempt = 1; attempt <= MAX; attempt++) {
+        try { return await imageEditOnce(image, sys, prompt); }
+        catch (e) {
+          lastErr = e;
+          if (!isTransient(e) || attempt === MAX) throw e;
+          if (onRetry) onRetry(attempt, MAX);
+          await sleep(2000 * Math.pow(2, attempt - 1));
+        }
+      }
+      throw lastErr;
     }
 
     // ---- Cámara ----
@@ -454,15 +481,21 @@
         activeCard(els.card2); frameSpin(els.frame2, '8-bit…'); frameSpin(els.frame3, '16-bit…');
         setStatus('Generando el NPC 8-bit y el 16-bit del gemelo…');
         let done = 0; const bump = () => progSet(++done, 3, 'NPCs ' + done + '/2…');
-        const p8 = imageEdit(original, NPC8_SYS, NPC8_PROMPT).then(async img => { npc8 = await makeTransparentBg(img, 52); frameImg(els.frame2, npc8); bump(); });
-        const p16 = imageEdit(original, NPC16_SYS, NPC16_PROMPT).then(img => { npc16 = img; frameImg(els.frame3, img); bump(); });
+        // onRetry: el motor de imagen a veces da "alta demanda" (transitorio).
+        // Avisamos en el spinner y el status mientras reintenta solo.
+        const retryMsg = (frame, tag) => (a, m) => {
+          const s = frame.querySelector('.spin'); if (s) s.textContent = tag + ' · reintento ' + a + '/' + (m - 1) + '…';
+          setStatus('El motor está saturado, reintentando el ' + tag + ' (' + a + '/' + (m - 1) + ')…');
+        };
+        const p8 = imageEdit(original, NPC8_SYS, NPC8_PROMPT, retryMsg(els.frame2, '8-bit')).then(async img => { npc8 = await makeTransparentBg(img, 52); frameImg(els.frame2, npc8); bump(); });
+        const p16 = imageEdit(original, NPC16_SYS, NPC16_PROMPT, retryMsg(els.frame3, '16-bit')).then(img => { npc16 = img; frameImg(els.frame3, img); bump(); });
         await Promise.all([p8, p16]);
 
         // Paso 2 — NPC 16-bit → persona realista distinta
         activeCard(els.card4); frameSpin(els.frame4, 'Reconstruyendo…');
         setStatus('Generando una persona nueva…');
         const prompt = HUMAN_PROMPT[els.strength.value] || HUMAN_PROMPT.aire;
-        anon = await imageEdit(npc16, HUMAN_SYS, prompt);
+        anon = await imageEdit(npc16, HUMAN_SYS, prompt, retryMsg(els.frame4, 'retrato'));
         frameImg(els.frame4, anon); progSet(3, 3, 'Listo');
 
         activeCard(els.card4);
