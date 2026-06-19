@@ -585,12 +585,12 @@
         return `<img src="${it.thumbnail || it.url}" alt="" loading="lazy">`;
       }
       if (it.type === 'video' || it.type === 'animation') {
-        // VELOCIDAD: la card NO carga un <video> (eso pedía metadatos de cada
-        // vídeo y ralentizaba la rejilla). Muestra solo el PÓSTER (imagen ligera);
-        // el ▶ verde crea el <video> y reproduce AQUÍ al pulsarlo (data-url). Clic
-        // en la imagen abre el detalle.
-        const poster = it.thumbnail || '';
-        return `${poster ? `<img class="stock-cover" src="${poster}" alt="" loading="lazy">` : '<div class="stock-cover-empty">▶</div>'}
+        // PREVIEW = fotograma real del propio vídeo (buscado a ~1s), NO el póster
+        // guardado: ese se generaba del frame 0 y salía en NEGRO (fundido de
+        // entrada). Carga PEREZOSA (IntersectionObserver, margen 600px) para no
+        // penalizar la rejilla; al pulsar ▶ se reproduce aquí. Clic en el vídeo
+        // abre el detalle.
+        return `<video class="stock-cover stock-video-preview" data-src="${escAttr(it.url)}" preload="metadata" muted playsinline disablepictureinpicture style="background:#0a0f14;object-fit:cover;"></video>
                 <button type="button" class="stock-media-play" data-act="playmini" data-url="${escAttr(it.url)}" title="Reproducir aquí (pequeño)" aria-label="Reproducir aquí">▶</button>`;
       }
       if (it.type === 'audio' || it.type === 'locucion' || it.type === 'music') {
@@ -605,20 +605,41 @@
     // Lazy-load de previews de vídeo: el src (data-src) se asigna cuando la
     // tarjeta se acerca al viewport (margen 600px). Pintado de rejilla
     // instantáneo aunque haya cientos de vídeos.
+    // Busca en el preview un fotograma CON contenido (~1s o el 12% de la duración),
+    // para que la card no muestre el frame 0 (negro/fundido de entrada). No
+    // reproduce: solo hace seek (vídeo muteado, preload=metadata).
+    function seekToPreviewFrame(v) {
+      let done = false;
+      const go = () => {
+        if (done || !v) return; done = true;
+        try {
+          const d = (isFinite(v.duration) && v.duration > 0) ? v.duration : 0;
+          v.currentTime = d ? Math.min(1.2, d * 0.12) : 1.0;
+        } catch (_) {}
+      };
+      v.addEventListener('loadeddata', go, { once: true });
+      v.addEventListener('loadedmetadata', go, { once: true });
+    }
     const lazyVideoIO = ('IntersectionObserver' in window)
       ? new IntersectionObserver((entries) => {
           for (const e of entries) {
             if (!e.isIntersecting) continue;
             const v = e.target;
-            if (v.dataset.src && !v.src) v.src = v.dataset.src;
+            if (v.dataset.src && !v.src) { seekToPreviewFrame(v); v.src = v.dataset.src; }
             lazyVideoIO.unobserve(v);
           }
         }, { rootMargin: '600px' })
       : null;
     function observeLazyVideos() {
+      const vh = window.innerHeight || document.documentElement.clientHeight || 800;
       document.querySelectorAll('video.stock-video-preview[data-src]').forEach(v => {
+        if (v.src) return;
+        // Si ya está cerca del viewport, carga YA (no esperar al IO: en algunos
+        // entornos no dispara para los elementos visibles al pintar).
+        const r = v.getBoundingClientRect();
+        if (r.top < vh + 600 && r.bottom > -600) { seekToPreviewFrame(v); v.src = v.dataset.src; return; }
         if (lazyVideoIO) lazyVideoIO.observe(v);
-        else if (!v.src) v.src = v.dataset.src; // fallback sin IO: carga directa
+        else { seekToPreviewFrame(v); v.src = v.dataset.src; } // fallback sin IO
       });
     }
     function ainimationImportHref(it) {
@@ -1160,6 +1181,7 @@
           } else {
             if (v.dataset.src && !v.src) v.src = v.dataset.src;
             v.controls = true; v.style.pointerEvents = 'auto';
+            try { v.currentTime = 0; } catch (_) {}   // el preview estaba en ~1s; reproducir desde el inicio
           }
           v.muted = false;
           v.play().catch(() => {});

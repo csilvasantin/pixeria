@@ -245,7 +245,9 @@
         return `<img src="${it.thumbnail || it.url}" alt="" loading="lazy">`;
       }
       if (it.type === 'video' || it.type === 'animation') {
-        return `<video class="stock-video-preview" data-src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} preload="metadata" muted playsinline></video>`;
+        // Preview = a real frame from the video (seeked to ~1s), NOT the stored
+        // poster (frame 0 came out BLACK on fade-ins). Lazy-loaded.
+        return `<video class="stock-cover stock-video-preview" data-src="${escAttr(it.url)}" preload="metadata" muted playsinline disablepictureinpicture style="background:#0a0f14;object-fit:cover;"></video>`;
       }
       if (it.type === 'audio' || it.type === 'music') {
         const cover = it.thumbnail || '';
@@ -258,20 +260,32 @@
 
     // Lazy-load video previews: src is assigned when the card nears the
     // viewport (600px margin). Grid paints instantly regardless of item count.
+    // Seek the preview to a frame WITH content (~1s or 12% of duration) so the
+    // card never shows frame 0 (black/fade-in). Just seeks, never plays.
+    function seekToPreviewFrame(v) {
+      let done = false;
+      const go = () => { if (done || !v) return; done = true; try { const d = (isFinite(v.duration) && v.duration > 0) ? v.duration : 0; v.currentTime = d ? Math.min(1.2, d * 0.12) : 1.0; } catch (_) {} };
+      v.addEventListener('loadeddata', go, { once: true });
+      v.addEventListener('loadedmetadata', go, { once: true });
+    }
     const lazyVideoIO = ('IntersectionObserver' in window)
       ? new IntersectionObserver((entries) => {
           for (const e of entries) {
             if (!e.isIntersecting) continue;
             const v = e.target;
-            if (v.dataset.src && !v.src) v.src = v.dataset.src;
+            if (v.dataset.src && !v.src) { seekToPreviewFrame(v); v.src = v.dataset.src; }
             lazyVideoIO.unobserve(v);
           }
         }, { rootMargin: '600px' })
       : null;
     function observeLazyVideos() {
+      const vh = window.innerHeight || document.documentElement.clientHeight || 800;
       document.querySelectorAll('video.stock-video-preview[data-src]').forEach(v => {
+        if (v.src) return;
+        const r = v.getBoundingClientRect();
+        if (r.top < vh + 600 && r.bottom > -600) { seekToPreviewFrame(v); v.src = v.dataset.src; return; }
         if (lazyVideoIO) lazyVideoIO.observe(v);
-        else if (!v.src) v.src = v.dataset.src;
+        else { seekToPreviewFrame(v); v.src = v.dataset.src; }
       });
     }
     function ainimationImportHref(it) {
