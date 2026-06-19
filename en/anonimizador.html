@@ -211,7 +211,7 @@
     </section>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.18-anon</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19-anon</a></footer>
 
   <script src="/matrix-rain.js?v=20260608-sides"></script>
   <script>
@@ -582,11 +582,15 @@
       t.innerHTML = html; t.classList.add('show');
       clearTimeout(__toastT); __toastT = setTimeout(() => t.classList.remove('show'), sticky ? 15000 : 7000);
     }
-    // Send the 8-bit NPC to the twin (queue /twin/spawn → it walks into the store)
+    // Send the 8-bit NPC to the twin (queue /twin/spawn) and WAIT for the twin's
+    // REAL ack (when it spawns it walking) before saying "in the store".
     async function sendStore() {
       if (!npc8) return;
-      const btn = els.sendStore, label = btn.textContent;
-      btn.disabled = true; setStatus('Sending the 8-bit NPC to the store…');
+      const btn = els.sendStore, label = btn.dataset.label || btn.textContent;
+      btn.dataset.label = label;
+      btn.disabled = true; btn.classList.remove('ok'); els.status.classList.remove('err');
+      progShow(true); progSet(8, 100, 'Sending the NPC to the store…');
+      setStatus('Sending the 8-bit NPC to the store…');
       try {
         const sprite = await downscale(npc8, 256, 'image/png'); // light, transparent sprite for the twin
         // The audience (sex/age/description) travels to the twin PACKED in `name`
@@ -601,32 +605,48 @@
         });
         const d = await r.json().catch(() => ({}));
         if (!r.ok || !d.ok) throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status));
-        // Clear feedback: button ✓ + toast + link to go see it.
-        btn.textContent = '✓ Sent to store'; btn.classList.add('ok');
-        els.status.classList.remove('err');
-        els.status.innerHTML = '🏪 <b>Sent.</b> Your 8-bit NPC will walk into the twin in a few seconds — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">open the store to see it ↗</a>';
-        storeToast('🏪 NPC sent to the store! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Open the store ↗</a>', true);
-        setTimeout(() => { btn.textContent = label; btn.classList.remove('ok'); btn.disabled = false; }, 3500);
-        confirmInStore();   // switches to "already in the store" once we confirm it shows up
-      } catch (e) { setStatus('Could not send to the store: ' + e.message, true); btn.disabled = false; }
+        // Queued OK. Wait for the twin's REAL ack (when it spawns it walking) — we
+        // don't claim "in the store" on a timer, but on actual confirmation.
+        progSet(22, 100, 'Queued at the twin…');
+        setStatus('🏪 Queued at the twin — waiting for it to walk in…');
+        const inStore = await waitForStore(d.id);
+        if (inStore) {
+          progSet(100, 100, '✓ In the store');
+          btn.textContent = '✓ In the store'; btn.classList.add('ok');
+          els.status.innerHTML = '🏪 <b>Already in the store.</b> Your 8-bit NPC is walking around the twin — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">open the store to see it ↗</a>';
+          storeToast('✅ NPC already in the store! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Open the store ↗</a>', true);
+          setTimeout(() => progShow(false), 900);
+        } else {
+          // No ack in 30s: no open store is picking up the queue. Honest.
+          progSet(90, 100, '🕓 Queued — enters when a store opens');
+          btn.textContent = '🕓 Queued';
+          els.status.innerHTML = '🕓 <b>Queued.</b> The NPC will enter as soon as a store is open — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">open the store ↗</a>';
+          storeToast('🕓 NPC queued — <a href="' + STORE_URL + '" target="_blank" rel="noopener">open the store so it can enter ↗</a>', true);
+          setTimeout(() => progShow(false), 1200);
+        }
+        setTimeout(() => { btn.textContent = label; btn.classList.remove('ok'); btn.disabled = false; }, 3600);
+      } catch (e) { progShow(false); setStatus('Could not send to the store: ' + e.message, true); btn.disabled = false; }
     }
-    // After sending: if a twin (xtore-game) is ONLINE listening, the NPC enters in
-    // ~1 poll cycle (~6-8s). We confirm a store is connected and, after that window,
-    // swap "sent" for "already in the store". If NO store is online, we keep "sent"
-    // (it'll enter as soon as one opens) — honest.
-    async function confirmInStore() {
-      let online = false;
-      try {
-        const r = await fetch(WORKER + '/signage/screens', { cache: 'no-store' });
-        const d = await r.json().catch(() => ({}));
-        online = Array.isArray(d.screens) && d.screens.some(s => s && s.online && /game/i.test(s.role || ''));
-      } catch (_) {}
-      if (!online) return;
-      setTimeout(() => {
-        els.status.classList.remove('err');
-        els.status.innerHTML = '🏪 <b>Already in the store.</b> Your 8-bit NPC is walking around the twin — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">open the store to see it ↗</a>';
-        storeToast('✅ NPC already in the store! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Open the store ↗</a>');
-      }, 7000);
+    // Poll /twin/spawn/status?id= until the twin confirms the spawn (ACK) or it
+    // times out. The bar eases asymptotically toward ~88% while waiting.
+    function waitForStore(id) {
+      return new Promise((resolve) => {
+        if (!id) return resolve(false);
+        const t0 = Date.now(), TIMEOUT = 30000;
+        const tick = async () => {
+          const elapsed = Date.now() - t0;
+          const pct = Math.min(88, 22 + (88 - 22) * (1 - Math.exp(-elapsed / 9000)));
+          progSet(Math.round(pct), 100, 'Queued at the twin… ' + Math.round(elapsed / 1000) + 's');
+          try {
+            const r = await fetch(WORKER + '/twin/spawn/status?id=' + encodeURIComponent(id) + '&ts=' + Date.now(), { cache: 'no-store' });
+            const d = await r.json().catch(() => ({}));
+            if (d && d.consumed) return resolve(true);
+          } catch (_) {}
+          if (elapsed >= TIMEOUT) return resolve(false);
+          setTimeout(tick, 1200);
+        };
+        tick();
+      });
     }
 
     function download() {

@@ -211,7 +211,7 @@
     </section>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — el gemelo digital">Pixeria AI Workspace · Anonimizador · v.2026.06.18-anon</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — el gemelo digital">Pixeria AI Workspace · Anonimizador · v.2026.06.19-anon</a></footer>
 
   <script src="/matrix-rain.js?v=20260608-sides"></script>
   <script>
@@ -593,11 +593,15 @@
       t.innerHTML = html; t.classList.add('show');
       clearTimeout(__toastT); __toastT = setTimeout(() => t.classList.remove('show'), sticky ? 15000 : 7000);
     }
-    // Enviar el NPC 8-bit al gemelo (cola /twin/spawn → aparece paseando por la tienda)
+    // Enviar el NPC 8-bit al gemelo (cola /twin/spawn) y ESPERAR el ACK REAL del
+    // gemelo (cuando lo spawnea andando) antes de decir "en la tienda".
     async function sendStore() {
       if (!npc8) return;
-      const btn = els.sendStore, label = btn.textContent;
-      btn.disabled = true; setStatus('Enviando el NPC 8-bit a la tienda…');
+      const btn = els.sendStore, label = btn.dataset.label || btn.textContent;
+      btn.dataset.label = label;
+      btn.disabled = true; btn.classList.remove('ok'); els.status.classList.remove('err');
+      progShow(true); progSet(8, 100, 'Enviando el NPC a la tienda…');
+      setStatus('Enviando el NPC 8-bit a la tienda…');
       try {
         const sprite = await downscale(npc8, 256, 'image/png'); // sprite ligero y transparente para el gemelo
         // La audiencia (sexo/edad/descripción) viaja al gemelo EMPAQUETADA en `name`
@@ -612,32 +616,48 @@
         });
         const d = await r.json().catch(() => ({}));
         if (!r.ok || !d.ok) throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status));
-        // Feedback claro: botón ✓ + toast + enlace para ir a verlo.
-        btn.textContent = '✓ Enviado a la tienda'; btn.classList.add('ok');
-        els.status.classList.remove('err');
-        els.status.innerHTML = '🏪 <b>Enviado.</b> Tu NPC 8-bit entrará paseando por el gemelo en unos segundos — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">abre la tienda para verlo ↗</a>';
-        storeToast('🏪 ¡NPC enviado a la tienda! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Abrir la tienda ↗</a>', true);
-        setTimeout(() => { btn.textContent = label; btn.classList.remove('ok'); btn.disabled = false; }, 3500);
-        confirmInStore();   // pasa a "ya en tienda" cuando se confirma que aparece
-      } catch (e) { setStatus('No se pudo enviar a la tienda: ' + e.message, true); btn.disabled = false; }
+        // Encolado OK. Esperamos el ACK real del gemelo (cuando lo spawnea andando) —
+        // no afirmamos "en la tienda" por un temporizador, sino por confirmación real.
+        progSet(22, 100, 'En cola del gemelo…');
+        setStatus('🏪 En cola del gemelo — esperando a que entre paseando…');
+        const inStore = await waitForStore(d.id);
+        if (inStore) {
+          progSet(100, 100, '✓ En la tienda');
+          btn.textContent = '✓ En la tienda'; btn.classList.add('ok');
+          els.status.innerHTML = '🏪 <b>Ya en la tienda.</b> Tu NPC 8-bit está paseando por el gemelo — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">ábrela para verlo ↗</a>';
+          storeToast('✅ ¡NPC ya en la tienda! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Abrir la tienda ↗</a>', true);
+          setTimeout(() => progShow(false), 900);
+        } else {
+          // Sin ack en 30s: no hay ninguna tienda abierta recogiendo la cola. Honesto.
+          progSet(90, 100, '🕓 En cola — entra al abrir la tienda');
+          btn.textContent = '🕓 En cola';
+          els.status.innerHTML = '🕓 <b>En cola.</b> El NPC entrará en cuanto haya una tienda abierta — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">abre la tienda ↗</a>';
+          storeToast('🕓 NPC en cola — <a href="' + STORE_URL + '" target="_blank" rel="noopener">abre la tienda para que entre ↗</a>', true);
+          setTimeout(() => progShow(false), 1200);
+        }
+        setTimeout(() => { btn.textContent = label; btn.classList.remove('ok'); btn.disabled = false; }, 3600);
+      } catch (e) { progShow(false); setStatus('No se pudo enviar a la tienda: ' + e.message, true); btn.disabled = false; }
     }
-    // Tras enviar: si hay un gemelo (xtore-game) ONLINE escuchando, el NPC entra
-    // en ~1 ciclo de sondeo (~6-8s). Confirmamos que hay tienda conectada y, pasado
-    // ese margen, sustituimos "enviado" por "ya en tienda". Si NO hay ninguna tienda
-    // online, mantenemos "enviado" (el NPC entrará en cuanto se abra una) — honesto.
-    async function confirmInStore() {
-      let online = false;
-      try {
-        const r = await fetch(WORKER + '/signage/screens', { cache: 'no-store' });
-        const d = await r.json().catch(() => ({}));
-        online = Array.isArray(d.screens) && d.screens.some(s => s && s.online && /game/i.test(s.role || ''));
-      } catch (_) {}
-      if (!online) return;   // sin gemelo conectado: no afirmamos llegada
-      setTimeout(() => {
-        els.status.classList.remove('err');
-        els.status.innerHTML = '🏪 <b>Ya en la tienda.</b> Tu NPC 8-bit está paseando por el gemelo — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">abre la tienda para verlo ↗</a>';
-        storeToast('✅ ¡NPC ya en la tienda! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Abrir la tienda ↗</a>');
-      }, 7000);
+    // Sondea /twin/spawn/status?id= hasta que el gemelo confirme el spawn (ACK) o se
+    // agote el tiempo. La barra avanza asintóticamente hacia ~88% mientras espera.
+    function waitForStore(id) {
+      return new Promise((resolve) => {
+        if (!id) return resolve(false);
+        const t0 = Date.now(), TIMEOUT = 30000;
+        const tick = async () => {
+          const elapsed = Date.now() - t0;
+          const pct = Math.min(88, 22 + (88 - 22) * (1 - Math.exp(-elapsed / 9000)));
+          progSet(Math.round(pct), 100, 'En cola del gemelo… ' + Math.round(elapsed / 1000) + 's');
+          try {
+            const r = await fetch(WORKER + '/twin/spawn/status?id=' + encodeURIComponent(id) + '&ts=' + Date.now(), { cache: 'no-store' });
+            const d = await r.json().catch(() => ({}));
+            if (d && d.consumed) return resolve(true);
+          } catch (_) {}
+          if (elapsed >= TIMEOUT) return resolve(false);
+          setTimeout(tick, 1200);
+        };
+        tick();
+      });
     }
 
     function download() {
