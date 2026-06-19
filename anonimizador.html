@@ -218,7 +218,7 @@
     </section>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — el gemelo digital">Pixeria AI Workspace · Anonimizador · v.2026.06.19c-anon</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — el gemelo digital">Pixeria AI Workspace · Anonimizador · v.2026.06.19d-anon</a></footer>
 
   <script src="/matrix-rain.js?v=20260608-sides"></script>
   <script>
@@ -546,7 +546,10 @@
       const segTxt = parts.join(' · ');
       const audTxt = '👥 Creando audiencia' + (segTxt ? ': ' + segTxt : '') + '…';
       setStatus(audTxt);
-      // Reinicia visualmente el tríptico y rellena la card ORIGINAL de abajo a arriba.
+      // Borra el resultado anterior (previo grande + tríptico) ANTES de generar, para
+      // no pintar el progreso encima del NPC ya creado. Luego rellena la card ORIGINAL.
+      els.still.hidden = true; els.still.removeAttribute('src');
+      els.frame1.innerHTML = '<div class="ph">Tu foto aparece aquí</div>';
       els.frame2.innerHTML = '<div class="ph">NPC 8-bit<br>(NES)</div>';
       els.frame3.innerHTML = '<div class="ph">NPC 16-bit<br>(detallado)</div>';
       els.frame4.innerHTML = '<div class="ph">Persona realista distinta</div>';

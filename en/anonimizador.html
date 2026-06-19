@@ -218,7 +218,7 @@
     </section>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19c-anon</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19d-anon</a></footer>
 
   <script src="/matrix-rain.js?v=20260608-sides"></script>
   <script>
@@ -536,7 +536,10 @@
       const segTxt = parts.join(' · ');
       const audTxt = '👥 Building audience' + (segTxt ? ': ' + segTxt : '') + '…';
       setStatus(audTxt);
-      // Visually reset the triptych and fill the ORIGINAL card bottom-to-top.
+      // Clear the previous result (big preview + triptych) BEFORE generating, so the
+      // progress isn't painted over the already-created NPC. Then fill the ORIGINAL card.
+      els.still.hidden = true; els.still.removeAttribute('src');
+      els.frame1.innerHTML = '<div class="ph">Your photo shows up here</div>';
       els.frame2.innerHTML = '<div class="ph">8-bit NPC<br>(NES)</div>';
       els.frame3.innerHTML = '<div class="ph">16-bit NPC<br>(detailed)</div>';
       els.frame4.innerHTML = '<div class="ph">Different realistic person</div>';
