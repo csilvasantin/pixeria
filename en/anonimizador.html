@@ -21,7 +21,11 @@
     .anon-source{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:16px;align-items:stretch}
     @media (max-width:760px){.anon-source{grid-template-columns:1fr}}
     .anon-cam{position:relative;border:1px solid var(--line,#1c3a22);border-radius:14px;overflow:hidden;background:#020602;min-height:280px;display:flex;align-items:center;justify-content:center}
-    .anon-cam video,.anon-cam img{width:100%;height:100%;object-fit:cover;display:block}
+    /* FIXED-size preview (takes its height from the grid, like the controls): the
+       image is absolute so it never stretches the box. Vertical → side bands. */
+    .anon-cam video,.anon-cam img{position:absolute;inset:0;width:100%;height:100%;display:block;background:#020602}
+    .anon-cam video{object-fit:cover}
+    .anon-cam img{object-fit:contain}
     .anon-cam video[hidden],.anon-cam img[hidden]{display:none}
     .anon-cam .anon-cam-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted,#7fae8c);text-align:center;padding:24px;font-size:13px}
     .anon-cam .anon-cam-hint b{color:var(--fg,#dffbe6);font-size:34px;line-height:1}
@@ -214,7 +218,7 @@
     </section>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19b-anon</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19c-anon</a></footer>
 
   <script src="/matrix-rain.js?v=20260608-sides"></script>
   <script>
@@ -318,8 +322,7 @@
 
     function showOriginal(dataURL) {
       original = dataURL; npc8 = null; npc16 = null; anon = null;
-      frameFillStop(els.frame1);
-      els.frame1.innerHTML = '<img alt="Original" src="' + dataURL + '">';
+      frameFillFinish(els.frame1, dataURL);
       els.frame2.innerHTML = '<div class="ph">8-bit NPC<br>(NES)</div>';
       els.frame3.innerHTML = '<div class="ph">16-bit NPC<br>(detailed)</div>';
       els.frame4.innerHTML = '<div class="ph">Different realistic person</div>';
@@ -344,6 +347,13 @@
       frame.__fillT = setInterval(() => { p += (top - p) * 0.06; frameFill(frame, p); }, 260);
     }
     function frameFillStop(frame) { if (frame.__fillT) { clearInterval(frame.__fillT); frame.__fillT = null; } }
+    // Finishes the fill at 100% and, after a beat, shows the image (if a fill was active).
+    function frameFillFinish(frame, dataURL) {
+      if (frame.__fillT || frame.querySelector('.vfill')) {
+        frameFillStop(frame); frameFill(frame, 100);
+        setTimeout(() => frameImg(frame, dataURL), 340);
+      } else { frameImg(frame, dataURL); }
+    }
     function frameSpin(frame, label) {
       if (!frame.querySelector('.spin')) {
         const d = document.createElement('div'); d.className = 'spin'; d.textContent = label;
@@ -574,8 +584,8 @@
           const s = frame.querySelector('.spin'); if (s) s.textContent = tag + ' · retry ' + a + '/' + (m - 1) + '…';
           setStatus('The engine is busy, retrying the ' + tag + ' (' + a + '/' + (m - 1) + ')…');
         };
-        const p8 = editOrGrok(original, NPC8_SYS, NPC8_PROMPT, grok8Prompt(), retryMsg(els.frame2, '8-bit'), '8-bit').then(async img => { npc8 = await makeTransparentBg(img, 52); frameImg(els.frame2, npc8); bump(); });
-        const p16 = editOrGrok(original, NPC16_SYS, NPC16_PROMPT, grok16Prompt(), retryMsg(els.frame3, '16-bit'), '16-bit').then(img => { npc16 = img; frameImg(els.frame3, img); bump(); });
+        const p8 = editOrGrok(original, NPC8_SYS, NPC8_PROMPT, grok8Prompt(), retryMsg(els.frame2, '8-bit'), '8-bit').then(async img => { npc8 = await makeTransparentBg(img, 52); frameFillFinish(els.frame2, npc8); bump(); });
+        const p16 = editOrGrok(original, NPC16_SYS, NPC16_PROMPT, grok16Prompt(), retryMsg(els.frame3, '16-bit'), '16-bit').then(img => { npc16 = img; frameFillFinish(els.frame3, img); bump(); });
         await Promise.all([p8, p16]);
 
         // Step 2 — 16-bit NPC → different realistic person
@@ -583,7 +593,7 @@
         setStatus('Generating a new person…');
         const prompt = HUMAN_PROMPT[els.strength.value] || HUMAN_PROMPT.aire;
         anon = await editOrGrok(npc16, HUMAN_SYS, prompt, grokHumanPrompt(), retryMsg(els.frame4, 'portrait'), 'portrait');
-        frameImg(els.frame4, anon); progSet(3, 3, 'Done');
+        frameFillFinish(els.frame4, anon); progSet(3, 3, 'Done');
 
         activeCard(els.card4);
         setStatus('✓ Done: 2 NPCs (8/16-bit) + a person who does not exist.');
