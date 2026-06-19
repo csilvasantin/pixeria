@@ -219,20 +219,22 @@
     const $ = (s) => document.querySelector(s);
     const WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
 
-    const NPC8_SYS = 'You are an 8-bit pixel-art artist, NES / management-sim style (à la Kairosoft). From the given photo, generate a TINY, stubby character SPRITE: chibi proportions, big head, only 2 to 2.5 heads tall, full body facing front. VERY low resolution (like a ~32×40 px sprite), large clearly-visible square pixels, a palette of ONLY 4-5 flat colors, hard outline, no gradients, shadows or antialiasing. A SINGLE flat uniform background color (pure white) so it can be cut out. KEEP clothing and hair color and the approximate build. Do NOT keep recognizable facial features: it is a tiny anonymous NPC, not a portrait. It must look clearly SIMPLER, SMALLER and stubbier than a 16-bit sprite.';
+    const NPC8_SYS = 'You are an 8-bit pixel-art artist, NES / management-sim style (à la Kairosoft). From the given photo, generate a TINY, stubby character SPRITE: chibi proportions, big head, only 2 to 2.5 heads tall, full body facing front. VERY low resolution (like a ~32×40 px sprite), large clearly-visible square pixels, a palette of ONLY 4-5 flat colors, hard outline, no gradients, shadows or antialiasing. A SINGLE flat uniform background color (pure white) so it can be cut out. KEEP the apparent SEX/gender of the person (if female, female; if male, male), the clothing and hair color and the approximate build. Do NOT keep recognizable facial features: it is a tiny anonymous NPC, not a portrait. It must look clearly SIMPLER, SMALLER and stubbier than a 16-bit sprite.';
     const NPC8_PROMPT = 'Turn it into a TINY, stubby 8-bit NPC sprite (chibi, big head, ~2 heads tall), very low resolution, large pixels and only 4-5 flat colors, like the tiny passers-by of the Admira XP digital twin.';
-    const NPC16_SYS = 'You are a 16-bit pixel-art artist (SNES/Kairosoft style). From the given photo, generate a HALF-BODY PORTRAIT (from the waist up), centered and facing front, as UNMISTAKABLE 16-bit PIXEL-ART: clearly visible square pixels, hard black outline, block shading and more colors than 8-bit. NEVER a realistic photo or smooth skin: it is a videogame SPRITE, not a photograph. Blurred town/street background with tiny passers-by behind, like the digital twin. KEEP clothing and hair color, build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC.';
+    const NPC16_SYS = 'You are a 16-bit pixel-art artist (SNES/Kairosoft style). From the given photo, generate a HALF-BODY PORTRAIT (from the waist up), centered and facing front, as UNMISTAKABLE 16-bit PIXEL-ART: clearly visible square pixels, hard black outline, block shading and more colors than 8-bit. NEVER a realistic photo or smooth skin: it is a videogame SPRITE, not a photograph. Blurred town/street background with tiny passers-by behind, like the digital twin. KEEP the apparent SEX/gender of the person (if female, female; if male, male), the clothing and hair color, the build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC.';
     const NPC16_PROMPT = 'Turn it into an UNMISTAKABLE 16-bit pixel-art HALF-BODY portrait (waist up), clearly visible square pixels and hard black outline, block shading — NO realistic photo or smooth skin —, on a blurred town street like the passers-by of the Admira XP digital twin.';
 
-    const HUMAN_SYS = 'You are a street photographer. From the given pixel-art sprite/figure, generate a REALISTIC PHOTO of a DIFFERENT REAL person: new face and new identity, NOT the same person as the sprite. Keep only a similar VIBE (approximate age, same clothing style and color, same hair color and type, similar build). No pixel, drawing or game 3D: realistic skin, fabric and light. Full body, vertical, neutral background or blurred street. Anonymous person, no text or logos.';
+    const HUMAN_SYS = 'You are a street photographer. From the given pixel-art sprite/figure, generate a REALISTIC PHOTO of a DIFFERENT REAL person: new face and new identity, NOT the same person as the sprite, BUT OF THE SAME SEX/gender (if the sprite is female, a woman; if male, a man — never change the sex). Keep a similar VIBE (same sex, approximate age, same clothing style and color, same hair color and type, similar build). No pixel, drawing or game 3D: realistic skin, fabric and light. Full body, vertical, neutral background or blurred street. Anonymous person, no text or logos.';
     const HUMAN_PROMPT = {
-      aire:  'A different person who could walk past the store: similar in style and age, but clearly someone else with a different face.',
-      medio: 'A clearly different person (different face and features), keeping the clothing style and color and the hair type.',
-      full:  'A completely new person (different face, age and build), keeping only the garment type and color.'
+      aire:  'A different person who could walk past the store: similar in style and age and OF THE SAME SEX, but clearly someone else with a different face.',
+      medio: 'A clearly different person (different face and features), keeping the SAME SEX, the clothing style and color and the hair type.',
+      full:  'A completely new person (different face, age and build) but of the SAME SEX, keeping only the garment type and color.'
     };
 
     let stream = null, original = null, npc8 = null, npc16 = null, anon = null, busy = false;
     let segment = null; // {sex, age} chosen when inventing → travels to the ad (Stock tags)
+    let enginesUsed = new Set();   // models that generated the NPCs/person (for the "Done" tooltip)
+    let originalSource = 'photo';   // where the original came from (camera / upload / Grok)
 
     const els = {
       camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), hint: $('#camHint'),
@@ -407,11 +409,18 @@
     // Try editing with Gemini; if it REFUSES on content, regenerate with Grok.
     async function editOrGrok(image, sys, editPrompt, grokPrompt, onRetry, tag) {
       try {
-        return await imageEdit(image, sys, editPrompt, onRetry);
+        const img = await imageEdit(image, sys, editPrompt, onRetry);
+        enginesUsed.add('nano-banana (Gemini)');
+        return img;
       } catch (e) {
-        if (grokPrompt && REFUSAL.has(e.reason)) {
+        // Only fall back to Grok for INVENTED people (segment): there the synthetic
+        // is defined by the segment. With a REAL uploaded photo, Grok can't know
+        // what that person looks like and would output a different one (wrong sex).
+        if (segment && grokPrompt && REFUSAL.has(e.reason)) {
           setStatus('⚠️ The engine refused the synthetic image; generating the ' + (tag || 'result') + ' with Grok…');
-          return await grokImage(grokPrompt);
+          const img = await grokImage(grokPrompt);
+          enginesUsed.add('Grok (grok-imagine-image)');
+          return img;
         }
         throw e;
       }
@@ -440,6 +449,7 @@
       els.still.src = url; els.still.hidden = false; els.cam.hidden = true;
       stopCam();
       segment = null; // real camera photo: no chosen segment
+      originalSource = 'photo from your camera';
       downscale(url, 768).then(showOriginal);
     }
 
@@ -509,6 +519,7 @@
           throw new Error(reason);
         }
         segment = seg; // the chosen segment travels to the ad (Stock tags)
+        originalSource = 'Grok (grok-imagine-image)';
         const url = 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
         els.still.src = url; els.still.hidden = false; els.cam.hidden = true;
         progStop(); progShow(false); busy = false;
@@ -523,6 +534,8 @@
     async function run() {
       if (busy || !original) return;
       busy = true;
+      enginesUsed = new Set();           // reset the model registry for this pass
+      els.status.removeAttribute('title');
       els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true; els.sendStore.disabled = true;
       progShow(true); progSet(0, 3, 'Generating NPCs…');
       try {
@@ -549,6 +562,10 @@
 
         activeCard(els.card4);
         setStatus('✓ Done: 2 NPCs (8/16-bit) + a person who does not exist.');
+        // Tooltip on hover over "Done": which models made the images.
+        const models = Array.from(enginesUsed).join(' + ') || 'nano-banana (Gemini)';
+        els.status.title = 'Images generated with — Original: ' + originalSource + ' · NPCs and person: ' + models + '.';
+        els.status.style.cursor = 'help';
         els.download.disabled = false; els.publish.disabled = false; els.sendStore.disabled = false;
       } catch (e) {
         setStatus(errMsg(e), true);
@@ -660,6 +677,7 @@
       stopCam();
       els.still.src = url; els.still.hidden = false; els.cam.hidden = true; els.hint.style.display = 'none';
       segment = null; // uploaded/dropped photo: no chosen segment
+      originalSource = 'uploaded/dropped photo';
       downscale(url, 768).then(showOriginal);
     }
     function loadImageFile(f) {
