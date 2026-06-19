@@ -20,15 +20,17 @@
     .anon-stage-wrap{display:flex;flex-direction:column;gap:16px}
     .anon-source{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:16px;align-items:stretch}
     @media (max-width:760px){.anon-source{grid-template-columns:1fr}}
-    .anon-cam{position:relative;border:1px solid var(--line,#1c3a22);border-radius:14px;overflow:hidden;background:#020602;min-height:280px;display:flex;align-items:center;justify-content:center}
+    /* The upper space is a PERMANENT FIXED background (the Architect). The user's
+       photo and its derivatives appear in the 4 cards below, not here. */
+    .anon-cam{position:relative;border:1px solid var(--line,#1c3a22);border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at center,transparent 48%,rgba(0,0,0,.55) 100%),#020602 url('/assets/architect.jpg') center/cover no-repeat;min-height:280px;display:flex;align-items:center;justify-content:center}
     /* FIXED-size preview (takes its height from the grid, like the controls): the
        image is absolute so it never stretches the box. Vertical → side bands. */
     .anon-cam video,.anon-cam img{position:absolute;inset:0;width:100%;height:100%;display:block}
-    .anon-cam video{object-fit:cover;background:#020602;z-index:1}
-    .anon-cam #camStill{object-fit:contain;z-index:1}            /* sharp, full photo, centered */
-    .anon-cam #camStillBg{object-fit:cover;filter:blur(24px) brightness(.5) saturate(1.2);transform:scale(1.15);z-index:0}  /* environment fill: no black bands */
+    .anon-cam video{object-fit:cover;background:#020602;z-index:1}  /* live camera viewfinder, above the fixed background */
+    /* The user's photo NO LONGER fills the big preview (it shows in the ORIGINAL card). */
+    .anon-cam #camStill,.anon-cam #camStillBg{display:none!important}
     .anon-cam video[hidden],.anon-cam img[hidden]{display:none}
-    .anon-cam .anon-cam-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted,#7fae8c);text-align:center;padding:24px;font-size:13px}
+    .anon-cam .anon-cam-hint{display:none}
     .anon-cam .anon-cam-hint b{color:var(--fg,#dffbe6);font-size:34px;line-height:1}
     .anon-controls{display:flex;flex-direction:column;gap:10px;justify-content:center}
     .anon-controls .btn{width:100%;justify-content:center}
@@ -220,7 +222,7 @@
     </section>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19g-anon</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19h-anon</a></footer>
 
   <script src="/matrix-rain.js?v=20260608-sides"></script>
   <script>
