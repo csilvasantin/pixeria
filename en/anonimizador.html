@@ -143,6 +143,24 @@
                 <option value="full">Completely new person</option>
               </select>
             </div>
+            <div class="field" style="margin:0">
+              <label for="optSex">Segment when inventing · sex</label>
+              <select id="optSex">
+                <option value="any" selected>Any</option>
+                <option value="hombre">Male</option>
+                <option value="mujer">Female</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0">
+              <label for="optAge">Segment when inventing · age</label>
+              <select id="optAge">
+                <option value="any" selected>Any</option>
+                <option value="joven">Young (18-25)</option>
+                <option value="adulto">Adult (26-40)</option>
+                <option value="maduro">Mature (41-60)</option>
+                <option value="senior">Senior (60+)</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -197,8 +215,8 @@
     const $ = (s) => document.querySelector(s);
     const WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
 
-    const NPC8_SYS = 'You are an 8-bit pixel-art artist (NES style). From the given photo, generate a full-body CHARACTER facing front with a VERY limited palette (few flat colors), large pixels and a hard outline, no gradients or antialiasing. A SINGLE flat uniform background color (pure white), no shadows or gradients, so it can be cut out. KEEP clothing and hair color, build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC, not a portrait.';
-    const NPC8_PROMPT = 'Turn it into a full-body 8-bit (NES) pixel-art NPC, reduced palette and large pixels.';
+    const NPC8_SYS = 'You are an 8-bit pixel-art artist, NES / management-sim style (à la Kairosoft). From the given photo, generate a TINY, stubby character SPRITE: chibi proportions, big head, only 2 to 2.5 heads tall, full body facing front. VERY low resolution (like a ~32×40 px sprite), large clearly-visible square pixels, a palette of ONLY 4-5 flat colors, hard outline, no gradients, shadows or antialiasing. A SINGLE flat uniform background color (pure white) so it can be cut out. KEEP clothing and hair color and the approximate build. Do NOT keep recognizable facial features: it is a tiny anonymous NPC, not a portrait. It must look clearly SIMPLER, SMALLER and stubbier than a 16-bit sprite.';
+    const NPC8_PROMPT = 'Turn it into a TINY, stubby 8-bit NPC sprite (chibi, big head, ~2 heads tall), very low resolution, large pixels and only 4-5 flat colors, like the tiny passers-by of the Admira XP digital twin.';
     const NPC16_SYS = 'You are a detailed 16-bit pixel-art artist (SNES/Kairosoft style). From the given photo, generate a full-body CHARACTER facing front with more colors, shading and lighting and a defined outline, on a blurred street like the passers-by of the digital twin. KEEP clothing and hair color, build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC, not a portrait.';
     const NPC16_PROMPT = 'Turn it into a detailed full-body 16-bit pixel-art NPC, like the passers-by of the Admira XP digital twin on a street.';
 
@@ -210,11 +228,12 @@
     };
 
     let stream = null, original = null, npc8 = null, npc16 = null, anon = null, busy = false;
+    let segment = null; // {sex, age} chosen when inventing → travels to the ad (Stock tags)
 
     const els = {
       camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), hint: $('#camHint'),
       btnCam: $('#btnCam'), btnShot: $('#btnShot'), btnUpload: $('#btnUpload'), invent: $('#btnInvent'), file: $('#fileInput'),
-      go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'),
+      go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'), sex: $('#optSex'), age: $('#optAge'),
       download: $('#btnDownload'), publish: $('#btnPublish'), sendStore: $('#btnSendStore'),
       frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'), frame4: $('#frame4'),
       card1: $('#card1'), card2: $('#card2'), card3: $('#card3'), card4: $('#card4'),
@@ -233,6 +252,15 @@
     const errMsg = (e) => (e && ERR_MAP[e.reason]) || ('Error: ' + ((e && e.message) || 'unknown'));
     function progShow(on) { els.prog.classList.toggle('on', !!on); if (!on) els.progFill.style.width = '0'; }
     function progSet(done, total, label) { els.progFill.style.width = Math.round(done / total * 100) + '%'; els.progLabel.textContent = label || (done + '/' + total); }
+    // "Indeterminate" bar: for single-await steps (inventing) with no real
+    // progress, it creeps toward ~90% to show that work is happening.
+    let __creepT = null;
+    function progCreep(label) {
+      progShow(true); els.progFill.style.width = '0'; els.progLabel.textContent = label || 'Working…';
+      let p = 0; clearInterval(__creepT);
+      __creepT = setInterval(() => { p += (92 - p) * 0.07; els.progFill.style.width = Math.min(92, p).toFixed(1) + '%'; }, 280);
+    }
+    function progStop() { clearInterval(__creepT); __creepT = null; }
 
     // mime='image/png' preserves transparency (for the twin sprite).
     function downscale(dataURL, max, mime) {
@@ -339,6 +367,7 @@
       const url = c.toDataURL('image/jpeg', 0.92);
       els.still.src = url; els.still.hidden = false; els.cam.hidden = true;
       stopCam();
+      segment = null; // real camera photo: no chosen segment
       downscale(url, 768).then(showOriginal);
     }
 
@@ -348,20 +377,25 @@
     // exactly as with a real photo. Identity doesn't matter: it's erased on
     // pixelation, just like a street photo.
     const INV = {
-      who:    ['a man', 'a woman', 'a person'],
-      age:    ['in their early 20s', 'around 30', 'middle-aged, about 45', 'older, around 60', 'a teenager about 18'],
       build:  ['slim build', 'average build', 'sturdy build', 'athletic', 'petite'],
       hair:   ['short brown hair', 'long blonde hair', 'curly black hair', 'bald', 'grey hair', 'red hair in a ponytail', 'straight dark hair', 'shaved head'],
       outfit: ['a winter coat', 'a t-shirt and jeans', 'a formal suit', 'a hoodie', 'a casual dress', 'a denim jacket', 'sportswear', 'a jumper and wool coat'],
       vibe:   ['walking down the street', 'standing on the pavement', 'looking at a shop window', 'carrying shopping bags', 'checking their phone', 'waiting at a crossing']
     };
     const pick = (a) => a[Math.floor(Math.random() * a.length)];
-    function inventPrompt() {
+    // Chosen segment → prompt text
+    const AGE_TXT = { joven: 'around 22', adulto: 'around 33', maduro: 'around 50', senior: 'around 68' };
+    const AGE_ANY = ['in their early 20s', 'around 30', 'middle-aged, about 45', 'older, around 60'];
+    const SEG_LBL = { hombre: 'male', mujer: 'female', joven: 'young', adulto: 'adult', maduro: 'mature', senior: 'senior' };
+    function currentSegment() { return { sex: els.sex.value, age: els.age.value }; }
+    function inventPrompt(seg) {
+      const who = seg.sex === 'hombre' ? 'a man' : seg.sex === 'mujer' ? 'a woman' : pick(['a man', 'a woman']);
+      const age = (seg.age !== 'any' && AGE_TXT[seg.age]) ? AGE_TXT[seg.age] : pick(AGE_ANY);
       // Wide shot at a distance with a low-detail face: the edit engine (Gemini)
       // declines close-ups of realistic people as recognizable individuals.
       // From a distance it pixelates just as well and gets through.
       return 'Candid street photograph, vertical, wide full-body shot from some distance, of ' +
-        pick(INV.who) + ' ' + pick(INV.age) + ', ' + pick(INV.build) + ', ' + pick(INV.hair) +
+        who + ' ' + age + ', ' + pick(INV.build) + ', ' + pick(INV.hair) +
         ', wearing ' + pick(INV.outfit) + ', ' + pick(INV.vibe) +
         '. An anonymous passer-by seen from afar; NOT a portrait or close-up, the face appears small and not sharp. ' +
         'Natural light, blurred street background, candid phone-camera photo, no text or logos, not any famous or recognizable person.';
@@ -372,12 +406,14 @@
       const btn = els.invent, label = btn.textContent;
       btn.disabled = true; els.btnShot.disabled = true; stopCam();
       els.hint.style.display = 'none';
-      setStatus('🎲 Inventing a person…');
-      progShow(true); progSet(0, 1, 'Generating person…');
+      const seg = currentSegment();
+      const segTxt = (seg.sex === 'any' ? 'a person' : SEG_LBL[seg.sex]) + (seg.age === 'any' ? '' : ' · ' + SEG_LBL[seg.age]);
+      setStatus('🎲 Inventing ' + segTxt + '…');
+      progCreep('Inventing ' + segTxt + '…');
       try {
         const r = await fetch(WORKER + '/xai/image', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: inventPrompt(), b64: true, model: 'grok-imagine-image' })
+          body: JSON.stringify({ prompt: inventPrompt(seg), b64: true, model: 'grok-imagine-image' })
         });
         const d = await r.json().catch(() => ({}));
         const item = d && Array.isArray(d.data) && d.data[0];
@@ -385,12 +421,13 @@
           const reason = (d && (d.detail || d.error)) || ('HTTP ' + r.status);
           throw new Error(reason);
         }
+        segment = seg; // the chosen segment travels to the ad (Stock tags)
         const url = 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
         els.still.src = url; els.still.hidden = false; els.cam.hidden = true;
-        progShow(false); busy = false;
+        progStop(); progShow(false); busy = false;
         downscale(url, 768).then(showOriginal); // shows the original and auto-starts the pipeline
       } catch (e) {
-        progShow(false); busy = false;
+        progStop(); progShow(false); busy = false;
         setStatus('Could not invent the person (' + e.message + '). Try again or upload a photo.', true);
         btn.disabled = false; btn.textContent = label;
       }
@@ -477,17 +514,20 @@
     async function publish() {
       if (!anon) return;
       els.publish.disabled = true;
+      // Chosen segment when inventing → tags for the ad (targeting).
+      const segTags = segment ? [segment.sex, segment.age].filter(v => v && v !== 'any').map(v => 'seg:' + v) : [];
+      const segNote = segTags.length ? ' Segment: ' + segTags.map(t => t.slice(4)).join(' · ') + '.' : '';
       // The pixel-art NPCs go to "Twin NPCs"; the final person to "Digital Twins".
       const jobs = [];
       if (npc8) jobs.push(() => pubStock(npc8, 'twin-npc', 'Twin NPC 8-bit · Pixeria',
         '8-bit pixel-art NPC of the Admira XP twin (Anonymizer step)',
-        ['twin-npc', '8bit', 'anonymizer'], 'Anonymizer 8-bit NPC: facial identity wiped.'));
+        ['twin-npc', '8bit', 'anonymizer'].concat(segTags), 'Anonymizer 8-bit NPC: facial identity wiped.' + segNote));
       if (npc16) jobs.push(() => pubStock(npc16, 'twin-npc', 'Twin NPC 16-bit · Pixeria',
         '16-bit pixel-art NPC of the Admira XP twin (Anonymizer step)',
-        ['twin-npc', '16bit', 'anonymizer'], 'Anonymizer 16-bit NPC: facial identity wiped.'));
+        ['twin-npc', '16bit', 'anonymizer'].concat(segTags), 'Anonymizer 16-bit NPC: facial identity wiped.' + segNote));
       jobs.push(() => pubStock(anon, 'digital-twin', 'Digital Twin · Pixeria',
         'Anonymized synthetic person (real photo → twin NPC → new person)',
-        ['digital-twin', 'anonymizer'], 'Anonymizer digital twin: new identity, matches no real person.'));
+        ['digital-twin', 'anonymizer'].concat(segTags), 'Anonymizer digital twin: new identity, matches no real person.' + segNote));
       progShow(true); progSet(0, jobs.length, 'Uploading to Stock…');
       setStatus('Publishing to Stock…');
       try {
@@ -526,6 +566,7 @@
     function loadDataURL(url) {
       stopCam();
       els.still.src = url; els.still.hidden = false; els.cam.hidden = true; els.hint.style.display = 'none';
+      segment = null; // uploaded/dropped photo: no chosen segment
       downscale(url, 768).then(showOriginal);
     }
     function loadImageFile(f) {

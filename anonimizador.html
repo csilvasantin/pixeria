@@ -143,6 +143,24 @@
                 <option value="full">Persona completamente nueva</option>
               </select>
             </div>
+            <div class="field" style="margin:0">
+              <label for="optSex">Segmentación al inventar · sexo</label>
+              <select id="optSex">
+                <option value="any" selected>Cualquiera</option>
+                <option value="hombre">Hombre</option>
+                <option value="mujer">Mujer</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0">
+              <label for="optAge">Segmentación al inventar · edad</label>
+              <select id="optAge">
+                <option value="any" selected>Cualquiera</option>
+                <option value="joven">Joven (18-25)</option>
+                <option value="adulto">Adulto (26-40)</option>
+                <option value="maduro">Maduro (41-60)</option>
+                <option value="senior">Senior (60+)</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -198,8 +216,8 @@
     const WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
 
     // ---- Prompts: NPC 8-bit, NPC 16-bit, y la vuelta a humano anónimo ----
-    const NPC8_SYS = 'Eres un artista de pixel-art 8-bit (estilo NES). A partir de la foto, genera un PERSONAJE de cuerpo entero de frente con paleta MUY limitada (pocos colores planos), píxeles grandes y contorno duro, sin degradados ni antialias. Fondo de UN SOLO color plano y uniforme (blanco puro), sin sombras ni degradados, para poder recortarlo. MANTÉN color de ropa y pelo, complexión y edad aparente. NO conserves rasgos faciales reconocibles: es un NPC anónimo, no un retrato.';
-    const NPC8_PROMPT = 'Conviértelo en un NPC pixel-art 8-bit (NES) de cuerpo entero, paleta reducida y píxeles grandes.';
+    const NPC8_SYS = 'Eres un artista de pixel-art 8-bit estilo NES / simulador de gestión (tipo Kairosoft). A partir de la foto, genera un SPRITE de personaje DIMINUTO y achaparrado: proporción chibi, cabezón, solo 2 a 2,5 cabezas de alto, de cuerpo entero y de frente. MUY baja resolución (como un sprite de ~32×40 px), píxeles grandes y cuadrados bien visibles, paleta de SOLO 4-5 colores planos, contorno duro, sin degradados, sombras ni antialias. Fondo de UN SOLO color plano y uniforme (blanco puro) para poder recortarlo. MANTÉN color de ropa y pelo y la complexión aproximada. NO conserves rasgos faciales reconocibles: es un NPC anónimo minúsculo, no un retrato. Debe verse claramente MÁS SIMPLE, MÁS PEQUEÑO y MÁS achaparrado que un sprite de 16 bits.';
+    const NPC8_PROMPT = 'Conviértelo en un sprite NPC 8-bit DIMINUTO y achaparrado (chibi, cabezón, ~2 cabezas de alto), muy baja resolución, píxeles grandes y solo 4-5 colores planos, como los viandantes minúsculos del gemelo Admira XP.';
     const NPC16_SYS = 'Eres un artista de pixel-art 16-bit detallado (estilo SNES/Kairosoft). A partir de la foto, genera un PERSONAJE de cuerpo entero de frente con más colores, sombreado e iluminación y contorno definido, sobre una calle desenfocada como los viandantes del gemelo digital. MANTÉN color de ropa y pelo, complexión y edad aparente. NO conserves rasgos faciales reconocibles: es un NPC anónimo, no un retrato.';
     const NPC16_PROMPT = 'Conviértelo en un NPC pixel-art 16-bit detallado de cuerpo entero, como los viandantes del gemelo digital Admira XP en una calle.';
 
@@ -217,11 +235,12 @@
     let npc16 = null;      // dataURL NPC 16-bit
     let anon = null;       // dataURL persona anónima final
     let busy = false;
+    let segment = null;    // {sex, age} elegido al inventar → viaja a la publi (tags Stock)
 
     const els = {
       camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), hint: $('#camHint'),
       btnCam: $('#btnCam'), btnShot: $('#btnShot'), btnUpload: $('#btnUpload'), invent: $('#btnInvent'), file: $('#fileInput'),
-      go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'),
+      go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'), sex: $('#optSex'), age: $('#optAge'),
       download: $('#btnDownload'), publish: $('#btnPublish'), sendStore: $('#btnSendStore'),
       frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'), frame4: $('#frame4'),
       card1: $('#card1'), card2: $('#card2'), card3: $('#card3'), card4: $('#card4'),
@@ -240,6 +259,15 @@
     const errMsg = (e) => (e && ERR_MAP[e.reason]) || ('Error: ' + ((e && e.message) || 'desconocido'));
     function progShow(on) { els.prog.classList.toggle('on', !!on); if (!on) els.progFill.style.width = '0'; }
     function progSet(done, total, label) { els.progFill.style.width = Math.round(done / total * 100) + '%'; els.progLabel.textContent = label || (done + '/' + total); }
+    // Barra "indeterminada": para pasos de un solo await (inventar) en los que no
+    // hay progreso real, repta hacia ~90% para mostrar que se está trabajando.
+    let __creepT = null;
+    function progCreep(label) {
+      progShow(true); els.progFill.style.width = '0'; els.progLabel.textContent = label || 'Trabajando…';
+      let p = 0; clearInterval(__creepT);
+      __creepT = setInterval(() => { p += (92 - p) * 0.07; els.progFill.style.width = Math.min(92, p).toFixed(1) + '%'; }, 280);
+    }
+    function progStop() { clearInterval(__creepT); __creepT = null; }
 
     // Reduce la imagen al lado mayor = max px (acelera la subida y el modelo).
     // mime='image/png' conserva la transparencia (para el sprite del gemelo).
@@ -349,6 +377,7 @@
       const url = c.toDataURL('image/jpeg', 0.92);
       els.still.src = url; els.still.hidden = false; els.cam.hidden = true;
       stopCam();
+      segment = null; // foto real de cámara: sin segmentación elegida
       downscale(url, 768).then(showOriginal);
     }
 
@@ -358,20 +387,25 @@
     // funciona igual que con una foto real. La identidad da igual: se borra al
     // pixelar, igual que con una foto de la calle.
     const INV = {
-      who:    ['un hombre', 'una mujer', 'una persona'],
-      age:    ['joven de unos 20 años', 'de unos 30 años', 'de mediana edad, sobre 45', 'mayor, de unos 60 años', 'adolescente de unos 18'],
       build:  ['complexión delgada', 'complexión media', 'complexión robusta', 'atlético', 'menudo'],
       hair:   ['pelo corto castaño', 'melena rubia', 'pelo rizado negro', 'calvo', 'pelo canoso', 'pelirrojo con coleta', 'pelo liso moreno', 'rapado'],
       outfit: ['abrigo de invierno', 'camiseta y vaqueros', 'traje formal', 'sudadera con capucha', 'vestido casual', 'chaqueta vaquera', 'ropa deportiva', 'jersey y abrigo de lana'],
       vibe:   ['caminando por la calle', 'de pie en la acera', 'mirando un escaparate', 'con bolsas de la compra', 'consultando el móvil', 'esperando en un paso de peatones']
     };
     const pick = (a) => a[Math.floor(Math.random() * a.length)];
-    function inventPrompt() {
+    // Segmentación elegida → texto para el prompt
+    const AGE_TXT = { joven: 'de unos 22 años', adulto: 'de unos 33 años', maduro: 'de unos 50 años', senior: 'de unos 68 años' };
+    const AGE_ANY = ['joven de unos 20 años', 'de unos 30 años', 'de mediana edad, sobre 45', 'mayor, de unos 60 años'];
+    const SEG_LBL = { hombre: 'hombre', mujer: 'mujer', joven: 'joven', adulto: 'adulto', maduro: 'maduro', senior: 'senior' };
+    function currentSegment() { return { sex: els.sex.value, age: els.age.value }; }
+    function inventPrompt(seg) {
+      const who = seg.sex === 'hombre' ? 'un hombre' : seg.sex === 'mujer' ? 'una mujer' : pick(['un hombre', 'una mujer']);
+      const age = (seg.age !== 'any' && AGE_TXT[seg.age]) ? AGE_TXT[seg.age] : pick(AGE_ANY);
       // Plano general a cierta distancia y cara poco nítida: el motor de edición
       // (Gemini) rechaza los primeros planos de personas realistas por tratarlas
       // como individuos reconocibles. A distancia pixela igual de bien y pasa.
       return 'Fotografía callejera espontánea, vertical, plano general de cuerpo entero y a cierta distancia, de ' +
-        pick(INV.who) + ' ' + pick(INV.age) + ', ' + pick(INV.build) + ', ' + pick(INV.hair) +
+        who + ' ' + age + ', ' + pick(INV.build) + ', ' + pick(INV.hair) +
         ', vestido con ' + pick(INV.outfit) + ', ' + pick(INV.vibe) +
         '. Viandante anónimo visto de lejos; NO es un retrato ni un primer plano, la cara aparece pequeña y poco nítida. ' +
         'Luz natural, fondo de calle desenfocado, foto candid tipo cámara de móvil, sin texto ni marcas, no es ninguna persona famosa ni reconocible.';
@@ -382,12 +416,14 @@
       const btn = els.invent, label = btn.textContent;
       btn.disabled = true; els.btnShot.disabled = true; stopCam();
       els.hint.style.display = 'none';
-      setStatus('🎲 Inventando una persona…');
-      progShow(true); progSet(0, 1, 'Generando persona…');
+      const seg = currentSegment();
+      const segTxt = (seg.sex === 'any' ? 'persona' : SEG_LBL[seg.sex]) + (seg.age === 'any' ? '' : ' · ' + SEG_LBL[seg.age]);
+      setStatus('🎲 Inventando ' + segTxt + '…');
+      progCreep('Inventando ' + segTxt + '…');
       try {
         const r = await fetch(WORKER + '/xai/image', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: inventPrompt(), b64: true, model: 'grok-imagine-image' })
+          body: JSON.stringify({ prompt: inventPrompt(seg), b64: true, model: 'grok-imagine-image' })
         });
         const d = await r.json().catch(() => ({}));
         const item = d && Array.isArray(d.data) && d.data[0];
@@ -395,12 +431,13 @@
           const reason = (d && (d.detail || d.error)) || ('HTTP ' + r.status);
           throw new Error(reason);
         }
+        segment = seg; // la segmentación elegida viaja a la publi (tags Stock)
         const url = 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
         els.still.src = url; els.still.hidden = false; els.cam.hidden = true;
-        progShow(false); busy = false;
+        progStop(); progShow(false); busy = false;
         downscale(url, 768).then(showOriginal); // muestra el original y auto-arranca el pipeline
       } catch (e) {
-        progShow(false); busy = false;
+        progStop(); progShow(false); busy = false;
         setStatus('No se pudo inventar la persona (' + e.message + '). Reinténtalo o sube una foto.', true);
         btn.disabled = false; btn.textContent = label;
       }
@@ -488,17 +525,20 @@
     async function publish() {
       if (!anon) return;
       els.publish.disabled = true;
+      // Segmentación elegida al inventar → etiquetas para la publi (targeting).
+      const segTags = segment ? [segment.sex, segment.age].filter(v => v && v !== 'any').map(v => 'seg:' + v) : [];
+      const segNote = segTags.length ? ' Segmento: ' + segTags.map(t => t.slice(4)).join(' · ') + '.' : '';
       // Los NPC pixel-art van a "Twin NPCs"; la persona final a "Digital Twins".
       const jobs = [];
       if (npc8) jobs.push(() => pubStock(npc8, 'twin-npc', 'Twin NPC 8-bit · Pixeria',
         'NPC pixel-art 8-bit del gemelo Admira XP (paso del Anonimizador)',
-        ['twin-npc', '8bit', 'anonimizador'], 'NPC 8-bit del Anonimizador: identidad facial borrada.'));
+        ['twin-npc', '8bit', 'anonimizador'].concat(segTags), 'NPC 8-bit del Anonimizador: identidad facial borrada.' + segNote));
       if (npc16) jobs.push(() => pubStock(npc16, 'twin-npc', 'Twin NPC 16-bit · Pixeria',
         'NPC pixel-art 16-bit del gemelo Admira XP (paso del Anonimizador)',
-        ['twin-npc', '16bit', 'anonimizador'], 'NPC 16-bit del Anonimizador: identidad facial borrada.'));
+        ['twin-npc', '16bit', 'anonimizador'].concat(segTags), 'NPC 16-bit del Anonimizador: identidad facial borrada.' + segNote));
       jobs.push(() => pubStock(anon, 'digital-twin', 'Digital Twin · Pixeria',
         'Persona sintética anonimizada (foto real → NPC del gemelo → persona nueva)',
-        ['digital-twin', 'anonimizador'], 'Gemelo digital del Anonimizador: identidad nueva, no corresponde a nadie real.'));
+        ['digital-twin', 'anonimizador'].concat(segTags), 'Gemelo digital del Anonimizador: identidad nueva, no corresponde a nadie real.' + segNote));
       progShow(true); progSet(0, jobs.length, 'Subiendo a Stock…');
       setStatus('Publicando en Stock…');
       try {
@@ -538,6 +578,7 @@
     function loadDataURL(url) {
       stopCam();
       els.still.src = url; els.still.hidden = false; els.cam.hidden = true; els.hint.style.display = 'none';
+      segment = null; // foto subida/arrastrada: sin segmentación elegida
       downscale(url, 768).then(showOriginal);
     }
     function loadImageFile(f) {
