@@ -218,7 +218,7 @@
     </section>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19d-anon</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19e-anon</a></footer>
 
   <script src="/matrix-rain.js?v=20260608-sides"></script>
   <script>
@@ -635,7 +635,7 @@
         // The audience (sex/age/description) travels to the twin PACKED in `name`
         // (the worker only forwards img+name). The twin splits it by "||" for the
         // customer card. Only when created via "Create audience".
-        const seg = segment ? { sex: segment.sex, age: segment.age, desc: segment.desc || '' } : null;
+        const seg = segment ? { sex: segment.sex, age: segment.age, desc: (segment.desc || '').slice(0, 120) } : null;
         const hasSeg = seg && (seg.sex !== 'any' || seg.age !== 'any' || seg.desc);
         const npcName = 'Anonymous' + (hasSeg ? '||' + JSON.stringify(seg) : '');
         const r = await fetch(WORKER + '/twin/spawn', {
@@ -671,7 +671,7 @@
     function waitForStore(id) {
       return new Promise((resolve) => {
         if (!id) return resolve(false);
-        const t0 = Date.now(), TIMEOUT = 30000;
+        const t0 = Date.now(), TIMEOUT = 45000;
         const tick = async () => {
           const elapsed = Date.now() - t0;
           const pct = Math.min(88, 22 + (88 - 22) * (1 - Math.exp(-elapsed / 9000)));
