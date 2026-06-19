@@ -123,16 +123,15 @@
         <div class="anon-cam" id="camWrap">
           <div class="anon-cam-hint" id="camHint">
             <b>📷</b>
-            <span>Activa la cámara, sube una foto, <strong>arrástrala aquí</strong> o <strong>inventa una persona</strong> si no tienes cámara.<br>La imagen solo se usa para transformarla; no se almacena.</span>
+            <span>Activa la cámara, sube una foto, <strong>arrástrala aquí</strong> o <strong>crea una audiencia</strong> si no tienes cámara.<br>La imagen solo se usa para transformarla; no se almacena.</span>
           </div>
           <video id="cam" autoplay playsinline muted hidden></video>
           <img id="camStill" alt="Foto capturada" hidden>
         </div>
         <div class="anon-controls">
           <button type="button" class="btn primary" id="btnCam">📷 Activar cámara</button>
-          <button type="button" class="btn" id="btnShot" disabled>📸 Disparar</button>
           <button type="button" class="btn" id="btnUpload">📁 Subir foto</button>
-          <button type="button" class="btn" id="btnInvent">🎲 Inventar persona</button>
+          <button type="button" class="btn" id="btnInvent">👥 Crear audiencia</button>
           <input type="file" id="fileInput" class="anon-file" accept="image/*">
           <div class="anon-opts">
             <div class="field" style="margin:0">
@@ -239,7 +238,7 @@
 
     const els = {
       camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), hint: $('#camHint'),
-      btnCam: $('#btnCam'), btnShot: $('#btnShot'), btnUpload: $('#btnUpload'), invent: $('#btnInvent'), file: $('#fileInput'),
+      btnCam: $('#btnCam'), btnUpload: $('#btnUpload'), invent: $('#btnInvent'), file: $('#fileInput'),
       go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'), sex: $('#optSex'), age: $('#optAge'),
       download: $('#btnDownload'), publish: $('#btnPublish'), sendStore: $('#btnSendStore'),
       frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'), frame4: $('#frame4'),
@@ -386,7 +385,7 @@
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 1280 }, audio: false });
         els.cam.srcObject = stream; els.cam.hidden = false; els.still.hidden = true; els.hint.style.display = 'none';
-        els.btnShot.disabled = false; els.btnCam.textContent = '⛔ Apagar cámara';
+        els.btnCam.textContent = '📸 Disparar'; // el mismo botón ahora dispara
         setStatus('Cámara activa. Encuádrate y pulsa Disparar.');
       } catch (e) {
         setStatus('No se pudo abrir la cámara (' + (e.name || e.message) + '). Sube una foto.', true);
@@ -394,7 +393,7 @@
     }
     function stopCam() {
       if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-      els.cam.hidden = true; els.btnShot.disabled = true; els.btnCam.textContent = '📷 Activar cámara';
+      els.cam.hidden = true; els.btnCam.textContent = '📷 Activar cámara';
     }
     function shoot() {
       if (!stream) return;
@@ -441,12 +440,16 @@
       if (busy) return;
       busy = true;
       const btn = els.invent, label = btn.textContent;
-      btn.disabled = true; els.btnShot.disabled = true; stopCam();
+      btn.disabled = true; stopCam();
       els.hint.style.display = 'none';
       const seg = currentSegment();
-      const segTxt = (seg.sex === 'any' ? 'persona' : SEG_LBL[seg.sex]) + (seg.age === 'any' ? '' : ' · ' + SEG_LBL[seg.age]);
-      setStatus('🎲 Inventando ' + segTxt + '…');
-      progCreep('Inventando ' + segTxt + '…');
+      const parts = [];
+      if (seg.sex !== 'any') parts.push(SEG_LBL[seg.sex]);
+      if (seg.age !== 'any') parts.push(SEG_LBL[seg.age]);
+      const segTxt = parts.join(' · ');
+      const audTxt = '👥 Creando audiencia' + (segTxt ? ': ' + segTxt : '') + '…';
+      setStatus(audTxt);
+      progCreep(audTxt);
       try {
         const r = await fetch(WORKER + '/xai/image', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -465,7 +468,7 @@
         downscale(url, 768).then(showOriginal); // muestra el original y auto-arranca el pipeline
       } catch (e) {
         progStop(); progShow(false); busy = false;
-        setStatus('No se pudo inventar la persona (' + e.message + '). Reinténtalo o sube una foto.', true);
+        setStatus('No se pudo crear la audiencia (' + e.message + '). Reinténtalo o sube una foto.', true);
         btn.disabled = false; btn.textContent = label;
       }
     }
@@ -584,8 +587,7 @@
     }
 
     // ---- Eventos ----
-    els.btnCam.addEventListener('click', () => stream ? stopCam() : startCam());
-    els.btnShot.addEventListener('click', shoot);
+    els.btnCam.addEventListener('click', () => stream ? shoot() : startCam());
     els.btnUpload.addEventListener('click', () => els.file.click());
     els.invent.addEventListener('click', inventPerson);
 
@@ -605,7 +607,7 @@
         els.btnCam.disabled = true; els.btnCam.classList.remove('primary');
         els.btnCam.textContent = '📷 Sin cámara';
         els.invent.classList.add('primary');
-        setStatus('No detecto cámara: pulsa “Inventar persona”, sube una foto o arrástrala.');
+        setStatus('No detecto cámara: pulsa “Crear audiencia”, sube una foto o arrástrala.');
       }
     })();
     function loadDataURL(url) {
