@@ -123,7 +123,7 @@
         <div class="anon-cam" id="camWrap">
           <div class="anon-cam-hint" id="camHint">
             <b>📷</b>
-            <span>Turn on the camera, upload a photo or <strong>drag one here</strong>.<br>The image is only used to transform it; nothing is stored.</span>
+            <span>Turn on the camera, upload a photo, <strong>drag one here</strong> or <strong>invent a person</strong> if you have no camera.<br>The image is only used to transform it; nothing is stored.</span>
           </div>
           <video id="cam" autoplay playsinline muted hidden></video>
           <img id="camStill" alt="Captured photo" hidden>
@@ -132,6 +132,7 @@
           <button type="button" class="btn primary" id="btnCam">📷 Turn on camera</button>
           <button type="button" class="btn" id="btnShot" disabled>📸 Capture</button>
           <button type="button" class="btn" id="btnUpload">📁 Upload photo</button>
+          <button type="button" class="btn" id="btnInvent">🎲 Invent a person</button>
           <input type="file" id="fileInput" class="anon-file" accept="image/*">
           <div class="anon-opts">
             <div class="field" style="margin:0">
@@ -212,7 +213,7 @@
 
     const els = {
       camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), hint: $('#camHint'),
-      btnCam: $('#btnCam'), btnShot: $('#btnShot'), btnUpload: $('#btnUpload'), file: $('#fileInput'),
+      btnCam: $('#btnCam'), btnShot: $('#btnShot'), btnUpload: $('#btnUpload'), invent: $('#btnInvent'), file: $('#fileInput'),
       go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'),
       download: $('#btnDownload'), publish: $('#btnPublish'), sendStore: $('#btnSendStore'),
       frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'), frame4: $('#frame4'),
@@ -341,6 +342,60 @@
       downscale(url, 768).then(showOriginal);
     }
 
+    // ---- No camera: invent a realistic person (text → image) ----
+    // Generates the "original" with AI when there is no webcam: an anonymous
+    // passer-by, full body. The rest of the pipeline (NPC → new person) runs
+    // exactly as with a real photo. Identity doesn't matter: it's erased on
+    // pixelation, just like a street photo.
+    const INV = {
+      who:    ['a man', 'a woman', 'a person'],
+      age:    ['in their early 20s', 'around 30', 'middle-aged, about 45', 'older, around 60', 'a teenager about 18'],
+      build:  ['slim build', 'average build', 'sturdy build', 'athletic', 'petite'],
+      hair:   ['short brown hair', 'long blonde hair', 'curly black hair', 'bald', 'grey hair', 'red hair in a ponytail', 'straight dark hair', 'shaved head'],
+      outfit: ['a winter coat', 'a t-shirt and jeans', 'a formal suit', 'a hoodie', 'a casual dress', 'a denim jacket', 'sportswear', 'a jumper and wool coat'],
+      vibe:   ['walking down the street', 'standing on the pavement', 'looking at a shop window', 'carrying shopping bags', 'checking their phone', 'waiting at a crossing']
+    };
+    const pick = (a) => a[Math.floor(Math.random() * a.length)];
+    function inventPrompt() {
+      // Wide shot at a distance with a low-detail face: the edit engine (Gemini)
+      // declines close-ups of realistic people as recognizable individuals.
+      // From a distance it pixelates just as well and gets through.
+      return 'Candid street photograph, vertical, wide full-body shot from some distance, of ' +
+        pick(INV.who) + ' ' + pick(INV.age) + ', ' + pick(INV.build) + ', ' + pick(INV.hair) +
+        ', wearing ' + pick(INV.outfit) + ', ' + pick(INV.vibe) +
+        '. An anonymous passer-by seen from afar; NOT a portrait or close-up, the face appears small and not sharp. ' +
+        'Natural light, blurred street background, candid phone-camera photo, no text or logos, not any famous or recognizable person.';
+    }
+    async function inventPerson() {
+      if (busy) return;
+      busy = true;
+      const btn = els.invent, label = btn.textContent;
+      btn.disabled = true; els.btnShot.disabled = true; stopCam();
+      els.hint.style.display = 'none';
+      setStatus('🎲 Inventing a person…');
+      progShow(true); progSet(0, 1, 'Generating person…');
+      try {
+        const r = await fetch(WORKER + '/xai/image', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: inventPrompt(), b64: true, model: 'grok-imagine-image' })
+        });
+        const d = await r.json().catch(() => ({}));
+        const item = d && Array.isArray(d.data) && d.data[0];
+        if (!r.ok || !item || !item.b64_json) {
+          const reason = (d && (d.detail || d.error)) || ('HTTP ' + r.status);
+          throw new Error(reason);
+        }
+        const url = 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
+        els.still.src = url; els.still.hidden = false; els.cam.hidden = true;
+        progShow(false); busy = false;
+        downscale(url, 768).then(showOriginal); // shows the original and auto-starts the pipeline
+      } catch (e) {
+        progShow(false); busy = false;
+        setStatus('Could not invent the person (' + e.message + '). Try again or upload a photo.', true);
+        btn.disabled = false; btn.textContent = label;
+      }
+    }
+
     async function run() {
       if (busy || !original) return;
       busy = true;
@@ -447,6 +502,27 @@
     els.btnCam.addEventListener('click', () => stream ? stopCam() : startCam());
     els.btnShot.addEventListener('click', shoot);
     els.btnUpload.addEventListener('click', () => els.file.click());
+    els.invent.addEventListener('click', inventPerson);
+
+    // If the device has no camera (PC with no webcam, blocked phone…), promote
+    // "Invent a person" as the main path.
+    (async function detectCam() {
+      let hasCam = true;
+      try {
+        const md = navigator.mediaDevices;
+        if (!md || !md.getUserMedia) { hasCam = false; }
+        else if (md.enumerateDevices) {
+          const devs = await md.enumerateDevices();
+          hasCam = devs.some(d => d.kind === 'videoinput');
+        }
+      } catch (e) { /* when unsure, keep the camera available */ }
+      if (!hasCam) {
+        els.btnCam.disabled = true; els.btnCam.classList.remove('primary');
+        els.btnCam.textContent = '📷 No camera';
+        els.invent.classList.add('primary');
+        setStatus('No camera detected: tap “Invent a person”, upload a photo or drag one in.');
+      }
+    })();
     function loadDataURL(url) {
       stopCam();
       els.still.src = url; els.still.hidden = false; els.cam.hidden = true; els.hint.style.display = 'none';
