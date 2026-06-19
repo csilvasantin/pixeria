@@ -131,7 +131,6 @@
         <div class="anon-controls">
           <button type="button" class="btn primary" id="btnCam">📷 Turn on camera</button>
           <button type="button" class="btn" id="btnUpload">📁 Upload photo</button>
-          <button type="button" class="btn" id="btnInvent">👥 Create audience</button>
           <input type="file" id="fileInput" class="anon-file" accept="image/*">
           <div class="anon-opts">
             <div class="field" style="margin:0">
@@ -161,6 +160,7 @@
               </select>
             </div>
           </div>
+          <button type="button" class="btn" id="btnInvent">👥 Create audience</button>
         </div>
       </div>
 
@@ -216,8 +216,8 @@
 
     const NPC8_SYS = 'You are an 8-bit pixel-art artist, NES / management-sim style (à la Kairosoft). From the given photo, generate a TINY, stubby character SPRITE: chibi proportions, big head, only 2 to 2.5 heads tall, full body facing front. VERY low resolution (like a ~32×40 px sprite), large clearly-visible square pixels, a palette of ONLY 4-5 flat colors, hard outline, no gradients, shadows or antialiasing. A SINGLE flat uniform background color (pure white) so it can be cut out. KEEP clothing and hair color and the approximate build. Do NOT keep recognizable facial features: it is a tiny anonymous NPC, not a portrait. It must look clearly SIMPLER, SMALLER and stubbier than a 16-bit sprite.';
     const NPC8_PROMPT = 'Turn it into a TINY, stubby 8-bit NPC sprite (chibi, big head, ~2 heads tall), very low resolution, large pixels and only 4-5 flat colors, like the tiny passers-by of the Admira XP digital twin.';
-    const NPC16_SYS = 'You are a detailed 16-bit pixel-art artist (SNES/Kairosoft style). From the given photo, generate a full-body CHARACTER facing front with more colors, shading and lighting and a defined outline, on a blurred street like the passers-by of the digital twin. KEEP clothing and hair color, build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC, not a portrait.';
-    const NPC16_PROMPT = 'Turn it into a detailed full-body 16-bit pixel-art NPC, like the passers-by of the Admira XP digital twin on a street.';
+    const NPC16_SYS = 'You are a 16-bit pixel-art artist (SNES/Kairosoft style). From the given photo, generate a HALF-BODY PORTRAIT (from the waist up), centered and facing front, as UNMISTAKABLE 16-bit PIXEL-ART: clearly visible square pixels, hard black outline, block shading and more colors than 8-bit. NEVER a realistic photo or smooth skin: it is a videogame SPRITE, not a photograph. Blurred town/street background with tiny passers-by behind, like the digital twin. KEEP clothing and hair color, build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC.';
+    const NPC16_PROMPT = 'Turn it into an UNMISTAKABLE 16-bit pixel-art HALF-BODY portrait (waist up), clearly visible square pixels and hard black outline, block shading — NO realistic photo or smooth skin —, on a blurred town street like the passers-by of the Admira XP digital twin.';
 
     const HUMAN_SYS = 'You are a street photographer. From the given pixel-art sprite/figure, generate a REALISTIC PHOTO of a DIFFERENT REAL person: new face and new identity, NOT the same person as the sprite. Keep only a similar VIBE (approximate age, same clothing style and color, same hair color and type, similar build). No pixel, drawing or game 3D: realistic skin, fabric and light. Full body, vertical, neutral background or blurred street. Anonymous person, no text or logos.';
     const HUMAN_PROMPT = {

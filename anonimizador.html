@@ -131,7 +131,6 @@
         <div class="anon-controls">
           <button type="button" class="btn primary" id="btnCam">📷 Activar cámara</button>
           <button type="button" class="btn" id="btnUpload">📁 Subir foto</button>
-          <button type="button" class="btn" id="btnInvent">👥 Crear audiencia</button>
           <input type="file" id="fileInput" class="anon-file" accept="image/*">
           <div class="anon-opts">
             <div class="field" style="margin:0">
@@ -161,6 +160,7 @@
               </select>
             </div>
           </div>
+          <button type="button" class="btn" id="btnInvent">👥 Crear audiencia</button>
         </div>
       </div>
 
@@ -217,8 +217,8 @@
     // ---- Prompts: NPC 8-bit, NPC 16-bit, y la vuelta a humano anónimo ----
     const NPC8_SYS = 'Eres un artista de pixel-art 8-bit estilo NES / simulador de gestión (tipo Kairosoft). A partir de la foto, genera un SPRITE de personaje DIMINUTO y achaparrado: proporción chibi, cabezón, solo 2 a 2,5 cabezas de alto, de cuerpo entero y de frente. MUY baja resolución (como un sprite de ~32×40 px), píxeles grandes y cuadrados bien visibles, paleta de SOLO 4-5 colores planos, contorno duro, sin degradados, sombras ni antialias. Fondo de UN SOLO color plano y uniforme (blanco puro) para poder recortarlo. MANTÉN color de ropa y pelo y la complexión aproximada. NO conserves rasgos faciales reconocibles: es un NPC anónimo minúsculo, no un retrato. Debe verse claramente MÁS SIMPLE, MÁS PEQUEÑO y MÁS achaparrado que un sprite de 16 bits.';
     const NPC8_PROMPT = 'Conviértelo en un sprite NPC 8-bit DIMINUTO y achaparrado (chibi, cabezón, ~2 cabezas de alto), muy baja resolución, píxeles grandes y solo 4-5 colores planos, como los viandantes minúsculos del gemelo Admira XP.';
-    const NPC16_SYS = 'Eres un artista de pixel-art 16-bit detallado (estilo SNES/Kairosoft). A partir de la foto, genera un PERSONAJE de cuerpo entero de frente con más colores, sombreado e iluminación y contorno definido, sobre una calle desenfocada como los viandantes del gemelo digital. MANTÉN color de ropa y pelo, complexión y edad aparente. NO conserves rasgos faciales reconocibles: es un NPC anónimo, no un retrato.';
-    const NPC16_PROMPT = 'Conviértelo en un NPC pixel-art 16-bit detallado de cuerpo entero, como los viandantes del gemelo digital Admira XP en una calle.';
+    const NPC16_SYS = 'Eres un artista de pixel-art 16-bit estilo SNES/Kairosoft. A partir de la foto, genera un RETRATO de medio cuerpo (de la cintura para arriba), centrado y de frente, como PIXEL-ART 16-bit INEQUÍVOCO: píxeles cuadrados claramente visibles, contorno negro duro, sombreado por bloques y más colores que el 8-bit. NUNCA una foto realista ni piel suave: es un SPRITE de videojuego, no una fotografía. Fondo de calle/pueblo desenfocado con viandantes diminutos al fondo, como el gemelo digital. MANTÉN color de ropa y pelo, complexión y edad aparente. NO conserves rasgos faciales reconocibles: es un NPC anónimo.';
+    const NPC16_PROMPT = 'Conviértelo en un RETRATO pixel-art 16-bit INEQUÍVOCO de medio cuerpo (cintura para arriba), píxeles cuadrados bien visibles y contorno negro duro, sombreado por bloques — NADA de foto realista ni piel suave —, sobre una calle de pueblo desenfocada como los viandantes del gemelo Admira XP.';
 
     const HUMAN_SYS = 'Eres un fotógrafo de calle. A partir del sprite/figura pixel-art dado, genera una FOTO REALISTA de una persona REAL DIFERENTE: cara nueva e identidad nueva, NO la misma persona del sprite. Conserva solo un AIRE parecido (edad aproximada, mismo estilo y color de ropa, mismo color y tipo de pelo, complexión similar). Nada de pixel, dibujo ni 3D de juego: piel, tela y luz realistas. Cuerpo entero, vertical, fondo neutro o calle desenfocada. Persona anónima, sin texto ni marcas.';
     const HUMAN_PROMPT = {
