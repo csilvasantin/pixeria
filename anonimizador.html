@@ -44,6 +44,9 @@
     .anon-frame img{width:100%;height:100%;object-fit:contain;display:block}
     .anon-frame.is-pixel img{image-rendering:pixelated}
     .anon-frame .ph{color:var(--muted,#5e8a6c);font-size:12px;text-align:center;padding:18px;line-height:1.5}
+    /* Relleno vertical de progreso: el rectángulo se llena de abajo a arriba con %. */
+    .anon-frame .vfill{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(to top,rgba(57,211,83,.45),rgba(57,211,83,.12));border-top:2px solid var(--accent,#39d353);box-shadow:0 0 18px rgba(57,211,83,.55);transition:height .35s ease;z-index:1;pointer-events:none}
+    .anon-frame .vpct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--accent,#39d353);font:800 24px var(--mono,ui-monospace,monospace);letter-spacing:.04em;text-shadow:0 0 10px rgba(0,0,0,.85),0 0 18px rgba(57,211,83,.4);z-index:2;pointer-events:none}
     .anon-frame .spin{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,2,.7);color:var(--accent,#39d353);font-size:12px;letter-spacing:.1em;text-transform:uppercase;gap:10px}
     .anon-frame .spin::before{content:"";width:16px;height:16px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:anonspin .8s linear infinite}
     @keyframes anonspin{to{transform:rotate(360deg)}}
@@ -211,7 +214,7 @@
     </section>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — el gemelo digital">Pixeria AI Workspace · Anonimizador · v.2026.06.19-anon</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — el gemelo digital">Pixeria AI Workspace · Anonimizador · v.2026.06.19b-anon</a></footer>
 
   <script src="/matrix-rain.js?v=20260608-sides"></script>
   <script>
@@ -323,6 +326,7 @@
 
     function showOriginal(dataURL) {
       original = dataURL; npc8 = null; npc16 = null; anon = null;
+      frameFillStop(els.frame1);
       els.frame1.innerHTML = '<img alt="Original" src="' + dataURL + '">';
       els.frame2.innerHTML = '<div class="ph">NPC 8-bit<br>(NES)</div>';
       els.frame3.innerHTML = '<div class="ph">NPC 16-bit<br>(detallado)</div>';
@@ -332,7 +336,23 @@
       run(); // auto-arranca en cuanto hay foto (no hace falta pulsar el botón)
     }
 
-    function frameImg(frame, dataURL) { frame.innerHTML = '<img src="' + dataURL + '" alt="">'; }
+    function frameImg(frame, dataURL) { frameFillStop(frame); frame.innerHTML = '<img src="' + dataURL + '" alt="">'; }
+    // ── Progreso por "rectángulo": relleno vertical (abajo→arriba) con % ──────────
+    function frameFill(frame, pct) {
+      let fill = frame.querySelector('.vfill'), txt = frame.querySelector('.vpct');
+      if (!fill) { fill = document.createElement('div'); fill.className = 'vfill'; frame.appendChild(fill); }
+      if (!txt) { txt = document.createElement('div'); txt.className = 'vpct'; frame.appendChild(txt); }
+      const p = Math.max(0, Math.min(100, pct));
+      fill.style.height = p.toFixed(1) + '%';
+      txt.textContent = Math.round(p) + '%';
+    }
+    // Relleno "indeterminado": repta hacia ~92% (no hay progreso real por await).
+    function frameFillCreep(frame, cap) {
+      frameFill(frame, 3); let p = 3; const top = cap || 92;
+      frameFillStop(frame);
+      frame.__fillT = setInterval(() => { p += (top - p) * 0.06; frameFill(frame, p); }, 260);
+    }
+    function frameFillStop(frame) { if (frame.__fillT) { clearInterval(frame.__fillT); frame.__fillT = null; } }
     function frameSpin(frame, label) {
       if (!frame.querySelector('.spin')) {
         const d = document.createElement('div'); d.className = 'spin'; d.textContent = label;
@@ -516,7 +536,11 @@
       const segTxt = parts.join(' · ');
       const audTxt = '👥 Creando audiencia' + (segTxt ? ': ' + segTxt : '') + '…';
       setStatus(audTxt);
-      progCreep(audTxt);
+      // Reinicia visualmente el tríptico y rellena la card ORIGINAL de abajo a arriba.
+      els.frame2.innerHTML = '<div class="ph">NPC 8-bit<br>(NES)</div>';
+      els.frame3.innerHTML = '<div class="ph">NPC 16-bit<br>(detallado)</div>';
+      els.frame4.innerHTML = '<div class="ph">Persona realista distinta</div>';
+      activeCard(els.card1); frameFillCreep(els.frame1);
       try {
         const r = await fetch(WORKER + '/xai/image', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -533,6 +557,7 @@
         const url = 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
         els.still.src = url; els.still.hidden = false; els.cam.hidden = true;
         progStop(); progShow(false); busy = false;
+        btn.disabled = false; btn.textContent = label; // re-armar el botón: permite volver a crear otra audiencia
         downscale(url, 768).then(showOriginal); // muestra el original y auto-arranca el pipeline
       } catch (e) {
         progStop(); progShow(false); busy = false;
@@ -551,7 +576,7 @@
       progShow(true); progSet(0, 3, 'Generando NPCs…');
       try {
         // Paso 1 — Foto → NPC 8-bit y 16-bit (en paralelo)
-        activeCard(els.card2); frameSpin(els.frame2, '8-bit…'); frameSpin(els.frame3, '16-bit…');
+        activeCard(els.card2); frameFillCreep(els.frame2); frameFillCreep(els.frame3);
         setStatus('Generando el NPC 8-bit y el 16-bit del gemelo…');
         let done = 0; const bump = () => progSet(++done, 3, 'NPCs ' + done + '/2…');
         // onRetry: el motor de imagen a veces da "alta demanda" (transitorio).
@@ -565,7 +590,7 @@
         await Promise.all([p8, p16]);
 
         // Paso 2 — NPC 16-bit → persona realista distinta
-        activeCard(els.card4); frameSpin(els.frame4, 'Reconstruyendo…');
+        activeCard(els.card4); frameFillCreep(els.frame4);
         setStatus('Generando una persona nueva…');
         const prompt = HUMAN_PROMPT[els.strength.value] || HUMAN_PROMPT.aire;
         anon = await editOrGrok(npc16, HUMAN_SYS, prompt, grokHumanPrompt(), retryMsg(els.frame4, 'retrato'), 'retrato');
@@ -582,6 +607,7 @@
         setStatus(errMsg(e), true);
         activeCard(null);
       } finally {
+        [els.frame2, els.frame3, els.frame4].forEach(frameFillStop);
         progShow(false); els.go.disabled = false; busy = false;
       }
     }
