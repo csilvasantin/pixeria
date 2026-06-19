@@ -577,10 +577,10 @@
 
     const STORE_URL = 'https://www.xpaceos.com/admira-xp/';
     let __toastT = null;
-    function storeToast(html) {
+    function storeToast(html, sticky) {
       const t = document.getElementById('anonToast'); if (!t) return;
       t.innerHTML = html; t.classList.add('show');
-      clearTimeout(__toastT); __toastT = setTimeout(() => t.classList.remove('show'), 7000);
+      clearTimeout(__toastT); __toastT = setTimeout(() => t.classList.remove('show'), sticky ? 15000 : 7000);
     }
     // Send the 8-bit NPC to the twin (queue /twin/spawn → it walks into the store)
     async function sendStore() {
@@ -599,9 +599,28 @@
         btn.textContent = '✓ Sent to store'; btn.classList.add('ok');
         els.status.classList.remove('err');
         els.status.innerHTML = '🏪 <b>Sent.</b> Your 8-bit NPC will walk into the twin in a few seconds — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">open the store to see it ↗</a>';
-        storeToast('🏪 NPC sent to the store! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Open the store ↗</a>');
+        storeToast('🏪 NPC sent to the store! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Open the store ↗</a>', true);
         setTimeout(() => { btn.textContent = label; btn.classList.remove('ok'); btn.disabled = false; }, 3500);
+        confirmInStore();   // switches to "already in the store" once we confirm it shows up
       } catch (e) { setStatus('Could not send to the store: ' + e.message, true); btn.disabled = false; }
+    }
+    // After sending: if a twin (xtore-game) is ONLINE listening, the NPC enters in
+    // ~1 poll cycle (~6-8s). We confirm a store is connected and, after that window,
+    // swap "sent" for "already in the store". If NO store is online, we keep "sent"
+    // (it'll enter as soon as one opens) — honest.
+    async function confirmInStore() {
+      let online = false;
+      try {
+        const r = await fetch(WORKER + '/signage/screens', { cache: 'no-store' });
+        const d = await r.json().catch(() => ({}));
+        online = Array.isArray(d.screens) && d.screens.some(s => s && s.online && /game/i.test(s.role || ''));
+      } catch (_) {}
+      if (!online) return;
+      setTimeout(() => {
+        els.status.classList.remove('err');
+        els.status.innerHTML = '🏪 <b>Already in the store.</b> Your 8-bit NPC is walking around the twin — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">open the store to see it ↗</a>';
+        storeToast('✅ NPC already in the store! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Open the store ↗</a>');
+      }, 7000);
     }
 
     function download() {

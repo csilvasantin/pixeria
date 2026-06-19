@@ -588,10 +588,10 @@
 
     const STORE_URL = 'https://www.xpaceos.com/admira-xp/';
     let __toastT = null;
-    function storeToast(html) {
+    function storeToast(html, sticky) {
       const t = document.getElementById('anonToast'); if (!t) return;
       t.innerHTML = html; t.classList.add('show');
-      clearTimeout(__toastT); __toastT = setTimeout(() => t.classList.remove('show'), 7000);
+      clearTimeout(__toastT); __toastT = setTimeout(() => t.classList.remove('show'), sticky ? 15000 : 7000);
     }
     // Enviar el NPC 8-bit al gemelo (cola /twin/spawn → aparece paseando por la tienda)
     async function sendStore() {
@@ -610,9 +610,28 @@
         btn.textContent = '✓ Enviado a la tienda'; btn.classList.add('ok');
         els.status.classList.remove('err');
         els.status.innerHTML = '🏪 <b>Enviado.</b> Tu NPC 8-bit entrará paseando por el gemelo en unos segundos — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">abre la tienda para verlo ↗</a>';
-        storeToast('🏪 ¡NPC enviado a la tienda! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Abrir la tienda ↗</a>');
+        storeToast('🏪 ¡NPC enviado a la tienda! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Abrir la tienda ↗</a>', true);
         setTimeout(() => { btn.textContent = label; btn.classList.remove('ok'); btn.disabled = false; }, 3500);
+        confirmInStore();   // pasa a "ya en tienda" cuando se confirma que aparece
       } catch (e) { setStatus('No se pudo enviar a la tienda: ' + e.message, true); btn.disabled = false; }
+    }
+    // Tras enviar: si hay un gemelo (xtore-game) ONLINE escuchando, el NPC entra
+    // en ~1 ciclo de sondeo (~6-8s). Confirmamos que hay tienda conectada y, pasado
+    // ese margen, sustituimos "enviado" por "ya en tienda". Si NO hay ninguna tienda
+    // online, mantenemos "enviado" (el NPC entrará en cuanto se abra una) — honesto.
+    async function confirmInStore() {
+      let online = false;
+      try {
+        const r = await fetch(WORKER + '/signage/screens', { cache: 'no-store' });
+        const d = await r.json().catch(() => ({}));
+        online = Array.isArray(d.screens) && d.screens.some(s => s && s.online && /game/i.test(s.role || ''));
+      } catch (_) {}
+      if (!online) return;   // sin gemelo conectado: no afirmamos llegada
+      setTimeout(() => {
+        els.status.classList.remove('err');
+        els.status.innerHTML = '🏪 <b>Ya en la tienda.</b> Tu NPC 8-bit está paseando por el gemelo — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">abre la tienda para verlo ↗</a>';
+        storeToast('✅ ¡NPC ya en la tienda! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Abrir la tienda ↗</a>');
+      }, 7000);
     }
 
     function download() {
