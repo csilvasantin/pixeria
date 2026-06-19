@@ -218,7 +218,7 @@
     </section>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19e-anon</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19f-anon</a></footer>
 
   <script src="/matrix-rain.js?v=20260608-sides"></script>
   <script>
@@ -228,8 +228,8 @@
 
     const NPC8_SYS = 'You are an 8-bit pixel-art artist, NES / management-sim style (à la Kairosoft). From the given photo, generate a TINY, stubby character SPRITE: chibi proportions, big head, only 2 to 2.5 heads tall, full body facing front. VERY low resolution (like a ~32×40 px sprite), large clearly-visible square pixels, a palette of ONLY 4-5 flat colors, hard outline, no gradients, shadows or antialiasing. A SINGLE flat uniform background color (pure white) so it can be cut out. KEEP the apparent SEX/gender of the person (if female, female; if male, male), the clothing and hair color and the approximate build. Do NOT keep recognizable facial features: it is a tiny anonymous NPC, not a portrait. It must look clearly SIMPLER, SMALLER and stubbier than a 16-bit sprite.';
     const NPC8_PROMPT = 'Turn it into a TINY, stubby 8-bit NPC sprite (chibi, big head, ~2 heads tall), very low resolution, large pixels and only 4-5 flat colors, like the tiny passers-by of the Admira XP digital twin.';
-    const NPC16_SYS = 'You are a 16-bit pixel-art artist (SNES/Kairosoft style). From the given photo, generate a HALF-BODY PORTRAIT (from the waist up), centered and facing front, as UNMISTAKABLE 16-bit PIXEL-ART: clearly visible square pixels, hard black outline, block shading and more colors than 8-bit. NEVER a realistic photo or smooth skin: it is a videogame SPRITE, not a photograph. Blurred town/street background with tiny passers-by behind, like the digital twin. KEEP the apparent SEX/gender of the person (if female, female; if male, male), the clothing and hair color, the build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC.';
-    const NPC16_PROMPT = 'Turn it into an UNMISTAKABLE 16-bit pixel-art HALF-BODY portrait (waist up), clearly visible square pixels and hard black outline, block shading — NO realistic photo or smooth skin —, on a blurred town street like the passers-by of the Admira XP digital twin.';
+    const NPC16_SYS = 'You are a 16-bit pixel-art artist (SNES / advanced Kairosoft style). FULLY REDRAW the person as a FULL-BODY 16-bit character SPRITE, facing front — do NOT apply a filter or texture over the photo, redraw it from scratch. Reduced resolution (like a ~64×112 px sprite) with LARGE, CLEARLY visible square pixels, hard black outline, block shading (cel-shading) and a LIMITED palette of ~16-24 flat colors. NO soft gradients, NO photographic skin, NO antialiasing, NO blur or depth of field. More detail and more colors than the 8-bit sprite, but UNMISTAKABLY videogame pixel-art, NEVER a photograph. Town/street background also in pixel-art with tiny passers-by. KEEP the apparent SEX/gender (if female, female; if male, male), the clothing and hair color, the build and apparent age. Do NOT keep recognizable facial features: it is an anonymous NPC.';
+    const NPC16_PROMPT = 'REDRAW IT FROM SCRATCH as a FULL-BODY 16-bit pixel-art sprite (SNES style): large, clearly visible square pixels, hard black outline, block shading and a ~16-24 flat-color palette. It is NOT a filter or texture over the photo — it is a REDRAWN videogame character, with no realistic skin, no gradients and no blur. Pixel-art town street in the background, like the Admira XP twin NPCs.';
 
     const HUMAN_SYS = 'You are a street photographer. From the given pixel-art sprite/figure, generate a REALISTIC PHOTO of a DIFFERENT REAL person: new face and new identity, NOT the same person as the sprite, BUT OF THE SAME SEX/gender (if the sprite is female, a woman; if male, a man — never change the sex). Keep a similar VIBE (same sex, approximate age, same clothing style and color, same hair color and type, similar build). No pixel, drawing or game 3D: realistic skin, fabric and light. Full body, vertical, neutral background or blurred street. Anonymous person, no text or logos.';
     const HUMAN_PROMPT = {
@@ -434,7 +434,7 @@
       return sex + ' ' + age + (s.desc ? ', ' + s.desc : '');
     }
     const grok8Prompt  = () => '8-bit NES pixel-art character sprite, tiny and stubby (chibi, big head, ~2 heads tall), full body facing front, 4-5 flat colors, large pixels and hard outline, NO gradients, on a flat uniform WHITE background for cutout. Character: ' + segPersonDesc() + '. Anonymous, no text or logos.';
-    const grok16Prompt = () => '16-bit SNES pixel-art half-body portrait, facing front, clearly visible square pixels, hard black outline and block shading (NOT a realistic photo), on a blurred street background. Character: ' + segPersonDesc() + '. Anonymous, no text or logos.';
+    const grok16Prompt = () => 'FULL-BODY 16-bit SNES pixel-art sprite, facing front, large clearly visible square pixels, hard black outline, block shading and a ~16-24 flat-color palette (NOT a realistic photo, gradients or blur), on a pixel-art street background. Character: ' + segPersonDesc() + '. Anonymous, no text or logos.';
     const grokHumanPrompt = () => 'Realistic full-body photo, vertical, of ' + segPersonDesc() + ', a NEW anonymous person (not famous or recognizable), blurred street background, natural light, no text or logos.';
     // Try editing with Gemini; if it REFUSES on content, regenerate with Grok.
     async function editOrGrok(image, sys, editPrompt, grokPrompt, onRetry, tag) {
@@ -577,19 +577,25 @@
       els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true; els.sendStore.disabled = true;
       progShow(true); progSet(0, 3, 'Generating NPCs…');
       try {
-        // Step 1 — photo → 8-bit and 16-bit NPC (in parallel)
-        activeCard(els.card2); frameFillCreep(els.frame2); frameFillCreep(els.frame3);
-        setStatus('Generating the 8-bit and 16-bit twin NPC…');
+        // Step 1 — photo → 8-bit and THEN 16-bit NPC, SEQUENTIAL (not at once): avoids
+        // hitting the engine with 2 concurrent requests and the progress cascade shows
+        // one card after another (the 8-bit finishes before the 16-bit starts).
         let done = 0; const bump = () => progSet(++done, 3, 'NPCs ' + done + '/2…');
         // onRetry: the image engine sometimes returns "high demand" (transient).
-        // We surface it in the spinner and status while it retries on its own.
         const retryMsg = (frame, tag) => (a, m) => {
           const s = frame.querySelector('.spin'); if (s) s.textContent = tag + ' · retry ' + a + '/' + (m - 1) + '…';
           setStatus('The engine is busy, retrying the ' + tag + ' (' + a + '/' + (m - 1) + ')…');
         };
-        const p8 = editOrGrok(original, NPC8_SYS, NPC8_PROMPT, grok8Prompt(), retryMsg(els.frame2, '8-bit'), '8-bit').then(async img => { npc8 = await makeTransparentBg(img, 52); frameFillFinish(els.frame2, npc8); bump(); });
-        const p16 = editOrGrok(original, NPC16_SYS, NPC16_PROMPT, grok16Prompt(), retryMsg(els.frame3, '16-bit'), '16-bit').then(img => { npc16 = img; frameFillFinish(els.frame3, img); bump(); });
-        await Promise.all([p8, p16]);
+        // 1a) 8-bit NPC
+        activeCard(els.card2); frameFillCreep(els.frame2);
+        setStatus('Generating the 8-bit twin NPC…');
+        const img8 = await editOrGrok(original, NPC8_SYS, NPC8_PROMPT, grok8Prompt(), retryMsg(els.frame2, '8-bit'), '8-bit');
+        npc8 = await makeTransparentBg(img8, 52); frameFillFinish(els.frame2, npc8); bump();
+        // 1b) 16-bit NPC (only once the 8-bit has finished)
+        activeCard(els.card3); frameFillCreep(els.frame3);
+        setStatus('Generating the 16-bit twin NPC…');
+        const img16 = await editOrGrok(original, NPC16_SYS, NPC16_PROMPT, grok16Prompt(), retryMsg(els.frame3, '16-bit'), '16-bit');
+        npc16 = img16; frameFillFinish(els.frame3, img16); bump();
 
         // Step 2 — 16-bit NPC → different realistic person
         activeCard(els.card4); frameFillCreep(els.frame4);
