@@ -23,9 +23,10 @@
     .anon-cam{position:relative;border:1px solid var(--line,#1c3a22);border-radius:14px;overflow:hidden;background:#020602;min-height:280px;display:flex;align-items:center;justify-content:center}
     /* Previo de tamaño FIJO (toma la altura del grid, igual que los controles): la
        imagen va absoluta para no estirar la caja. Vertical → bandas a los lados. */
-    .anon-cam video,.anon-cam img{position:absolute;inset:0;width:100%;height:100%;display:block;background:#020602}
-    .anon-cam video{object-fit:cover}
-    .anon-cam img{object-fit:contain}
+    .anon-cam video,.anon-cam img{position:absolute;inset:0;width:100%;height:100%;display:block}
+    .anon-cam video{object-fit:cover;background:#020602;z-index:1}
+    .anon-cam #camStill{object-fit:contain;z-index:1}            /* foto nítida y completa, centrada */
+    .anon-cam #camStillBg{object-fit:cover;filter:blur(24px) brightness(.5) saturate(1.2);transform:scale(1.15);z-index:0}  /* entorno de relleno: nada de franjas negras */
     .anon-cam video[hidden],.anon-cam img[hidden]{display:none}
     .anon-cam .anon-cam-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted,#7fae8c);text-align:center;padding:24px;font-size:13px}
     .anon-cam .anon-cam-hint b{color:var(--fg,#dffbe6);font-size:34px;line-height:1}
@@ -133,6 +134,7 @@
             <span>Activa la cámara, sube una foto, <strong>arrástrala aquí</strong> o <strong>crea una audiencia</strong> si no tienes cámara.<br>La imagen solo se usa para transformarla; no se almacena.</span>
           </div>
           <video id="cam" autoplay playsinline muted hidden></video>
+          <img id="camStillBg" alt="" aria-hidden="true" hidden>
           <img id="camStill" alt="Foto capturada" hidden>
         </div>
         <div class="anon-controls">
@@ -218,7 +220,7 @@
     </section>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — el gemelo digital">Pixeria AI Workspace · Anonimizador · v.2026.06.19f-anon</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — el gemelo digital">Pixeria AI Workspace · Anonimizador · v.2026.06.19g-anon</a></footer>
 
   <script src="/matrix-rain.js?v=20260608-sides"></script>
   <script>
@@ -251,7 +253,7 @@
     let originalSource = 'foto';   // de dónde salió el original (cámara / subida / Grok)
 
     const els = {
-      camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), hint: $('#camHint'),
+      camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), stillBg: $('#camStillBg'), hint: $('#camHint'),
       btnCam: $('#btnCam'), btnUpload: $('#btnUpload'), invent: $('#btnInvent'), file: $('#fileInput'),
       go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'), sex: $('#optSex'), age: $('#optAge'), desc: $('#optDesc'),
       download: $('#btnDownload'), publish: $('#btnPublish'), sendStore: $('#btnSendStore'),
@@ -259,6 +261,16 @@
       card1: $('#card1'), card2: $('#card2'), card3: $('#card3'), card4: $('#card4'),
       prog: $('#anonProg'), progFill: $('#anonProgFill'), progLabel: $('#anonProgLabel')
     };
+    // Previo vertical → rellena las franjas con el ENTORNO (copia desenfocada de la
+    // misma foto, escalada a cubrir), nunca negro. Espejamos src/hidden del still al fondo.
+    try {
+      const __syncBg = () => {
+        const s = els.still.getAttribute('src');
+        if (s && !els.still.hidden) { if (els.stillBg.getAttribute('src') !== s) els.stillBg.src = s; els.stillBg.hidden = false; }
+        else { els.stillBg.hidden = true; els.stillBg.removeAttribute('src'); }
+      };
+      new MutationObserver(__syncBg).observe(els.still, { attributes: true, attributeFilter: ['src', 'hidden'] });
+    } catch (_) {}
 
     const setStatus = (t, err) => { els.status.textContent = t; els.status.classList.toggle('err', !!err); };
     // Mensajes humanos según el motivo de rechazo del motor de imagen.
