@@ -144,20 +144,25 @@
             <div class="field" style="margin:0">
               <label for="optSex">Segmentación al inventar · sexo</label>
               <select id="optSex">
-                <option value="any" selected>Cualquiera</option>
-                <option value="hombre">Hombre</option>
+                <option value="hombre" selected>Hombre</option>
                 <option value="mujer">Mujer</option>
+                <option value="any">Cualquiera</option>
               </select>
             </div>
             <div class="field" style="margin:0">
               <label for="optAge">Segmentación al inventar · edad</label>
               <select id="optAge">
-                <option value="any" selected>Cualquiera</option>
                 <option value="joven">Joven (18-25)</option>
                 <option value="adulto">Adulto (26-40)</option>
-                <option value="maduro">Maduro (41-60)</option>
+                <option value="maduro" selected>Maduro (41-60)</option>
                 <option value="senior">Senior (60+)</option>
+                <option value="any">Cualquiera</option>
               </select>
+            </div>
+            <div class="field" style="margin:0">
+              <label for="optDesc">Descripción opcional (algo especial)</label>
+              <input type="text" id="optDesc" maxlength="160" autocomplete="off"
+                     placeholder="p. ej. con gorra y mochila, uniforme de trabajo, con paraguas…">
             </div>
           </div>
           <button type="button" class="btn" id="btnInvent">👥 Crear audiencia</button>
@@ -239,7 +244,7 @@
     const els = {
       camWrap: $('#camWrap'), cam: $('#cam'), still: $('#camStill'), hint: $('#camHint'),
       btnCam: $('#btnCam'), btnUpload: $('#btnUpload'), invent: $('#btnInvent'), file: $('#fileInput'),
-      go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'), sex: $('#optSex'), age: $('#optAge'),
+      go: $('#btnGo'), status: $('#status'), strength: $('#optStrength'), sex: $('#optSex'), age: $('#optAge'), desc: $('#optDesc'),
       download: $('#btnDownload'), publish: $('#btnPublish'), sendStore: $('#btnSendStore'),
       frame1: $('#frame1'), frame2: $('#frame2'), frame3: $('#frame3'), frame4: $('#frame4'),
       card1: $('#card1'), card2: $('#card2'), card3: $('#card3'), card4: $('#card4'),
@@ -412,10 +417,17 @@
     // cualquiera de cuerpo entero. El resto del pipeline (NPC → persona nueva)
     // funciona igual que con una foto real. La identidad da igual: se borra al
     // pixelar, igual que con una foto de la calle.
+    // Pelo y ropa POR SEXO: si pides "hombre" no debe salir con vestido ni melena.
     const INV = {
       build:  ['complexión delgada', 'complexión media', 'complexión robusta', 'atlético', 'menudo'],
-      hair:   ['pelo corto castaño', 'melena rubia', 'pelo rizado negro', 'calvo', 'pelo canoso', 'pelirrojo con coleta', 'pelo liso moreno', 'rapado'],
-      outfit: ['abrigo de invierno', 'camiseta y vaqueros', 'traje formal', 'sudadera con capucha', 'vestido casual', 'chaqueta vaquera', 'ropa deportiva', 'jersey y abrigo de lana'],
+      hair: {
+        hombre: ['pelo corto castaño', 'calvo', 'pelo canoso corto', 'rapado', 'pelo corto moreno', 'pelo corto rubio', 'entradas y barba corta'],
+        mujer:  ['melena rubia', 'pelo rizado negro', 'media melena morena', 'pelo canoso recogido', 'pelirroja con coleta', 'pelo corto castaño', 'moño']
+      },
+      outfit: {
+        hombre: ['abrigo de invierno', 'camiseta y vaqueros', 'traje formal', 'sudadera con capucha', 'chaqueta vaquera', 'ropa deportiva', 'jersey y abrigo de lana', 'camisa y pantalón chino'],
+        mujer:  ['abrigo de invierno', 'camiseta y vaqueros', 'vestido casual', 'sudadera con capucha', 'chaqueta vaquera', 'ropa deportiva', 'jersey y abrigo de lana', 'blusa y falda']
+      },
       vibe:   ['caminando por la calle', 'de pie en la acera', 'mirando un escaparate', 'con bolsas de la compra', 'consultando el móvil', 'esperando en un paso de peatones']
     };
     const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -423,18 +435,22 @@
     const AGE_TXT = { joven: 'de unos 22 años', adulto: 'de unos 33 años', maduro: 'de unos 50 años', senior: 'de unos 68 años' };
     const AGE_ANY = ['joven de unos 20 años', 'de unos 30 años', 'de mediana edad, sobre 45', 'mayor, de unos 60 años'];
     const SEG_LBL = { hombre: 'hombre', mujer: 'mujer', joven: 'joven', adulto: 'adulto', maduro: 'maduro', senior: 'senior' };
-    function currentSegment() { return { sex: els.sex.value, age: els.age.value }; }
+    function currentSegment() { return { sex: els.sex.value, age: els.age.value, desc: (els.desc.value || '').trim() }; }
     function inventPrompt(seg) {
-      const who = seg.sex === 'hombre' ? 'un hombre' : seg.sex === 'mujer' ? 'una mujer' : pick(['un hombre', 'una mujer']);
+      const sex = seg.sex === 'any' ? pick(['hombre', 'mujer']) : seg.sex;   // sexo efectivo
+      const who = sex === 'hombre' ? 'un HOMBRE (claramente masculino)' : 'una MUJER (claramente femenina)';
       const age = (seg.age !== 'any' && AGE_TXT[seg.age]) ? AGE_TXT[seg.age] : pick(AGE_ANY);
       // Plano general a cierta distancia y cara poco nítida: el motor de edición
       // (Gemini) rechaza los primeros planos de personas realistas por tratarlas
       // como individuos reconocibles. A distancia pixela igual de bien y pasa.
-      return 'Fotografía callejera espontánea, vertical, plano general de cuerpo entero y a cierta distancia, de ' +
-        who + ' ' + age + ', ' + pick(INV.build) + ', ' + pick(INV.hair) +
-        ', vestido con ' + pick(INV.outfit) + ', ' + pick(INV.vibe) +
-        '. Viandante anónimo visto de lejos; NO es un retrato ni un primer plano, la cara aparece pequeña y poco nítida. ' +
+      let p = 'Fotografía callejera espontánea, vertical, plano general de cuerpo entero y a cierta distancia, de ' +
+        who + ' ' + age + ', ' + pick(INV.build) + ', ' + pick(INV.hair[sex]) +
+        ', con ' + pick(INV.outfit[sex]) + ', ' + pick(INV.vibe) +
+        '. ES ' + (sex === 'hombre' ? 'UN HOMBRE' : 'UNA MUJER') + ', respeta el sexo indicado. ' +
+        'Viandante anónimo visto de lejos; NO es un retrato ni un primer plano, la cara aparece pequeña y poco nítida. ' +
         'Luz natural, fondo de calle desenfocado, foto candid tipo cámara de móvil, sin texto ni marcas, no es ninguna persona famosa ni reconocible.';
+      if (seg.desc) p += ' Detalle adicional pedido (respétalo): ' + seg.desc + '.';
+      return p;
     }
     async function inventPerson() {
       if (busy) return;
@@ -563,7 +579,8 @@
       els.publish.disabled = true;
       // Segmentación elegida al inventar → etiquetas para la publi (targeting).
       const segTags = segment ? [segment.sex, segment.age].filter(v => v && v !== 'any').map(v => 'seg:' + v) : [];
-      const segNote = segTags.length ? ' Segmento: ' + segTags.map(t => t.slice(4)).join(' · ') + '.' : '';
+      let segNote = segTags.length ? ' Segmento: ' + segTags.map(t => t.slice(4)).join(' · ') + '.' : '';
+      if (segment && segment.desc) segNote += ' Brief: ' + segment.desc + '.';
       // Los NPC pixel-art van a "Twin NPCs"; la persona final a "Digital Twins".
       const jobs = [];
       if (npc8) jobs.push(() => pubStock(npc8, 'twin-npc', 'Twin NPC 8-bit · Pixeria',
