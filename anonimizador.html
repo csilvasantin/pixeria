@@ -385,6 +385,47 @@
       throw lastErr;
     }
 
+    // ── Fallback a Grok cuando Gemini RECHAZA por contenido ───────────────────
+    // Gemini/nano-banana a veces rechaza (reason image-declined/safety/copyright)
+    // a personas SINTÉTICAS que él mismo tipo de IA ha generado, tratándolas como
+    // "reconocibles". No tiene sentido: la persona no existe. En ese caso, en vez
+    // de fallar, REGENERAMOS el resultado pedido con Grok (texto→imagen) a partir
+    // del segmento elegido. (Norma de Carlos, 2026-06-19.)
+    const REFUSAL = new Set(['image-declined', 'safety', 'copyright']);
+    async function grokImage(prompt) {
+      const r = await fetch(WORKER + '/xai/image', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, b64: true, model: 'grok-imagine-image' })
+      });
+      const d = await r.json().catch(() => ({}));
+      const item = d && Array.isArray(d.data) && d.data[0];
+      if (!r.ok || !item || !item.b64_json) { const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status)); e.reason = (d && d.reason) || null; throw e; }
+      return 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
+    }
+    // Descripción de la persona para los prompts de Grok (usa el segmento si lo hay).
+    function segPersonDesc() {
+      const s = segment;
+      if (!s) return 'una persona adulta cualquiera';
+      const sex = s.sex === 'hombre' ? 'un hombre' : s.sex === 'mujer' ? 'una mujer' : 'una persona';
+      const age = (s.age && s.age !== 'any' && AGE_TXT[s.age]) ? AGE_TXT[s.age] : 'de edad adulta';
+      return sex + ' ' + age + (s.desc ? ', ' + s.desc : '');
+    }
+    const grok8Prompt  = () => 'Sprite de personaje pixel-art 8-bit estilo NES, diminuto y achaparrado (chibi, cabezón, ~2 cabezas de alto), de cuerpo entero y de frente, paleta de 4-5 colores planos, píxeles grandes y contorno duro, SIN degradados, sobre FONDO BLANCO plano y uniforme para recortar. Personaje: ' + segPersonDesc() + '. Anónimo, sin texto ni marcas.';
+    const grok16Prompt = () => 'Retrato pixel-art 16-bit estilo SNES de medio cuerpo, de frente, píxeles cuadrados claramente visibles, contorno negro duro y sombreado por bloques (NADA de foto realista), sobre fondo de calle desenfocado. Personaje: ' + segPersonDesc() + '. Anónimo, sin texto ni marcas.';
+    const grokHumanPrompt = () => 'Fotografía realista de cuerpo entero, vertical, de ' + segPersonDesc() + ', una persona anónima NUEVA (no famosa ni reconocible), fondo de calle desenfocado, luz natural, sin texto ni marcas.';
+    // Intenta editar con Gemini; si RECHAZA por contenido, regenera con Grok.
+    async function editOrGrok(image, sys, editPrompt, grokPrompt, onRetry, tag) {
+      try {
+        return await imageEdit(image, sys, editPrompt, onRetry);
+      } catch (e) {
+        if (grokPrompt && REFUSAL.has(e.reason)) {
+          setStatus('⚠️ El motor rechazó la imagen sintética; generando el ' + (tag || 'resultado') + ' con Grok…');
+          return await grokImage(grokPrompt);
+        }
+        throw e;
+      }
+    }
+
     // ---- Cámara ----
     async function startCam() {
       try {
@@ -506,15 +547,15 @@
           const s = frame.querySelector('.spin'); if (s) s.textContent = tag + ' · reintento ' + a + '/' + (m - 1) + '…';
           setStatus('El motor está saturado, reintentando el ' + tag + ' (' + a + '/' + (m - 1) + ')…');
         };
-        const p8 = imageEdit(original, NPC8_SYS, NPC8_PROMPT, retryMsg(els.frame2, '8-bit')).then(async img => { npc8 = await makeTransparentBg(img, 52); frameImg(els.frame2, npc8); bump(); });
-        const p16 = imageEdit(original, NPC16_SYS, NPC16_PROMPT, retryMsg(els.frame3, '16-bit')).then(img => { npc16 = img; frameImg(els.frame3, img); bump(); });
+        const p8 = editOrGrok(original, NPC8_SYS, NPC8_PROMPT, grok8Prompt(), retryMsg(els.frame2, '8-bit'), '8-bit').then(async img => { npc8 = await makeTransparentBg(img, 52); frameImg(els.frame2, npc8); bump(); });
+        const p16 = editOrGrok(original, NPC16_SYS, NPC16_PROMPT, grok16Prompt(), retryMsg(els.frame3, '16-bit'), '16-bit').then(img => { npc16 = img; frameImg(els.frame3, img); bump(); });
         await Promise.all([p8, p16]);
 
         // Paso 2 — NPC 16-bit → persona realista distinta
         activeCard(els.card4); frameSpin(els.frame4, 'Reconstruyendo…');
         setStatus('Generando una persona nueva…');
         const prompt = HUMAN_PROMPT[els.strength.value] || HUMAN_PROMPT.aire;
-        anon = await imageEdit(npc16, HUMAN_SYS, prompt, retryMsg(els.frame4, 'retrato'));
+        anon = await editOrGrok(npc16, HUMAN_SYS, prompt, grokHumanPrompt(), retryMsg(els.frame4, 'retrato'), 'retrato');
         frameImg(els.frame4, anon); progSet(3, 3, 'Listo');
 
         activeCard(els.card4);
