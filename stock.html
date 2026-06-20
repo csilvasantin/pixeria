@@ -15,6 +15,10 @@
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
   <link rel="stylesheet" href="workspace.css?v=20260613-play">
   <style>
+    /* Contador de elementos en stock (en el título), con flash al crecer */
+    .stock-count{ font-variant-numeric:tabular-nums; display:inline-block; }
+    .stock-count.bump{ animation:stockBump .65s ease; }
+    @keyframes stockBump{ 0%{ transform:scale(1) } 30%{ transform:scale(1.22); text-shadow:0 0 22px currentColor } 100%{ transform:scale(1) } }
     /* Flechas anterior/siguiente del lightbox del Stock */
     .stock-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);z-index:30;width:54px;height:84px;display:flex;align-items:center;justify-content:center;
       border:1px solid rgba(118,185,0,.4);border-radius:12px;background:rgba(8,16,8,.72);color:#b8e577;font-size:34px;line-height:1;cursor:pointer;
@@ -244,7 +248,7 @@
 
   <header class="page-head">
     <p class="eyebrow stock">Galería pública</p>
-    <h1>Stock · assets desplegados desde los 4 motores.</h1>
+    <h1>Stock · <span id="stockCount" class="stock-count" data-n="0">…</span> assets desplegados desde los 4 motores.</h1>
     <p class="lead">Todo lo que se publica desde el botón <strong>📌 Publicar en Stock</strong> en audio, música, imágenes o video aparece aquí. Filtros por tipo y motor; búsqueda por prompt.</p>
   </header>
 
@@ -926,6 +930,17 @@
       // importada (canciones), que no son locuciones.
       return displayType(it) === t;
     }
+    // Nº de elementos en stock en el título (en vivo; al importar/borrar se refresca).
+    function updateStockCount() {
+      const el = document.getElementById('stockCount');
+      if (!el) return;
+      const n = allItems.length;
+      const prev = parseInt(el.dataset.n || '0', 10);
+      el.textContent = n;
+      el.dataset.n = n;
+      if (n > prev && prev > 0) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+    }
+
     function applyFilters(resetPage) {
       const items = allItems.filter(it => {
         if (!matchesType(it, filters.type)) return false;
@@ -963,6 +978,7 @@
       grid.innerHTML = pageItems.map(renderCard).join('');
       observeLazyVideos();
       empty.hidden = items.length > 0;
+      updateStockCount();
 
       // Pager UI. El superior lleva el orden integrado, así que no se oculta del
       // todo: solo escondemos sus flechas cuando hay una única página. El inferior
