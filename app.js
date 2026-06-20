@@ -3,8 +3,8 @@
   const KEYS_STORE = 'pixer-keys';
   const VERSION = 'v.2026.05.02-r35';
   const COSTES_FECHA = '2026-05-15';
-  const ELEVEN_WORKER_URL = 'https://pixer-eleven.csilvasantin.workers.dev';
-  const XAI_WORKER_URL    = 'https://pixer-eleven.csilvasantin.workers.dev';
+  const ELEVEN_WORKER_URL = 'https://api.admira.store';
+  const XAI_WORKER_URL    = 'https://api.admira.store';
 
   // ─── API keys (localStorage) ───────────────────────────────────────
   function loadKeys() {
