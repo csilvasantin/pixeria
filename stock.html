@@ -930,15 +930,21 @@
       // importada (canciones), que no son locuciones.
       return displayType(it) === t;
     }
-    // Nº de elementos en stock en el título (en vivo; al importar/borrar se refresca).
+    // Contador "X de Y" en el título (en vivo): X = reproducibles (misma definición
+    // que admira.tv → coincide), Y = TODO lo que hay en stock (incl. enlaces que no
+    // se pudieron descargar). Mismo set MEDIA + url que canal.html de admira.tv.
+    const ADMIRATV_MEDIA = new Set(['video', 'animation', 'image', 'digital-twin', 'audio', 'music', 'locucion']);
     function updateStockCount() {
       const el = document.getElementById('stockCount');
       if (!el) return;
-      const n = allItems.length;
-      const prev = parseInt(el.dataset.n || '0', 10);
-      el.textContent = n;
-      el.dataset.n = n;
-      if (n > prev && prev > 0) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+      const total = allItems.length;
+      const playable = allItems.filter(i => i && ADMIRATV_MEDIA.has(i.type) && i.url).length;
+      const prev = parseInt(el.dataset.p || '0', 10);
+      el.textContent = playable + ' de ' + total;
+      el.dataset.p = playable;
+      el.title = playable + ' reproducibles (= los que ves en admira.tv) · ' + total +
+        ' en stock' + (total > playable ? ' (incluye ' + (total - playable) + ' no reproducibles: mobiliario, NPCs y enlaces pendientes)' : '');
+      if (playable > prev && prev > 0) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
     }
 
     function applyFilters(resetPage) {
