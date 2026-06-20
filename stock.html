@@ -17,6 +17,8 @@
   <style>
     /* Contador de elementos en stock (en el título), con flash al crecer */
     .stock-count{ font-variant-numeric:tabular-nums; display:inline-block; }
+    /* ID único del asset (= /playN en admira.tv) */
+    .stock-num{ font-family:ui-monospace,monospace; font-size:11px; font-weight:700; color:#9bff6a; border:1px solid rgba(118,185,0,.45); border-radius:6px; padding:1px 6px; background:rgba(40,70,10,.4); letter-spacing:.04em; }
     .stock-count.bump{ animation:stockBump .65s ease; }
     @keyframes stockBump{ 0%{ transform:scale(1) } 30%{ transform:scale(1.22); text-shadow:0 0 22px currentColor } 100%{ transform:scale(1) } }
     /* Flechas anterior/siguiente del lightbox del Stock */
@@ -838,6 +840,7 @@
         <div class="stock-card-body">
           <header>
             <span class="stock-type ${typeLabel}">${typeText(typeLabel)}</span>
+            ${it.num ? `<span class="stock-num" title="ID único del asset · llámalo con /play${it.num} en admira.tv">#${it.num}</span>` : ''}
             <div class="stock-card-actions">
               <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Abrir en AINimation" aria-label="Abrir en AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
               <button type="button" class="stock-card-btn" data-act="playlist" title="Añadir a una playlist" aria-label="Añadir a playlist"><span aria-hidden="true">🎵</span></button>
