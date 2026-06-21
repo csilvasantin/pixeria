@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixeria · MCP — biblioteca de contenido</title>
+<meta name="description" content="Servidor MCP de Pixeria: busca y consulta la biblioteca de Stock (capa Crear de Admira) desde cualquier agente o persona.">
+<style>
+  :root{ --bg:#0a0710; --panel:#16101f; --line:#2b2138; --txt:#f1ecf7; --mut:#a293b5; --acc:#ff6fb3; --pur:#b98cff; --good:#3ddc84; }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:radial-gradient(1100px 560px at 50% -10%,#1d1330,var(--bg));color:var(--txt);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100%}
+  .wrap{max-width:780px;margin:0 auto;padding:48px 22px 80px}
+  .kick{font:600 12px/1 ui-monospace,Menlo,monospace;letter-spacing:3px;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:33px;margin:10px 0 6px;font-weight:680;letter-spacing:-.02em}
+  h1 b{background:linear-gradient(90deg,var(--acc),var(--pur));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{color:var(--mut);font-size:16px;margin:0 0 26px;max-width:62ch}
+  .status{display:inline-flex;align-items:center;gap:8px;font:600 12px ui-monospace,Menlo,monospace;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:7px 13px;margin-bottom:28px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--mut)}
+  .dot.up{background:var(--good);box-shadow:0 0 10px var(--good)} .dot.down{background:#ff5a5a;box-shadow:0 0 10px #ff5a5a}
+  h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin:34px 0 14px;font-family:ui-monospace,Menlo,monospace}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
+  .endpoint{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .url{font-size:16px;color:var(--acc);word-break:break-all}
+  button.copy{border:1px solid var(--line);background:#120c1a;color:var(--txt);border-radius:8px;padding:8px 14px;font:600 13px ui-monospace,Menlo,monospace;cursor:pointer}
+  button.copy:hover{border-color:var(--acc);color:var(--acc)}
+  pre{background:#120c1a;border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;font-size:13px;color:#e7d8f2;margin:0}
+  .tool{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .tool:last-child{border-bottom:0}
+  .tool b{font-family:ui-monospace,Menlo,monospace;color:var(--pur);font-size:14px}
+  .tool span{color:var(--mut);font-size:14px}
+  a{color:var(--acc)}
+  footer{color:var(--mut);font-size:13px;margin-top:38px;border-top:1px solid var(--line);padding-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kick">Pixeria · Model Context Protocol</div>
+  <h1>La <b>biblioteca</b> de Pixeria, conectada</h1>
+  <p class="lead">Servidor MCP de la capa <b>Crear</b>: agentes (silicio) y personas (carbono) buscan y consultan el Stock de contenido — vídeo, imagen, música, locución, mobiliario y gemelos.</p>
+
+  <div class="status"><span class="dot" id="dot"></span><span id="status">comprobando servidor…</span></div>
+
+  <h2>Endpoint</h2>
+  <div class="card endpoint">
+    <code class="url" id="ep">https://mcp-pixeria.admira.store/mcp</code>
+    <button class="copy" onclick="navigator.clipboard.writeText('https://mcp-pixeria.admira.store/mcp')">Copiar</button>
+  </div>
+
+  <h2>Herramientas</h2>
+  <div class="card">
+    <div class="tool"><b>search_stock</b><span>Busca por texto y tipo en la biblioteca de Stock.</span></div>
+    <div class="tool"><b>stock_stats</b><span>Total, desglose por tipo y etiquetas más frecuentes.</span></div>
+    <div class="tool"><b>get_asset</b><span>Un asset concreto por id, con todos sus metadatos.</span></div>
+  </div>
+
+  <h2>Conectar</h2>
+  <pre>{ "mcpServers": { "pixeria": { "url": "https://mcp-pixeria.admira.store/mcp" } } }</pre>
+
+  <footer>Pixeria · capa Crear de Admira · Hermanos: <a href="https://www.xpaceos.com/mcp/">xpaceos</a> (Operar) · <a href="https://admira.tv/mcp/">admira.tv</a> (Emitir).</footer>
+</div>
+<script>
+  fetch('https://mcp-pixeria.admira.store/',{cache:'no-store'}).then(r=>r.json()).then(j=>{
+    const ok=j&&j.ok; document.getElementById('dot').className='dot '+(ok?'up':'down');
+    document.getElementById('status').textContent= ok?('servidor en línea · '+(j.tools?j.tools.length:0)+' herramientas'):'servidor no responde';
+  }).catch(()=>{ document.getElementById('dot').className='dot down'; document.getElementById('status').textContent='servidor no alcanzable (¿desplegando?)'; });
+</script>
+</body>
+</html>
