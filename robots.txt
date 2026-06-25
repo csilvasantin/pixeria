@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /backoffice/
 Disallow: /god/
 
 Sitemap: https://www.pixeria.com/sitemap.xml
