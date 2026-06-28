@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Valencia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#04070d">
-<meta name="description" content="Xtanco Valencia — gemelo isométrico del local con sus 4 zonas DOOH (A·B·C·D), generado desde el plano. XpaceOS Locations · Pixeria.">
+<meta name="description" content="Xtanco Valencia — gemelo isométrico del local con sus 4 pantallas DOOH (A·B·C·D) emitiendo en vivo y gestión remota. XpaceOS Locations · Pixeria.">
 <style>
-  :root{ --bg:#04070d; --ink:#dceaff; --muted:#7d93b0; --cyan:#37e0ff; --line:rgba(55,224,255,.16); --panel:rgba(8,16,28,.82); }
+  :root{ --bg:#04070d; --ink:#dceaff; --muted:#7d93b0; --cyan:#37e0ff; --line:rgba(55,224,255,.16); --panel:rgba(8,16,28,.86); }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;overflow:hidden}
   body{background:radial-gradient(130% 100% at 50% -10%,#0a1424,#04070d);color:var(--ink);
@@ -25,8 +25,10 @@
   .brand small{color:var(--muted);font-size:11px}
   .spacer{flex:1}
   .badge{font-size:10.5px;color:var(--cyan);border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:rgba(55,224,255,.06)}
-  /* panel de zonas */
-  .zones{bottom:18px;left:18px;width:236px;background:var(--panel);backdrop-filter:blur(10px);
+  .live{display:inline-flex;align-items:center;gap:6px}
+  .live::before{content:"";width:7px;height:7px;border-radius:50%;background:#ff5a6a;box-shadow:0 0 8px #ff5a6a;animation:pulse 1.4s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .zones{bottom:18px;left:18px;width:238px;background:var(--panel);backdrop-filter:blur(10px);
     border:1px solid var(--line);border-radius:14px;padding:12px 13px}
   .zones h3{margin:0 0 9px;font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
   .zrow{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:9px;cursor:pointer;transition:.12s}
@@ -35,38 +37,56 @@
   .zrow .nm{font-weight:700;font-size:13px;flex:none;width:14px}
   .zrow .det{color:var(--muted);font-size:10.5px;line-height:1.3}
   .zrow .det b{color:var(--ink);font-weight:600}
-  /* controles */
   .ctrl{bottom:18px;right:18px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
   .ctrl button{font-family:inherit;background:var(--panel);backdrop-filter:blur(10px);color:var(--ink);
     border:1px solid var(--line);border-radius:10px;padding:9px 13px;font-size:12.5px;cursor:pointer;white-space:nowrap}
   .ctrl button:hover{border-color:var(--cyan)}
   .ctrl button.on{border-color:var(--cyan);color:var(--cyan);background:rgba(55,224,255,.08)}
+  /* panel de gestión remota (slide-in derecha) */
+  .mgmt{top:0;right:0;height:100%;width:312px;background:rgba(6,12,22,.94);backdrop-filter:blur(14px);
+    border-left:1px solid var(--line);transform:translateX(102%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+    z-index:8;display:flex;flex-direction:column;padding:18px 16px;gap:14px}
+  .mgmt.open{transform:translateX(0)}
+  .mgmt .x{align-self:flex-end;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;margin:-6px -4px 0}
+  .mgmt h2{margin:0;font-size:18px;display:flex;align-items:center;gap:9px}
+  .mgmt h2 .sw{width:14px;height:14px;border-radius:4px;box-shadow:0 0 10px currentColor}
+  .mgmt .sub{color:var(--muted);font-size:11px;margin-top:-8px}
+  .mgmt .prev{width:100%;aspect-ratio:16/9;border-radius:9px;border:1px solid var(--line);background:#000;overflow:hidden}
+  .mgmt .prev canvas{width:100%;height:100%;display:block}
+  .kv{display:flex;justify-content:space-between;font-size:12px;padding:7px 0;border-bottom:1px solid rgba(55,224,255,.08)}
+  .kv span:first-child{color:var(--muted)}
+  .kv .st-on{color:#54e08a}.kv .st-off{color:#ff5a6a}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  .acts button{flex:1;min-width:84px;font-family:inherit;background:rgba(55,224,255,.08);color:var(--ink);
+    border:1px solid var(--line);border-radius:9px;padding:10px 8px;font-size:12px;cursor:pointer}
+  .acts button:hover{border-color:var(--cyan)}
+  .acts button.danger{background:rgba(255,90,106,.08);border-color:rgba(255,90,106,.3)}
+  .mgmt .note{margin-top:auto;color:var(--muted);font-size:10px;line-height:1.5;border-top:1px solid var(--line);padding-top:10px}
   #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:9;
     background:var(--bg);color:var(--muted);font-size:13px;letter-spacing:.1em}
   #loading .ring{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--cyan);border-radius:50%;animation:spin .9s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .foot{bottom:2px;left:0;right:0;text-align:center;color:var(--muted);font-size:9.5px;opacity:.7;pointer-events:none}
-  /* etiquetas flotantes de zona (HTML sobre el canvas) */
-  .zlabel{position:fixed;z-index:4;transform:translate(-50%,-100%);pointer-events:none;
+  .zlabel{position:fixed;z-index:4;transform:translate(-50%,-100%);pointer-events:auto;cursor:pointer;
     background:rgba(4,7,13,.78);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-size:11px;white-space:nowrap;
     box-shadow:0 4px 16px rgba(0,0,0,.4)}
+  .zlabel:hover{border-color:var(--cyan)}
   .zlabel b{font-weight:700}
   .zlabel small{color:var(--muted)}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-
 <div id="loading"><div class="ring"></div><div>Construyendo Xtanco Valencia…</div></div>
 
 <div class="hud top">
   <a class="back" href="/xpacios/" title="Volver a Xpacios">←</a>
   <div class="brand"><b>Xtanco <span class="x">Valencia</span></b> <small>· Xpacio · XpaceOS Locations</small></div>
   <span class="spacer"></span>
-  <span class="badge">4 zonas DOOH · 280 cm · ~16 m² c/u</span>
+  <span class="badge"><span class="live">EN VIVO</span> · 4 pantallas DOOH · 280 cm</span>
 </div>
 
-<div class="hud zones" id="zones"><h3>Zonas / pantallas</h3></div>
+<div class="hud zones" id="zones"><h3>Pantallas · pulsa para gestionar</h3></div>
 
 <div class="hud ctrl">
   <button id="spinBtn" class="on" title="Rotación automática">↻ Auto-giro</button>
@@ -74,187 +94,250 @@
   <button id="resetBtn" title="Recentrar la cámara isométrica">📐 Isométrica</button>
 </div>
 
-<div class="hud foot">Pixeria · XpaceOS Locations · render interpretado del plano (v1) · cotas reales por zona</div>
+<!-- Panel de gestión remota -->
+<div class="hud mgmt" id="mgmt">
+  <span class="x" id="mgmtClose">✕</span>
+  <h2><span class="sw" id="mSw"></span> Pantalla <span id="mId">A</span></h2>
+  <div class="sub" id="mSub">Zona A · 16 m² · h 280 cm</div>
+  <div class="prev"><canvas id="mPrev" width="384" height="216"></canvas></div>
+  <div>
+    <div class="kv"><span>Estado</span><span id="mState" class="st-on">● en línea</span></div>
+    <div class="kv"><span>Emisión</span><span id="mEmit">▶ reproduciendo</span></div>
+    <div class="kv"><span>Contenido</span><span id="mContent">—</span></div>
+    <div class="kv"><span>Resolución</span><span id="mRes">1920×1080 · 16:9</span></div>
+  </div>
+  <div class="acts">
+    <button id="mPlay">⏸ Pausar</button>
+    <button id="mNext">⏭ Siguiente</button>
+    <button id="mPower" class="danger">⏻ Apagar</button>
+  </div>
+  <div class="note">Gestión remota (demo) — estado y controles por pantalla. Próximo: enganche real con la flota de señalización (signage / OmniPublicity) para emisión y proof-of-play.</div>
+</div>
+
+<div class="hud foot">Pixeria · XpaceOS Locations · Xtanco Valencia · render interpretado del plano · cotas reales por zona</div>
 
 <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
 </script>
 <script type="module">
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 /* ============================================================
-   MODELO DEL PLANO — Xtanco Valencia (editable / refinable)
-   Coordenadas en METROS, planta vista desde arriba (x→este, z→sur).
-   Las 4 zonas usan sus COTAS REALES (cm→m). El contorno es una
-   interpretación del plano; se afina cuando llegue el DWG/SVG.
+   MODELO DEL PLANO — Xtanco Valencia (interpretado, editable)
+   Metros, planta desde arriba (x→este, z→sur). Zonas con cotas reales.
    ============================================================ */
 const PLAN = {
-  height: 2.8,                              // altura de pared (280 cm)
-  // contorno exterior del local (polígono, en metros) — interpretado del plano
+  height: 2.8,
   outline: [
-    [0.0, 5.5],[3.6, 5.5],[3.6, 1.2],[8.2, 1.2],[8.2, 0.0],[14.6, 0.0],
-    [14.6, 2.0],[18.4, 2.0],[18.4, 9.2],[16.0, 14.4],[8.6, 14.4],[8.6, 10.2],
-    [4.2, 10.2],[4.2, 7.2],[0.0, 7.2]
+    [0.0,6.0],[3.4,6.0],[3.4,1.6],[8.0,1.6],[8.0,0.0],[15.0,0.0],[15.0,2.0],
+    [19.0,2.0],[19.0,9.2],[16.4,15.0],[9.0,15.0],[9.0,11.0],[4.4,11.0],[4.4,8.2],[0.0,8.2]
   ],
-  // zonas DOOH — pos = esquina sup-izq en planta (m); w×d en metros (cotas reales)
   zones: [
-    { id:"A", color:0xff9d6e, x:0.5,  z:7.2-5.0-0.0+2.2, w:3.22, d:5.00 },
-    { id:"B", color:0xf2e08a, x:9.2,  z:1.2,             w:4.91, d:3.37 },
-    { id:"C", color:0xb59cff, x:9.6,  z:6.6,             w:4.05, d:4.00 },
-    { id:"D", color:0x88e6a8, x:13.7, z:9.9,             w:3.98, d:4.09 },
+    { id:"A", color:0xff9d6e, x:0.25, z:1.7, w:3.22, d:5.00, online:true, playing:true, idx:0,
+      campaigns:[
+        {brand:"LOTERÍA", title:"El Gordo te espera", sub:"Décimos disponibles aquí"},
+        {brand:"ONCE", title:"Sorteo de hoy", sub:"Tu suerte empieza aquí"} ] },
+    { id:"B", color:0xf2e08a, x:9.6, z:1.9, w:4.91, d:3.37, online:true, playing:true, idx:0,
+      campaigns:[
+        {brand:"SIN HUMO", title:"Nueva gama vapeo", sub:"Pruébala hoy"},
+        {brand:"PREMIUM", title:"Tabaco de liar", sub:"Edición limitada"} ] },
+    { id:"C", color:0xb59cff, x:10.0, z:6.6, w:4.05, d:4.00, online:true, playing:true, idx:0,
+      campaigns:[
+        {brand:"ENERGY", title:"Recarga ya · 2x1", sub:"Solo esta semana"},
+        {brand:"CAFÉ", title:"Para llevar", sub:"Recién hecho"} ] },
+    { id:"D", color:0x88e6a8, x:13.6, z:10.2, w:3.98, d:4.09, online:true, playing:true, idx:0,
+      campaigns:[
+        {brand:"OFERTA", title:"Snacks −30%", sub:"Hoy en tienda"},
+        {brand:"PRENSA", title:"Revistas y novedades", sub:"Últimos números"} ] },
   ],
 };
-// pequeña corrección de A (la coloco a la izquierda, centrada en altura)
-PLAN.zones[0].x = 0.5; PLAN.zones[0].z = 1.6;
 
 /* ---------- escena ---------- */
 const canvas = document.getElementById("c");
-const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x04070d, 28, 60);
+scene.fog = new THREE.Fog(0x04070d, 30, 64);
 
-// centro del plano (para centrar la cámara y el suelo)
 const bb = PLAN.outline.reduce((a,[x,z])=>({minx:Math.min(a.minx,x),maxx:Math.max(a.maxx,x),minz:Math.min(a.minz,z),maxz:Math.max(a.maxz,z)}),{minx:1e9,maxx:-1e9,minz:1e9,maxz:-1e9});
 const CX=(bb.minx+bb.maxx)/2, CZ=(bb.minz+bb.maxz)/2, SPAN=Math.max(bb.maxx-bb.minx, bb.maxz-bb.minz);
 const root = new THREE.Group(); scene.add(root);
-const toV = (x,z)=> new THREE.Vector3(x-CX, 0, z-CZ);   // planta→mundo (centrado)
 
-/* cámara isométrica ortográfica */
 let aspect = innerWidth/innerHeight;
 const D = SPAN*0.62;
 const cam = new THREE.OrthographicCamera(-D*aspect, D*aspect, D, -D, 0.1, 200);
-function isoPose(){ cam.position.set(CX*0+22, 24, 22); cam.lookAt(0,0,0); }
+function isoPose(){ cam.position.set(22, 24, 22); cam.lookAt(0,0,0); }
 isoPose();
 const controls = new OrbitControls(cam, canvas);
 controls.enableDamping = true; controls.dampingFactor = .08;
-controls.target.set(0,1.2,0); controls.maxPolarAngle = Math.PI*0.49; controls.minZoom=0.4; controls.maxZoom=3;
+controls.target.set(0,1.2,0); controls.maxPolarAngle = Math.PI*0.49; controls.minZoom=0.45; controls.maxZoom=3.2;
 controls.update();
 
-/* luces */
-scene.add(new THREE.AmbientLight(0x2a3a55, 1.1));
-const key = new THREE.DirectionalLight(0xbfe4ff, 1.5); key.position.set(14,26,8);
+scene.add(new THREE.AmbientLight(0x2a3a55, 1.15));
+const key = new THREE.DirectionalLight(0xbfe4ff, 1.45); key.position.set(14,26,8);
 key.castShadow=true; key.shadow.mapSize.set(2048,2048);
-key.shadow.camera.left=-SPAN; key.shadow.camera.right=SPAN; key.shadow.camera.top=SPAN; key.shadow.camera.bottom=-SPAN;
-key.shadow.camera.near=1; key.shadow.camera.far=80; scene.add(key);
-const rim = new THREE.DirectionalLight(0x37e0ff, .55); rim.position.set(-12,8,-10); scene.add(rim);
+Object.assign(key.shadow.camera,{left:-SPAN,right:SPAN,top:SPAN,bottom:-SPAN,near:1,far:80}); scene.add(key);
+const rim = new THREE.DirectionalLight(0x37e0ff, .5); rim.position.set(-12,8,-10); scene.add(rim);
 
-/* ---------- suelo (polígono del local) + cuadrícula ---------- */
+/* ---------- suelo ---------- */
 const shape = new THREE.Shape(PLAN.outline.map(([x,z])=> new THREE.Vector2(x-CX, z-CZ)));
-const floorGeo = new THREE.ShapeGeometry(shape);
-const floor = new THREE.Mesh(floorGeo, new THREE.MeshStandardMaterial({ color:0x0a1626, roughness:.92, metalness:.05 }));
-floor.rotation.x = -Math.PI/2; floor.position.y = 0; floor.receiveShadow = true; root.add(floor);
-// borde luminoso del suelo
-const edge = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(PLAN.outline.map(([x,z])=> new THREE.Vector3(x-CX,0.02,z-CZ))),
-  new THREE.LineBasicMaterial({ color:0x37e0ff, transparent:true, opacity:.5 }));
-root.add(edge);
-// rejilla técnica (clip al polígono vía stencil sería ideal; aquí una sutil global)
+const floor = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshStandardMaterial({ color:0x0a1626, roughness:.92, metalness:.05 }));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; root.add(floor);
+root.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(PLAN.outline.map(([x,z])=> new THREE.Vector3(x-CX,0.02,z-CZ))),
+  new THREE.LineBasicMaterial({ color:0x37e0ff, transparent:true, opacity:.5 })));
 const grid = new THREE.GridHelper(SPAN*2, Math.round(SPAN*2), 0x16324a, 0x0e2236);
-grid.position.y = 0.012; grid.material.transparent=true; grid.material.opacity=.5; root.add(grid);
+grid.position.y=0.012; grid.material.transparent=true; grid.material.opacity=.45; root.add(grid);
 
-/* ---------- paredes (extrusión del contorno) ---------- */
-const wallMat = new THREE.MeshStandardMaterial({ color:0x16273f, roughness:.85, metalness:.1,
-  transparent:true, opacity:.5, side:THREE.DoubleSide });
+/* ---------- paredes ---------- */
+const wallMat = new THREE.MeshStandardMaterial({ color:0x16273f, roughness:.85, metalness:.1, transparent:true, opacity:.42, side:THREE.DoubleSide });
 const pts = PLAN.outline;
 for(let i=0;i<pts.length;i++){
   const a=pts[i], b=pts[(i+1)%pts.length];
   const ax=a[0]-CX, az=a[1]-CZ, bx=b[0]-CX, bz=b[1]-CZ;
   const len=Math.hypot(bx-ax, bz-az);
-  const g=new THREE.PlaneGeometry(len, PLAN.height);
-  const m=new THREE.Mesh(g, wallMat);
-  m.position.set((ax+bx)/2, PLAN.height/2, (az+bz)/2);
-  m.rotation.y = -Math.atan2(bz-az, bx-ax);
-  m.castShadow=true; root.add(m);
-  // remate superior luminoso
-  const top=new THREE.Mesh(new THREE.BoxGeometry(len,0.04,0.04), new THREE.MeshBasicMaterial({color:0x37e0ff}));
-  top.position.set((ax+bx)/2, PLAN.height, (az+bz)/2); top.rotation.y=m.rotation.y;
-  top.material.transparent=true; top.material.opacity=.35; root.add(top);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(len, PLAN.height), wallMat);
+  m.position.set((ax+bx)/2, PLAN.height/2, (az+bz)/2); m.rotation.y=-Math.atan2(bz-az, bx-ax); m.castShadow=true; root.add(m);
+  const top=new THREE.Mesh(new THREE.BoxGeometry(len,0.035,0.035), new THREE.MeshBasicMaterial({color:0x37e0ff, transparent:true, opacity:.35}));
+  top.position.set((ax+bx)/2, PLAN.height, (az+bz)/2); top.rotation.y=m.rotation.y; root.add(top);
 }
 
-/* ---------- zonas DOOH (volumen + suelo coloreado + pantalla emisiva) ---------- */
-const screens = []; const zoneMeshes = [];
+/* ---------- mostrador curvo + estanterías ---------- */
+const counterCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(2.6-CX,0.5,11.0-CZ), new THREE.Vector3(4.5-CX,0.5,12.4-CZ),
+  new THREE.Vector3(7.0-CX,0.5,12.7-CZ), new THREE.Vector3(9.2-CX,0.5,12.0-CZ)
+]);
+const counter = new THREE.Mesh(new THREE.TubeGeometry(counterCurve, 40, 0.45, 12, false),
+  new THREE.MeshStandardMaterial({ color:0x1c3550, roughness:.5, metalness:.3, emissive:0x0a2236, emissiveIntensity:.4 }));
+counter.castShadow=true; root.add(counter);
+function shelfRun(x1,z1,x2,z2,n){
+  const dx=(x2-x1)/n, dz=(z2-z1)/n;
+  for(let i=0;i<n;i++){
+    const b=new THREE.Mesh(new THREE.BoxGeometry(0.5,1.6,0.18),
+      new THREE.MeshStandardMaterial({color:0x12273e, roughness:.8, metalness:.15}));
+    b.position.set(x1+dx*(i+.5)-CX, 0.8, z1+dz*(i+.5)-CZ);
+    b.rotation.y = -Math.atan2(dz,dx); b.castShadow=true; root.add(b);
+  }
+}
+shelfRun(4.6,8.0, 8.6,11.2, 6);
+shelfRun(0.3,8.0, 4.0,8.0, 4);
+
+/* ---------- contenido de pantalla (canvas animado) ---------- */
+function makeScreenCanvas(){ const cv=document.createElement("canvas"); cv.width=384; cv.height=216; return cv; }
+function shade(hex,p){ const n=parseInt(hex.slice(1),16); let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  r=Math.max(0,Math.min(255,r+255*p));g=Math.max(0,Math.min(255,g+255*p));b=Math.max(0,Math.min(255,b+255*p));
+  return "rgb("+(r|0)+","+(g|0)+","+(b|0)+")"; }
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function wrap(c,txt,x,y,maxw,lh){const w=txt.split(" ");let line="",yy=y;for(const word of w){const test=line+word+" ";if(c.measureText(test).width>maxw&&line){c.fillText(line,x,yy);line=word+" ";yy+=lh;}else line=test;}c.fillText(line,x,yy);}
+function drawAd(ctx, camp, color, t){
+  const W=ctx.canvas.width, H=ctx.canvas.height;
+  const hex="#"+color.toString(16).padStart(6,"0");
+  const g=ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,"#05101c"); g.addColorStop(1,shade(hex,-0.55));
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  const sweep=(t*0.12)%1.6-0.3;
+  const sg=ctx.createLinearGradient(sweep*W-60,0,sweep*W+60,H);
+  sg.addColorStop(0,"rgba(255,255,255,0)"); sg.addColorStop(.5,"rgba(255,255,255,.06)"); sg.addColorStop(1,"rgba(255,255,255,0)");
+  ctx.fillStyle=sg; ctx.fillRect(0,0,W,H);
+  ctx.font="700 15px JetBrains Mono, monospace"; const bw=ctx.measureText(camp.brand).width+22;
+  ctx.fillStyle=hex; roundRect(ctx,20,20,bw,26,7); ctx.fill();
+  ctx.fillStyle="#04070d"; ctx.fillText(camp.brand,31,38);
+  ctx.fillStyle="#eef6ff"; ctx.font="700 30px JetBrains Mono, monospace"; wrap(ctx,camp.title,20,92,W-40,32);
+  ctx.fillStyle="rgba(220,234,255,.75)"; ctx.font="400 16px JetBrains Mono, monospace"; ctx.fillText(camp.sub,20,H-50);
+  ctx.fillStyle=hex; ctx.fillRect(20,H-30,28,3);
+  ctx.fillStyle="rgba(220,234,255,.5)"; ctx.font="400 12px JetBrains Mono, monospace"; ctx.fillText("Xtanco Valencia · ADmira",58,H-26);
+}
+
+/* ---------- zonas: pad + volumen + pantalla mural ---------- */
+const zoneMeshes = [];
 PLAN.zones.forEach(z=>{
-  const col = new THREE.Color(z.color);
-  const cx = (z.x + z.w/2) - CX, cz = (z.z + z.d/2) - CZ;
-  // suelo coloreado de la zona
-  const padGeo = new THREE.PlaneGeometry(z.w, z.d);
-  const pad = new THREE.Mesh(padGeo, new THREE.MeshStandardMaterial({ color:col, roughness:.6, metalness:.1, transparent:true, opacity:.32, emissive:col, emissiveIntensity:.25 }));
+  const col=new THREE.Color(z.color);
+  const cx=(z.x+z.w/2)-CX, cz=(z.z+z.d/2)-CZ;
+  const pad=new THREE.Mesh(new THREE.PlaneGeometry(z.w,z.d), new THREE.MeshStandardMaterial({color:col,roughness:.6,metalness:.1,transparent:true,opacity:.28,emissive:col,emissiveIntensity:.22}));
   pad.rotation.x=-Math.PI/2; pad.position.set(cx,0.03,cz); pad.receiveShadow=true; root.add(pad);
-  // contorno del volumen (caja wireframe a 2.8m)
-  const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(z.w, PLAN.height, z.d)),
-    new THREE.LineBasicMaterial({ color:col, transparent:true, opacity:.55 }));
-  box.position.set(cx, PLAN.height/2, cz); root.add(box);
-  // PANTALLA: un panel emisivo vertical en la zona (mirando al centro del local)
-  const sW=Math.min(z.w,z.d)*0.78, sH=1.5;
-  const scr = new THREE.Mesh(new THREE.PlaneGeometry(sW, sH),
-    new THREE.MeshStandardMaterial({ color:0x05131f, emissive:col, emissiveIntensity:1.1, roughness:.3, metalness:.4, side:THREE.DoubleSide }));
-  // orientar la pantalla hacia el centro del local
-  const toCenter = new THREE.Vector3(-cx,0,-cz).normalize();
-  scr.position.set(cx + toCenter.x*(z.w*0.0), sH/2+0.25, cz + toCenter.z*(z.d*0.0));
-  scr.lookAt(0, sH/2+0.25, 0);
-  scr.userData.col = col; root.add(scr); screens.push(scr);
-  // marco de la pantalla
-  const frame = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(sW+0.06,sH+0.06)),
-    new THREE.LineBasicMaterial({color:col})); frame.position.copy(scr.position); frame.quaternion.copy(scr.quaternion); root.add(frame);
-  // luz puntual tenue de la pantalla
-  const pl=new THREE.PointLight(col, 0.9, 6); pl.position.set(cx, 1.8, cz); root.add(pl);
-  z._world={cx,cz}; zoneMeshes.push({z,box,pad,scr,frame,pl});
+  const box=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(z.w,PLAN.height,z.d)), new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.5}));
+  box.position.set(cx,PLAN.height/2,cz); root.add(box);
+  const dir=new THREE.Vector3(cx,0,cz).normalize();
+  const sW=Math.min(z.w,z.d)*0.92, sH=1.55, sy=sH/2+0.35;
+  const cv=makeScreenCanvas(); const tex=new THREE.CanvasTexture(cv); tex.colorSpace=THREE.SRGBColorSpace;
+  const scr=new THREE.Mesh(new THREE.PlaneGeometry(sW,sH),
+    new THREE.MeshStandardMaterial({map:tex, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:.78, roughness:.35, metalness:.2, side:THREE.DoubleSide}));
+  const px=cx+dir.x*(z.w*0.46-0.06), pz=cz+dir.z*(z.d*0.46-0.06);
+  scr.position.set(px,sy,pz); scr.lookAt(0,sy,0); root.add(scr);
+  const frame=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(sW+0.08,sH+0.08)), new THREE.LineBasicMaterial({color:col}));
+  frame.position.copy(scr.position); frame.quaternion.copy(scr.quaternion); root.add(frame);
+  const pl=new THREE.PointLight(col,0.85,7); pl.position.set(px,1.8,pz); root.add(pl);
+  z._w={cx,cz}; z._col=col; zoneMeshes.push({z,box,pad,scr,frame,pl,cv,tex});
 });
 
-/* ---------- panel de zonas (HTML) ---------- */
+/* ---------- panel de zonas ---------- */
 const zonesEl=document.getElementById("zones");
 PLAN.zones.forEach(z=>{
-  const r=document.createElement("div"); r.className="zrow";
-  r.innerHTML=`<span class="dot" style="color:#${z.color.toString(16).padStart(6,'0')};background:#${z.color.toString(16).padStart(6,'0')}"></span>`+
-    `<span class="nm">${z.id}</span>`+
-    `<span class="det">Zona ${z.id} · <b>${(z.w*z.d).toFixed(0)} m²</b><br>${(z.w*100|0)}×${(z.d*100|0)} cm · h 280</span>`;
-  r.addEventListener("click",()=>{ // enfocar la zona
-    controls.target.set(z._world.cx, 1.2, z._world.cz); controls.update();
-  });
+  const r=document.createElement("div"); r.className="zrow"; r.dataset.id=z.id;
+  const hex="#"+z.color.toString(16).padStart(6,'0');
+  r.innerHTML=`<span class="dot" style="color:${hex};background:${hex}"></span><span class="nm">${z.id}</span>`+
+    `<span class="det">Pantalla ${z.id} · <b>${(z.w*z.d).toFixed(0)} m²</b><br>${(z.w*100|0)}×${(z.d*100|0)} cm · h 280</span>`;
+  r.addEventListener("click",()=>openMgmt(z.id));
   zonesEl.appendChild(r);
 });
 
-/* ---------- etiquetas flotantes A/B/C/D ---------- */
-const labels = PLAN.zones.map(z=>{ const el=document.createElement("div"); el.className="zlabel";
-  el.innerHTML=`<b>${z.id}</b> <small>${(z.w*z.d).toFixed(0)} m²</small>`; document.body.appendChild(el); return {z,el}; });
-function updateLabels(){
-  labels.forEach(({z,el})=>{
-    const v=new THREE.Vector3(z._world.cx, PLAN.height+0.2, z._world.cz);
-    v.applyMatrix4(root.matrixWorld);   // sigue la rotación del grupo
-    v.project(cam);
-    el.style.left=(v.x*0.5+0.5)*innerWidth+"px"; el.style.top=(-v.y*0.5+0.5)*innerHeight+"px";
-    el.style.display=(v.z<1)?"block":"none";
-  });
-}
+/* ---------- etiquetas A/B/C/D ---------- */
+const labels=PLAN.zones.map(z=>{ const el=document.createElement("div"); el.className="zlabel";
+  el.innerHTML=`<b>${z.id}</b> <small>${(z.w*z.d).toFixed(0)} m²</small>`; el.addEventListener("click",()=>openMgmt(z.id)); document.body.appendChild(el); return {z,el}; });
+function updateLabels(){ labels.forEach(({z,el})=>{ const v=new THREE.Vector3(z._w.cx,PLAN.height+0.2,z._w.cz); v.applyMatrix4(root.matrixWorld); v.project(cam);
+  el.style.left=(v.x*.5+.5)*innerWidth+"px"; el.style.top=(-v.y*.5+.5)*innerHeight+"px"; el.style.display=(v.z<1)?"block":"none"; }); }
 
-/* ---------- controles UI ---------- */
+/* ---------- gestión remota ---------- */
+const mgmt=document.getElementById("mgmt"); let curZone=null;
+const mPrevCtx=document.getElementById("mPrev").getContext("2d");
+function zoneById(id){ return PLAN.zones.find(z=>z.id===id); }
+function meshOf(id){ return zoneMeshes.find(m=>m.z.id===id); }
+function openMgmt(id){ curZone=id; const z=zoneById(id); const hex="#"+z.color.toString(16).padStart(6,'0');
+  document.getElementById("mId").textContent=id;
+  document.getElementById("mSw").style.cssText=`background:${hex};color:${hex}`;
+  document.getElementById("mSub").textContent=`Zona ${id} · ${(z.w*z.d).toFixed(0)} m² · ${(z.w*100|0)}×${(z.d*100|0)} cm · h 280`;
+  refreshMgmt(); mgmt.classList.add("open");
+}
+function refreshMgmt(){ if(!curZone)return; const z=zoneById(curZone);
+  const st=document.getElementById("mState"); st.textContent=z.online?"● en línea":"● apagada"; st.className=z.online?"st-on":"st-off";
+  document.getElementById("mEmit").textContent=z.playing&&z.online?"▶ reproduciendo":"⏸ en pausa";
+  document.getElementById("mContent").textContent=z.campaigns[z.idx].title;
+  document.getElementById("mPlay").textContent=z.playing?"⏸ Pausar":"▶ Reanudar";
+  document.getElementById("mPower").textContent=z.online?"⏻ Apagar":"⏻ Encender";
+}
+document.getElementById("mgmtClose").onclick=()=>{ mgmt.classList.remove("open"); curZone=null; };
+document.getElementById("mPlay").onclick=()=>{ const z=zoneById(curZone); z.playing=!z.playing; refreshMgmt(); };
+document.getElementById("mNext").onclick=()=>{ const z=zoneById(curZone); z.idx=(z.idx+1)%z.campaigns.length; refreshMgmt(); };
+document.getElementById("mPower").onclick=()=>{ const z=zoneById(curZone); z.online=!z.online; applyPower(z); refreshMgmt(); };
+function applyPower(z){ const m=meshOf(z.id); m.scr.material.emissiveIntensity=z.online?.78:.03; m.pl.intensity=z.online?.85:0; }
+
+/* ---------- controles ---------- */
 let spin=true, screensOn=true;
-const spinBtn=document.getElementById("spinBtn"), screensBtn=document.getElementById("screensBtn"), resetBtn=document.getElementById("resetBtn");
+const spinBtn=document.getElementById("spinBtn"), screensBtn=document.getElementById("screensBtn");
 spinBtn.onclick=()=>{ spin=!spin; spinBtn.classList.toggle("on",spin); };
 screensBtn.onclick=()=>{ screensOn=!screensOn; screensBtn.classList.toggle("on",screensOn);
-  screens.forEach(s=>{ s.material.emissiveIntensity = screensOn?1.1:0.04; });
-  zoneMeshes.forEach(m=>{ m.pl.intensity = screensOn?0.9:0; });
-};
-resetBtn.onclick=()=>{ controls.target.set(0,1.2,0); isoPose(); controls.update(); };
+  zoneMeshes.forEach(m=>{ const live=screensOn&&m.z.online; m.scr.material.emissiveIntensity=live?.78:.03; m.pl.intensity=live?.85:0; }); };
+document.getElementById("resetBtn").onclick=()=>{ controls.target.set(0,1.2,0); isoPose(); controls.update(); };
 
 /* ---------- bucle ---------- */
 function resize(){ aspect=innerWidth/innerHeight; cam.left=-D*aspect; cam.right=D*aspect; cam.top=D; cam.bottom=-D; cam.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); }
 addEventListener("resize",resize); resize();
-let t0=performance.now();
+let t0=performance.now(), tsum=0, lastCycle=0, lastDraw=0;
 function loop(now){
-  const dt=(now-t0)/1000; t0=now;
-  if(spin) root.rotation.y += dt*0.12;
-  // parpadeo sutil de pantallas
-  if(screensOn){ const p=0.95+Math.sin(now*0.002)*0.08; screens.forEach(s=>s.material.emissiveIntensity=1.05*p); }
-  controls.update(); renderer.render(scene,cam); updateLabels();
-  requestAnimationFrame(loop);
+  const dt=(now-t0)/1000; t0=now; tsum+=dt;
+  if(spin) root.rotation.y += dt*0.11;
+  if(now-lastCycle>5000){ lastCycle=now; PLAN.zones.forEach(z=>{ if(z.playing&&z.online) z.idx=(z.idx+1)%z.campaigns.length; }); if(curZone)refreshMgmt(); }
+  if(now-lastDraw>80){ lastDraw=now;
+    zoneMeshes.forEach(m=>{ const z=m.z; const ctx=m.cv.getContext("2d");
+      if(z.online){ drawAd(ctx, z.campaigns[z.idx], z.color, z.playing?tsum:0); } else { ctx.fillStyle="#05080e"; ctx.fillRect(0,0,m.cv.width,m.cv.height); }
+      m.tex.needsUpdate=true; });
+    if(curZone){ const m=meshOf(curZone); mPrevCtx.drawImage(m.cv,0,0,384,216); }
+  }
+  controls.update(); renderer.render(scene,cam); updateLabels(); requestAnimationFrame(loop);
 }
 document.getElementById("loading").style.display="none";
 requestAnimationFrame(loop);
