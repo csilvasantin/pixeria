@@ -268,7 +268,7 @@ PLAN.zones.forEach(z=>{
   const sW=Math.min(z.w,z.d)*0.92, sH=1.55, sy=sH/2+0.35;
   const cv=makeScreenCanvas(); const tex=new THREE.CanvasTexture(cv); tex.colorSpace=THREE.SRGBColorSpace;
   const scr=new THREE.Mesh(new THREE.PlaneGeometry(sW,sH),
-    new THREE.MeshStandardMaterial({map:tex, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:.78, roughness:.35, metalness:.2, side:THREE.DoubleSide}));
+    new THREE.MeshStandardMaterial({map:tex, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:.78, roughness:.35, metalness:.2, side:THREE.FrontSide}));
   const px=cx+dir.x*(z.w*0.46-0.06), pz=cz+dir.z*(z.d*0.46-0.06);
   scr.position.set(px,sy,pz); scr.lookAt(0,sy,0); root.add(scr);
   const frame=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(sW+0.08,sH+0.08)), new THREE.LineBasicMaterial({color:col}));
@@ -388,6 +388,13 @@ let t0=performance.now(), tsum=0, lastCycle=0, lastDraw=0;
 function loop(now){
   const dt=(now-t0)/1000; t0=now; tsum+=dt;
   if(spin) root.rotation.y += dt*0.11;
+  // pantallas siempre legibles: la cara con contenido (+Z) mira al espectador (yaw),
+  // evitando ver el reverso con el texto en espejo al girar.
+  const cp=cam.position;
+  for(const m of zoneMeshes){ const wp=new THREE.Vector3(); m.scr.getWorldPosition(wp);
+    const dx=cp.x-wp.x, dz=cp.z-wp.z, L=Math.hypot(dx,dz)||1;
+    m.scr.lookAt(wp.x+dx/L, wp.y, wp.z+dz/L);   // cara con textura (+Z) hacia la cámara
+    m.frame.quaternion.copy(m.scr.quaternion); }
   if(now-lastCycle>8000){ lastCycle=now; PLAN.zones.forEach(z=>{ if(!(z.playing&&z.online))return;
       if(z._assets&&z._assets.length){ z._ai=(z._ai+1)%z._assets.length; applyContent(meshOf(z.id), z._assets[z._ai]); }
       else { z.idx=(z.idx+1)%z.campaigns.length; }
