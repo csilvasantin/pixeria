@@ -308,7 +308,8 @@ function openMgmt(id){ curZone=id; const z=zoneById(id); const hex="#"+z.color.t
 function refreshMgmt(){ if(!curZone)return; const z=zoneById(curZone);
   const st=document.getElementById("mState"); st.textContent=z.online?"● en línea":"● apagada"; st.className=z.online?"st-on":"st-off";
   document.getElementById("mEmit").textContent=z.playing&&z.online?"▶ reproduciendo":"⏸ en pausa";
-  document.getElementById("mContent").textContent=z.campaigns[z.idx].title;
+  document.getElementById("mContent").textContent=currentItem(z).title;
+  document.getElementById("mRes").textContent=(currentItem(z).type==="video"?"vídeo":"imagen")+" · admira.tv · 16:9";
   document.getElementById("mPlay").textContent=z.playing?"⏸ Pausar":"▶ Reanudar";
   document.getElementById("mPower").textContent=z.online?"⏻ Apagar":"⏻ Encender";
 }
@@ -337,10 +338,10 @@ const ageSec = ls => { if(!ls) return 1e9; if(ls>1e12) ls/=1000; return Date.now
 const fpost=(u,b)=>fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}).then(r=>r.json()).catch(()=>null);
 const fget =u=>fetch(u).then(r=>r.json()).catch(()=>null);
 PLAN.zones.forEach(z=>{ z._pop={plays:0,secs:0,byType:{},assets:{}}; z._dirty=false; });
-function recordPlay(z){ const c=z.campaigns[z.idx], dur=5, aid="camp-"+c.brand.toLowerCase().replace(/[^a-z0-9]+/g,"");
-  z._pop.plays++; z._pop.secs+=dur; z._pop.byType.animation=(z._pop.byType.animation||0)+1;
-  const a=z._pop.assets[aid]||(z._pop.assets[aid]={n:0,type:"animation",title:c.title,secs:0}); a.n++; a.secs+=dur; a.last=Date.now();
-  z._dirty=true; fpost(FLEET.pix+"/signage/now",{screen:sid(z.id),item:{id:aid,title:c.title,type:"animation",duration:dur}}); }
+function recordPlay(z){ const it=currentItem(z), dur=it.duration||8, aid=it.id;
+  z._pop.plays++; z._pop.secs+=dur; z._pop.byType[it.type]=(z._pop.byType[it.type]||0)+1;
+  const a=z._pop.assets[aid]||(z._pop.assets[aid]={n:0,type:it.type,title:it.title,secs:0}); a.n++; a.secs+=dur; a.last=Date.now();
+  z._dirty=true; fpost(FLEET.pix+"/signage/now",{screen:sid(z.id),item:it}); }
 function emitFlush(){ PLAN.zones.forEach(z=>{ if(!z._dirty||!z._pop.plays)return; z._dirty=false;
   fpost(FLEET.pix+"/emit",{loc:FLEET.loc,screen:sid(z.id),date:todayStr(),totalPlays:z._pop.plays,totalSecs:z._pop.secs,byType:z._pop.byType,assets:z._pop.assets}); }); }
 function presencePing(){ PLAN.zones.forEach(z=>{ if(!z.online)return;
@@ -352,6 +353,34 @@ function refreshFleet(){ if(!curZone)return; const z=zoneById(curZone), S=sid(z.
   fget(FLEET.pix+"/emit/range?loc="+FLEET.loc+"&from="+todayStr()+"&to="+todayStr()).then(d=>{ if(!d||curZone!==z.id)return;
     const day=((d.screens||{})[S]||{})[todayStr()]||{}; const el=document.getElementById("mPlays"); if(el) el.textContent=((day.totalPlays??z._pop.plays)||0)+" hoy"; }); }
 
+/* ---------- contenido REAL de admira.tv (Stock Pixeria) ----------
+   Las pantallas muestran los mismos assets que sirve admira.tv: api.admira.store/stock/list
+   (imágenes y vídeo). Si falla la carga, se mantiene el contenido mock como fallback. */
+const STOCK_URL="https://api.admira.store/stock/list?limit=80";
+const texLoader=new THREE.TextureLoader(); texLoader.setCrossOrigin("anonymous");
+function currentItem(z){ if(z._assets&&z._assets.length){ const a=z._assets[z._ai]; return {id:a.id,title:(a.title||"Contenido").slice(0,90),type:a.type||"image",url:a.url,duration:10}; }
+  const c=z.campaigns[z.idx]; return {id:"camp-"+c.brand.toLowerCase().replace(/[^a-z0-9]+/g,""),title:c.title,type:"animation",duration:5}; }
+function disposeContent(m){ if(m._video){ try{m._video.pause();}catch(e){} m._video.removeAttribute("src"); try{m._video.load();}catch(e){} m._video=null; } if(m._ctex){ m._ctex.dispose(); m._ctex=null; } m._prevSrc=null; }
+function applyContent(m, asset){
+  if(!asset||!asset.url) return;
+  if(asset.type==="video"){
+    const v=document.createElement("video"); v.crossOrigin="anonymous"; v.muted=true; v.loop=true; v.playsInline=true; v.autoplay=true; v.src=asset.url;
+    v.addEventListener("loadeddata",()=>{ const tex=new THREE.VideoTexture(v); tex.colorSpace=THREE.SRGBColorSpace;
+      disposeContent(m); m._video=v; m._ctex=tex; m._prevSrc=v; m.scr.material.map=tex; m.scr.material.emissiveMap=tex; m.scr.material.needsUpdate=true; },{once:true});
+    v.play().catch(()=>{});
+  } else {
+    texLoader.load(asset.url, tex=>{ tex.colorSpace=THREE.SRGBColorSpace;
+      disposeContent(m); m._ctex=tex; m._prevSrc=tex.image; m.scr.material.map=tex; m.scr.material.emissiveMap=tex; m.scr.material.needsUpdate=true; }, undefined, ()=>{});
+  }
+}
+async function loadStock(){
+  const d=await fget(STOCK_URL); const items=(d&&(d.items||d.list||d.assets))||[];
+  const ok=items.filter(it=>it&&it.url&&(it.type==="image"||it.type==="video"));
+  if(ok.length<2) return;                                   // sin stock: seguimos con mock
+  for(let i=ok.length-1;i>0;i--){ const j=(i*7+3)%(i+1); const t=ok[i]; ok[i]=ok[j]; ok[j]=t; }
+  PLAN.zones.forEach((z,i)=>{ z._assets=ok; z._ai=(i*Math.floor(ok.length/4))%ok.length; applyContent(meshOf(z.id), z._assets[z._ai]); recordPlay(z); });
+}
+
 /* ---------- bucle ---------- */
 function resize(){ aspect=innerWidth/innerHeight; cam.left=-D*aspect; cam.right=D*aspect; cam.top=D; cam.bottom=-D; cam.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); }
 addEventListener("resize",resize); resize();
@@ -359,19 +388,26 @@ let t0=performance.now(), tsum=0, lastCycle=0, lastDraw=0;
 function loop(now){
   const dt=(now-t0)/1000; t0=now; tsum+=dt;
   if(spin) root.rotation.y += dt*0.11;
-  if(now-lastCycle>5000){ lastCycle=now; PLAN.zones.forEach(z=>{ if(z.playing&&z.online){ z.idx=(z.idx+1)%z.campaigns.length; recordPlay(z); } }); if(curZone)refreshMgmt(); }
+  if(now-lastCycle>8000){ lastCycle=now; PLAN.zones.forEach(z=>{ if(!(z.playing&&z.online))return;
+      if(z._assets&&z._assets.length){ z._ai=(z._ai+1)%z._assets.length; applyContent(meshOf(z.id), z._assets[z._ai]); }
+      else { z.idx=(z.idx+1)%z.campaigns.length; }
+      recordPlay(z); }); if(curZone)refreshMgmt(); }
   if(now-lastDraw>80){ lastDraw=now;
-    zoneMeshes.forEach(m=>{ const z=m.z; const ctx=m.cv.getContext("2d");
+    zoneMeshes.forEach(m=>{ const z=m.z; if(z._assets&&z._assets.length) return;   // contenido real ya en el material
+      const ctx=m.cv.getContext("2d");
       if(z.online){ drawAd(ctx, z.campaigns[z.idx], z.color, z.playing?tsum:0); } else { ctx.fillStyle="#05080e"; ctx.fillRect(0,0,m.cv.width,m.cv.height); }
       m.tex.needsUpdate=true; });
-    if(curZone){ const m=meshOf(curZone); mPrevCtx.drawImage(m.cv,0,0,384,216); }
+    if(curZone){ const m=meshOf(curZone);
+      if(m._prevSrc){ try{ mPrevCtx.drawImage(m._prevSrc,0,0,384,216); }catch(e){ mPrevCtx.drawImage(m.cv,0,0,384,216); } }
+      else mPrevCtx.drawImage(m.cv,0,0,384,216); }
   }
   controls.update(); renderer.render(scene,cam); updateLabels(); requestAnimationFrame(loop);
 }
 document.getElementById("loading").style.display="none";
 requestAnimationFrame(loop);
 
-/* arranque de la flota: presencia + primer reporte de emisión, luego intervalos */
+/* arranque: contenido real de admira.tv + presencia + primer reporte, luego intervalos */
+loadStock();
 presencePing();
 PLAN.zones.forEach(z=>{ if(z.online&&z.playing) recordPlay(z); });
 emitFlush();
