@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xpacios · XpaceOS Locations · Pixeria</title>
+<meta name="theme-color" content="#020602">
+<meta name="description" content="XpaceOS Locations: genera el gemelo isométrico de tu local desde una foto, coloca las pantallas y gestiónalas en remoto desde Pixeria.">
+<link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
+<link rel="canonical" href="https://www.pixeria.com/xpacios/">
+<style>
+  :root{ --matrix:#00ff41; --matrix-deep:#00b82e; --bg:#020602; --panel:#06120a; --line:rgba(0,255,65,.18); --muted:#5f8f6f; --ink:#cfeed6; --spine:#50c8ff; }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{background:radial-gradient(120% 90% at 50% -10%,#04120a,#020602);color:var(--ink);
+    font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;padding:0 0 60px}
+  a{color:var(--matrix);text-decoration:none}
+  header{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(2,6,2,.92);backdrop-filter:blur(8px);z-index:5}
+  header .logo{font-size:20px}
+  header b{color:var(--matrix);letter-spacing:.5px;font-weight:650}
+  header .sub{color:var(--muted);font-size:11px}
+  header .spacer{flex:1}
+  header .home{color:var(--muted);font-size:12px;border:1px solid var(--line);border-radius:7px;padding:6px 10px}
+  header .home:hover{border-color:var(--matrix);color:var(--ink)}
+  .wrap{max-width:1040px;margin:0 auto;padding:26px 22px}
+  .hero h1{font-size:26px;margin:6px 0 8px;color:#eafff0;letter-spacing:.3px}
+  .hero h1 .x{color:var(--spine)}
+  .hero p{color:var(--ink);opacity:.82;font-size:14px;line-height:1.6;max-width:680px}
+  .hero .steps{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+  .hero .steps span{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+  .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0 6px}
+  .cta{display:inline-flex;align-items:center;gap:9px;background:var(--matrix);color:#02140a;border:1px solid var(--matrix);
+    border-radius:10px;padding:12px 20px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.02em}
+  .cta:hover{background:#5dff86}
+  .cta.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .cta.ghost:hover{border-color:var(--matrix)}
+  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:34px 2px 14px;display:flex;align-items:center;gap:10px}
+  h2.sec .n{font-family:inherit;color:var(--matrix);font-size:11px;border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;transition:.12s}
+  .card:hover{border-color:var(--matrix);transform:translateY(-2px)}
+  .card .thumb{aspect-ratio:16/10;background:#040d07 center/cover;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:30px}
+  .card .meta{padding:11px 13px}
+  .card .nm{font-weight:700;color:#eafff0;font-size:14px;word-break:break-word}
+  .card .loc{color:var(--muted);font-size:11px;margin-top:3px}
+  .card .row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:var(--muted)}
+  .card .chip{border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+  .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--line);border-radius:14px;padding:40px 20px;line-height:1.6}
+  .empty b{color:var(--ink)}
+  .foot{text-align:center;color:var(--muted);font-size:10.5px;margin-top:40px;letter-spacing:.06em}
+  .foot a{color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">🗺️</span>
+  <div><b>Xpacios</b> <span class="sub">· XpaceOS Locations</span></div>
+  <span class="spacer"></span>
+  <a class="home" href="/">← Pixeria</a>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Tus locales como <span class="x">gemelos isométricos</span>, gestionables en remoto</h1>
+    <p>Sube una foto de un local y <b>XpaceOS Locations</b> reconstruye su espacio en 2.5D (la profundidad se calcula en tu propio navegador, sin servidor). Coloca las pantallas donde están de verdad, guárdalo como un <b>Xpacio</b> y gestiónalo desde aquí: estado, contenido y emisión de cada pantalla.</p>
+    <div class="steps">
+      <span>📷 1 foto</span><span>🧠 profundidad en el navegador</span><span>📐 vista isométrica</span><span>🖥️ coloca pantallas</span><span>💾 guarda el Xpacio</span><span>🛰️ gestiona en remoto</span>
+    </div>
+    <div class="cta-row">
+      <a class="cta" href="/xpacios/crear/">📷 Generar un Xpacio desde una foto</a>
+      <a class="cta ghost" href="/signage.html">🖥️ Ver signage</a>
+    </div>
+  </div>
+
+  <h2 class="sec">Mis Xpacios <span class="n" id="count">0</span></h2>
+  <div class="grid" id="grid">
+    <div class="empty">Aún no has guardado ningún Xpacio.<br><b>Genera el primero</b> desde una foto de tu local y aparecerá aquí.</div>
+  </div>
+
+  <div class="foot">Pixeria · XpaceOS Locations · powered by ADmira · profundidad: Depth Anything V2 (en el navegador)</div>
+</div>
+
+<script>
+  // MVP local-first: los Xpacios guardados viven en localStorage ('xpacios').
+  // El generador (/xpacios/crear/) escribe aquí al guardar. Próximo paso: worker + KV
+  // para sincronizarlos en remoto entre dispositivos y gestionar las pantallas de verdad.
+  function loadXpacios(){ try{ return JSON.parse(localStorage.getItem("xpacios")||"[]"); }catch(e){ return []; } }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+  function fmtDate(ts){ try{ return new Date(ts).toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"numeric"}); }catch(e){ return ""; } }
+  function render(){
+    const items = loadXpacios();
+    document.getElementById("count").textContent = items.length;
+    const grid = document.getElementById("grid");
+    if(!items.length){ return; }
+    grid.innerHTML = items.slice().reverse().map(x=>{
+      const n = (x.screens && x.screens.length) || 0;
+      const thumb = x.thumb ? `style="background-image:url('${x.thumb}')"` : "";
+      const thumbInner = x.thumb ? "" : "🗺️";
+      return `<div class="card" data-id="${esc(x.id)}">
+        <div class="thumb" ${thumb}>${thumbInner}</div>
+        <div class="meta">
+          <div class="nm">${esc(x.name||"Xpacio sin nombre")}</div>
+          <div class="loc">${esc(x.location||"sin ubicación")}</div>
+          <div class="row"><span class="chip">🖥️ ${n} pantalla${n===1?"":"s"}</span><span>${fmtDate(x.date)}</span></div>
+        </div>
+      </div>`;
+    }).join("");
+    grid.querySelectorAll(".card").forEach(c=>c.addEventListener("click",()=>{
+      // Por ahora abre el generador con el Xpacio cargado (gestión remota: siguiente pieza).
+      location.href = "/xpacios/crear/?xpacio=" + encodeURIComponent(c.dataset.id);
+    }));
+  }
+  render();
+</script>
+</body>
+</html>
