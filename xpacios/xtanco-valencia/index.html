@@ -105,13 +105,16 @@
     <div class="kv"><span>Emisión</span><span id="mEmit">▶ reproduciendo</span></div>
     <div class="kv"><span>Contenido</span><span id="mContent">—</span></div>
     <div class="kv"><span>Resolución</span><span id="mRes">1920×1080 · 16:9</span></div>
+    <div class="kv"><span>Flota Admira</span><span id="mFleet" class="st-off">○ conectando…</span></div>
+    <div class="kv"><span>Reproducciones hoy</span><span id="mPlays">—</span></div>
+    <div class="kv"><span>Última emisión (flota)</span><span id="mLast">—</span></div>
   </div>
   <div class="acts">
     <button id="mPlay">⏸ Pausar</button>
     <button id="mNext">⏭ Siguiente</button>
     <button id="mPower" class="danger">⏻ Apagar</button>
   </div>
-  <div class="note">Gestión remota (demo) — estado y controles por pantalla. Próximo: enganche real con la flota de señalización (signage / OmniPublicity) para emisión y proof-of-play.</div>
+  <div class="note">Gestión remota REAL — esta pantalla es un <b>nodo en vivo de la flota Admira</b>: reporta presencia (xpl.admira.store), emisión actual (pixer /signage/now) y proof-of-play (/emit). Apágala y desaparece de la flota.</div>
 </div>
 
 <div class="hud foot">Pixeria · XpaceOS Locations · Xtanco Valencia · render interpretado del plano · cotas reales por zona</div>
@@ -300,7 +303,7 @@ function openMgmt(id){ curZone=id; const z=zoneById(id); const hex="#"+z.color.t
   document.getElementById("mId").textContent=id;
   document.getElementById("mSw").style.cssText=`background:${hex};color:${hex}`;
   document.getElementById("mSub").textContent=`Zona ${id} · ${(z.w*z.d).toFixed(0)} m² · ${(z.w*100|0)}×${(z.d*100|0)} cm · h 280`;
-  refreshMgmt(); mgmt.classList.add("open");
+  refreshMgmt(); refreshFleet(); mgmt.classList.add("open");
 }
 function refreshMgmt(){ if(!curZone)return; const z=zoneById(curZone);
   const st=document.getElementById("mState"); st.textContent=z.online?"● en línea":"● apagada"; st.className=z.online?"st-on":"st-off";
@@ -323,6 +326,32 @@ screensBtn.onclick=()=>{ screensOn=!screensOn; screensBtn.classList.toggle("on",
   zoneMeshes.forEach(m=>{ const live=screensOn&&m.z.online; m.scr.material.emissiveIntensity=live?.78:.03; m.pl.intensity=live?.85:0; }); };
 document.getElementById("resetBtn").onclick=()=>{ controls.target.set(0,1.2,0); isoPose(); controls.update(); };
 
+/* ---------- integración con la flota Admira (emisión real) ----------
+   La página actúa como nodo de señalización: reporta presencia, emisión
+   y proof-of-play a los workers reales (endpoints abiertos, CORS OK). */
+const FLEET = { xpl:"https://xpl.admira.store", pix:"https://pixer-eleven.csilvasantin.workers.dev",
+  circuit:"xtanco-valencia", loc:"xtanco-valencia", instance:"xpacio-"+Math.floor(performance.now()) };
+const sid = id => "xtanco-valencia-"+id.toLowerCase();
+const todayStr = ()=>{ const d=new Date(); return ""+d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0"); };
+const ageSec = ls => { if(!ls) return 1e9; if(ls>1e12) ls/=1000; return Date.now()/1000 - ls; };
+const fpost=(u,b)=>fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}).then(r=>r.json()).catch(()=>null);
+const fget =u=>fetch(u).then(r=>r.json()).catch(()=>null);
+PLAN.zones.forEach(z=>{ z._pop={plays:0,secs:0,byType:{},assets:{}}; z._dirty=false; });
+function recordPlay(z){ const c=z.campaigns[z.idx], dur=5, aid="camp-"+c.brand.toLowerCase().replace(/[^a-z0-9]+/g,"");
+  z._pop.plays++; z._pop.secs+=dur; z._pop.byType.animation=(z._pop.byType.animation||0)+1;
+  const a=z._pop.assets[aid]||(z._pop.assets[aid]={n:0,type:"animation",title:c.title,secs:0}); a.n++; a.secs+=dur; a.last=Date.now();
+  z._dirty=true; fpost(FLEET.pix+"/signage/now",{screen:sid(z.id),item:{id:aid,title:c.title,type:"animation",duration:dur}}); }
+function emitFlush(){ PLAN.zones.forEach(z=>{ if(!z._dirty||!z._pop.plays)return; z._dirty=false;
+  fpost(FLEET.pix+"/emit",{loc:FLEET.loc,screen:sid(z.id),date:todayStr(),totalPlays:z._pop.plays,totalSecs:z._pop.secs,byType:z._pop.byType,assets:z._pop.assets}); }); }
+function presencePing(){ PLAN.zones.forEach(z=>{ if(!z.online)return;
+  fpost(FLEET.xpl+"/xpl/ping",{instance:FLEET.instance+"-"+z.id,screen:sid(z.id),circuit:FLEET.circuit,device:"XpaceOS Locations · "+navigator.platform,url:location.href}); }); }
+function refreshFleet(){ if(!curZone)return; const z=zoneById(curZone), S=sid(z.id);
+  fget(FLEET.xpl+"/xpl/live").then(d=>{ if(!d||curZone!==z.id)return; const on=(d.screens||[]).some(s=>s.screen===S&&ageSec(s.lastSeen)<200);
+    const el=document.getElementById("mFleet"); if(el){ el.textContent=on?"● nodo en vivo":"○ sin presencia"; el.className=on?"st-on":"st-off"; } });
+  fget(FLEET.pix+"/signage/now?screen="+S).then(d=>{ if(!d||curZone!==z.id)return; const el=document.getElementById("mLast"); if(el) el.textContent=(d.item&&d.item.title)?d.item.title:"—"; });
+  fget(FLEET.pix+"/emit/range?loc="+FLEET.loc+"&from="+todayStr()+"&to="+todayStr()).then(d=>{ if(!d||curZone!==z.id)return;
+    const day=((d.screens||{})[S]||{})[todayStr()]||{}; const el=document.getElementById("mPlays"); if(el) el.textContent=((day.totalPlays??z._pop.plays)||0)+" hoy"; }); }
+
 /* ---------- bucle ---------- */
 function resize(){ aspect=innerWidth/innerHeight; cam.left=-D*aspect; cam.right=D*aspect; cam.top=D; cam.bottom=-D; cam.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); }
 addEventListener("resize",resize); resize();
@@ -330,7 +359,7 @@ let t0=performance.now(), tsum=0, lastCycle=0, lastDraw=0;
 function loop(now){
   const dt=(now-t0)/1000; t0=now; tsum+=dt;
   if(spin) root.rotation.y += dt*0.11;
-  if(now-lastCycle>5000){ lastCycle=now; PLAN.zones.forEach(z=>{ if(z.playing&&z.online) z.idx=(z.idx+1)%z.campaigns.length; }); if(curZone)refreshMgmt(); }
+  if(now-lastCycle>5000){ lastCycle=now; PLAN.zones.forEach(z=>{ if(z.playing&&z.online){ z.idx=(z.idx+1)%z.campaigns.length; recordPlay(z); } }); if(curZone)refreshMgmt(); }
   if(now-lastDraw>80){ lastDraw=now;
     zoneMeshes.forEach(m=>{ const z=m.z; const ctx=m.cv.getContext("2d");
       if(z.online){ drawAd(ctx, z.campaigns[z.idx], z.color, z.playing?tsum:0); } else { ctx.fillStyle="#05080e"; ctx.fillRect(0,0,m.cv.width,m.cv.height); }
@@ -341,6 +370,14 @@ function loop(now){
 }
 document.getElementById("loading").style.display="none";
 requestAnimationFrame(loop);
+
+/* arranque de la flota: presencia + primer reporte de emisión, luego intervalos */
+presencePing();
+PLAN.zones.forEach(z=>{ if(z.online&&z.playing) recordPlay(z); });
+emitFlush();
+setInterval(presencePing, 60000);
+setInterval(emitFlush, 30000);
+setInterval(()=>{ if(curZone) refreshFleet(); }, 6000);
 </script>
 </body>
 </html>
