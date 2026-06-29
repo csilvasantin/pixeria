@@ -91,8 +91,10 @@
 <div class="hud ctrl">
   <button id="spinBtn" class="on" title="Rotación automática">↻ Auto-giro</button>
   <button id="screensBtn" class="on" title="Encender/apagar las pantallas">🖥️ Pantallas</button>
+  <button id="musicBtn" title="Hilo musical del Xpacio (audio comercializable)">🎵 Hilo Musical<span id="musicNow" class="mnow"></span></button>
   <button id="resetBtn" title="Recentrar la cámara isométrica">📐 Isométrica</button>
 </div>
+<audio id="hilo" preload="none"></audio>
 
 <!-- Panel de gestión remota -->
 <div class="hud mgmt" id="mgmt">
@@ -352,6 +354,34 @@ function refreshFleet(){ if(!curZone)return; const z=zoneById(curZone), S=sid(z.
   fget(FLEET.pix+"/signage/now?screen="+S).then(d=>{ if(!d||curZone!==z.id)return; const el=document.getElementById("mLast"); if(el) el.textContent=(d.item&&d.item.title)?d.item.title:"—"; });
   fget(FLEET.pix+"/emit/range?loc="+FLEET.loc+"&from="+todayStr()+"&to="+todayStr()).then(d=>{ if(!d||curZone!==z.id)return;
     const day=((d.screens||{})[S]||{})[todayStr()]||{}; const el=document.getElementById("mPlays"); if(el) el.textContent=((day.totalPlays??z._pop.plays)||0)+" hoy"; }); }
+
+/* ---------- Hilo Musical del Xpacio (audio comercializable, uno por Xpacio) ----------
+   Lee la parrilla de la superficie de audio xtanco-valencia-musica del mismo grid
+   y reproduce en bucle el contenido (own + vendido) de la franja actual; suena
+   igual en todo el Xpacio. Fallback a una pista por defecto. */
+const GRID="https://api.admira.store", MUSIC_SCREEN="xtanco-valencia-musica";
+const DEFAULT_MUSIC="https://api.admira.store/stock/asset/1781454130444-ztjupx", AUD=["music","audio","locucion"];
+let musicOn=false, mList=[], mIdx=0, mBandId=null, mPlays=0, mSecs=0, mByType={}, mAssets={};
+const hilo=document.getElementById("hilo");
+async function loadHilo(){
+  const d=await fget(`${GRID}/grid/day?screen=${MUSIC_SCREEN}&date=${todayStr()}&_=`+Date.now());
+  let band=null;
+  if(d&&d.bands) band=d.bands.find(b=>b.isNow)||(d.nowPlaying&&d.bands.find(b=>b.id===d.nowPlaying.bandId))||d.bands[0];
+  mBandId=band?band.id:null;
+  const urls=[],seen=new Set();
+  if(band)(band.slots||[]).forEach(sl=>{ if((sl.kind==="own"||sl.kind==="paid")&&sl.creative&&AUD.includes(sl.creative.type)&&sl.creative.url&&!seen.has(sl.creative.url)){seen.add(sl.creative.url);urls.push({url:sl.creative.url,title:sl.title||"♪",type:sl.creative.type});} });
+  mList=urls.length?urls:[{url:DEFAULT_MUSIC,title:"Hilo lounge",type:"music"}];
+  if(mIdx>=mList.length)mIdx=0;
+}
+function playHilo(){ if(!mList.length)return; const t=mList[mIdx]; hilo.src=t.url; hilo.play().catch(()=>{});
+  fpost(FLEET.pix+"/signage/now",{screen:MUSIC_SCREEN,item:{id:t.url,title:t.title,type:t.type}});
+  const el=document.getElementById("musicNow"); if(el)el.textContent=" · "+(t.title||"♪").slice(0,22); }
+hilo.addEventListener("ended",()=>{ const t=mList[mIdx]||{}; mPlays++; mSecs+=Math.round(hilo.duration||0); mByType[t.type]=(mByType[t.type]||0)+1; const a=mAssets[t.url]||(mAssets[t.url]={n:0,type:t.type,title:t.title,secs:0}); a.n++; a.secs+=Math.round(hilo.duration||0); mIdx=(mIdx+1)%mList.length; playHilo(); });
+const musicBtn=document.getElementById("musicBtn");
+musicBtn.onclick=async()=>{ musicOn=!musicOn; musicBtn.classList.toggle("on",musicOn);
+  if(musicOn){ if(!mList.length)await loadHilo(); playHilo(); } else { hilo.pause(); const el=document.getElementById("musicNow"); if(el)el.textContent=""; } };
+setInterval(async()=>{ if(!musicOn)return; const prev=mBandId; await loadHilo(); if(mBandId!==prev){mIdx=0;playHilo();}
+  if(mPlays){ fpost(FLEET.pix+"/emit",{loc:FLEET.loc,screen:MUSIC_SCREEN,date:todayStr(),totalPlays:mPlays,totalSecs:mSecs,byType:mByType,assets:mAssets}); } }, 60000);
 
 /* ---------- contenido REAL de admira.tv (Stock Pixeria) ----------
    Las pantallas muestran los mismos assets que sirve admira.tv: api.admira.store/stock/list
