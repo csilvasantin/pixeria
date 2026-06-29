@@ -288,6 +288,56 @@ function shelfRun(x1,z1,x2,z2,n){
 shelfRun(4.6,8.0, 8.6,11.2, 6);
 shelfRun(0.3,8.0, 4.0,8.0, 4);
 
+/* ---------- mobiliario Desigual × Xtanco (interior navegable) ----------
+   Mezcla de tienda de moda (percheros, maniquíes, mesas de producto, probadores)
+   con el estanco (mostrador + estanterías de tabaco/lotería de arriba). Cada pieza
+   registra un círculo de colisión en `obstacles` para que el paseo se sienta real. */
+const DCOL=[0xff2d78,0xff8a3d,0xffd23d,0x2ee6c8,0x7b5cff,0x35c2ff,0xff5ad0];
+const obstacles=[];                       // {x,z,r} en coords root-local (= coords del jugador)
+function addObstacle(px,pz,r){ obstacles.push({x:px-CX, z:pz-CZ, r}); }
+function matD(col,e){ return new THREE.MeshStandardMaterial({color:col,roughness:.55,metalness:.2,emissive:col,emissiveIntensity:e==null?0.14:e}); }
+
+function makeRail(x1,z1,x2,z2,n){           // perchero de ropa con prendas colgando
+  const ax=x1-CX,az=z1-CZ,bx=x2-CX,bz=z2-CZ, len=Math.hypot(bx-ax,bz-az), ang=Math.atan2(bz-az,bx-ax), barY=1.5;
+  const pm=new THREE.MeshStandardMaterial({color:0xb9c2cc,metalness:.6,roughness:.3});
+  [[ax,az],[bx,bz]].forEach(([x,z])=>{ const p=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,barY,8),pm); p.position.set(x,barY/2,z); p.castShadow=true; root.add(p); });
+  const bar=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,len,8),pm); bar.position.set((ax+bx)/2,barY,(az+bz)/2); bar.rotation.order="ZYX"; bar.rotation.z=Math.PI/2; bar.rotation.y=-ang; root.add(bar);
+  for(let i=0;i<n;i++){ const t=(i+0.5)/n, x=ax+(bx-ax)*t, z=az+(bz-az)*t;
+    const g=new THREE.Mesh(new THREE.BoxGeometry(0.10,0.72,0.34), matD(DCOL[(i+(x1|0))%DCOL.length],0.18));
+    g.position.set(x,barY-0.42,z); g.rotation.y=-ang; g.castShadow=true; root.add(g); }
+  addObstacle((x1+x2)/2,(z1+z2)/2,0.38); addObstacle(0.72*x1+0.28*x2,0.72*z1+0.28*z2,0.34); addObstacle(0.28*x1+0.72*x2,0.28*z1+0.72*z2,0.34);
+}
+function makeMannequin(px,pz,col,ang){      // maniquí de moda (sin cara), multicolor Desigual
+  const g=new THREE.Group();
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.32,0.08,20),new THREE.MeshStandardMaterial({color:0x222a30,metalness:.4,roughness:.5})); base.position.y=0.04; g.add(base);
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.5,8),new THREE.MeshStandardMaterial({color:0x8a93a0})); pole.position.y=0.3; g.add(pole);
+  const hips=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.16,0.5,16),matD(col,0.12)); hips.position.y=0.62; hips.castShadow=true; g.add(hips);
+  const torso=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.25,0.8,16),matD(col,0.16)); torso.position.y=1.12; torso.castShadow=true; g.add(torso);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.13,16,12),new THREE.MeshStandardMaterial({color:0xefe4d8,roughness:.6})); head.position.y=1.68; head.castShadow=true; g.add(head);
+  g.position.set(px-CX,0,pz-CZ); g.rotation.y=ang||0; root.add(g); addObstacle(px,pz,0.42);
+}
+function makeTable(px,pz){                   // mesa de producto con ropa doblada (pilas de color)
+  const x=px-CX,z=pz-CZ;
+  const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.55,0.5,20),new THREE.MeshStandardMaterial({color:0x18101a,roughness:.7})); leg.position.set(x,0.25,z); root.add(leg);
+  const top=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.6,0.12,24),new THREE.MeshStandardMaterial({color:0x2a1a24,roughness:.6,metalness:.2})); top.position.set(x,0.55,z); top.castShadow=true; root.add(top);
+  for(let i=0;i<4;i++){ const a=i/4*Math.PI*2; const s=new THREE.Mesh(new THREE.BoxGeometry(0.26,0.13,0.26),matD(DCOL[(i*2)%DCOL.length],0.16)); s.position.set(x+Math.cos(a)*0.22,0.67,z+Math.sin(a)*0.22); s.castShadow=true; root.add(s); }
+  addObstacle(px,pz,0.68);
+}
+function makeBooth(px,pz,ang){               // probador con cortina Desigual
+  const g=new THREE.Group(); const wm=new THREE.MeshStandardMaterial({color:0x2a1420,roughness:.85,side:THREE.DoubleSide});
+  const back=new THREE.Mesh(new THREE.PlaneGeometry(1.3,2.4),wm); back.position.set(0,1.2,-0.65); g.add(back);
+  [-0.65,0.65].forEach(sx=>{ const w=new THREE.Mesh(new THREE.PlaneGeometry(1.3,2.4),wm); w.position.set(sx,1.2,0); w.rotation.y=Math.PI/2; g.add(w); });
+  const curtain=new THREE.Mesh(new THREE.PlaneGeometry(1.28,2.3),matD(0xff2d78,0.22)); curtain.position.set(0,1.15,0.66); g.add(curtain);
+  const top=new THREE.Mesh(new THREE.BoxGeometry(1.34,0.06,1.34),new THREE.MeshBasicMaterial({color:0xff2d78,transparent:true,opacity:.55})); top.position.set(0,2.42,0); g.add(top);
+  g.position.set(px-CX,0,pz-CZ); g.rotation.y=ang; root.add(g); addObstacle(px,pz,0.8);
+}
+
+makeRail(10.5,3.2, 13.5,3.2, 7);   makeRail(16.0,4.0, 16.0,7.0, 7);   makeRail(6.0,9.0, 8.5,9.0, 6);
+makeMannequin(5.0,9.5, 0x2ee6c8, 0.6);  makeMannequin(11.0,13.0, 0xff2d78, -2.4);
+makeMannequin(13.0,13.5, 0xff8a3d, 3.0); makeMannequin(10.0,5.0, 0x7b5cff, -0.8);
+makeTable(11.5,4.2);  makeTable(7.0,9.2);  makeTable(13.5,12.5);
+makeBooth(17.6,5.0, -Math.PI/2);  makeBooth(17.6,7.2, -Math.PI/2);
+
 /* ---------- contenido de pantalla (canvas animado) ---------- */
 function makeScreenCanvas(){ const cv=document.createElement("canvas"); cv.width=384; cv.height=216; return cv; }
 function shade(hex,p){ const n=parseInt(hex.slice(1),16); let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
@@ -399,7 +449,10 @@ function inside(x,z){ let c=false; for(let i=0,j=POLY.length-1;i<POLY.length;j=i
   const xi=POLY[i][0],zi=POLY[i][1],xj=POLY[j][0],zj=POLY[j][1];
   if(((zi>z)!==(zj>z)) && (x < (xj-xi)*(z-zi)/((zj-zi)||1e-9)+xi)) c=!c; } return c; }
 const PR=0.42;             // radio del jugador (no atraviesa muros)
-function canStand(x,z){ return inside(x,z)&&inside(x+PR,z)&&inside(x-PR,z)&&inside(x,z+PR)&&inside(x,z-PR); }
+function canStand(x,z){
+  if(!(inside(x,z)&&inside(x+PR,z)&&inside(x-PR,z)&&inside(x,z+PR)&&inside(x,z-PR))) return false;
+  for(const o of obstacles){ const dx=x-o.x, dz=z-o.z; if(dx*dx+dz*dz < (o.r+PR)*(o.r+PR)) return false; }   // no atraviesa el mobiliario
+  return true; }
 function findSpawn(){
   const cand=[[2,0.5],[1,1],[0,1],[3,1],[-2,1],[2,-1],[0,3],[-3,2],[0,4],[0,-1]];
   for(const c of cand){ if(canStand(c[0],c[1])) return new THREE.Vector3(c[0],0,c[1]); }
