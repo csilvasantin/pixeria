@@ -82,6 +82,8 @@
   #joy{position:fixed;left:24px;bottom:24px;width:120px;height:120px;border-radius:50%;z-index:7;display:none;
     background:radial-gradient(circle,rgba(55,224,255,.10),rgba(8,16,28,.5));border:1px solid var(--line);touch-action:none}
   body.walking #joy{display:block}
+  .ctrl #fpvBtn{display:none} body.walking .ctrl #fpvBtn{display:inline-flex}
+  .ctrl #fpvBtn.on{border-color:var(--cyan);color:var(--cyan);background:rgba(255,77,166,.12)}
   #joyNub{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;
     background:rgba(55,224,255,.32);border:1px solid var(--cyan);box-shadow:0 0 14px rgba(55,224,255,.5);transition:transform .04s linear}
   #walkHint{position:fixed;left:50%;top:72px;transform:translateX(-50%);z-index:7;display:none;
@@ -125,6 +127,7 @@
 
 <div class="hud ctrl">
   <button id="walkBtn" title="Entra y pasea por el Xtanco con un personaje">🎮 Entrar al Xtanco</button>
+  <button id="fpvBtn" title="Alternar 1ª / 3ª persona">👁 1ª persona</button>
   <button id="editBtn" title="Decorar: coloca pósters en las paredes">🖼️ Decorar</button>
   <button id="spinBtn" class="on" title="Rotación automática">↻ Auto-giro</button>
   <button id="screensBtn" class="on" title="Encender/apagar las pantallas">🖥️ Pantallas</button>
@@ -184,6 +187,7 @@
 <script type="module">
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 /* ============================================================
    MODELO DEL PLANO — Xtanco Barcelona (interpretado, editable)
@@ -221,8 +225,13 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;   // look fotográfico
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x04070d, 30, 64);
+scene.background = new THREE.Color(0x141016);
+scene.fog = new THREE.Fog(0x141016, 34, 80);
+// Iluminación basada en imagen (IBL): da realismo PBR a materiales y reflejos, como un escaneo
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.06).texture;
 
 const bb = PLAN.outline.reduce((a,[x,z])=>({minx:Math.min(a.minx,x),maxx:Math.max(a.maxx,x),minz:Math.min(a.minz,z),maxz:Math.max(a.maxz,z)}),{minx:1e9,maxx:-1e9,minz:1e9,maxz:-1e9});
 const CX=(bb.minx+bb.maxx)/2, CZ=(bb.minz+bb.maxz)/2, SPAN=Math.max(bb.maxx-bb.minx, bb.maxz-bb.minz);
@@ -238,34 +247,53 @@ controls.enableDamping = true; controls.dampingFactor = .08;
 controls.target.set(0,1.2,0); controls.maxPolarAngle = Math.PI*0.49; controls.minZoom=0.45; controls.maxZoom=3.2;
 controls.update();
 
-const amb = new THREE.AmbientLight(0x2a3a55, 1.15); scene.add(amb);
-const key = new THREE.DirectionalLight(0xbfe4ff, 1.45); key.position.set(14,26,8);
-key.castShadow=true; key.shadow.mapSize.set(2048,2048);
+// Luz de tienda: relleno neutro suave (el grueso lo da el IBL) + key cálida con sombra
+const amb = new THREE.AmbientLight(0xfff2e6, 0.35); scene.add(amb);
+const key = new THREE.DirectionalLight(0xfff1e0, 1.1); key.position.set(14,26,8);
+key.castShadow=true; key.shadow.mapSize.set(2048,2048); key.shadow.bias=-0.0004;
 Object.assign(key.shadow.camera,{left:-SPAN,right:SPAN,top:SPAN,bottom:-SPAN,near:1,far:80}); scene.add(key);
-const rim = new THREE.DirectionalLight(0x37e0ff, .5); rim.position.set(-12,8,-10); scene.add(rim);
+// Focos cálidos de techo (spots de tienda) repartidos por la planta
+const spotPos=[[3,2],[11,3],[16,5],[7,9],[13,12],[17,8]];
+spotPos.forEach(([sx,sz])=>{ const pl=new THREE.PointLight(0xffe8cf, 0.5, 11, 1.8); pl.position.set(sx-CX, PLAN.height-0.15, sz-CZ); scene.add(pl); });
 
-/* ---------- suelo ---------- */
+/* ---------- suelo (parquet claro realista) ---------- */
+function woodTexture(){ const cv=document.createElement("canvas"); cv.width=cv.height=512; const x=cv.getContext("2d");
+  x.fillStyle="#cbb79a"; x.fillRect(0,0,512,512);
+  for(let p=0;p<8;p++){ const y=p*64; const base=198+((p*37)%24); x.fillStyle=`rgb(${base},${base-22},${base-58})`; x.fillRect(0,y,512,64);
+    for(let i=0;i<70;i++){ const gx=Math.floor((i*97+p*53)%512), gy=y+Math.floor((i*61+p*29)%64); x.fillStyle=`rgba(120,90,55,${0.05+((i*p)%5)/40})`; x.fillRect(gx,gy,1+((i)%3),1); }
+    x.strokeStyle="rgba(90,65,40,.5)"; x.lineWidth=1.5; x.beginPath(); x.moveTo(0,y+0.5); x.lineTo(512,y+0.5); x.stroke();
+    const seam=((p*131)%512); x.beginPath(); x.moveTo(seam,y); x.lineTo(seam,y+64); x.stroke(); }
+  const t=new THREE.CanvasTexture(cv); t.colorSpace=THREE.SRGBColorSpace; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(0.5,0.5); return t; }
 const shape = new THREE.Shape(PLAN.outline.map(([x,z])=> new THREE.Vector2(x-CX, z-CZ)));
-const floor = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshStandardMaterial({ color:0x0a1626, roughness:.92, metalness:.05 }));
+const floorGeo = new THREE.ShapeGeometry(shape);
+const floor = new THREE.Mesh(floorGeo, new THREE.MeshStandardMaterial({ map:woodTexture(), roughness:.72, metalness:.05 }));
 floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; root.add(floor);
-root.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(PLAN.outline.map(([x,z])=> new THREE.Vector3(x-CX,0.02,z-CZ))),
-  new THREE.LineBasicMaterial({ color:0x37e0ff, transparent:true, opacity:.5 })));
-const grid = new THREE.GridHelper(SPAN*2, Math.round(SPAN*2), 0x16324a, 0x0e2236);
-grid.position.y=0.012; grid.material.transparent=true; grid.material.opacity=.45; root.add(grid);
+/* ---------- techo (solo visible al pasear por dentro; oculto en isométrica/decorar) ---------- */
+const ceilingGrp = new THREE.Group(); ceilingGrp.visible = false; root.add(ceilingGrp);
+const ceiling = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshStandardMaterial({ color:0xf3eee8, roughness:.95, metalness:0, side:THREE.DoubleSide }));
+ceiling.rotation.x = Math.PI/2; ceiling.position.y = PLAN.height; ceilingGrp.add(ceiling);
+// paneles de luz en el techo (rectángulos emisivos sobre los focos)
+const panelPos=[[3,2],[11,3],[16,5],[7,9],[13,12],[17,8]];
+panelPos.forEach(([sx,sz])=>{ const pn=new THREE.Mesh(new THREE.PlaneGeometry(1.1,0.5), new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff0dd,emissiveIntensity:1.2}));
+  pn.rotation.x=Math.PI/2; pn.position.set(sx-CX, PLAN.height-0.02, sz-CZ); ceilingGrp.add(pn); });
 
 /* ---------- paredes ---------- */
-const wallMat = new THREE.MeshStandardMaterial({ color:0x16273f, roughness:.85, metalness:.1, transparent:true, opacity:.42, side:THREE.DoubleSide });
+const wallMat = new THREE.MeshStandardMaterial({ color:0xefe9e2, roughness:.94, metalness:.02, side:THREE.DoubleSide });
+const baseMat = new THREE.MeshStandardMaterial({ color:0x2a2230, roughness:.8 });     // zócalo
+const trimMat = new THREE.MeshStandardMaterial({ color:0xc9bdaf, roughness:.6 });
 const pts = PLAN.outline;
 const wallMeshes = [];   // para raycast del editor (colocar pósters)
 for(let i=0;i<pts.length;i++){
   const a=pts[i], b=pts[(i+1)%pts.length];
   const ax=a[0]-CX, az=a[1]-CZ, bx=b[0]-CX, bz=b[1]-CZ;
-  const len=Math.hypot(bx-ax, bz-az);
+  const len=Math.hypot(bx-ax, bz-az), ang=-Math.atan2(bz-az, bx-ax);
   const m=new THREE.Mesh(new THREE.PlaneGeometry(len, PLAN.height), wallMat);
-  m.position.set((ax+bx)/2, PLAN.height/2, (az+bz)/2); m.rotation.y=-Math.atan2(bz-az, bx-ax); m.castShadow=true;
+  m.position.set((ax+bx)/2, PLAN.height/2, (az+bz)/2); m.rotation.y=ang; m.receiveShadow=true;
   m.userData.wall=i; root.add(m); wallMeshes.push(m);
-  const top=new THREE.Mesh(new THREE.BoxGeometry(len,0.035,0.035), new THREE.MeshBasicMaterial({color:0x37e0ff, transparent:true, opacity:.35}));
-  top.position.set((ax+bx)/2, PLAN.height, (az+bz)/2); top.rotation.y=m.rotation.y; root.add(top);
+  const base=new THREE.Mesh(new THREE.BoxGeometry(len,0.12,0.05), baseMat);
+  base.position.set((ax+bx)/2, 0.06, (az+bz)/2); base.rotation.y=ang; root.add(base);
+  const top=new THREE.Mesh(new THREE.BoxGeometry(len,0.06,0.05), trimMat);
+  top.position.set((ax+bx)/2, PLAN.height-0.04, (az+bz)/2); top.rotation.y=ang; root.add(top);
 }
 
 /* ---------- mostrador curvo + estanterías ---------- */
@@ -295,7 +323,7 @@ shelfRun(0.3,8.0, 4.0,8.0, 4);
 const DCOL=[0xff2d78,0xff8a3d,0xffd23d,0x2ee6c8,0x7b5cff,0x35c2ff,0xff5ad0];
 const obstacles=[];                       // {x,z,r} en coords root-local (= coords del jugador)
 function addObstacle(px,pz,r){ obstacles.push({x:px-CX, z:pz-CZ, r}); }
-function matD(col,e){ return new THREE.MeshStandardMaterial({color:col,roughness:.55,metalness:.2,emissive:col,emissiveIntensity:e==null?0.14:e}); }
+function matD(col,e){ return new THREE.MeshStandardMaterial({color:col,roughness:.62,metalness:.05,emissive:col,emissiveIntensity:0.04}); }
 
 function makeRail(x1,z1,x2,z2,n){           // perchero de ropa con prendas colgando
   const ax=x1-CX,az=z1-CZ,bx=x2-CX,bz=z2-CZ, len=Math.hypot(bx-ax,bz-az), ang=Math.atan2(bz-az,bx-ax), barY=1.5;
@@ -483,7 +511,7 @@ addEventListener("keydown",e=>{ keys[e.code]=true;
 addEventListener("keyup",e=>{ keys[e.code]=false; });
 
 /* --- input: arrastre para girar la cámara (ratón/táctil) --- */
-let camYaw=Math.PI, camDist=4.7, camHeight=2.3, dragging=false, lastX=0;
+let camYaw=Math.PI, camDist=4.7, camHeight=2.3, dragging=false, lastX=0, fpv=false;
 canvas.addEventListener("pointerdown",e=>{ if(mode!=="walk")return; dragging=true; lastX=e.clientX; });
 addEventListener("pointermove",e=>{ if(mode!=="walk"||!dragging)return; camYaw-=(e.clientX-lastX)*0.006; lastX=e.clientX; });
 addEventListener("pointerup",()=>{ dragging=false; });
@@ -502,9 +530,10 @@ joyEl.addEventListener("touchend",joyEnd); joyEl.addEventListener("touchcancel",
 
 /* --- entrar / salir --- */
 const walkBtn=document.getElementById("walkBtn"), walkHint=document.getElementById("walkHint");
-function enterWalk(){ if(mode==="edit") exitEdit(); mode="walk"; activeCam=persp; player.visible=true;
+function enterWalk(){ if(mode==="edit") exitEdit(); mode="walk"; activeCam=persp; player.visible=!fpv;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=false;
-  amb.intensity=2.0; playerLight.intensity=1.5;        // sube luz de interior para pasear
+  amb.intensity=0.55; playerLight.intensity=0.5;       // realza ligeramente al pasear
+  ceilingGrp.visible=true;                              // techo: tienda cerrada al pasear
   root.rotation.y=0;                                   // mundo fijo mientras paseas
   player.position.copy(findSpawn()); camYaw=Math.PI; player.rotation.y=camYaw; pHeading=camYaw;
   zoneMeshes.forEach(m=>{ m.scr.lookAt(0,m.scr.position.y,0); m.frame.quaternion.copy(m.scr.quaternion); });
@@ -515,11 +544,15 @@ function enterWalk(){ if(mode==="edit") exitEdit(); mode="walk"; activeCam=persp
   walkBtn.textContent="✕ Salir"; walkBtn.classList.add("on");
   if(walkHint){ walkHint.style.display="block"; clearTimeout(walkHint._t); walkHint._t=setTimeout(()=>walkHint.style.display="none",5500); } }
 function exitWalk(){ mode="orbit"; activeCam=cam; player.visible=false;
-  amb.intensity=1.15; playerLight.intensity=0;          // restaura luz orbital
+  amb.intensity=0.35; playerLight.intensity=0;          // restaura luz base
+  ceilingGrp.visible=false;                             // sin techo en isométrica
   controls.enabled=true; document.body.classList.remove("walking");
   walkBtn.textContent="🎮 Entrar al Xtanco"; walkBtn.classList.remove("on");
   if(walkHint) walkHint.style.display="none"; }
 walkBtn.onclick=()=> mode==="walk"?exitWalk():enterWalk();
+const fpvBtn=document.getElementById("fpvBtn");
+fpvBtn.onclick=()=>{ fpv=!fpv; fpvBtn.classList.toggle("on",fpv); fpvBtn.textContent=fpv?"👁 3ª persona":"👁 1ª persona";
+  if(mode==="walk") player.visible=!fpv; };
 
 /* --- actualización por frame del modo walk --- */
 let pHeading=0, bob=0;
@@ -545,10 +578,16 @@ function updateWalk(dt){
     player.rotation.y+=da*Math.min(1,dt*12);
   }
   player.position.y=Math.abs(Math.sin(bob))*0.055;
-  const co=new THREE.Vector3(Math.sin(camYaw)*camDist,0,Math.cos(camYaw)*camDist);
-  const want=new THREE.Vector3(player.position.x-co.x,camHeight,player.position.z-co.z);
-  persp.position.lerp(want,Math.min(1,dt*6));
-  persp.lookAt(player.position.x,1.3,player.position.z);
+  const fwd=new THREE.Vector3(Math.sin(camYaw),0,Math.cos(camYaw));
+  if(fpv){                                   // 1ª persona: cámara a la altura de los ojos
+    const eye=new THREE.Vector3(player.position.x, 1.62, player.position.z);
+    persp.position.lerp(eye, Math.min(1,dt*14));
+    persp.lookAt(eye.x+fwd.x, 1.52, eye.z+fwd.z);
+  } else {                                   // 3ª persona: cámara detrás del personaje
+    const want=new THREE.Vector3(player.position.x-fwd.x*camDist,camHeight,player.position.z-fwd.z*camDist);
+    persp.position.lerp(want,Math.min(1,dt*6));
+    persp.lookAt(player.position.x,1.3,player.position.z);
+  }
 }
 
 /* ============================================================
