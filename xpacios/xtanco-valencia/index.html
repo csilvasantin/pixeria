@@ -88,6 +88,26 @@
     background:rgba(4,7,13,.84);border:1px solid var(--line);border-radius:10px;padding:9px 15px;font-size:12px;color:var(--ink);
     box-shadow:0 6px 22px rgba(0,0,0,.5);white-space:nowrap;text-align:center}
   #walkHint b{color:var(--cyan)}
+  /* ---- editor: paleta + toolbar ---- */
+  .ctrl #editBtn.on{background:rgba(126,224,160,.14);border-color:#7ee0a0;color:#7ee0a0}
+  #palette{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:7;display:none;align-items:center;gap:12px;
+    background:var(--panel);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:14px;padding:10px 14px;max-width:94vw}
+  body.editing #palette{display:flex}
+  #palette .pTit{font-size:10px;letter-spacing:.7px;color:var(--muted)}
+  #pSwatches{display:flex;gap:8px}
+  .pSwatch{width:40px;height:56px;border-radius:6px;border:1px solid var(--line);cursor:pointer;background-size:cover;background-position:center;flex:none}
+  .pSwatch.sel{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(55,224,255,.4)}
+  #palette .pUp{font-size:11px;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 9px;cursor:pointer;white-space:nowrap}
+  #palette .pUp:hover{border-color:var(--cyan)}
+  #palette .pHint{font-size:10.5px;color:var(--muted);max-width:230px;line-height:1.3}
+  #posterTool{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:8;display:none;align-items:center;gap:8px;
+    background:rgba(6,12,22,.95);backdrop-filter:blur(12px);border:1px solid var(--cyan);border-radius:12px;padding:8px 10px}
+  #posterTool.show{display:flex}
+  #posterTool button{font-family:inherit;background:rgba(55,224,255,.10);color:var(--ink);border:1px solid var(--line);
+    border-radius:8px;padding:7px 11px;font-size:12px;cursor:pointer}
+  #posterTool button:hover{border-color:var(--cyan)}
+  #posterTool button.danger{background:rgba(255,90,106,.12);border-color:rgba(255,90,106,.4);color:#ff8290}
+  #posterTool .ptHint{font-size:10.5px;color:var(--muted);margin-left:4px}
 </style>
 </head>
 <body>
@@ -105,6 +125,7 @@
 
 <div class="hud ctrl">
   <button id="walkBtn" title="Entra y pasea por el Xtanco con un personaje">🎮 Entrar al Xtanco</button>
+  <button id="editBtn" title="Decorar: coloca pósters en las paredes">🖼️ Decorar</button>
   <button id="spinBtn" class="on" title="Rotación automática">↻ Auto-giro</button>
   <button id="screensBtn" class="on" title="Encender/apagar las pantallas">🖥️ Pantallas</button>
   <button id="musicBtn" title="Hilo musical del Xpacio (audio comercializable)">🎵 Hilo Musical<span id="musicNow" class="mnow"></span></button>
@@ -137,6 +158,20 @@
 
 <div id="joy"><div id="joyNub"></div></div>
 <div id="walkHint"><b>WASD</b> / flechas para moverte · arrastra para mirar · <b>Esc</b> para salir</div>
+
+<!-- Editor: paleta de pósters + toolbar de selección -->
+<div id="palette">
+  <span class="pTit">PÓSTER</span>
+  <div id="pSwatches"></div>
+  <label class="pUp" title="Sube tu propia imagen">⬆ Subir<input id="pUpload" type="file" accept="image/*" hidden></label>
+  <span class="pHint">Click en una pared para colocar · click en un póster para seleccionar</span>
+</div>
+<div id="posterTool">
+  <button data-act="smaller" title="Más pequeño">－</button>
+  <button data-act="bigger" title="Más grande">＋</button>
+  <button data-act="delete" class="danger" title="Borrar (Supr)">🗑 Borrar</button>
+  <span class="ptHint">arrastra el póster para moverlo por la pared</span>
+</div>
 
 <div class="hud foot">Pixeria · XpaceOS Locations · Xtanco Valencia · render interpretado del plano · cotas reales por zona</div>
 
@@ -221,12 +256,14 @@ grid.position.y=0.012; grid.material.transparent=true; grid.material.opacity=.45
 /* ---------- paredes ---------- */
 const wallMat = new THREE.MeshStandardMaterial({ color:0x16273f, roughness:.85, metalness:.1, transparent:true, opacity:.42, side:THREE.DoubleSide });
 const pts = PLAN.outline;
+const wallMeshes = [];   // para raycast del editor (colocar pósters)
 for(let i=0;i<pts.length;i++){
   const a=pts[i], b=pts[(i+1)%pts.length];
   const ax=a[0]-CX, az=a[1]-CZ, bx=b[0]-CX, bz=b[1]-CZ;
   const len=Math.hypot(bx-ax, bz-az);
   const m=new THREE.Mesh(new THREE.PlaneGeometry(len, PLAN.height), wallMat);
-  m.position.set((ax+bx)/2, PLAN.height/2, (az+bz)/2); m.rotation.y=-Math.atan2(bz-az, bx-ax); m.castShadow=true; root.add(m);
+  m.position.set((ax+bx)/2, PLAN.height/2, (az+bz)/2); m.rotation.y=-Math.atan2(bz-az, bx-ax); m.castShadow=true;
+  m.userData.wall=i; root.add(m); wallMeshes.push(m);
   const top=new THREE.Mesh(new THREE.BoxGeometry(len,0.035,0.035), new THREE.MeshBasicMaterial({color:0x37e0ff, transparent:true, opacity:.35}));
   top.position.set((ax+bx)/2, PLAN.height, (az+bz)/2); top.rotation.y=m.rotation.y; root.add(top);
 }
@@ -412,7 +449,7 @@ joyEl.addEventListener("touchend",joyEnd); joyEl.addEventListener("touchcancel",
 
 /* --- entrar / salir --- */
 const walkBtn=document.getElementById("walkBtn"), walkHint=document.getElementById("walkHint");
-function enterWalk(){ mode="walk"; activeCam=persp; player.visible=true;
+function enterWalk(){ if(mode==="edit") exitEdit(); mode="walk"; activeCam=persp; player.visible=true;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=false;
   amb.intensity=2.0; playerLight.intensity=1.5;        // sube luz de interior para pasear
   root.rotation.y=0;                                   // mundo fijo mientras paseas
@@ -460,6 +497,97 @@ function updateWalk(dt){
   persp.position.lerp(want,Math.min(1,dt*6));
   persp.lookAt(player.position.x,1.3,player.position.z);
 }
+
+/* ============================================================
+   MODO DECORAR — editor 3D: coloca pósters en las paredes
+   ============================================================ */
+const POSTER_KEY="xtanco-valencia-posters";
+const posters=[]; let selPoster=null, draggingPoster=null;
+const PW=1.1, PH=1.55;                       // tamaño base del póster (m)
+const POSTER_PRESETS=[
+  {key:"loteria",brand:"LOTERÍA",title:"El Gordo te espera", sub:"Décimos aquí",        c:"#ff9d6e"},
+  {key:"vapeo",  brand:"VAPEO",  title:"Nueva gama sin humo",sub:"Pruébala hoy",        c:"#f2e08a"},
+  {key:"oferta", brand:"OFERTA", title:"Snacks −30%",        sub:"Solo esta semana",    c:"#88e6a8"},
+  {key:"prensa", brand:"PRENSA", title:"Revistas y novedades",sub:"Últimos números",    c:"#b59cff"},
+];
+function posterArtCanvas(p){ const cv=document.createElement("canvas"); cv.width=480; cv.height=680; const x=cv.getContext("2d");
+  const g=x.createLinearGradient(0,0,0,680); g.addColorStop(0,"#0a1526"); g.addColorStop(1,shade(p.c,-0.5));
+  x.fillStyle=g; x.fillRect(0,0,480,680); x.strokeStyle=p.c; x.lineWidth=6; x.strokeRect(16,16,448,648);
+  x.font="700 34px JetBrains Mono, monospace"; const bw=x.measureText(p.brand).width+34;
+  x.fillStyle=p.c; roundRect(x,40,52,bw,52,12); x.fill(); x.fillStyle="#04070d"; x.fillText(p.brand,57,89);
+  x.fillStyle="#eef6ff"; x.font="800 50px JetBrains Mono, monospace"; wrap(x,p.title,40,230,400,58);
+  x.fillStyle="rgba(220,234,255,.8)"; x.font="400 26px JetBrains Mono, monospace"; x.fillText(p.sub,40,560);
+  x.fillStyle=p.c; x.fillRect(40,590,70,6);
+  x.fillStyle="rgba(220,234,255,.55)"; x.font="400 20px JetBrains Mono, monospace"; x.fillText("Xtanco Valencia · ADmira",40,632); return cv; }
+function textureForImg(img){ let t;
+  if(img&&img.preset){ t=new THREE.CanvasTexture(posterArtCanvas(POSTER_PRESETS.find(p=>p.key===img.preset)||POSTER_PRESETS[0])); }
+  else if(img&&img.url){ t=texLoader.load(img.url); }
+  else { t=new THREE.CanvasTexture(posterArtCanvas(POSTER_PRESETS[0])); }
+  t.colorSpace=THREE.SRGBColorSpace; return t; }
+let pickImg={preset:"loteria"};              // diseño elegido para el próximo póster
+
+function makePoster(rec){ const s=rec.s||1, w=PW*s, h=PH*s;
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshBasicMaterial({map:textureForImg(rec.img),side:THREE.DoubleSide}));
+  mesh.position.set(rec.x,rec.y,rec.z); mesh.quaternion.set(rec.qx,rec.qy,rec.qz,rec.qw);
+  const frame=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(w+0.05,h+0.05)), new THREE.LineBasicMaterial({color:0x37e0ff}));
+  frame.position.copy(mesh.position); frame.quaternion.copy(mesh.quaternion); frame.visible=false;
+  root.add(mesh); root.add(frame); const P={mesh,frame,img:rec.img,s}; mesh.userData.poster=P; posters.push(P); return P; }
+function placeOnWall(P,hit){ const wq=new THREE.Quaternion(); hit.object.getWorldQuaternion(wq);
+  let n=new THREE.Vector3(0,0,1).applyQuaternion(wq).normalize();
+  if(n.dot(new THREE.Vector3().subVectors(cam.position,hit.point))<0) n.negate();
+  const pos=hit.point.clone().addScaledVector(n,0.04);
+  P.mesh.position.copy(pos); P.mesh.lookAt(pos.clone().add(n));
+  P.frame.position.copy(P.mesh.position); P.frame.quaternion.copy(P.mesh.quaternion); }
+function resizePoster(P,f){ if(!P)return; P.s=Math.max(0.4,Math.min(3,P.s*f)); const w=PW*P.s,h=PH*P.s;
+  P.mesh.geometry.dispose(); P.mesh.geometry=new THREE.PlaneGeometry(w,h);
+  P.frame.geometry.dispose(); P.frame.geometry=new THREE.EdgesGeometry(new THREE.PlaneGeometry(w+0.05,h+0.05)); savePosters(); }
+function selectPoster(P){ if(selPoster) selPoster.frame.visible=false; selPoster=P;
+  posterTool.classList.toggle("show",!!P); if(P) P.frame.visible=true; }
+function deletePoster(P){ if(!P)return; root.remove(P.mesh); root.remove(P.frame); P.mesh.geometry.dispose(); P.frame.geometry.dispose();
+  const i=posters.indexOf(P); if(i>=0) posters.splice(i,1); if(selPoster===P) selectPoster(null); savePosters(); }
+function savePosters(){ try{ localStorage.setItem(POSTER_KEY, JSON.stringify(posters.map(P=>{ const q=P.mesh.quaternion,p=P.mesh.position;
+  return {x:p.x,y:p.y,z:p.z,qx:q.x,qy:q.y,qz:q.z,qw:q.w,s:P.s,img:P.img}; }))); }catch(e){} }
+function loadPosters(){ try{ const raw=localStorage.getItem(POSTER_KEY); if(raw) JSON.parse(raw).forEach(makePoster); }catch(e){} }
+
+const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
+function setNdc(e){ const r=canvas.getBoundingClientRect(); ndc.x=((e.clientX-r.left)/r.width)*2-1; ndc.y=-((e.clientY-r.top)/r.height)*2+1; ray.setFromCamera(ndc,activeCam); }
+function hitPosters(){ return ray.intersectObjects(posters.map(P=>P.mesh),false)[0]||null; }
+function hitWalls(){ return ray.intersectObjects(wallMeshes,false)[0]||null; }
+
+let downXY=null, moved=false;
+canvas.addEventListener("pointerdown",e=>{ if(mode!=="edit")return; downXY=[e.clientX,e.clientY]; moved=false;
+  setNdc(e); const hp=hitPosters(); if(hp){ selectPoster(hp.object.userData.poster); draggingPoster=selPoster; controls.enabled=false; } });
+canvas.addEventListener("pointermove",e=>{ if(mode!=="edit")return;
+  if(downXY && Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>4) moved=true;
+  if(draggingPoster){ setNdc(e); const hw=hitWalls(); if(hw) placeOnWall(draggingPoster,hw); } });
+addEventListener("pointerup",e=>{ if(mode!=="edit"){ downXY=null; return; }
+  if(draggingPoster){ savePosters(); draggingPoster=null; controls.enabled=true; downXY=null; return; }
+  if(downXY && !moved){ setNdc(e); const hp=hitPosters();
+    if(hp){ selectPoster(hp.object.userData.poster); }
+    else { const hw=hitWalls(); if(hw){ const P=makePoster({x:0,y:0,z:0,qx:0,qy:0,qz:0,qw:1,s:1,img:Object.assign({},pickImg)}); placeOnWall(P,hw); selectPoster(P); savePosters(); } else selectPoster(null); } }
+  downXY=null; controls.enabled=true; });
+
+const editBtn=document.getElementById("editBtn");
+const palette=document.getElementById("palette"), posterTool=document.getElementById("posterTool"), swatchWrap=document.getElementById("pSwatches");
+POSTER_PRESETS.forEach(p=>{ const s=document.createElement("div"); s.className="pSwatch"+(p.key===pickImg.preset?" sel":"");
+  s.style.backgroundImage="url("+posterArtCanvas(p).toDataURL()+")"; s.title=p.brand;
+  s.onclick=()=>{ pickImg={preset:p.key}; [...swatchWrap.children].forEach(c=>c.classList.remove("sel")); s.classList.add("sel"); };
+  swatchWrap.appendChild(s); });
+document.getElementById("pUpload").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(!f)return;
+  const rd=new FileReader(); rd.onload=()=>{ pickImg={url:rd.result}; [...swatchWrap.children].forEach(c=>c.classList.remove("sel")); }; rd.readAsDataURL(f); };
+posterTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act;
+  if(a==="delete") deletePoster(selPoster); else if(a==="bigger") resizePoster(selPoster,1.15); else if(a==="smaller") resizePoster(selPoster,1/1.15); });
+canvas.addEventListener("wheel",e=>{ if(mode==="edit"&&selPoster){ e.preventDefault(); resizePoster(selPoster, e.deltaY<0?1.08:1/1.08); } },{passive:false});
+
+function enterEdit(){ if(mode==="walk") exitWalk(); mode="edit"; activeCam=cam;
+  spin=false; spinBtn.classList.remove("on"); controls.enabled=true; root.rotation.y=0;
+  document.body.classList.add("editing"); editBtn.classList.add("on"); editBtn.textContent="✓ Hecho"; }
+function exitEdit(){ mode="orbit"; selectPoster(null); document.body.classList.remove("editing");
+  editBtn.classList.remove("on"); editBtn.textContent="🖼️ Decorar"; }
+editBtn.onclick=()=> mode==="edit"?exitEdit():enterEdit();
+addEventListener("keydown",e=>{ if(mode!=="edit")return;
+  if((e.code==="Delete"||e.code==="Backspace")&&selPoster){ deletePoster(selPoster); }
+  if(e.code==="Escape") exitEdit(); });
 
 /* ---------- integración con la flota Admira (emisión real) ----------
    La página actúa como nodo de señalización: reporta presencia, emisión
@@ -582,6 +710,7 @@ document.getElementById("loading").style.display="none";
 requestAnimationFrame(loop);
 
 /* arranque: contenido real de admira.tv + presencia + primer reporte, luego intervalos */
+loadPosters();          // restaura los pósters colocados en el editor (localStorage)
 loadStock();
 presencePing();
 PLAN.zones.forEach(z=>{ if(z.online&&z.playing) recordPlay(z); });
