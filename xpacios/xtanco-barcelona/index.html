@@ -90,6 +90,12 @@
     background:rgba(4,7,13,.84);border:1px solid var(--line);border-radius:10px;padding:9px 15px;font-size:12px;color:var(--ink);
     box-shadow:0 6px 22px rgba(0,0,0,.5);white-space:nowrap;text-align:center}
   #walkHint b{color:var(--cyan)}
+  body.touring .zones,body.touring .foot{display:none}
+  .ctrl #tourBtn.on{background:rgba(255,77,166,.14);border-color:#ff5a6a;color:#ff8290}
+  #tourHint{position:fixed;left:50%;top:72px;transform:translateX(-50%);z-index:7;display:none;
+    background:rgba(4,7,13,.84);border:1px solid var(--line);border-radius:10px;padding:9px 15px;font-size:12px;color:var(--ink);
+    box-shadow:0 6px 22px rgba(0,0,0,.5);white-space:nowrap;text-align:center}
+  #tourHint b{color:var(--cyan)}
   /* ---- editor: paleta + toolbar ---- */
   .ctrl #editBtn.on{background:rgba(126,224,160,.14);border-color:#7ee0a0;color:#7ee0a0}
   #palette{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:7;display:none;align-items:center;gap:12px;
@@ -128,6 +134,7 @@
 <div class="hud ctrl">
   <button id="walkBtn" title="Entra y pasea por el Xtanco con un personaje">🎮 Entrar al Xtanco</button>
   <button id="fpvBtn" title="Alternar 1ª / 3ª persona">👁 1ª persona</button>
+  <button id="tourBtn" title="Recorrido tipo Matterport por puntos">🎬 Tour</button>
   <button id="editBtn" title="Decorar: coloca pósters en las paredes">🖼️ Decorar</button>
   <button id="spinBtn" class="on" title="Rotación automática">↻ Auto-giro</button>
   <button id="screensBtn" class="on" title="Encender/apagar las pantallas">🖥️ Pantallas</button>
@@ -161,6 +168,7 @@
 
 <div id="joy"><div id="joyNub"></div></div>
 <div id="walkHint"><b>WASD</b> / flechas para moverte · arrastra para mirar · <b>Esc</b> para salir</div>
+<div id="tourHint">Pulsa los <b>puntos</b> del suelo para recorrer · arrastra para mirar · <b>Esc</b> para salir</div>
 
 <!-- Editor: paleta de pósters + toolbar de selección -->
 <div id="palette">
@@ -427,7 +435,7 @@ PLAN.zones.forEach(z=>{
 /* ---------- etiquetas A/B/C/D ---------- */
 const labels=PLAN.zones.map(z=>{ const el=document.createElement("div"); el.className="zlabel";
   el.innerHTML=`<b>${z.id}</b> <small>${(z.w*z.d).toFixed(0)} m²</small>`; el.addEventListener("click",()=>openMgmt(z.id)); document.body.appendChild(el); return {z,el}; });
-function updateLabels(){ if(mode==="walk"){ labels.forEach(({el})=>{ el.style.display="none"; }); return; }
+function updateLabels(){ if(mode==="walk"||mode==="tour"){ labels.forEach(({el})=>{ el.style.display="none"; }); return; }
   labels.forEach(({z,el})=>{ const v=new THREE.Vector3(z._w.cx,PLAN.height+0.2,z._w.cz); v.applyMatrix4(root.matrixWorld); v.project(activeCam);
   el.style.left=(v.x*.5+.5)*innerWidth+"px"; el.style.top=(-v.y*.5+.5)*innerHeight+"px"; el.style.display=(v.z<1)?"block":"none"; }); }
 
@@ -530,7 +538,7 @@ joyEl.addEventListener("touchend",joyEnd); joyEl.addEventListener("touchcancel",
 
 /* --- entrar / salir --- */
 const walkBtn=document.getElementById("walkBtn"), walkHint=document.getElementById("walkHint");
-function enterWalk(){ if(mode==="edit") exitEdit(); mode="walk"; activeCam=persp; player.visible=!fpv;
+function enterWalk(){ if(mode==="edit") exitEdit(); if(mode==="tour") exitTour(); mode="walk"; activeCam=persp; player.visible=!fpv;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=false;
   amb.intensity=0.55; playerLight.intensity=0.5;       // realza ligeramente al pasear
   ceilingGrp.visible=true;                              // techo: tienda cerrada al pasear
@@ -671,7 +679,7 @@ posterTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.datas
   if(a==="delete") deletePoster(selPoster); else if(a==="bigger") resizePoster(selPoster,1.15); else if(a==="smaller") resizePoster(selPoster,1/1.15); });
 canvas.addEventListener("wheel",e=>{ if(mode==="edit"&&selPoster){ e.preventDefault(); resizePoster(selPoster, e.deltaY<0?1.08:1/1.08); } },{passive:false});
 
-function enterEdit(){ if(mode==="walk") exitWalk(); mode="edit"; activeCam=cam;
+function enterEdit(){ if(mode==="walk") exitWalk(); if(mode==="tour") exitTour(); mode="edit"; activeCam=cam;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=true; root.rotation.y=0;
   document.body.classList.add("editing"); editBtn.classList.add("on"); editBtn.textContent="✓ Hecho"; }
 function exitEdit(){ mode="orbit"; selectPoster(null); document.body.classList.remove("editing");
@@ -680,6 +688,46 @@ editBtn.onclick=()=> mode==="edit"?exitEdit():enterEdit();
 addEventListener("keydown",e=>{ if(mode!=="edit")return;
   if((e.code==="Delete"||e.code==="Backspace")&&selPoster){ deletePoster(selPoster); }
   if(e.code==="Escape") exitEdit(); });
+
+/* ============================================================
+   MODO TOUR — recorrido tipo Matterport (sin escaneo): waypoints en
+   el suelo; pulsas uno y la cámara se desliza suave a la altura de
+   los ojos; arrastras para mirar alrededor.
+   ============================================================ */
+const tourGrp=new THREE.Group(); tourGrp.visible=false; root.add(tourGrp);
+const markers=[];                                   // discos pulsables
+const TOUR_PTS=[[12,6],[8.5,6],[10,7.5],[14,9],[6.5,7],[12,11],[16.5,9]];   // pasillos abiertos (sin chocar con muebles)
+TOUR_PTS.forEach(([px,pz])=>{ if(!canStand(px-CX,pz-CZ)) return;
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.05,10,32), new THREE.MeshBasicMaterial({color:0xff4da6}));
+  ring.rotation.x=-Math.PI/2; ring.position.set(px-CX,0.06,pz-CZ);
+  const dot=new THREE.Mesh(new THREE.CircleGeometry(0.3,28), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.22}));
+  dot.rotation.x=-Math.PI/2; dot.position.copy(ring.position);
+  ring.userData.eye=new THREE.Vector3(px-CX,1.62,pz-CZ); tourGrp.add(ring); tourGrp.add(dot); markers.push(ring); });
+let tourTarget=new THREE.Vector3(0,1.62,0), tDown=null, tMoved=false, tdrag=false, tlastX=0, tpulse=0;
+function goToMarker(eye){ tourTarget=eye.clone(); }
+canvas.addEventListener("pointerdown",e=>{ if(mode!=="tour")return; tDown=[e.clientX,e.clientY]; tMoved=false; tdrag=true; tlastX=e.clientX; });
+addEventListener("pointermove",e=>{ if(mode!=="tour")return; if(tDown&&Math.hypot(e.clientX-tDown[0],e.clientY-tDown[1])>4) tMoved=true; if(tdrag){ camYaw-=(e.clientX-tlastX)*0.006; tlastX=e.clientX; } });
+addEventListener("pointerup",e=>{ if(mode!=="tour"){ return; } tdrag=false;
+  if(tDown&&!tMoved){ setNdc(e); const h=ray.intersectObjects(markers,false)[0]; if(h) goToMarker(h.object.userData.eye); } tDown=null; });
+function updateTour(dt){ tpulse+=dt*3;
+  persp.position.lerp(tourTarget, Math.min(1,dt*3.2));        // deslizamiento suave entre puntos
+  const fwd=new THREE.Vector3(Math.sin(camYaw),0,Math.cos(camYaw));
+  persp.lookAt(persp.position.x+fwd.x, persp.position.y-0.08, persp.position.z+fwd.z);
+  const s=1+Math.sin(tpulse)*0.12; markers.forEach(m=>{ m.scale.set(s,s,1); const cur=m.userData.eye.distanceTo(tourTarget)<0.3; m.material.color.setHex(cur?0x2ee6c8:0xff4da6); });
+}
+const tourBtn=document.getElementById("tourBtn"), tourHint=document.getElementById("tourHint");
+function enterTour(){ if(mode==="walk") exitWalk(); if(mode==="edit") exitEdit(); mode="tour"; activeCam=persp; player.visible=false;
+  spin=false; spinBtn.classList.remove("on"); controls.enabled=false; root.rotation.y=0;
+  amb.intensity=0.55; playerLight.intensity=0; ceilingGrp.visible=true; tourGrp.visible=true;
+  zoneMeshes.forEach(m=>{ m.scr.lookAt(0,m.scr.position.y,0); m.frame.quaternion.copy(m.scr.quaternion); });
+  const first=markers[0]?markers[0].userData.eye.clone():new THREE.Vector3(0,1.62,0); tourTarget=first.clone();
+  persp.position.set(first.x, first.y, first.z+0.01); camYaw=0; persp.aspect=innerWidth/innerHeight; persp.updateProjectionMatrix();
+  document.body.classList.add("touring"); tourBtn.classList.add("on"); tourBtn.textContent="✕ Salir tour";
+  if(tourHint){ tourHint.style.display="block"; clearTimeout(tourHint._t); tourHint._t=setTimeout(()=>tourHint.style.display="none",6000); } }
+function exitTour(){ mode="orbit"; activeCam=cam; controls.enabled=true; ceilingGrp.visible=false; tourGrp.visible=false;
+  amb.intensity=0.35; document.body.classList.remove("touring"); tourBtn.classList.remove("on"); tourBtn.textContent="🎬 Tour"; if(tourHint) tourHint.style.display="none"; }
+tourBtn.onclick=()=> mode==="tour"?exitTour():enterTour();
+addEventListener("keydown",e=>{ if(mode==="tour"&&e.code==="Escape") exitTour(); });
 
 /* ---------- integración con la flota Admira (emisión real) ----------
    La página actúa como nodo de señalización: reporta presencia, emisión
@@ -772,6 +820,8 @@ function loop(now){
   const dt=(now-t0)/1000; t0=now; tsum+=dt;
   if(mode==="walk"){
     updateWalk(dt);
+  } else if(mode==="tour"){
+    updateTour(dt);
   } else {
     if(spin) root.rotation.y += dt*0.11;
     // pantallas siempre legibles: la cara con contenido (+Z) mira al espectador (yaw),
