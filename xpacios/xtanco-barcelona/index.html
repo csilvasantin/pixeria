@@ -96,6 +96,9 @@
     background:rgba(4,7,13,.84);border:1px solid var(--line);border-radius:10px;padding:9px 15px;font-size:12px;color:var(--ink);
     box-shadow:0 6px 22px rgba(0,0,0,.5);white-space:nowrap;text-align:center}
   #tourHint b{color:var(--cyan)}
+  #minimap{position:fixed;left:20px;bottom:20px;z-index:7;display:none;border:1px solid var(--line);border-radius:12px;
+    background:rgba(6,12,22,.72);backdrop-filter:blur(8px);box-shadow:0 6px 22px rgba(0,0,0,.5)}
+  body.touring #minimap{display:block}
   /* ---- editor: paleta + toolbar ---- */
   .ctrl #editBtn.on{background:rgba(126,224,160,.14);border-color:#7ee0a0;color:#7ee0a0}
   #palette{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:7;display:none;align-items:center;gap:12px;
@@ -169,6 +172,7 @@
 <div id="joy"><div id="joyNub"></div></div>
 <div id="walkHint"><b>WASD</b> / flechas para moverte · arrastra para mirar · <b>Esc</b> para salir</div>
 <div id="tourHint">Pulsa los <b>puntos</b> del suelo para recorrer · arrastra para mirar · <b>Esc</b> para salir</div>
+<canvas id="minimap" width="150" height="150" title="Planta del Xtanco · tu posición"></canvas>
 
 <!-- Editor: paleta de pósters + toolbar de selección -->
 <div id="palette">
@@ -695,32 +699,60 @@ addEventListener("keydown",e=>{ if(mode!=="edit")return;
    los ojos; arrastras para mirar alrededor.
    ============================================================ */
 const tourGrp=new THREE.Group(); tourGrp.visible=false; root.add(tourGrp);
-const markers=[];                                   // discos pulsables
+const markers=[];                                   // anillos (pulso + minimapa)
+const hitTargets=[];                                // discos clicables (incluye el centro del anillo)
 const TOUR_PTS=[[12,6],[8.5,6],[10,7.5],[14,9],[6.5,7],[12,11],[16.5,9]];   // pasillos abiertos (sin chocar con muebles)
 TOUR_PTS.forEach(([px,pz])=>{ if(!canStand(px-CX,pz-CZ)) return;
+  const eye=new THREE.Vector3(px-CX,1.62,pz-CZ);
   const ring=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.05,10,32), new THREE.MeshBasicMaterial({color:0xff4da6}));
-  ring.rotation.x=-Math.PI/2; ring.position.set(px-CX,0.06,pz-CZ);
-  const dot=new THREE.Mesh(new THREE.CircleGeometry(0.3,28), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.22}));
-  dot.rotation.x=-Math.PI/2; dot.position.copy(ring.position);
-  ring.userData.eye=new THREE.Vector3(px-CX,1.62,pz-CZ); tourGrp.add(ring); tourGrp.add(dot); markers.push(ring); });
+  ring.rotation.x=-Math.PI/2; ring.position.set(px-CX,0.06,pz-CZ); ring.userData.eye=eye;
+  const dot=new THREE.Mesh(new THREE.CircleGeometry(0.42,28), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.18}));
+  dot.rotation.x=-Math.PI/2; dot.position.copy(ring.position); dot.userData.eye=eye;
+  tourGrp.add(ring); tourGrp.add(dot); markers.push(ring); hitTargets.push(ring,dot); });
 let tourTarget=new THREE.Vector3(0,1.62,0), tDown=null, tMoved=false, tdrag=false, tlastX=0, tpulse=0;
-function goToMarker(eye){ tourTarget=eye.clone(); }
+// transición cinematográfica entre puntos (viaje con easing + giro hacia el destino)
+let tFrom=new THREE.Vector3(), tTo=new THREE.Vector3(0,1.62,0), tT=1, yawFrom=0, yawTo=0;
+const TOUR_DUR=1.2;
+const easeIO=t=>t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function lerpAngle(a,b,t){ const d=((b-a+Math.PI*3)%(Math.PI*2))-Math.PI; return a+d*t; }
+function goToMarker(eye){ const dx=eye.x-persp.position.x, dz=eye.z-persp.position.z;
+  if(Math.hypot(dx,dz)<0.05) return;
+  tFrom.copy(persp.position); tTo.copy(eye); tourTarget=eye.clone();
+  yawFrom=camYaw; yawTo=Math.atan2(dx,dz);     // dolly: mira al destino mientras viaja
+  tT=0; }
+// ── minimapa de planta ──
+const mmCanvas=document.getElementById("minimap"), mmCtx=mmCanvas?mmCanvas.getContext("2d"):null;
+const LMINX=bb.minx-CX, LMAXX=bb.maxx-CX, LMINZ=bb.minz-CZ, LMAXZ=bb.maxz-CZ;
+function mmMap(lx,lz){ const W=150,H=150,pad=13, s=Math.min((W-2*pad)/(LMAXX-LMINX),(H-2*pad)/(LMAXZ-LMINZ));
+  return [pad+(lx-LMINX)*s, pad+(lz-LMINZ)*s]; }
+function drawMinimap(){ if(!mmCtx)return; mmCtx.clearRect(0,0,150,150);
+  mmCtx.beginPath(); PLAN.outline.forEach(([x,z],i)=>{ const p=mmMap(x-CX,z-CZ); i?mmCtx.lineTo(p[0],p[1]):mmCtx.moveTo(p[0],p[1]); }); mmCtx.closePath();
+  mmCtx.fillStyle="rgba(255,255,255,.05)"; mmCtx.fill(); mmCtx.strokeStyle="rgba(255,77,166,.65)"; mmCtx.lineWidth=1.4; mmCtx.stroke();
+  markers.forEach(m=>{ const p=mmMap(m.position.x,m.position.z); mmCtx.beginPath(); mmCtx.arc(p[0],p[1],2.6,0,7); mmCtx.fillStyle="rgba(255,77,166,.85)"; mmCtx.fill(); });
+  const c=mmMap(persp.position.x,persp.position.z);
+  mmCtx.strokeStyle="#2ee6c8"; mmCtx.lineWidth=2; mmCtx.beginPath(); mmCtx.moveTo(c[0],c[1]); mmCtx.lineTo(c[0]+Math.sin(camYaw)*11,c[1]+Math.cos(camYaw)*11); mmCtx.stroke();
+  mmCtx.beginPath(); mmCtx.arc(c[0],c[1],3.6,0,7); mmCtx.fillStyle="#2ee6c8"; mmCtx.fill(); }
 canvas.addEventListener("pointerdown",e=>{ if(mode!=="tour")return; tDown=[e.clientX,e.clientY]; tMoved=false; tdrag=true; tlastX=e.clientX; });
-addEventListener("pointermove",e=>{ if(mode!=="tour")return; if(tDown&&Math.hypot(e.clientX-tDown[0],e.clientY-tDown[1])>4) tMoved=true; if(tdrag){ camYaw-=(e.clientX-tlastX)*0.006; tlastX=e.clientX; } });
+addEventListener("pointermove",e=>{ if(mode!=="tour")return; if(tDown&&Math.hypot(e.clientX-tDown[0],e.clientY-tDown[1])>4) tMoved=true; if(tdrag&&tT>=1){ camYaw-=(e.clientX-tlastX)*0.006; } tlastX=e.clientX; });
 addEventListener("pointerup",e=>{ if(mode!=="tour"){ return; } tdrag=false;
-  if(tDown&&!tMoved){ setNdc(e); const h=ray.intersectObjects(markers,false)[0]; if(h) goToMarker(h.object.userData.eye); } tDown=null; });
+  if(tDown&&!tMoved){ setNdc(e);
+    const hits=ray.intersectObjects(hitTargets,false);
+    const h=hits.find(it=>it.object.userData.eye.distanceTo(persp.position)>0.7);   // ignora el punto donde ya estás
+    if(h) goToMarker(h.object.userData.eye); } tDown=null; });
 function updateTour(dt){ tpulse+=dt*3;
-  persp.position.lerp(tourTarget, Math.min(1,dt*3.2));        // deslizamiento suave entre puntos
+  if(tT<1){ tT=Math.min(1,tT+dt/TOUR_DUR); const e=easeIO(tT);
+    persp.position.lerpVectors(tFrom,tTo,e); camYaw=lerpAngle(yawFrom,yawTo,e); }
   const fwd=new THREE.Vector3(Math.sin(camYaw),0,Math.cos(camYaw));
   persp.lookAt(persp.position.x+fwd.x, persp.position.y-0.08, persp.position.z+fwd.z);
-  const s=1+Math.sin(tpulse)*0.12; markers.forEach(m=>{ m.scale.set(s,s,1); const cur=m.userData.eye.distanceTo(tourTarget)<0.3; m.material.color.setHex(cur?0x2ee6c8:0xff4da6); });
+  const s=1+Math.sin(tpulse)*0.12; markers.forEach(m=>{ m.scale.set(s,s,1); const cur=(tT>=1)&&m.userData.eye.distanceTo(tTo)<0.3; m.material.color.setHex(cur?0x2ee6c8:0xff4da6); });
+  drawMinimap();
 }
 const tourBtn=document.getElementById("tourBtn"), tourHint=document.getElementById("tourHint");
 function enterTour(){ if(mode==="walk") exitWalk(); if(mode==="edit") exitEdit(); mode="tour"; activeCam=persp; player.visible=false;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=false; root.rotation.y=0;
   amb.intensity=0.55; playerLight.intensity=0; ceilingGrp.visible=true; tourGrp.visible=true;
   zoneMeshes.forEach(m=>{ m.scr.lookAt(0,m.scr.position.y,0); m.frame.quaternion.copy(m.scr.quaternion); });
-  const first=markers[0]?markers[0].userData.eye.clone():new THREE.Vector3(0,1.62,0); tourTarget=first.clone();
+  const first=markers[0]?markers[0].userData.eye.clone():new THREE.Vector3(0,1.62,0); tourTarget=first.clone(); tTo.copy(first); tT=1;
   persp.position.set(first.x, first.y, first.z+0.01); camYaw=0; persp.aspect=innerWidth/innerHeight; persp.updateProjectionMatrix();
   document.body.classList.add("touring"); tourBtn.classList.add("on"); tourBtn.textContent="✕ Salir tour";
   if(tourHint){ tourHint.style.display="block"; clearTimeout(tourHint._t); tourHint._t=setTimeout(()=>tourHint.style.display="none",6000); } }
