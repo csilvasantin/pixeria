@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.5">
+<meta name="version" content="v.30.06.2026.6">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -148,6 +148,15 @@
   .spRow button:hover{border-color:var(--cyan)}
   .spRow .del{background:rgba(255,90,106,.12);border-color:rgba(255,90,106,.35);color:#ff8290}
   .spEmpty{color:var(--muted);font-size:11px;text-align:center;padding:10px}
+  #helpPanel{position:fixed;inset:0;z-index:12;display:none;align-items:center;justify-content:center;background:rgba(4,7,13,.72);backdrop-filter:blur(4px);padding:18px}
+  #helpPanel.show{display:flex}
+  .hpBox{background:rgba(8,14,24,.98);border:1px solid var(--cyan);border-radius:14px;max-width:920px;width:100%;max-height:88vh;overflow:auto;padding:16px 18px;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+  .hpHead{display:flex;justify-content:space-between;align-items:center;font-size:15px;color:var(--ink);margin-bottom:12px}
+  .hpX{cursor:pointer;color:var(--muted);font-size:18px}.hpX:hover{color:var(--ink)}
+  .hpCols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+  .hpCols h4{margin:0 0 6px;color:var(--cyan);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+  .hpCols p{margin:0 0 7px;font-size:12px;line-height:1.5;color:var(--ink)}
+  .hpCols b{color:#ffe6f2}
   #objContent{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);z-index:9;display:none;width:min(440px,92vw);
     background:rgba(6,12,22,.96);backdrop-filter:blur(12px);border:1px solid var(--cyan);border-radius:12px;padding:10px 12px}
   #objContent.show{display:block}
@@ -198,7 +207,31 @@
   <button id="screensBtn" class="on" title="Encender/apagar las pantallas">🖥️ Pantallas</button>
   <button id="musicBtn" title="Hilo musical del Xpacio (audio comercializable)">🎵 Hilo Musical<span id="musicNow" class="mnow"></span></button>
   <button id="resetBtn" title="Recentrar la cámara isométrica">📐 Isométrica</button>
+  <button id="helpBtn" title="Atajos y ayuda (?)">❔ Ayuda</button>
 </div>
+<div id="helpPanel"><div class="hpBox">
+  <div class="hpHead"><b>❔ Atajos y ayuda del editor</b><span class="hpX" title="Cerrar">✕</span></div>
+  <div class="hpCols">
+    <div><h4>Modos</h4>
+      <p><b>📐 Isométrica</b> — vista general "casa de muñecas"; arrastra para orbitar, rueda para zoom.</p>
+      <p><b>🎮 Entrar</b> — pasea en 1ª/3ª persona (WASD o flechas, joystick en móvil; arrastra para mirar; 👁 alterna 1ª/3ª).</p>
+      <p><b>🎬 Tour</b> — recorrido tipo Matterport: pulsa los puntos del suelo para deslizarte; arrastra para mirar.</p>
+      <p><b>🖼️ Decorar</b> — editor: pósters, objetos y escena.</p>
+    </div>
+    <div><h4>Decorar</h4>
+      <p><b>Pósters</b> — click en una pared para poner; click en un póster para seleccionar.</p>
+      <p><b>Objetos</b> — elige uno y click en el suelo; arrástralo para mover (snap a rejilla).</p>
+      <p><b>Objeto seleccionado</b> — ⟲⟳ o <b>Q/E</b> rotar · rueda o <b>＋－</b> escalar · <b>⧉</b> duplicar · 🎨 recolorear · <b>🖼️ Vestir</b> textura/contenido · <b>Supr</b> borrar.</p>
+      <p><b>🎨 Escena</b> — color de suelo y paredes.</p>
+    </div>
+    <div><h4>Historial y versiones</h4>
+      <p><b>Ctrl/⌘+Z</b> — deshacer.</p>
+      <p><b>↶</b> deshacer · <b>🧹</b> vaciar la decoración.</p>
+      <p><b>💾 Versiones</b> — guarda la decoración con nombre y restáurala cuando quieras.</p>
+      <p>Todo se guarda en la nube y se comparte entre dispositivos. <b>Esc</b> cierra paneles.</p>
+    </div>
+  </div>
+</div></div>
 <audio id="hilo" preload="none"></audio>
 
 <!-- Panel de gestión remota -->
@@ -581,6 +614,14 @@ spinBtn.onclick=()=>{ spin=!spin; spinBtn.classList.toggle("on",spin); };
 screensBtn.onclick=()=>{ screensOn=!screensOn; screensBtn.classList.toggle("on",screensOn);
   zoneMeshes.forEach(m=>{ const live=screensOn&&m.z.online; m.scr.material.emissiveIntensity=live?.78:.03; m.pl.intensity=live?.85:0; }); };
 document.getElementById("resetBtn").onclick=()=>{ controls.target.set(0,1.2,0); isoPose(); controls.update(); };
+// panel de ayuda / atajos (botón ❔ o tecla ?)
+const helpPanel=document.getElementById("helpPanel");
+function toggleHelp(){ helpPanel.classList.toggle("show"); }
+document.getElementById("helpBtn").onclick=toggleHelp;
+helpPanel.querySelector(".hpX").onclick=()=>helpPanel.classList.remove("show");
+helpPanel.addEventListener("click",e=>{ if(e.target===helpPanel) helpPanel.classList.remove("show"); });
+addEventListener("keydown",e=>{ if(e.key==="?"){ const t=e.target.tagName; if(t==="INPUT"||t==="TEXTAREA") return; e.preventDefault(); toggleHelp(); }
+  else if(e.code==="Escape"&&helpPanel.classList.contains("show")) helpPanel.classList.remove("show"); });
 
 /* ============================================================
    MODO EXPLORAR — pasea por el Xtanco con un personaje (3ª persona)
