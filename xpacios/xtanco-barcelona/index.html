@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.1">
+<meta name="version" content="v.30.06.2026.2">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -126,6 +126,9 @@
   #objTool button:hover{border-color:var(--cyan)}
   #objTool button.danger{background:rgba(255,90,106,.12);border-color:rgba(255,90,106,.4);color:#ff8290;font-size:12px}
   #objTool .ptHint{font-size:10.5px;color:var(--muted);margin-left:4px}
+  .objColors{display:inline-flex;gap:4px;align-items:center;margin:0 4px}
+  .objColors .cd{width:17px;height:17px;border-radius:50%;border:1px solid rgba(255,255,255,.28);cursor:pointer;transition:transform .1s}
+  .objColors .cd:hover{transform:scale(1.18)}
   #objContent{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);z-index:9;display:none;width:min(440px,92vw);
     background:rgba(6,12,22,.96);backdrop-filter:blur(12px);border:1px solid var(--cyan);border-radius:12px;padding:10px 12px}
   #objContent.show{display:block}
@@ -240,6 +243,7 @@
   <button data-act="bigger" title="Más grande">＋</button>
   <button data-act="dup" title="Duplicar">⧉</button>
   <button data-act="content" title="Vestir / poner contenido">🖼️ Vestir</button>
+  <span class="objColors" id="objColors" title="Recolorear"></span>
   <button data-act="del" class="danger" title="Borrar (Supr)">🗑</button>
   <span class="ptHint">arrastra para mover · rueda escala · Q/E rota</span>
 </div>
@@ -763,8 +767,13 @@ function buildObjectMesh(kind,color){
 }
 function makeObjectRec(rec){ const g=buildObjectMesh(rec.kind,rec.color); g.position.set(rec.x,0,rec.z); g.rotation.y=rec.rot||0;
   if(rec.s) g.scale.setScalar(rec.s);
-  root.add(g); const O={group:g,kind:rec.kind,color:rec.color||DCOL[0],s:rec.s||1,tex:rec.tex||null}; g.userData.objRec=O; objects.push(O);
+  root.add(g); const O={group:g,kind:rec.kind,color:rec.color||DCOL[0],s:rec.s||1,tex:rec.tex||null,recolored:!!rec.color}; g.userData.objRec=O; objects.push(O);
+  if(rec.color) recolorObj(O,rec.color,true);
   if(rec.tex) applyObjTexture(O,rec.tex,true); return O; }
+// recolorea las mallas de color del objeto (mantiene textura si la hay como tinte)
+function recolorObj(O,hex,skipSave){ if(!O)return; O.color=hex; O.recolored=true; const col=new THREE.Color(hex);
+  O.group.traverse(m=>{ if(m.userData&&m.userData.skin&&m.material){ m.material.color.copy(col); if(m.userData.screen) m.material.emissive=col.clone(); m.material.needsUpdate=true; } });
+  if(!skipSave) saveDecor(); }
 function selectObj(O){ if(selPoster) selectPoster(null); if(selObj&&selObj.group.userData.ring) selObj.group.userData.ring.visible=false;
   selObj=O; objTool.classList.toggle("show",!!O); if(O&&O.group.userData.ring) O.group.userData.ring.visible=true;
   if(!O&&typeof closeObjContent==="function") closeObjContent(); }
@@ -785,7 +794,7 @@ function objRecFromHit(obj){ let o=obj; while(o&&!o.userData.objRec) o=o.parent;
 /* ---------- persistencia de decoración (backend compartido + fallback local) ---------- */
 function decorSnapshot(){ return { furniture:[],
   posters: posters.map(P=>{ const q=P.mesh.quaternion,p=P.mesh.position; return {x:p.x,y:p.y,z:p.z,qx:q.x,qy:q.y,qz:q.z,qw:q.w,s:P.s,img:P.img}; }),
-  objects: objects.map(O=>({kind:O.kind,color:O.color,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3),s:+(O.s||1).toFixed(3),tex:O.tex||null})) }; }
+  objects: objects.map(O=>({kind:O.kind,color:O.recolored?O.color:null,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3),s:+(O.s||1).toFixed(3),tex:O.tex||null})) }; }
 function saveDecor(){ const snap=decorSnapshot();
   try{ fetch(DECOR_BASE+"/layout/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({snapshot:snap,screen:XPACIO_ID})}).catch(()=>{}); }catch(e){}
   try{ localStorage.setItem(POSTER_KEY, JSON.stringify(snap)); }catch(e){} }
@@ -858,6 +867,9 @@ OBJ_KINDS.forEach((o,i)=>{ const s=document.createElement("button"); s.className
   s.innerHTML="<span>"+o.icon+"</span><small>"+o.label+"</small>";
   s.onclick=()=>{ pickKind=o.kind; [...objSwatches.children].forEach(c=>c.classList.remove("sel")); s.classList.add("sel"); };
   objSwatches.appendChild(s); });
+const objColorsEl=document.getElementById("objColors");
+DCOL.forEach(c=>{ const d=document.createElement("span"); d.className="cd"; d.style.background="#"+c.toString(16).padStart(6,"0");
+  d.onclick=()=>{ if(selObj){ pushUndo(); recolorObj(selObj,c); } }; objColorsEl.appendChild(d); });
 objTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act; if(a!=="content") pushUndo();
   if(a==="rotL") rotateObj(selObj,-Math.PI/12); else if(a==="rotR") rotateObj(selObj,Math.PI/12);
   else if(a==="smaller") scaleObj(selObj,1/1.12); else if(a==="bigger") scaleObj(selObj,1.12);
