@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.20">
+<meta name="version" content="v.30.06.2026.21">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -334,7 +334,7 @@
   <button data-act="content" title="Vestir / poner contenido">🖼️ Vestir</button>
   <span class="objColors" id="objColors" title="Recolorear"></span>
   <button data-act="del" class="danger" title="Borrar (Supr)">🗑</button>
-  <span class="ptHint">arrastra para mover · rueda escala · Q/E rota</span>
+  <span class="ptHint">arrastra para mover · flechas afinan (⇧ más) · rueda escala · Q/E rota</span>
 </div>
 <div id="objContent">
   <div class="ocHead"><b>Vestir / Contenido</b><span class="ocX" title="Cerrar">✕</span></div>
@@ -1197,6 +1197,9 @@ addEventListener("keydown",e=>{ if(mode!=="edit")return;
   if((e.code==="Delete"||e.code==="Backspace")){ if(selPoster){ pushUndo(); deletePoster(selPoster); } else if(selObj){ pushUndo(); deleteObj(selObj); } }
   if(selObj&&(e.code==="BracketLeft"||e.code==="KeyQ")){ pushUndo(); rotateObj(selObj,-Math.PI/12); }
   if(selObj&&(e.code==="BracketRight"||e.code==="KeyE")){ pushUndo(); rotateObj(selObj,Math.PI/12); }
+  if(selObj&&!selObj.locked&&e.code.indexOf("Arrow")===0){ e.preventDefault(); const step=e.shiftKey?0.5:0.1; const p=selObj.group.position;
+    let nx=p.x, nz=p.z; if(e.code==="ArrowLeft")nx-=step; else if(e.code==="ArrowRight")nx+=step; else if(e.code==="ArrowUp")nz-=step; else if(e.code==="ArrowDown")nz+=step;
+    nx=Math.round(nx*100)/100; nz=Math.round(nz*100)/100; if(canStand(nx,nz)){ pushUndo(); selObj.group.position.set(nx,0,nz); saveDecor(); } }
   if(e.code==="Escape") exitEdit(); });
 
 /* ============================================================
