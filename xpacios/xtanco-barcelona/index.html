@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.22">
+<meta name="version" content="v.30.06.2026.23">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -151,6 +151,9 @@
   #spName{flex:1;background:#070a10;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:12px}
   #spName:focus{outline:none;border-color:var(--cyan)}
   #spSave{font-family:inherit;font-size:12px;color:#0c0510;background:var(--cyan);border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700}
+  .spIO{display:flex;gap:7px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
+  .spIO #spExport,.spIO .spImp{flex:1;text-align:center;font-family:inherit;font-size:11.5px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:8px 6px;cursor:pointer}
+  .spIO #spExport:hover,.spIO .spImp:hover{border-color:var(--cyan)}
   .spList{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow:auto}
   .spRow{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12px}
   .spThumb{width:54px;height:34px;object-fit:cover;border-radius:5px;border:1px solid var(--line);flex:none}
@@ -351,6 +354,10 @@
   <div class="spHead"><b>💾 Versiones del Xpacio</b><span class="spX" title="Cerrar">✕</span></div>
   <div class="spNew"><input id="spName" type="text" placeholder="Nombre de la versión…" maxlength="40"><button id="spSave">Guardar actual</button></div>
   <div id="spList" class="spList"></div>
+  <div class="spIO">
+    <button id="spExport" title="Descargar la decoración actual como archivo JSON">⬇️ Exportar</button>
+    <label class="spImp" title="Cargar una decoración desde un archivo JSON">⬆️ Importar<input id="spImport" type="file" accept="application/json,.json" hidden></label>
+  </div>
 </div>
 
 <div class="hud foot">Pixeria · XpaceOS Locations · Xtanco Barcelona · Gran de Gràcia · render interpretado del plano · cotas reales por zona</div>
@@ -1158,6 +1165,16 @@ document.getElementById("savesBtn").onclick=()=>{ savesPanel.classList.contains(
 savesPanel.querySelector(".spX").onclick=closeSaves;
 document.getElementById("spSave").onclick=async()=>{ const inp=document.getElementById("spName"); const name=(inp.value||"").trim()||("Versión "+new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}));
   const list=await loadSaves(); list.unshift({name,ts:Date.now(),decor:decorSnapshot(),thumb:captureThumb()}); if(list.length>20) list.length=20; await postSaves(list); inp.value=""; renderSaves(); };
+// exportar / importar la decoración como archivo JSON (backup y trasladar montajes entre tiendas)
+function exportDecor(){ const data={xpacio:XPACIO_ID, version:(document.querySelector('meta[name=version]')?.content||""), exported:new Date().toISOString(), decor:decorSnapshot()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="xpacio-"+(XPACIO_ID||"xtanco")+"-decor.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); toast("⬇️ Decoración exportada"); }
+function importDecorFromText(text){ let d; try{ d=JSON.parse(text); }catch(e){ toast("Archivo JSON no válido"); return false; }
+  const decor=(d&&typeof d==="object"&&d.decor&&typeof d.decor==="object")?d.decor:d;
+  if(!decor||typeof decor!=="object"||(!Array.isArray(decor.posters)&&!Array.isArray(decor.objects))){ toast("No parece una decoración de Xpacio"); return false; }
+  pushUndo(); rebuildDecor(decor); saveDecor(); toast("⬆️ Decoración importada"); return true; }
+document.getElementById("spExport").onclick=exportDecor;
+document.getElementById("spImport").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{ importDecorFromText(rd.result); e.target.value=""; }; rd.readAsText(f); };
 OBJ_KINDS.forEach((o,i)=>{ const s=document.createElement("button"); s.className="objSwatch"+(o.kind===pickKind?" sel":""); s.title=o.label;
   s.innerHTML="<span>"+o.icon+"</span><small>"+o.label+"</small>";
   s.onclick=()=>{ pickKind=o.kind; [...objSwatches.children].forEach(c=>c.classList.remove("sel")); s.classList.add("sel"); };
