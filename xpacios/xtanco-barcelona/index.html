@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.6">
+<meta name="version" content="v.30.06.2026.7">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -286,6 +286,7 @@
   <div id="scenePalette" class="sub-palette" style="display:none">
     <span class="scLbl">Suelo</span><div id="floorColors" class="objColors"></div>
     <span class="scLbl">Paredes</span><div id="wallColors" class="objColors"></div>
+    <span class="tt-sep"></span><button class="tool-aux" id="timeBtn" title="Alternar día / noche">☀️ Día</button>
   </div>
 </div>
 <div id="posterTool">
@@ -424,12 +425,19 @@ panelPos.forEach(([sx,sz])=>{ const pn=new THREE.Mesh(new THREE.PlaneGeometry(1.
 /* ---------- paredes ---------- */
 const wallMat = new THREE.MeshStandardMaterial({ color:0xefe9e2, roughness:.94, metalness:.02, side:THREE.DoubleSide });
 // estado de escena (color de suelo/paredes, editable y persistente por Xpacio)
-const DEF_FLOOR=0xffffff, DEF_WALL=0xefe9e2; let sceneState={floor:null,wall:null};
-function applyScene(s){ s=s||{}; sceneState={floor:s.floor||null,wall:s.wall||null};
+const DEF_FLOOR=0xffffff, DEF_WALL=0xefe9e2, DAY_EXP=1.05, DAY_BG=0x141016, NIGHT_EXP=0.5, NIGHT_BG=0x080510;
+let sceneState={floor:null,wall:null,time:null};
+function applyTime(t){ const night=(t==="night"); sceneState.time=night?"night":null;
+  renderer.toneMappingExposure = night?NIGHT_EXP:DAY_EXP;
+  const bg=night?NIGHT_BG:DAY_BG; if(scene.background) scene.background.setHex(bg); if(scene.fog) scene.fog.color.setHex(bg);
+  try{ zoneMeshes.forEach(m=>{ if(m.z.online){ m.scr.material.emissiveIntensity=night?1.2:.78; m.pl.intensity=night?1.35:.85; } }); }catch(e){}
+  const hb=document.getElementById("timeBtn"); if(hb) hb.textContent=night?"🌙 Noche":"☀️ Día"; }
+function applyScene(s){ s=s||{}; sceneState={floor:s.floor||null,wall:s.wall||null,time:s.time||null};
   floor.material.color.set(s.floor||DEF_FLOOR); floor.material.needsUpdate=true;
-  wallMat.color.set(s.wall||DEF_WALL); wallMat.needsUpdate=true; }
+  wallMat.color.set(s.wall||DEF_WALL); wallMat.needsUpdate=true; applyTime(s.time); }
 function setFloorColor(hex){ sceneState.floor=hex; floor.material.color.set(hex); floor.material.needsUpdate=true; saveDecor(); }
 function setWallColor(hex){ sceneState.wall=hex; wallMat.color.set(hex); wallMat.needsUpdate=true; saveDecor(); }
+function setTime(t){ applyTime(t); saveDecor(); }
 const baseMat = new THREE.MeshStandardMaterial({ color:0x2a2230, roughness:.8 });     // zócalo
 const trimMat = new THREE.MeshStandardMaterial({ color:0xc9bdaf, roughness:.6 });
 const pts = PLAN.outline;
@@ -899,7 +907,7 @@ function objRecFromHit(obj){ let o=obj; while(o&&!o.userData.objRec) o=o.parent;
 function decorSnapshot(){ return { furniture:[],
   posters: posters.map(P=>{ const q=P.mesh.quaternion,p=P.mesh.position; return {x:p.x,y:p.y,z:p.z,qx:q.x,qy:q.y,qz:q.z,qw:q.w,s:P.s,img:P.img}; }),
   objects: objects.map(O=>({kind:O.kind,color:O.recolored?O.color:null,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3),s:+(O.s||1).toFixed(3),tex:O.tex||null})),
-  scene: {floor:sceneState.floor,wall:sceneState.wall} }; }
+  scene: {floor:sceneState.floor,wall:sceneState.wall,time:sceneState.time} }; }
 function saveDecor(){ const snap=decorSnapshot();
   try{ fetch(DECOR_BASE+"/layout/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({snapshot:snap,screen:XPACIO_ID})}).catch(()=>{}); }catch(e){}
   try{ localStorage.setItem(POSTER_KEY, JSON.stringify(snap)); }catch(e){} }
@@ -971,6 +979,7 @@ const WALL_COLS=["#efe9e2","#d9c9b0","#ff4da6","#1a2433","#26122a","#0c0510"];
 (()=>{ const fc=document.getElementById("floorColors"), wc=document.getElementById("wallColors");
   FLOOR_COLS.forEach(h=>{ const d=document.createElement("span"); d.className="cd"; d.style.background=h; d.onclick=()=>{ pushUndo(); setFloorColor(h); }; fc.appendChild(d); });
   WALL_COLS.forEach(h=>{ const d=document.createElement("span"); d.className="cd"; d.style.background=h; d.onclick=()=>{ pushUndo(); setWallColor(h); }; wc.appendChild(d); }); })();
+document.getElementById("timeBtn").onclick=()=>{ pushUndo(); setTime(sceneState.time==="night"?"day":"night"); };
 toolTabs.forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
 document.getElementById("undoBtn").onclick=undoDecor;
 document.getElementById("clearBtn").onclick=()=>{ if((posters.length||objects.length)&&confirm("¿Vaciar toda la decoración de este Xpacio? (puedes Deshacer con Ctrl+Z)")) clearDecor(); };
