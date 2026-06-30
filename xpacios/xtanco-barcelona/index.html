@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.10">
+<meta name="version" content="v.30.06.2026.11">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -211,10 +211,12 @@
   <button id="screensBtn" class="on" title="Encender/apagar las pantallas">🖥️ Pantallas</button>
   <button id="musicBtn" title="Hilo musical del Xpacio (audio comercializable)">🎵 Hilo Musical<span id="musicNow" class="mnow"></span></button>
   <button id="resetBtn" title="Recentrar la cámara isométrica">📐 Isométrica</button>
+  <button id="aforoBtn" title="Aforo simulado: clientes paseando">👥 Aforo</button>
   <button id="shareBtn" title="Copiar enlace de este Xpacio">🔗 Compartir</button>
   <button id="helpBtn" title="Atajos y ayuda (?)">❔ Ayuda</button>
 </div>
 <div id="toast"></div>
+<div id="aforoTag" class="badge" style="position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:6;display:none"></div>
 <div id="helpPanel"><div class="hpBox">
   <div class="hpHead"><b>❔ Atajos y ayuda del editor</b><span class="hpX" title="Cerrar">✕</span></div>
   <div class="hpCols">
@@ -679,6 +681,22 @@ function findSpawn(){
   for(let z=-6;z<=6;z+=0.5) for(let x=-9;x<=9;x+=0.5) if(canStand(x,z)) return new THREE.Vector3(x,0,z);
   return new THREE.Vector3(0,0,0);
 }
+
+/* --- aforo simulado: clientes paseando (apagado por defecto, sin persistencia) --- */
+const shoppers=[]; let aforoOn=false, aforoPts=null;
+function aforoPoints(){ if(aforoPts) return aforoPts; aforoPts=[]; for(let z=-6;z<=6;z+=1.5) for(let x=-8;x<=8;x+=1.5) if(canStand(x,z)) aforoPts.push([x,z]); if(!aforoPts.length) aforoPts.push([0,0]); return aforoPts; }
+function randPt(){ const p=aforoPoints(); return p[(Math.random()*p.length)|0]; }
+function ensureShoppers(){ if(shoppers.length) return; for(let i=0;i<7;i++){ const g=new THREE.Group(), col=DCOL[i%DCOL.length];
+  const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.22,0.5,4,10),matD(col,0.06)); body.position.y=0.55; body.castShadow=true; g.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.17,14,12),new THREE.MeshStandardMaterial({color:0xefe4d8,roughness:.6})); head.position.y=1.0; g.add(head);
+  const sp=randPt(); g.position.set(sp[0],0,sp[1]); g.visible=false; root.add(g); shoppers.push({g,tx:sp[0],tz:sp[1],spd:0.6+Math.random()*0.7}); } }
+function updateShoppers(dt){ for(const s of shoppers){ const p=s.g.position; let dx=s.tx-p.x,dz=s.tz-p.z,d=Math.hypot(dx,dz);
+  if(d<0.2){ const t=randPt(); s.tx=t[0]; s.tz=t[1]; dx=s.tx-p.x; dz=s.tz-p.z; d=Math.hypot(dx,dz)||1; }
+  const step=Math.min(d,s.spd*dt); p.x+=dx/d*step; p.z+=dz/d*step; s.g.rotation.y=Math.atan2(dx,dz); p.y=Math.abs(Math.sin(performance.now()*0.006*s.spd))*0.04; } }
+const aforoBtn=document.getElementById("aforoBtn"), aforoTag=document.getElementById("aforoTag");
+function setAforo(on){ aforoOn=on; if(on) ensureShoppers(); shoppers.forEach(s=>s.g.visible=on); aforoBtn.classList.toggle("on",on);
+  if(aforoTag){ aforoTag.style.display=on?"block":"none"; aforoTag.textContent="👥 Aforo: "+shoppers.length+" personas"; } }
+aforoBtn.onclick=()=>setAforo(!aforoOn);
 
 /* --- personaje (3ª persona, estilo neón Admira) --- */
 const player = new THREE.Group(); player.visible=false; root.add(player);
@@ -1236,6 +1254,7 @@ addEventListener("resize",resize); resize();
 let t0=performance.now(), tsum=0, lastCycle=0, lastDraw=0;
 function loop(now){
   const dt=(now-t0)/1000; t0=now; tsum+=dt;
+  if(aforoOn) updateShoppers(dt);
   if(mode==="walk"){
     updateWalk(dt);
   } else if(mode==="tour"){
