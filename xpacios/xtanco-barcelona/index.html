@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.7">
+<meta name="version" content="v.30.06.2026.8">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -300,7 +300,8 @@
   <button data-act="rotR" title="Rotar der. (E)">⟳</button>
   <button data-act="smaller" title="Más pequeño">－</button>
   <button data-act="bigger" title="Más grande">＋</button>
-  <button data-act="dup" title="Duplicar">⧉</button>
+  <button data-act="dup" title="Duplicar (sin solapar)">⧉</button>
+  <button data-act="align" title="Alinear a la rejilla">⊞</button>
   <button data-act="content" title="Vestir / poner contenido">🖼️ Vestir</button>
   <span class="objColors" id="objColors" title="Recolorear"></span>
   <button data-act="del" class="danger" title="Borrar (Supr)">🗑</button>
@@ -891,7 +892,12 @@ function selectObj(O){ if(selPoster) selectPoster(null); if(selObj&&selObj.group
   if(!O&&typeof closeObjContent==="function") closeObjContent(); }
 function rotateObj(O,d){ if(!O)return; O.group.rotation.y+=d; saveDecor(); }
 function scaleObj(O,f){ if(!O)return; O.s=Math.max(0.4,Math.min(2.5,(O.s||1)*f)); O.group.scale.setScalar(O.s); saveDecor(); }
-function dupObj(O){ if(!O)return; const p=O.group.position; const r=makeObjectRec({kind:O.kind,color:O.color,x:p.x+0.6,z:p.z+0.6,rot:O.group.rotation.y,s:O.s,tex:O.tex}); selectObj(r); saveDecor(); }
+function objAt(x,z,ignore){ return objects.some(o=>o!==ignore && Math.hypot(o.group.position.x-x,o.group.position.z-z)<0.7); }
+function freeSpotNear(x,z,ignore){ const STEP=0.6; for(let r=1;r<=6;r++){ for(let a=0;a<8;a++){ const ang=a/8*Math.PI*2, nx=x+Math.cos(ang)*STEP*r, nz=z+Math.sin(ang)*STEP*r;
+  if(canStand(nx,nz)&&!objAt(nx,nz,ignore)) return [nx,nz]; } } return [x+0.6,z+0.6]; }
+function dupObj(O){ if(!O)return; const p=O.group.position; const sp=freeSpotNear(p.x,p.z,O);
+  const r=makeObjectRec({kind:O.kind,color:O.recolored?O.color:null,x:sp[0],z:sp[1],rot:O.group.rotation.y,s:O.s,tex:O.tex}); selectObj(r); saveDecor(); }
+function alignObj(O){ if(!O)return; const p=O.group.position; const gx=Math.round(p.x/0.5)*0.5, gz=Math.round(p.z/0.5)*0.5; if(canStand(gx,gz)){ O.group.position.set(gx,0,gz); saveDecor(); } }
 function deleteObj(O){ if(!O)return; root.remove(O.group); const i=objects.indexOf(O); if(i>=0) objects.splice(i,1); if(selObj===O) selectObj(null); saveDecor(); }
 // aplica una textura (URL del stock o dataURL subido) a las mallas "vestibles" del objeto
 function applyObjTexture(O,src,skipSave){ if(!O)return; O.tex=src||null;
@@ -1013,7 +1019,7 @@ DCOL.forEach(c=>{ const d=document.createElement("span"); d.className="cd"; d.st
 objTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act; if(a!=="content") pushUndo();
   if(a==="rotL") rotateObj(selObj,-Math.PI/12); else if(a==="rotR") rotateObj(selObj,Math.PI/12);
   else if(a==="smaller") scaleObj(selObj,1/1.12); else if(a==="bigger") scaleObj(selObj,1.12);
-  else if(a==="dup") dupObj(selObj); else if(a==="content") openObjContent();
+  else if(a==="dup") dupObj(selObj); else if(a==="align") alignObj(selObj); else if(a==="content") openObjContent();
   else if(a==="del") deleteObj(selObj); });
 
 /* --- selector de "Vestir / Contenido": thumbs del stock + subir + quitar --- */
