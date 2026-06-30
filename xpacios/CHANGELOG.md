@@ -4,6 +4,9 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
+## v.30.06.2026.5 — 🔗 [Ver resultado](PENDING)
+- **Versiones nombradas del Xpacio**: botón 💾 en el editor para **guardar** la decoración actual con nombre y **restaurar** o borrar versiones anteriores (snapshots con posters/objetos/escena, guardados en el backend compartido `saves-<Xpacio>`). Restaurar es deshacible.
+
 ## v.30.06.2026.4 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/18efb2f/xpacios/xtanco-barcelona/index.html)
 - **Catálogo de objetos ampliado**: 5 nuevos muebles colocables — 🪴 Planta, 💡 Lámpara, 🛋️ Banco, 🪞 Espejo, 🧾 Caja registradora. Todos con recolorear/escalar/duplicar/mover/vestir y persistencia. Paleta de objetos con auto-ajuste (wrap).
 

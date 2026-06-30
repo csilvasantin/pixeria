@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.4">
+<meta name="version" content="v.30.06.2026.5">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -131,6 +131,23 @@
   .objColors .cd:hover{transform:scale(1.18)}
   .scLbl{font-size:10.5px;color:var(--muted);letter-spacing:.04em}
   #scenePalette{gap:8px}
+  #savesPanel{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);z-index:9;display:none;width:min(420px,92vw);
+    background:rgba(6,12,22,.97);backdrop-filter:blur(12px);border:1px solid var(--cyan);border-radius:12px;padding:11px 13px}
+  #savesPanel.show{display:block}
+  .spHead{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink);margin-bottom:9px}
+  .spX{cursor:pointer;color:var(--muted)}.spX:hover{color:var(--ink)}
+  .spNew{display:flex;gap:7px;margin-bottom:9px}
+  #spName{flex:1;background:#070a10;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:12px}
+  #spName:focus{outline:none;border-color:var(--cyan)}
+  #spSave{font-family:inherit;font-size:12px;color:#0c0510;background:var(--cyan);border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700}
+  .spList{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow:auto}
+  .spRow{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12px}
+  .spRow .nm{flex:1;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .spRow .dt{color:var(--muted);font-size:10px}
+  .spRow button{font-family:inherit;font-size:11px;border:1px solid var(--line);border-radius:7px;padding:5px 9px;cursor:pointer;background:rgba(255,77,166,.08);color:var(--ink)}
+  .spRow button:hover{border-color:var(--cyan)}
+  .spRow .del{background:rgba(255,90,106,.12);border-color:rgba(255,90,106,.35);color:#ff8290}
+  .spEmpty{color:var(--muted);font-size:11px;text-align:center;padding:10px}
   #objContent{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);z-index:9;display:none;width:min(440px,92vw);
     background:rgba(6,12,22,.96);backdrop-filter:blur(12px);border:1px solid var(--cyan);border-radius:12px;padding:10px 12px}
   #objContent.show{display:block}
@@ -220,6 +237,7 @@
     <button class="tool-tab" data-tool="scene">🎨 Escena</button>
     <span class="tt-sep"></span>
     <button class="tool-aux" id="undoBtn" title="Deshacer (Ctrl/⌘+Z)">↶</button>
+    <button class="tool-aux" id="savesBtn" title="Versiones guardadas">💾</button>
     <button class="tool-aux" id="clearBtn" title="Vaciar la decoración">🧹</button>
     <span class="edVer" id="edVer"></span>
   </div>
@@ -261,6 +279,12 @@
     <label class="ocUp" title="Sube tu imagen">⬆ Subir<input id="ocUpload" type="file" accept="image/*" hidden></label>
     <button id="ocClear">Quitar</button>
   </div>
+</div>
+
+<div id="savesPanel">
+  <div class="spHead"><b>💾 Versiones del Xpacio</b><span class="spX" title="Cerrar">✕</span></div>
+  <div class="spNew"><input id="spName" type="text" placeholder="Nombre de la versión…" maxlength="40"><button id="spSave">Guardar actual</button></div>
+  <div id="spList" class="spList"></div>
 </div>
 
 <div class="hud foot">Pixeria · XpaceOS Locations · Xtanco Barcelona · Gran de Gràcia · render interpretado del plano · cotas reales por zona</div>
@@ -910,6 +934,25 @@ toolTabs.forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
 document.getElementById("undoBtn").onclick=undoDecor;
 document.getElementById("clearBtn").onclick=()=>{ if((posters.length||objects.length)&&confirm("¿Vaciar toda la decoración de este Xpacio? (puedes Deshacer con Ctrl+Z)")) clearDecor(); };
 (()=>{ const v=document.querySelector('meta[name="version"]'); const el=document.getElementById("edVer"); if(v&&el) el.textContent=v.getAttribute("content"); })();
+
+/* ---------- Versiones nombradas del Xpacio (snapshots en backend) ---------- */
+const SAVES_SCREEN="saves-"+XPACIO_ID, savesPanel=document.getElementById("savesPanel"), spList=document.getElementById("spList");
+async function loadSaves(){ try{ const r=await fetch(DECOR_BASE+"/layout/current?screen="+encodeURIComponent(SAVES_SCREEN)+"&_="+Date.now()); const j=await r.json(); const c=j&&j.current; if(c&&Array.isArray(c.saves)) return c.saves; }catch(e){} return []; }
+async function postSaves(list){ try{ await fetch(DECOR_BASE+"/layout/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({snapshot:{furniture:[],saves:list},screen:SAVES_SCREEN})}); }catch(e){} }
+async function renderSaves(){ const list=await loadSaves(); spList.innerHTML="";
+  if(!list.length){ spList.innerHTML='<div class="spEmpty">Aún no hay versiones guardadas.</div>'; return; }
+  list.forEach((s,i)=>{ const row=document.createElement("div"); row.className="spRow";
+    const d=new Date(s.ts); const dt=isNaN(d)?"":d.toLocaleDateString("es-ES",{day:"2-digit",month:"short"})+" "+d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});
+    row.innerHTML='<span class="nm">'+(s.name||"(sin nombre)").replace(/[<>&]/g,"")+'</span><span class="dt">'+dt+'</span>';
+    const rb=document.createElement("button"); rb.textContent="Restaurar"; rb.onclick=()=>{ pushUndo(); rebuildDecor(s.decor||{}); saveDecor(); closeSaves(); };
+    const db=document.createElement("button"); db.className="del"; db.textContent="🗑"; db.onclick=async()=>{ const l=await loadSaves(); l.splice(i,1); await postSaves(l); renderSaves(); };
+    row.appendChild(rb); row.appendChild(db); spList.appendChild(row); }); }
+function openSaves(){ savesPanel.classList.add("show"); renderSaves(); }
+function closeSaves(){ savesPanel.classList.remove("show"); }
+document.getElementById("savesBtn").onclick=()=>{ savesPanel.classList.contains("show")?closeSaves():openSaves(); };
+savesPanel.querySelector(".spX").onclick=closeSaves;
+document.getElementById("spSave").onclick=async()=>{ const inp=document.getElementById("spName"); const name=(inp.value||"").trim()||("Versión "+new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}));
+  const list=await loadSaves(); list.unshift({name,ts:Date.now(),decor:decorSnapshot()}); if(list.length>20) list.length=20; await postSaves(list); inp.value=""; renderSaves(); };
 OBJ_KINDS.forEach((o,i)=>{ const s=document.createElement("button"); s.className="objSwatch"+(o.kind===pickKind?" sel":""); s.title=o.label;
   s.innerHTML="<span>"+o.icon+"</span><small>"+o.label+"</small>";
   s.onclick=()=>{ pickKind=o.kind; [...objSwatches.children].forEach(c=>c.classList.remove("sel")); s.classList.add("sel"); };
