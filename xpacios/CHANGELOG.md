@@ -4,6 +4,9 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
+## v.30.06.2026.21 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/09ec69d/xpacios/xtanco-barcelona/index.html)
+- **Afinar con flechas**: con una pieza seleccionada, las **flechas** la mueven 0,1 m (⇧ + flecha = 0,5 m), respetando muros y mobiliario. Posicionado fino tras arrastrar a ojo. (Las piezas bloqueadas no se mueven.)
+
 ## v.30.06.2026.20 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/294f1cd/xpacios/xtanco-barcelona/index.html)
 - **Inventario de piezas por tipo**: al Decorar, un panel (abajo-izq, sobre el minimapa) cuenta cuántas piezas hay de cada tipo (👗 percheros, 🧍 maniquíes, 🪴 plantas…) y el total. Se actualiza al colocar/borrar/duplicar/vaciar. Para controlar de un vistazo el mobiliario del Xpacio.
 
