@@ -101,9 +101,27 @@
   body.touring #minimap{display:block}
   /* ---- editor: paleta + toolbar ---- */
   .ctrl #editBtn.on{background:rgba(126,224,160,.14);border-color:#7ee0a0;color:#7ee0a0}
-  #palette{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:7;display:none;align-items:center;gap:12px;
+  #palette{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:7;display:none;flex-direction:column;align-items:center;gap:9px;
     background:var(--panel);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:14px;padding:10px 14px;max-width:94vw}
   body.editing #palette{display:flex}
+  .tool-tabs{display:flex;gap:6px}
+  .tool-tab{font-family:inherit;font-size:11.5px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer}
+  .tool-tab.on{color:var(--cyan);border-color:var(--cyan);background:rgba(255,77,166,.10)}
+  .sub-palette{display:flex;align-items:center;gap:12px}
+  #objSwatches{display:flex;gap:7px}
+  .objSwatch{font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;width:58px;padding:7px 4px;cursor:pointer;
+    background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:9px;color:var(--ink)}
+  .objSwatch span{font-size:20px;line-height:1}
+  .objSwatch small{font-size:9.5px;color:var(--muted)}
+  .objSwatch.sel{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(255,77,166,.35)}
+  .objSwatch.sel small{color:var(--ink)}
+  #objTool{position:fixed;left:50%;bottom:118px;transform:translateX(-50%);z-index:8;display:none;align-items:center;gap:8px;
+    background:rgba(6,12,22,.95);backdrop-filter:blur(12px);border:1px solid var(--cyan);border-radius:12px;padding:8px 10px}
+  #objTool.show{display:flex}
+  #objTool button{font-family:inherit;background:rgba(255,77,166,.10);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:14px;cursor:pointer}
+  #objTool button:hover{border-color:var(--cyan)}
+  #objTool button.danger{background:rgba(255,90,106,.12);border-color:rgba(255,90,106,.4);color:#ff8290;font-size:12px}
+  #objTool .ptHint{font-size:10.5px;color:var(--muted);margin-left:4px}
   #palette .pTit{font-size:10px;letter-spacing:.7px;color:var(--muted)}
   #pSwatches{display:flex;gap:8px}
   .pSwatch{width:40px;height:56px;border-radius:6px;border:1px solid var(--line);cursor:pointer;background-size:cover;background-position:center;flex:none}
@@ -174,18 +192,33 @@
 <div id="tourHint">Pulsa los <b>puntos</b> del suelo para recorrer · arrastra para mirar · <b>Esc</b> para salir</div>
 <canvas id="minimap" width="150" height="150" title="Planta del Xtanco · tu posición"></canvas>
 
-<!-- Editor: paleta de pósters + toolbar de selección -->
+<!-- Editor: switch de herramienta + paletas (pósters/objetos) + toolbars -->
 <div id="palette">
-  <span class="pTit">PÓSTER</span>
-  <div id="pSwatches"></div>
-  <label class="pUp" title="Sube tu propia imagen">⬆ Subir<input id="pUpload" type="file" accept="image/*" hidden></label>
-  <span class="pHint">Click en una pared para colocar · click en un póster para seleccionar</span>
+  <div class="tool-tabs">
+    <button class="tool-tab on" data-tool="poster">🖼️ Pósters</button>
+    <button class="tool-tab" data-tool="object">🪑 Objetos</button>
+  </div>
+  <div id="posterPalette" class="sub-palette">
+    <div id="pSwatches"></div>
+    <label class="pUp" title="Sube tu propia imagen">⬆ Subir<input id="pUpload" type="file" accept="image/*" hidden></label>
+    <span class="pHint">Click en una pared para poner un póster</span>
+  </div>
+  <div id="objectPalette" class="sub-palette" style="display:none">
+    <div id="objSwatches"></div>
+    <span class="pHint">Click en el suelo para poner · arrastra para mover</span>
+  </div>
 </div>
 <div id="posterTool">
   <button data-act="smaller" title="Más pequeño">－</button>
   <button data-act="bigger" title="Más grande">＋</button>
   <button data-act="delete" class="danger" title="Borrar (Supr)">🗑 Borrar</button>
   <span class="ptHint">arrastra el póster para moverlo por la pared</span>
+</div>
+<div id="objTool">
+  <button data-act="rotL" title="Rotar izq. (Q)">⟲</button>
+  <button data-act="rotR" title="Rotar der. (E)">⟳</button>
+  <button data-act="del" class="danger" title="Borrar (Supr)">🗑 Borrar</button>
+  <span class="ptHint">arrastra para mover · Q/E o ⟲⟳ para rotar</span>
 </div>
 
 <div class="hud foot">Pixeria · XpaceOS Locations · Xtanco Barcelona · Gran de Gràcia · render interpretado del plano · cotas reales por zona</div>
@@ -605,8 +638,12 @@ function updateWalk(dt){
 /* ============================================================
    MODO DECORAR — editor 3D: coloca pósters en las paredes
    ============================================================ */
-const POSTER_KEY="xtanco-bcn-gracia-posters";
+const XPACIO_ID = (new URLSearchParams(location.search).get('xpacio')||'xtanco-bcn-gracia').replace(/[^a-z0-9_-]/gi,'').slice(0,48);
+const DECOR_BASE = "https://pixer-eleven.csilvasantin.workers.dev";   // decor compartida (backend)
+const POSTER_KEY="decor:"+XPACIO_ID;                                   // fallback local
 const posters=[]; let selPoster=null, draggingPoster=null;
+const objects=[]; let selObj=null, draggingObj=null;                  // mobiliario colocable (editor de objetos)
+let editTool="poster";                                                // "poster" (pared) | "object" (suelo)
 const PW=1.1, PH=1.55;                       // tamaño base del póster (m)
 const POSTER_PRESETS=[
   {key:"coleccion",brand:"DESIGUAL", title:"Nueva colección", sub:"AW26 · ya en tienda",   c:"#ff4da6"},
@@ -644,31 +681,96 @@ function placeOnWall(P,hit){ const wq=new THREE.Quaternion(); hit.object.getWorl
   P.frame.position.copy(P.mesh.position); P.frame.quaternion.copy(P.mesh.quaternion); }
 function resizePoster(P,f){ if(!P)return; P.s=Math.max(0.4,Math.min(3,P.s*f)); const w=PW*P.s,h=PH*P.s;
   P.mesh.geometry.dispose(); P.mesh.geometry=new THREE.PlaneGeometry(w,h);
-  P.frame.geometry.dispose(); P.frame.geometry=new THREE.EdgesGeometry(new THREE.PlaneGeometry(w+0.05,h+0.05)); savePosters(); }
-function selectPoster(P){ if(selPoster) selPoster.frame.visible=false; selPoster=P;
+  P.frame.geometry.dispose(); P.frame.geometry=new THREE.EdgesGeometry(new THREE.PlaneGeometry(w+0.05,h+0.05)); saveDecor(); }
+function selectPoster(P){ if(P&&selObj) selectObj(null); if(selPoster) selPoster.frame.visible=false; selPoster=P;
   posterTool.classList.toggle("show",!!P); if(P) P.frame.visible=true; }
 function deletePoster(P){ if(!P)return; root.remove(P.mesh); root.remove(P.frame); P.mesh.geometry.dispose(); P.frame.geometry.dispose();
-  const i=posters.indexOf(P); if(i>=0) posters.splice(i,1); if(selPoster===P) selectPoster(null); savePosters(); }
-function savePosters(){ try{ localStorage.setItem(POSTER_KEY, JSON.stringify(posters.map(P=>{ const q=P.mesh.quaternion,p=P.mesh.position;
-  return {x:p.x,y:p.y,z:p.z,qx:q.x,qy:q.y,qz:q.z,qw:q.w,s:P.s,img:P.img}; }))); }catch(e){} }
-function loadPosters(){ try{ const raw=localStorage.getItem(POSTER_KEY); if(raw) JSON.parse(raw).forEach(makePoster); }catch(e){} }
+  const i=posters.indexOf(P); if(i>=0) posters.splice(i,1); if(selPoster===P) selectPoster(null); saveDecor(); }
+/* ---------- objetos colocables (mobiliario Desigual × Xtanco) ---------- */
+const OBJ_KINDS=[
+  {kind:"rack",      icon:"👗", label:"Perchero"},
+  {kind:"mannequin", icon:"🧍", label:"Maniquí"},
+  {kind:"table",     icon:"🟫", label:"Mesa"},
+  {kind:"booth",     icon:"🚪", label:"Probador"},
+  {kind:"totem",     icon:"📺", label:"Tótem DOOH"},
+];
+let pickKind="rack", pickObjColor=DCOL[0];
+function buildObjectMesh(kind,color){
+  const g=new THREE.Group(), c=color||DCOL[0];
+  const metal=new THREE.MeshStandardMaterial({color:0xb9c2cc,metalness:.6,roughness:.3});
+  const add=(geo,mat,x,y,z)=>{ const m=new THREE.Mesh(geo,mat); m.position.set(x||0,y||0,z||0); m.castShadow=true; g.add(m); return m; };
+  if(kind==="rack"){ const len=2.2,barY=1.5;
+    [-len/2,len/2].forEach(x=>add(new THREE.CylinderGeometry(0.03,0.03,barY,8),metal,x,barY/2,0));
+    add(new THREE.CylinderGeometry(0.025,0.025,len,8),metal,0,barY,0).rotation.z=Math.PI/2;
+    for(let i=0;i<7;i++) add(new THREE.BoxGeometry(0.10,0.72,0.34),matD(DCOL[i%DCOL.length],0.05),-len/2+len*(i+0.5)/7,barY-0.42,0);
+  } else if(kind==="mannequin"){
+    add(new THREE.CylinderGeometry(0.28,0.32,0.08,20),new THREE.MeshStandardMaterial({color:0x222a30,metalness:.4,roughness:.5}),0,0.04,0);
+    add(new THREE.CylinderGeometry(0.03,0.03,0.5,8),new THREE.MeshStandardMaterial({color:0x8a93a0}),0,0.3,0);
+    add(new THREE.CylinderGeometry(0.22,0.16,0.5,16),matD(c,0.04),0,0.62,0);
+    add(new THREE.CylinderGeometry(0.16,0.25,0.8,16),matD(c,0.05),0,1.12,0);
+    add(new THREE.SphereGeometry(0.13,16,12),new THREE.MeshStandardMaterial({color:0xefe4d8,roughness:.6}),0,1.68,0);
+  } else if(kind==="table"){
+    add(new THREE.CylinderGeometry(0.5,0.55,0.5,20),new THREE.MeshStandardMaterial({color:0x18101a,roughness:.7}),0,0.25,0);
+    add(new THREE.CylinderGeometry(0.6,0.6,0.12,24),new THREE.MeshStandardMaterial({color:0x2a1a24,roughness:.6,metalness:.2}),0,0.55,0);
+    for(let i=0;i<4;i++){ const a=i/4*Math.PI*2; add(new THREE.BoxGeometry(0.26,0.13,0.26),matD(DCOL[(i*2)%DCOL.length],0.05),Math.cos(a)*0.22,0.67,Math.sin(a)*0.22); }
+  } else if(kind==="booth"){ const wm=new THREE.MeshStandardMaterial({color:0x2a1420,roughness:.85,side:THREE.DoubleSide});
+    add(new THREE.PlaneGeometry(1.3,2.4),wm,0,1.2,-0.65);
+    [-0.65,0.65].forEach(sx=>add(new THREE.PlaneGeometry(1.3,2.4),wm,sx,1.2,0).rotation.y=Math.PI/2);
+    add(new THREE.PlaneGeometry(1.28,2.3),matD(c,0.18),0,1.15,0.66);
+    add(new THREE.BoxGeometry(1.34,0.06,1.34),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.5}),0,2.42,0);
+  } else { // totem DOOH (pantalla vertical con pedestal)
+    add(new THREE.BoxGeometry(0.7,0.18,0.5),new THREE.MeshStandardMaterial({color:0x111418,metalness:.4,roughness:.5}),0,0.09,0);
+    add(new THREE.BoxGeometry(1.05,1.75,0.12),new THREE.MeshStandardMaterial({color:0x0a0c10,metalness:.5,roughness:.3}),0,1.05,0);
+    add(new THREE.PlaneGeometry(0.92,1.6),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.55,roughness:.3}),0,1.05,0.07);
+  }
+  // anillo de selección (oculto) en la base
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.55,0.05,10,28),new THREE.MeshBasicMaterial({color:0x37e0ff}));
+  ring.rotation.x=-Math.PI/2; ring.position.y=0.04; ring.visible=false; g.add(ring); g.userData.ring=ring;
+  return g;
+}
+function makeObjectRec(rec){ const g=buildObjectMesh(rec.kind,rec.color); g.position.set(rec.x,0,rec.z); g.rotation.y=rec.rot||0;
+  root.add(g); const O={group:g,kind:rec.kind,color:rec.color||DCOL[0]}; g.userData.objRec=O; objects.push(O); return O; }
+function selectObj(O){ if(selPoster) selectPoster(null); if(selObj&&selObj.group.userData.ring) selObj.group.userData.ring.visible=false;
+  selObj=O; objTool.classList.toggle("show",!!O); if(O&&O.group.userData.ring) O.group.userData.ring.visible=true; }
+function rotateObj(O,d){ if(!O)return; O.group.rotation.y+=d; saveDecor(); }
+function deleteObj(O){ if(!O)return; root.remove(O.group); const i=objects.indexOf(O); if(i>=0) objects.splice(i,1); if(selObj===O) selectObj(null); saveDecor(); }
+function objRecFromHit(obj){ let o=obj; while(o&&!o.userData.objRec) o=o.parent; return o&&o.userData.objRec; }
+
+/* ---------- persistencia de decoración (backend compartido + fallback local) ---------- */
+function decorSnapshot(){ return { furniture:[],
+  posters: posters.map(P=>{ const q=P.mesh.quaternion,p=P.mesh.position; return {x:p.x,y:p.y,z:p.z,qx:q.x,qy:q.y,qz:q.z,qw:q.w,s:P.s,img:P.img}; }),
+  objects: objects.map(O=>({kind:O.kind,color:O.color,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3)})) }; }
+function saveDecor(){ const snap=decorSnapshot();
+  try{ fetch(DECOR_BASE+"/layout/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({snapshot:snap,screen:XPACIO_ID})}).catch(()=>{}); }catch(e){}
+  try{ localStorage.setItem(POSTER_KEY, JSON.stringify(snap)); }catch(e){} }
+async function loadDecor(){ let d=null;
+  try{ const r=await fetch(DECOR_BASE+"/layout/current?screen="+encodeURIComponent(XPACIO_ID)+"&_="+Date.now()); const j=await r.json(); d=j&&j.current; }catch(e){}
+  if(!d||((!d.posters||!d.posters.length)&&(!d.objects||!d.objects.length))){ try{ const raw=localStorage.getItem(POSTER_KEY); if(raw) d=JSON.parse(raw); }catch(e){} }
+  if(d){ (d.posters||[]).forEach(makePoster); (d.objects||[]).forEach(makeObjectRec); } }
 
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
 function setNdc(e){ const r=canvas.getBoundingClientRect(); ndc.x=((e.clientX-r.left)/r.width)*2-1; ndc.y=-((e.clientY-r.top)/r.height)*2+1; ray.setFromCamera(ndc,activeCam); }
 function hitPosters(){ return ray.intersectObjects(posters.map(P=>P.mesh),false)[0]||null; }
 function hitWalls(){ return ray.intersectObjects(wallMeshes,false)[0]||null; }
+function hitFloor(){ return ray.intersectObject(floor,false)[0]||null; }
+function hitObjects(){ const h=ray.intersectObjects(objects.map(o=>o.group),true)[0]; return h?objRecFromHit(h.object):null; }
 
 let downXY=null, moved=false;
-canvas.addEventListener("pointerdown",e=>{ if(mode!=="edit")return; downXY=[e.clientX,e.clientY]; moved=false;
-  setNdc(e); const hp=hitPosters(); if(hp){ selectPoster(hp.object.userData.poster); draggingPoster=selPoster; controls.enabled=false; } });
+canvas.addEventListener("pointerdown",e=>{ if(mode!=="edit")return; downXY=[e.clientX,e.clientY]; moved=false; setNdc(e);
+  const ho=hitObjects(); if(ho){ selectObj(ho); draggingObj=ho; controls.enabled=false; return; }
+  const hp=hitPosters(); if(hp){ selectPoster(hp.object.userData.poster); draggingPoster=selPoster; controls.enabled=false; } });
 canvas.addEventListener("pointermove",e=>{ if(mode!=="edit")return;
   if(downXY && Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>4) moved=true;
+  if(draggingObj){ setNdc(e); const hf=hitFloor(); if(hf&&canStand(hf.point.x,hf.point.z)) draggingObj.group.position.set(hf.point.x,0,hf.point.z); return; }
   if(draggingPoster){ setNdc(e); const hw=hitWalls(); if(hw) placeOnWall(draggingPoster,hw); } });
 addEventListener("pointerup",e=>{ if(mode!=="edit"){ downXY=null; return; }
-  if(draggingPoster){ savePosters(); draggingPoster=null; controls.enabled=true; downXY=null; return; }
-  if(downXY && !moved){ setNdc(e); const hp=hitPosters();
-    if(hp){ selectPoster(hp.object.userData.poster); }
-    else { const hw=hitWalls(); if(hw){ const P=makePoster({x:0,y:0,z:0,qx:0,qy:0,qz:0,qw:1,s:1,img:Object.assign({},pickImg)}); placeOnWall(P,hw); selectPoster(P); savePosters(); } else selectPoster(null); } }
+  if(draggingObj){ saveDecor(); draggingObj=null; controls.enabled=true; downXY=null; return; }
+  if(draggingPoster){ saveDecor(); draggingPoster=null; controls.enabled=true; downXY=null; return; }
+  if(downXY && !moved){ setNdc(e);
+    const ho=hitObjects(); if(ho){ selectObj(ho); downXY=null; controls.enabled=true; return; }
+    if(editTool==="object"){ const hf=hitFloor(); if(hf&&canStand(hf.point.x,hf.point.z)){ const O=makeObjectRec({kind:pickKind,color:pickObjColor,x:hf.point.x,z:hf.point.z,rot:0}); selectObj(O); saveDecor(); } }
+    else { const hp=hitPosters(); if(hp){ selectPoster(hp.object.userData.poster); }
+      else { const hw=hitWalls(); if(hw){ const P=makePoster({x:0,y:0,z:0,qx:0,qy:0,qz:0,qw:1,s:1,img:Object.assign({},pickImg)}); placeOnWall(P,hw); selectPoster(P); saveDecor(); } else { selectPoster(null); selectObj(null); } } } }
   downXY=null; controls.enabled=true; });
 
 const editBtn=document.getElementById("editBtn");
@@ -683,14 +785,30 @@ posterTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.datas
   if(a==="delete") deletePoster(selPoster); else if(a==="bigger") resizePoster(selPoster,1.15); else if(a==="smaller") resizePoster(selPoster,1/1.15); });
 canvas.addEventListener("wheel",e=>{ if(mode==="edit"&&selPoster){ e.preventDefault(); resizePoster(selPoster, e.deltaY<0?1.08:1/1.08); } },{passive:false});
 
+/* --- editor de objetos: switch de herramienta + paleta de objetos + toolbar --- */
+const objTool=document.getElementById("objTool"), objSwatches=document.getElementById("objSwatches");
+const toolTabs=[...document.querySelectorAll(".tool-tab")];
+function setTool(t){ editTool=t; toolTabs.forEach(b=>b.classList.toggle("on",b.dataset.tool===t));
+  document.getElementById("posterPalette").style.display = t==="poster"?"flex":"none";
+  document.getElementById("objectPalette").style.display = t==="object"?"flex":"none"; }
+toolTabs.forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+OBJ_KINDS.forEach((o,i)=>{ const s=document.createElement("button"); s.className="objSwatch"+(o.kind===pickKind?" sel":""); s.title=o.label;
+  s.innerHTML="<span>"+o.icon+"</span><small>"+o.label+"</small>";
+  s.onclick=()=>{ pickKind=o.kind; [...objSwatches.children].forEach(c=>c.classList.remove("sel")); s.classList.add("sel"); };
+  objSwatches.appendChild(s); });
+objTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act;
+  if(a==="rotL") rotateObj(selObj,-Math.PI/12); else if(a==="rotR") rotateObj(selObj,Math.PI/12); else if(a==="del") deleteObj(selObj); });
+
 function enterEdit(){ if(mode==="walk") exitWalk(); if(mode==="tour") exitTour(); mode="edit"; activeCam=cam;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=true; root.rotation.y=0;
   document.body.classList.add("editing"); editBtn.classList.add("on"); editBtn.textContent="✓ Hecho"; }
-function exitEdit(){ mode="orbit"; selectPoster(null); document.body.classList.remove("editing");
+function exitEdit(){ mode="orbit"; selectPoster(null); selectObj(null); document.body.classList.remove("editing");
   editBtn.classList.remove("on"); editBtn.textContent="🖼️ Decorar"; }
 editBtn.onclick=()=> mode==="edit"?exitEdit():enterEdit();
 addEventListener("keydown",e=>{ if(mode!=="edit")return;
-  if((e.code==="Delete"||e.code==="Backspace")&&selPoster){ deletePoster(selPoster); }
+  if((e.code==="Delete"||e.code==="Backspace")){ if(selPoster) deletePoster(selPoster); else if(selObj) deleteObj(selObj); }
+  if(selObj&&(e.code==="BracketLeft"||e.code==="KeyQ")) rotateObj(selObj,-Math.PI/12);
+  if(selObj&&(e.code==="BracketRight"||e.code==="KeyE")) rotateObj(selObj,Math.PI/12);
   if(e.code==="Escape") exitEdit(); });
 
 /* ============================================================
@@ -884,7 +1002,7 @@ document.getElementById("loading").style.display="none";
 requestAnimationFrame(loop);
 
 /* arranque: contenido real de admira.tv + presencia + primer reporte, luego intervalos */
-loadPosters();          // restaura los pósters colocados en el editor (localStorage)
+loadDecor();            // restaura decoración (pósters + objetos) del backend compartido
 loadStock();
 presencePing();
 PLAN.zones.forEach(z=>{ if(z.online&&z.playing) recordPlay(z); });
