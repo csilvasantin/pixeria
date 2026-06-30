@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.14">
+<meta name="version" content="v.30.06.2026.15">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -216,6 +216,7 @@
   <button id="musicBtn" title="Hilo musical del Xpacio (audio comercializable)">🎵 Hilo Musical<span id="musicNow" class="mnow"></span></button>
   <button id="resetBtn" title="Recentrar la cámara isométrica">📐 Isométrica</button>
   <button id="aforoBtn" title="Aforo simulado: clientes paseando">👥 Aforo</button>
+  <button id="photoBtn" title="Descargar una foto (PNG) del Xpacio">📸 Foto</button>
   <button id="shareBtn" title="Copiar enlace de este Xpacio">🔗 Compartir</button>
   <button id="helpBtn" title="Atajos y ayuda (?)">❔ Ayuda</button>
 </div>
@@ -648,6 +649,10 @@ function copyText(t){ try{ if(navigator.clipboard&&navigator.clipboard.writeText
 document.getElementById("shareBtn").onclick=()=>{ const base=location.origin+location.pathname;
   const url=(XPACIO_ID&&XPACIO_ID!=="xtanco-bcn-gracia")?base+"?xpacio="+encodeURIComponent(XPACIO_ID):base;
   copyText(url); toast("🔗 Enlace copiado"); };
+document.getElementById("photoBtn").onclick=()=>{ try{ renderer.render(scene,activeCam);
+  const a=document.createElement("a"); a.href=renderer.domElement.toDataURL("image/png");
+  a.download="xpacio-"+(XPACIO_ID||"xtanco")+"-v"+(document.querySelector('meta[name=version]')?.content||"").replace(/[^0-9.]/g,"")+".png";
+  document.body.appendChild(a); a.click(); a.remove(); toast("📸 Foto del Xpacio descargada"); }catch(e){ toast("No se pudo capturar la foto"); } };
 // panel de ayuda / atajos (botón ❔ o tecla ?)
 const helpPanel=document.getElementById("helpPanel");
 function toggleHelp(){ helpPanel.classList.toggle("show"); }
