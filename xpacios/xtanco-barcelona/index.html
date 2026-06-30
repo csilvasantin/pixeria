@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.2026.06.29-bcn">
+<meta name="version" content="v.30.06.2026.1">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -107,6 +107,10 @@
   .tool-tabs{display:flex;gap:6px}
   .tool-tab{font-family:inherit;font-size:11.5px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer}
   .tool-tab.on{color:var(--cyan);border-color:var(--cyan);background:rgba(255,77,166,.10)}
+  .tt-sep{width:1px;height:20px;background:var(--line)}
+  .tool-aux{font-family:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:8px;padding:4px 9px;cursor:pointer}
+  .tool-aux:hover{border-color:var(--cyan)}
+  .edVer{font-size:9.5px;color:var(--muted);letter-spacing:.04em;margin-left:2px}
   .sub-palette{display:flex;align-items:center;gap:12px}
   #objSwatches{display:flex;gap:7px}
   .objSwatch{font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;width:58px;padding:7px 4px;cursor:pointer;
@@ -208,6 +212,10 @@
   <div class="tool-tabs">
     <button class="tool-tab on" data-tool="poster">🖼️ Pósters</button>
     <button class="tool-tab" data-tool="object">🪑 Objetos</button>
+    <span class="tt-sep"></span>
+    <button class="tool-aux" id="undoBtn" title="Deshacer (Ctrl/⌘+Z)">↶</button>
+    <button class="tool-aux" id="clearBtn" title="Vaciar la decoración">🧹</button>
+    <span class="edVer" id="edVer"></span>
   </div>
   <div id="posterPalette" class="sub-palette">
     <div id="pSwatches"></div>
@@ -786,6 +794,16 @@ async function loadDecor(){ let d=null;
   if(!d||((!d.posters||!d.posters.length)&&(!d.objects||!d.objects.length))){ try{ const raw=localStorage.getItem(POSTER_KEY); if(raw) d=JSON.parse(raw); }catch(e){} }
   if(d){ (d.posters||[]).forEach(makePoster); (d.objects||[]).forEach(makeObjectRec); } }
 
+/* ---------- Deshacer / Vaciar (historial de decoración) ---------- */
+const undoStack=[];
+function pushUndo(){ try{ const s=JSON.stringify(decorSnapshot()); if(undoStack[undoStack.length-1]===s) return; undoStack.push(s); if(undoStack.length>40) undoStack.shift(); }catch(e){} }
+function rebuildDecor(snap){ selectPoster(null); selectObj(null);
+  posters.forEach(P=>{ root.remove(P.mesh); root.remove(P.frame); }); posters.length=0;
+  objects.forEach(O=>root.remove(O.group)); objects.length=0;
+  (snap&&snap.posters||[]).forEach(makePoster); (snap&&snap.objects||[]).forEach(makeObjectRec); }
+function undoDecor(){ if(!undoStack.length) return; const snap=JSON.parse(undoStack.pop()); rebuildDecor(snap); saveDecor(); }
+function clearDecor(){ if(!posters.length&&!objects.length) return; pushUndo(); rebuildDecor({posters:[],objects:[]}); saveDecor(); }
+
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
 function setNdc(e){ const r=canvas.getBoundingClientRect(); ndc.x=((e.clientX-r.left)/r.width)*2-1; ndc.y=-((e.clientY-r.top)/r.height)*2+1; ray.setFromCamera(ndc,activeCam); }
 function hitPosters(){ return ray.intersectObjects(posters.map(P=>P.mesh),false)[0]||null; }
@@ -794,7 +812,7 @@ function hitFloor(){ return ray.intersectObject(floor,false)[0]||null; }
 function hitObjects(){ const h=ray.intersectObjects(objects.map(o=>o.group),true)[0]; return h?objRecFromHit(h.object):null; }
 
 let downXY=null, moved=false;
-canvas.addEventListener("pointerdown",e=>{ if(mode!=="edit")return; downXY=[e.clientX,e.clientY]; moved=false; setNdc(e);
+canvas.addEventListener("pointerdown",e=>{ if(mode!=="edit")return; downXY=[e.clientX,e.clientY]; moved=false; pushUndo(); setNdc(e);
   const ho=hitObjects(); if(ho){ selectObj(ho); draggingObj=ho; controls.enabled=false; return; }
   const hp=hitPosters(); if(hp){ selectPoster(hp.object.userData.poster); draggingPoster=selPoster; controls.enabled=false; } });
 canvas.addEventListener("pointermove",e=>{ if(mode!=="edit")return;
@@ -820,7 +838,7 @@ POSTER_PRESETS.forEach(p=>{ const s=document.createElement("div"); s.className="
   swatchWrap.appendChild(s); });
 document.getElementById("pUpload").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(!f)return;
   const rd=new FileReader(); rd.onload=()=>{ pickImg={url:rd.result}; [...swatchWrap.children].forEach(c=>c.classList.remove("sel")); }; rd.readAsDataURL(f); };
-posterTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act;
+posterTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act; pushUndo();
   if(a==="delete") deletePoster(selPoster); else if(a==="bigger") resizePoster(selPoster,1.15); else if(a==="smaller") resizePoster(selPoster,1/1.15); });
 canvas.addEventListener("wheel",e=>{ if(mode!=="edit")return;
   if(selPoster){ e.preventDefault(); resizePoster(selPoster, e.deltaY<0?1.08:1/1.08); }
@@ -833,11 +851,14 @@ function setTool(t){ editTool=t; toolTabs.forEach(b=>b.classList.toggle("on",b.d
   document.getElementById("posterPalette").style.display = t==="poster"?"flex":"none";
   document.getElementById("objectPalette").style.display = t==="object"?"flex":"none"; }
 toolTabs.forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+document.getElementById("undoBtn").onclick=undoDecor;
+document.getElementById("clearBtn").onclick=()=>{ if((posters.length||objects.length)&&confirm("¿Vaciar toda la decoración de este Xpacio? (puedes Deshacer con Ctrl+Z)")) clearDecor(); };
+(()=>{ const v=document.querySelector('meta[name="version"]'); const el=document.getElementById("edVer"); if(v&&el) el.textContent=v.getAttribute("content"); })();
 OBJ_KINDS.forEach((o,i)=>{ const s=document.createElement("button"); s.className="objSwatch"+(o.kind===pickKind?" sel":""); s.title=o.label;
   s.innerHTML="<span>"+o.icon+"</span><small>"+o.label+"</small>";
   s.onclick=()=>{ pickKind=o.kind; [...objSwatches.children].forEach(c=>c.classList.remove("sel")); s.classList.add("sel"); };
   objSwatches.appendChild(s); });
-objTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act;
+objTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act; if(a!=="content") pushUndo();
   if(a==="rotL") rotateObj(selObj,-Math.PI/12); else if(a==="rotR") rotateObj(selObj,Math.PI/12);
   else if(a==="smaller") scaleObj(selObj,1/1.12); else if(a==="bigger") scaleObj(selObj,1.12);
   else if(a==="dup") dupObj(selObj); else if(a==="content") openObjContent();
@@ -855,11 +876,11 @@ async function ocLoadThumbs(){ if(ocStock) return ocStock;
 async function openObjContent(){ if(!selObj) return; objContent.classList.add("show");
   const list=await ocLoadThumbs(); ocThumbs.innerHTML="";
   list.forEach(it=>{ const t=document.createElement("div"); t.className="ocThumb"; t.title=it.title||""; t.style.backgroundImage="url('"+it.url+"')";
-    t.onclick=()=>{ applyObjTexture(selObj,it.url); }; ocThumbs.appendChild(t); }); }
+    t.onclick=()=>{ pushUndo(); applyObjTexture(selObj,it.url); }; ocThumbs.appendChild(t); }); }
 function closeObjContent(){ objContent.classList.remove("show"); }
 objContent.querySelector(".ocX").onclick=closeObjContent;
-document.getElementById("ocClear").onclick=()=>{ if(selObj) applyObjTexture(selObj,null); };
-document.getElementById("ocUpload").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(!f||!selObj)return;
+document.getElementById("ocClear").onclick=()=>{ if(selObj){ pushUndo(); applyObjTexture(selObj,null); } };
+document.getElementById("ocUpload").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(!f||!selObj)return; pushUndo();
   const rd=new FileReader(); rd.onload=()=>applyObjTexture(selObj,rd.result); rd.readAsDataURL(f); };
 
 function enterEdit(){ if(mode==="walk") exitWalk(); if(mode==="tour") exitTour(); mode="edit"; activeCam=cam;
@@ -869,9 +890,10 @@ function exitEdit(){ mode="orbit"; selectPoster(null); selectObj(null); document
   editBtn.classList.remove("on"); editBtn.textContent="🖼️ Decorar"; }
 editBtn.onclick=()=> mode==="edit"?exitEdit():enterEdit();
 addEventListener("keydown",e=>{ if(mode!=="edit")return;
-  if((e.code==="Delete"||e.code==="Backspace")){ if(selPoster) deletePoster(selPoster); else if(selObj) deleteObj(selObj); }
-  if(selObj&&(e.code==="BracketLeft"||e.code==="KeyQ")) rotateObj(selObj,-Math.PI/12);
-  if(selObj&&(e.code==="BracketRight"||e.code==="KeyE")) rotateObj(selObj,Math.PI/12);
+  if(e.code==="KeyZ"&&(e.metaKey||e.ctrlKey)){ e.preventDefault(); undoDecor(); return; }
+  if((e.code==="Delete"||e.code==="Backspace")){ if(selPoster){ pushUndo(); deletePoster(selPoster); } else if(selObj){ pushUndo(); deleteObj(selObj); } }
+  if(selObj&&(e.code==="BracketLeft"||e.code==="KeyQ")){ pushUndo(); rotateObj(selObj,-Math.PI/12); }
+  if(selObj&&(e.code==="BracketRight"||e.code==="KeyE")){ pushUndo(); rotateObj(selObj,Math.PI/12); }
   if(e.code==="Escape") exitEdit(); });
 
 /* ============================================================
