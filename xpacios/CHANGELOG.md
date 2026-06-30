@@ -4,7 +4,7 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
-## v.30.06.2026.7 — 🔗 [Ver resultado](PENDING)
+## v.30.06.2026.7 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/d4f2218/xpacios/xtanco-barcelona/index.html)
 - **Modo Día / Noche**: botón ☀️/🌙 en la pestaña 🎨 Escena. De noche baja la exposición y oscurece el ambiente, y las pantallas DOOH lucen más (ideal para previsualizar la tienda y vender el inventario). Persistente y deshacible.
 
 ## v.30.06.2026.6 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/6360476/xpacios/xtanco-barcelona/index.html)
