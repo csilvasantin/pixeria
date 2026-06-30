@@ -3,6 +3,9 @@
 Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mundo.
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 
+## v.30.06.2026.3
+- **Escena**: nueva pestaña 🎨 en el editor para cambiar el **color del suelo y de las paredes** (paletas de tonos de madera/neutros y blanco/Desigual/oscuros). Global por Xpacio, persistente y deshacible.
+
 ## v.30.06.2026.2
 - **Recolorear objeto**: al seleccionar un objeto, una paleta de colores Desigual lo recolorea al instante (mantiene la textura como tinte si la tiene). Se persiste por objeto; deshacible con Ctrl+Z.
 

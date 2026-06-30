@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.2">
+<meta name="version" content="v.30.06.2026.3">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -129,6 +129,8 @@
   .objColors{display:inline-flex;gap:4px;align-items:center;margin:0 4px}
   .objColors .cd{width:17px;height:17px;border-radius:50%;border:1px solid rgba(255,255,255,.28);cursor:pointer;transition:transform .1s}
   .objColors .cd:hover{transform:scale(1.18)}
+  .scLbl{font-size:10.5px;color:var(--muted);letter-spacing:.04em}
+  #scenePalette{gap:8px}
   #objContent{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);z-index:9;display:none;width:min(440px,92vw);
     background:rgba(6,12,22,.96);backdrop-filter:blur(12px);border:1px solid var(--cyan);border-radius:12px;padding:10px 12px}
   #objContent.show{display:block}
@@ -215,6 +217,7 @@
   <div class="tool-tabs">
     <button class="tool-tab on" data-tool="poster">🖼️ Pósters</button>
     <button class="tool-tab" data-tool="object">🪑 Objetos</button>
+    <button class="tool-tab" data-tool="scene">🎨 Escena</button>
     <span class="tt-sep"></span>
     <button class="tool-aux" id="undoBtn" title="Deshacer (Ctrl/⌘+Z)">↶</button>
     <button class="tool-aux" id="clearBtn" title="Vaciar la decoración">🧹</button>
@@ -228,6 +231,10 @@
   <div id="objectPalette" class="sub-palette" style="display:none">
     <div id="objSwatches"></div>
     <span class="pHint">Click en el suelo para poner · arrastra para mover</span>
+  </div>
+  <div id="scenePalette" class="sub-palette" style="display:none">
+    <span class="scLbl">Suelo</span><div id="floorColors" class="objColors"></div>
+    <span class="scLbl">Paredes</span><div id="wallColors" class="objColors"></div>
   </div>
 </div>
 <div id="posterTool">
@@ -359,6 +366,13 @@ panelPos.forEach(([sx,sz])=>{ const pn=new THREE.Mesh(new THREE.PlaneGeometry(1.
 
 /* ---------- paredes ---------- */
 const wallMat = new THREE.MeshStandardMaterial({ color:0xefe9e2, roughness:.94, metalness:.02, side:THREE.DoubleSide });
+// estado de escena (color de suelo/paredes, editable y persistente por Xpacio)
+const DEF_FLOOR=0xffffff, DEF_WALL=0xefe9e2; let sceneState={floor:null,wall:null};
+function applyScene(s){ s=s||{}; sceneState={floor:s.floor||null,wall:s.wall||null};
+  floor.material.color.set(s.floor||DEF_FLOOR); floor.material.needsUpdate=true;
+  wallMat.color.set(s.wall||DEF_WALL); wallMat.needsUpdate=true; }
+function setFloorColor(hex){ sceneState.floor=hex; floor.material.color.set(hex); floor.material.needsUpdate=true; saveDecor(); }
+function setWallColor(hex){ sceneState.wall=hex; wallMat.color.set(hex); wallMat.needsUpdate=true; saveDecor(); }
 const baseMat = new THREE.MeshStandardMaterial({ color:0x2a2230, roughness:.8 });     // zócalo
 const trimMat = new THREE.MeshStandardMaterial({ color:0xc9bdaf, roughness:.6 });
 const pts = PLAN.outline;
@@ -794,14 +808,15 @@ function objRecFromHit(obj){ let o=obj; while(o&&!o.userData.objRec) o=o.parent;
 /* ---------- persistencia de decoración (backend compartido + fallback local) ---------- */
 function decorSnapshot(){ return { furniture:[],
   posters: posters.map(P=>{ const q=P.mesh.quaternion,p=P.mesh.position; return {x:p.x,y:p.y,z:p.z,qx:q.x,qy:q.y,qz:q.z,qw:q.w,s:P.s,img:P.img}; }),
-  objects: objects.map(O=>({kind:O.kind,color:O.recolored?O.color:null,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3),s:+(O.s||1).toFixed(3),tex:O.tex||null})) }; }
+  objects: objects.map(O=>({kind:O.kind,color:O.recolored?O.color:null,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3),s:+(O.s||1).toFixed(3),tex:O.tex||null})),
+  scene: {floor:sceneState.floor,wall:sceneState.wall} }; }
 function saveDecor(){ const snap=decorSnapshot();
   try{ fetch(DECOR_BASE+"/layout/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({snapshot:snap,screen:XPACIO_ID})}).catch(()=>{}); }catch(e){}
   try{ localStorage.setItem(POSTER_KEY, JSON.stringify(snap)); }catch(e){} }
 async function loadDecor(){ let d=null;
   try{ const r=await fetch(DECOR_BASE+"/layout/current?screen="+encodeURIComponent(XPACIO_ID)+"&_="+Date.now()); const j=await r.json(); d=j&&j.current; }catch(e){}
   if(!d||((!d.posters||!d.posters.length)&&(!d.objects||!d.objects.length))){ try{ const raw=localStorage.getItem(POSTER_KEY); if(raw) d=JSON.parse(raw); }catch(e){} }
-  if(d){ (d.posters||[]).forEach(makePoster); (d.objects||[]).forEach(makeObjectRec); } }
+  if(d){ (d.posters||[]).forEach(makePoster); (d.objects||[]).forEach(makeObjectRec); if(d.scene) applyScene(d.scene); } }
 
 /* ---------- Deshacer / Vaciar (historial de decoración) ---------- */
 const undoStack=[];
@@ -809,7 +824,7 @@ function pushUndo(){ try{ const s=JSON.stringify(decorSnapshot()); if(undoStack[
 function rebuildDecor(snap){ selectPoster(null); selectObj(null);
   posters.forEach(P=>{ root.remove(P.mesh); root.remove(P.frame); }); posters.length=0;
   objects.forEach(O=>root.remove(O.group)); objects.length=0;
-  (snap&&snap.posters||[]).forEach(makePoster); (snap&&snap.objects||[]).forEach(makeObjectRec); }
+  (snap&&snap.posters||[]).forEach(makePoster); (snap&&snap.objects||[]).forEach(makeObjectRec); applyScene(snap&&snap.scene); }
 function undoDecor(){ if(!undoStack.length) return; const snap=JSON.parse(undoStack.pop()); rebuildDecor(snap); saveDecor(); }
 function clearDecor(){ if(!posters.length&&!objects.length) return; pushUndo(); rebuildDecor({posters:[],objects:[]}); saveDecor(); }
 
@@ -858,7 +873,14 @@ const objTool=document.getElementById("objTool"), objSwatches=document.getElemen
 const toolTabs=[...document.querySelectorAll(".tool-tab")];
 function setTool(t){ editTool=t; toolTabs.forEach(b=>b.classList.toggle("on",b.dataset.tool===t));
   document.getElementById("posterPalette").style.display = t==="poster"?"flex":"none";
-  document.getElementById("objectPalette").style.display = t==="object"?"flex":"none"; }
+  document.getElementById("objectPalette").style.display = t==="object"?"flex":"none";
+  document.getElementById("scenePalette").style.display = t==="scene"?"flex":"none"; }
+// paletas de color de suelo y paredes
+const FLOOR_COLS=["#ffffff","#e8dcc8","#caa37a","#8a6a45","#bfc3c8","#3a3340"];
+const WALL_COLS=["#efe9e2","#d9c9b0","#ff4da6","#1a2433","#26122a","#0c0510"];
+(()=>{ const fc=document.getElementById("floorColors"), wc=document.getElementById("wallColors");
+  FLOOR_COLS.forEach(h=>{ const d=document.createElement("span"); d.className="cd"; d.style.background=h; d.onclick=()=>{ pushUndo(); setFloorColor(h); }; fc.appendChild(d); });
+  WALL_COLS.forEach(h=>{ const d=document.createElement("span"); d.className="cd"; d.style.background=h; d.onclick=()=>{ pushUndo(); setWallColor(h); }; wc.appendChild(d); }); })();
 toolTabs.forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
 document.getElementById("undoBtn").onclick=undoDecor;
 document.getElementById("clearBtn").onclick=()=>{ if((posters.length||objects.length)&&confirm("¿Vaciar toda la decoración de este Xpacio? (puedes Deshacer con Ctrl+Z)")) clearDecor(); };
