@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.16">
+<meta name="version" content="v.30.06.2026.17">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -74,6 +74,8 @@
   .zlabel:hover{border-color:var(--cyan)}
   .zlabel b{font-weight:700}
   .zlabel small{color:var(--muted)}
+  .olabel{font-size:10px;padding:3px 7px;background:rgba(20,16,22,.82);z-index:3}
+  .olabel b{font-weight:600}
   /* ---- modo explorar (walkable) ---- */
   .ctrl #walkBtn{border-color:var(--cyan);color:var(--cyan);background:rgba(55,224,255,.12);font-weight:700}
   .ctrl #walkBtn:hover{background:rgba(55,224,255,.2)}
@@ -321,6 +323,7 @@
   <button data-act="bigger" title="Más grande">＋</button>
   <button data-act="dup" title="Duplicar (sin solapar)">⧉</button>
   <button data-act="align" title="Alinear a la rejilla">⊞</button>
+  <button data-act="name" title="Poner nombre / etiqueta a la pieza">🏷️</button>
   <button data-act="content" title="Vestir / poner contenido">🖼️ Vestir</button>
   <span class="objColors" id="objColors" title="Recolorear"></span>
   <button data-act="del" class="danger" title="Borrar (Supr)">🗑</button>
@@ -629,9 +632,13 @@ PLAN.zones.forEach(z=>{
 /* ---------- etiquetas A/B/C/D ---------- */
 const labels=PLAN.zones.map(z=>{ const el=document.createElement("div"); el.className="zlabel";
   el.innerHTML=`<b>${z.id}</b> <small>${(z.w*z.d).toFixed(0)} m²</small>`; el.addEventListener("click",()=>openMgmt(z.id)); document.body.appendChild(el); return {z,el}; });
-function updateLabels(){ if(mode==="walk"||mode==="tour"){ labels.forEach(({el})=>{ el.style.display="none"; }); return; }
-  labels.forEach(({z,el})=>{ const v=new THREE.Vector3(z._w.cx,PLAN.height+0.2,z._w.cz); v.applyMatrix4(root.matrixWorld); v.project(activeCam);
-  el.style.left=(v.x*.5+.5)*innerWidth+"px"; el.style.top=(-v.y*.5+.5)*innerHeight+"px"; el.style.display=(v.z<1)?"block":"none"; }); }
+function updateLabels(){ const hide=(mode==="walk"||mode==="tour");
+  labels.forEach(({z,el})=>{ if(hide){ el.style.display="none"; return; }
+    const v=new THREE.Vector3(z._w.cx,PLAN.height+0.2,z._w.cz); v.applyMatrix4(root.matrixWorld); v.project(activeCam);
+    el.style.left=(v.x*.5+.5)*innerWidth+"px"; el.style.top=(-v.y*.5+.5)*innerHeight+"px"; el.style.display=(v.z<1)?"block":"none"; });
+  for(const O of objects){ const el=O.labelEl; if(!el) continue; if(hide){ el.style.display="none"; continue; }
+    const p=O.group.position; const v=new THREE.Vector3(p.x, 1.5*(O.s||1)+0.25, p.z); v.applyMatrix4(root.matrixWorld); v.project(activeCam);
+    el.style.left=(v.x*.5+.5)*innerWidth+"px"; el.style.top=(-v.y*.5+.5)*innerHeight+"px"; el.style.display=(v.z<1)?"block":"none"; } }
 
 /* ---------- gestión remota ---------- */
 const mgmt=document.getElementById("mgmt"); let curZone=null;
@@ -960,9 +967,17 @@ function buildObjectMesh(kind,color){
 }
 function makeObjectRec(rec){ const g=buildObjectMesh(rec.kind,rec.color); g.position.set(rec.x,0,rec.z); g.rotation.y=rec.rot||0;
   if(rec.s) g.scale.setScalar(rec.s);
-  root.add(g); const O={group:g,kind:rec.kind,color:rec.color||DCOL[0],s:rec.s||1,tex:rec.tex||null,recolored:!!rec.color}; g.userData.objRec=O; objects.push(O);
+  root.add(g); const O={group:g,kind:rec.kind,color:rec.color||DCOL[0],s:rec.s||1,tex:rec.tex||null,recolored:!!rec.color,name:null,labelEl:null}; g.userData.objRec=O; objects.push(O);
   if(rec.color) recolorObj(O,rec.color,true);
-  if(rec.tex) applyObjTexture(O,rec.tex,true); return O; }
+  if(rec.tex) applyObjTexture(O,rec.tex,true);
+  if(rec.name) setObjName(O,rec.name,true); return O; }
+// nombre / etiqueta flotante de una pieza (persistente; la etiqueta la posiciona updateLabels)
+function setObjName(O,name,skipSave){ if(!O)return; name=(name||"").replace(/[<>&]/g,"").trim().slice(0,40); O.name=name||null;
+  if(O.name){ if(!O.labelEl){ const el=document.createElement("div"); el.className="zlabel olabel"; el.addEventListener("click",()=>selectObj(O)); document.body.appendChild(el); O.labelEl=el; }
+    O.labelEl.innerHTML="<b>"+O.name+"</b>"; }
+  else removeObjLabel(O);
+  if(!skipSave) saveDecor(); }
+function removeObjLabel(O){ if(O&&O.labelEl){ O.labelEl.remove(); O.labelEl=null; } }
 // recolorea las mallas de color del objeto (mantiene textura si la hay como tinte)
 function recolorObj(O,hex,skipSave){ if(!O)return; O.color=hex; O.recolored=true; const col=new THREE.Color(hex);
   O.group.traverse(m=>{ if(m.userData&&m.userData.skin&&m.material){ m.material.color.copy(col); if(m.userData.screen) m.material.emissive=col.clone(); m.material.needsUpdate=true; } });
@@ -978,7 +993,7 @@ function freeSpotNear(x,z,ignore){ const STEP=0.6; for(let r=1;r<=6;r++){ for(le
 function dupObj(O){ if(!O)return; const p=O.group.position; const sp=freeSpotNear(p.x,p.z,O);
   const r=makeObjectRec({kind:O.kind,color:O.recolored?O.color:null,x:sp[0],z:sp[1],rot:O.group.rotation.y,s:O.s,tex:O.tex}); selectObj(r); saveDecor(); }
 function alignObj(O){ if(!O)return; const p=O.group.position; const gx=Math.round(p.x/0.5)*0.5, gz=Math.round(p.z/0.5)*0.5; if(canStand(gx,gz)){ O.group.position.set(gx,0,gz); saveDecor(); } }
-function deleteObj(O){ if(!O)return; root.remove(O.group); const i=objects.indexOf(O); if(i>=0) objects.splice(i,1); if(selObj===O) selectObj(null); saveDecor(); }
+function deleteObj(O){ if(!O)return; removeObjLabel(O); root.remove(O.group); const i=objects.indexOf(O); if(i>=0) objects.splice(i,1); if(selObj===O) selectObj(null); saveDecor(); }
 // aplica una textura (URL del stock o dataURL subido) a las mallas "vestibles" del objeto
 function applyObjTexture(O,src,skipSave){ if(!O)return; O.tex=src||null;
   const tex= src ? texLoader.load(src) : null; if(tex) tex.colorSpace=THREE.SRGBColorSpace;
@@ -992,7 +1007,7 @@ function objRecFromHit(obj){ let o=obj; while(o&&!o.userData.objRec) o=o.parent;
 /* ---------- persistencia de decoración (backend compartido + fallback local) ---------- */
 function decorSnapshot(){ return { furniture:[],
   posters: posters.map(P=>{ const q=P.mesh.quaternion,p=P.mesh.position; return {x:p.x,y:p.y,z:p.z,qx:q.x,qy:q.y,qz:q.z,qw:q.w,s:P.s,img:P.img}; }),
-  objects: objects.map(O=>({kind:O.kind,color:O.recolored?O.color:null,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3),s:+(O.s||1).toFixed(3),tex:O.tex||null})),
+  objects: objects.map(O=>({kind:O.kind,color:O.recolored?O.color:null,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3),s:+(O.s||1).toFixed(3),tex:O.tex||null,name:O.name||null})),
   zones: zoneOverrides(),
   scene: {floor:sceneState.floor,wall:sceneState.wall,time:sceneState.time} }; }
 function saveDecor(){ const snap=decorSnapshot();
@@ -1008,7 +1023,7 @@ const undoStack=[];
 function pushUndo(){ try{ const s=JSON.stringify(decorSnapshot()); if(undoStack[undoStack.length-1]===s) return; undoStack.push(s); if(undoStack.length>40) undoStack.shift(); }catch(e){} }
 function rebuildDecor(snap){ selectPoster(null); selectObj(null); selectZone(null);
   posters.forEach(P=>{ root.remove(P.mesh); root.remove(P.frame); }); posters.length=0;
-  objects.forEach(O=>root.remove(O.group)); objects.length=0;
+  objects.forEach(O=>{ removeObjLabel(O); root.remove(O.group); }); objects.length=0;
   (snap&&snap.posters||[]).forEach(makePoster); (snap&&snap.objects||[]).forEach(makeObjectRec); applyScene(snap&&snap.scene); applyZones(snap&&snap.zones); }
 function undoDecor(){ if(!undoStack.length) return; const snap=JSON.parse(undoStack.pop()); rebuildDecor(snap); saveDecor(); }
 function clearDecor(){ if(!posters.length&&!objects.length) return; pushUndo(); rebuildDecor({posters:[],objects:[]}); saveDecor(); }
@@ -1107,7 +1122,9 @@ OBJ_KINDS.forEach((o,i)=>{ const s=document.createElement("button"); s.className
 const objColorsEl=document.getElementById("objColors");
 DCOL.forEach(c=>{ const d=document.createElement("span"); d.className="cd"; d.style.background="#"+c.toString(16).padStart(6,"0");
   d.onclick=()=>{ if(selObj){ pushUndo(); recolorObj(selObj,c); } }; objColorsEl.appendChild(d); });
-objTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act; if(a!=="content") pushUndo();
+objTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act;
+  if(a==="name"){ if(!selObj)return; const n=prompt("Nombre / etiqueta de la pieza (vacío = quitar):", selObj.name||""); if(n===null)return; pushUndo(); setObjName(selObj,n); return; }
+  if(a!=="content") pushUndo();
   if(a==="rotL") rotateObj(selObj,-Math.PI/12); else if(a==="rotR") rotateObj(selObj,Math.PI/12);
   else if(a==="smaller") scaleObj(selObj,1/1.12); else if(a==="bigger") scaleObj(selObj,1.12);
   else if(a==="dup") dupObj(selObj); else if(a==="align") alignObj(selObj); else if(a==="content") openObjContent();
