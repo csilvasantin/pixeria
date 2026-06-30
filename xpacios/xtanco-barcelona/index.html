@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.12">
+<meta name="version" content="v.30.06.2026.13">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -142,6 +142,7 @@
   #spSave{font-family:inherit;font-size:12px;color:#0c0510;background:var(--cyan);border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700}
   .spList{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow:auto}
   .spRow{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12px}
+  .spThumb{width:54px;height:34px;object-fit:cover;border-radius:5px;border:1px solid var(--line);flex:none}
   .spRow .nm{flex:1;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .spRow .dt{color:var(--muted);font-size:10px}
   .spRow button{font-family:inherit;font-size:11px;border:1px solid var(--line);border-radius:7px;padding:5px 9px;cursor:pointer;background:rgba(255,77,166,.08);color:var(--ink)}
@@ -375,7 +376,7 @@ const PLAN = {
 
 /* ---------- escena ---------- */
 const canvas = document.getElementById("c");
-const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, preserveDrawingBuffer:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1041,11 +1042,13 @@ document.getElementById("clearBtn").onclick=()=>{ if((posters.length||objects.le
 const SAVES_SCREEN="saves-"+XPACIO_ID, savesPanel=document.getElementById("savesPanel"), spList=document.getElementById("spList");
 async function loadSaves(){ try{ const r=await fetch(DECOR_BASE+"/layout/current?screen="+encodeURIComponent(SAVES_SCREEN)+"&_="+Date.now()); const j=await r.json(); const c=j&&j.current; if(c&&Array.isArray(c.saves)) return c.saves; }catch(e){} return []; }
 async function postSaves(list){ try{ await fetch(DECOR_BASE+"/layout/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({snapshot:{furniture:[],saves:list},screen:SAVES_SCREEN})}); }catch(e){} }
+function captureThumb(){ try{ renderer.render(scene,activeCam); const src=renderer.domElement; const w=180,h=Math.max(1,Math.round(w*src.height/src.width));
+  const c=document.createElement("canvas"); c.width=w; c.height=h; c.getContext("2d").drawImage(src,0,0,w,h); return c.toDataURL("image/jpeg",0.5); }catch(e){ return null; } }
 async function renderSaves(){ const list=await loadSaves(); spList.innerHTML="";
   if(!list.length){ spList.innerHTML='<div class="spEmpty">Aún no hay versiones guardadas.</div>'; return; }
   list.forEach((s,i)=>{ const row=document.createElement("div"); row.className="spRow";
     const d=new Date(s.ts); const dt=isNaN(d)?"":d.toLocaleDateString("es-ES",{day:"2-digit",month:"short"})+" "+d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});
-    row.innerHTML='<span class="nm">'+(s.name||"(sin nombre)").replace(/[<>&]/g,"")+'</span><span class="dt">'+dt+'</span>';
+    row.innerHTML=(s.thumb?'<img class="spThumb" src="'+s.thumb+'">':'')+'<span class="nm">'+(s.name||"(sin nombre)").replace(/[<>&]/g,"")+'</span><span class="dt">'+dt+'</span>';
     const rb=document.createElement("button"); rb.textContent="Restaurar"; rb.onclick=()=>{ pushUndo(); rebuildDecor(s.decor||{}); saveDecor(); closeSaves(); };
     const db=document.createElement("button"); db.className="del"; db.textContent="🗑"; db.onclick=async()=>{ const l=await loadSaves(); l.splice(i,1); await postSaves(l); renderSaves(); };
     row.appendChild(rb); row.appendChild(db); spList.appendChild(row); }); }
@@ -1054,7 +1057,7 @@ function closeSaves(){ savesPanel.classList.remove("show"); }
 document.getElementById("savesBtn").onclick=()=>{ savesPanel.classList.contains("show")?closeSaves():openSaves(); };
 savesPanel.querySelector(".spX").onclick=closeSaves;
 document.getElementById("spSave").onclick=async()=>{ const inp=document.getElementById("spName"); const name=(inp.value||"").trim()||("Versión "+new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}));
-  const list=await loadSaves(); list.unshift({name,ts:Date.now(),decor:decorSnapshot()}); if(list.length>20) list.length=20; await postSaves(list); inp.value=""; renderSaves(); };
+  const list=await loadSaves(); list.unshift({name,ts:Date.now(),decor:decorSnapshot(),thumb:captureThumb()}); if(list.length>20) list.length=20; await postSaves(list); inp.value=""; renderSaves(); };
 OBJ_KINDS.forEach((o,i)=>{ const s=document.createElement("button"); s.className="objSwatch"+(o.kind===pickKind?" sel":""); s.title=o.label;
   s.innerHTML="<span>"+o.icon+"</span><small>"+o.label+"</small>";
   s.onclick=()=>{ pickKind=o.kind; [...objSwatches.children].forEach(c=>c.classList.remove("sel")); s.classList.add("sel"); };

@@ -4,6 +4,9 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
+## v.30.06.2026.13 — 🔗 [Ver resultado](PENDING)
+- **Miniaturas en las versiones**: al guardar una versión (💾) se captura una **foto del render** y se muestra como miniatura en la lista de versiones, para reconocerlas de un vistazo al restaurar.
+
 ## v.30.06.2026.12 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/c119b94/xpacios/xtanco-barcelona/index.html)
 - **Rejilla de edición**: al entrar en 🖼️ Decorar se muestra una rejilla de 0,5 m en el suelo (se oculta al salir/pasear), para colocar y alinear objetos con precisión.
 
