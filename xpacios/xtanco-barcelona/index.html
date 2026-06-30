@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.17">
+<meta name="version" content="v.30.06.2026.18">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -324,6 +324,7 @@
   <button data-act="dup" title="Duplicar (sin solapar)">⧉</button>
   <button data-act="align" title="Alinear a la rejilla">⊞</button>
   <button data-act="name" title="Poner nombre / etiqueta a la pieza">🏷️</button>
+  <button data-act="lock" title="Bloquear / desbloquear (no moverla sin querer)">🔓</button>
   <button data-act="content" title="Vestir / poner contenido">🖼️ Vestir</button>
   <span class="objColors" id="objColors" title="Recolorear"></span>
   <button data-act="del" class="danger" title="Borrar (Supr)">🗑</button>
@@ -967,10 +968,15 @@ function buildObjectMesh(kind,color){
 }
 function makeObjectRec(rec){ const g=buildObjectMesh(rec.kind,rec.color); g.position.set(rec.x,0,rec.z); g.rotation.y=rec.rot||0;
   if(rec.s) g.scale.setScalar(rec.s);
-  root.add(g); const O={group:g,kind:rec.kind,color:rec.color||DCOL[0],s:rec.s||1,tex:rec.tex||null,recolored:!!rec.color,name:null,labelEl:null}; g.userData.objRec=O; objects.push(O);
+  root.add(g); const O={group:g,kind:rec.kind,color:rec.color||DCOL[0],s:rec.s||1,tex:rec.tex||null,recolored:!!rec.color,name:null,labelEl:null,locked:!!rec.locked}; g.userData.objRec=O; objects.push(O);
   if(rec.color) recolorObj(O,rec.color,true);
   if(rec.tex) applyObjTexture(O,rec.tex,true);
-  if(rec.name) setObjName(O,rec.name,true); return O; }
+  if(rec.name) setObjName(O,rec.name,true);
+  if(O.locked) applyLockVisual(O); return O; }
+// bloqueo: la pieza no se arrastra ni se escala con rueda (evita moverla sin querer); sí permite acciones explícitas
+function applyLockVisual(O){ const r=O.group.userData.ring; if(r) r.material.color.set(O.locked?0xffc83d:0x37e0ff); }
+function toggleLock(O){ if(!O)return; O.locked=!O.locked; applyLockVisual(O); updateLockBtn(O); toast(O.locked?"🔒 Pieza bloqueada":"🔓 Pieza desbloqueada"); saveDecor(); }
+function updateLockBtn(O){ const b=objTool.querySelector('[data-act="lock"]'); if(b) b.textContent=(O&&O.locked)?"🔒":"🔓"; }
 // nombre / etiqueta flotante de una pieza (persistente; la etiqueta la posiciona updateLabels)
 function setObjName(O,name,skipSave){ if(!O)return; name=(name||"").replace(/[<>&]/g,"").trim().slice(0,40); O.name=name||null;
   if(O.name){ if(!O.labelEl){ const el=document.createElement("div"); el.className="zlabel olabel"; el.addEventListener("click",()=>selectObj(O)); document.body.appendChild(el); O.labelEl=el; }
@@ -984,6 +990,7 @@ function recolorObj(O,hex,skipSave){ if(!O)return; O.color=hex; O.recolored=true
   if(!skipSave) saveDecor(); }
 function selectObj(O){ if(selPoster) selectPoster(null); if(selObj&&selObj.group.userData.ring) selObj.group.userData.ring.visible=false;
   selObj=O; objTool.classList.toggle("show",!!O); if(O&&O.group.userData.ring) O.group.userData.ring.visible=true;
+  if(O) updateLockBtn(O);
   if(!O&&typeof closeObjContent==="function") closeObjContent(); }
 function rotateObj(O,d){ if(!O)return; O.group.rotation.y+=d; saveDecor(); }
 function scaleObj(O,f){ if(!O)return; O.s=Math.max(0.4,Math.min(2.5,(O.s||1)*f)); O.group.scale.setScalar(O.s); saveDecor(); }
@@ -1007,7 +1014,7 @@ function objRecFromHit(obj){ let o=obj; while(o&&!o.userData.objRec) o=o.parent;
 /* ---------- persistencia de decoración (backend compartido + fallback local) ---------- */
 function decorSnapshot(){ return { furniture:[],
   posters: posters.map(P=>{ const q=P.mesh.quaternion,p=P.mesh.position; return {x:p.x,y:p.y,z:p.z,qx:q.x,qy:q.y,qz:q.z,qw:q.w,s:P.s,img:P.img}; }),
-  objects: objects.map(O=>({kind:O.kind,color:O.recolored?O.color:null,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3),s:+(O.s||1).toFixed(3),tex:O.tex||null,name:O.name||null})),
+  objects: objects.map(O=>({kind:O.kind,color:O.recolored?O.color:null,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3),s:+(O.s||1).toFixed(3),tex:O.tex||null,name:O.name||null,locked:O.locked||false})),
   zones: zoneOverrides(),
   scene: {floor:sceneState.floor,wall:sceneState.wall,time:sceneState.time} }; }
 function saveDecor(){ const snap=decorSnapshot();
@@ -1038,7 +1045,7 @@ function hitObjects(){ const h=ray.intersectObjects(objects.map(o=>o.group),true
 let downXY=null, moved=false;
 canvas.addEventListener("pointerdown",e=>{ if(mode!=="edit")return; downXY=[e.clientX,e.clientY]; moved=false; pushUndo(); setNdc(e);
   if(editTool==="zone"){ const hz=hitZone(); if(hz){ selectZone(hz); draggingZone=hz; controls.enabled=false; } else selectZone(null); return; }
-  const ho=hitObjects(); if(ho){ selectObj(ho); draggingObj=ho; controls.enabled=false; return; }
+  const ho=hitObjects(); if(ho){ selectObj(ho); if(!ho.locked){ draggingObj=ho; controls.enabled=false; } return; }
   const hp=hitPosters(); if(hp){ selectPoster(hp.object.userData.poster); draggingPoster=selPoster; controls.enabled=false; } });
 canvas.addEventListener("pointermove",e=>{ if(mode!=="edit")return;
   if(downXY && Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>4) moved=true;
@@ -1071,7 +1078,7 @@ posterTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.datas
   if(a==="delete") deletePoster(selPoster); else if(a==="bigger") resizePoster(selPoster,1.15); else if(a==="smaller") resizePoster(selPoster,1/1.15); });
 canvas.addEventListener("wheel",e=>{ if(mode!=="edit")return;
   if(selPoster){ e.preventDefault(); resizePoster(selPoster, e.deltaY<0?1.08:1/1.08); }
-  else if(selObj){ e.preventDefault(); scaleObj(selObj, e.deltaY<0?1.08:1/1.08); } },{passive:false});
+  else if(selObj&&!selObj.locked){ e.preventDefault(); scaleObj(selObj, e.deltaY<0?1.08:1/1.08); } },{passive:false});
 
 /* --- editor de objetos: switch de herramienta + paleta de objetos + toolbar --- */
 const objTool=document.getElementById("objTool"), objSwatches=document.getElementById("objSwatches");
@@ -1124,6 +1131,7 @@ DCOL.forEach(c=>{ const d=document.createElement("span"); d.className="cd"; d.st
   d.onclick=()=>{ if(selObj){ pushUndo(); recolorObj(selObj,c); } }; objColorsEl.appendChild(d); });
 objTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act;
   if(a==="name"){ if(!selObj)return; const n=prompt("Nombre / etiqueta de la pieza (vacío = quitar):", selObj.name||""); if(n===null)return; pushUndo(); setObjName(selObj,n); return; }
+  if(a==="lock"){ if(!selObj)return; pushUndo(); toggleLock(selObj); return; }
   if(a!=="content") pushUndo();
   if(a==="rotL") rotateObj(selObj,-Math.PI/12); else if(a==="rotR") rotateObj(selObj,Math.PI/12);
   else if(a==="smaller") scaleObj(selObj,1/1.12); else if(a==="bigger") scaleObj(selObj,1.12);
