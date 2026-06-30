@@ -4,6 +4,9 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
+## v.30.06.2026.19 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/5eef235/xpacios/xtanco-barcelona/index.html)
+- **Medir el local (📏)**: toggle que dibuja las cotas del local sobre el suelo (ancho × fondo en metros) y muestra los **m² útiles** en el centro. Útil para fichas técnicas y comercializar la planta. Solo vista (no persiste); se oculta al pasear/tour.
+
 ## v.30.06.2026.18 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/ffe2369/xpacios/xtanco-barcelona/index.html)
 - **Bloquear pieza (🔒)**: candado por objeto para no moverlo ni escalarlo sin querer (el arrastre y la rueda quedan inhabilitados; sigue seleccionable y el anillo se pone ámbar). Se persiste en `decor`. Ideal tras dejar el escaparate/mostrador en su sitio.
 
