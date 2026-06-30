@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.9">
+<meta name="version" content="v.30.06.2026.10">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -656,6 +656,15 @@ let activeCam = cam;
 
 /* --- colisión: dentro del polígono de planta (coords root-local) --- */
 const POLY = PLAN.outline.map(([x,z])=>[x-CX, z-CZ]);
+// si (x,z) está cerca de una pared, devuelve posición pegada + rotación mirando al interior
+function snapToWall(x,z){ let best=null,bd=1e9,bn=null;
+  for(let i=0;i<POLY.length;i++){ const a=POLY[i], b=POLY[(i+1)%POLY.length];
+    const ax=a[0],az=a[1],dx=b[0]-ax,dz=b[1]-az,L2=dx*dx+dz*dz||1e-9;
+    let t=((x-ax)*dx+(z-az)*dz)/L2; t=Math.max(0,Math.min(1,t));
+    const cx=ax+dx*t,cz=az+dz*t,d=Math.hypot(x-cx,z-cz);
+    if(d<bd){ bd=d; best=[cx,cz]; const len=Math.sqrt(L2); let nx=-dz/len,nz=dx/len; if((nx*-cx+nz*-cz)<0){nx=-nx;nz=-nz;} bn=[nx,nz]; } }
+  if(bd>0.6||!best) return null;
+  return {x:best[0]+bn[0]*0.34, z:best[1]+bn[1]*0.34, rot:Math.atan2(bn[0],bn[1])}; }
 function inside(x,z){ let c=false; for(let i=0,j=POLY.length-1;i<POLY.length;j=i++){
   const xi=POLY[i][0],zi=POLY[i][1],xj=POLY[j][0],zj=POLY[j][1];
   if(((zi>z)!==(zj>z)) && (x < (xj-xi)*(z-zi)/((zj-zi)||1e-9)+xi)) c=!c; } return c; }
@@ -960,8 +969,9 @@ canvas.addEventListener("pointerdown",e=>{ if(mode!=="edit")return; downXY=[e.cl
   const hp=hitPosters(); if(hp){ selectPoster(hp.object.userData.poster); draggingPoster=selPoster; controls.enabled=false; } });
 canvas.addEventListener("pointermove",e=>{ if(mode!=="edit")return;
   if(downXY && Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>4) moved=true;
-  if(draggingObj){ setNdc(e); const hf=hitFloor(); if(hf){ const gx=Math.round(hf.point.x/0.2)*0.2, gz=Math.round(hf.point.z/0.2)*0.2;   // snap a rejilla 0.2 m
-    if(canStand(gx,gz)) draggingObj.group.position.set(gx,0,gz); } return; }
+  if(draggingObj){ setNdc(e); const hf=hitFloor(); if(hf){ const w=snapToWall(hf.point.x,hf.point.z);
+    if(w&&canStand(w.x,w.z)){ draggingObj.group.position.set(w.x,0,w.z); draggingObj.group.rotation.y=w.rot; }   // pegado a la pared, mirando al interior
+    else { const gx=Math.round(hf.point.x/0.2)*0.2, gz=Math.round(hf.point.z/0.2)*0.2; if(canStand(gx,gz)) draggingObj.group.position.set(gx,0,gz); } } return; }
   if(draggingPoster){ setNdc(e); const hw=hitWalls(); if(hw) placeOnWall(draggingPoster,hw); } });
 addEventListener("pointerup",e=>{ if(mode!=="edit"){ downXY=null; return; }
   if(draggingObj){ saveDecor(); draggingObj=null; controls.enabled=true; downXY=null; return; }
