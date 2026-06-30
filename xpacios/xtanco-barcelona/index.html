@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.19">
+<meta name="version" content="v.30.06.2026.20">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -104,6 +104,10 @@
   #editMap{position:fixed;left:20px;bottom:20px;z-index:7;display:none;border:1px solid var(--line);border-radius:12px;
     background:rgba(6,12,22,.72);backdrop-filter:blur(8px);box-shadow:0 6px 22px rgba(0,0,0,.5)}
   body.editing #editMap{display:block}
+  #objCount{position:fixed;left:20px;bottom:182px;z-index:7;display:none;flex-wrap:wrap;gap:5px;max-width:178px;
+    background:rgba(4,7,13,.82);border:1px solid var(--line);border-radius:10px;padding:7px 9px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+  #objCount .occT{font-size:10px;color:var(--muted);width:100%;margin-bottom:1px;letter-spacing:.04em}
+  #objCount .occ{font-size:11.5px;color:#eef6ff;white-space:nowrap}
   /* ---- editor: paleta + toolbar ---- */
   .ctrl #editBtn.on{background:rgba(126,224,160,.14);border-color:#7ee0a0;color:#7ee0a0}
   #palette{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:7;display:none;flex-direction:column;align-items:center;gap:9px;
@@ -278,6 +282,7 @@
 <div id="tourHint">Pulsa los <b>puntos</b> del suelo para recorrer · arrastra para mirar · <b>Esc</b> para salir</div>
 <canvas id="minimap" width="150" height="150" title="Planta del Xtanco · tu posición"></canvas>
 <canvas id="editMap" width="150" height="150" title="Planta · objetos y pósters"></canvas>
+<div id="objCount" title="Inventario de piezas colocadas por tipo"></div>
 
 <!-- Editor: switch de herramienta + paletas (pósters/objetos) + toolbars -->
 <div id="palette">
@@ -927,6 +932,12 @@ const OBJ_KINDS=[
   {kind:"mirror",    icon:"🪞", label:"Espejo"},
   {kind:"register",  icon:"🧾", label:"Caja"},
 ];
+// inventario de piezas por tipo (visible al Decorar)
+function updateObjCount(){ const el=document.getElementById("objCount"); if(!el) return;
+  const counts={}; let total=0; for(const O of objects){ counts[O.kind]=(counts[O.kind]||0)+1; total++; }
+  if(!total || mode!=="edit"){ el.style.display="none"; return; }
+  const parts=OBJ_KINDS.filter(k=>counts[k.kind]).map(k=>`<span class="occ" title="${k.label}">${k.icon} ${counts[k.kind]}</span>`);
+  el.innerHTML=`<span class="occT">PIEZAS · ${total}</span>`+parts.join(""); el.style.display="flex"; }
 let pickKind="rack", pickObjColor=DCOL[0];
 function buildObjectMesh(kind,color){
   const g=new THREE.Group(), c=color||DCOL[0];
@@ -1036,7 +1047,8 @@ function decorSnapshot(){ return { furniture:[],
   scene: {floor:sceneState.floor,wall:sceneState.wall,time:sceneState.time} }; }
 function saveDecor(){ const snap=decorSnapshot();
   try{ fetch(DECOR_BASE+"/layout/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({snapshot:snap,screen:XPACIO_ID})}).catch(()=>{}); }catch(e){}
-  try{ localStorage.setItem(POSTER_KEY, JSON.stringify(snap)); }catch(e){} }
+  try{ localStorage.setItem(POSTER_KEY, JSON.stringify(snap)); }catch(e){}
+  if(typeof updateObjCount==="function") updateObjCount(); }
 async function loadDecor(){ let d=null;
   try{ const r=await fetch(DECOR_BASE+"/layout/current?screen="+encodeURIComponent(XPACIO_ID)+"&_="+Date.now()); const j=await r.json(); d=j&&j.current; }catch(e){}
   if(!d||((!d.posters||!d.posters.length)&&(!d.objects||!d.objects.length))){ try{ const raw=localStorage.getItem(POSTER_KEY); if(raw) d=JSON.parse(raw); }catch(e){} }
@@ -1176,9 +1188,9 @@ document.getElementById("ocUpload").onchange=e=>{ const f=e.target.files&&e.targ
 
 function enterEdit(){ if(mode==="walk") exitWalk(); if(mode==="tour") exitTour(); mode="edit"; activeCam=cam;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=true; root.rotation.y=0; editGrid.visible=true;
-  document.body.classList.add("editing"); editBtn.classList.add("on"); editBtn.textContent="✓ Hecho"; }
+  document.body.classList.add("editing"); editBtn.classList.add("on"); editBtn.textContent="✓ Hecho"; updateObjCount(); }
 function exitEdit(){ mode="orbit"; selectPoster(null); selectObj(null); selectZone(null); editGrid.visible=false; document.body.classList.remove("editing");
-  editBtn.classList.remove("on"); editBtn.textContent="🖼️ Decorar"; }
+  editBtn.classList.remove("on"); editBtn.textContent="🖼️ Decorar"; updateObjCount(); }
 editBtn.onclick=()=> mode==="edit"?exitEdit():enterEdit();
 addEventListener("keydown",e=>{ if(mode!=="edit")return;
   if(e.code==="KeyZ"&&(e.metaKey||e.ctrlKey)){ e.preventDefault(); undoDecor(); return; }
