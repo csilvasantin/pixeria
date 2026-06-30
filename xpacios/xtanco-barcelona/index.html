@@ -122,6 +122,17 @@
   #objTool button:hover{border-color:var(--cyan)}
   #objTool button.danger{background:rgba(255,90,106,.12);border-color:rgba(255,90,106,.4);color:#ff8290;font-size:12px}
   #objTool .ptHint{font-size:10.5px;color:var(--muted);margin-left:4px}
+  #objContent{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);z-index:9;display:none;width:min(440px,92vw);
+    background:rgba(6,12,22,.96);backdrop-filter:blur(12px);border:1px solid var(--cyan);border-radius:12px;padding:10px 12px}
+  #objContent.show{display:block}
+  #objContent .ocHead{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink);margin-bottom:8px}
+  #objContent .ocX{cursor:pointer;color:var(--muted)}#objContent .ocX:hover{color:var(--ink)}
+  .ocThumbs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;max-height:160px;overflow:auto}
+  .ocThumb{aspect-ratio:1;border-radius:6px;border:1px solid var(--line);background:#000 center/cover;cursor:pointer}
+  .ocThumb:hover{border-color:var(--cyan)}
+  #objContent .ocFoot{display:flex;gap:8px;justify-content:flex-end;margin-top:9px}
+  #objContent .ocUp,#objContent #ocClear{font-family:inherit;font-size:11px;color:var(--ink);background:rgba(255,77,166,.08);border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
+  #objContent .ocUp:hover,#objContent #ocClear:hover{border-color:var(--cyan)}
   #palette .pTit{font-size:10px;letter-spacing:.7px;color:var(--muted)}
   #pSwatches{display:flex;gap:8px}
   .pSwatch{width:40px;height:56px;border-radius:6px;border:1px solid var(--line);cursor:pointer;background-size:cover;background-position:center;flex:none}
@@ -217,8 +228,20 @@
 <div id="objTool">
   <button data-act="rotL" title="Rotar izq. (Q)">⟲</button>
   <button data-act="rotR" title="Rotar der. (E)">⟳</button>
-  <button data-act="del" class="danger" title="Borrar (Supr)">🗑 Borrar</button>
-  <span class="ptHint">arrastra para mover · Q/E o ⟲⟳ para rotar</span>
+  <button data-act="smaller" title="Más pequeño">－</button>
+  <button data-act="bigger" title="Más grande">＋</button>
+  <button data-act="dup" title="Duplicar">⧉</button>
+  <button data-act="content" title="Vestir / poner contenido">🖼️ Vestir</button>
+  <button data-act="del" class="danger" title="Borrar (Supr)">🗑</button>
+  <span class="ptHint">arrastra para mover · rueda escala · Q/E rota</span>
+</div>
+<div id="objContent">
+  <div class="ocHead"><b>Vestir / Contenido</b><span class="ocX" title="Cerrar">✕</span></div>
+  <div class="ocBody"><div id="ocThumbs" class="ocThumbs"></div></div>
+  <div class="ocFoot">
+    <label class="ocUp" title="Sube tu imagen">⬆ Subir<input id="ocUpload" type="file" accept="image/*" hidden></label>
+    <button id="ocClear">Quitar</button>
+  </div>
 </div>
 
 <div class="hud foot">Pixeria · XpaceOS Locations · Xtanco Barcelona · Gran de Gràcia · render interpretado del plano · cotas reales por zona</div>
@@ -699,29 +722,31 @@ function buildObjectMesh(kind,color){
   const g=new THREE.Group(), c=color||DCOL[0];
   const metal=new THREE.MeshStandardMaterial({color:0xb9c2cc,metalness:.6,roughness:.3});
   const add=(geo,mat,x,y,z)=>{ const m=new THREE.Mesh(geo,mat); m.position.set(x||0,y||0,z||0); m.castShadow=true; g.add(m); return m; };
+  const sk=m=>{ m.userData.skin=true; return m; };            // malla "vestible"/contenido (recibe textura)
   if(kind==="rack"){ const len=2.2,barY=1.5;
     [-len/2,len/2].forEach(x=>add(new THREE.CylinderGeometry(0.03,0.03,barY,8),metal,x,barY/2,0));
     add(new THREE.CylinderGeometry(0.025,0.025,len,8),metal,0,barY,0).rotation.z=Math.PI/2;
-    for(let i=0;i<7;i++) add(new THREE.BoxGeometry(0.10,0.72,0.34),matD(DCOL[i%DCOL.length],0.05),-len/2+len*(i+0.5)/7,barY-0.42,0);
+    for(let i=0;i<7;i++) sk(add(new THREE.BoxGeometry(0.10,0.72,0.34),matD(DCOL[i%DCOL.length],0.05),-len/2+len*(i+0.5)/7,barY-0.42,0));
   } else if(kind==="mannequin"){
     add(new THREE.CylinderGeometry(0.28,0.32,0.08,20),new THREE.MeshStandardMaterial({color:0x222a30,metalness:.4,roughness:.5}),0,0.04,0);
     add(new THREE.CylinderGeometry(0.03,0.03,0.5,8),new THREE.MeshStandardMaterial({color:0x8a93a0}),0,0.3,0);
-    add(new THREE.CylinderGeometry(0.22,0.16,0.5,16),matD(c,0.04),0,0.62,0);
-    add(new THREE.CylinderGeometry(0.16,0.25,0.8,16),matD(c,0.05),0,1.12,0);
+    sk(add(new THREE.CylinderGeometry(0.22,0.16,0.5,16),matD(c,0.04),0,0.62,0));
+    sk(add(new THREE.CylinderGeometry(0.16,0.25,0.8,16),matD(c,0.05),0,1.12,0));
     add(new THREE.SphereGeometry(0.13,16,12),new THREE.MeshStandardMaterial({color:0xefe4d8,roughness:.6}),0,1.68,0);
   } else if(kind==="table"){
     add(new THREE.CylinderGeometry(0.5,0.55,0.5,20),new THREE.MeshStandardMaterial({color:0x18101a,roughness:.7}),0,0.25,0);
     add(new THREE.CylinderGeometry(0.6,0.6,0.12,24),new THREE.MeshStandardMaterial({color:0x2a1a24,roughness:.6,metalness:.2}),0,0.55,0);
-    for(let i=0;i<4;i++){ const a=i/4*Math.PI*2; add(new THREE.BoxGeometry(0.26,0.13,0.26),matD(DCOL[(i*2)%DCOL.length],0.05),Math.cos(a)*0.22,0.67,Math.sin(a)*0.22); }
+    for(let i=0;i<4;i++){ const a=i/4*Math.PI*2; sk(add(new THREE.BoxGeometry(0.26,0.13,0.26),matD(DCOL[(i*2)%DCOL.length],0.05),Math.cos(a)*0.22,0.67,Math.sin(a)*0.22)); }
   } else if(kind==="booth"){ const wm=new THREE.MeshStandardMaterial({color:0x2a1420,roughness:.85,side:THREE.DoubleSide});
     add(new THREE.PlaneGeometry(1.3,2.4),wm,0,1.2,-0.65);
     [-0.65,0.65].forEach(sx=>add(new THREE.PlaneGeometry(1.3,2.4),wm,sx,1.2,0).rotation.y=Math.PI/2);
-    add(new THREE.PlaneGeometry(1.28,2.3),matD(c,0.18),0,1.15,0.66);
+    sk(add(new THREE.PlaneGeometry(1.28,2.3),matD(c,0.18),0,1.15,0.66));
     add(new THREE.BoxGeometry(1.34,0.06,1.34),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.5}),0,2.42,0);
   } else { // totem DOOH (pantalla vertical con pedestal)
     add(new THREE.BoxGeometry(0.7,0.18,0.5),new THREE.MeshStandardMaterial({color:0x111418,metalness:.4,roughness:.5}),0,0.09,0);
     add(new THREE.BoxGeometry(1.05,1.75,0.12),new THREE.MeshStandardMaterial({color:0x0a0c10,metalness:.5,roughness:.3}),0,1.05,0);
-    add(new THREE.PlaneGeometry(0.92,1.6),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.55,roughness:.3}),0,1.05,0.07);
+    const scr=add(new THREE.PlaneGeometry(0.92,1.6),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.55,roughness:.3}),0,1.05,0.07);
+    scr.userData.skin=true; scr.userData.screen=true;
   }
   // anillo de selección (oculto) en la base
   const ring=new THREE.Mesh(new THREE.TorusGeometry(0.55,0.05,10,28),new THREE.MeshBasicMaterial({color:0x37e0ff}));
@@ -729,17 +754,30 @@ function buildObjectMesh(kind,color){
   return g;
 }
 function makeObjectRec(rec){ const g=buildObjectMesh(rec.kind,rec.color); g.position.set(rec.x,0,rec.z); g.rotation.y=rec.rot||0;
-  root.add(g); const O={group:g,kind:rec.kind,color:rec.color||DCOL[0]}; g.userData.objRec=O; objects.push(O); return O; }
+  if(rec.s) g.scale.setScalar(rec.s);
+  root.add(g); const O={group:g,kind:rec.kind,color:rec.color||DCOL[0],s:rec.s||1,tex:rec.tex||null}; g.userData.objRec=O; objects.push(O);
+  if(rec.tex) applyObjTexture(O,rec.tex,true); return O; }
 function selectObj(O){ if(selPoster) selectPoster(null); if(selObj&&selObj.group.userData.ring) selObj.group.userData.ring.visible=false;
-  selObj=O; objTool.classList.toggle("show",!!O); if(O&&O.group.userData.ring) O.group.userData.ring.visible=true; }
+  selObj=O; objTool.classList.toggle("show",!!O); if(O&&O.group.userData.ring) O.group.userData.ring.visible=true;
+  if(!O&&typeof closeObjContent==="function") closeObjContent(); }
 function rotateObj(O,d){ if(!O)return; O.group.rotation.y+=d; saveDecor(); }
+function scaleObj(O,f){ if(!O)return; O.s=Math.max(0.4,Math.min(2.5,(O.s||1)*f)); O.group.scale.setScalar(O.s); saveDecor(); }
+function dupObj(O){ if(!O)return; const p=O.group.position; const r=makeObjectRec({kind:O.kind,color:O.color,x:p.x+0.6,z:p.z+0.6,rot:O.group.rotation.y,s:O.s,tex:O.tex}); selectObj(r); saveDecor(); }
 function deleteObj(O){ if(!O)return; root.remove(O.group); const i=objects.indexOf(O); if(i>=0) objects.splice(i,1); if(selObj===O) selectObj(null); saveDecor(); }
+// aplica una textura (URL del stock o dataURL subido) a las mallas "vestibles" del objeto
+function applyObjTexture(O,src,skipSave){ if(!O)return; O.tex=src||null;
+  const tex= src ? texLoader.load(src) : null; if(tex) tex.colorSpace=THREE.SRGBColorSpace;
+  O.group.traverse(m=>{ if(m.userData&&m.userData.skin&&m.material){
+    m.material.map=tex||null;
+    if(m.userData.screen){ if(tex){ m.material.emissiveMap=tex; m.material.emissive=new THREE.Color(0xffffff); m.material.emissiveIntensity=0.95; } }
+    m.material.needsUpdate=true; } });
+  if(!skipSave) saveDecor(); }
 function objRecFromHit(obj){ let o=obj; while(o&&!o.userData.objRec) o=o.parent; return o&&o.userData.objRec; }
 
 /* ---------- persistencia de decoración (backend compartido + fallback local) ---------- */
 function decorSnapshot(){ return { furniture:[],
   posters: posters.map(P=>{ const q=P.mesh.quaternion,p=P.mesh.position; return {x:p.x,y:p.y,z:p.z,qx:q.x,qy:q.y,qz:q.z,qw:q.w,s:P.s,img:P.img}; }),
-  objects: objects.map(O=>({kind:O.kind,color:O.color,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3)})) }; }
+  objects: objects.map(O=>({kind:O.kind,color:O.color,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3),s:+(O.s||1).toFixed(3),tex:O.tex||null})) }; }
 function saveDecor(){ const snap=decorSnapshot();
   try{ fetch(DECOR_BASE+"/layout/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({snapshot:snap,screen:XPACIO_ID})}).catch(()=>{}); }catch(e){}
   try{ localStorage.setItem(POSTER_KEY, JSON.stringify(snap)); }catch(e){} }
@@ -761,7 +799,8 @@ canvas.addEventListener("pointerdown",e=>{ if(mode!=="edit")return; downXY=[e.cl
   const hp=hitPosters(); if(hp){ selectPoster(hp.object.userData.poster); draggingPoster=selPoster; controls.enabled=false; } });
 canvas.addEventListener("pointermove",e=>{ if(mode!=="edit")return;
   if(downXY && Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>4) moved=true;
-  if(draggingObj){ setNdc(e); const hf=hitFloor(); if(hf&&canStand(hf.point.x,hf.point.z)) draggingObj.group.position.set(hf.point.x,0,hf.point.z); return; }
+  if(draggingObj){ setNdc(e); const hf=hitFloor(); if(hf){ const gx=Math.round(hf.point.x/0.2)*0.2, gz=Math.round(hf.point.z/0.2)*0.2;   // snap a rejilla 0.2 m
+    if(canStand(gx,gz)) draggingObj.group.position.set(gx,0,gz); } return; }
   if(draggingPoster){ setNdc(e); const hw=hitWalls(); if(hw) placeOnWall(draggingPoster,hw); } });
 addEventListener("pointerup",e=>{ if(mode!=="edit"){ downXY=null; return; }
   if(draggingObj){ saveDecor(); draggingObj=null; controls.enabled=true; downXY=null; return; }
@@ -783,7 +822,9 @@ document.getElementById("pUpload").onchange=e=>{ const f=e.target.files&&e.targe
   const rd=new FileReader(); rd.onload=()=>{ pickImg={url:rd.result}; [...swatchWrap.children].forEach(c=>c.classList.remove("sel")); }; rd.readAsDataURL(f); };
 posterTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act;
   if(a==="delete") deletePoster(selPoster); else if(a==="bigger") resizePoster(selPoster,1.15); else if(a==="smaller") resizePoster(selPoster,1/1.15); });
-canvas.addEventListener("wheel",e=>{ if(mode==="edit"&&selPoster){ e.preventDefault(); resizePoster(selPoster, e.deltaY<0?1.08:1/1.08); } },{passive:false});
+canvas.addEventListener("wheel",e=>{ if(mode!=="edit")return;
+  if(selPoster){ e.preventDefault(); resizePoster(selPoster, e.deltaY<0?1.08:1/1.08); }
+  else if(selObj){ e.preventDefault(); scaleObj(selObj, e.deltaY<0?1.08:1/1.08); } },{passive:false});
 
 /* --- editor de objetos: switch de herramienta + paleta de objetos + toolbar --- */
 const objTool=document.getElementById("objTool"), objSwatches=document.getElementById("objSwatches");
@@ -797,7 +838,29 @@ OBJ_KINDS.forEach((o,i)=>{ const s=document.createElement("button"); s.className
   s.onclick=()=>{ pickKind=o.kind; [...objSwatches.children].forEach(c=>c.classList.remove("sel")); s.classList.add("sel"); };
   objSwatches.appendChild(s); });
 objTool.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const a=b.dataset.act;
-  if(a==="rotL") rotateObj(selObj,-Math.PI/12); else if(a==="rotR") rotateObj(selObj,Math.PI/12); else if(a==="del") deleteObj(selObj); });
+  if(a==="rotL") rotateObj(selObj,-Math.PI/12); else if(a==="rotR") rotateObj(selObj,Math.PI/12);
+  else if(a==="smaller") scaleObj(selObj,1/1.12); else if(a==="bigger") scaleObj(selObj,1.12);
+  else if(a==="dup") dupObj(selObj); else if(a==="content") openObjContent();
+  else if(a==="del") deleteObj(selObj); });
+
+/* --- selector de "Vestir / Contenido": thumbs del stock + subir + quitar --- */
+const objContent=document.getElementById("objContent"), ocThumbs=document.getElementById("ocThumbs");
+let ocStock=null;
+async function ocLoadThumbs(){ if(ocStock) return ocStock;
+  try{ const d=await fget(STOCK_URL); const items=(d&&(d.items||d.list||d.assets))||[];
+    ocStock=items.filter(it=>it&&it.url&&it.type==="image").slice(0,12); }catch(e){ ocStock=[]; }
+  // presets de moda como respaldo si no hay stock de imagen
+  if(!ocStock.length) ocStock=POSTER_PRESETS.map(p=>({url:posterArtCanvas(p).toDataURL(),title:p.brand}));
+  return ocStock; }
+async function openObjContent(){ if(!selObj) return; objContent.classList.add("show");
+  const list=await ocLoadThumbs(); ocThumbs.innerHTML="";
+  list.forEach(it=>{ const t=document.createElement("div"); t.className="ocThumb"; t.title=it.title||""; t.style.backgroundImage="url('"+it.url+"')";
+    t.onclick=()=>{ applyObjTexture(selObj,it.url); }; ocThumbs.appendChild(t); }); }
+function closeObjContent(){ objContent.classList.remove("show"); }
+objContent.querySelector(".ocX").onclick=closeObjContent;
+document.getElementById("ocClear").onclick=()=>{ if(selObj) applyObjTexture(selObj,null); };
+document.getElementById("ocUpload").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(!f||!selObj)return;
+  const rd=new FileReader(); rd.onload=()=>applyObjTexture(selObj,rd.result); rd.readAsDataURL(f); };
 
 function enterEdit(){ if(mode==="walk") exitWalk(); if(mode==="tour") exitTour(); mode="edit"; activeCam=cam;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=true; root.rotation.y=0;
