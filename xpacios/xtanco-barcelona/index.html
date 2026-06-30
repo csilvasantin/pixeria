@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.18">
+<meta name="version" content="v.30.06.2026.19">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -218,6 +218,7 @@
   <button id="musicBtn" title="Hilo musical del Xpacio (audio comercializable)">🎵 Hilo Musical<span id="musicNow" class="mnow"></span></button>
   <button id="resetBtn" title="Recentrar la cámara isométrica">📐 Isométrica</button>
   <button id="aforoBtn" title="Aforo simulado: clientes paseando">👥 Aforo</button>
+  <button id="measureBtn" title="Medir: cotas del local (ancho × fondo) y m²">📏 Medir</button>
   <button id="photoBtn" title="Descargar una foto (PNG) del Xpacio">📸 Foto</button>
   <button id="shareBtn" title="Copiar enlace de este Xpacio">🔗 Compartir</button>
   <button id="helpBtn" title="Atajos y ayuda (?)">❔ Ayuda</button>
@@ -633,13 +634,28 @@ PLAN.zones.forEach(z=>{
 /* ---------- etiquetas A/B/C/D ---------- */
 const labels=PLAN.zones.map(z=>{ const el=document.createElement("div"); el.className="zlabel";
   el.innerHTML=`<b>${z.id}</b> <small>${(z.w*z.d).toFixed(0)} m²</small>`; el.addEventListener("click",()=>openMgmt(z.id)); document.body.appendChild(el); return {z,el}; });
+/* ---------- medir: cotas del local (ancho × fondo) + m² ---------- */
+const FLOOR_M2=Math.abs(PLAN.outline.reduce((a,[x,z],i)=>{ const n=PLAN.outline[(i+1)%PLAN.outline.length]; return a+(x*n[1]-n[0]*z); },0))/2;
+const ROOM_W=bb.maxx-bb.minx, ROOM_D=bb.maxz-bb.minz;
+const measureGroup=new THREE.Group(); measureGroup.visible=false; root.add(measureGroup);
+function mCotaLine(ax,az,bx,bz){ const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(ax-CX,0.05,az-CZ),new THREE.Vector3(bx-CX,0.05,bz-CZ)]); return new THREE.Line(g,new THREE.LineBasicMaterial({color:0x37e0ff,transparent:true,opacity:.85})); }
+measureGroup.add(mCotaLine(bb.minx,bb.minz,bb.maxx,bb.minz));   // ancho (X)
+measureGroup.add(mCotaLine(bb.minx,bb.minz,bb.minx,bb.maxz));   // fondo (Z)
+function mCotaLabel(html){ const el=document.createElement("div"); el.className="zlabel olabel mlabel"; el.innerHTML=html; el.style.display="none"; document.body.appendChild(el); return el; }
+const mLabW=mCotaLabel("<b>"+ROOM_W.toFixed(1)+" m</b>"), mLabD=mCotaLabel("<b>"+ROOM_D.toFixed(1)+" m</b>"), mLabA=mCotaLabel("<b>"+FLOOR_M2.toFixed(0)+" m²</b> <small>útiles</small>");
+let measureOn=false;
+function toggleMeasure(){ measureOn=!measureOn; measureGroup.visible=measureOn; const b=document.getElementById("measureBtn"); if(b) b.classList.toggle("on",measureOn);
+  if(!measureOn)[mLabW,mLabD,mLabA].forEach(el=>el.style.display="none"); }
 function updateLabels(){ const hide=(mode==="walk"||mode==="tour");
   labels.forEach(({z,el})=>{ if(hide){ el.style.display="none"; return; }
     const v=new THREE.Vector3(z._w.cx,PLAN.height+0.2,z._w.cz); v.applyMatrix4(root.matrixWorld); v.project(activeCam);
     el.style.left=(v.x*.5+.5)*innerWidth+"px"; el.style.top=(-v.y*.5+.5)*innerHeight+"px"; el.style.display=(v.z<1)?"block":"none"; });
   for(const O of objects){ const el=O.labelEl; if(!el) continue; if(hide){ el.style.display="none"; continue; }
     const p=O.group.position; const v=new THREE.Vector3(p.x, 1.5*(O.s||1)+0.25, p.z); v.applyMatrix4(root.matrixWorld); v.project(activeCam);
-    el.style.left=(v.x*.5+.5)*innerWidth+"px"; el.style.top=(-v.y*.5+.5)*innerHeight+"px"; el.style.display=(v.z<1)?"block":"none"; } }
+    el.style.left=(v.x*.5+.5)*innerWidth+"px"; el.style.top=(-v.y*.5+.5)*innerHeight+"px"; el.style.display=(v.z<1)?"block":"none"; }
+  if(measureOn){ const proj=(wx,wz,el)=>{ if(hide){ el.style.display="none"; return; } const v=new THREE.Vector3(wx,0.12,wz); v.applyMatrix4(root.matrixWorld); v.project(activeCam);
+      el.style.left=(v.x*.5+.5)*innerWidth+"px"; el.style.top=(-v.y*.5+.5)*innerHeight+"px"; el.style.display=(v.z<1)?"block":"none"; };
+    proj((bb.minx+bb.maxx)/2-CX, bb.minz-CZ, mLabW); proj(bb.minx-CX, (bb.minz+bb.maxz)/2-CZ, mLabD); proj(0, 0, mLabA); } }
 
 /* ---------- gestión remota ---------- */
 const mgmt=document.getElementById("mgmt"); let curZone=null;
@@ -673,6 +689,7 @@ spinBtn.onclick=()=>{ spin=!spin; spinBtn.classList.toggle("on",spin); };
 screensBtn.onclick=()=>{ screensOn=!screensOn; screensBtn.classList.toggle("on",screensOn);
   zoneMeshes.forEach(m=>{ const live=screensOn&&m.z.online; m.scr.material.emissiveIntensity=live?.78:.03; m.pl.intensity=live?.85:0; }); };
 document.getElementById("resetBtn").onclick=()=>{ controls.target.set(0,1.2,0); isoPose(); controls.update(); };
+document.getElementById("measureBtn").onclick=toggleMeasure;
 // toast reutilizable
 const toastEl=document.getElementById("toast"); let toastT=null;
 function toast(msg){ toastEl.textContent=msg; toastEl.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>toastEl.classList.remove("show"),2600); }
