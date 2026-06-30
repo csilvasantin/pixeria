@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.15">
+<meta name="version" content="v.30.06.2026.16">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -282,6 +282,7 @@
     <button class="tool-tab on" data-tool="poster">🖼️ Pósters</button>
     <button class="tool-tab" data-tool="object">🪑 Objetos</button>
     <button class="tool-tab" data-tool="scene">🎨 Escena</button>
+    <button class="tool-tab" data-tool="zone">🖥️ Pantallas</button>
     <span class="tt-sep"></span>
     <button class="tool-aux" id="undoBtn" title="Deshacer (Ctrl/⌘+Z)">↶</button>
     <button class="tool-aux" id="savesBtn" title="Versiones guardadas">💾</button>
@@ -301,6 +302,10 @@
     <span class="scLbl">Suelo</span><div id="floorColors" class="objColors"></div>
     <span class="scLbl">Paredes</span><div id="wallColors" class="objColors"></div>
     <span class="tt-sep"></span><button class="tool-aux" id="timeBtn" title="Alternar día / noche">☀️ Día</button>
+  </div>
+  <div id="zonePalette" class="sub-palette" style="display:none">
+    <span class="pHint">Arrastra una pantalla A/B/C/D para reubicarla — su contenido y datos de emisión no cambian</span>
+    <button class="tool-aux" id="zoneResetBtn" title="Volver a las posiciones originales">↺ Restablecer</button>
   </div>
 </div>
 <div id="posterTool">
@@ -587,8 +592,28 @@ PLAN.zones.forEach(z=>{
   const frame=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(sW+0.08,sH+0.08)), new THREE.LineBasicMaterial({color:col}));
   frame.position.copy(scr.position); frame.quaternion.copy(scr.quaternion); root.add(frame);
   const pl=new THREE.PointLight(col,0.85,7); pl.position.set(px,1.8,pz); root.add(pl);
-  z._w={cx,cz}; z._col=col; zoneMeshes.push({z,box,pad,scr,frame,pl,cv,tex});
+  z._w={cx,cz}; z._col=col; z._home={x:z.x,z:z.z}; const _rec={z,box,pad,scr,frame,pl,cv,tex}; pad.userData.zoneRec=_rec; zoneMeshes.push(_rec);
 });
+
+/* ---------- reubicar pantallas DOOH (mover A/B/C/D; NO cambia z.id ni el reporte de emisión) ---------- */
+let draggingZone=null, selZone=null;
+function placeZone(m){ const z=m.z; const cx=(z.x+z.w/2)-CX, cz=(z.z+z.d/2)-CZ;
+  m.pad.position.set(cx,0.03,cz); m.box.position.set(cx,PLAN.height/2,cz);
+  const dir=new THREE.Vector3(cx,0,cz); if(dir.lengthSq()<1e-6) dir.set(0,0,1); dir.normalize();
+  const sy=1.55/2+0.35, px=cx+dir.x*(z.w*0.46-0.06), pz=cz+dir.z*(z.d*0.46-0.06);
+  m.scr.position.set(px,sy,pz); m.scr.lookAt(0,sy,0);
+  m.frame.position.copy(m.scr.position); m.frame.quaternion.copy(m.scr.quaternion);
+  m.pl.position.set(px,1.8,pz); z._w={cx,cz}; }
+function moveZone(m,wx,wz){ m.z.x=wx+CX-m.z.w/2; m.z.z=wz+CZ-m.z.d/2; placeZone(m); }
+function selectZone(m){ if(selZone&&selZone.pad) selZone.pad.material.opacity=.28;
+  selZone=m||null; if(m){ selectObj(null); selectPoster(null); m.pad.material.opacity=.5; } }
+function hitZone(){ const h=ray.intersectObjects(zoneMeshes.map(m=>m.pad),false)[0]; return h? h.object.userData.zoneRec : null; }
+function zoneOverrides(){ const o={}; zoneMeshes.forEach(m=>{ const z=m.z; if(!z._home) return;
+  if(Math.abs(z.x-z._home.x)>1e-4||Math.abs(z.z-z._home.z)>1e-4) o[z.id]={x:+z.x.toFixed(3),z:+z.z.toFixed(3)}; }); return o; }
+function applyZones(zo){ zoneMeshes.forEach(m=>{ if(m.z._home){ m.z.x=m.z._home.x; m.z.z=m.z._home.z; } });
+  if(zo) zoneMeshes.forEach(m=>{ const ov=zo[m.z.id]; if(ov&&typeof ov.x==="number"&&typeof ov.z==="number"){ m.z.x=ov.x; m.z.z=ov.z; } });
+  zoneMeshes.forEach(placeZone); }
+function resetZones(){ zoneMeshes.forEach(m=>{ if(m.z._home){ m.z.x=m.z._home.x; m.z.z=m.z._home.z; placeZone(m); } }); selectZone(null); saveDecor(); toast("🖥️ Pantallas restablecidas"); }
 
 /* ---------- panel de zonas ---------- */
 const zonesEl=document.getElementById("zones");
@@ -968,6 +993,7 @@ function objRecFromHit(obj){ let o=obj; while(o&&!o.userData.objRec) o=o.parent;
 function decorSnapshot(){ return { furniture:[],
   posters: posters.map(P=>{ const q=P.mesh.quaternion,p=P.mesh.position; return {x:p.x,y:p.y,z:p.z,qx:q.x,qy:q.y,qz:q.z,qw:q.w,s:P.s,img:P.img}; }),
   objects: objects.map(O=>({kind:O.kind,color:O.recolored?O.color:null,x:+O.group.position.x.toFixed(3),z:+O.group.position.z.toFixed(3),rot:+O.group.rotation.y.toFixed(3),s:+(O.s||1).toFixed(3),tex:O.tex||null})),
+  zones: zoneOverrides(),
   scene: {floor:sceneState.floor,wall:sceneState.wall,time:sceneState.time} }; }
 function saveDecor(){ const snap=decorSnapshot();
   try{ fetch(DECOR_BASE+"/layout/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({snapshot:snap,screen:XPACIO_ID})}).catch(()=>{}); }catch(e){}
@@ -975,15 +1001,15 @@ function saveDecor(){ const snap=decorSnapshot();
 async function loadDecor(){ let d=null;
   try{ const r=await fetch(DECOR_BASE+"/layout/current?screen="+encodeURIComponent(XPACIO_ID)+"&_="+Date.now()); const j=await r.json(); d=j&&j.current; }catch(e){}
   if(!d||((!d.posters||!d.posters.length)&&(!d.objects||!d.objects.length))){ try{ const raw=localStorage.getItem(POSTER_KEY); if(raw) d=JSON.parse(raw); }catch(e){} }
-  if(d){ (d.posters||[]).forEach(makePoster); (d.objects||[]).forEach(makeObjectRec); if(d.scene) applyScene(d.scene); } }
+  if(d){ (d.posters||[]).forEach(makePoster); (d.objects||[]).forEach(makeObjectRec); if(d.scene) applyScene(d.scene); if(d.zones) applyZones(d.zones); } }
 
 /* ---------- Deshacer / Vaciar (historial de decoración) ---------- */
 const undoStack=[];
 function pushUndo(){ try{ const s=JSON.stringify(decorSnapshot()); if(undoStack[undoStack.length-1]===s) return; undoStack.push(s); if(undoStack.length>40) undoStack.shift(); }catch(e){} }
-function rebuildDecor(snap){ selectPoster(null); selectObj(null);
+function rebuildDecor(snap){ selectPoster(null); selectObj(null); selectZone(null);
   posters.forEach(P=>{ root.remove(P.mesh); root.remove(P.frame); }); posters.length=0;
   objects.forEach(O=>root.remove(O.group)); objects.length=0;
-  (snap&&snap.posters||[]).forEach(makePoster); (snap&&snap.objects||[]).forEach(makeObjectRec); applyScene(snap&&snap.scene); }
+  (snap&&snap.posters||[]).forEach(makePoster); (snap&&snap.objects||[]).forEach(makeObjectRec); applyScene(snap&&snap.scene); applyZones(snap&&snap.zones); }
 function undoDecor(){ if(!undoStack.length) return; const snap=JSON.parse(undoStack.pop()); rebuildDecor(snap); saveDecor(); }
 function clearDecor(){ if(!posters.length&&!objects.length) return; pushUndo(); rebuildDecor({posters:[],objects:[]}); saveDecor(); }
 
@@ -996,21 +1022,25 @@ function hitObjects(){ const h=ray.intersectObjects(objects.map(o=>o.group),true
 
 let downXY=null, moved=false;
 canvas.addEventListener("pointerdown",e=>{ if(mode!=="edit")return; downXY=[e.clientX,e.clientY]; moved=false; pushUndo(); setNdc(e);
+  if(editTool==="zone"){ const hz=hitZone(); if(hz){ selectZone(hz); draggingZone=hz; controls.enabled=false; } else selectZone(null); return; }
   const ho=hitObjects(); if(ho){ selectObj(ho); draggingObj=ho; controls.enabled=false; return; }
   const hp=hitPosters(); if(hp){ selectPoster(hp.object.userData.poster); draggingPoster=selPoster; controls.enabled=false; } });
 canvas.addEventListener("pointermove",e=>{ if(mode!=="edit")return;
   if(downXY && Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>4) moved=true;
+  if(draggingZone){ setNdc(e); const hf=hitFloor(); if(hf){ const nx=Math.round(hf.point.x/0.25)*0.25, nz=Math.round(hf.point.z/0.25)*0.25; if(inside(nx,nz)) moveZone(draggingZone,nx,nz); } return; }
   if(draggingObj){ setNdc(e); const hf=hitFloor(); if(hf){ const w=snapToWall(hf.point.x,hf.point.z);
     if(w&&canStand(w.x,w.z)){ draggingObj.group.position.set(w.x,0,w.z); draggingObj.group.rotation.y=w.rot; }   // pegado a la pared, mirando al interior
     else { const gx=Math.round(hf.point.x/0.2)*0.2, gz=Math.round(hf.point.z/0.2)*0.2; if(canStand(gx,gz)) draggingObj.group.position.set(gx,0,gz); } } return; }
   if(draggingPoster){ setNdc(e); const hw=hitWalls(); if(hw) placeOnWall(draggingPoster,hw); } });
 addEventListener("pointerup",e=>{ if(mode!=="edit"){ downXY=null; return; }
+  if(draggingZone){ if(moved) saveDecor(); draggingZone=null; controls.enabled=true; downXY=null; return; }
   if(draggingObj){ saveDecor(); draggingObj=null; controls.enabled=true; downXY=null; return; }
   if(draggingPoster){ saveDecor(); draggingPoster=null; controls.enabled=true; downXY=null; return; }
   if(downXY && !moved){ setNdc(e);
+    if(editTool==="zone"){ downXY=null; controls.enabled=true; return; }   // selección de pantalla gestionada en pointerdown
     const ho=hitObjects(); if(ho){ selectObj(ho); downXY=null; controls.enabled=true; return; }
     if(editTool==="object"){ const hf=hitFloor(); if(hf&&canStand(hf.point.x,hf.point.z)){ const O=makeObjectRec({kind:pickKind,color:pickObjColor,x:hf.point.x,z:hf.point.z,rot:0}); selectObj(O); saveDecor(); } }
-    else { const hp=hitPosters(); if(hp){ selectPoster(hp.object.userData.poster); }
+    else if(editTool==="poster"){ const hp=hitPosters(); if(hp){ selectPoster(hp.object.userData.poster); }
       else { const hw=hitWalls(); if(hw){ const P=makePoster({x:0,y:0,z:0,qx:0,qy:0,qz:0,qw:1,s:1,img:Object.assign({},pickImg)}); placeOnWall(P,hw); selectPoster(P); saveDecor(); } else { selectPoster(null); selectObj(null); } } } }
   downXY=null; controls.enabled=true; });
 
@@ -1034,7 +1064,9 @@ const toolTabs=[...document.querySelectorAll(".tool-tab")];
 function setTool(t){ editTool=t; toolTabs.forEach(b=>b.classList.toggle("on",b.dataset.tool===t));
   document.getElementById("posterPalette").style.display = t==="poster"?"flex":"none";
   document.getElementById("objectPalette").style.display = t==="object"?"flex":"none";
-  document.getElementById("scenePalette").style.display = t==="scene"?"flex":"none"; }
+  document.getElementById("scenePalette").style.display = t==="scene"?"flex":"none";
+  document.getElementById("zonePalette").style.display = t==="zone"?"flex":"none";
+  if(t!=="zone") selectZone(null); }
 // paletas de color de suelo y paredes
 const FLOOR_COLS=["#ffffff","#e8dcc8","#caa37a","#8a6a45","#bfc3c8","#3a3340"];
 const WALL_COLS=["#efe9e2","#d9c9b0","#ff4da6","#1a2433","#26122a","#0c0510"];
@@ -1043,6 +1075,7 @@ const WALL_COLS=["#efe9e2","#d9c9b0","#ff4da6","#1a2433","#26122a","#0c0510"];
   WALL_COLS.forEach(h=>{ const d=document.createElement("span"); d.className="cd"; d.style.background=h; d.onclick=()=>{ pushUndo(); setWallColor(h); }; wc.appendChild(d); }); })();
 document.getElementById("timeBtn").onclick=()=>{ pushUndo(); setTime(sceneState.time==="night"?"day":"night"); };
 toolTabs.forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+document.getElementById("zoneResetBtn").onclick=resetZones;
 document.getElementById("undoBtn").onclick=undoDecor;
 document.getElementById("clearBtn").onclick=()=>{ if((posters.length||objects.length)&&confirm("¿Vaciar toda la decoración de este Xpacio? (puedes Deshacer con Ctrl+Z)")) clearDecor(); };
 (()=>{ const v=document.querySelector('meta[name="version"]'); const el=document.getElementById("edVer"); if(v&&el) el.textContent=v.getAttribute("content"); })();
@@ -1102,7 +1135,7 @@ document.getElementById("ocUpload").onchange=e=>{ const f=e.target.files&&e.targ
 function enterEdit(){ if(mode==="walk") exitWalk(); if(mode==="tour") exitTour(); mode="edit"; activeCam=cam;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=true; root.rotation.y=0; editGrid.visible=true;
   document.body.classList.add("editing"); editBtn.classList.add("on"); editBtn.textContent="✓ Hecho"; }
-function exitEdit(){ mode="orbit"; selectPoster(null); selectObj(null); editGrid.visible=false; document.body.classList.remove("editing");
+function exitEdit(){ mode="orbit"; selectPoster(null); selectObj(null); selectZone(null); editGrid.visible=false; document.body.classList.remove("editing");
   editBtn.classList.remove("on"); editBtn.textContent="🖼️ Decorar"; }
 editBtn.onclick=()=> mode==="edit"?exitEdit():enterEdit();
 addEventListener("keydown",e=>{ if(mode!=="edit")return;
