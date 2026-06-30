@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.11">
+<meta name="version" content="v.30.06.2026.12">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -422,6 +422,9 @@ const shape = new THREE.Shape(PLAN.outline.map(([x,z])=> new THREE.Vector2(x-CX,
 const floorGeo = new THREE.ShapeGeometry(shape);
 const floor = new THREE.Mesh(floorGeo, new THREE.MeshStandardMaterial({ map:woodTexture(), roughness:.72, metalness:.05 }));
 floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; root.add(floor);
+// rejilla de edición (0,5 m) — solo visible al Decorar, ayuda a alinear
+const editGrid = new THREE.GridHelper(Math.ceil(SPAN/0.5)*0.5*2, Math.ceil(SPAN/0.5)*2, 0xff4da6, 0x37e0ff);
+editGrid.material.transparent=true; editGrid.material.opacity=.18; editGrid.position.y=0.03; editGrid.visible=false; root.add(editGrid);
 /* ---------- techo (solo visible al pasear por dentro; oculto en isométrica/decorar) ---------- */
 const ceilingGrp = new THREE.Group(); ceilingGrp.visible = false; root.add(ceilingGrp);
 const ceiling = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshStandardMaterial({ color:0xf3eee8, roughness:.95, metalness:0, side:THREE.DoubleSide }));
@@ -1085,9 +1088,9 @@ document.getElementById("ocUpload").onchange=e=>{ const f=e.target.files&&e.targ
   const rd=new FileReader(); rd.onload=()=>applyObjTexture(selObj,rd.result); rd.readAsDataURL(f); };
 
 function enterEdit(){ if(mode==="walk") exitWalk(); if(mode==="tour") exitTour(); mode="edit"; activeCam=cam;
-  spin=false; spinBtn.classList.remove("on"); controls.enabled=true; root.rotation.y=0;
+  spin=false; spinBtn.classList.remove("on"); controls.enabled=true; root.rotation.y=0; editGrid.visible=true;
   document.body.classList.add("editing"); editBtn.classList.add("on"); editBtn.textContent="✓ Hecho"; }
-function exitEdit(){ mode="orbit"; selectPoster(null); selectObj(null); document.body.classList.remove("editing");
+function exitEdit(){ mode="orbit"; selectPoster(null); selectObj(null); editGrid.visible=false; document.body.classList.remove("editing");
   editBtn.classList.remove("on"); editBtn.textContent="🖼️ Decorar"; }
 editBtn.onclick=()=> mode==="edit"?exitEdit():enterEdit();
 addEventListener("keydown",e=>{ if(mode!=="edit")return;
