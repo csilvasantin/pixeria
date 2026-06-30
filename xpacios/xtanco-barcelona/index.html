@@ -1003,6 +1003,9 @@ requestAnimationFrame(loop);
 
 /* arranque: contenido real de admira.tv + presencia + primer reporte, luego intervalos */
 loadDecor();            // restaura decoración (pósters + objetos) del backend compartido
+// entrada directa por URL desde la galería: ?go=walk|tour|decorar
+(()=>{ const go=new URLSearchParams(location.search).get('go');
+  if(!go) return; setTimeout(()=>{ try{ if(go==='walk') enterWalk(); else if(go==='tour') enterTour(); else if(go==='decorar'||go==='edit') enterEdit(); }catch(e){} }, 400); })();
 loadStock();
 presencePing();
 PLAN.zones.forEach(z=>{ if(z.online&&z.playing) recordPlay(z); });

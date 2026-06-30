@@ -45,6 +45,15 @@
   .card .loc{color:var(--muted);font-size:11px;margin-top:3px}
   .card .row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:var(--muted)}
   .card .chip{border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+  .card .chip.live{color:#ff8290;border-color:rgba(255,90,106,.4)}
+  .card .chip.live::before{content:"●";color:#ff5a6a;margin-right:4px;animation:pulse 1.4s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .card .acts{display:flex;gap:6px;margin-top:10px}
+  .card .act{flex:1;text-align:center;font-size:11px;border:1px solid var(--line);border-radius:8px;padding:7px 4px;color:var(--ink);background:rgba(0,255,65,.05);cursor:pointer}
+  .card .act:hover{border-color:var(--matrix);color:#eafff0}
+  .card .act.bcn{background:rgba(255,77,166,.08)}.card .act.bcn:hover{border-color:#ff4da6}
+  .card.new{display:flex;align-items:center;justify-content:center;border-style:dashed;min-height:150px;color:var(--matrix);font-size:14px;font-weight:700}
+  .card.new:hover{background:rgba(0,255,65,.05)}
   .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--line);border-radius:14px;padding:40px 20px;line-height:1.6}
   .empty b{color:var(--ink)}
   .foot{text-align:center;color:var(--muted);font-size:10.5px;margin-top:40px;letter-spacing:.06em}
@@ -67,82 +76,102 @@
       <span>📷 1 foto</span><span>🧠 profundidad en el navegador</span><span>📐 vista isométrica</span><span>🖥️ coloca pantallas</span><span>💾 guarda el Xpacio</span><span>🛰️ gestiona en remoto</span>
     </div>
     <div class="cta-row">
-      <a class="cta" href="/xpacios/crear/">📷 Generar un Xpacio desde una foto</a>
+      <button class="cta" id="newXpacioBtn">＋ Nuevo Xpacio</button>
+      <a class="cta ghost" href="/xpacios/crear/">📷 Generar desde una foto</a>
       <a class="cta ghost" href="/signage.html">🖥️ Ver signage</a>
     </div>
   </div>
 
-  <h2 class="sec">Xpacio destacado</h2>
+  <h2 class="sec">Xpacios destacados</h2>
   <div class="grid">
-    <a class="card" href="/xpacios/grok/" style="text-decoration:none;color:inherit;border-color:rgba(80,200,255,.35)">
-      <div class="thumb" style="background:linear-gradient(135deg,#0a1a2e,#04070d);font-size:0;position:relative">
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--spine)">✨ <b style="color:#eafff0">Xtanco · Grok</b> · UX mejorada</div>
-      </div>
-      <div class="meta">
-        <div class="nm">Xtanco Valencia · Grok</div>
-        <div class="loc">Onboarding · móvil · métricas · deep links</div>
-        <div class="row"><span class="chip">🖥️ 4 zonas DOOH</span><span class="chip">flota en vivo</span><span>abrir →</span></div>
-      </div>
-    </a>
-    <a class="card" href="/xpacios/xtanco-valencia/" style="text-decoration:none;color:inherit">
-      <div class="thumb" style="background:linear-gradient(135deg,#0a1a2e,#04070d);font-size:0;position:relative">
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--spine)">🏪 <b style="color:#eafff0">Xtanco Valencia</b> · original</div>
-      </div>
-      <div class="meta">
-        <div class="nm">Xtanco Valencia</div>
-        <div class="loc">Estanco · Valencia</div>
-        <div class="row"><span class="chip">🖥️ 4 zonas DOOH</span><span class="chip">~16 m² c/u · h 280</span><span>abrir →</span></div>
-      </div>
-    </a>
-    <a class="card" href="/xpacios/xtanco-barcelona/" style="text-decoration:none;color:inherit;border-color:rgba(255,77,166,.4)">
-      <div class="thumb" style="background:linear-gradient(135deg,#26122a,#0c0510);font-size:0;position:relative">
+    <div class="card" style="border-color:rgba(255,77,166,.4)">
+      <a class="thumb" href="/xpacios/xtanco-barcelona/" style="text-decoration:none;background:linear-gradient(135deg,#26122a,#0c0510);font-size:0;position:relative">
         <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:#ff4da6">👗 <b style="color:#ffe6f2">Xtanco Barcelona</b> · flagship Desigual</div>
-      </div>
+      </a>
       <div class="meta">
         <div class="nm">Xtanco Barcelona</div>
         <div class="loc">Gran de Gràcia · Barcelona · estilo Desigual Ginza</div>
-        <div class="row"><span class="chip">🖥️ 4 zonas DOOH</span><span class="chip">walkable · decorable</span><span>abrir →</span></div>
+        <div class="row"><span class="chip live">EN VIVO</span><span class="chip">4 DOOH · realista</span></div>
+        <div class="acts">
+          <a class="act bcn" href="/xpacios/xtanco-barcelona/?go=walk">🎮 Pasear</a>
+          <a class="act bcn" href="/xpacios/xtanco-barcelona/?go=tour">🎬 Tour</a>
+          <a class="act bcn" href="/xpacios/xtanco-barcelona/?go=decorar">🖼️ Decorar</a>
+        </div>
       </div>
-    </a>
+    </div>
+    <div class="card">
+      <a class="thumb" href="/xpacios/xtanco-valencia/" style="text-decoration:none;background:linear-gradient(135deg,#0a1a2e,#04070d);font-size:0;position:relative">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--spine)">🏪 <b style="color:#eafff0">Xtanco Valencia</b> · original</div>
+      </a>
+      <div class="meta">
+        <div class="nm">Xtanco Valencia</div>
+        <div class="loc">Estanco · Valencia</div>
+        <div class="row"><span class="chip live">EN VIVO</span><span class="chip">4 DOOH · ~16 m²</span></div>
+        <div class="acts">
+          <a class="act" href="/xpacios/xtanco-valencia/?go=walk">🎮 Pasear</a>
+          <a class="act" href="/xpacios/xtanco-valencia/?go=decorar">🖼️ Decorar</a>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="border-color:rgba(80,200,255,.35)">
+      <a class="thumb" href="/xpacios/grok/" style="text-decoration:none;background:linear-gradient(135deg,#0a1a2e,#04070d);font-size:0;position:relative">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--spine)">✨ <b style="color:#eafff0">Xtanco · Grok</b> · UX mejorada</div>
+      </a>
+      <div class="meta">
+        <div class="nm">Xtanco Valencia · Grok</div>
+        <div class="loc">Onboarding · móvil · métricas · deep links</div>
+        <div class="row"><span class="chip">UX demo</span></div>
+        <div class="acts"><a class="act" href="/xpacios/grok/">Abrir →</a></div>
+      </div>
+    </div>
   </div>
 
   <h2 class="sec">Mis Xpacios <span class="n" id="count">0</span></h2>
-  <div class="grid" id="grid">
-    <div class="empty">Aún no has guardado ningún Xpacio.<br><b>Genera el primero</b> desde una foto de tu local y aparecerá aquí.</div>
-  </div>
+  <div class="grid" id="grid"></div>
 
   <div class="foot">Pixeria · XpaceOS Locations · powered by ADmira · profundidad: Depth Anything V2 (en el navegador)</div>
 </div>
 
 <script>
-  // MVP local-first: los Xpacios guardados viven en localStorage ('xpacios').
-  // El generador (/xpacios/crear/) escribe aquí al guardar. Próximo paso: worker + KV
-  // para sincronizarlos en remoto entre dispositivos y gestionar las pantallas de verdad.
-  function loadXpacios(){ try{ return JSON.parse(localStorage.getItem("xpacios")||"[]"); }catch(e){ return []; } }
+  // Índice de Xpacios COMPARTIDO en el backend (pixer-eleven /layout/report+current,
+  // screen="xpacios-index"), con fallback a localStorage. Cada Xpacio creado es una
+  // capa de decoración propia sobre la base 3D (Barcelona/Desigual), abrible con ?xpacio=<id>.
+  const API="https://pixer-eleven.csilvasantin.workers.dev", IDX="xpacios-index", BASE="/xpacios/xtanco-barcelona/";
   function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-  function fmtDate(ts){ try{ return new Date(ts).toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"numeric"}); }catch(e){ return ""; } }
-  function render(){
-    const items = loadXpacios();
-    document.getElementById("count").textContent = items.length;
-    const grid = document.getElementById("grid");
-    if(!items.length){ return; }
-    grid.innerHTML = items.slice().reverse().map(x=>{
-      const n = (x.screens && x.screens.length) || 0;
-      const thumb = x.thumb ? `style="background-image:url('${x.thumb}')"` : "";
-      const thumbInner = x.thumb ? "" : "🗺️";
-      return `<div class="card" data-id="${esc(x.id)}">
-        <div class="thumb" ${thumb}>${thumbInner}</div>
-        <div class="meta">
-          <div class="nm">${esc(x.name||"Xpacio sin nombre")}</div>
-          <div class="loc">${esc(x.location||"sin ubicación")}</div>
-          <div class="row"><span class="chip">🖥️ ${n} pantalla${n===1?"":"s"}</span><span>${fmtDate(x.date)}</span></div>
+  function fmtDate(ts){ try{ return new Date(ts).toLocaleDateString("es-ES",{day:"2-digit",month:"short"}); }catch(e){ return ""; } }
+  function localIdx(){ try{ return JSON.parse(localStorage.getItem("xpacios-index")||"[]"); }catch(e){ return []; } }
+  async function loadIndex(){ let items=null;
+    try{ const r=await fetch(API+"/layout/current?screen="+IDX+"&_="+Date.now()); const j=await r.json(); if(j&&j.current&&Array.isArray(j.current.items)) items=j.current.items; }catch(e){}
+    if(!items) items=localIdx();
+    return items; }
+  async function saveIndex(items){ try{ localStorage.setItem("xpacios-index", JSON.stringify(items)); }catch(e){}
+    try{ await fetch(API+"/layout/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({snapshot:{furniture:[],items},screen:IDX})}); }catch(e){} }
+  function slug(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,28)||"xpacio"; }
+  async function newXpacio(){
+    const name=(prompt("Nombre del nuevo Xpacio (p.ej. «Desigual Passeig de Gràcia»):","")||"").trim(); if(!name) return;
+    const city=(prompt("Ciudad / dirección (opcional):","")||"").trim();
+    const id="xp-"+slug(name)+"-"+Math.floor(Date.now()/1000).toString(36).slice(-4);
+    const items=await loadIndex(); items.push({id,name,city,base:"barcelona",createdAt:Date.now()}); await saveIndex(items);
+    location.href=BASE+"?xpacio="+encodeURIComponent(id)+"&go=decorar";
+  }
+  document.getElementById("newXpacioBtn").addEventListener("click",newXpacio);
+  function cardHTML(x){ return `<div class="card">
+      <a class="thumb" href="${BASE}?xpacio=${encodeURIComponent(x.id)}" style="text-decoration:none;background:linear-gradient(135deg,#26122a,#0c0510);font-size:0;position:relative">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:#ff4da6">🏬 <b style="color:#ffe6f2">${esc(x.name)}</b></div>
+      </a>
+      <div class="meta">
+        <div class="nm">${esc(x.name)}</div>
+        <div class="loc">${esc(x.city||"Xpacio propio")} · base Desigual · ${fmtDate(x.createdAt)}</div>
+        <div class="acts">
+          <a class="act bcn" href="${BASE}?xpacio=${encodeURIComponent(x.id)}&go=walk">🎮</a>
+          <a class="act bcn" href="${BASE}?xpacio=${encodeURIComponent(x.id)}&go=tour">🎬</a>
+          <a class="act bcn" href="${BASE}?xpacio=${encodeURIComponent(x.id)}&go=decorar">🖼️ Decorar</a>
         </div>
-      </div>`;
-    }).join("");
-    grid.querySelectorAll(".card").forEach(c=>c.addEventListener("click",()=>{
-      // Por ahora abre el generador con el Xpacio cargado (gestión remota: siguiente pieza).
-      location.href = "/xpacios/crear/?xpacio=" + encodeURIComponent(c.dataset.id);
-    }));
+      </div></div>`; }
+  async function render(){ const items=await loadIndex(); const grid=document.getElementById("grid");
+    document.getElementById("count").textContent=items.length;
+    grid.innerHTML = `<div class="card new" id="newCard">＋ Nuevo Xpacio</div>` + items.slice().reverse().map(cardHTML).join("");
+    const nc=document.getElementById("newCard"); if(nc) nc.addEventListener("click",newXpacio);
   }
   render();
 </script>
