@@ -4,6 +4,9 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
+## v.30.06.2026.23 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/e87aa15/xpacios/xtanco-barcelona/index.html)
+- **Exportar / Importar decoración (JSON)**: en el panel de Versiones, **⬇️ Exportar** descarga toda la decoración del Xpacio (pósters, objetos con nombre/lock, escena, posición de pantallas) como `.json`, y **⬆️ Importar** la carga desde un archivo. Para hacer backups y **trasladar un montaje de una tienda a otra**. Importar es deshacible (Ctrl+Z) y valida el archivo.
+
 ## v.30.06.2026.22 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/c0011e6/xpacios/xtanco-barcelona/index.html)
 - **Resumen de inventario DOOH**: el panel de Pantallas muestra ahora el total comercializable — **m² de pantallas**, nº de pantallas y cuántas están encendidas (se actualiza al encender/apagar). De un vistazo, el inventario vendible del Xpacio.
 
