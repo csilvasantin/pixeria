@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.30.06.2026.13">
+<meta name="version" content="v.30.06.2026.14">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -99,6 +99,9 @@
   #minimap{position:fixed;left:20px;bottom:20px;z-index:7;display:none;border:1px solid var(--line);border-radius:12px;
     background:rgba(6,12,22,.72);backdrop-filter:blur(8px);box-shadow:0 6px 22px rgba(0,0,0,.5)}
   body.touring #minimap{display:block}
+  #editMap{position:fixed;left:20px;bottom:20px;z-index:7;display:none;border:1px solid var(--line);border-radius:12px;
+    background:rgba(6,12,22,.72);backdrop-filter:blur(8px);box-shadow:0 6px 22px rgba(0,0,0,.5)}
+  body.editing #editMap{display:block}
   /* ---- editor: paleta + toolbar ---- */
   .ctrl #editBtn.on{background:rgba(126,224,160,.14);border-color:#7ee0a0;color:#7ee0a0}
   #palette{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:7;display:none;flex-direction:column;align-items:center;gap:9px;
@@ -270,6 +273,7 @@
 <div id="walkHint"><b>WASD</b> / flechas para moverte · arrastra para mirar · <b>Esc</b> para salir</div>
 <div id="tourHint">Pulsa los <b>puntos</b> del suelo para recorrer · arrastra para mirar · <b>Esc</b> para salir</div>
 <canvas id="minimap" width="150" height="150" title="Planta del Xtanco · tu posición"></canvas>
+<canvas id="editMap" width="150" height="150" title="Planta · objetos y pósters"></canvas>
 
 <!-- Editor: switch de herramienta + paletas (pósters/objetos) + toolbars -->
 <div id="palette">
@@ -1142,6 +1146,14 @@ function drawMinimap(){ if(!mmCtx)return; mmCtx.clearRect(0,0,150,150);
   const c=mmMap(persp.position.x,persp.position.z);
   mmCtx.strokeStyle="#2ee6c8"; mmCtx.lineWidth=2; mmCtx.beginPath(); mmCtx.moveTo(c[0],c[1]); mmCtx.lineTo(c[0]+Math.sin(camYaw)*11,c[1]+Math.cos(camYaw)*11); mmCtx.stroke();
   mmCtx.beginPath(); mmCtx.arc(c[0],c[1],3.6,0,7); mmCtx.fillStyle="#2ee6c8"; mmCtx.fill(); }
+// minimapa del EDITOR: planta + objetos + pósters (sin cámara)
+const emCanvas=document.getElementById("editMap"), emCtx=emCanvas?emCanvas.getContext("2d"):null;
+function drawEditMap(){ if(!emCtx)return; emCtx.clearRect(0,0,150,150);
+  emCtx.beginPath(); PLAN.outline.forEach(([x,z],i)=>{ const p=mmMap(x-CX,z-CZ); i?emCtx.lineTo(p[0],p[1]):emCtx.moveTo(p[0],p[1]); }); emCtx.closePath();
+  emCtx.fillStyle="rgba(255,255,255,.05)"; emCtx.fill(); emCtx.strokeStyle="rgba(255,77,166,.55)"; emCtx.lineWidth=1.4; emCtx.stroke();
+  objects.forEach(o=>{ const p=mmMap(o.group.position.x,o.group.position.z); emCtx.beginPath(); emCtx.arc(p[0],p[1],3,0,7); emCtx.fillStyle="#"+(o.color||DCOL[0]).toString(16).padStart(6,"0"); emCtx.fill();
+    if(selObj===o){ emCtx.strokeStyle="#fff"; emCtx.lineWidth=1.5; emCtx.beginPath(); emCtx.arc(p[0],p[1],5,0,7); emCtx.stroke(); } });
+  posters.forEach(P=>{ const p=mmMap(P.mesh.position.x,P.mesh.position.z); emCtx.fillStyle="#37e0ff"; emCtx.fillRect(p[0]-2,p[1]-2,4,4); }); }
 canvas.addEventListener("pointerdown",e=>{ if(mode!=="tour")return; tDown=[e.clientX,e.clientY]; tMoved=false; tdrag=true; tlastX=e.clientX; });
 addEventListener("pointermove",e=>{ if(mode!=="tour")return; if(tDown&&Math.hypot(e.clientX-tDown[0],e.clientY-tDown[1])>4) tMoved=true; if(tdrag&&tT>=1){ camYaw-=(e.clientX-tlastX)*0.006; } tlastX=e.clientX; });
 addEventListener("pointerup",e=>{ if(mode!=="tour"){ return; } tdrag=false;
@@ -1289,6 +1301,7 @@ function loop(now){
       if(m._prevSrc){ try{ mPrevCtx.drawImage(m._prevSrc,0,0,384,216); }catch(e){ mPrevCtx.drawImage(m.cv,0,0,384,216); } }
       else mPrevCtx.drawImage(m.cv,0,0,384,216); }
   }
+  if(mode==="edit") drawEditMap();
   renderer.render(scene,activeCam); updateLabels(); requestAnimationFrame(loop);
 }
 document.getElementById("loading").style.display="none";
