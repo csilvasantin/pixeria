@@ -4,6 +4,9 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
+## v.30.06.2026.16 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/edd2da7/xpacios/xtanco-barcelona/index.html)
+- **Reubicar las pantallas DOOH (🖥️ Pantallas)**: nueva herramienta en Decorar para seleccionar y arrastrar las 4 pantallas base A/B/C/D y recolocarlas dentro del local; el override de posición se persiste en `decor` y se restaura al recargar. Botón **↺ Restablecer** para volver a las posiciones originales. Clave: los IDs A/B/C/D y el reporte de emisión (proof-of-play) **no cambian** — solo se mueve la representación 3D. Comercializa la planta real adaptando el gemelo a cada tienda.
+
 ## v.30.06.2026.15 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/bad3430/xpacios/xtanco-barcelona/index.html)
 - **Foto del Xpacio (📸)**: botón que descarga una imagen PNG full-res del render actual (con el nombre del Xpacio y la versión), lista para presentaciones y comercialización del inventario DOOH.
 
