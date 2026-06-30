@@ -4,7 +4,7 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
-## v.30.06.2026.10 — 🔗 [Ver resultado](PENDING)
+## v.30.06.2026.10 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/127e4e7/xpacios/xtanco-barcelona/index.html)
 - **Snap a la pared**: al arrastrar un objeto cerca de una pared (<0,6 m) se pega a ella y se orienta mirando al interior (ideal para percheros, espejos, tótems y bancos). Lejos de las paredes mantiene el snap a rejilla.
 
 ## v.30.06.2026.9 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/4446911/xpacios/xtanco-barcelona/index.html)
