@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.01.07.2026.4">
+<meta name="version" content="v.01.07.2026.5">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -235,6 +235,7 @@
   <button id="aforoBtn" title="Aforo simulado: clientes paseando">👥 Aforo</button>
   <button id="measureBtn" title="Medir: cotas del local (ancho × fondo) y m²">📏 Medir</button>
   <button id="photoBtn" title="Descargar una foto (PNG) del Xpacio">📸 Foto</button>
+  <button id="fichaBtn" title="Descargar ficha técnica: plano cenital con cotas, pantallas y objetos">📄 Ficha</button>
   <button id="shareBtn" title="Copiar enlace de este Xpacio">🔗 Compartir</button>
   <button id="helpBtn" title="Atajos y ayuda (?)">❔ Ayuda</button>
 </div>
@@ -739,6 +740,42 @@ document.getElementById("photoBtn").onclick=()=>{ try{ renderer.render(scene,act
   const a=document.createElement("a"); a.href=renderer.domElement.toDataURL("image/png");
   a.download="xpacio-"+(XPACIO_ID||"xtanco")+"-v"+(document.querySelector('meta[name=version]')?.content||"").replace(/[^0-9.]/g,"")+".png";
   document.body.appendChild(a); a.click(); a.remove(); toast("📸 Foto del Xpacio descargada"); }catch(e){ toast("No se pudo capturar la foto"); } };
+// ficha técnica: plano cenital (canvas 2D) con outline, pantallas DOOH, objetos, cotas y m² — para comercializar / imprimir
+function exportPlanPNG(){ try{
+  const S=44, M=70, titleH=70, footH=28;
+  const bw=bb.maxx-bb.minx, bh=bb.maxz-bb.minz;
+  const cw=Math.round(M*2+bw*S), ch=Math.round(M*2+titleH+footH+bh*S);
+  const cv=document.createElement("canvas"); cv.width=cw*2; cv.height=ch*2; const g=cv.getContext("2d"); g.scale(2,2);
+  const X=x=>M+(x-bb.minx)*S, Y=z=>M+titleH+(z-bb.minz)*S;
+  g.fillStyle="#ffffff"; g.fillRect(0,0,cw,ch);
+  const XNAME=(document.title||"Xpacio").split("·")[0].trim();
+  const ver=(document.querySelector('meta[name=version]')?.content||"");
+  g.fillStyle="#0c0510"; g.font="700 22px Helvetica,Arial,sans-serif"; g.fillText("Ficha técnica — "+XNAME, M, 36);
+  g.fillStyle="#666"; g.font="400 13px Helvetica,Arial,sans-serif";
+  g.fillText(bw.toFixed(1)+" × "+bh.toFixed(1)+" m · "+FLOOR_M2.toFixed(0)+" m² útiles · "+PLAN.zones.length+" pantallas DOOH · "+ver, M, 56);
+  // suelo (outline)
+  g.beginPath(); PLAN.outline.forEach((p,i)=>{ const cx=X(p[0]),cy=Y(p[1]); i?g.lineTo(cx,cy):g.moveTo(cx,cy); }); g.closePath();
+  g.fillStyle="#f4f1ec"; g.fill(); g.strokeStyle="#2a2230"; g.lineWidth=3; g.stroke();
+  // pantallas DOOH
+  PLAN.zones.forEach(z=>{ const hex="#"+z.color.toString(16).padStart(6,"0"); const x=X(z.x),y=Y(z.z),w=z.w*S,h=z.d*S;
+    g.fillStyle=hex+"2e"; g.fillRect(x,y,w,h); g.strokeStyle=hex; g.lineWidth=2; g.strokeRect(x,y,w,h);
+    g.fillStyle=hex; g.font="700 13px Helvetica,Arial,sans-serif"; g.fillText(z.id, x+6, y+17);
+    g.fillStyle="#444"; g.font="400 10px Helvetica,Arial,sans-serif"; g.fillText((z.w*z.d).toFixed(0)+" m²", x+6, y+30); });
+  // objetos
+  objects.forEach(O=>{ const p=O.group.position; const px=X(p.x+CX), py=Y(p.z+CZ); const col="#"+(O.color||0x37e0ff).toString(16).padStart(6,"0");
+    g.beginPath(); g.arc(px,py,5,0,Math.PI*2); g.fillStyle=col; g.fill(); g.strokeStyle="#0c0510"; g.lineWidth=1; g.stroke();
+    if(O.name){ g.fillStyle="#0c0510"; g.font="600 10px Helvetica,Arial,sans-serif"; g.fillText(O.name, px+8, py+3); } });
+  // cotas
+  g.fillStyle="#0c0510"; g.font="600 12px Helvetica,Arial,sans-serif";
+  g.fillText(bw.toFixed(1)+" m", X((bb.minx+bb.maxx)/2)-14, Y(bb.maxz)+22);
+  g.save(); g.translate(X(bb.minx)-26, Y((bb.minz+bb.maxz)/2)); g.rotate(-Math.PI/2); g.fillText(bh.toFixed(1)+" m", -14, 0); g.restore();
+  // pie
+  g.fillStyle="#999"; g.font="400 10px Helvetica,Arial,sans-serif"; g.fillText("Pixeria · XpaceOS Locations · pixeria.com", M, ch-12);
+  const url=cv.toDataURL("image/png"); const a=document.createElement("a"); a.href=url;
+  a.download="ficha-"+(XPACIO_ID||"xtanco")+".png"; document.body.appendChild(a); a.click(); a.remove();
+  toast("📄 Ficha técnica descargada"); return url;
+}catch(e){ toast("No se pudo generar la ficha"); return null; } }
+document.getElementById("fichaBtn").onclick=exportPlanPNG;
 // panel de ayuda / atajos (botón ❔ o tecla ?)
 const helpPanel=document.getElementById("helpPanel");
 function toggleHelp(){ helpPanel.classList.toggle("show"); }
