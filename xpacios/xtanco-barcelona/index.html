@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.01.07.2026.1">
+<meta name="version" content="v.01.07.2026.2">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -40,6 +40,7 @@
   .zrow .det b{color:var(--ink);font-weight:600}
   .zsum{margin-top:8px;padding:8px 9px;border-top:1px solid var(--line);font-size:10.5px;line-height:1.45;color:var(--muted)}
   .zsum b{color:var(--ink);font-weight:600}
+  .zsum .zorient{opacity:.6;font-style:italic}
   .ctrl{bottom:18px;right:18px;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
   .ctrl button{font-family:inherit;background:var(--panel);backdrop-filter:blur(10px);color:var(--ink);
     border:1px solid var(--line);border-radius:10px;padding:9px 13px;font-size:12.5px;cursor:pointer;white-space:nowrap}
@@ -647,8 +648,14 @@ PLAN.zones.forEach(z=>{
 });
 // resumen de inventario DOOH (m² totales de pantallas + nº encendidas)
 const zonesSummaryEl=document.createElement("div"); zonesSummaryEl.id="zonesSummary"; zonesSummaryEl.className="zsum"; zonesEl.appendChild(zonesSummaryEl);
+// estimación de ingresos DOOH (orientativa, supuestos visibles y editables aquí)
+const DOOH_ASSUMP={horas:12,dias:30,pasesMin:4,impPase:8,cpm:5,ocupacion:0.6};
+function doohRevenuePerScreen(){ const a=DOOH_ASSUMP; const pasesMes=a.pasesMin*60*a.horas*a.dias; const imp=pasesMes*a.impPase*a.ocupacion; return imp/1000*a.cpm; }
 function updateZonesSummary(){ const tot=PLAN.zones.reduce((a,z)=>a+z.w*z.d,0); const on=PLAN.zones.filter(z=>z.online).length;
-  zonesSummaryEl.innerHTML=`<b>Inventario DOOH</b><br>${tot.toFixed(0)} m² · ${PLAN.zones.length} pantallas · <b>${on}/${PLAN.zones.length}</b> encendidas`; }
+  const eur=Math.round(doohRevenuePerScreen()*on); const eurStr=eur.toLocaleString("es-ES");
+  zonesSummaryEl.innerHTML=`<b>Inventario DOOH</b><br>${tot.toFixed(0)} m² · ${PLAN.zones.length} pantallas · <b>${on}/${PLAN.zones.length}</b> encendidas`+
+    `<br>💶 <b>~${eurStr} €/mes</b> estimado <span class="zorient">(orientativo)</span>`+
+    `<br><small>supuestos: ${DOOH_ASSUMP.horas} h·${DOOH_ASSUMP.dias} d·${DOOH_ASSUMP.pasesMin} pases/min·${DOOH_ASSUMP.impPase} imp/pase·CPM ${DOOH_ASSUMP.cpm} €·${Math.round(DOOH_ASSUMP.ocupacion*100)}% ocup.</small>`; }
 updateZonesSummary();
 
 /* ---------- etiquetas A/B/C/D ---------- */
