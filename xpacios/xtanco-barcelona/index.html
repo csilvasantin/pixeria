@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.01.07.2026.5">
+<meta name="version" content="v.01.07.2026.6">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -122,6 +122,7 @@
   .tool-tab.on{color:var(--cyan);border-color:var(--cyan);background:rgba(255,77,166,.10)}
   .tt-sep{width:1px;height:20px;background:var(--line)}
   .tool-aux{font-family:inherit;font-size:13px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:8px;padding:4px 9px;cursor:pointer}
+  .tool-aux.on{color:var(--cyan);border-color:var(--cyan);background:rgba(55,224,255,.10)}
   .tool-aux:hover{border-color:var(--cyan)}
   .edVer{font-size:9.5px;color:var(--muted);letter-spacing:.04em;margin-left:2px}
   .sub-palette{display:flex;align-items:center;gap:12px}
@@ -307,6 +308,7 @@
     <button class="tool-aux" id="undoBtn" title="Deshacer (Ctrl/⌘+Z)">↶</button>
     <button class="tool-aux" id="savesBtn" title="Versiones guardadas">💾</button>
     <button class="tool-aux" id="clearBtn" title="Vaciar la decoración">🧹</button>
+    <button class="tool-aux" id="cmpBtn" title="Comparar antes/después: guarda un estado, cambia la decoración y pulsa de nuevo para alternar (clic derecho: reiniciar)">🔀</button>
     <span class="edVer" id="edVer"></span>
   </div>
   <div id="posterPalette" class="sub-palette">
@@ -1212,6 +1214,18 @@ document.getElementById("timeBtn").onclick=()=>{ pushUndo(); setTime(sceneState.
 toolTabs.forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
 document.getElementById("zoneResetBtn").onclick=resetZones;
 document.getElementById("undoBtn").onclick=undoDecor;
+// comparar antes/después: dos estados en memoria (antes/después) y alternar para ver el cambio
+let cmpBefore=null, cmpAfter=null, cmpShowing=null;
+function updateCmpBtn(){ const b=document.getElementById("cmpBtn"); if(!b)return; b.classList.toggle("on",!!cmpBefore);
+  b.textContent = !cmpBefore ? "🔀" : !cmpAfter ? "🔀·" : (cmpShowing==="antes"?"🔀 A":"🔀 B"); }
+function resetCmp(){ cmpBefore=cmpAfter=cmpShowing=null; updateCmpBtn(); }
+function cmpToggle(){
+  if(!cmpBefore){ cmpBefore=decorSnapshot(); toast("🔀 'Antes' guardado — cambia la decoración y pulsa 🔀 otra vez"); updateCmpBtn(); return; }
+  if(!cmpAfter){ cmpAfter=decorSnapshot(); cmpShowing="antes"; pushUndo(); rebuildDecor(cmpBefore); saveDecor(); toast("🔀 Mostrando ANTES (pulsa para alternar)"); updateCmpBtn(); return; }
+  pushUndo(); if(cmpShowing==="antes"){ rebuildDecor(cmpAfter); cmpShowing="después"; } else { rebuildDecor(cmpBefore); cmpShowing="antes"; }
+  saveDecor(); toast(cmpShowing==="antes"?"🔀 Mostrando ANTES":"🔀 Mostrando DESPUÉS"); updateCmpBtn(); }
+document.getElementById("cmpBtn").onclick=cmpToggle;
+document.getElementById("cmpBtn").oncontextmenu=e=>{ e.preventDefault(); resetCmp(); toast("🔀 Comparación reiniciada"); };
 document.getElementById("clearBtn").onclick=()=>{ if((posters.length||objects.length)&&confirm("¿Vaciar toda la decoración de este Xpacio? (puedes Deshacer con Ctrl+Z)")) clearDecor(); };
 (()=>{ const v=document.querySelector('meta[name="version"]'); const el=document.getElementById("edVer"); if(v&&el) el.textContent=v.getAttribute("content"); })();
 
@@ -1286,7 +1300,7 @@ function enterEdit(){ if(mode==="walk") exitWalk(); if(mode==="tour") exitTour()
   spin=false; spinBtn.classList.remove("on"); controls.enabled=true; root.rotation.y=0; editGrid.visible=true;
   document.body.classList.add("editing"); editBtn.classList.add("on"); editBtn.textContent="✓ Hecho"; updateObjCount(); }
 function exitEdit(){ mode="orbit"; selectPoster(null); selectObj(null); selectZone(null); editGrid.visible=false; document.body.classList.remove("editing");
-  editBtn.classList.remove("on"); editBtn.textContent="🖼️ Decorar"; updateObjCount(); }
+  editBtn.classList.remove("on"); editBtn.textContent="🖼️ Decorar"; updateObjCount(); resetCmp(); }
 editBtn.onclick=()=> mode==="edit"?exitEdit():enterEdit();
 addEventListener("keydown",e=>{ if(mode!=="edit")return;
   if(e.code==="KeyZ"&&(e.metaKey||e.ctrlKey)){ e.preventDefault(); undoDecor(); return; }
