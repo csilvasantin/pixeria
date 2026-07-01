@@ -4,6 +4,9 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
+## v.01.07.2026.5 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/6b5a665/xpacios/xtanco-barcelona/index.html)
+- **Ficha técnica / plano cenital (📄 PNG)**: botón que descarga un **plano cenital** del Xpacio en PNG (canvas 2D, sin depender del render 3D): planta del local con cotas (ancho × fondo) y m² útiles, las 4 pantallas DOOH con su color y m², y los objetos colocados (con su nombre). Entregable listo para comercializar el espacio o imprimir.
+
 ## v.01.07.2026.4 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/e3352f4/xpacios/xtanco-barcelona/index.html)
 - **Plantillas de montaje (1 clic)**: en la paleta de Objetos, botones **Básico / Escaparate / Probadores** que pueblan la tienda con un layout base de un clic (racks, maniquíes, banco, tótem, probadores, espejos…). Colocación segura (solo en sitios válidos, sin atravesar muros ni solapar) y aditiva (se suma a lo ya puesto). Arranque rápido de un montaje.
 
