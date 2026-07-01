@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.01.07.2026.2">
+<meta name="version" content="v.01.07.2026.3">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -110,7 +110,8 @@
   #objCount{position:fixed;left:20px;bottom:182px;z-index:7;display:none;flex-wrap:wrap;gap:5px;max-width:178px;
     background:rgba(4,7,13,.82);border:1px solid var(--line);border-radius:10px;padding:7px 9px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
   #objCount .occT{font-size:10px;color:var(--muted);width:100%;margin-bottom:1px;letter-spacing:.04em}
-  #objCount .occ{font-size:11.5px;color:#eef6ff;white-space:nowrap}
+  #objCount .occ{font-size:11.5px;color:#eef6ff;white-space:nowrap;cursor:pointer;padding:1px 4px;border-radius:6px}
+  #objCount .occ:hover{background:rgba(55,224,255,.14)}
   /* ---- editor: paleta + toolbar ---- */
   .ctrl #editBtn.on{background:rgba(126,224,160,.14);border-color:#7ee0a0;color:#7ee0a0}
   #palette{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:7;display:none;flex-direction:column;align-items:center;gap:9px;
@@ -958,8 +959,14 @@ const OBJ_KINDS=[
 function updateObjCount(){ const el=document.getElementById("objCount"); if(!el) return;
   const counts={}; let total=0; for(const O of objects){ counts[O.kind]=(counts[O.kind]||0)+1; total++; }
   if(!total || mode!=="edit"){ el.style.display="none"; return; }
-  const parts=OBJ_KINDS.filter(k=>counts[k.kind]).map(k=>`<span class="occ" title="${k.label}">${k.icon} ${counts[k.kind]}</span>`);
+  const parts=OBJ_KINDS.filter(k=>counts[k.kind]).map(k=>`<span class="occ" data-kind="${k.kind}" title="Seleccionar ${k.label} (clic para ciclar)">${k.icon} ${counts[k.kind]}</span>`);
   el.innerHTML=`<span class="occT">PIEZAS · ${total}</span>`+parts.join(""); el.style.display="flex"; }
+// clic en el inventario por tipo: selecciona/cicla las piezas de ese tipo y centra la cámara en ellas
+function pickByKind(kind){ const list=objects.filter(o=>o.kind===kind); if(!list.length) return;
+  let start=-1; if(selObj&&selObj.kind===kind) start=list.indexOf(selObj);
+  const next=list[(start+1)%list.length]; selectObj(next);
+  try{ controls.target.set(next.group.position.x,0.8,next.group.position.z); controls.update(); }catch(e){} }
+document.getElementById("objCount").addEventListener("click",e=>{ const chip=e.target.closest("[data-kind]"); if(chip) pickByKind(chip.dataset.kind); });
 let pickKind="rack", pickObjColor=DCOL[0];
 function buildObjectMesh(kind,color){
   const g=new THREE.Group(), c=color||DCOL[0];
@@ -1040,7 +1047,7 @@ function recolorObj(O,hex,skipSave){ if(!O)return; O.color=hex; O.recolored=true
   if(!skipSave) saveDecor(); }
 function selectObj(O){ if(selPoster) selectPoster(null); if(selObj&&selObj.group.userData.ring) selObj.group.userData.ring.visible=false;
   selObj=O; objTool.classList.toggle("show",!!O); if(O&&O.group.userData.ring) O.group.userData.ring.visible=true;
-  if(O) updateLockBtn(O);
+  if(O) updateLockBtn(O); document.body.dataset.sel=O?O.kind:"";
   if(!O&&typeof closeObjContent==="function") closeObjContent(); }
 function rotateObj(O,d){ if(!O)return; O.group.rotation.y+=d; saveDecor(); }
 function rot90(O){ if(!O)return; const step=Math.PI/2; O.group.rotation.y=Math.round(O.group.rotation.y/step)*step+step; saveDecor(); }
