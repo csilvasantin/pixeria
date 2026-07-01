@@ -4,6 +4,9 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
+## v.01.07.2026.4 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/e3352f4/xpacios/xtanco-barcelona/index.html)
+- **Plantillas de montaje (1 clic)**: en la paleta de Objetos, botones **Básico / Escaparate / Probadores** que pueblan la tienda con un layout base de un clic (racks, maniquíes, banco, tótem, probadores, espejos…). Colocación segura (solo en sitios válidos, sin atravesar muros ni solapar) y aditiva (se suma a lo ya puesto). Arranque rápido de un montaje.
+
 ## v.01.07.2026.3 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/3d8ac0b/xpacios/xtanco-barcelona/index.html)
 - **Seleccionar piezas desde el inventario**: el panel de piezas por tipo (al Decorar) es ahora **clicable** — clic en un tipo (👗, 🧍, 🪴…) selecciona una pieza de ese tipo y centra la cámara en ella; clics sucesivos **ciclan** entre las piezas de ese tipo. Para encontrar y editar rápido una pieza concreta en montajes grandes.
 
