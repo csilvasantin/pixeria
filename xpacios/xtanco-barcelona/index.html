@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.01.07.2026.3">
+<meta name="version" content="v.01.07.2026.4">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -125,6 +125,10 @@
   .tool-aux:hover{border-color:var(--cyan)}
   .edVer{font-size:9.5px;color:var(--muted);letter-spacing:.04em;margin-left:2px}
   .sub-palette{display:flex;align-items:center;gap:12px}
+  .tplRow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .tplLbl{font-size:10.5px;color:var(--muted)}
+  .tplBtn{font-family:inherit;font-size:11px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:7px;padding:5px 9px;cursor:pointer}
+  .tplBtn:hover{border-color:var(--cyan)}
   #objSwatches{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;max-width:min(620px,90vw)}
   .objSwatch{font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;width:58px;padding:7px 4px;cursor:pointer;
     background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:9px;color:var(--ink)}
@@ -312,6 +316,10 @@
   <div id="objectPalette" class="sub-palette" style="display:none">
     <div id="objSwatches"></div>
     <span class="pHint">Click en el suelo para poner · arrastra para mover</span>
+    <div class="tplRow"><span class="tplLbl">✨ Plantillas:</span>
+      <button class="tplBtn" data-tpl="0">Básico</button>
+      <button class="tplBtn" data-tpl="1">Escaparate</button>
+      <button class="tplBtn" data-tpl="2">Probadores</button></div>
   </div>
   <div id="scenePalette" class="sub-palette" style="display:none">
     <span class="scLbl">Suelo</span><div id="floorColors" class="objColors"></div>
@@ -1055,6 +1063,15 @@ function scaleObj(O,f){ if(!O)return; O.s=Math.max(0.4,Math.min(2.5,(O.s||1)*f))
 function objAt(x,z,ignore){ return objects.some(o=>o!==ignore && Math.hypot(o.group.position.x-x,o.group.position.z-z)<0.7); }
 function freeSpotNear(x,z,ignore){ const STEP=0.6; for(let r=1;r<=6;r++){ for(let a=0;a<8;a++){ const ang=a/8*Math.PI*2, nx=x+Math.cos(ang)*STEP*r, nz=z+Math.sin(ang)*STEP*r;
   if(canStand(nx,nz)&&!objAt(nx,nz,ignore)) return [nx,nz]; } } return [x+0.6,z+0.6]; }
+// plantillas de montaje: poblan la tienda con un layout base (additive; coloca solo en sitios válidos)
+const TEMPLATES=[
+  {name:"Básico", items:[{kind:"rack",x:-4,z:1},{kind:"rack",x:-4,z:-1},{kind:"rack",x:-2,z:2.5},{kind:"mannequin",x:0,z:0},{kind:"mannequin",x:1.5,z:2},{kind:"bench",x:3,z:-2}]},
+  {name:"Escaparate", items:[{kind:"mannequin",x:-6,z:-2,name:"Escaparate"},{kind:"mannequin",x:-5,z:-2},{kind:"mannequin",x:-4,z:-2},{kind:"totem",x:-3,z:-3}]},
+  {name:"Probadores", items:[{kind:"booth",x:4,z:3,name:"Probadores"},{kind:"booth",x:5.5,z:3},{kind:"mirror",x:3,z:1.5},{kind:"mirror",x:6,z:1.5}]},
+];
+function placeAt(kind,x,z,rot,name){ let px=x,pz=z; if(!(canStand(x,z)&&!objAt(x,z))){ const s=freeSpotNear(x,z); px=s[0]; pz=s[1]; }
+  if(!canStand(px,pz)) return null; const O=makeObjectRec({kind,x:px,z:pz,rot:rot||0}); if(name) setObjName(O,name,true); return O; }
+function applyTemplate(t){ if(!t)return; pushUndo(); selectObj(null); let n=0; t.items.forEach(it=>{ if(placeAt(it.kind,it.x,it.z,it.rot,it.name)) n++; }); saveDecor(); toast("✨ Plantilla \""+t.name+"\" aplicada ("+n+" piezas)"); }
 function dupObj(O){ if(!O)return; const p=O.group.position; const sp=freeSpotNear(p.x,p.z,O);
   const r=makeObjectRec({kind:O.kind,color:O.recolored?O.color:null,x:sp[0],z:sp[1],rot:O.group.rotation.y,s:O.s,tex:O.tex}); selectObj(r); saveDecor(); }
 function alignObj(O){ if(!O)return; const p=O.group.position; const gx=Math.round(p.x/0.5)*0.5, gz=Math.round(p.z/0.5)*0.5; if(canStand(gx,gz)){ O.group.position.set(gx,0,gz); saveDecor(); } }
@@ -1195,6 +1212,7 @@ OBJ_KINDS.forEach((o,i)=>{ const s=document.createElement("button"); s.className
   s.innerHTML="<span>"+o.icon+"</span><small>"+o.label+"</small>";
   s.onclick=()=>{ pickKind=o.kind; [...objSwatches.children].forEach(c=>c.classList.remove("sel")); s.classList.add("sel"); };
   objSwatches.appendChild(s); });
+document.querySelectorAll(".tplBtn").forEach(b=>b.onclick=()=>applyTemplate(TEMPLATES[+b.dataset.tpl]));
 const objColorsEl=document.getElementById("objColors");
 DCOL.forEach(c=>{ const d=document.createElement("span"); d.className="cd"; d.style.background="#"+c.toString(16).padStart(6,"0");
   d.onclick=()=>{ if(selObj){ pushUndo(); recolorObj(selObj,c); } }; objColorsEl.appendChild(d); });
