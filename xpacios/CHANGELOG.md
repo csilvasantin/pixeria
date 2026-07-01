@@ -4,6 +4,9 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
+## v.01.07.2026.7 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/d6b344d/xpacios/xtanco-barcelona/index.html)
+- **Regla: medir distancia (📐)**: toggle que mide la distancia entre dos puntos del suelo — clic en A, clic en B, y dibuja la línea + la **distancia en metros** en el punto medio (el tooltip muestra las coordenadas). Para acotar pasillos, huecos entre muebles o el frente de escaparate. Solo vista, en modo isométrica/órbita.
+
 ## v.01.07.2026.6 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/120764d/xpacios/xtanco-barcelona/index.html)
 - **Comparar antes/después (🔀)**: guarda un estado de decoración ("antes"), haz cambios, y pulsa 🔀 para guardar el "después" y **alternar A/B** viendo el cambio al instante. El botón indica cuál estás viendo (A/B); clic derecho reinicia. Ideal para decidir entre dos montajes.
 
