@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Xtanco Barcelona · Gran de Gràcia · Xpacio · XpaceOS Locations</title>
 <meta name="theme-color" content="#0c0510">
-<meta name="version" content="v.01.07.2026.6">
+<meta name="version" content="v.01.07.2026.7">
 <meta name="description" content="Xtanco Barcelona (Gran de Gràcia) — gemelo 3D estilo flagship Desigual (como el de Ginza): entra con un personaje y paséalo como un videojuego, decora paredes y comercializa sus pantallas. Sandbox de innovación. XpaceOS Locations · Pixeria.">
 <style>
   :root{ --bg:#0c0510; --ink:#ffe6f2; --muted:#b88aa6; --cyan:#ff4da6; --line:rgba(255,77,166,.18); --panel:rgba(22,8,18,.86); }
@@ -78,6 +78,7 @@
   .zlabel b{font-weight:700}
   .zlabel small{color:var(--muted)}
   .olabel{font-size:10px;padding:3px 7px;background:rgba(20,16,22,.82);z-index:3}
+  .rlabel{border-color:var(--cyan);color:#eef6ff;font-size:11px}
   .olabel b{font-weight:600}
   /* ---- modo explorar (walkable) ---- */
   .ctrl #walkBtn{border-color:var(--cyan);color:var(--cyan);background:rgba(55,224,255,.12);font-weight:700}
@@ -235,6 +236,7 @@
   <button id="resetBtn" title="Recentrar la cámara isométrica">📐 Isométrica</button>
   <button id="aforoBtn" title="Aforo simulado: clientes paseando">👥 Aforo</button>
   <button id="measureBtn" title="Medir: cotas del local (ancho × fondo) y m²">📏 Medir</button>
+  <button id="rulerBtn" title="Regla: medir la distancia entre dos puntos del suelo">📐 Regla</button>
   <button id="photoBtn" title="Descargar una foto (PNG) del Xpacio">📸 Foto</button>
   <button id="fichaBtn" title="Descargar ficha técnica: plano cenital con cotas, pantallas y objetos">📄 Ficha</button>
   <button id="shareBtn" title="Copiar enlace de este Xpacio">🔗 Compartir</button>
@@ -694,7 +696,10 @@ function updateLabels(){ const hide=(mode==="walk"||mode==="tour");
     el.style.left=(v.x*.5+.5)*innerWidth+"px"; el.style.top=(-v.y*.5+.5)*innerHeight+"px"; el.style.display=(v.z<1)?"block":"none"; }
   if(measureOn){ const proj=(wx,wz,el)=>{ if(hide){ el.style.display="none"; return; } const v=new THREE.Vector3(wx,0.12,wz); v.applyMatrix4(root.matrixWorld); v.project(activeCam);
       el.style.left=(v.x*.5+.5)*innerWidth+"px"; el.style.top=(-v.y*.5+.5)*innerHeight+"px"; el.style.display=(v.z<1)?"block":"none"; };
-    proj((bb.minx+bb.maxx)/2-CX, bb.minz-CZ, mLabW); proj(bb.minx-CX, (bb.minz+bb.maxz)/2-CZ, mLabD); proj(0, 0, mLabA); } }
+    proj((bb.minx+bb.maxx)/2-CX, bb.minz-CZ, mLabW); proj(bb.minx-CX, (bb.minz+bb.maxz)/2-CZ, mLabD); proj(0, 0, mLabA); }
+  if(rulerLabelEl && rulerLabelEl.style.display!=="none" && rulerMid){ if(mode!=="orbit"){ rulerLabelEl.style.display="none"; }
+    else { const v=new THREE.Vector3(rulerMid.x,0.2,rulerMid.z); v.applyMatrix4(root.matrixWorld); v.project(activeCam);
+      rulerLabelEl.style.left=(v.x*.5+.5)*innerWidth+"px"; rulerLabelEl.style.top=(-v.y*.5+.5)*innerHeight+"px"; } } }
 
 /* ---------- gestión remota ---------- */
 const mgmt=document.getElementById("mgmt"); let curZone=null;
@@ -793,6 +798,25 @@ addEventListener("keydown",e=>{ if(e.key==="?"){ const t=e.target.tagName; if(t=
 const persp = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.05, 240);
 let mode = "orbit";        // "orbit" | "walk"
 let activeCam = cam;
+/* ---------- regla: medir distancia entre dos puntos del suelo (modo órbita) ---------- */
+let rulerOn=false, rulerA=null, rulerMid=null;
+const rulerGeo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]);
+const rulerLine=new THREE.Line(rulerGeo,new THREE.LineBasicMaterial({color:0x37e0ff})); rulerLine.visible=false; root.add(rulerLine);
+const rulerLabelEl=document.createElement("div"); rulerLabelEl.className="zlabel olabel rlabel"; rulerLabelEl.style.display="none"; document.body.appendChild(rulerLabelEl);
+function clearRuler(){ rulerA=null; rulerMid=null; rulerLine.visible=false; rulerLabelEl.style.display="none"; }
+function toggleRuler(){ rulerOn=!rulerOn; const b=document.getElementById("rulerBtn"); if(b) b.classList.toggle("on",rulerOn); clearRuler(); if(rulerOn) toast("📐 Regla: clic dos puntos del suelo para medir"); }
+function rulerSetA(p){ rulerA=p; rulerMid={x:p.x,z:p.z}; rulerLine.visible=false; rulerLabelEl.innerHTML="<b>A</b> · clic el 2º punto"; rulerLabelEl.title=""; rulerLabelEl.style.display="block"; }
+function rulerMeasure(a,b){ const d=Math.hypot(a.x-b.x,a.z-b.z);
+  rulerGeo.setFromPoints([new THREE.Vector3(a.x,0.06,a.z),new THREE.Vector3(b.x,0.06,b.z)]); rulerGeo.attributes.position.needsUpdate=true; rulerLine.visible=true;
+  rulerMid={x:(a.x+b.x)/2,z:(a.z+b.z)/2}; rulerLabelEl.innerHTML="<b>"+d.toFixed(2)+" m</b>";
+  rulerLabelEl.title="A ("+a.x.toFixed(2)+", "+a.z.toFixed(2)+") → B ("+b.x.toFixed(2)+", "+b.z.toFixed(2)+")"; rulerLabelEl.style.display="block"; }
+let rDown=null, rMoved=false;
+canvas.addEventListener("pointerdown",e=>{ if(!rulerOn||mode!=="orbit")return; rDown=[e.clientX,e.clientY]; rMoved=false; });
+addEventListener("pointermove",e=>{ if(rDown&&Math.hypot(e.clientX-rDown[0],e.clientY-rDown[1])>4) rMoved=true; });
+addEventListener("pointerup",e=>{ if(!rulerOn||mode!=="orbit"){ rDown=null; return; } const dn=rDown, mv=rMoved; rDown=null; if(!dn||mv) return;
+  setNdc(e); const hf=hitFloor(); if(!hf) return; const p={x:hf.point.x,z:hf.point.z};
+  if(!rulerA) rulerSetA(p); else { rulerMeasure(rulerA,p); rulerA=null; } });
+document.getElementById("rulerBtn").onclick=toggleRuler;
 
 /* --- colisión: dentro del polígono de planta (coords root-local) --- */
 const POLY = PLAN.outline.map(([x,z])=>[x-CX, z-CZ]);
@@ -878,7 +902,7 @@ joyEl.addEventListener("touchend",joyEnd); joyEl.addEventListener("touchcancel",
 
 /* --- entrar / salir --- */
 const walkBtn=document.getElementById("walkBtn"), walkHint=document.getElementById("walkHint");
-function enterWalk(){ if(mode==="edit") exitEdit(); if(mode==="tour") exitTour(); mode="walk"; activeCam=persp; player.visible=!fpv;
+function enterWalk(){ if(rulerOn) toggleRuler(); if(mode==="edit") exitEdit(); if(mode==="tour") exitTour(); mode="walk"; activeCam=persp; player.visible=!fpv;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=false;
   amb.intensity=0.55; playerLight.intensity=0.5;       // realza ligeramente al pasear
   ceilingGrp.visible=true;                              // techo: tienda cerrada al pasear
@@ -1296,7 +1320,7 @@ document.getElementById("ocClear").onclick=()=>{ if(selObj){ pushUndo(); applyOb
 document.getElementById("ocUpload").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(!f||!selObj)return; pushUndo();
   const rd=new FileReader(); rd.onload=()=>applyObjTexture(selObj,rd.result); rd.readAsDataURL(f); };
 
-function enterEdit(){ if(mode==="walk") exitWalk(); if(mode==="tour") exitTour(); mode="edit"; activeCam=cam;
+function enterEdit(){ if(rulerOn) toggleRuler(); if(mode==="walk") exitWalk(); if(mode==="tour") exitTour(); mode="edit"; activeCam=cam;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=true; root.rotation.y=0; editGrid.visible=true;
   document.body.classList.add("editing"); editBtn.classList.add("on"); editBtn.textContent="✓ Hecho"; updateObjCount(); }
 function exitEdit(){ mode="orbit"; selectPoster(null); selectObj(null); selectZone(null); editGrid.visible=false; document.body.classList.remove("editing");
@@ -1376,7 +1400,7 @@ function updateTour(dt){ tpulse+=dt*3;
   drawMinimap();
 }
 const tourBtn=document.getElementById("tourBtn"), tourHint=document.getElementById("tourHint");
-function enterTour(){ if(mode==="walk") exitWalk(); if(mode==="edit") exitEdit(); mode="tour"; activeCam=persp; player.visible=false;
+function enterTour(){ if(rulerOn) toggleRuler(); if(mode==="walk") exitWalk(); if(mode==="edit") exitEdit(); mode="tour"; activeCam=persp; player.visible=false;
   spin=false; spinBtn.classList.remove("on"); controls.enabled=false; root.rotation.y=0;
   amb.intensity=0.55; playerLight.intensity=0; ceilingGrp.visible=true; tourGrp.visible=true;
   zoneMeshes.forEach(m=>{ m.scr.lookAt(0,m.scr.position.y,0); m.frame.quaternion.copy(m.scr.quaternion); });
