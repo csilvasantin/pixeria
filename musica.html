@@ -21,7 +21,7 @@
   <script defer src="/assets/analytics.js?v=20260617-consent"></script>
   <script defer src="/assets/consent.js?v=20260617"></script>
 </head>
-<body data-page="musica">
+<body data-page="musica" class="quad-ui">
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KD696XW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
@@ -42,6 +42,39 @@
     </div>
   </nav>
   <canvas id="matrix-rain" aria-hidden="true"></canvas>
+  <nav class="quad-menu quad-top" aria-label="Navegación superior Pixeria">
+    <button type="button" class="quad-icon" data-quad-toggle="left" aria-label="Desplegar barra de opciones izquierda" title="Opciones">☰</button>
+    <a class="quad-brand" href="index.html"><span>P</span><b>Pixeria</b><small>Music Ops</small></a>
+    <div class="quad-links">
+      <a href="audio.html">Locución</a>
+      <a class="active" href="musica.html">Música</a>
+      <a href="imagenes.html">Imágenes</a>
+      <a href="video.html">Video</a>
+      <a href="stock.html">Stock</a>
+    </div>
+    <a class="quad-cta" href="https://admira.tv" target="_blank" rel="noopener">Admira.tv</a>
+    <button type="button" class="quad-icon" data-quad-toggle="right" aria-label="Desplegar menú avanzado derecho" title="Menú avanzado">▤</button>
+    <button type="button" class="quad-icon" data-quad-toggle="bottom" aria-label="Desplegar modo experto inferior" title="Modo experto">⌘</button>
+  </nav>
+  <nav class="quad-menu quad-bottom is-collapsed" aria-label="Acciones de producción musical">
+    <button type="button" data-quad-action="create">🎵 Crear música</button>
+    <button type="button" data-quad-action="send">🎧 Enviar audio</button>
+    <button type="button" data-quad-action="listen">↗ Escuchar Xpacio</button>
+    <a href="stock.html">📌 Stock</a>
+  </nav>
+  <nav class="quad-menu quad-left is-collapsed" aria-label="Flujo de producción">
+    <a href="#briefForm"><span>01</span>Brief</a>
+    <a href="#briefForm"><span>02</span>Motor</a>
+    <a href="#player"><span>03</span>Generar</a>
+    <a href="#player"><span>04</span>Revisar</a>
+    <a href="#signageStatus"><span>05</span>Publicar</a>
+  </nav>
+  <nav class="quad-menu quad-right is-collapsed" aria-label="Destino Xpacio">
+    <button type="button" data-xpacio-target="xtanco-valencia-a|/xpacios/grok/?pantalla=A&listen=1"><span>A</span>Xtanco</button>
+    <button type="button" data-xpacio-target="xtanco-valencia-b|/xpacios/grok/?pantalla=B&listen=1"><span>B</span>Zona</button>
+    <button type="button" data-xpacio-target="xtanco-valencia-c|/xpacios/grok/?pantalla=C&listen=1"><span>C</span>Zona</button>
+    <button type="button" data-xpacio-target="xtanco-valencia-d|/xpacios/grok/?pantalla=D&listen=1"><span>D</span>Zona</button>
+  </nav>
   <header class="topnav">
     <div class="brand"><a href="index.html" class="brand-link"><span class="brand-mark">P</span><span class="brand-name">Pixeria</span></a></div>
     <nav class="primary-nav">
@@ -64,28 +97,79 @@
     </div>
   </header>
 
-  <header class="page-head has-gif"><figure class="page-gif"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Digital_rain_animation_medium_letters_2_clear.gif" alt="Música · loop Matrix" loading="lazy"><figcaption>// Música · loop Matrix</figcaption></figure>
+  <header class="page-head has-gif music-hero"><figure class="page-gif"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Digital_rain_animation_medium_letters_2_clear.gif" alt="Música · loop Matrix" loading="lazy"><figcaption>// Música · loop Matrix</figcaption></figure>
     <p class="eyebrow music">Tipo de contenido · Música</p>
-    <h1>Identidad musical y piezas adaptativas.</h1>
-    <p class="lead">Música generada para menús, trailers, ambientes, marcas, eventos y escenas. Define mapa emocional, capas, BPM y versiones; el brief se exporta listo para producción.</p>
+    <h1>Hilo musical para Admira TV.</h1>
+    <p class="lead">Crea piezas musicales listas para pantallas, ambientes, eventos y canales Admira. Define intención, produce con Suno y publica en Stock sin perder trazabilidad.</p>
   </header>
 
   <main>
     <form id="briefForm">
-      <div class="field" style="margin-bottom: 16px; display:grid; grid-template-columns: minmax(220px, 1fr) auto auto; gap:10px; align-items:end;">
+      <section class="music-console" aria-label="Flujo de creación musical">
+        <div class="music-console-head">
+          <div>
+            <span class="music-console-kicker">Admira TV · music ops</span>
+            <h2>De brief a emisión</h2>
+          </div>
+          <div class="music-flow" id="musicFlow" aria-label="Estado de producción">
+            <span class="music-flow-step is-active" data-stage="brief">Brief</span>
+            <span class="music-flow-step" data-stage="engine">Motor</span>
+            <span class="music-flow-step" data-stage="produce">Generar</span>
+            <span class="music-flow-step" data-stage="review">Revisar</span>
+            <span class="music-flow-step" data-stage="publish">Publicar</span>
+          </div>
+        </div>
+        <div class="music-health" id="musicHealth" aria-live="polite">
+          <div>
+            <span class="music-health-label">Suno local</span>
+            <strong id="musicHealthState">Comprobando...</strong>
+          </div>
+          <div>
+            <span class="music-health-label">Créditos</span>
+            <strong id="musicHealthCredits">--</strong>
+          </div>
+          <div>
+            <span class="music-health-label">Destino</span>
+            <strong>Xpacio + Admira TV</strong>
+          </div>
+          <button type="button" class="btn" id="refreshMusicHealth">Revisar conexión</button>
+        </div>
+      </section>
+
+      <div class="music-project-bar field">
         <div>
           <label for="proj-cliente">Cliente / proyecto</label>
           <input id="proj-cliente" name="cliente" type="text" placeholder="Ej. Aena Mallorca - Campaña primavera">
         </div>
-        <button type="button" class="btn" id="sendToAdmiraXP" title="Envía el último contenido generado al feed de Admira XP">📺 ENVIAR A ADMIRA XP</button>
-        <a class="btn" href="signage.html" target="_blank" rel="noopener" title="Abre la pantalla de signage para ver lo enviado">↗ VER PANTALLA</a>
+        <div>
+          <label for="xpacio-target">Xpacio destino</label>
+          <select id="xpacio-target" name="musica.xpacioTarget">
+            <option value="xtanco-valencia-a|/xpacios/grok/?pantalla=A&listen=1">Xtanco Valencia · zona A</option>
+            <option value="xtanco-valencia-b|/xpacios/grok/?pantalla=B&listen=1">Xtanco Valencia · zona B</option>
+            <option value="xtanco-valencia-c|/xpacios/grok/?pantalla=C&listen=1">Xtanco Valencia · zona C</option>
+            <option value="xtanco-valencia-d|/xpacios/grok/?pantalla=D&listen=1">Xtanco Valencia · zona D</option>
+          </select>
+        </div>
+        <button type="button" class="btn" id="sendToAdmiraXP" title="Envía el audio al Xpacio seleccionado">🎧 ENVIAR AUDIO</button>
+        <a class="btn" id="listenXpacio" href="/xpacios/grok/?pantalla=A&listen=1" target="_blank" rel="noopener" title="Abre el Xpacio destino para escuchar lo que está sonando">↗ ESCUCHAR XPACIO</a>
+      </div>
+      <div id="signageStatus" class="signage-status music-send-status" hidden>
+        <img class="signage-thumb" alt="">
+        <div>
+          <div class="signage-status-head">
+            <span class="signage-stage">Preparando audio...</span>
+            <span class="signage-id"></span>
+          </div>
+          <div class="signage-log"></div>
+          <div class="signage-bar"><span class="signage-bar-fill"></span></div>
+        </div>
       </div>
 
-      <article class="module">
+      <article class="module music-workbench">
         <div class="module-head"><h3><span class="accent" style="background: var(--music);"></span>Música</h3><small>identidad + loop + energía</small></div>
         <div data-motor-section="musica"></div>
-        <div class="field" style="display:flex;gap:14px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:200px;">
+        <div class="music-form-grid two">
+          <div class="field">
             <label for="m-versiones">Versiones a entregar</label>
             <select id="m-versiones" name="musica.versiones">
               <option value="Canción ~2 min">Canción ~2 min</option>
@@ -96,7 +180,7 @@
               <option value="Stinger ~3s">Stinger ~3s</option>
             </select>
           </div>
-          <div style="flex:1;min-width:170px;">
+          <div class="field">
             <label for="m-singer">Voz / cantante</label>
             <select id="m-singer" name="musica.singer">
               <option value="voz masculina">Hombre</option>
@@ -106,10 +190,10 @@
             </select>
           </div>
         </div>
-        <div class="field" style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
-          <div style="flex:0 0 180px;">
+        <div class="music-form-grid style-title">
+          <div class="field">
             <label for="m-style">Estilo</label>
-            <select id="m-style" name="musica.style" style="width:100%;">
+            <select id="m-style" name="musica.style">
               <option value="blues" selected>Blues</option>
               <option value="flamenco">Flamenco</option>
               <option value="samba">Samba</option>
@@ -117,18 +201,18 @@
               <option value="techno">Techno</option>
             </select>
           </div>
-          <div style="flex:1;min-width:220px;">
+          <div class="field">
             <label for="m-titulo">Título de la canción</label>
             <input id="m-titulo" name="musica.titulo" type="text" placeholder="Ej. Blues de medianoche">
           </div>
         </div>
         <div class="field">
           <label for="m-letra">Letra <button type="button" class="btn" id="genLyrics" style="font-size:10px;padding:4px 8px;margin-left:8px;vertical-align:middle;">✏️ GENERAR CON GEMINI</button></label>
-          <div style="display:flex;gap:14px;align-items:stretch;flex-wrap:wrap;">
-            <textarea id="m-letra" name="musica.letra" rows="10" placeholder="[Verse 1]&#10;...&#10;&#10;[Chorus]&#10;..." style="font-family:inherit;flex:1;min-width:280px;"></textarea>
-            <figure id="m-cover" hidden style="flex:0 0 240px;margin:0;display:flex;flex-direction:column;gap:6px;">
-              <img alt="Portada generada por Suno" style="width:100%;aspect-ratio:1/1;object-fit:cover;border:1px solid var(--matrix,#0f0);border-radius:6px;box-shadow:0 0 12px rgba(0,255,65,.3);">
-              <figcaption style="font-size:10px;color:var(--muted);text-align:center;">Portada · Suno</figcaption>
+          <div class="music-lyrics-grid">
+            <textarea id="m-letra" name="musica.letra" rows="10" placeholder="[Verse 1]&#10;...&#10;&#10;[Chorus]&#10;..." style="font-family:inherit;"></textarea>
+            <figure id="m-cover" hidden>
+              <img alt="Portada generada por Suno">
+              <figcaption>Portada · Suno</figcaption>
             </figure>
           </div>
         </div>

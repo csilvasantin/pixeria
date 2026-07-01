@@ -148,9 +148,9 @@
       { id: 'elevenlabs-v3', nombre: 'ElevenLabs v3',  tipo: 'pro',  badge: 'Best',   coste: '$300 / 1M caracteres',   desc: 'máxima expresividad · tags emocionales' },
     ],
     musica: [
-      { id: 'pixer-loop',           nombre: 'Pixer Loop (Web Audio)', tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',  desc: 'pentatónica Cm in-browser' },
-      { id: 'lyria-3-pro-preview',  nombre: 'Gemini (Google)',        tipo: 'pro',  badge: 'Better', coste: 'paid tier Gemini',    desc: '~2min con voz cantando la letra' },
-      { id: 'suno-local-v5',        nombre: 'Suno v5 (local)',        tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción · cuenta loguead.', desc: 'chirp-v5 · máxima calidad · vía proxy suno-local' },
+      { id: 'pixer-loop',           nombre: 'Pixer Loop (Web Audio)', tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',  desc: 'preview rápido para probar intención', use: 'Borrador' },
+      { id: 'lyria-3-pro-preview',  nombre: 'Gemini (Google)',        tipo: 'pro',  badge: 'Better', coste: 'paid tier Gemini',    desc: '~2min con voz cantando la letra', use: 'Alternativa' },
+      { id: 'suno-local-v5',        nombre: 'Suno v5 (local)',        tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción · cuenta loguead.', desc: 'calidad final vía proxy suno-local', use: 'Master' },
     ],
     imagenes: [
       { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Good',   coste: 'gratis (free tier)',   desc: 'generación + edición · Gemini 2.5 Flash Image' },
@@ -256,6 +256,7 @@
           <input type="${inputType}" id="${groupName}-${o.id}" name="${groupName}" value="${o.id}" ${selected.includes(o.id) ? 'checked' : ''}${o.soon ? ' disabled' : ''}>
           <label for="${groupName}-${o.id}">
             <span class="motor-name">${o.nombre}<span class="motor-tag ${o.tipo} ${badgeCls}">${badgeText}</span></span>
+            ${o.use ? `<span class="motor-use">${o.use}</span>` : ''}
             <span class="motor-cost">${o.coste}</span>
             <span class="motor-desc">${o.desc}</span>
           </label>
@@ -317,6 +318,10 @@
           }
           saveStore(s);
           renderWarning();
+          if (seccion === 'musica') {
+            updateMusicStage('engine');
+            refreshMusicHealth(false);
+          }
         });
       });
       renderWarning();
@@ -813,6 +818,111 @@
     }
   }
 
+  function updateMusicStage(stage) {
+    const order = ['brief', 'engine', 'produce', 'review', 'publish'];
+    const idx = Math.max(0, order.indexOf(stage));
+    document.querySelectorAll('#musicFlow .music-flow-step').forEach(el => {
+      const n = order.indexOf(el.dataset.stage);
+      el.classList.toggle('is-active', n === idx);
+      el.classList.toggle('is-done', n >= 0 && n < idx);
+    });
+  }
+
+  async function refreshMusicHealth(showOkToast) {
+    const panel = document.getElementById('musicHealth');
+    const state = document.getElementById('musicHealthState');
+    const credits = document.getElementById('musicHealthCredits');
+    if (!panel || !state || !credits) return null;
+    panel.classList.remove('is-ok', 'is-warn', 'is-checking');
+    panel.classList.add('is-checking');
+    state.textContent = 'Comprobando...';
+    credits.textContent = '--';
+    const health = await sunoLocalAlive();
+    panel.classList.remove('is-checking');
+    if (health && health.ok) {
+      panel.classList.add('is-ok');
+      state.textContent = 'Conectado';
+      const left = health.total_credits_left ?? health.credits_left ?? health.monthly_limit ?? '--';
+      credits.textContent = String(left);
+      if (showOkToast) showToast('Suno conectado');
+    } else {
+      panel.classList.add('is-warn');
+      state.textContent = 'No responde';
+      credits.textContent = 'offline';
+    }
+    return health;
+  }
+
+  function bindMusicProductionUX() {
+    if (document.body.dataset.page !== 'musica') return;
+    updateMusicStage('brief');
+    document.getElementById('refreshMusicHealth')?.addEventListener('click', () => refreshMusicHealth(true));
+    const target = document.getElementById('xpacio-target');
+    const listen = document.getElementById('listenXpacio');
+    function syncListenHref() {
+      if (!target || !listen) return;
+      const [, href] = String(target.value || '').split('|');
+      if (href) listen.href = href;
+    }
+    target?.addEventListener('change', () => {
+      const s = loadStore();
+      setNested(s, 'musica.xpacioTarget', target.value);
+      saveStore(s);
+      syncListenHref();
+      document.querySelectorAll('[data-xpacio-target]').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.xpacioTarget === target.value);
+      });
+    });
+    syncListenHref();
+    document.querySelectorAll('[data-xpacio-target]').forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.xpacioTarget === (target?.value || ''));
+      btn.addEventListener('click', () => {
+        if (!target) return;
+        target.value = btn.dataset.xpacioTarget || target.value;
+        target.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    });
+    document.querySelectorAll('[data-quad-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const act = btn.dataset.quadAction;
+        if (act === 'create') document.getElementById('playOutput')?.click();
+        if (act === 'send') document.getElementById('sendToAdmiraXP')?.click();
+        if (act === 'listen') document.getElementById('listenXpacio')?.click();
+      });
+    });
+    document.querySelectorAll('[data-quad-toggle]').forEach(btn => {
+      const targetName = btn.dataset.quadToggle;
+      const panel = document.querySelector(`.quad-${targetName}`);
+      if (!panel) return;
+      const bodyClass = `quad-${targetName}-open`;
+      function sync() {
+        const open = !panel.classList.contains('is-collapsed');
+        document.body.classList.toggle(bodyClass, open);
+        btn.classList.toggle('is-active', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      btn.addEventListener('click', () => {
+        panel.classList.toggle('is-collapsed');
+        sync();
+      });
+      sync();
+    });
+    const form = document.getElementById('briefForm');
+    form?.addEventListener('input', e => {
+      if (e.target && e.target.name && e.target.name.startsWith('musica.')) updateMusicStage('brief');
+    });
+    document.addEventListener('click', e => {
+      const feedBtn = e.target.closest('[data-act="feed-latest"]');
+      if (!feedBtn) return;
+      const card = feedBtn.closest('.music-result-item');
+      document.querySelectorAll('.music-result-item.is-selected').forEach(el => el.classList.remove('is-selected'));
+      if (card) card.classList.add('is-selected');
+      updateMusicStage('publish');
+      document.getElementById('sendToAdmiraXP')?.click();
+    });
+    refreshMusicHealth(false);
+  }
+
   // Portada (#m-cover, a la derecha de la Letra). Por defecto una imagen Matrix
   // aleatoria; cuando Suno termina, su carátula la sustituye.
   // Pool de imágenes Matrix (digital rain) fiables de Wikimedia Commons.
@@ -839,6 +949,7 @@
 
   async function playSunoLocal(s, model) {
     setMusicCover('');  // limpia la portada anterior al empezar
+    updateMusicStage('produce');
     // El campo "Styles" (s.uso) va a la caja Styles de Suno. La Letra va a Lyrics.
     // "Versiones a entregar" define tipo (canción/loop/stinger) + pista de duración.
     const lyrics = (s.letra || '').trim();
@@ -857,8 +968,9 @@
     const prompt = [voice, styleText, durHint].filter(Boolean).join(', ');
     const titleHint = (s.titulo || s.cliente || styleText || '').slice(0, 60);
 
-    const health = await sunoLocalAlive();
+    const health = await refreshMusicHealth(false) || await sunoLocalAlive();
     if (!health.ok) {
+      updateMusicStage('engine');
       showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · proxy NO responde (${SUNO_LOCAL_URL})</div><pre class="player-body">${health.error}\n\nArranca en el Mac Mini:\n  cd ~/GitHub/01.-AdmiraXperience-Game/suno-local\n  ./start-suno-local.sh</pre></div>`);
       return;
     }
@@ -900,55 +1012,80 @@
         attempt++;
         const pollR = await fetch(`${SUNO_LOCAL_URL}/status?ids=${clipIds.join(',')}`);
         const clips = await pollR.json();
-        const ready = clips.filter(c => c.audio_url && c.status === 'streaming' || c.status === 'complete');
+        const ready = clips.filter(c => (c.audio_url || c.video_url) && (c.status === 'streaming' || c.status === 'complete'));
         setProgressLabel('suno', `Suno · intento ${attempt} · ${ready.length}/${clips.length} listos`);
         if (ready.length >= 1) {
           stop(true);
+          updateMusicStage('review');
           // Portada que devuelve Suno → a la derecha de la Letra cuando termina.
           setMusicCover(ready.map(c => c.image_large_url || c.image_url).find(Boolean) || '');
           const briefTitle = deriveAssetTitle('musica', loadStore());
+          const modelLabel = model.replace('chirp-', '');
           showPlayer(`
-            <div class="player-card">
-              <div class="player-head">▶ MÚSICA · Suno (${model.replace('chirp-','')}) · ${ready.length}/${clips.length} clips</div>
+            <div class="player-card music-result-card">
+              <div class="player-head music-result-head">
+                <span>▶ HILO MUSICAL · Suno ${modelLabel}</span>
+                <span>${ready.length}/${clips.length} versiones listas</span>
+              </div>
+              <div class="music-result-grid">
               ${ready.map((c, i) => {
                 const cTitle = (c.title && c.title.trim()) || briefTitle || `Suno ${i + 1}`;
                 const cover = c.image_large_url || c.image_url || '';
                 const dur = (c.metadata && (c.metadata.duration_formatted || c.metadata.duration)) || '';
                 const pickedUrl = c.video_url || c.audio_url;
                 const pickedMime = c.video_url ? 'video/mp4' : 'audio/mpeg';
-                const pubMeta = { type: 'music', motor: `suno-local-${model.replace('chirp-v','v')}`, prompt: `${cTitle} · ${prompt}`.slice(0,200), costEst: '~10 cred', url: pickedUrl, mime: pickedMime, thumbnail: cover || null, clipId: c.id };
+                const pubMeta = {
+                  type: 'music',
+                  motor: `suno-local-${model.replace('chirp-v','v')}`,
+                  prompt: `${cTitle} · ${prompt}`.slice(0,200),
+                  title: cTitle,
+                  comment: `Hilo musical Admira TV · ${ver || 'pieza musical'} · ${voice || 'voz no especificada'}`,
+                  tags: ['admira-tv', 'hilo-musical', 'suno'],
+                  costEst: '~10 cred',
+                  url: pickedUrl,
+                  mime: pickedMime,
+                  thumbnail: cover || null,
+                  clipId: c.id,
+                  quality: 'best',
+                };
                 // Suno devuelve video_url (mp4 con cover estatico + audio embebido):
                 // lo preferimos porque al enviarlo a Pixer Feed lleva caratula sin
                 // depender del worker. Si solo hay audio_url, fallback a audio + img.
-                if (c.video_url) {
-                  return `
-                <div style="display:grid;gap:6px;margin-bottom:10px;">
-                  <strong style="color:var(--matrix);text-shadow:var(--glow);">[${i + 1}] ${escAttr(cTitle)} · ${dur}</strong>
-                  <video controls src="${c.video_url}"${cover ? ` poster="${escAttr(cover)}"` : ''} data-pixer-title="${escAttr(cTitle)}"${cover ? ` data-pixer-cover="${escAttr(cover)}"` : ''} style="width:100%;max-height:55vh;border:1px solid var(--matrix);box-shadow:0 0 12px rgba(0,255,65,.3);"></video>
-                  ${publishBtnHTML(pubMeta)}
-                </div>`;
-                }
+                const media = c.video_url
+                  ? `<video controls src="${c.video_url}"${cover ? ` poster="${escAttr(cover)}"` : ''} data-pixer-title="${escAttr(cTitle)}"${cover ? ` data-pixer-cover="${escAttr(cover)}"` : ''}${c.audio_url ? ` data-pixer-audio="${escAttr(c.audio_url)}"` : ''}></video>`
+                  : `${cover ? `<img src="${escAttr(cover)}" alt="" class="music-result-cover">` : ''}
+                     <audio controls src="${c.audio_url}" data-pixer-title="${escAttr(cTitle)}"${cover ? ` data-pixer-cover="${escAttr(cover)}"` : ''}></audio>`;
                 return `
-                <div style="display:grid;gap:6px;margin-bottom:10px;">
-                  <strong style="color:var(--matrix);text-shadow:var(--glow);">[${i + 1}] ${escAttr(cTitle)} · ${dur}</strong>
-                  ${cover ? `<img src="${escAttr(cover)}" style="width:100%;max-height:240px;object-fit:cover;border:1px solid var(--matrix);box-shadow:0 0 12px rgba(0,255,65,.3);">` : ''}
-                  <audio controls src="${c.audio_url}" data-pixer-title="${escAttr(cTitle)}"${cover ? ` data-pixer-cover="${escAttr(cover)}"` : ''} style="width:100%;"></audio>
-                  ${publishBtnHTML(pubMeta)}
-                </div>`;
+                <article class="music-result-item">
+                  <header>
+                    <span class="music-result-index">Versión ${i + 1}</span>
+                    <strong>${escAttr(cTitle)}</strong>
+                    ${dur ? `<small>${escAttr(String(dur))}</small>` : ''}
+                  </header>
+                  <div class="music-result-media">${media}</div>
+                  <div class="music-result-actions">
+                    ${publishBtnHTML(pubMeta)}
+                    <a class="btn" href="${escAttr(pickedUrl)}" target="_blank" rel="noopener" download>⬇ Descargar</a>
+                    <button type="button" class="btn" data-act="feed-latest" title="Usa esta versión para enviarla al Xpacio elegido">🎧 Preparar escucha</button>
+                  </div>
+                </article>`;
               }).join('')}
-              ${lyrics ? `<details open style="margin-top:8px;"><summary style="cursor:pointer;color:var(--matrix);text-shadow:var(--glow);">📝 LETRA</summary><pre class="brief" style="white-space:pre-wrap;max-height:320px;overflow:auto;font-size:12px;margin-top:6px;">${escAttr(lyrics)}</pre><button type="button" class="btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent);this.textContent='✓ copiada'" style="margin-top:4px;font-size:10px;padding:4px 8px;">COPIAR LETRA</button></details>` : ''}
-              <small class="player-foot">// Suno · ${prompt.slice(0,80)}</small>
+              </div>
+              ${lyrics ? `<details open class="music-result-lyrics"><summary>Letra de producción</summary><pre class="brief">${escAttr(lyrics)}</pre></details>` : ''}
+              <small class="player-foot">// Admira TV · ${prompt.slice(0,80)} · revisa una versión y publícala en Stock</small>
             </div>`);
           return;
         }
         if (attempt > 60) { // 5 min cap
           stop(false);
+          updateMusicStage('engine');
           showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · TIMEOUT</div><pre class="player-body">clips: ${clipIds.join(', ')}</pre></div>`);
           return;
         }
       }
     } catch (e) {
       stop(false);
+      updateMusicStage('engine');
       showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);
     }
   }
@@ -2655,6 +2792,7 @@
       }
       const data = await r.json();
       showToast('✅ Publicado · ' + (data.id || data.url || 'ok'));
+      if (meta.type === 'music') updateMusicStage('publish');
       if (btn) { btn.textContent = '✅ EN STOCK'; btn.classList.add('done'); }
       return { ok: true, id: data.id, url: data.url };
     } catch (e) {
@@ -2676,6 +2814,18 @@
 
   // ─── Enviar al feed de Admira XP (KV vía worker) ────────────────
   const SIGNAGE_URL = ELEVEN_WORKER_URL + '/signage';
+
+  function selectedXpacioTarget() {
+    const sel = document.getElementById('xpacio-target');
+    const raw = sel ? String(sel.value || '') : '';
+    const [screen, href] = raw.split('|');
+    const label = sel && sel.selectedOptions && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent.trim() : 'Xpacio';
+    return {
+      screen: screen || 'xtanco-valencia-a',
+      href: href || '/xpacios/grok/?pantalla=A&listen=1',
+      label,
+    };
+  }
 
   async function urlToBase64(url) {
     if (url.startsWith('data:')) {
@@ -2774,6 +2924,16 @@
         cover: (selectedCellImg.dataset && selectedCellImg.dataset.pixerCover) || '',
       };
     }
+    const selectedMusicMedia = player.querySelector('.music-result-item.is-selected video[src], .music-result-item.is-selected audio[src]');
+    if (selectedMusicMedia) {
+      const audioSrc = selectedMusicMedia.dataset && selectedMusicMedia.dataset.pixerAudio;
+      return {
+        kind: audioSrc ? 'audio' : (selectedMusicMedia.tagName === 'VIDEO' ? 'video' : 'audio'),
+        src: audioSrc || selectedMusicMedia.getAttribute('src') || selectedMusicMedia.src,
+        title: (selectedMusicMedia.dataset && selectedMusicMedia.dataset.pixerTitle) || '',
+        cover: (selectedMusicMedia.dataset && selectedMusicMedia.dataset.pixerCover) || '',
+      };
+    }
     const pick = (sel, kind) => {
       const el = player.querySelector(sel);
       if (!el) return null;
@@ -2823,13 +2983,17 @@
       }
       const cliente = (loadStore().cliente || 'sin cliente').slice(0, 80);
       const page = document.body.dataset.page || 'pixer';
+      const xpacio = selectedXpacioTarget();
       // El titulo viene del propio asset cuando los renders dejan data-pixer-title;
       // si no, fallback al generico "<page> · <cliente>".
       const title = (asset.title && asset.title.trim()) || `${page} · ${cliente}`;
       const cover = (asset.cover && asset.cover.trim()) || '';
       const oldText = btn.textContent;
       btn.disabled = true;
-      btn.textContent = '📤 enviando...';
+      btn.textContent = page === 'musica' ? '🎧 enviando...' : '📤 enviando...';
+      const listenWindow = (page === 'musica' && (asset.kind === 'audio' || asset.kind === 'video'))
+        ? window.open(xpacio.href, '_blank', 'noopener')
+        : null;
 
       // Stage 0 — preview en el panel
       const thumbUrl = asset.kind === 'image' ? asset.src : (cover || '');
@@ -2844,6 +3008,46 @@
       });
 
       try {
+        if (page === 'musica' && (asset.kind === 'audio' || asset.kind === 'video')) {
+          const item = {
+            id: 'music-' + Date.now().toString(36),
+            title,
+            type: 'audio',
+            kind: 'audio',
+            url: asset.src,
+            cover_url: cover || '',
+            duration: 180,
+            ts: Date.now(),
+            source: 'pixeria-musica',
+          };
+          setSignageStatus({
+            stage: '🎧 Enviando audio al Xpacio',
+            log: `${xpacio.label} · screen ${xpacio.screen}`,
+            pct: 35,
+            indeterminate: false,
+          });
+          const nowR = await fetch(SIGNAGE_URL + '/now', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ screen: xpacio.screen, item }),
+          });
+          const nowData = await nowR.json().catch(() => ({}));
+          if (!nowR.ok || nowData.ok === false) {
+            setSignageStatus({ stage: '❌ Error enviando al Xpacio', log: (nowData.error || ('HTTP ' + nowR.status)).slice(0, 200), pct: 100, mode: 'error' });
+            return;
+          }
+          setSignageStatus({
+            stage: '▶ Audio asignado al Xpacio',
+            log: `${title.slice(0, 80)} · abre "${xpacio.label}" para escuchar`,
+            pct: 100,
+            id: xpacio.screen,
+            mode: 'done',
+          });
+          updateMusicStage('publish');
+          if (!listenWindow) window.open(xpacio.href, '_blank', 'noopener');
+          return;
+        }
+
         let payload = {
           kind: asset.kind,
           title,
@@ -3408,6 +3612,34 @@
     });
   }
 
+  // Handoff desde el Consejo (admira.live): ?from=consejo&prompt=…&ar=…&motor=…&autoplay=1
+  function bindConsejoHandoff() {
+    const params = new URLSearchParams(location.search);
+    if (params.get('from') !== 'consejo') return;
+    const page = document.body.dataset.page;
+    const prompt = (params.get('prompt') || '').trim();
+    const ar = params.get('ar') || '';
+    const motor = params.get('motor') || '';
+    const encMap = { '1:1': 'Cuadrado 1:1', '16:9': 'Horizontal 16:9', '9:16': 'Vertical 9:16' };
+    const store = loadStore();
+    if (page === 'imagenes') {
+      store.imagenes = { ...(store.imagenes || {}) };
+      if (prompt) store.imagenes.prompt = prompt;
+      if (ar && encMap[ar]) store.imagenes.encuadre = encMap[ar];
+      if (motor) {
+        store.imagenes.motor = motor;
+        store.imagenes.motors = [motor];
+      }
+      saveStore(store);
+      const form = document.getElementById('briefForm');
+      if (form) hydrate(form);
+      showToast(prompt ? 'Brief recibido desde el Consejo' : 'Conexión desde el Consejo');
+      if (params.get('autoplay') === '1' && prompt) {
+        setTimeout(() => { try { playImagenes(); } catch (e) { console.warn('[Pixeria] consejo autoplay', e); } }, 500);
+      }
+    }
+  }
+
   // Init por página
   document.addEventListener('DOMContentLoaded', () => {
     applyDefaults();
@@ -3419,6 +3651,7 @@
     const form = document.getElementById('briefForm');
     if (form) {
       hydrate(form);
+      bindMusicProductionUX();
       bindPersistence(form);
       bindCliente();
       const out = document.getElementById('briefOut');
@@ -3438,6 +3671,7 @@
       bindGenLyrics();
       bindSegmentedAds();
       bindSendToAdmiraXP();
+      bindConsejoHandoff();
 
       const demoBtn = document.getElementById('loadDemo');
       if (demoBtn && window.PIXER_DEMO) {
