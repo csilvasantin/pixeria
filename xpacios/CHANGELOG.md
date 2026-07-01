@@ -4,6 +4,9 @@ Versión: **v.DD.MM.AAAA.release**. Objetivo: el mejor editor de Xpacios del mun
 Cada release se despliega en producción y se verifica. Twin de referencia: `/xpacios/xtanco-barcelona/`.
 Cada versión tiene un enlace **🔗 Ver resultado** que renderiza ese commit exacto vía githack (la versión actual también está siempre en producción: https://www.pixeria.com/xpacios/xtanco-barcelona/).
 
+## v.01.07.2026.2 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/b8c9509/xpacios/xtanco-barcelona/index.html)
+- **Estimación de ingresos DOOH (orientativa)**: el panel de Pantallas calcula unos **€/mes estimados** del inventario (según nº de pantallas encendidas) con supuestos visibles y editables en el código (h/día, días, pases/min, impresiones/pase, CPM, ocupación). Herramienta comercial para valorar el inventario del Xpacio ante anunciantes. Claramente marcado como orientativo.
+
 ## v.01.07.2026.1 — 🔗 [Ver resultado](https://raw.githack.com/csilvasantin/pixeria/f4368db/xpacios/xtanco-barcelona/index.html)
 - **Rotar a 90° exactos (⟳90° / tecla R)**: con una pieza seleccionada, un botón (y la tecla **R**) la giran 90° exactos por paso, encuadrándola con las paredes y la rejilla. Complementa el giro fino de Q/E para alinear muebles a escuadra.
 
