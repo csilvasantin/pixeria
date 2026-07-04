@@ -8,7 +8,7 @@
   var ENDPOINT = WORKER + '/newsletter/subscribe';
   var COUNT_ENDPOINT = WORKER + '/newsletter/count';
   var PROOF_MIN = 25; // umbral: por debajo no mostramos prueba social (resta credibilidad)
-  var MAILTO = 'mailto:csilvasantin@gmail.com?subject=Pixeria%20radar&body=I%20want%20to%20receive%20the%20Pixeria%20radar.';
+  var MAILTO = 'mailto:hola@admiranext.com?subject=Pixeria%20radar&body=I%20want%20to%20receive%20the%20Pixeria%20radar.';
   var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   var isEN = (document.documentElement.lang || 'es').toLowerCase().indexOf('en') === 0;
   var T = isEN ? {
