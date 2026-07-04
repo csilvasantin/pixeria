@@ -96,6 +96,11 @@
     .dist-items-note{ font-size:11px; color:var(--muted); }
     .dist-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:4px; }
     .dist-empty{ color:var(--muted); font-size:12px; text-align:center; padding:14px; }
+    /* Aviso reforzado cuando la programación cae a la pestaña local (scheduler caído) */
+    .stock-status.sched-local-warn{ color:#ffcc00; font-weight:700;
+      background:rgba(255,140,0,.12); border:1px solid rgba(255,180,0,.5);
+      border-radius:6px; padding:8px 10px; animation:schedWarnBlink 1s ease-in-out 3; }
+    @keyframes schedWarnBlink{ 0%,100%{ opacity:1; } 50%{ opacity:.55; } }
 
     /* Cabecera de grupo/circuito en la lista de pantallas */
     .dist-group-head{ display:flex; align-items:center; gap:8px; padding:6px 10px; margin-top:4px;
@@ -328,7 +333,7 @@
     </div>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.2026.06.07-ops</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.2026.07.04-stockfix</a></footer>
 
   <dialog id="importModal" class="keys-modal">
     <form method="dialog" class="keys-form import-form">
@@ -1007,12 +1012,19 @@
         } else {
           p.hidden = hidePagers;
         }
-        if (hidePagers) return;
-        p.querySelector('.stock-pager-info').textContent = `${currentPage}/${totalPages}`;
-        p.querySelector('[data-page="first"]').disabled = currentPage <= 1;
-        p.querySelector('[data-page="prev"]').disabled = currentPage <= 1;
-        p.querySelector('[data-page="next"]').disabled = currentPage >= totalPages;
-        p.querySelector('[data-page="last"]').disabled = currentPage >= totalPages;
+        // Mantener SIEMPRE el contador y las flechas en sync con el set filtrado,
+        // incluso cuando se ocultan (una sola página): así no queda un "1/9" rancio
+        // de una búsqueda anterior si el pager se vuelve a mostrar.
+        const info = p.querySelector('.stock-pager-info');
+        if (info) info.textContent = `${currentPage}/${totalPages}`;
+        const first = p.querySelector('[data-page="first"]');
+        const prev = p.querySelector('[data-page="prev"]');
+        const next = p.querySelector('[data-page="next"]');
+        const last = p.querySelector('[data-page="last"]');
+        if (first) first.disabled = currentPage <= 1;
+        if (prev) prev.disabled = currentPage <= 1;
+        if (next) next.disabled = currentPage >= totalPages;
+        if (last) last.disabled = currentPage >= totalPages;
       });
     }
 
@@ -1506,6 +1518,7 @@
       const tsel = new Set();      // ids de pantallas destino elegidas
       let screens = [];            // [{screen, role, online, age_seconds, now}]
       let screensAt = 0;
+      let screensLoading = false;  // descubriendo pantallas: bloquea Distribuir
       let modalItems = [];         // assets a distribuir en la apertura actual
       let priorityZero = false;    // envío Prioridad 0: AHORA + interrumpe lo emitido
       let queue = [];              // tareas en fallback local (scheduler caído)
@@ -1560,26 +1573,46 @@
       function selectedItems() { return allItems.filter(i => sel.has(i.id)); }
 
       // ── Pantallas ──
+      // fetch con timeout: si la red se cuelga, aborta en vez de dejar el modal
+      // eternamente en "cargando pantallas…".
+      function fetchTO(url, ms) {
+        const ac = new AbortController();
+        const t = setTimeout(() => ac.abort(), ms || 8000);
+        return fetch(url, { cache: 'no-store', signal: ac.signal }).finally(() => clearTimeout(t));
+      }
+      // Bloquea/reactiva el botón Distribuir mientras se descubren pantallas, para
+      // que no se pueda lanzar un envío sin destino resuelto.
+      function setScreensLoading(on) {
+        screensLoading = on;
+        const btn = $('distGo');
+        if (btn) btn.disabled = on;
+      }
       async function loadScreens(force) {
         const fresh = (Date.now() - screensAt) < 15000;
         if (!force && fresh && screens.length) { renderScreens(); return; }
+        setScreensLoading(true);
         $('distScreensSummary').textContent = 'cargando pantallas…';
         try {
-          const r = await fetch(`${STOCK_BASE}/signage/screens`, { cache: 'no-store' });
+          const r = await fetchTO(`${STOCK_BASE}/signage/screens`, 8000);
           const d = await r.json();
           screens = Array.isArray(d.screens) ? d.screens : [];
           screensAt = Date.now();
           // "ahora reproduciendo" por pantalla (solo online, para ahorrar)
           await Promise.all(screens.filter(s => s.online).map(async s => {
             try {
-              const rr = await fetch(`${STOCK_BASE}/signage/now?screen=${encodeURIComponent(s.screen)}`, { cache: 'no-store' });
+              const rr = await fetchTO(`${STOCK_BASE}/signage/now?screen=${encodeURIComponent(s.screen)}`, 6000);
               const dd = await rr.json();
               s.now = dd && dd.item ? (dd.item.title || dd.item.kind || '—') : null;
             } catch { s.now = null; }
           }));
         } catch (e) {
           screens = [];
-          $('distScreensSummary').textContent = 'error al cargar pantallas';
+          const aborted = e && e.name === 'AbortError';
+          $('distScreensSummary').textContent = aborted
+            ? 'sin respuesta al cargar pantallas · pulsa ↻ para reintentar'
+            : 'error al cargar pantallas · pulsa ↻ para reintentar';
+        } finally {
+          setScreensLoading(false);
         }
         renderScreens();
       }
@@ -1827,6 +1860,7 @@
       function close() { const d = $('distModal'); if (d && d.open) d.close(); }
 
       async function go() {
+        if (screensLoading) { status.textContent = '// espera: aún descubriendo pantallas…'; return; }
         const mode = (document.querySelector('input[name="dist-mode"]:checked') || {}).value || 'now';
         const targets = tsel.has(ALL) ? [ALL] : Array.from(tsel);
         if (!targets.length) { status.textContent = '// elige al menos una pantalla (o TODAS)'; return; }
@@ -1849,8 +1883,17 @@
             const everyMin = Math.max(1, Math.min(240, parseInt($('distEvery').value, 10) || 5));
             const res = await enqueue(snaps, targets, fireAt, passes, everyMin);
             const d = new Date(fireAt);
-            const where = res.server ? 'en el servidor (saldrá aunque cierres)' : '📍 local (requiere esta pestaña abierta)';
-            status.textContent = `⏰ programado ${where} para ${d.toLocaleString('es')} · ${passes} pase(s) cada ${everyMin}m`;
+            const when = d.toLocaleString('es');
+            if (res.server) {
+              status.textContent = `⏰ programado en el servidor (saldrá aunque cierres) para ${when} · ${passes} pase(s) cada ${everyMin}m`;
+            } else {
+              // Fallback local: el scheduler de servidor no respondió, así que el
+              // envío SOLO saldrá si esta pestaña sigue abierta a esa hora. Aviso
+              // reforzado (no es un simple "programado") para que no pase inadvertido.
+              status.textContent = `⚠️ SCHEDULER OFFLINE — programado SOLO en local para ${when}. NO cierres ni recargues esta pestaña o el envío (${passes} pase/s cada ${everyMin}m) NO saldrá. Reintenta más tarde para subirlo al servidor.`;
+              status.classList.add('sched-local-warn');
+              setTimeout(() => status.classList.remove('sched-local-warn'), 12000);
+            }
           }
           close();
           clearSelection();
