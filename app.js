@@ -744,8 +744,8 @@
     const lang = (LANG_MAP[s.idioma] || 'es-ES').slice(0, 2);
     showPlayer(`
       <div class="player-card">
-        <div class="player-head">▶ LOCUCIÓN · gratis (Google TTS) · ${lang}</div>
-        ${progressHtml('Generando locución gratis...', 'gtts', 8000)}
+        <div class="player-head">▶ MEGAFONÍA · gratis (Google TTS) · ${lang}</div>
+        ${progressHtml('Generando megafonía gratis...', 'gtts', 8000)}
       </div>`);
     const stopGtts = startProgress('gtts');
     try {
@@ -762,7 +762,7 @@
       const pubMeta = { type: 'locucion', motor: 'web-speech-free', prompt: text, costEst: 'gratis', url, mime: 'audio/mpeg', thumbnail: audioCover || null };
       showPlayer(`
         <div class="player-card">
-          <div class="player-head">▶ LOCUCIÓN · gratis (Google TTS) · ${lang}</div>
+          <div class="player-head">▶ MEGAFONÍA · gratis (Google TTS) · ${lang}</div>
           <pre class="player-body">"${text.replace(/</g,'&lt;')}"</pre>
           <audio controls autoplay src="${url}" data-pixer-title="${escAttr(audioTitle)}" style="width:100%;"></audio>
           ${publishBtnHTML(pubMeta)}
@@ -773,7 +773,7 @@
       stopGtts(false);
       // Respaldo: speechSynthesis local (suena pero NO genera fichero).
       if (!('speechSynthesis' in window)) {
-        showPlayer('<p class="player-msg">⚠ No se pudo generar la locución gratis (' + String(e).slice(0,60) + ') y tu navegador no soporta speechSynthesis.</p>');
+        showPlayer('<p class="player-msg">⚠ No se pudo generar la megafonía gratis (' + String(e).slice(0,60) + ') y tu navegador no soporta speechSynthesis.</p>');
         return;
       }
       speechSynthesis.cancel();
@@ -785,7 +785,7 @@
       if (v) u.voice = v;
       showPlayer(`
         <div class="player-card">
-          <div class="player-head">▶ LOCUCIÓN · Web Speech (local) · ${u.lang}${v ? ' · ' + v.name : ''}</div>
+          <div class="player-head">▶ MEGAFONÍA · Web Speech (local) · ${u.lang}${v ? ' · ' + v.name : ''}</div>
           <pre class="player-body">"${text.replace(/</g,'&lt;')}"</pre>
           <small class="player-foot">⚠ TTS libre no disponible — reproducción local; NO se puede guardar en Stock. Usa ElevenLabs para un fichero.</small>
         </div>`);
@@ -2641,7 +2641,7 @@
     const fn = map[page];
     if (!fn) { btn.hidden = true; return; }
     const labels = {
-      audio: '🎙️ CREAR LOCUCIÓN',
+      audio: '🎙️ CREAR MEGAFONÍA',
       musica: '🎵 CREAR MÚSICA',
       imagenes: '✨ CREAR IMAGEN',
       video: '✨ CREAR VÍDEO',
