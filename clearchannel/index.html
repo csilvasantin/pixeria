@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pixeria × Clear Channel · Demo audio + contenidos segmentados</title>
-  <meta name="description" content="Demo interna Pixeria para Clear Channel: hilo musical con Suno, megafonia con ElevenLabs y contenidos automaticos y segmentados.">
+  <meta name="description" content="Demo interna Pixeria para Clear Channel: hilo musical con Eleven Music, megafonia con ElevenLabs y contenidos automaticos y segmentados. Un solo proveedor de audio.">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="theme-color" content="#0b1117">
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
@@ -145,9 +145,9 @@
         <span class="cc-demo-flag">Demo interna · reunión Clear Channel · 14 jul 2026</span>
         <p class="eyebrow">Pixeria × Clear Channel</p>
         <h1>Audio con IA y contenidos que se adaptan solos.</h1>
-        <p class="lead">Tres capacidades demostrables hoy sobre el motor de Pixeria: hilo musical propio con Suno, megafonía por voz con ElevenLabs y una parrilla de contenidos que se genera automáticamente y se segmenta por audiencia, ubicación y franja horaria.</p>
+        <p class="lead">Tres capacidades demostrables hoy sobre el motor de Pixeria: hilo musical propio con Eleven Music, megafonía por voz con ElevenLabs y una parrilla de contenidos que se genera automáticamente y se segmenta por audiencia, ubicación y franja horaria. Todo el audio — música y voz — sale de un único proveedor: <strong>ElevenLabs</strong>. Una integración, una factura.</p>
         <div class="cc-jump">
-          <a href="#hilo">1 · Hilo musical (Suno)</a>
+          <a href="#hilo">1 · Hilo musical (Eleven Music)</a>
           <a href="#megafonia">2 · Megafonía (ElevenLabs)</a>
           <a href="#segmentados">3 · Contenidos automáticos y segmentados</a>
         </div>
@@ -157,14 +157,14 @@
     <!-- ===================== BLOQUE A · HILO MUSICAL ===================== -->
     <section id="hilo" class="cc-block band">
       <div class="section-head">
-        <p class="eyebrow">Bloque 1 · Suno</p>
+        <p class="eyebrow">Bloque 1 · Eleven Music (ElevenLabs)</p>
         <h2>Hilo musical propio, por ambiente y por marca.</h2>
       </div>
       <div class="cc-lead-row">
         <span class="cc-status demo">Audio de esta demo: placeholder</span>
-        <span class="meta" style="color:var(--muted);font-size:13px">La integración real con Suno está lista para enchufar la clave. Las pistas de abajo son marcadores generados localmente para que la demo suene sin depender de red.</span>
+        <span class="meta" style="color:var(--muted);font-size:13px">La integración real con la Eleven Music API está lista para enchufar la clave. Las pistas de abajo son marcadores generados localmente para que la demo suene sin depender de red.</span>
       </div>
-      <p style="color:var(--muted);max-width:760px;line-height:1.5">Cada tienda define su identidad sonora: una playlist generada a medida que encaja con la marca, la franja y el tipo de espacio. No es una radio genérica compartida entre miles de locales: es un hilo propio, renovable y sin problemas de derechos de reproducción en público.</p>
+      <p style="color:var(--muted);max-width:760px;line-height:1.5">Cada tienda define su identidad sonora: una playlist generada a medida con <strong>Eleven Music</strong> (modelo Music v2 de ElevenLabs) que encaja con la marca, la franja y el tipo de espacio. No es una radio genérica compartida entre miles de locales: es un hilo propio y renovable. Y es <strong>música limpia para espacios públicos</strong>: Eleven Music está entrenada sobre un catálogo licenciado con discográficas y editores, apta para uso comercial y difusión sin las incógnitas de derechos de una IA sin acuerdos.</p>
 
       <div class="cc-players">
         <div class="cc-player">
@@ -172,27 +172,31 @@
           <h3>Retail · apertura de mañana</h3>
           <p class="meta">Ambiente luminoso y ligero para las primeras horas: tempo medio, cálido, no invasivo.</p>
           <audio controls preload="none" src="assets/audio/hilo-retail-manana.mp3"></audio>
-          <p class="prompt">Prompt Suno → "warm uplifting retail background, mid tempo, airy pads, morning energy, instrumental, loopable"</p>
+          <p class="prompt">Prompt Eleven Music → "warm uplifting retail background, mid tempo, airy pads, morning energy, instrumental, loopable"</p>
         </div>
         <div class="cc-player">
           <div class="tagrow"><span class="cc-tag">Flagship</span><span class="cc-tag">Tarde</span></div>
           <h3>Flagship · tarde premium</h3>
           <p class="meta">Sofisticado y con cuerpo para la tarde en tienda insignia: presencia sin protagonismo.</p>
           <audio controls preload="none" src="assets/audio/hilo-flagship-tarde.mp3"></audio>
-          <p class="prompt">Prompt Suno → "sophisticated deep house lounge, flagship store afternoon, elegant, confident, instrumental"</p>
+          <p class="prompt">Prompt Eleven Music → "sophisticated deep house lounge, flagship store afternoon, elegant, confident, instrumental"</p>
         </div>
         <div class="cc-player">
           <div class="tagrow"><span class="cc-tag">Premium</span><span class="cc-tag">Noche</span></div>
           <h3>Premium · cierre de noche</h3>
           <p class="meta">Envolvente y sereno para las últimas horas: baja las revoluciones sin apagar el espacio.</p>
           <audio controls preload="none" src="assets/audio/hilo-premium-noche.mp3"></audio>
-          <p class="prompt">Prompt Suno → "calm ambient downtempo, late evening premium retail, warm low end, instrumental, seamless loop"</p>
+          <p class="prompt">Prompt Eleven Music → "calm ambient downtempo, late evening premium retail, warm low end, instrumental, seamless loop"</p>
         </div>
       </div>
 
       <div class="cc-callout">
-        <p><strong>Flujo real en producción:</strong> brief de marca (tono, tempo, referencias) → prompt a la API de Suno → cola de generación → curación humana (aprobar / descartar) → publicación al reproductor de cada pantalla o zona vía Pixer Feed. La rotación se renueva sin repetir y queda trazada. <strong>Ver derechos de uso comercial en el roadmap.</strong></p>
+        <p><strong>Flujo real en producción:</strong> brief de marca (tono, tempo, referencias) → prompt a la Eleven Music API (<code>POST /v1/music</code>, modelo Music v2) → pista generada → cola / curación humana (aprobar / descartar / re-generar) → publicación al reproductor de cada pantalla o zona vía Pixer Feed. La rotación se renueva sin repetir y queda trazada. <strong>Ver derechos de uso comercial en el roadmap.</strong></p>
       </div>
+      <div class="cc-callout" style="border-left-color:var(--gold);background:rgba(241,201,106,0.05)">
+        <p><strong>Licencias — el argumento clave:</strong> Eleven Music se entrena sobre un catálogo licenciado con discográficas y editores. Es <strong>música limpia para sonar en espacios públicos</strong>, apta para uso comercial: exactamente lo que una red como Clear Channel necesita para difundir en cientos de locales sin zonas grises de derechos.</p>
+      </div>
+      <p class="meta" style="color:var(--muted);font-size:13px;margin-top:14px">Suno: en el radar — programa de partners solicitado (jul 2026), sin API pública aún. Cuando abra, se evaluará como fuente adicional; hoy el hilo va sobre Eleven Music.</p>
     </section>
 
     <!-- ===================== BLOQUE B · MEGAFONIA ===================== -->
@@ -268,6 +272,9 @@
       <div class="cc-callout">
         <p><strong>Por qué un proxy:</strong> la clave de ElevenLabs no puede vivir en el navegador. En producción, "Emitir" llama a un worker de Cloudflare que guarda la clave en la bóveda, genera el MP3 y lo encola en la zona de megafonía correcta. Coste por aviso y tarifas en el roadmap.</p>
       </div>
+      <div class="cc-callout" style="border-left-color:var(--gold);background:rgba(241,201,106,0.05)">
+        <p><strong>Un solo proveedor para todo el audio:</strong> esta megafonía (TTS) y el hilo musical (Eleven Music) salen ambos de <strong>ElevenLabs</strong>. Voz y música desde la misma API, con la misma clave y la misma factura — una única integración que mantener, no dos contratos.</p>
+      </div>
     </section>
 
     <!-- ===================== BLOQUE C · CONTENIDOS SEGMENTADOS ===================== -->
@@ -325,7 +332,7 @@
         <p class="eyebrow">Para la reunión</p>
         <h2>Qué es real hoy y qué falta para producción.</h2>
       </div>
-      <p style="color:var(--muted);max-width:760px;line-height:1.5">El roadmap ejecutivo detalla arquitectura de cada capacidad, derechos de uso comercial de Suno y ElevenLabs (con fuentes), costes estimados por tienda y mes, y el plan de tres fases posterior a la reunión.</p>
+      <p style="color:var(--muted);max-width:760px;line-height:1.5">El roadmap ejecutivo detalla arquitectura de cada capacidad (mono-proveedor ElevenLabs: voz + música), derechos de uso comercial de Eleven Music y ElevenLabs (con fuentes), costes estimados por tienda y mes, y el plan de tres fases posterior a la reunión.</p>
       <div class="cc-docs">
         <a class="button primary" href="/docs/clearchannel-roadmap-2026-07-14.md">Abrir roadmap ejecutivo</a>
         <a class="button secondary" href="/crear/">Abrir Studio Pixeria</a>

@@ -3,6 +3,7 @@
 **Reunión:** martes 14 de julio de 2026
 **Preparado por:** equipo AdmiraNeXT (Pixeria)
 **Ámbito:** audio con IA (hilo musical + megafonía) y contenidos automáticos y segmentados sobre el motor de Pixeria.
+**Arquitectura de audio:** mono-proveedor **ElevenLabs** — voz (TTS) y música (Eleven Music API) desde la misma cuenta, clave y factura.
 **Página de la demo:** `/clearchannel/` (interna, `noindex` — material de reunión, no público).
 
 ---
@@ -13,27 +14,28 @@ Tres capacidades, todas navegables en la misma página `/clearchannel/`:
 
 | # | Capacidad | Qué ve Clear Channel | Estado en la demo |
 |---|-----------|----------------------|-------------------|
-| A | **Hilo musical (Suno)** | 3 pistas de ambiente por marca/franja (retail mañana, flagship tarde, premium noche) con su prompt | Audio **placeholder** local; integración lista para clave |
+| A | **Hilo musical (Eleven Music)** | 3 pistas de ambiente por marca/franja (retail mañana, flagship tarde, premium noche) con su prompt | Audio **placeholder** local; integración lista para clave |
 | B | **Megafonía (ElevenLabs)** | Compositor "escribe el aviso → emitir" + 5 avisos tipo (apertura, cierre, promo, seguridad, EN) | Voz **placeholder** local (macOS TTS); producción vía worker proxy |
 | C | **Contenidos automáticos y segmentados** | Una campaña base renderizada en vivo para N pantallas por audiencia × franja × ubicación | Motor de render **real** en la página |
 
-**Mensaje de la reunión:** Pixeria no es una demo de herramientas sueltas — es un motor que ya orquesta imagen, vídeo y audio a pantallas (Pixer Feed). Estas tres piezas encajan en ese motor. Lo que falta para producción con Clear Channel es conectar inventario real, claves y el proxy de voz; nada de esto es investigación, es integración.
+**Mensaje de la reunión:** Pixeria no es una demo de herramientas sueltas — es un motor que ya orquesta imagen, vídeo y audio a pantallas (Pixer Feed). Estas tres piezas encajan en ese motor. Todo el audio (voz + música) sale de **un único proveedor, ElevenLabs**: una integración, una factura. Lo que falta para producción con Clear Channel es conectar inventario real, la clave y el proxy de voz; nada de esto es investigación, es integración.
 
 ---
 
 ## 2. Arquitectura por capacidad
 
-### A) Hilo musical — Suno
+### A) Hilo musical — Eleven Music (ElevenLabs)
 ```
 Brief de marca (tono, tempo, referencias)
-      → Prompt a la API de Suno (por ambiente/franja)
-      → Cola de generación (async)
+      → Prompt a la Eleven Music API (POST /v1/music, modelo Music v2, por ambiente/franja)
+      → Pista generada (async)
       → Curación humana (aprobar / descartar / re-generar)
       → Publicación al reproductor de zona vía Pixer Feed
       → Rotación renovable, sin repetición, trazada
 ```
 - **Real hoy:** el patrón de prompt→cola→curación→publicación ya existe en el Studio de Pixeria para otros formatos. Reaprovechable 1:1 para música.
-- **Falta para producción:** clave `SUNO_API_KEY` en la bóveda; conector de la API de Suno; almacenamiento de pistas aprobadas (R2); binding al reproductor de cada pantalla/zona.
+- **Mismo proveedor que la voz:** Eleven Music vive dentro de ElevenLabs, así que comparte cuenta, clave (`ELEVENLABS_API_KEY`) e infraestructura de proxy con la megafonía. No hay un segundo contrato ni una segunda integración.
+- **Falta para producción:** la clave `ELEVENLABS_API_KEY` en la bóveda; conector de la Eleven Music API (`POST /v1/music`); almacenamiento de pistas aprobadas (R2); binding al reproductor de cada pantalla/zona.
 
 ### B) Megafonía — ElevenLabs
 ```
@@ -63,12 +65,15 @@ Campaña base (modelo editorial: titular, oferta, tono, CTA)
 
 > Honestidad total: esto condiciona si el hilo musical se puede usar legalmente en espacios públicos. Resumen de lo confirmado por búsqueda en julio de 2026.
 
-### Suno (hilo musical)
-- Los planes **de pago (Pro ~10 $/mes, Premier ~30 $/mes)** otorgan **derechos de uso comercial** de las canciones generadas, y **se conservan aunque canceles** la suscripción. Fuente oficial: [Suno — "Does Suno own the music I make?"](https://help.suno.com/en/articles/2416769).
-- El plan **gratuito NO permite uso comercial**: las pistas son solo para uso no comercial. (misma fuente)
-- **Matiz importante (no ocultar):** "uso comercial" **no equivale a titularidad de copyright**. Análisis legales señalan que el usuario recibe derechos de reproducción/distribución pero **generalmente no se le considera propietario** de la obra (generada por IA), y **no hay exclusividad** (otro podría generar algo similar). Fuentes: [Terms.Law — Suno commercial rights](https://terms.law/ai-output-rights/suno/), [Suno commercial use guide 2026 — TechJack](https://techjacksolutions.com/ai-tools/suno/suno-commercial-use/).
-- **Implicación para retail/espacios públicos:** con plan de pago se puede usar como música de fondo en tienda, pero conviene revisar los Términos vigentes antes de un despliegue masivo y no asumir exclusividad de marca sobre las pistas.
-- **Pendiente de confirmar con Suno directamente** para un caso Clear Channel: si su licencia comercial cubre **difusión pública** (public performance) en cientos/miles de locales, o si haría falta un acuerdo específico/licencia de nivel empresarial. **No lo damos por cerrado.**
+### Eleven Music — hilo musical (proveedor elegido)
+- **Eleven Music** es el modelo de generación musical de ElevenLabs, disponible vía API (`POST /v1/music`, modelo **Music v2**). Fuentes: [Eleven Music API](https://elevenlabs.io/music-api), [Eleven Music now available in the API](https://elevenlabs.io/blog/eleven-music-now-available-in-the-api), [Eleven Music is here](https://elevenlabs.io/blog/eleven-music-is-here).
+- **Argumento clave de licencias:** Eleven Music está entrenada sobre un **catálogo licenciado con discográficas y editores**. ElevenLabs la posiciona explícitamente como música **apta para uso comercial**, lo que la hace idónea para **difusión en espacios públicos** — el caso exacto de una red retail como Clear Channel. Frente a una IA musical sin acuerdos de licencia, aquí la cadena de derechos está cubierta de origen.
+- **Implicación para retail/espacios públicos:** música limpia para sonar en tienda sin las zonas grises de titularidad/copyright que arrastran los generadores sin catálogo licenciado. **A confirmar en contrato:** los términos exactos de uso (alcance de la licencia comercial, difusión pública a escala de cientos/miles de locales) según el plan de Eleven Music contratado — **no lo damos por cerrado**, pero el punto de partida legal es mucho más sólido.
+- **Un solo proveedor:** al ser ElevenLabs, comparte cuenta y factura con la megafonía. Voz + música bajo un único acuerdo comercial.
+
+### Suno — apuesta futura (no disponible hoy)
+- Suno **no tiene API pública oficial**. El 1 de julio de 2026 anunció un **programa de partners** para desarrolladores, **sin fecha de disponibilidad general**. Fuentes: [Digital Music News — Suno is opening an API partner program](https://www.digitalmusicnews.com/2026/07/03/suno-is-opening-an-api-partner-program/), [Music Business Worldwide — Suno explores developer API](https://www.musicbusinessworldwide.com/suno-explores-developer-api-seeking-apps-that-unlock-experiences-generative-music-makes-possible-for-the-first-time/).
+- **Decisión:** por eso el hilo musical va **hoy sobre Eleven Music**. Suno queda en el radar como fuente adicional para cuando abra su programa de partners; se re-evaluará entonces (incluidos sus términos de licencia para difusión pública, que también quedarían por confirmar).
 
 ### ElevenLabs (megafonía)
 - La **licencia comercial** comienza en el tier **Starter (~6 $/mes, 30.000 créditos/mes)**; el plan gratuito **no** incluye derechos comerciales. Fuente: [ElevenLabs Pricing](https://elevenlabs.io/pricing).
@@ -82,16 +87,16 @@ Campaña base (modelo editorial: titular, oferta, tono, CTA)
 
 > Estimación de orden de magnitud para dimensionar, **no** presupuesto cerrado. Precios de lista confirmados arriba; el volumen es una hipótesis de trabajo.
 
-**Supuestos por tienda:** ~30 avisos de megafonía/día (~120 caracteres cada uno) y hilo musical renovado mensualmente.
+**Supuestos por tienda:** ~30 avisos de megafonía/día (~120 caracteres cada uno) y hilo musical renovado mensualmente. **Al ser mono-proveedor, una única suscripción ElevenLabs cubre voz + música**; el consumo se reparte entre créditos de TTS y créditos/generaciones de Eleven Music del mismo plan.
 
 | Partida | Base de cálculo | Coste orientativo |
 |---------|-----------------|-------------------|
-| **Megafonía (ElevenLabs)** | 30 avisos/día × 120 car. × 30 días ≈ 108.000 car./mes × 0,10 $/1k | **~11 $/tienda/mes** en consumo TTS |
-| **Hilo musical (Suno)** | Cuota de plan (Pro/Premier) compartida entre catálogo de pistas, no por tienda | **~10–30 $/mes por cuenta**, prorrateado (céntimos/tienda a escala) |
+| **Megafonía (ElevenLabs TTS)** | 30 avisos/día × 120 car. × 30 días ≈ 108.000 car./mes × 0,10 $/1k | **~11 $/tienda/mes** en consumo TTS |
+| **Hilo musical (Eleven Music)** | Generación musical dentro de la misma cuenta ElevenLabs; consume créditos/generaciones del plan | **Depende del plan y de los créditos** de Eleven Music — *no fijamos precio sin fuente pública confirmada*; a escala se prorratea entre el catálogo de pistas |
 | **Infra (worker proxy + R2 + Pixer Feed)** | Cloudflare Workers/R2, tráfico de audio | **marginal** (< 1 $/tienda/mes a escala) |
-| **Total variable estimado** | — | **~11–15 $/tienda/mes** dominado por la megafonía |
+| **Total variable estimado** | — | **~11 $/tienda/mes** de TTS + la parte de música según plan; dominado por la megafonía |
 
-A escala (cientos de tiendas) el coste por tienda **baja** porque la cuota de Suno y la infra se prorratean. El driver de coste real es el **volumen de caracteres de megafonía**; se controla con plantillas y límites.
+A escala (cientos de tiendas) el coste por tienda **baja** porque la suscripción única de ElevenLabs (voz + música) y la infra se prorratean. El driver de coste real es el **volumen de caracteres de megafonía**; se controla con plantillas y límites. **La parte de música queda por dimensionar contra el plan/créditos concretos de Eleven Music** — se cierra en el piloto, no se inventa aquí.
 
 ---
 
@@ -99,7 +104,7 @@ A escala (cientos de tiendas) el coste por tienda **baja** porque la cuota de Su
 
 | Pieza | Real hoy | Falta para producción |
 |-------|----------|-----------------------|
-| Hilo musical | Patrón prompt→cola→curación (Studio); UI de reproductores | Clave Suno · conector API · almacenamiento R2 · binding a zonas |
+| Hilo musical | Patrón prompt→cola→curación (Studio); UI de reproductores | Clave ElevenLabs · conector Eleven Music API (`POST /v1/music`) · almacenamiento R2 · binding a zonas |
 | Megafonía | Compositor UI · avisos ejemplo · flujo definido | Clave ElevenLabs · worker proxy · voice ID de marca · enrutado a zonas |
 | Segmentación | **Motor de render en vivo** (esta página) · Studio /crear/ (223 KB) | Inventario real de soportes · calendario de emisión · plantillas finales |
 | Pixer Feed | Empuje de contenido a pantallas (ya en operación) | Integración con inventario Clear Channel |
@@ -109,10 +114,10 @@ A escala (cientos de tiendas) el coste por tienda **baja** porque la cuota de Su
 ## 6. Plan de 3 fases post-reunión
 
 **Fase 1 — Piloto técnico (2–3 semanas).**
-Claves Suno + ElevenLabs en la bóveda. Worker proxy de voz. Conector Suno con curación. Piloto en 3–5 pantallas reales de Clear Channel con una campaña segmentada de verdad. Objetivo: audio real sonando y una campaña renderizada a inventario real.
+Clave **ElevenLabs** en la bóveda (una sola, para voz + música). Worker proxy de audio. Conector Eleven Music (`POST /v1/music`) con curación. Piloto en 3–5 pantallas reales de Clear Channel con una campaña segmentada de verdad. Objetivo: audio real sonando y una campaña renderizada a inventario real.
 
 **Fase 2 — Integración de inventario (4–6 semanas).**
-Conectar el catálogo de soportes de Clear Channel (ubicaciones, formatos, resoluciones) y el calendario de emisión. Definir voz de marca (voice ID) y las plantillas visuales definitivas por soporte. Cerrar con Suno los términos de difusión pública a escala. Objetivo: parrilla operativa multi-ciudad.
+Conectar el catálogo de soportes de Clear Channel (ubicaciones, formatos, resoluciones) y el calendario de emisión. Definir voz de marca (voice ID) y las plantillas visuales definitivas por soporte. Cerrar con ElevenLabs los términos de Eleven Music para difusión pública a escala y dimensionar el consumo de música. Objetivo: parrilla operativa multi-ciudad.
 
 **Fase 3 — Escala y operación (continuo).**
 Despliegue a la red, panel de control por central/tienda, límites de coste, trazabilidad de derechos por pista, métricas de emisión. Objetivo: operación autónoma con supervisión humana y coste por tienda controlado.
@@ -127,4 +132,4 @@ Despliegue a la red, panel de control por central/tienda, límites de coste, tra
 
 ---
 
-*Documento interno de trabajo. Los precios de lista están confirmados por las fuentes citadas (julio 2026); los volúmenes son hipótesis para dimensionar. Los términos de difusión pública de Suno para una red de retail quedan pendientes de confirmación directa con el proveedor.*
+*Documento interno de trabajo. Los precios de lista están confirmados por las fuentes citadas (julio 2026); los volúmenes son hipótesis para dimensionar. La parte de coste de música (Eleven Music) depende del plan/créditos concretos y queda por dimensionar en el piloto — no se inventa aquí. Los términos de difusión pública de Eleven Music para una red de retail quedan pendientes de confirmación directa con ElevenLabs. Suno no tiene API pública (solo un programa de partners anunciado el 1-jul-2026, sin fecha) y queda como apuesta futura.*
