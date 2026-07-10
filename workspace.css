@@ -2230,6 +2230,22 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
   cursor: pointer;
   transition: background .15s, border-color .15s, color .15s;
 }
+/* "+ más": añade metatags propias (a la derecha de las auto-tags). Verde matriz
+   para distinguirlo de las etiquetas automáticas (moradas). */
+.stock-tag-more {
+  appearance: none;
+  border: 1px dashed var(--matrix);
+  background: rgba(0, 255, 65, .07);
+  color: var(--matrix);
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: .04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.stock-tag-more:hover { background: rgba(0, 255, 65, .16); border-style: solid; }
 .stock-tag:hover {
   border-color: #aa88ff;
   color: #fff;

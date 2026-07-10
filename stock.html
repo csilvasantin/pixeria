@@ -711,12 +711,16 @@
       }
       return `<span title="${escAttr(raw)}">${trunc}</span>`;
     }
-    function renderTagsHtml(tags) {
-      if (!Array.isArray(tags) || tags.length === 0) return '';
-      return `<div class="stock-tags">${tags.map(t => {
+    function renderTagsHtml(tags, id) {
+      const safeId = String(id || '').replace(/[^A-Za-z0-9-]/g, '');
+      const chips = (Array.isArray(tags) ? tags : []).map(t => {
         const safe = String(t).replace(/</g, '&lt;');
         return `<button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Clic: filtrar por #${escAttr(t)} · Doble-clic: renombrar">#${safe}</button>`;
-      }).join('')}</div>`;
+      }).join('');
+      // "+ más": añade metatags propias para agrupar (a la derecha de las auto-tags).
+      // Se muestra SIEMPRE, incluso sin etiquetas, para poder agrupar cualquier asset.
+      const more = `<button type="button" class="stock-tag-more" data-act="add-tag-list" data-id="${safeId}" title="Añadir etiquetas propias para agrupar (varias separadas por comas)">+ más</button>`;
+      return `<div class="stock-tags">${chips}${more}</div>`;
     }
     function renderTagsEditorHtml(id, tags) {
       const safeId = String(id || '').replace(/[^A-Za-z0-9-]/g, '');
@@ -872,7 +876,7 @@
       const commentBlock = commentRaw
         ? `<p class="stock-comment" title="${escAttr(commentRaw)}">💬 ${commentSafe.slice(0, 200)}${commentRaw.length > 200 ? '…' : ''}</p>`
         : '';
-      const tagsBlock = renderTagsHtml(it.tags);
+      const tagsBlock = renderTagsHtml(it.tags, it.id);
       const selected = DIST.isSelected(it.id) ? ' is-selected' : '';
       return `<article class="stock-card${selected}" data-type="${typeLabel}" data-motor="${it.motor}" data-id="${idAttr}" tabindex="0" role="button" aria-label="Maximizar ${typeLabel}">
         <button type="button" class="stock-select" data-act="select" title="Seleccionar para distribuir en lote" aria-label="Seleccionar asset" aria-pressed="${DIST.isSelected(it.id) ? 'true' : 'false'}"><span aria-hidden="true">${DIST.isSelected(it.id) ? '✓' : '+'}</span></button>
@@ -1168,7 +1172,7 @@
         const fresh = (prompt('Añadir etiqueta (1-2 palabras):') || '').trim().toLowerCase();
         if (!fresh) return;
         if (nextTags.includes(fresh)) { return; }
-        if (nextTags.length >= 8) { alert('Máximo 8 etiquetas por asset.'); return; }
+        if (nextTags.length >= 12) { alert('Máximo 12 etiquetas por asset.'); return; }
         nextTags.push(fresh);
       }
       const saved = await saveTags(it.id, nextTags);
@@ -1206,7 +1210,26 @@
     // (El antiguo "broadcast ciego" sendToPixerFeed quedó sustituido por DIST,
     //  el distribuidor con destino por pantalla, lote y programación — más abajo.)
 
-    grid.addEventListener('click', e => {
+    grid.addEventListener('click', async e => {
+      // "+ más": añadir metatags propias a este asset desde la lista (agrupar sin abrir
+      // el detalle). Acepta varias etiquetas separadas por comas. Reusa saveTags.
+      const moreBtn = e.target.closest('[data-act="add-tag-list"]');
+      if (moreBtn) {
+        e.preventDefault(); e.stopPropagation();
+        const sid = moreBtn.dataset.id;
+        const it = allItems.find(x => String(x.id || '').replace(/[^A-Za-z0-9-]/g, '') === sid);
+        if (!it) return;
+        const raw = prompt('Añadir etiquetas para agrupar (varias separadas por comas):');
+        if (raw == null) return;
+        const fresh = raw.split(',').map(s => s.trim().toLowerCase().replace(/^#+/, '')).filter(Boolean);
+        if (!fresh.length) return;
+        const next = Array.isArray(it.tags) ? it.tags.slice() : [];
+        for (const t of fresh) if (!next.includes(t)) next.push(t);
+        if (next.length > 12) { alert('Máximo 12 etiquetas por asset (auto + propias). Quita alguna antes.'); }
+        const saved = await saveTags(it.id, next);
+        if (saved) { it.tags = saved; applyFilters(); }
+        return;
+      }
       // Flechas del visor de mueble girable → cambia de cara (no abre lightbox)
       const arrow = e.target.closest('[data-act="furni-prev"], [data-act="furni-next"]');
       if (arrow) {
