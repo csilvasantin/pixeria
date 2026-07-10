@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pixeria × Clear Channel · Demo audio + contenidos segmentados</title>
+  <meta name="description" content="Demo interna Pixeria para Clear Channel: hilo musical con Suno, megafonia con ElevenLabs y contenidos automaticos y segmentados.">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#0b1117">
+  <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
+  <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
+  <link rel="stylesheet" href="../assets/styles.css?v=20260617-legal">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <style>
+    /* ---- Demo Clear Channel: componentes propios sobre el design system Pixeria ---- */
+    .cc-hero {
+      min-height: 78vh;
+      display: grid;
+      align-items: center;
+      padding: 128px clamp(20px, 6vw, 76px) 64px;
+      background:
+        linear-gradient(90deg, rgba(8, 13, 19, 0.97), rgba(8, 13, 19, 0.72) 52%, rgba(8, 13, 19, 0.30)),
+        url("../assets/hero-pixeria.jpg") center/cover;
+    }
+    .cc-hero-panel { width: min(100%, 900px); display: grid; gap: 18px; }
+    .cc-hero h1 { font-size: clamp(42px, 7vw, 88px); line-height: 0.94; margin: 0; }
+    .cc-hero .lead { max-width: 720px; color: rgba(244,240,232,0.86); font-size: clamp(17px, 2.1vw, 24px); line-height: 1.28; }
+    .cc-demo-flag {
+      display: inline-flex; align-items: center; gap: 8px; align-self: start;
+      border: 1px solid var(--gold); color: var(--gold);
+      background: rgba(241, 201, 106, 0.10);
+      border-radius: 999px; padding: 6px 14px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    }
+    .cc-demo-flag::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
+
+    /* Anclas de bloque */
+    .cc-jump { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+    .cc-jump a { border: 1px solid var(--line); border-radius: 8px; padding: 10px 16px; font-weight: 600; font-size: 14px; }
+    .cc-jump a:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .cc-status { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); }
+    .cc-status.real { color: var(--green); border-color: rgba(107,214,166,0.5); }
+    .cc-status.demo { color: var(--gold); border-color: rgba(241,201,106,0.5); }
+
+    .cc-block { border-top: 1px solid var(--line); }
+    .cc-block .section-head { align-items: start; }
+    .cc-lead-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 8px; }
+
+    /* ---- Reproductores de audio ---- */
+    .cc-players { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 20px; }
+    .cc-player {
+      border: 1px solid var(--line); border-radius: 10px; padding: 18px;
+      background: rgba(244,240,232,0.04); display: grid; gap: 12px;
+    }
+    .cc-player h3 { margin: 0; font-size: 17px; }
+    .cc-player .meta { color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .cc-player .tagrow { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cc-tag { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--cyan); border: 1px solid rgba(104,220,233,0.35); border-radius: 999px; padding: 3px 9px; }
+    .cc-player audio { width: 100%; }
+    .cc-player .prompt { font-size: 12px; color: rgba(244,240,232,0.6); border-left: 2px solid var(--line); padding-left: 10px; font-style: italic; }
+
+    /* ---- Megafonia: compositor ---- */
+    .cc-compose { border: 1px solid var(--line); border-radius: 10px; padding: 20px; background: rgba(244,240,232,0.04); display: grid; gap: 12px; margin-top: 20px; }
+    .cc-compose label { font-size: 13px; color: var(--muted); }
+    .cc-compose textarea { width: 100%; min-height: 84px; resize: vertical; background: rgba(11,17,23,0.7); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-family: inherit; font-size: 15px; }
+    .cc-compose .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .cc-compose select { background: rgba(11,17,23,0.7); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-family: inherit; }
+    .cc-compose .note { font-size: 12px; color: rgba(244,240,232,0.6); }
+    .cc-flow { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .cc-flow span { font-size: 13px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; color: var(--muted); }
+    .cc-flow em { color: var(--cyan); font-style: normal; }
+
+    /* ---- Contenidos segmentados ---- */
+    .cc-controls { display: grid; gap: 14px; margin: 22px 0; }
+    .cc-control-group { display: grid; gap: 8px; }
+    .cc-control-group > .lbl { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .cc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cc-chip { cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 8px 16px; font-size: 14px; font-family: inherit; transition: all .15s ease; }
+    .cc-chip:hover { border-color: var(--cyan); }
+    .cc-chip.active { border-color: var(--cyan); background: rgba(104,220,233,0.14); color: var(--cyan); }
+
+    .cc-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+    .cc-screen {
+      border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+      background: var(--bg-soft); display: grid; grid-template-rows: auto 1fr;
+    }
+    .cc-screen-canvas {
+      aspect-ratio: 16 / 9; position: relative; display: grid; align-content: space-between;
+      padding: 18px; color: #fff; overflow: hidden; isolation: isolate;
+    }
+    .cc-screen-canvas::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.55)); z-index: -1; }
+    .cc-screen-canvas .kicker { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.92; }
+    .cc-screen-canvas .headline { font-size: clamp(20px, 3.4vw, 30px); line-height: 1.02; font-weight: 800; text-shadow: 0 2px 14px rgba(0,0,0,0.4); }
+    .cc-screen-canvas .price { font-size: 15px; font-weight: 700; }
+    .cc-screen-canvas .cta { align-self: start; font-size: 12px; font-weight: 700; background: #fff; color: #111; border-radius: 6px; padding: 6px 12px; }
+    .cc-screen-canvas .footer-line { display: flex; justify-content: space-between; align-items: end; gap: 10px; }
+    .cc-screen-meta { padding: 12px 14px; display: grid; gap: 6px; border-top: 1px solid var(--line); }
+    .cc-screen-meta .segline { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cc-screen-meta .segline span { font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 2px 7px; }
+    .cc-screen-meta .loc { font-size: 13px; color: var(--ink); font-weight: 600; }
+    .cc-screen-meta .why { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .cc-count { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+
+    .cc-callout { border: 1px solid var(--line); border-left: 3px solid var(--cyan); border-radius: 8px; padding: 16px 18px; margin-top: 22px; background: rgba(104,220,233,0.05); }
+    .cc-callout p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .cc-callout strong { color: var(--ink); }
+
+    .cc-docs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <nav class="admira-nav admira-nav-static" aria-label="Admira · Xperience">
+    <a class="admira-nav-brand" href="https://www.admira.app">
+      <span class="admira-nav-brand-name">Admira</span>
+      <span class="admira-nav-brand-tag">Xperience</span>
+    </a>
+    <div class="admira-nav-items">
+      <a class="admira-nav-link" href="https://www.pixeria.com">Pixeria</a>
+      <a class="admira-nav-link admira-nav-link-active" href="#top">Clear Channel</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.xpaceos.com">XpaceOS</a>
+      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live">Live</a>
+    </div>
+  </nav>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
+
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Pixeria inicio">
+      <span class="brand-mark">P</span>
+      <span>Pixeria</span>
+    </a>
+    <nav class="nav" aria-label="Navegación demo">
+      <a href="#hilo">Hilo musical</a>
+      <a href="#megafonia">Megafonía</a>
+      <a href="#segmentados">Contenidos segmentados</a>
+    </nav>
+    <div class="header-actions">
+      <a class="nav-action" href="/crear/">Abrir Studio</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ===================== HERO ===================== -->
+    <section class="cc-hero">
+      <div class="cc-hero-panel">
+        <span class="cc-demo-flag">Demo interna · reunión Clear Channel · 14 jul 2026</span>
+        <p class="eyebrow">Pixeria × Clear Channel</p>
+        <h1>Audio con IA y contenidos que se adaptan solos.</h1>
+        <p class="lead">Tres capacidades demostrables hoy sobre el motor de Pixeria: hilo musical propio con Suno, megafonía por voz con ElevenLabs y una parrilla de contenidos que se genera automáticamente y se segmenta por audiencia, ubicación y franja horaria.</p>
+        <div class="cc-jump">
+          <a href="#hilo">1 · Hilo musical (Suno)</a>
+          <a href="#megafonia">2 · Megafonía (ElevenLabs)</a>
+          <a href="#segmentados">3 · Contenidos automáticos y segmentados</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== BLOQUE A · HILO MUSICAL ===================== -->
+    <section id="hilo" class="cc-block band">
+      <div class="section-head">
+        <p class="eyebrow">Bloque 1 · Suno</p>
+        <h2>Hilo musical propio, por ambiente y por marca.</h2>
+      </div>
+      <div class="cc-lead-row">
+        <span class="cc-status demo">Audio de esta demo: placeholder</span>
+        <span class="meta" style="color:var(--muted);font-size:13px">La integración real con Suno está lista para enchufar la clave. Las pistas de abajo son marcadores generados localmente para que la demo suene sin depender de red.</span>
+      </div>
+      <p style="color:var(--muted);max-width:760px;line-height:1.5">Cada tienda define su identidad sonora: una playlist generada a medida que encaja con la marca, la franja y el tipo de espacio. No es una radio genérica compartida entre miles de locales: es un hilo propio, renovable y sin problemas de derechos de reproducción en público.</p>
+
+      <div class="cc-players">
+        <div class="cc-player">
+          <div class="tagrow"><span class="cc-tag">Retail</span><span class="cc-tag">Mañana</span></div>
+          <h3>Retail · apertura de mañana</h3>
+          <p class="meta">Ambiente luminoso y ligero para las primeras horas: tempo medio, cálido, no invasivo.</p>
+          <audio controls preload="none" src="assets/audio/hilo-retail-manana.mp3"></audio>
+          <p class="prompt">Prompt Suno → "warm uplifting retail background, mid tempo, airy pads, morning energy, instrumental, loopable"</p>
+        </div>
+        <div class="cc-player">
+          <div class="tagrow"><span class="cc-tag">Flagship</span><span class="cc-tag">Tarde</span></div>
+          <h3>Flagship · tarde premium</h3>
+          <p class="meta">Sofisticado y con cuerpo para la tarde en tienda insignia: presencia sin protagonismo.</p>
+          <audio controls preload="none" src="assets/audio/hilo-flagship-tarde.mp3"></audio>
+          <p class="prompt">Prompt Suno → "sophisticated deep house lounge, flagship store afternoon, elegant, confident, instrumental"</p>
+        </div>
+        <div class="cc-player">
+          <div class="tagrow"><span class="cc-tag">Premium</span><span class="cc-tag">Noche</span></div>
+          <h3>Premium · cierre de noche</h3>
+          <p class="meta">Envolvente y sereno para las últimas horas: baja las revoluciones sin apagar el espacio.</p>
+          <audio controls preload="none" src="assets/audio/hilo-premium-noche.mp3"></audio>
+          <p class="prompt">Prompt Suno → "calm ambient downtempo, late evening premium retail, warm low end, instrumental, seamless loop"</p>
+        </div>
+      </div>
+
+      <div class="cc-callout">
+        <p><strong>Flujo real en producción:</strong> brief de marca (tono, tempo, referencias) → prompt a la API de Suno → cola de generación → curación humana (aprobar / descartar) → publicación al reproductor de cada pantalla o zona vía Pixer Feed. La rotación se renueva sin repetir y queda trazada. <strong>Ver derechos de uso comercial en el roadmap.</strong></p>
+      </div>
+    </section>
+
+    <!-- ===================== BLOQUE B · MEGAFONIA ===================== -->
+    <section id="megafonia" class="cc-block band">
+      <div class="section-head">
+        <p class="eyebrow">Bloque 2 · ElevenLabs</p>
+        <h2>Megafonía por voz: escribe el aviso, suena en la tienda.</h2>
+      </div>
+      <div class="cc-lead-row">
+        <span class="cc-status demo">Voz de esta demo: placeholder local</span>
+        <span class="meta" style="color:var(--muted);font-size:13px">En producción la voz la genera ElevenLabs a través de un worker proxy (la clave nunca viaja al navegador). Los avisos de abajo están pregrabados como ejemplo.</span>
+      </div>
+      <p style="color:var(--muted);max-width:760px;line-height:1.5">El equipo de tienda o la central escribe el mensaje y lo emite: apertura, cierre, promoción, seguridad, en español o inglés. Voz de marca consistente en todos los centros, sin depender de que alguien coja el micrófono.</p>
+
+      <!-- Compositor (demo: reproduce el ejemplo más cercano) -->
+      <div class="cc-compose">
+        <label for="ccMsg">Escribe el aviso a emitir</label>
+        <textarea id="ccMsg" placeholder="Ej.: El centro cerrará en 15 minutos. Diríjanse a las cajas para finalizar sus compras.">Estimados clientes, el centro cerrará sus puertas en quince minutos. Gracias por su visita.</textarea>
+        <div class="row">
+          <select id="ccVoice" aria-label="Idioma y voz">
+            <option value="es">Voz ES · femenina (Mónica)</option>
+            <option value="en">Voice EN · female (Samantha)</option>
+          </select>
+          <button class="button primary" id="ccEmit" type="button">Emitir aviso</button>
+          <span class="note" id="ccEmitNote">Demo: reproduce el ejemplo pregrabado más parecido.</span>
+        </div>
+        <div class="cc-flow" aria-label="Flujo de producción">
+          <span><em>1.</em> Texto</span>
+          <span>→</span>
+          <span><em>2.</em> Worker proxy (clave segura)</span>
+          <span>→</span>
+          <span><em>3.</em> ElevenLabs TTS</span>
+          <span>→</span>
+          <span><em>4.</em> Cola de megafonía por zona</span>
+          <span>→</span>
+          <span><em>5.</em> Altavoces / pantalla</span>
+        </div>
+      </div>
+
+      <div class="cc-players">
+        <div class="cc-player" data-kind="apertura">
+          <div class="tagrow"><span class="cc-tag">Apertura</span><span class="cc-tag">ES</span></div>
+          <h3>Bienvenida / apertura</h3>
+          <p class="meta">Saludo de apertura con horario del día.</p>
+          <audio controls preload="none" src="assets/audio/mega-apertura-es.mp3"></audio>
+        </div>
+        <div class="cc-player" data-kind="cierre">
+          <div class="tagrow"><span class="cc-tag">Cierre</span><span class="cc-tag">ES</span></div>
+          <h3>Cierre de centro</h3>
+          <p class="meta">Aviso de cierre en 15 minutos, a cajas.</p>
+          <audio controls preload="none" src="assets/audio/mega-cierre-es.mp3"></audio>
+        </div>
+        <div class="cc-player" data-kind="promo">
+          <div class="tagrow"><span class="cc-tag">Promoción</span><span class="cc-tag">ES</span></div>
+          <h3>Promoción por horas</h3>
+          <p class="meta">Oferta flash con llamada a la acción.</p>
+          <audio controls preload="none" src="assets/audio/mega-promo-es.mp3"></audio>
+        </div>
+        <div class="cc-player" data-kind="seguridad">
+          <div class="tagrow"><span class="cc-tag">Seguridad</span><span class="cc-tag">ES</span></div>
+          <h3>Aviso de seguridad</h3>
+          <p class="meta">Recordatorio de objetos personales.</p>
+          <audio controls preload="none" src="assets/audio/mega-seguridad-es.mp3"></audio>
+        </div>
+        <div class="cc-player" data-kind="cierre-en">
+          <div class="tagrow"><span class="cc-tag">Closing</span><span class="cc-tag">EN</span></div>
+          <h3>Closing announcement (EN)</h3>
+          <p class="meta">Misma megafonía, multiidioma.</p>
+          <audio controls preload="none" src="assets/audio/mega-closing-en.mp3"></audio>
+        </div>
+      </div>
+
+      <div class="cc-callout">
+        <p><strong>Por qué un proxy:</strong> la clave de ElevenLabs no puede vivir en el navegador. En producción, "Emitir" llama a un worker de Cloudflare que guarda la clave en la bóveda, genera el MP3 y lo encola en la zona de megafonía correcta. Coste por aviso y tarifas en el roadmap.</p>
+      </div>
+    </section>
+
+    <!-- ===================== BLOQUE C · CONTENIDOS SEGMENTADOS ===================== -->
+    <section id="segmentados" class="cc-block band">
+      <div class="section-head">
+        <p class="eyebrow">Bloque 3 · Motor de segmentación</p>
+        <h2>Una campaña, renderizada sola para cada audiencia.</h2>
+      </div>
+      <div class="cc-lead-row">
+        <span class="cc-status real">Motor de render: real (en esta página)</span>
+        <span class="meta" style="color:var(--muted);font-size:13px">La misma campaña base se renderiza en vivo para cada segmento con datos distintos. En Pixeria esto se alimenta desde el Studio (/crear/) y sale a pantallas por Pixer Feed.</span>
+      </div>
+      <p style="color:var(--muted);max-width:820px;line-height:1.5">Defines una campaña una vez. El motor genera automáticamente una variante por cada combinación de <strong>audiencia</strong> (familia · joven · premium), <strong>franja</strong> (mañana · tarde · noche) y <strong>ubicación / soporte</strong>. Cambia el titular, la oferta, el tono visual y la llamada a la acción para cada pantalla. Usa los filtros para ver cómo cambia la parrilla.</p>
+
+      <div class="cc-controls">
+        <div class="cc-control-group">
+          <span class="lbl">Campaña base</span>
+          <div class="cc-chips" id="ccCampaign">
+            <button class="cc-chip active" data-campaign="rebajas">Rebajas de verano</button>
+            <button class="cc-chip" data-campaign="nuevacol">Nueva colección</button>
+            <button class="cc-chip" data-campaign="finde">Plan de finde</button>
+          </div>
+        </div>
+        <div class="cc-control-group">
+          <span class="lbl">Audiencia</span>
+          <div class="cc-chips" id="ccAudience">
+            <button class="cc-chip active" data-aud="all">Todas</button>
+            <button class="cc-chip" data-aud="familia">Familia</button>
+            <button class="cc-chip" data-aud="joven">Joven</button>
+            <button class="cc-chip" data-aud="premium">Premium</button>
+          </div>
+        </div>
+        <div class="cc-control-group">
+          <span class="lbl">Franja</span>
+          <div class="cc-chips" id="ccDaypart">
+            <button class="cc-chip active" data-part="all">Todas</button>
+            <button class="cc-chip" data-part="manana">Mañana</button>
+            <button class="cc-chip" data-part="tarde">Tarde</button>
+            <button class="cc-chip" data-part="noche">Noche</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="cc-count" id="ccCount"></p>
+      <div class="cc-grid" id="ccGrid" aria-live="polite"></div>
+
+      <div class="cc-callout">
+        <p><strong>Qué es real aquí:</strong> el motor que ves genera y pinta cada creatividad en el navegador a partir de un modelo de campaña y una matriz de segmentos — exactamente la lógica que en Pixeria vive en el Studio <a href="/crear/" style="color:var(--cyan)">/crear/</a> y se despliega a pantallas. Lo que falta para producción con Clear Channel es conectar el inventario real de soportes y el calendario de emisión.</p>
+      </div>
+    </section>
+
+    <!-- ===================== CIERRE / DOCS ===================== -->
+    <section class="cc-block band">
+      <div class="section-head">
+        <p class="eyebrow">Para la reunión</p>
+        <h2>Qué es real hoy y qué falta para producción.</h2>
+      </div>
+      <p style="color:var(--muted);max-width:760px;line-height:1.5">El roadmap ejecutivo detalla arquitectura de cada capacidad, derechos de uso comercial de Suno y ElevenLabs (con fuentes), costes estimados por tienda y mes, y el plan de tres fases posterior a la reunión.</p>
+      <div class="cc-docs">
+        <a class="button primary" href="/docs/clearchannel-roadmap-2026-07-14.md">Abrir roadmap ejecutivo</a>
+        <a class="button secondary" href="/crear/">Abrir Studio Pixeria</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Pixeria × Clear Channel</span>
+    <p>Demo interna. Material de reunión, no público. <span class="footer-updated">14 julio 2026</span></p>
+    <a href="mailto:hola@admiranext.com">hola@admiranext.com</a>
+  </footer>
+
+  <script>
+    /* ---------- Megafonía: el botón reproduce el ejemplo más cercano (demo) ---------- */
+    (function () {
+      const btn = document.getElementById('ccEmit');
+      const msg = document.getElementById('ccMsg');
+      const voice = document.getElementById('ccVoice');
+      const note = document.getElementById('ccEmitNote');
+      if (!btn) return;
+      const players = Array.from(document.querySelectorAll('.cc-player[data-kind] audio'));
+      const byKind = (k) => document.querySelector('.cc-player[data-kind="' + k + '"] audio');
+      function pick(text, lang) {
+        const t = text.toLowerCase();
+        if (lang === 'en') return byKind('cierre-en');
+        if (/segur|emergen|vigil|objeto/.test(t)) return byKind('seguridad');
+        if (/promo|oferta|descuento|%|rebaj/.test(t)) return byKind('promo');
+        if (/cerra|cierre|15|quince|cajas|finaliz/.test(t)) return byKind('cierre');
+        if (/bienven|apertura|buenos d|abrimos|horario/.test(t)) return byKind('apertura');
+        return byKind('cierre');
+      }
+      btn.addEventListener('click', () => {
+        players.forEach(a => { a.pause(); });
+        const a = pick(msg.value || '', voice.value);
+        if (!a) return;
+        note.textContent = 'Demo: reproduciendo el ejemplo pregrabado más parecido a tu texto.';
+        a.currentTime = 0;
+        const p = a.play();
+        if (p && p.catch) p.catch(() => { note.textContent = 'Pulsa play en el reproductor de abajo para oírlo.'; });
+        a.closest('.cc-player').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    })();
+
+    /* ---------- Contenidos segmentados: motor de render en vivo ---------- */
+    (function () {
+      const grid = document.getElementById('ccGrid');
+      const countEl = document.getElementById('ccCount');
+      if (!grid) return;
+
+      // Campañas base (modelo editorial reutilizable)
+      const CAMPAIGNS = {
+        rebajas:  { name: 'Rebajas de verano', base: 'Rebajas de verano', hueA: 18, hueB: 344 },
+        nuevacol: { name: 'Nueva colección',   base: 'Nueva colección',   hueA: 268, hueB: 210 },
+        finde:    { name: 'Plan de finde',      base: 'Plan de finde',      hueA: 168, hueB: 196 }
+      };
+
+      // Variaciones por audiencia
+      const AUD = {
+        familia: { label: 'Familia', kicker: 'Para toda la familia', cta: 'Ven en familia',
+          rebajas: 'Rebajas para toda la familia', nuevacol: 'Vuelta al cole con estilo', finde: 'Planazo en familia este finde',
+          price: '2ª unidad -50%', sat: 62 },
+        joven:   { label: 'Joven', kicker: 'Drop de temporada', cta: 'Descúbrelo',
+          rebajas: '-60% en tu look de verano', nuevacol: 'Nueva colección ya en tienda', finde: 'Tu finde empieza aquí',
+          price: 'Hasta -60%', sat: 82 },
+        premium: { label: 'Premium', kicker: 'Selección exclusiva', cta: 'Reserva tu cita',
+          rebajas: 'Selección privada de temporada', nuevacol: 'Preestreno de la nueva colección', finde: 'Experiencia de finde premium',
+          price: 'Edición limitada', sat: 40 }
+      };
+
+      // Variaciones por franja (tono visual + microcopy)
+      const PART = {
+        manana: { label: 'Mañana', tone: 'luz cálida', light: 0.70, tail: 'Abrimos a las 10:00' },
+        tarde:  { label: 'Tarde', tone: 'contraste alto', light: 0.55, tail: 'La mejor hora para venir' },
+        noche:  { label: 'Noche', tone: 'ambiente íntimo', light: 0.38, tail: 'Hasta las 22:00' }
+      };
+
+      // Ubicaciones / soportes (inventario simulado)
+      const LOCS = [
+        { city: 'Madrid', place: 'Gran Vía', support: 'Fachada LED 6×3 m', aud: 'joven',   part: 'tarde' },
+        { city: 'Madrid', place: 'C.C. La Vaguada', support: 'Tótem 55" pasillo', aud: 'familia', part: 'manana' },
+        { city: 'Barcelona', place: 'Passeig de Gràcia', support: 'Escaparate 4K', aud: 'premium', part: 'noche' },
+        { city: 'Barcelona', place: 'C.C. Glòries', support: 'Mupi digital', aud: 'joven',   part: 'tarde' },
+        { city: 'Valencia', place: 'Colón', support: 'Pantalla flagship', aud: 'premium', part: 'tarde' },
+        { city: 'Sevilla', place: 'C.C. Nervión', support: 'Ring de cajas', aud: 'familia', part: 'noche' },
+        { city: 'Bilbao', place: 'Gran Vía', support: 'Tótem entrada', aud: 'familia', part: 'manana' },
+        { city: 'Málaga', place: 'Muelle Uno', support: 'Videowall 3×2', aud: 'joven',   part: 'noche' }
+      ];
+
+      const state = { campaign: 'rebajas', aud: 'all', part: 'all' };
+
+      function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+      function render() {
+        const camp = CAMPAIGNS[state.campaign];
+        const list = LOCS.filter(l =>
+          (state.aud === 'all' || l.aud === state.aud) &&
+          (state.part === 'all' || l.part === state.part)
+        );
+        countEl.textContent = list.length + ' pantalla' + (list.length === 1 ? '' : 's') +
+          ' · misma campaña "' + camp.name + '", ' + list.length + ' render' + (list.length === 1 ? '' : 's') + ' distinto' + (list.length === 1 ? '' : 's') + ' generado' + (list.length === 1 ? '' : 's') + ' al vuelo.';
+
+        grid.innerHTML = list.map(l => {
+          const a = AUD[l.aud], p = PART[l.part];
+          const headline = a[state.campaign];
+          const bg = 'linear-gradient(140deg, hsl(' + camp.hueA + ' ' + a.sat + '% ' + Math.round(p.light*46) + '%), hsl(' + camp.hueB + ' ' + Math.round(a.sat*0.8) + '% ' + Math.round(p.light*28) + '%))';
+          return '' +
+          '<article class="cc-screen">' +
+            '<div class="cc-screen-canvas" style="background:' + bg + '">' +
+              '<div><div class="kicker">' + esc(a.kicker) + '</div></div>' +
+              '<div class="headline">' + esc(headline) + '</div>' +
+              '<div class="footer-line">' +
+                '<div><div class="price">' + esc(a.price) + '</div><div style="font-size:11px;opacity:.85">' + esc(p.tail) + '</div></div>' +
+                '<div class="cta">' + esc(a.cta) + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="cc-screen-meta">' +
+              '<div class="loc">' + esc(l.city) + ' · ' + esc(l.place) + '</div>' +
+              '<div class="segline"><span>' + esc(a.label) + '</span><span>' + esc(p.label) + '</span><span>' + esc(l.support) + '</span></div>' +
+              '<div class="why">Se eligió titular "' + esc(headline) + '" y tono ' + esc(p.tone) + ' por audiencia ' + esc(a.label.toLowerCase()) + ' en franja de ' + esc(p.label.toLowerCase()) + '.</div>' +
+            '</div>' +
+          '</article>';
+        }).join('') || '<p class="meta" style="color:var(--muted)">No hay pantallas para esta combinación. Prueba otro filtro.</p>';
+      }
+
+      function wire(id, key, attr) {
+        const box = document.getElementById(id);
+        box.addEventListener('click', (e) => {
+          const btn = e.target.closest('.cc-chip');
+          if (!btn) return;
+          box.querySelectorAll('.cc-chip').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          state[key] = btn.dataset[attr];
+          render();
+        });
+      }
+      wire('ccCampaign', 'campaign', 'campaign');
+      wire('ccAudience', 'aud', 'aud');
+      wire('ccDaypart', 'part', 'part');
+      render();
+    })();
+  </script>
+  <script defer src="/assets/matrix-rain.js?v=20260608-sides"></script>
+</body>
+</html>
