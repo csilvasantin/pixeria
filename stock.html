@@ -239,7 +239,7 @@
   <header class="topnav">
     <div class="brand"><a href="index.html" class="brand-link"><span class="brand-mark">P</span><span class="brand-name">Pixeria</span></a></div>
     <nav class="primary-nav">
-      <a href="audio.html" data-nav="audio">Locución</a>
+      <a href="audio.html" data-nav="audio">Megafonía</a>
       <a href="musica.html" data-nav="musica">Música</a>
       <a href="imagenes.html" data-nav="imagenes">Imágenes</a>
       <a href="video.html" data-nav="video">Video</a>
@@ -278,7 +278,7 @@
         <div class="stock-pager-filters">
           <select id="stockTypeFilter" title="Filtrar por tipo" aria-label="Filtrar por tipo">
             <option value="">Todos los tipos</option>
-            <option value="locucion">Locución</option>
+            <option value="locucion">Megafonía</option>
             <option value="music">Música</option>
             <option value="image">Imagen</option>
             <option value="twin-npc">Twin NPCs</option>
@@ -469,7 +469,7 @@
           <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px;">Elementos a añadir — elige tipo:</label>
           <div class="pl-types" id="plTypes">
             <button type="button" class="pl-type active" data-t="">Todos</button>
-            <button type="button" class="pl-type" data-t="locucion">Locución</button>
+            <button type="button" class="pl-type" data-t="locucion">Megafonía</button>
             <button type="button" class="pl-type" data-t="music">Música</button>
             <button type="button" class="pl-type" data-t="image">Imagen</button>
             <button type="button" class="pl-type" data-t="video">Video</button>
@@ -938,9 +938,9 @@
       if (t === 'furni') return isFurni(it);
       if (t === 'video') return it.type === 'video' && !isAnim;
       if (t === 'image') return it.type === 'image' && !isFurni(it) && !isTwinNpc && !isDigitalTwin;
-      // «Locución» = solo type locucion (las que creamos en la página Audio).
+      // «Megafonía» (slug interno estable: locucion) = solo type locucion (las que creamos en la página Audio).
       // No se fusiona con el viejo bucket 'audio' porque ahí cayó también música
-      // importada (canciones), que no son locuciones.
+      // importada (canciones), que no son megafonía.
       return displayType(it) === t;
     }
     // Contador "X de Y" en el título (en vivo): X = reproducibles (misma definición

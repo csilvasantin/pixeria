@@ -43,7 +43,7 @@
   <header class="topnav">
     <div class="brand"><a href="index.html" class="brand-link"><span class="brand-mark">P</span><span class="brand-name">Pixeria</span></a></div>
     <nav class="primary-nav">
-      <a href="audio.html" data-nav="audio">Locución</a>
+      <a href="audio.html" data-nav="audio">Megafonía</a>
       <a href="musica.html" data-nav="musica">Música</a>
       <a href="imagenes.html" data-nav="imagenes">Imágenes</a>
       <a href="video.html" data-nav="video">Video</a>
@@ -215,7 +215,7 @@
       btn.addEventListener('click', () => {
         setActive(btn.dataset.sound);
         speakVisual(1600);
-        $('#avatarResponse').innerHTML = `<span class="avatar-response-kicker">// sonido activado</span><p>${active === 'mother' ? 'Avatar A' : 'Avatar B'} preparado para reproducir voz o demo de locucion.</p>`;
+        $('#avatarResponse').innerHTML = `<span class="avatar-response-kicker">// sonido activado</span><p>${active === 'mother' ? 'Avatar A' : 'Avatar B'} preparado para reproducir voz o demo de megafonía.</p>`;
       });
     });
 

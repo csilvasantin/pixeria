@@ -11,7 +11,7 @@
   <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
   <title>Pixeria Studio · Audio</title>
-  <meta name="description" content="Brief operativo de Audio: voces, locuciones y paisajes sonoros para Admira.xp.">
+  <meta name="description" content="Brief operativo de Audio: voces, megafonía y paisajes sonoros para Admira.xp.">
   <!-- Admira · Xperience · design system del grupo (tokens + nav header) -->
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
@@ -45,7 +45,7 @@
   <header class="topnav">
     <div class="brand"><a href="index.html" class="brand-link"><span class="brand-mark">P</span><span class="brand-name">Pixeria</span></a></div>
     <nav class="primary-nav">
-      <a href="audio.html" data-nav="audio">Locución</a>
+      <a href="audio.html" data-nav="audio">Megafonía</a>
       <a href="musica.html" data-nav="musica">Música</a>
       <a href="imagenes.html" data-nav="imagenes">Imágenes</a>
       <a href="video.html" data-nav="video">Video</a>
@@ -66,9 +66,23 @@
 
   <header class="page-head has-gif"><figure class="page-gif"><img src="https://upload.wikimedia.org/wikipedia/commons/0/0a/Digital_rain_animation_medium_letters_clear.gif" alt="Audio · letras Matrix" loading="lazy"><figcaption>// Audio · letras Matrix</figcaption></figure>
     <p class="eyebrow audio">Tipo de contenido · Audio</p>
-    <h1>Voces, locuciones y paisajes sonoros.</h1>
+    <h1>Voces, megafonía y paisajes sonoros.</h1>
     <p class="lead">Piezas habladas para asistentes, narrativas, guías, anuncios, experiencias interactivas y respuestas de producto. Define personaje, idioma, tono y guion; el brief se exporta listo para PixerIA y Admira.xp.</p>
   </header>
+
+  <section class="module cap-megafonia" aria-label="Capacidad · Megafonía">
+    <div class="module-head"><h3><span class="accent" style="background: var(--audio);"></span>Megafonía</h3><small>ElevenLabs TTS · avisos por voz al instante</small></div>
+    <p style="color:var(--muted);line-height:1.55;max-width:820px">Compositor de avisos por voz: escribe el mensaje y suena en el espacio. Apertura, cierre, promoción o seguridad — <strong>multiidioma</strong> y con <strong>voz de marca consistente</strong> en todos los centros, sin depender de que alguien coja el micrófono. Texto → voz al instante con ElevenLabs.</p>
+    <div class="cap-flow" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0;font-size:13px;color:var(--muted)">
+      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">1 · Texto del aviso</span><span>→</span>
+      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">2 · Worker proxy <em style="color:var(--cyan);font-style:normal">(clave segura, nunca en el navegador)</em></span><span>→</span>
+      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">3 · ElevenLabs TTS</span><span>→</span>
+      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">4 · Cola de megafonía por zona</span><span>→</span>
+      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">5 · Altavoces / pantalla</span>
+    </div>
+    <p style="color:var(--muted);line-height:1.5;max-width:820px;font-size:13px"><strong style="color:var(--ink)">Producción:</strong> la clave de ElevenLabs vive en la bóveda de secretos; un worker proxy de Cloudflare genera el MP3 y lo encola en la zona de megafonía correcta. La clave nunca viaja al front.</p>
+    <p style="margin-top:8px"><a class="btn" href="/clearchannel/#megafonia">▶ Ver la demo en vivo · Clear Channel</a></p>
+  </section>
 
   <main>
     <form id="briefForm">
@@ -121,9 +135,9 @@
       <div class="brief-area">
         <div class="brief-head">
           <div class="brief-actions">
-            <button class="btn play" type="button" id="playOutput"><span class="play-label">🎙️ CREAR LOCUCIÓN</span></button>
+            <button class="btn play" type="button" id="playOutput"><span class="play-label">🎙️ CREAR MEGAFONÍA</span></button>
             <button class="btn" type="button" id="clearAll">Limpiar Audio</button>
-            <button class="btn" type="button" id="sendToStock" title="Publica en Stock la locución creada">📌 Enviar a Stock</button>
+            <button class="btn" type="button" id="sendToStock" title="Publica en Stock la megafonía creada">📌 Enviar a Stock</button>
           </div>
         </div>
         <pre class="brief" id="briefOut" hidden></pre>
