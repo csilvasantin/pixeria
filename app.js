@@ -853,6 +853,43 @@
     return health;
   }
 
+  // Marco cuadrático (quad-ui): cableado GENÉRICO para cualquier página de medios.
+  // - Toggles left/right/bottom: despliegan/colapsan su panel y ajustan el padding
+  //   del body vía la clase quad-<lado>-open.
+  // - data-quad-click="idBoton": el botón del marco dispara el clic de un control
+  //   REAL de la página (Generar/Enviar/Publicar), sin duplicar lógica.
+  // - data-quad-scroll="#sección": lleva suave a un hito del flujo (pasos 01–05).
+  function bindQuadChrome() {
+    if (!document.body.classList.contains('quad-ui')) return;
+    document.querySelectorAll('[data-quad-toggle]').forEach(btn => {
+      const name = btn.dataset.quadToggle;
+      const panel = document.querySelector(`.quad-${name}`);
+      if (!panel) return;
+      const bodyClass = `quad-${name}-open`;
+      const sync = () => {
+        const open = !panel.classList.contains('is-collapsed');
+        document.body.classList.toggle(bodyClass, open);
+        btn.classList.toggle('is-active', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      };
+      btn.addEventListener('click', () => { panel.classList.toggle('is-collapsed'); sync(); });
+      sync();
+    });
+    document.querySelectorAll('[data-quad-click]').forEach(btn => {
+      btn.addEventListener('click', () => document.getElementById(btn.dataset.quadClick)?.click());
+    });
+    document.querySelectorAll('[data-quad-scroll]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const el = document.querySelector(btn.dataset.quadScroll);
+        if (!el) return;
+        e.preventDefault();
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelectorAll('.quad-left a.is-step-active').forEach(a => a.classList.remove('is-step-active'));
+        btn.classList.add('is-step-active');
+      });
+    });
+  }
+
   function bindMusicProductionUX() {
     if (document.body.dataset.page !== 'musica') return;
     updateMusicStage('brief');
@@ -890,23 +927,8 @@
         if (act === 'listen') document.getElementById('listenXpacio')?.click();
       });
     });
-    document.querySelectorAll('[data-quad-toggle]').forEach(btn => {
-      const targetName = btn.dataset.quadToggle;
-      const panel = document.querySelector(`.quad-${targetName}`);
-      if (!panel) return;
-      const bodyClass = `quad-${targetName}-open`;
-      function sync() {
-        const open = !panel.classList.contains('is-collapsed');
-        document.body.classList.toggle(bodyClass, open);
-        btn.classList.toggle('is-active', open);
-        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      }
-      btn.addEventListener('click', () => {
-        panel.classList.toggle('is-collapsed');
-        sync();
-      });
-      sync();
-    });
+    // Los toggles del marco cuadrático los cablea bindQuadChrome() (genérico para
+    // todas las páginas con quad-ui); aquí solo queda lo específico de Música.
     const form = document.getElementById('briefForm');
     form?.addEventListener('input', e => {
       if (e.target && e.target.name && e.target.name.startsWith('musica.')) updateMusicStage('brief');
@@ -3651,6 +3673,7 @@
     const form = document.getElementById('briefForm');
     if (form) {
       hydrate(form);
+      bindQuadChrome();
       bindMusicProductionUX();
       bindPersistence(form);
       bindCliente();

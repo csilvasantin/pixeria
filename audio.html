@@ -53,48 +53,38 @@
   <script defer src="/assets/analytics.js?v=20260617-consent"></script>
   <script defer src="/assets/consent.js?v=20260617"></script>
 </head>
-<body data-page="audio">
+<body data-page="audio" class="quad-ui">
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KD696XW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
-  <!-- Banda superior del grupo Admira · Xperience -->
-  <nav class="admira-nav admira-nav-static" aria-label="Admira · Xperience">
-    <a class="admira-nav-brand" href="https://www.admira.app">
-      <span class="admira-nav-brand-name">Admira</span>
-      <span class="admira-nav-brand-tag">Xperience</span>
-    </a>
-    <div class="admira-nav-items">
-      <a class="admira-nav-link admira-nav-link-active" href="https://www.pixeria.com">Pixeria</a>
-      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live/council-scumm.html">Consejo Live</a>
-      <a class="admira-nav-link admira-nav-link-external" href="https://www.xpaceos.com">XpaceOS</a>
-      <a class="admira-nav-link admira-nav-link-external" href="https://www.clearchannel.tv">ClearChannel</a>
-      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.app">Xbusiness</a>
-      <a class="admira-nav-link admira-nav-link-external" href="https://www.admira.live">Live</a>
-      <a class="admira-nav-link admira-nav-link-cta" href="#contact" data-admira-contact>Contacto</a>
-    </div>
-  </nav>
   <canvas id="matrix-rain" aria-hidden="true"></canvas>
-  <header class="topnav">
-    <div class="brand"><a href="index.html" class="brand-link"><span class="brand-mark">P</span><span class="brand-name">Pixeria</span></a></div>
-    <nav class="primary-nav">
-      <a href="audio.html" data-nav="audio">Megafonía</a>
-      <a href="musica.html" data-nav="musica">Música</a>
-      <a href="imagenes.html" data-nav="imagenes">Imágenes</a>
-      <a href="video.html" data-nav="video">Video</a>
-      <a href="publicidad.html" data-nav="publicidad">Publicidad</a>
-      <a href="avatar.html" data-nav="avatar">Avatar 3D</a>
-      <a href="anonimizador.html" data-nav="anonimizador">Anonimizador</a>
-      <a href="/crear/" data-nav="crear">Assets</a>
-      <a href="stock.html" data-nav="stock">Stock</a>
-      <a href="/xpacios/" data-nav="xpacios">Xpacios</a>
-    </nav>
-    <div class="topnav-actions">
-      <div class="language-switcher" aria-label="Selección de idioma">
-        <a class="lang-toggle" href="/en/audio.html" aria-label="Cambiar a inglés">ENG</a>
-      </div>
-      <a class="nav-action" href="#contact" data-admira-contact>Contacto</a>
+  <!-- Marco cuadrático (quad-ui): navegación en los 4 bordes, estilo Admira.tv -->
+  <nav class="quad-menu quad-top" aria-label="Navegación superior Pixeria">
+    <button type="button" class="quad-icon" data-quad-toggle="left" aria-label="Desplegar flujo de producción" title="Flujo de producción">☰</button>
+    <a class="quad-brand" href="index.html"><span>P</span><b>Pixeria</b><small>Voice Ops</small></a>
+    <div class="quad-links">
+      <a class="active" href="audio.html">Megafonía</a>
+      <a href="musica.html">Música</a>
+      <a href="imagenes.html">Imágenes</a>
+      <a href="video.html">Video</a>
+      <a href="stock.html">Stock</a>
     </div>
-  </header>
+    <a class="quad-cta" href="https://admira.tv" target="_blank" rel="noopener">Admira.tv</a>
+    <button type="button" class="quad-icon" data-quad-toggle="bottom" aria-label="Desplegar acciones rápidas" title="Acciones rápidas">⌘</button>
+  </nav>
+  <nav class="quad-menu quad-bottom is-collapsed" aria-label="Acciones de producción">
+    <button type="button" data-quad-click="playOutput">🎙️ Crear locución</button>
+    <button type="button" data-quad-click="sendToAdmiraXP">📺 Admira XP</button>
+    <button type="button" data-quad-click="sendToStock">📌 Enviar a Stock</button>
+    <a href="stock.html">🗂 Ver Stock</a>
+  </nav>
+  <nav class="quad-menu quad-left is-collapsed" aria-label="Flujo de producción">
+    <a href="#briefForm" data-quad-scroll="#briefForm"><span>01</span>Brief</a>
+    <a href="#briefForm" data-quad-scroll="[data-motor-section]"><span>02</span>Motor</a>
+    <a href="#playOutput" data-quad-scroll="#playOutput"><span>03</span>Generar</a>
+    <a href="#briefOut" data-quad-scroll="#briefOut"><span>04</span>Revisar</a>
+    <a href="#sendToStock" data-quad-scroll="#sendToStock"><span>05</span>Publicar</a>
+  </nav>
 
   <header class="page-head has-gif"><figure class="page-gif"><img src="https://upload.wikimedia.org/wikipedia/commons/0/0a/Digital_rain_animation_medium_letters_clear.gif" alt="Audio · letras Matrix" loading="lazy"><figcaption>// Audio · letras Matrix</figcaption></figure>
     <p class="eyebrow audio">Tipo de contenido · Audio</p>

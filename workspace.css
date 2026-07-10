@@ -2628,7 +2628,8 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
 .stock-lightbox-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 body.stock-lightbox-open { overflow: hidden; }
 
-/* Admira.tv-style quadratic chrome, experimental on musica.html */
+/* Marco cuadrático estilo Admira.tv (quad chrome): navegación en los 4 bordes.
+   Activo en las páginas de medios (audio · música · imágenes · video) vía body.quad-ui. */
 body.quad-ui {
   --quad-top: 62px;
   --quad-bottom: 18px;
@@ -2816,12 +2817,14 @@ body.quad-ui footer {
   border: 1px solid rgba(0,255,65,.35);
   padding: 3px 2px;
 }
-.quad-right button.is-active {
+.quad-right button.is-active,
+.quad-left a.is-step-active {
   border-color: var(--matrix);
   color: var(--matrix);
   background: rgba(0,255,65,.14);
   text-shadow: var(--glow);
 }
+.quad-left a.is-step-active span { border-color: var(--matrix); background: rgba(0,255,65,.2); }
 @media (max-width: 900px) {
   body.quad-ui {
     --quad-side: 0px;
