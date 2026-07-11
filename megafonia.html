@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- ═══════════════ VERJA DE ACCESO · PIXERIA CERRADO HASTA LANZAMIENTO ═══════════════
+       Reutiliza la MISMA verja del ecosistema (admira.live / admiranext.com): auth-gate.js,
+       login con Google + misma whitelist de usuarios (worker admira-whitelist). Verja ACTIVA
+       por defecto. ?gate=off es un escape SOLO para esa carga (no persiste), por si el login
+       falla. PARA REABRIR EL SITIO EL DÍA DEL LANZAMIENTO: borrar TODO este bloque. -->
+  <!-- GATE-INICIO -->
+  <meta name="robots" content="noindex, nofollow">
+  <script>
+  (function(){
+    var GATE_DEFAULT = 'on';
+    var on = GATE_DEFAULT;
+    try{
+      var q = new URLSearchParams(location.search).get('gate');
+      if(q==='on') on = q;
+    }catch(e){}
+    if(on!=='on') return;
+    var s=document.createElement('script'); s.src='/auth-gate.js';
+    (document.head||document.documentElement).appendChild(s);
+    setTimeout(function(){
+      if(!document.documentElement.classList.contains('gate-locked')) return;
+      var el=document.getElementById('admira-err');
+      if(el && !el.textContent) el.textContent='✖ SI EL LOGIN NO ABRE: ORIGEN www.pixeria.com PENDIENTE DE AUTORIZAR EN GOOGLE CLOUD';
+    }, 10000);
+  })();
+  </script>
+  <!-- GATE-FIN -->
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
+  <title>Pixeria · Megafonía</title>
+  <meta name="description" content="Megafonía del Xpacio: envía un aviso de audio en cualquier idioma y voz a la tienda (Instore Media).">
+  <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
+  <style>
+    :root{
+      --bg:var(--admira-bg,#0a0c12); --elev:var(--admira-bg-elev,#141826);
+      --text:var(--admira-text,#f0e6ff); --muted:var(--admira-text-muted,rgba(216,200,255,.65));
+      --dim:var(--admira-text-dim,rgba(216,200,255,.4));
+      --violet:var(--admira-violet,#aa88ff); --amber:var(--admira-amber,#ffd866);
+      --cyan:var(--admira-cyan,#50c8ff); --green:var(--admira-green,#76b900);
+      --border:var(--admira-border,rgba(170,136,255,.25));
+      --mono:var(--admira-font-mono,ui-monospace,Menlo,monospace);
+      --sans:var(--admira-font-sans,-apple-system,system-ui,sans-serif);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+      background-image:radial-gradient(1100px 560px at 50% -10%,rgba(170,136,255,.10),transparent 60%);
+      min-height:100vh;padding:26px 18px 60px}
+    .wrap{max-width:640px;margin:0 auto}
+    .kick{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--violet)}
+    h1{font-size:clamp(24px,4vw,34px);margin:.15em 0 .1em}
+    .sub{color:var(--muted);line-height:1.5;margin:0 0 20px}
+    .sub a{color:var(--cyan);text-decoration:none}
+    .card{background:var(--elev);border:1px solid var(--border);border-radius:16px;padding:20px}
+    label.fld{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);margin:14px 0 5px;letter-spacing:.06em;text-transform:uppercase}
+    label.fld:first-child{margin-top:0}
+    input,select,textarea{width:100%;font-family:var(--sans);font-size:15px;padding:11px 12px;border-radius:10px;background:#0d1018;color:var(--text);border:1px solid var(--border)}
+    textarea{min-height:92px;resize:vertical;line-height:1.45}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:520px){.two{grid-template-columns:1fr}}
+    .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+    .chip{font-family:var(--mono);font-size:12px;padding:7px 11px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer}
+    .chip:hover{border-color:var(--violet);color:var(--text)}
+    .actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+    .btn{font-family:var(--mono);font-size:14px;padding:12px 18px;border-radius:11px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);display:inline-flex;align-items:center;gap:8px;transition:.15s}
+    .btn:hover{border-color:var(--cyan);color:var(--cyan)}
+    .btn.primary{background:color-mix(in srgb,var(--amber) 16%,transparent);border-color:var(--amber);color:var(--amber);font-weight:700}
+    .btn.primary:hover{background:color-mix(in srgb,var(--amber) 26%,transparent)}
+    .btn:disabled{opacity:.5;cursor:default}
+    .meta{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:14px;line-height:1.6}
+    #status{font-family:var(--mono);font-size:13px;margin-top:14px;min-height:20px}
+    .ok{color:var(--green)} .err{color:#ff6b6b} .wait{color:var(--amber)}
+    .foot{max-width:640px;margin:22px auto 0;font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center}
+    .foot a{color:var(--violet);text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="kick">Instore Media · pixeria → tienda</div>
+    <h1>📢 Megafonía del Xpacio</h1>
+    <p class="sub">Envía un aviso de audio a la tienda en <b>cualquier idioma y voz</b>. Suena en el gemelo del Xpacio
+      bajando la música y restaurándola al terminar. Motor: ElevenLabs multilingüe (worker <code>pixer-eleven</code>).</p>
+
+    <div class="card">
+      <label class="fld">Tienda destino (store / circuito)</label>
+      <input id="store" value="xtanco-valencia" spellcheck="false" autocapitalize="off">
+
+      <label class="fld">Aviso a locutar</label>
+      <textarea id="text" placeholder="Ej.: Atención clientes: oferta 2×1 en perfumería solo hoy."></textarea>
+      <div class="chips" id="chips"></div>
+
+      <div class="two">
+        <div>
+          <label class="fld">Idioma (ejemplo)</label>
+          <select id="lang"></select>
+        </div>
+        <div>
+          <label class="fld">Voz</label>
+          <select id="voice"></select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="preview">🔊 Escuchar aquí</button>
+        <button class="btn primary" id="send">📢 Enviar a la tienda</button>
+      </div>
+      <div id="status"></div>
+      <div class="meta">El aviso se sintetiza una vez, se guarda y se encola por tienda; el gemelo (admira-xp) lo
+        sondea y lo reproduce en segundos. El idioma lo infiere del texto (modelo multilingüe) — escribe en el idioma que quieras.</div>
+    </div>
+    <p class="foot"><a href="audio.html">← Audio</a> · <a href="https://www.xpaceos.com/admira-xp/?loc=xtanco-valencia" target="_blank">Abrir el gemelo (Xtanco) ↗</a></p>
+  </div>
+
+  <script>
+    var API='https://api.admira.store';
+    // Voces ElevenLabs (multilingüe v2 → cualquier idioma). id real + etiqueta.
+    var VOICES=[
+      {id:'EXAVITQu4vr4xnSDxMaL', name:'Sarah · femenina cálida'},
+      {id:'21m00Tcm4TlvDq8ikWAM', name:'Rachel · femenina neutra'},
+      {id:'AZnzlk1XvdvUeBnXmlld', name:'Domi · femenina enérgica'},
+      {id:'ErXwobaYiN019PkySvjV', name:'Antoni · masculina cálida'},
+      {id:'pNInz6obpgDQGcFmaJgB', name:'Adam · masculina grave'},
+      {id:'TxGEqnHWrfWFTfGW9XjX', name:'Josh · masculina joven'}
+    ];
+    // Idiomas con un aviso de ejemplo (rellena el textarea al elegir).
+    var LANGS=[
+      {code:'es', name:'Español',  ex:'Atención clientes: oferta 2×1 en perfumería solo hoy.'},
+      {code:'ca', name:'Català',   ex:'Atenció clients: oferta 2×1 en perfumeria només avui.'},
+      {code:'en', name:'English',  ex:'Attention shoppers: two for one in the perfume aisle, today only.'},
+      {code:'fr', name:'Français', ex:'Chers clients : offre deux pour un en parfumerie, aujourd’hui seulement.'},
+      {code:'de', name:'Deutsch',  ex:'Liebe Kunden: heute 2 für 1 in der Parfümerie.'},
+      {code:'it', name:'Italiano', ex:'Gentili clienti: oggi 2×1 in profumeria.'},
+      {code:'pt', name:'Português',ex:'Atenção clientes: hoje 2×1 na perfumaria.'}
+    ];
+    var CHIPS=[
+      '📣 Oferta relámpago','🕐 Cerramos en 15 minutos','🎁 Nuevo producto en tienda',
+      '🔊 Bienvenidos a la tienda','🧒 Aviso: niño perdido en información'
+    ];
+    var $=function(id){return document.getElementById(id);};
+    // Rellenar selects
+    LANGS.forEach(function(l,i){ var o=document.createElement('option'); o.value=i; o.textContent=l.name; $('lang').appendChild(o); });
+    VOICES.forEach(function(v,i){ var o=document.createElement('option'); o.value=v.id; o.textContent=v.name; $('voice').appendChild(o); });
+    // Chips de frase rápida
+    CHIPS.forEach(function(c){ var b=document.createElement('button'); b.className='chip'; b.textContent=c;
+      b.onclick=function(){ var t=c.replace(/^\S+\s/,''); $('text').value= t.charAt(0).toUpperCase()+t.slice(1)+'.'; }; $('chips').appendChild(b); });
+    // Elegir idioma → sugiere ejemplo si el textarea está vacío o sin tocar
+    var touched=false; $('text').addEventListener('input',function(){touched=true;});
+    $('lang').onchange=function(){ var l=LANGS[+this.value]; if(l && (!touched || !$('text').value.trim())){ $('text').value=l.ex; touched=false; } };
+    // arranque desde ?store=
+    try{ var qs=new URLSearchParams(location.search); if(qs.get('store')) $('store').value=qs.get('store'); }catch(e){}
+
+    function setStatus(msg,cls){ var s=$('status'); s.textContent=msg; s.className=cls||''; }
+    function payload(){
+      return { store:($('store').value||'default').trim(), text:($('text').value||'').trim(),
+        voice_id:$('voice').value, lang:LANGS[+$('lang').value].code };
+    }
+    var previewAudio=null;
+    // ESCUCHAR aquí: /tts devuelve el mp3 directo, lo reproducimos en el navegador.
+    $('preview').onclick=function(){
+      var p=payload(); if(!p.text){ setStatus('Escribe el aviso primero.','err'); return; }
+      setStatus('Generando voz…','wait'); this.disabled=true; var btn=this;
+      fetch(API+'/tts',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text:p.text, voice_id:p.voice_id})})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.blob(); })
+      .then(function(b){ if(previewAudio){try{previewAudio.pause();}catch(e){}} previewAudio=new Audio(URL.createObjectURL(b));
+        previewAudio.play(); setStatus('▶ Reproduciendo aquí (no en la tienda).','ok'); })
+      .catch(function(e){ setStatus('✖ No se pudo generar ('+e.message+').','err'); })
+      .finally(function(){ btn.disabled=false; });
+    };
+    // ENVIAR a la tienda: /megafonia/push → genera + encola; el gemelo lo reproduce.
+    $('send').onclick=function(){
+      var p=payload(); if(!p.text){ setStatus('Escribe el aviso primero.','err'); return; }
+      if(!p.store){ setStatus('Indica la tienda destino.','err'); return; }
+      setStatus('Enviando a «'+p.store+'»…','wait'); this.disabled=true; var btn=this;
+      fetch(API+'/megafonia/push',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)})
+      .then(function(r){ return r.json().then(function(d){ if(!r.ok) throw new Error(d.error||('HTTP '+r.status)); return d; }); })
+      .then(function(d){ setStatus('✓ Enviado a «'+d.store+'». Sonará en la tienda en unos segundos.','ok'); })
+      .catch(function(e){ setStatus('✖ Error al enviar ('+e.message+').','err'); })
+      .finally(function(){ btn.disabled=false; });
+    };
+  </script>
+</body>
+</html>
