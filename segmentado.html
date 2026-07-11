@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- ═══════════════ VERJA DE ACCESO · PIXERIA CERRADO HASTA LANZAMIENTO ═══════════════ -->
+  <!-- GATE-INICIO -->
+  <meta name="robots" content="noindex, nofollow">
+  <script>
+  (function(){
+    var on='on';
+    try{ var q=new URLSearchParams(location.search).get('gate'); if(q==='on') on=q; }catch(e){}
+    if(on!=='on') return;
+    var s=document.createElement('script'); s.src='/auth-gate.js';
+    (document.head||document.documentElement).appendChild(s);
+    setTimeout(function(){
+      if(!document.documentElement.classList.contains('gate-locked')) return;
+      var el=document.getElementById('admira-err');
+      if(el && !el.textContent) el.textContent='✖ SI EL LOGIN NO ABRE: ORIGEN www.pixeria.com PENDIENTE DE AUTORIZAR EN GOOGLE CLOUD';
+    }, 10000);
+  })();
+  </script>
+  <!-- GATE-FIN -->
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
+  <title>Pixeria · Contenido segmentado</title>
+  <meta name="description" content="Genera automáticamente una variante de contenido por segmento (edad y sexo); la cámara del Xpacio emite la que casa con quien mira.">
+  <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
+  <style>
+    :root{
+      --bg:var(--admira-bg,#0a0c12); --elev:var(--admira-bg-elev,#141826);
+      --text:var(--admira-text,#f0e6ff); --muted:var(--admira-text-muted,rgba(216,200,255,.65));
+      --dim:var(--admira-text-dim,rgba(216,200,255,.4));
+      --violet:var(--admira-violet,#aa88ff); --amber:var(--admira-amber,#ffd866);
+      --cyan:var(--admira-cyan,#50c8ff); --green:var(--admira-green,#76b900); --magenta:var(--admira-magenta,#ff4488);
+      --border:var(--admira-border,rgba(170,136,255,.25));
+      --mono:var(--admira-font-mono,ui-monospace,Menlo,monospace);
+      --sans:var(--admira-font-sans,-apple-system,system-ui,sans-serif);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+      background-image:radial-gradient(1100px 560px at 50% -10%,rgba(255,68,136,.10),transparent 60%);
+      min-height:100vh;padding:26px 18px 60px}
+    .wrap{max-width:820px;margin:0 auto}
+    .kick{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--magenta)}
+    h1{font-size:clamp(24px,4vw,34px);margin:.15em 0 .1em}
+    .sub{color:var(--muted);line-height:1.5;margin:0 0 20px}
+    .sub code{color:var(--amber);font-family:var(--mono);font-size:.9em}
+    .card{background:var(--elev);border:1px solid var(--border);border-radius:16px;padding:20px}
+    label.fld{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);margin:14px 0 5px;letter-spacing:.06em;text-transform:uppercase}
+    label.fld:first-child{margin-top:0}
+    input,select,textarea{width:100%;font-family:var(--sans);font-size:15px;padding:11px 12px;border-radius:10px;background:#0d1018;color:var(--text);border:1px solid var(--border)}
+    textarea{min-height:72px;resize:vertical;line-height:1.45}
+    .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    @media(max-width:560px){.three{grid-template-columns:1fr}}
+    .matrix{margin-top:14px}
+    .seg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:8px}
+    .seg-chip{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;padding:9px 11px;border:1px solid var(--border);border-radius:10px;background:#0d1018;cursor:pointer;user-select:none}
+    .seg-chip input{width:auto;margin:0}
+    .seg-chip.on{border-color:var(--magenta);color:#ffd0e4;background:color-mix(in srgb,var(--magenta) 12%,transparent)}
+    .actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;align-items:center}
+    .btn{font-family:var(--mono);font-size:14px;padding:12px 18px;border-radius:11px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);display:inline-flex;align-items:center;gap:8px;transition:.15s}
+    .btn:hover{border-color:var(--magenta);color:var(--magenta)}
+    .btn.primary{background:color-mix(in srgb,var(--magenta) 16%,transparent);border-color:var(--magenta);color:#ffd0e4;font-weight:700}
+    .btn:disabled{opacity:.5;cursor:default}
+    #status{font-family:var(--mono);font-size:13px;margin-top:12px;min-height:20px}
+    .ok{color:var(--green)} .err{color:#ff6b6b} .wait{color:var(--amber)}
+    .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-top:20px}
+    .rcard{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#0d1018}
+    .rcard .ph{aspect-ratio:9/16;background:#0a0c12 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--dim);font-family:var(--mono);font-size:11px}
+    .rcard .cap{padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+    .rcard .cap b{color:var(--magenta)}
+    .meta{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:14px;line-height:1.6}
+    .foot{max-width:820px;margin:22px auto 0;font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center}
+    .foot a{color:var(--violet);text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="kick">Instore Media · pixeria → cámara → pantalla</div>
+    <h1>👥 Contenido segmentado por audiencia</h1>
+    <p class="sub">De un solo brief, genera <b>una variante por segmento</b> (edad × sexo) con IA y la publica al Stock
+      etiquetada (<code>audience</code> + <code>seg-&lt;aud&gt;-&lt;edad&gt;</code>). La <b>cámara del Xpacio</b> detecta a quién
+      tiene delante y emite sola la variante que casa. Motor: Imagen 4.0.</p>
+
+    <div class="card">
+      <label class="fld">Brief / producto</label>
+      <textarea id="brief" placeholder="Ej.: Perfume de verano en oferta 2×1"></textarea>
+
+      <div class="three">
+        <div>
+          <label class="fld">Tienda</label>
+          <input id="store" value="xtanco-valencia" spellcheck="false" autocapitalize="off">
+        </div>
+        <div>
+          <label class="fld">Categoría</label>
+          <select id="category">
+            <option value="promo">Promo</option>
+            <option value="producto">Producto</option>
+            <option value="atraer">Atraer</option>
+            <option value="marca">Marca</option>
+          </select>
+        </div>
+        <div>
+          <label class="fld">Formato</label>
+          <select id="aspect">
+            <option value="9:16">Vertical 9:16 (MUPI)</option>
+            <option value="16:9">Horizontal 16:9</option>
+            <option value="1:1">Cuadrado 1:1</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="matrix">
+        <label class="fld">Segmentos a generar (edad × sexo)</label>
+        <div class="seg-grid" id="segGrid"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" id="gen">✨ Generar variantes segmentadas</button>
+        <span id="status"></span>
+      </div>
+      <div class="meta">Cada variante tarda ~10-15 s (una llamada a Imagen por segmento). Al terminar, ya están en el Stock:
+        la cámara del gemelo (o <code>canal.html?audience=f&amp;age=joven</code>) emite la que corresponde a quien mira.</div>
+
+      <div class="results" id="results"></div>
+    </div>
+    <p class="foot"><a href="imagenes.html">← Imágenes</a> · <a href="hilomusical.html">Hilo musical</a> · <a href="megafonia.html">Megafonía</a> · <a href="https://www.admira.tv/canal.html?circuit=xtanco-valencia&screen=xtanco-valencia-a&embed=mupi&clean=1&muted=1" target="_blank">Ver el player ↗</a></p>
+  </div>
+
+  <script>
+    var API='https://api.admira.store';
+    var $=function(id){return document.getElementById(id);};
+    var AUDS=[{k:'f',n:'Mujer'},{k:'m',n:'Hombre'}];
+    var AGES=[{k:'joven',n:'Joven'},{k:'adulto',n:'Adulto'},{k:'senior',n:'Sénior'},{k:'nino',n:'Infantil'},{k:'vejez',n:'3ª edad'}];
+    // Construye la matriz de checkboxes; por defecto el contraste demo (f-joven, m-adulto).
+    var DEFAULT=['f|joven','m|adulto'];
+    AUDS.forEach(function(a){ AGES.forEach(function(g){
+      var key=a.k+'|'+g.k;
+      var lab=document.createElement('label'); lab.className='seg-chip'+(DEFAULT.indexOf(key)>=0?' on':'');
+      var cb=document.createElement('input'); cb.type='checkbox'; cb.value=key; cb.checked=DEFAULT.indexOf(key)>=0;
+      cb.onchange=function(){ lab.classList.toggle('on',cb.checked); };
+      lab.appendChild(cb); lab.appendChild(document.createTextNode(a.n+' · '+g.n));
+      $('segGrid').appendChild(lab);
+    }); });
+    try{ var qs=new URLSearchParams(location.search); if(qs.get('store')) $('store').value=qs.get('store'); }catch(e){}
+    function setStatus(m,c){ var s=$('status'); s.textContent=m; s.className=c||''; }
+
+    $('gen').onclick=function(){
+      var brief=($('brief').value||'').trim();
+      if(!brief){ setStatus('Escribe el brief.','err'); return; }
+      var segs=[].slice.call(document.querySelectorAll('#segGrid input:checked')).map(function(c){return c.value;});
+      if(!segs.length){ setStatus('Elige al menos un segmento.','err'); return; }
+      var store=($('store').value||'default').trim(), category=$('category').value, aspect=$('aspect').value;
+      var btn=this; btn.disabled=true; $('results').innerHTML='';
+      var done=0;
+      // Tarjetas placeholder
+      segs.forEach(function(seg){
+        var p=seg.split('|');
+        var card=document.createElement('div'); card.className='rcard'; card.id='r-'+seg.replace('|','-');
+        card.innerHTML='<div class="ph">generando…</div><div class="cap"><b>'+p[0]+'-'+p[1]+'</b></div>';
+        $('results').appendChild(card);
+      });
+      // Genera secuencialmente (una imagen por segmento)
+      (function next(i){
+        if(i>=segs.length){ btn.disabled=false; setStatus('✓ '+done+'/'+segs.length+' variantes en el Stock. La cámara emite la que casa.', done?'ok':'err'); return; }
+        var seg=segs[i], p=seg.split('|');
+        setStatus('Generando '+p[0]+'-'+p[1]+' ('+(i+1)+'/'+segs.length+')…','wait');
+        fetch(API+'/segmentado/generate',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({store:store, prompt:brief, audience:p[0], age:p[1], category:category, aspectRatio:aspect})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var card=$('r-'+seg.replace('|','-'));
+          if(d && d.ok){ done++; if(card){ card.querySelector('.ph').style.backgroundImage='url('+d.url+')'; card.querySelector('.ph').textContent=''; card.querySelector('.cap').innerHTML='<b>'+p[0]+'-'+p[1]+'</b> · en Stock'; } }
+          else if(card){ card.querySelector('.ph').textContent='✖ '+((d&&(d.detail||d.error))||'error'); }
+        })
+        .catch(function(e){ var card=$('r-'+seg.replace('|','-')); if(card) card.querySelector('.ph').textContent='✖ '+e.message; })
+        .finally(function(){ next(i+1); });
+      })(0);
+    };
+  </script>
+</body>
+</html>
