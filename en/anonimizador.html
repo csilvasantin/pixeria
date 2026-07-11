@@ -17,7 +17,7 @@
     var on = GATE_DEFAULT;
     try{
       var q = new URLSearchParams(location.search).get('gate');
-      if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
+      if(q==='on') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
     var s=document.createElement('script'); s.src='/auth-gate.js';
