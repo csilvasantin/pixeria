@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- ═══════════════ VERJA DE ACCESO · PIXERIA CERRADO HASTA LANZAMIENTO ═══════════════ -->
+  <!-- GATE-INICIO -->
+  <meta name="robots" content="noindex, nofollow">
+  <script>
+  (function(){
+    var on='on';
+    try{ var q=new URLSearchParams(location.search).get('gate'); if(q==='on') on=q; }catch(e){}
+    if(on!=='on') return;
+    var s=document.createElement('script'); s.src='/auth-gate.js';
+    (document.head||document.documentElement).appendChild(s);
+    setTimeout(function(){
+      if(!document.documentElement.classList.contains('gate-locked')) return;
+      var el=document.getElementById('admira-err');
+      if(el && !el.textContent) el.textContent='✖ SI EL LOGIN NO ABRE: ORIGEN www.pixeria.com PENDIENTE DE AUTORIZAR EN GOOGLE CLOUD';
+    }, 10000);
+  })();
+  </script>
+  <!-- GATE-FIN -->
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
+  <title>Pixeria · Hilo musical</title>
+  <meta name="description" content="Hilo musical del Xpacio: envía una canción al hilo del gemelo (Instore Media) y al Stock a la vez.">
+  <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
+  <style>
+    :root{
+      --bg:var(--admira-bg,#0a0c12); --elev:var(--admira-bg-elev,#141826);
+      --text:var(--admira-text,#f0e6ff); --muted:var(--admira-text-muted,rgba(216,200,255,.65));
+      --dim:var(--admira-text-dim,rgba(216,200,255,.4));
+      --violet:var(--admira-violet,#aa88ff); --amber:var(--admira-amber,#ffd866);
+      --cyan:var(--admira-cyan,#50c8ff); --green:var(--admira-green,#76b900);
+      --border:var(--admira-border,rgba(170,136,255,.25));
+      --mono:var(--admira-font-mono,ui-monospace,Menlo,monospace);
+      --sans:var(--admira-font-sans,-apple-system,system-ui,sans-serif);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+      background-image:radial-gradient(1100px 560px at 50% -10%,rgba(80,200,255,.10),transparent 60%);
+      min-height:100vh;padding:26px 18px 60px}
+    .wrap{max-width:640px;margin:0 auto}
+    .kick{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan)}
+    h1{font-size:clamp(24px,4vw,34px);margin:.15em 0 .1em}
+    .sub{color:var(--muted);line-height:1.5;margin:0 0 20px}
+    .sub code{color:var(--amber);font-family:var(--mono);font-size:.9em}
+    .card{background:var(--elev);border:1px solid var(--border);border-radius:16px;padding:20px}
+    label.fld{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);margin:14px 0 5px;letter-spacing:.06em;text-transform:uppercase}
+    label.fld:first-child{margin-top:0}
+    input,textarea{width:100%;font-family:var(--sans);font-size:15px;padding:11px 12px;border-radius:10px;background:#0d1018;color:var(--text);border:1px solid var(--border)}
+    input[type=url]{font-family:var(--mono);font-size:13px}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:520px){.two{grid-template-columns:1fr}}
+    .actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+    .btn{font-family:var(--mono);font-size:14px;padding:12px 18px;border-radius:11px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);display:inline-flex;align-items:center;gap:8px;transition:.15s}
+    .btn:hover{border-color:var(--cyan);color:var(--cyan)}
+    .btn.primary{background:color-mix(in srgb,var(--cyan) 16%,transparent);border-color:var(--cyan);color:var(--cyan);font-weight:700}
+    .btn.primary:hover{background:color-mix(in srgb,var(--cyan) 26%,transparent)}
+    .btn:disabled{opacity:.5;cursor:default}
+    .meta{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:14px;line-height:1.6}
+    #status{font-family:var(--mono);font-size:13px;margin-top:14px;min-height:20px}
+    .ok{color:var(--green)} .err{color:#ff6b6b} .wait{color:var(--amber)}
+    .plist{margin-top:18px;border-top:1px solid var(--border);padding-top:14px}
+    .plist h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+    .plist ol{margin:0;padding-left:22px;color:var(--text);font-size:14px}
+    .plist li{margin:3px 0}
+    .plist .empty{color:var(--dim);font-family:var(--mono);font-size:12px}
+    .foot{max-width:640px;margin:22px auto 0;font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center}
+    .foot a{color:var(--violet);text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="kick">Instore Media · pixeria → tienda</div>
+    <h1>🎵 Hilo musical del Xpacio</h1>
+    <p class="sub">Envía una canción al hilo musical del gemelo (Instore) <b>y al Stock a la vez</b>: queda como
+      inventario reproducible (<code>type=music</code>, etiqueta <code>hilo-&lt;tienda&gt;</code>) y suena en el Xpacio al vuelo.
+      Genera con Suno / Eleven Music y pega aquí la URL del mp3.</p>
+
+    <div class="card">
+      <div class="two">
+        <div>
+          <label class="fld">Tienda destino</label>
+          <input id="store" value="xtanco-valencia" spellcheck="false" autocapitalize="off">
+        </div>
+        <div>
+          <label class="fld">Título de la canción</label>
+          <input id="title" placeholder="Ej.: Jingle Xtanco · verano">
+        </div>
+      </div>
+
+      <label class="fld">URL de la canción (mp3)</label>
+      <input id="url" type="url" placeholder="https://…/cancion.mp3  (Suno / Eleven Music / suno-local)">
+
+      <div class="actions">
+        <button class="btn" id="preview">🔊 Escuchar</button>
+        <button class="btn primary" id="send">🎵 Enviar al Xpacio + Stock</button>
+      </div>
+      <div id="status"></div>
+      <div class="meta">La canción se publica en el Stock y se encola; el gemelo (admira-xp) la pone en su hilo en segundos.
+        <b>Suno</b> aún no tiene API pública (programa partners) → hoy: genera y pega la URL, o usa <code>suno-local :3777</code> en local.</div>
+
+      <div class="plist" id="plistWrap">
+        <h3>🎶 Hilo actual de la tienda</h3>
+        <ol id="plist"></ol>
+        <div class="empty" id="plistEmpty">Sin canciones aún — envía la primera.</div>
+      </div>
+    </div>
+    <p class="foot"><a href="musica.html">← Música</a> · <a href="megafonia.html">Megafonía</a> · <a href="https://www.xpaceos.com/admira-xp/?loc=xtanco-valencia" target="_blank">Abrir el gemelo (Xtanco) ↗</a></p>
+  </div>
+
+  <script>
+    var API='https://api.admira.store';
+    var $=function(id){return document.getElementById(id);};
+    try{ var qs=new URLSearchParams(location.search); if(qs.get('store')) $('store').value=qs.get('store'); }catch(e){}
+    function setStatus(msg,cls){ var s=$('status'); s.textContent=msg; s.className=cls||''; }
+
+    var previewAudio=null;
+    $('preview').onclick=function(){
+      var u=($('url').value||'').trim(); if(!u){ setStatus('Pega la URL de la canción.','err'); return; }
+      try{ if(previewAudio){previewAudio.pause();} previewAudio=new Audio(u); previewAudio.play();
+        setStatus('▶ Reproduciendo aquí (no en la tienda).','ok'); }
+      catch(e){ setStatus('✖ No se pudo reproducir.','err'); }
+    };
+    $('send').onclick=function(){
+      var store=($('store').value||'default').trim();
+      var url=($('url').value||'').trim();
+      var title=($('title').value||'').trim()||'Canción';
+      if(!url){ setStatus('Pega la URL de la canción.','err'); return; }
+      if(!store){ setStatus('Indica la tienda destino.','err'); return; }
+      setStatus('Publicando en Stock y enviando al Xpacio…','wait'); this.disabled=true; var btn=this;
+      fetch(API+'/hilomusical/push',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({store:store, sourceUrl:url, title:title, motor:'pixeria'})})
+      .then(function(r){ return r.json().then(function(d){ if(!r.ok) throw new Error(d.detail||d.error||('HTTP '+r.status)); return d; }); })
+      .then(function(d){ setStatus('✓ En el Stock (id '+d.id+') y en el hilo de «'+d.store+'». Sonará en segundos.','ok'); loadPlaylist(); })
+      .catch(function(e){ setStatus('✖ Error ('+e.message+').','err'); })
+      .finally(function(){ btn.disabled=false; });
+    };
+    function loadPlaylist(){
+      var store=($('store').value||'default').trim();
+      fetch(API+'/hilomusical/next?store='+encodeURIComponent(store)+'&since=0',{cache:'no-store'})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        var pl=(d&&d.playlist)||[]; var ol=$('plist'); ol.innerHTML='';
+        $('plistEmpty').style.display=pl.length?'none':'block';
+        pl.slice().reverse().forEach(function(e){ var li=document.createElement('li'); li.textContent=e.title||e.id; ol.appendChild(li); });
+      }).catch(function(){});
+    }
+    $('store').addEventListener('change', loadPlaylist);
+    loadPlaylist();
+  </script>
+</body>
+</html>
