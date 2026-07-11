@@ -35,6 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="admiranext-version" content="Pixeria v.26.07.11.r1">
   <title>Pixeria · Concepto — conversa con Nemotron</title>
   <meta name="description" content="Pásale cualquier duda a Nemotron y te responde. Un espacio de conversación para dar forma a tus ideas con IA, dentro de Pixeria.">
   <meta name="theme-color" content="#020602">
@@ -56,6 +57,7 @@
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
   <link rel="stylesheet" href="assets/styles.css?v=20260617-legal">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=20260711-cuad">
   <style>
     :root { --idea-max: 860px; }
     .idea-main {
@@ -183,6 +185,11 @@
   <script defer src="/assets/consent.js?v=20260617"></script>
 </head>
 <body>
+  <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
+  <script>
+  (function(){var b=document.body,m={pixeria_pf_left:'pf-left-off',pixeria_pf_right:'pf-right-off',pixeria_pf_bottom:'pf-bottom-off'};
+  try{for(var k in m){if(localStorage.getItem(k)!=='1')b.classList.add(m[k]);}}catch(e){for(var j in m){b.classList.add(m[j]);}}})();
+  </script>
   <!-- Google Tag Manager (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KD696XW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
@@ -433,5 +440,6 @@
       input.focus();
     })();
   </script>
+  <script defer src="/assets/cuadratura.js?v=20260711-cuad"></script>
 </body>
 </html>

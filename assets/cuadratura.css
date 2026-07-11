@@ -1,0 +1,174 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Cuadratura AdmiraNeXT · Pixeria
+   Patrón de 4 zonas sobre el MISMO contenido:
+     · OPCIONES  → raíl IZQUIERDO  (.rail-left)   navegación de secciones
+     · CENTRO    → lo importante   (.cuad-center)  hero + radar + formatos
+     · AVANZADO  → raíl DERECHO    (.rail-right)   método/pipeline + detalle
+     · EXPERTO   → franja INFERIOR (.rail-bottom)  biblioteca + estado + versión
+   Los raíles están OCULTOS por defecto (body.pf-*-off) y se revelan con los
+   iconos toggle de la barra superior. Persistencia en localStorage pixeria_pf_*.
+   Estética cuadrática: esquinas RECTAS y marcos planos. La IDENTIDAD de Pixeria
+   (tokens de styles.css: colores, tipos) se respeta — la cuadratura no cambia la
+   marca, solo redistribuye la pantalla.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.cuad{
+  display:grid;
+  grid-template-columns:290px minmax(0,1fr) 330px;
+  gap:14px;
+  align-items:start;
+}
+.cuad-center{min-width:0}
+
+/* ── Raíles: sticky, con su propio scroll, marco recto plano ─────────────── */
+.cuad .rail{
+  position:sticky;
+  top:84px;
+  max-height:calc(100vh - 100px);
+  overflow:auto;
+  border:1px solid var(--line, rgba(140,160,150,.30));
+  border-radius:0;
+  background:var(--bg-soft, rgba(8,14,10,.78));
+}
+.cuad .rail-left{border-top:2px solid var(--cyan, #68dce9)}
+.cuad .rail-right{border-top:2px solid var(--gold, #e8c268)}
+.rail-bottom{
+  grid-column:1 / -1;
+  border:1px solid var(--line, rgba(140,160,150,.30));
+  border-top:2px solid var(--green, #7dff9a);
+  border-radius:0;
+  background:var(--bg-soft, rgba(8,14,10,.78));
+}
+
+/* Cabecera de cada zona (sticky dentro del raíl) */
+.rail-hd{
+  position:sticky;top:0;z-index:3;
+  margin:0;
+  padding:13px 16px 11px;
+  font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted, #9ab0a4);
+  background:var(--bg-soft, rgba(8,14,10,.78));
+  border-bottom:1px solid var(--line, rgba(140,160,150,.30));
+}
+.rail-left .rail-hd{color:var(--cyan, #68dce9)}
+.rail-right .rail-hd{color:var(--gold, #e8c268)}
+.rail-bottom .rail-hd{color:var(--green, #7dff9a)}
+
+/* El contenido reubicado (secciones .band) se compacta dentro de los raíles:
+   sin el padding gigante de las bandas y con sus rejillas apiladas a 1 columna. */
+.cuad .rail .band{padding:16px 16px 4px;background:transparent}
+.cuad .rail .section-head{max-width:none;margin:0 0 14px}
+.cuad .rail .section-head h2{max-width:none;font-size:19px;line-height:1.1}
+.cuad .rail .section-head p{font-size:13px}
+.cuad .rail .eyebrow{font-size:11px;margin-bottom:8px}
+.cuad .rail .radar-grid,
+.cuad .rail .format-grid,
+.cuad .rail .program-layout,
+.cuad .rail .program-list,
+.cuad .rail .steps,
+.cuad .rail .intro-grid,
+.cuad .rail .ops-grid{grid-template-columns:1fr !important;gap:10px}
+.cuad .rail .radar-live{margin-top:12px}
+
+/* Tipografía y anchos compactos dentro de los raíles estrechos (izq/der):
+   las secciones .band originales usan títulos gigantes (clamp) pensados para el
+   ancho completo; aquí se reescalan para que quepan sin desbordar. */
+.cuad .rail h1,.cuad .rail h2,.cuad .rail h3{max-width:none;letter-spacing:0}
+.cuad .rail .section-head h2{font-size:19px;line-height:1.12}
+.cuad .rail .program-main h3,
+.cuad .rail .program-list h3,
+.cuad .rail .radar-card h3,
+.cuad .rail .format-grid h3{font-size:17px;line-height:1.2;margin:12px 0 8px}
+.cuad .rail p,
+.cuad .rail .program-main p{font-size:13.5px;max-width:none;line-height:1.5}
+.cuad .rail .program-kicker{margin-bottom:4px}
+.cuad .rail .program-tags{margin-top:12px;gap:6px}
+.cuad .rail .program-tags span{padding:6px 9px;font-size:11.5px}
+.cuad .rail .steps li{padding:12px}
+.cuad .rail .steps span{font-size:15px}
+.cuad .rail .radar-card,
+.cuad .rail .format-grid article,
+.cuad .rail .program-main,
+.cuad .rail .program-list article,
+.cuad .rail .model{padding:12px}
+.cuad .rail *{overflow-wrap:anywhere}
+
+/* La franja EXPERTO (inferior) sí es ancha: mantiene 2 columnas donde encaja. */
+.rail-bottom .band{padding:20px clamp(16px,4vw,40px)}
+
+/* ── Raíl OPCIONES: navegación vertical de secciones ────────────────────── */
+.rail-nav{display:flex;flex-direction:column;padding:8px}
+.rail-nav a{
+  display:block;
+  padding:10px 12px;
+  border:1px solid transparent;
+  border-radius:0;
+  transition:border-color .15s ease, background .2s ease;
+}
+.rail-nav a:hover{border-color:var(--cyan, #68dce9);background:rgba(104,220,233,0.07)}
+.rail-nav a b{display:block;font-weight:760;font-size:14px;color:var(--ink, #e8f2ec)}
+.rail-nav a small{display:block;margin-top:2px;font-size:11.5px;color:var(--muted, #9ab0a4);line-height:1.3}
+
+/* ── Raíl AVANZADO: bloque de documentación / radar ampliado ────────────── */
+.rail-extra{padding:4px 16px 18px}
+.rail-extra .rail-sub{
+  margin:6px 0 8px;
+  font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted, #9ab0a4);
+}
+.rail-doc{
+  display:block;padding:9px 0;
+  font-size:13.5px;color:var(--ink, #e8f2ec);
+  border-bottom:1px solid var(--line, rgba(140,160,150,.30));
+}
+.rail-doc:last-child{border-bottom:0}
+.rail-doc:hover{color:var(--gold, #e8c268)}
+
+/* ── Franja EXPERTO: meta (versión + estado del equipo) ─────────────────── */
+.rail-meta{
+  display:flex;flex-wrap:wrap;align-items:center;gap:14px;
+  padding:14px clamp(16px,4vw,40px) 20px;
+  border-top:1px solid var(--line, rgba(140,160,150,.30));
+  font-size:12.5px;color:var(--muted, #9ab0a4);
+}
+.rail-meta .rail-ver{
+  font-weight:800;letter-spacing:.06em;color:var(--green, #7dff9a);
+  border:1px solid var(--line, rgba(140,160,150,.30));padding:4px 10px;
+}
+.rail-meta a:hover{color:var(--cyan, #68dce9)}
+
+/* ── Iconos toggle (look SCUMM, mismos trazos, tematizados a Pixeria) ────── */
+.cuad-toggles{display:inline-flex;gap:6px;align-items:center}
+.pf-ico{
+  width:30px;height:28px;
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;
+  border:1px solid var(--line, rgba(140,160,150,.30));border-radius:0;
+  background:rgba(244,240,232,0.06);
+}
+.pf-ico svg{width:16px;height:14px;display:block}
+.pf-ico .frame{fill:none;stroke:var(--muted, #9ab0a4);stroke-width:1.4}
+.pf-ico .panel{fill:var(--muted, #9ab0a4);opacity:.5}
+.pf-ico.on{border-color:var(--cyan, #68dce9)}
+.pf-ico.on .frame{stroke:var(--cyan, #68dce9)}
+.pf-ico.on .panel{fill:var(--cyan, #68dce9);opacity:1}
+.pf-ico:hover{border-color:var(--cyan, #68dce9)}
+
+/* ── Ocultar / re-cuadrar según los toggles (raíles OCULTOS por defecto) ── */
+body.pf-left-off   .rail-left   {display:none}
+body.pf-right-off  .rail-right  {display:none}
+body.pf-bottom-off .rail-bottom {display:none}
+body.pf-left-off   .cuad{grid-template-columns:minmax(0,1fr) 330px}
+body.pf-right-off  .cuad{grid-template-columns:290px minmax(0,1fr)}
+body.pf-left-off.pf-right-off .cuad{grid-template-columns:minmax(0,1fr)}
+
+/* ── Responsive: 1 columna, raíles en flujo normal ──────────────────────── */
+@media(max-width:980px){
+  .cuad,
+  body.pf-left-off .cuad,
+  body.pf-right-off .cuad{grid-template-columns:1fr}
+  .cuad .rail{position:static;max-height:none}
+}
+
+/* Sección ACTUAL en el raíl OPCIONES (auto-cuadratura marca la página activa) */
+.rail-nav a.rail-cur{border-color:var(--cyan, #68dce9);background:rgba(104,220,233,0.10)}
+.rail-nav a.rail-cur b{color:var(--cyan, #68dce9)}

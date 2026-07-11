@@ -35,6 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="admiranext-version" content="Pixeria v.26.07.11.r1">
   <title>Pixeria × Clear Channel · Demo audio + contenidos segmentados</title>
   <meta name="description" content="Demo interna Pixeria para Clear Channel: hilo musical con Eleven Music, megafonia con ElevenLabs y contenidos automaticos y segmentados. Un solo proveedor de audio.">
   <meta name="robots" content="noindex,nofollow,noarchive">
@@ -42,6 +43,7 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="stylesheet" href="../assets/styles.css?v=20260617-legal">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=20260711-cuad">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <style>
     /* ---- Demo Clear Channel: componentes propios sobre el design system Pixeria ---- */
@@ -141,6 +143,11 @@
   </style>
 </head>
 <body>
+  <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
+  <script>
+  (function(){var b=document.body,m={pixeria_pf_left:'pf-left-off',pixeria_pf_right:'pf-right-off',pixeria_pf_bottom:'pf-bottom-off'};
+  try{for(var k in m){if(localStorage.getItem(k)!=='1')b.classList.add(m[k]);}}catch(e){for(var j in m){b.classList.add(m[j]);}}})();
+  </script>
   <nav class="admira-nav admira-nav-static" aria-label="Admira · Xperience">
     <a class="admira-nav-brand" href="https://www.admira.app">
       <span class="admira-nav-brand-name">Admira</span>
@@ -510,5 +517,6 @@
     })();
   </script>
   <script defer src="/assets/matrix-rain.js?v=20260608-sides"></script>
+  <script defer src="/assets/cuadratura.js?v=20260711-cuad"></script>
 </body>
 </html>
