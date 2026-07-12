@@ -15,7 +15,16 @@
 .cuad{
   display:block;
 }
-.cuad-center{min-width:0}
+:root{
+  --pf-left-w:300px;
+  --pf-right-w:330px;
+  --pf-bottom-h:260px;
+}
+.cuad-center,
+body.pf-has-frame .page-head{
+  min-width:0;
+  transition:margin .16s ease, max-width .16s ease;
+}
 
 /* ── Raíles: paneles laterales pegados al borde real de pantalla ─────────── */
 .cuad .rail{
@@ -23,7 +32,7 @@
   top:70px;
   bottom:0;
   z-index:160;
-  width:300px;
+  width:var(--pf-left-w);
   max-height:none;
   overflow:auto;
   border:1px solid var(--line, rgba(140,160,150,.30));
@@ -40,7 +49,7 @@
 }
 .cuad .rail-right{
   right:0;
-  width:330px;
+  width:var(--pf-right-w);
   border-right:0;
   border-top:2px solid var(--gold, #e8c268);
   border-left-color:var(--gold, #e8c268);
@@ -52,6 +61,7 @@
   bottom:0;
   z-index:155;
   max-height:42vh;
+  height:var(--pf-bottom-h);
   overflow:auto;
   border:1px solid var(--line, rgba(140,160,150,.30));
   border-top:2px solid var(--green, #7dff9a);
@@ -119,6 +129,127 @@
 
 /* La franja EXPERTO (inferior) sí es ancha: mantiene 2 columnas donde encaja. */
 .rail-bottom .band{padding:20px clamp(16px,4vw,40px)}
+
+/* El contenido principal responde al tamano de los paneles abiertos. */
+body.pf-has-frame:not(.pf-left-off) .cuad-center{
+  margin-left:var(--pf-left-w);
+}
+body.pf-has-frame:not(.pf-left-off) .page-head{
+  margin-left:calc(var(--pf-left-w) + 46px);
+  max-width:calc(100vw - var(--pf-left-w) - 92px);
+  width:auto;
+}
+body.pf-has-frame:not(.pf-right-off) .cuad-center{
+  margin-right:var(--pf-right-w);
+}
+body.pf-has-frame:not(.pf-right-off) .page-head{
+  margin-right:calc(var(--pf-right-w) + 46px);
+  max-width:calc(100vw - var(--pf-right-w) - 92px);
+  width:auto;
+}
+body.pf-has-frame:not(.pf-bottom-off) .cuad-center{
+  margin-bottom:var(--pf-bottom-h);
+}
+body.pf-has-frame:not(.pf-left-off) .page-head h1,
+body.pf-has-frame:not(.pf-right-off) .page-head h1,
+body.pf-has-frame:not(.pf-left-off) .cuad-center h1,
+body.pf-has-frame:not(.pf-right-off) .cuad-center h1{
+  font-size:clamp(38px, 6vw, 72px);
+  overflow-wrap:anywhere;
+}
+body.pf-has-frame:not(.pf-left-off):not(.pf-right-off) .page-head h1,
+body.pf-has-frame:not(.pf-left-off):not(.pf-right-off) .cuad-center h1{
+  font-size:clamp(32px, 5vw, 58px);
+}
+body.pf-has-frame:not(.pf-left-off):not(.pf-right-off) .page-head{
+  max-width:calc(100vw - var(--pf-left-w) - var(--pf-right-w) - 92px);
+}
+body.pf-has-frame:not(.pf-left-off):not(.pf-right-off) .page-head .lead,
+body.pf-has-frame:not(.pf-left-off):not(.pf-right-off) .cuad-center .lead{
+  max-width:min(100%, 680px);
+}
+body.pf-has-frame:not(.pf-left-off) .cuad-center .stock-toolbar,
+body.pf-has-frame:not(.pf-right-off) .cuad-center .stock-toolbar{
+  max-width:100%;
+}
+body.pf-has-frame:not(.pf-left-off) .cuad-center .stock-pager,
+body.pf-has-frame:not(.pf-right-off) .cuad-center .stock-pager{
+  grid-template-columns:auto minmax(220px,1fr);
+  align-items:start;
+}
+body.pf-has-frame:not(.pf-left-off) .cuad-center .stock-pager-filters,
+body.pf-has-frame:not(.pf-right-off) .cuad-center .stock-pager-filters,
+body.pf-has-frame:not(.pf-left-off) .cuad-center .stock-pager-sort,
+body.pf-has-frame:not(.pf-right-off) .cuad-center .stock-pager-sort{
+  flex-wrap:wrap;
+}
+
+/* Tiradores de redimension: invisibles hasta hover, pero grandes para acertar. */
+.pf-resize-handle{
+  position:absolute;
+  z-index:6;
+  background:transparent;
+  pointer-events:auto;
+  touch-action:none;
+}
+.pf-resize-handle::after{
+  content:"";
+  position:absolute;
+  background:currentColor;
+  opacity:.38;
+  transition:opacity .14s ease, box-shadow .14s ease;
+}
+.pf-resize-handle:hover::after,
+body.pf-resizing .pf-resize-handle::after{
+  opacity:1;
+  box-shadow:0 0 16px currentColor;
+}
+.pf-resize-left{
+  top:0;
+  right:-9px;
+  width:18px;
+  height:100%;
+  cursor:col-resize;
+  color:var(--cyan, #68dce9);
+}
+.pf-resize-left::after{
+  top:0;
+  right:8px;
+  width:2px;
+  height:100%;
+}
+.pf-resize-right{
+  top:0;
+  left:-9px;
+  width:18px;
+  height:100%;
+  cursor:col-resize;
+  color:var(--gold, #e8c268);
+}
+.pf-resize-right::after{
+  top:0;
+  left:8px;
+  width:2px;
+  height:100%;
+}
+.pf-resize-bottom{
+  top:-7px;
+  left:0;
+  width:100%;
+  height:14px;
+  cursor:row-resize;
+  color:var(--green, #7dff9a);
+}
+.pf-resize-bottom::after{
+  top:6px;
+  left:0;
+  width:100%;
+  height:2px;
+}
+body.pf-resizing{
+  user-select:none;
+  cursor:col-resize;
+}
 
 /* ── Raíl OPCIONES: navegación vertical de secciones ────────────────────── */
 .rail-nav{display:flex;flex-direction:column;padding:8px}
@@ -320,6 +451,15 @@ body.pf-bottom-off .rail-bottom {display:none}
     width:min(86vw, 320px);
   }
   .cuad .rail-right{width:min(86vw, 330px)}
+  body.pf-has-frame:not(.pf-left-off) .cuad-center,
+  body.pf-has-frame:not(.pf-right-off) .cuad-center,
+  body.pf-has-frame:not(.pf-bottom-off) .cuad-center,
+  body.pf-has-frame:not(.pf-left-off) .page-head,
+  body.pf-has-frame:not(.pf-right-off) .page-head{
+    margin-left:0;
+    margin-right:0;
+    margin-bottom:0;
+  }
 }
 
 /* Sección ACTUAL en el raíl OPCIONES (auto-cuadratura marca la página activa) */

@@ -109,6 +109,103 @@
     main.appendChild(cuad);
   }
 
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function applyPanelSizes() {
+    var root = document.documentElement;
+    try {
+      var lw = parseInt(localStorage.getItem('pixeria_pf_left_w') || '', 10);
+      var rw = parseInt(localStorage.getItem('pixeria_pf_right_w') || '', 10);
+      var bh = parseInt(localStorage.getItem('pixeria_pf_bottom_h') || '', 10);
+      if (Number.isFinite(lw)) root.style.setProperty('--pf-left-w', clamp(lw, 220, 520) + 'px');
+      if (Number.isFinite(rw)) root.style.setProperty('--pf-right-w', clamp(rw, 240, 560) + 'px');
+      if (Number.isFinite(bh)) root.style.setProperty('--pf-bottom-h', clamp(bh, 140, Math.round(window.innerHeight * 0.72)) + 'px');
+    } catch (e) {}
+  }
+
+  function addResizeHandle(panel, kind) {
+    if (!panel || panel.querySelector('.pf-resize-handle')) return;
+    var h = document.createElement('div');
+    h.className = 'pf-resize-handle pf-resize-' + kind;
+    h.setAttribute('role', 'separator');
+    h.setAttribute('aria-label',
+      kind === 'left' ? 'Redimensionar panel de opciones' :
+      kind === 'right' ? 'Redimensionar panel avanzado' :
+      'Redimensionar panel experto');
+    panel.appendChild(h);
+    function startDrag(ev) {
+      ev.preventDefault();
+      if (document.body.classList.contains('pf-resizing')) return;
+      if (ev.pointerId != null && h.setPointerCapture) h.setPointerCapture(ev.pointerId);
+      document.body.classList.add('pf-resizing');
+      var move = function (e) {
+        var root = document.documentElement;
+        if (kind === 'left') {
+          var lw = clamp(e.clientX, 220, Math.min(560, window.innerWidth - 260));
+          root.style.setProperty('--pf-left-w', lw + 'px');
+          try { localStorage.setItem('pixeria_pf_left_w', String(Math.round(lw))); } catch (err) {}
+        } else if (kind === 'right') {
+          var rw = clamp(window.innerWidth - e.clientX, 240, Math.min(600, window.innerWidth - 260));
+          root.style.setProperty('--pf-right-w', rw + 'px');
+          try { localStorage.setItem('pixeria_pf_right_w', String(Math.round(rw))); } catch (err2) {}
+        } else {
+          var bh = clamp(window.innerHeight - e.clientY, 140, Math.round(window.innerHeight * 0.72));
+          root.style.setProperty('--pf-bottom-h', bh + 'px');
+          try { localStorage.setItem('pixeria_pf_bottom_h', String(Math.round(bh))); } catch (err3) {}
+        }
+      };
+      var up = function () {
+        document.body.classList.remove('pf-resizing');
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        window.removeEventListener('pointercancel', up);
+      };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+      window.addEventListener('pointercancel', up);
+      window.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', up);
+    }
+    h.addEventListener('pointerdown', startDrag);
+    h.addEventListener('mousedown', function (ev) {
+      if (ev.buttons === 1) startDrag(ev);
+    });
+    h.addEventListener('keydown', function (ev) {
+      var delta = ev.shiftKey ? 32 : 12;
+      var root = document.documentElement;
+      var current;
+      if (kind === 'left' && (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight')) {
+        ev.preventDefault();
+        current = parseInt(getComputedStyle(root).getPropertyValue('--pf-left-w'), 10) || 300;
+        current = clamp(current + (ev.key === 'ArrowRight' ? delta : -delta), 220, 520);
+        root.style.setProperty('--pf-left-w', current + 'px');
+        try { localStorage.setItem('pixeria_pf_left_w', String(current)); } catch (e) {}
+      } else if (kind === 'right' && (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight')) {
+        ev.preventDefault();
+        current = parseInt(getComputedStyle(root).getPropertyValue('--pf-right-w'), 10) || 330;
+        current = clamp(current + (ev.key === 'ArrowLeft' ? delta : -delta), 240, 560);
+        root.style.setProperty('--pf-right-w', current + 'px');
+        try { localStorage.setItem('pixeria_pf_right_w', String(current)); } catch (e2) {}
+      } else if (kind === 'bottom' && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) {
+        ev.preventDefault();
+        current = parseInt(getComputedStyle(root).getPropertyValue('--pf-bottom-h'), 10) || 260;
+        current = clamp(current + (ev.key === 'ArrowUp' ? delta : -delta), 140, Math.round(window.innerHeight * 0.72));
+        root.style.setProperty('--pf-bottom-h', current + 'px');
+        try { localStorage.setItem('pixeria_pf_bottom_h', String(current)); } catch (e3) {}
+      }
+    });
+    h.tabIndex = 0;
+  }
+
+  function initResizablePanels() {
+    applyPanelSizes();
+    addResizeHandle(document.querySelector('.rail-left'), 'left');
+    addResizeHandle(document.querySelector('.rail-right'), 'right');
+    addResizeHandle(document.querySelector('.rail-bottom'), 'bottom');
+  }
+
   // ── Toggles (look SCUMM, tematizados en cuadratura.css) ───────────────────
   function makeToggle(p) {
     if (!document.querySelector(p.sel)) return null;
@@ -220,6 +317,7 @@
     buildAutoCuad();
     if (!document.querySelector('.cuad')) return;      // sin cuadratura → sin toggles
     buildTopbar();
+    initResizablePanels();
   }
 
   if (document.readyState === 'loading') {
