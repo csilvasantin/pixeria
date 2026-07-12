@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- GATE-INICIO -->
+  <meta name="robots" content="noindex, nofollow">
+  <script>
+  (function(){
+    var on='on';
+    try{var q=new URLSearchParams(location.search).get('gate');if(q==='on'||q==='off')on=q;}catch(e){}
+    if(on!=='on')return;
+    var s=document.createElement('script');s.src='/auth-gate.js';
+    (document.head||document.documentElement).appendChild(s);
+  })();
+  </script>
+  <!-- GATE-FIN -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="admiranext-version" content="Pixeria v.26.07.12.r4">
+  <title>Pixeria &middot; Megafonia</title>
+  <meta name="description" content="Acceso directo al flujo de megafonia Pixeria: avisos por voz con ElevenLabs, cola por zona y demo Clear Channel.">
+  <meta name="theme-color" content="#0b1117">
+  <link rel="canonical" href="https://www.pixeria.com/megafonia/">
+  <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
+  <link rel="stylesheet" href="/assets/styles.css?v=20260617-legal">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=20260711-cuad">
+  <script defer src="/assets/analytics.js?v=20260617-consent"></script>
+  <script defer src="/assets/consent.js?v=20260617"></script>
+  <style>
+    .flow-page{min-height:100vh;padding:108px clamp(20px,6vw,76px) 64px;background:linear-gradient(90deg,rgba(8,13,19,.97),rgba(8,13,19,.78)),url("/assets/hero-pixeria.jpg") center/cover;color:var(--ink)}
+    .flow-shell{width:min(100%,980px);display:grid;gap:22px}
+    .flow-kicker{width:max-content;border:1px solid var(--cyan);color:var(--cyan);border-radius:999px;padding:6px 12px;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+    h1{font-size:clamp(42px,7vw,88px);line-height:.94;margin:0}
+    .lead{max-width:760px;color:rgba(244,240,232,.84);font-size:clamp(17px,2vw,23px);line-height:1.34}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:8px}
+    .card{border:1px solid var(--line);border-radius:8px;background:rgba(244,240,232,.05);padding:16px}
+    .card span{display:block;color:var(--cyan);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+    .card p{color:var(--muted);line-height:1.45;margin:0}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+    .actions a{border:1px solid var(--line);border-radius:8px;padding:11px 16px;font-weight:700}
+    .actions a.primary{background:var(--cyan);border-color:var(--cyan);color:#071018}
+  </style>
+</head>
+<body>
+  <main class="flow-page">
+    <section class="flow-shell">
+      <a class="brand" href="/" aria-label="Pixeria inicio"><span class="brand-mark">P</span><span>Pixeria</span></a>
+      <span class="flow-kicker">Voice ops · ElevenLabs</span>
+      <h1>Megafonia por voz, lista para sonar en tienda.</h1>
+      <p class="lead">Compositor de avisos para apertura, cierre, promocion y seguridad. El texto se convierte en voz de marca, se encola por zona y baja el hilo musical mientras habla.</p>
+      <div class="cards">
+        <article class="card"><span>01 · Texto</span><p>Mensaje operativo por idioma, tono y centro.</p></article>
+        <article class="card"><span>02 · Worker seguro</span><p>La clave queda en backend; nunca viaja al navegador.</p></article>
+        <article class="card"><span>03 · Cola</span><p>El gemelo consulta el siguiente aviso y lo reproduce con prioridad.</p></article>
+      </div>
+      <div class="actions">
+        <a class="primary" href="/clearchannel/#megafonia">Ver demo Clear Channel</a>
+        <a href="/audio.html">Abrir Voice Ops</a>
+        <a href="https://www.xpaceos.com/admira-xp/" rel="noopener">Ver gemelo XpaceOS</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

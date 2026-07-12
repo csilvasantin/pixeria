@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- GATE-INICIO -->
+  <meta name="robots" content="noindex, nofollow">
+  <script>
+  (function(){
+    var on='on';
+    try{var q=new URLSearchParams(location.search).get('gate');if(q==='on'||q==='off')on=q;}catch(e){}
+    if(on!=='on')return;
+    var s=document.createElement('script');s.src='/auth-gate.js';
+    (document.head||document.documentElement).appendChild(s);
+  })();
+  </script>
+  <!-- GATE-FIN -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="admiranext-version" content="Pixeria v.26.07.12.r4">
+  <title>Pixeria &middot; Hilo musical</title>
+  <meta name="description" content="Acceso directo al flujo de hilo musical Pixeria: Eleven Music, Stock y reproduccion continua en el gemelo.">
+  <meta name="theme-color" content="#0b1117">
+  <link rel="canonical" href="https://www.pixeria.com/hilomusical/">
+  <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
+  <link rel="stylesheet" href="/assets/styles.css?v=20260617-legal">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=20260711-cuad">
+  <script defer src="/assets/analytics.js?v=20260617-consent"></script>
+  <script defer src="/assets/consent.js?v=20260617"></script>
+  <style>
+    .flow-page{min-height:100vh;padding:108px clamp(20px,6vw,76px) 64px;background:linear-gradient(90deg,rgba(8,13,19,.97),rgba(8,13,19,.78)),url("/assets/hero-pixeria.jpg") center/cover;color:var(--ink)}
+    .flow-shell{width:min(100%,980px);display:grid;gap:22px}
+    .flow-kicker{width:max-content;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:6px 12px;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+    h1{font-size:clamp(42px,7vw,88px);line-height:.94;margin:0}
+    .lead{max-width:760px;color:rgba(244,240,232,.84);font-size:clamp(17px,2vw,23px);line-height:1.34}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:8px}
+    .card{border:1px solid var(--line);border-radius:8px;background:rgba(244,240,232,.05);padding:16px}
+    .card span{display:block;color:var(--gold);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+    .card p{color:var(--muted);line-height:1.45;margin:0}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+    .actions a{border:1px solid var(--line);border-radius:8px;padding:11px 16px;font-weight:700}
+    .actions a.primary{background:var(--gold);border-color:var(--gold);color:#111}
+  </style>
+</head>
+<body>
+  <main class="flow-page">
+    <section class="flow-shell">
+      <a class="brand" href="/" aria-label="Pixeria inicio"><span class="brand-mark">P</span><span>Pixeria</span></a>
+      <span class="flow-kicker">Music ops · Eleven Music</span>
+      <h1>Hilo musical propio para cada espacio.</h1>
+      <p class="lead">Playlists generadas por marca, ambiente y franja horaria. Pixeria publica la pieza en Stock y la encola para que el gemelo la reproduzca en loop.</p>
+      <div class="cards">
+        <article class="card"><span>01 · Prompt de marca</span><p>Identidad sonora por centro, zona y momento del dia.</p></article>
+        <article class="card"><span>02 · Stock</span><p>La cancion queda trazada como asset reutilizable.</p></article>
+        <article class="card"><span>03 · Emision</span><p>El gemelo cambia el audio de fondo sin tocar su logica principal.</p></article>
+      </div>
+      <div class="actions">
+        <a class="primary" href="/clearchannel/#hilo">Ver demo Clear Channel</a>
+        <a href="/musica.html">Abrir Music Ops</a>
+        <a href="/stock.html">Ver Stock</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
