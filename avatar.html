@@ -17,7 +17,7 @@
     var on = GATE_DEFAULT;
     try{
       var q = new URLSearchParams(location.search).get('gate');
-      if(q==='on') on = q;              // escape puntual, solo esta carga
+      if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
     var s=document.createElement('script'); s.src='/auth-gate.js';
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.26.07.11.r1">
+  <meta name="admiranext-version" content="Pixeria v.26.07.12.r1">
   <link rel="canonical" href="https://www.pixeria.com/avatar.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/avatar.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/avatar.html">
