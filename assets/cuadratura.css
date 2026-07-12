@@ -13,31 +13,55 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 .cuad{
-  display:grid;
-  grid-template-columns:290px minmax(0,1fr) 330px;
-  gap:14px;
-  align-items:start;
+  display:block;
 }
 .cuad-center{min-width:0}
 
-/* ── Raíles: sticky, con su propio scroll, marco recto plano ─────────────── */
+/* ── Raíles: paneles laterales pegados al borde real de pantalla ─────────── */
 .cuad .rail{
-  position:sticky;
-  top:84px;
-  max-height:calc(100vh - 100px);
+  position:fixed;
+  top:70px;
+  bottom:0;
+  z-index:160;
+  width:300px;
+  max-height:none;
   overflow:auto;
   border:1px solid var(--line, rgba(140,160,150,.30));
   border-radius:0;
-  background:var(--bg-soft, rgba(8,14,10,.78));
+  background:rgba(2, 10, 5, .90);
+  box-shadow:0 0 34px rgba(0,255,65,.10);
+  backdrop-filter:blur(8px);
 }
-.cuad .rail-left{border-top:2px solid var(--cyan, #68dce9)}
-.cuad .rail-right{border-top:2px solid var(--gold, #e8c268)}
+.cuad .rail-left{
+  left:0;
+  border-left:0;
+  border-top:2px solid var(--cyan, #68dce9);
+  border-right-color:var(--cyan, #68dce9);
+}
+.cuad .rail-right{
+  right:0;
+  width:330px;
+  border-right:0;
+  border-top:2px solid var(--gold, #e8c268);
+  border-left-color:var(--gold, #e8c268);
+}
 .rail-bottom{
-  grid-column:1 / -1;
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:155;
+  max-height:42vh;
+  overflow:auto;
   border:1px solid var(--line, rgba(140,160,150,.30));
   border-top:2px solid var(--green, #7dff9a);
+  border-left:0;
+  border-right:0;
+  border-bottom:0;
   border-radius:0;
-  background:var(--bg-soft, rgba(8,14,10,.78));
+  background:rgba(2, 10, 5, .92);
+  box-shadow:0 -18px 34px rgba(0,255,65,.10);
+  backdrop-filter:blur(8px);
 }
 
 /* Cabecera de cada zona (sticky dentro del raíl) */
@@ -266,9 +290,6 @@ body.pf-has-frame .admira-nav{
 body.pf-left-off   .rail-left   {display:none}
 body.pf-right-off  .rail-right  {display:none}
 body.pf-bottom-off .rail-bottom {display:none}
-body.pf-left-off   .cuad{grid-template-columns:minmax(0,1fr) 330px}
-body.pf-right-off  .cuad{grid-template-columns:290px minmax(0,1fr)}
-body.pf-left-off.pf-right-off .cuad{grid-template-columns:minmax(0,1fr)}
 
 /* ── Responsive: 1 columna, raíles en flujo normal ──────────────────────── */
 @media(max-width:980px){
@@ -294,10 +315,11 @@ body.pf-left-off.pf-right-off .cuad{grid-template-columns:minmax(0,1fr)}
     padding-bottom:8px;
   }
   .pf-topbar-contact{display:none}
-  .cuad,
-  body.pf-left-off .cuad,
-  body.pf-right-off .cuad{grid-template-columns:1fr}
-  .cuad .rail{position:static;max-height:none}
+  .cuad .rail{
+    top:83px;
+    width:min(86vw, 320px);
+  }
+  .cuad .rail-right{width:min(86vw, 330px)}
 }
 
 /* Sección ACTUAL en el raíl OPCIONES (auto-cuadratura marca la página activa) */
