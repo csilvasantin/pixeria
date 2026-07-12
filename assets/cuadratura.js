@@ -129,21 +129,97 @@
     return b;
   }
 
+  function isActive(href) {
+    var a = document.createElement('a');
+    a.href = href;
+    function normPath(p){ return String(p).replace(/index\.html$/, '').replace(/\.html$/, '').replace(/\/$/, '') || '/'; }
+    return normPath(a.pathname) === normPath(location.pathname);
+  }
+
+  function mainNavItems() {
+    var stockNav = document.querySelector('.primary-nav');
+    var siteNav = document.querySelector('.site-header .nav');
+    var source = stockNav || siteNav;
+    if (source) {
+      return Array.prototype.slice.call(source.querySelectorAll('a')).map(function (a) {
+        return { href: a.getAttribute('href') || a.href, t: a.textContent.trim() };
+      }).filter(function (a) { return a.href && a.t; });
+    }
+    return SECTIONS.slice(0, 10).map(function (s) { return { href: s.href, t: s.t.replace(/^.*·\s*/, '') }; });
+  }
+
+  function pageLanguageLink() {
+    return document.querySelector('.language-switcher a, .topnav-actions .language-switcher a, .mobile-language-switcher a');
+  }
+
+  function buildTopbar() {
+    if (document.querySelector('.pf-topbar')) return;
+    var leftToggle = makeToggle(PANELS[0]);
+    var rightToggle = makeToggle(PANELS[1]);
+    var bottomToggle = makeToggle(PANELS[2]);
+    if (!leftToggle || !rightToggle || !bottomToggle) return;
+
+    leftToggle.classList.add('pf-window-left');
+    rightToggle.classList.add('pf-window-advanced');
+    bottomToggle.classList.add('pf-window-expert');
+
+    var bar = document.createElement('header');
+    bar.className = 'pf-topbar';
+    bar.setAttribute('aria-label', 'Pixeria · marco cuadrático');
+
+    var left = document.createElement('div');
+    left.className = 'pf-topbar-left';
+    left.appendChild(leftToggle);
+
+    var brand = document.createElement('a');
+    brand.className = 'pf-topbar-brand';
+    brand.href = '/';
+    brand.setAttribute('aria-label', 'Pixeria inicio');
+    brand.innerHTML = '<span class="pf-brand-mark">P</span><span class="pf-brand-name">Pixeria</span>';
+    left.appendChild(brand);
+
+    var nav = document.createElement('nav');
+    nav.className = 'pf-topbar-nav';
+    nav.setAttribute('aria-label', 'Secciones principales de Pixeria');
+    mainNavItems().forEach(function (item) {
+      var a = document.createElement('a');
+      a.href = item.href;
+      a.textContent = item.t;
+      if (isActive(item.href)) a.setAttribute('aria-current', 'page');
+      nav.appendChild(a);
+    });
+
+    var right = document.createElement('div');
+    right.className = 'pf-topbar-right';
+    var lang = pageLanguageLink();
+    if (lang) {
+      var langLink = document.createElement('a');
+      langLink.className = 'pf-topbar-lang';
+      langLink.href = lang.getAttribute('href') || lang.href;
+      langLink.textContent = lang.textContent.trim() || 'ENG';
+      langLink.setAttribute('aria-label', lang.getAttribute('aria-label') || 'Cambiar idioma');
+      right.appendChild(langLink);
+    }
+    var contact = document.createElement('a');
+    contact.className = 'pf-topbar-contact';
+    contact.href = '#contact';
+    contact.textContent = 'Contacto';
+    contact.setAttribute('data-admira-contact', '');
+    right.appendChild(contact);
+    right.appendChild(rightToggle);
+    right.appendChild(bottomToggle);
+
+    bar.appendChild(left);
+    bar.appendChild(nav);
+    bar.appendChild(right);
+    document.body.insertBefore(bar, document.body.firstChild);
+    document.body.classList.add('pf-has-frame');
+  }
+
   function mount() {
     buildAutoCuad();
     if (!document.querySelector('.cuad')) return;      // sin cuadratura → sin toggles
-    // Anclaje: la barra actual es .admira-nav (el viejo .header-actions ya no existe —
-    // por eso los toggles no aparecían). Se insertan ANTES del CTA de contacto.
-    var host = document.querySelector('.admira-nav .admira-nav-items') || document.querySelector('.header-actions');
-    if (!host || host.querySelector('.cuad-toggles')) return;
-    var box = document.createElement('div');
-    box.className = 'cuad-toggles';
-    box.setAttribute('role', 'group');
-    box.setAttribute('aria-label', 'Mostrar u ocultar zonas de la cuadratura');
-    PANELS.forEach(function (p) { var b = makeToggle(p); if (b) box.appendChild(b); });
-    if (!box.children.length) return;
-    var cta = host.querySelector('.admira-nav-link-cta') || host.querySelector('.nav-action');
-    host.insertBefore(box, cta || null);
+    buildTopbar();
   }
 
   if (document.readyState === 'loading') {
