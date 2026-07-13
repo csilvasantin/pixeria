@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.26.07.13.r1">
+  <meta name="admiranext-version" content="Pixeria v.26.07.13.r2">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -246,33 +246,11 @@
     .distq-empty{ color:var(--muted); font-size:12px; text-align:center; padding:24px; }
     .distq-hist .ok{ color:var(--matrix); } .distq-hist .fail{ color:#ff8866; }
 
-    /* ── Sección CAMPAÑAS (series empaquetadas con metatag, p.ej. #sabiasqueXtanco) ── */
-    .camp-section{ margin:0 0 28px; }
-    .camp-head{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
-    .camp-head h2{ font-size:20px; color:var(--matrix); letter-spacing:.03em; margin:0; }
-    .camp-head .camp-lead{ font-size:12px; color:var(--muted); margin:0; }
-    .camp-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
-    .camp-card{ display:flex; flex-direction:column; border:1px solid var(--line-bright); border-radius:12px;
-      background:var(--panel-2); overflow:hidden; transition:border-color .15s, box-shadow .15s; }
-    .camp-card:hover{ border-color:var(--matrix); box-shadow:var(--glow); }
-    .camp-prevlink{ display:block; position:relative; aspect-ratio:16/9; background:#0a0f14; }
-    .camp-prev{ position:absolute; inset:0; width:100%; height:100%; border:0; pointer-events:none; }
-    .camp-prevlink::after{ content:'▶ VER BUCLE'; position:absolute; right:10px; bottom:10px; font-size:10px;
-      letter-spacing:.1em; color:var(--matrix); background:rgba(0,0,0,.7); border:1px solid var(--line-bright);
-      border-radius:6px; padding:3px 8px; opacity:0; transition:opacity .15s; }
-    .camp-prevlink:hover::after{ opacity:1; }
-    .camp-body{ display:flex; flex-direction:column; gap:8px; padding:12px 14px 14px; }
-    .camp-body h3{ font-size:14px; color:var(--matrix); margin:0; }
-    .camp-tags{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
-    .camp-tag{ border:1px solid #aa88ff; background:rgba(170,136,255,.14); color:#e6dcff; border-radius:999px;
-      padding:2px 8px; font-size:11px; }
-    .camp-target{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
-    .camp-items{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px; font-size:12px; }
-    .camp-items a{ color:var(--matrix); text-decoration:none; }
-    .camp-items a:hover{ text-decoration:underline; }
-    .camp-seg{ font-size:10px; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:0 5px; margin-left:4px; }
-    .camp-actions{ display:flex; align-items:center; gap:10px; margin-top:4px; }
-    .camp-meta{ font-size:11px; color:var(--muted); }
+    /* Etiquetas arrastrables entre assets. */
+    .stock-tag[draggable="true"],.stock-tags-drag{cursor:grab}.stock-tag[draggable="true"]:active,.stock-tags-drag:active{cursor:grabbing}
+    .stock-tags-drag{border:1px dashed var(--matrix);background:rgba(0,255,65,.06);color:var(--matrix);border-radius:999px;padding:2px 8px;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:.04em}
+    .stock-card.tag-drop-target{outline:2px dashed var(--matrix);outline-offset:3px;background:rgba(0,255,65,.08)}
+    body.tag-dragging .stock-card:not(.tag-drop-target){transition:opacity .15s,outline .15s}.stock-tag.tag-drag-source,.stock-tags-drag.tag-drag-source{opacity:.45}
   </style>
   <script defer src="/assets/analytics.js?v=20260617-consent"></script>
   <script defer src="/assets/consent.js?v=20260617"></script>
@@ -315,6 +293,7 @@
       <a href="anonimizador.html" data-nav="anonimizador">Anonimizador</a>
       <a href="/crear/" data-nav="crear">Assets</a>
       <a href="stock.html" data-nav="stock">Stock</a>
+      <a href="/campanas/" data-nav="campanas">Campañas</a>
       <a href="/xpacios/" data-nav="xpacios">Xpacios</a>
     </nav>
     <div class="topnav-actions">
@@ -332,16 +311,6 @@
   </header>
 
   <main>
-    <!-- CAMPAÑAS: series de contenidos empaquetadas con metatag (p.ej. #sabiasqueXtanco),
-         listadas desde /campanas/index.json + el feed.json de cada campaña. -->
-    <section class="camp-section" id="campSection" hidden aria-label="Campañas">
-      <div class="camp-head">
-        <h2>📣 Campañas · <span id="campCount">0</span></h2>
-        <p class="camp-lead">Series empaquetadas con metatag, listas para distribuirse a las pantallas de la red (Xtanco y circuitos).</p>
-      </div>
-      <div id="campGrid" class="camp-grid"></div>
-    </section>
-
     <section class="stock-toolbar">
       <nav class="stock-pager stock-pager-top" aria-label="Vista, filtros, búsqueda, orden y paginación">
         <div class="stock-view" role="group" aria-label="Vista">
@@ -811,12 +780,13 @@
       const safeId = String(id || '').replace(/[^A-Za-z0-9-]/g, '');
       const chips = (Array.isArray(tags) ? tags : []).map(t => {
         const safe = String(t).replace(/</g, '&lt;');
-        return `<button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Clic: filtrar por #${escAttr(t)} · Doble-clic: renombrar">#${safe}</button>`;
+        return `<button type="button" class="stock-tag" draggable="true" data-drag-tag="${escAttr(t)}" data-tag="${escAttr(t)}" title="Arrastra para copiar #${escAttr(t)} a otro contenido · Clic: filtrar · Doble-clic: renombrar">#${safe}</button>`;
       }).join('');
+      const dragAll = chips ? `<button type="button" class="stock-tags-drag" draggable="true" data-act="drag-tags" data-id="${safeId}" title="Arrastra para copiar todas las etiquetas a otro contenido">⇄ tags</button>` : '';
       // "+ más": añade metatags propias para agrupar (a la derecha de las auto-tags).
       // Se muestra SIEMPRE, incluso sin etiquetas, para poder agrupar cualquier asset.
       const more = `<button type="button" class="stock-tag-more" data-act="add-tag-list" data-id="${safeId}" title="Añadir etiquetas propias para agrupar (varias separadas por comas)">+ más</button>`;
-      return `<div class="stock-tags">${chips}${more}</div>`;
+      return `<div class="stock-tags">${chips}${dragAll}${more}</div>`;
     }
     function renderTagsEditorHtml(id, tags) {
       const safeId = String(id || '').replace(/[^A-Za-z0-9-]/g, '');
@@ -1308,6 +1278,8 @@
     //  el distribuidor con destino por pantalla, lote y programación — más abajo.)
 
     grid.addEventListener('click', async e => {
+      const dragTagsBtn = e.target.closest('[data-act="drag-tags"]');
+      if (dragTagsBtn) { e.preventDefault(); e.stopPropagation(); return; }
       // "+ más": añadir metatags propias a este asset desde la lista (agrupar sin abrir
       // el detalle). Acepta varias etiquetas separadas por comas. Reusa saveTags.
       const moreBtn = e.target.closest('[data-act="add-tag-list"]');
@@ -1427,6 +1399,62 @@
       clearTimeout(window.__tagClickTimer);
       startTagRename(tagBtn);
     });
+    // Arrastra una etiqueta, o el tirador «⇄ tags», y suéltalo sobre otra
+    // tarjeta. El destino conserva sus etiquetas y recibe solo las que le faltan.
+    let draggedTags = [];
+    let draggedFromId = '';
+    function clearTagDropState() {
+      document.body.classList.remove('tag-dragging');
+      grid.querySelectorAll('.tag-drop-target,.tag-drag-source').forEach(el => el.classList.remove('tag-drop-target','tag-drag-source'));
+    }
+    grid.addEventListener('dragstart', e => {
+      const one = e.target.closest('[data-drag-tag]');
+      const all = e.target.closest('[data-act="drag-tags"]');
+      if (!one && !all) return;
+      const card = e.target.closest('.stock-card');
+      const source = card && allItems.find(it => String(it.id) === card.dataset.id);
+      if (!source) { e.preventDefault(); return; }
+      draggedTags = one ? [one.dataset.dragTag] : (source.tags || []).slice();
+      draggedTags = draggedTags.map(t => String(t).trim().replace(/^#+/, '')).filter(Boolean);
+      draggedFromId = String(source.id);
+      if (!draggedTags.length) { e.preventDefault(); return; }
+      e.target.classList.add('tag-drag-source');
+      document.body.classList.add('tag-dragging');
+      e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.setData('application/x-pixeria-tags', JSON.stringify({ tags: draggedTags, from: draggedFromId }));
+      e.dataTransfer.setData('text/plain', draggedTags.map(t => '#'+t).join(', '));
+    });
+    grid.addEventListener('dragover', e => {
+      if (!draggedTags.length) return;
+      const card = e.target.closest('.stock-card');
+      if (!card || card.dataset.id === draggedFromId) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+      grid.querySelectorAll('.tag-drop-target').forEach(el => { if (el !== card) el.classList.remove('tag-drop-target'); });
+      card.classList.add('tag-drop-target');
+    });
+    grid.addEventListener('dragleave', e => {
+      const card = e.target.closest('.stock-card');
+      if (card && !card.contains(e.relatedTarget)) card.classList.remove('tag-drop-target');
+    });
+    grid.addEventListener('drop', async e => {
+      const card = e.target.closest('.stock-card');
+      if (!card || !draggedTags.length || card.dataset.id === draggedFromId) { clearTagDropState(); return; }
+      e.preventDefault(); e.stopPropagation();
+      const target = allItems.find(it => String(it.id) === card.dataset.id);
+      const incoming = draggedTags.slice();
+      clearTagDropState();
+      if (!target) return;
+      const next = Array.isArray(target.tags) ? target.tags.slice() : [];
+      const seen = new Set(next.map(t => String(t).toLowerCase()));
+      const added = [];
+      for (const tag of incoming) if (!seen.has(tag.toLowerCase())) { seen.add(tag.toLowerCase()); next.push(tag); added.push(tag); }
+      if (!added.length) { status.textContent = `🏷️ ${target.title || target.prompt || target.id} ya tenía esas etiquetas`; return; }
+      if (next.length > 12) { status.textContent = '// máximo 12 etiquetas por asset'; alert('Máximo 12 etiquetas por asset.'); return; }
+      status.textContent = `🏷️ copiando ${added.map(t=>'#'+t).join(', ')}…`;
+      const saved = await saveTags(target.id, next);
+      if (saved) { target.tags = saved; status.textContent = `✓ ${added.map(t=>'#'+t).join(', ')} copiadas a ${target.title || target.prompt || target.id}`; applyFilters(false); }
+    });
+    grid.addEventListener('dragend', clearTagDropState);
     grid.addEventListener('keydown', e => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       const card = e.target.closest('.stock-card');
