@@ -50,7 +50,7 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=20260613-play">
+  <link rel="stylesheet" href="workspace.css?v=20260713-orientation">
   <link rel="stylesheet" href="/assets/cuadratura.css?v=20260712-resize">
   <style>
     /* Contador de elementos en stock (en el título), con flash al crecer */
@@ -648,6 +648,25 @@
     function displayType(it) {
       return isFurni(it) ? 'furni' : it.type;
     }
+    function mediaOrientation(it) {
+      const width = Number(it && (it.width || it._mediaWidth)) || 0;
+      const height = Number(it && (it.height || it._mediaHeight)) || 0;
+      let ratio = width > 0 && height > 0 ? width / height : 0;
+      if (!ratio && it && typeof it.aspectRatio === 'string') {
+        const bits = it.aspectRatio.split(':').map(Number);
+        if (bits.length === 2 && bits[0] > 0 && bits[1] > 0) ratio = bits[0] / bits[1];
+      }
+      // Los Shorts se identifican de inmediato mientras llega loadedmetadata.
+      if (!ratio && /(?:youtube\.com\/shorts\/|youtu\.be\/shorts\/)/i.test(String((it && it.prompt) || ''))) ratio = 9 / 16;
+      if (!ratio) return { key: 'unknown', icon: '◇', label: 'detectando formato…' };
+      if (ratio < 0.9) return { key: 'portrait', icon: '↕', label: 'vertical' };
+      if (ratio > 1.1) return { key: 'landscape', icon: '↔', label: 'horizontal' };
+      return { key: 'square', icon: '□', label: 'cuadrado' };
+    }
+    function orientationBadgeHtml(it) {
+      const o = mediaOrientation(it);
+      return `<span class="stock-orientation ${o.key}" data-role="orientation" title="Formato del contenido">${o.icon} ${o.label}</span>`;
+    }
     // Estilo de UN frame de un sprite-sheet horizontal (frames>1) en una caja.
     function frameStyle(url, frames, idx) {
       const n = Math.max(1, frames | 0);
@@ -675,7 +694,7 @@
         return `<img src="${it.url}" alt="" loading="lazy" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
       }
       if (it.type === 'image' || it.type === 'digital-twin') {
-        return `<img src="${it.thumbnail || it.url}" alt="" loading="lazy">`;
+        return `${orientationBadgeHtml(it)}<img data-orientation-media src="${it.thumbnail || it.url}" alt="" loading="lazy">`;
       }
       if (it.type === 'video' || it.type === 'animation') {
         // PREVIEW = fotograma real del propio vídeo (buscado a ~1s), NO el póster
@@ -683,7 +702,7 @@
         // entrada). Carga PEREZOSA (IntersectionObserver, margen 600px) para no
         // penalizar la rejilla; al pulsar ▶ se reproduce aquí. Clic en el vídeo
         // abre el detalle.
-        return `<video class="stock-cover stock-video-preview" data-src="${escAttr(it.url)}" preload="metadata" muted playsinline disablepictureinpicture style="background:#0a0f14;object-fit:cover;"></video>
+        return `${orientationBadgeHtml(it)}<video class="stock-cover stock-video-preview" data-orientation-media data-src="${escAttr(it.url)}" preload="metadata" muted playsinline disablepictureinpicture style="background:#0a0f14;"></video>
                 <button type="button" class="stock-media-play" data-act="playmini" data-url="${escAttr(it.url)}" title="Reproducir aquí (pequeño)" aria-label="Reproducir aquí">▶</button>`;
       }
       if (it.type === 'audio' || it.type === 'locucion' || it.type === 'music') {
@@ -694,6 +713,38 @@
       return `<pre>${JSON.stringify(it).slice(0,200)}</pre>`;
     }
     function escAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
+
+    function setMediaOrientation(media, width, height) {
+      if (!media || !(width > 0) || !(height > 0)) return;
+      const card = media.closest('.stock-card');
+      if (!card) return;
+      const it = allItems.find(x => String(x.id) === card.dataset.id);
+      if (it) { it._mediaWidth = width; it._mediaHeight = height; }
+      const o = mediaOrientation({ width, height });
+      card.dataset.orientation = o.key;
+      const badge = card.querySelector('[data-role="orientation"]');
+      if (badge) {
+        badge.className = `stock-orientation ${o.key}`;
+        badge.textContent = `${o.icon} ${o.label}`;
+        badge.title = `${o.label} · ${Math.round(width)}×${Math.round(height)} px`;
+      }
+    }
+    function hydrateMediaOrientations() {
+      grid.querySelectorAll('[data-orientation-media]').forEach(media => {
+        const read = () => {
+          const isVideo = media.tagName === 'VIDEO';
+          setMediaOrientation(media,
+            isVideo ? media.videoWidth : media.naturalWidth,
+            isVideo ? media.videoHeight : media.naturalHeight);
+        };
+        if (media.tagName === 'VIDEO') media.addEventListener('loadedmetadata', read, { once: true });
+        else if (media.complete) read();
+        else media.addEventListener('load', read, { once: true });
+        const card = media.closest('.stock-card');
+        const it = card && allItems.find(x => String(x.id) === card.dataset.id);
+        if (card && it) card.dataset.orientation = mediaOrientation(it).key;
+      });
+    }
 
     // Lazy-load de previews de vídeo: el src (data-src) se asigna cuando la
     // tarjeta se acerca al viewport (margen 600px). Pintado de rejilla
@@ -1076,6 +1127,7 @@
 
       grid.classList.remove('stock-grid-grouped');
       grid.innerHTML = pageItems.map(renderCard).join('');
+      hydrateMediaOrientations();
       observeLazyVideos();
       empty.hidden = items.length > 0;
       updateStockCount();
