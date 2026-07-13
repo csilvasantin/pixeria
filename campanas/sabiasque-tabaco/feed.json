@@ -1,0 +1,52 @@
+{
+  "campaign": "sabiasque-tabaco",
+  "title": "¿Sabías que? del tabaco",
+  "tags": ["sabiasqueXtanco"],
+  "target": "xtanco",
+  "loop": true,
+  "dwell_ms": 8000,
+  "player": "bucle.html",
+  "updatedAt": "2026-07-13",
+  "items": [
+    {
+      "id": "sqt-01-hombre",
+      "kind": "slide",
+      "url": "slide.html?i=1",
+      "title": "El estanco, un privilegio real de casi 400 años",
+      "tags": ["sabiasqueXtanco"],
+      "segment": { "genero": "hombre" }
+    },
+    {
+      "id": "sqt-02-mujer",
+      "kind": "slide",
+      "url": "slide.html?i=2",
+      "title": "Las cigarreras de Sevilla y la Carmen de la ópera",
+      "tags": ["sabiasqueXtanco"],
+      "segment": { "genero": "mujer" }
+    },
+    {
+      "id": "sqt-03-joven",
+      "kind": "slide",
+      "url": "slide.html?i=3",
+      "title": "En el estanco hay mucho más que tabaco",
+      "tags": ["sabiasqueXtanco"],
+      "segment": { "edad": "joven" }
+    },
+    {
+      "id": "sqt-04-adulto",
+      "kind": "slide",
+      "url": "slide.html?i=4",
+      "title": "\"Estanco\" significa literalmente \"monopolizado\"",
+      "tags": ["sabiasqueXtanco"],
+      "segment": { "edad": "adulto" }
+    },
+    {
+      "id": "sqt-05-senior",
+      "kind": "slide",
+      "url": "slide.html?i=5",
+      "title": "El estanco de barrio, de los comercios más longevos",
+      "tags": ["sabiasqueXtanco"],
+      "segment": { "edad": "senior" }
+    }
+  ]
+}
