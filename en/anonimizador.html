@@ -310,6 +310,7 @@
       'safety': '🚫 The engine rejected the image for sensitive content. Try another photo.',
       'copyright': '🚫 Blocked for possible copyright. Try another photo.',
       'empty': 'The engine returned no image. Retry or try another photo.',
+      'timeout': '⏱️ The engine took too long. Generation was stopped; press Anonymize to try again.',
       'network': 'No connection to the engine. (Works from pixeria.com.)'
     };
     const errMsg = (e) => (e && ERR_MAP[e.reason]) || ('Error: ' + ((e && e.message) || 'unknown'));
@@ -397,6 +398,16 @@
       frame.__fillT = setInterval(() => { p += (top - p) * 0.06; frameFill(frame, p); }, 260);
     }
     function frameFillStop(frame) { if (frame.__fillT) { clearInterval(frame.__fillT); frame.__fillT = null; } }
+    function frameFillFail(frame, message) {
+      if (!frame) return;
+      frameFillStop(frame);
+      frame.querySelectorAll('.vfill,.vpct,.spin').forEach(el => el.remove());
+      const error = document.createElement('div');
+      error.className = 'ph';
+      error.textContent = '⚠️ ' + String(message || 'Generation stopped. Try again.').slice(0, 180);
+      error.title = String(message || '');
+      frame.replaceChildren(error);
+    }
     // Finishes the fill at 100% and, after a beat, shows the image (if a fill was active).
     function frameFillFinish(frame, dataURL) {
       if (frame.__fillT || frame.querySelector('.vfill')) {
@@ -427,12 +438,19 @@
     }
     async function imageEditOnce(image, sys, prompt) {
       let r;
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 90000);
       try {
         r = await fetch(WORKER + '/image/edit', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image, sys, prompt })
+          body: JSON.stringify({ image, sys, prompt }), signal: ctrl.signal
         });
-      } catch (netErr) { const e = new Error('no connection to the engine'); e.reason = 'network'; throw e; }
+      } catch (netErr) {
+        const e = new Error(ctrl.signal.aborted ? 'request timed out (90 s)' : 'no connection to the engine');
+        e.reason = ctrl.signal.aborted ? 'timeout' : 'network';
+        e.status = ctrl.signal.aborted ? 408 : 0;
+        throw e;
+      } finally { clearTimeout(timeout); }
       const d = await r.json().catch(() => ({}));
       if (r.ok && d && d.ok && d.image) return d.image;
       const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
@@ -626,6 +644,7 @@
       els.status.removeAttribute('title');
       els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true; els.sendStore.disabled = true;
       progShow(true); progSet(0, 3, 'Generating NPCs…');
+      let workingFrame = null;
       try {
         // Step 1 — photo → 8-bit and THEN 16-bit NPC, SEQUENTIAL (not at once): avoids
         // hitting the engine with 2 concurrent requests and the progress cascade shows
@@ -637,18 +656,18 @@
           setStatus('The engine is busy, retrying the ' + tag + ' (' + a + '/' + (m - 1) + ')…');
         };
         // 1a) 8-bit NPC
-        activeCard(els.card2); frameFillCreep(els.frame2);
+        workingFrame = els.frame2; activeCard(els.card2); frameFillCreep(els.frame2);
         setStatus('Generating the 8-bit twin NPC…');
         const img8 = await editOrGrok(original, NPC8_SYS, NPC8_PROMPT, grok8Prompt(), retryMsg(els.frame2, '8-bit'), '8-bit');
         npc8 = await makeTransparentBg(img8, 52); frameFillFinish(els.frame2, npc8); bump();
         // 1b) 16-bit NPC (only once the 8-bit has finished)
-        activeCard(els.card3); frameFillCreep(els.frame3);
+        workingFrame = els.frame3; activeCard(els.card3); frameFillCreep(els.frame3);
         setStatus('Generating the 16-bit twin NPC…');
         const img16 = await editOrGrok(original, NPC16_SYS, NPC16_PROMPT, grok16Prompt(), retryMsg(els.frame3, '16-bit'), '16-bit');
         npc16 = img16; frameFillFinish(els.frame3, img16); bump();
 
         // Step 2 — 16-bit NPC → different realistic person
-        activeCard(els.card4); frameFillCreep(els.frame4);
+        workingFrame = els.frame4; activeCard(els.card4); frameFillCreep(els.frame4);
         setStatus('Generating a new person…');
         const prompt = HUMAN_PROMPT[els.strength.value] || HUMAN_PROMPT.aire;
         anon = await editOrGrok(npc16, HUMAN_SYS, prompt, grokHumanPrompt(), retryMsg(els.frame4, 'portrait'), 'portrait');
@@ -661,8 +680,11 @@
         els.status.title = 'Images generated with — Original: ' + originalSource + ' · NPCs and person: ' + models + '.';
         els.status.style.cursor = 'help';
         els.download.disabled = false; els.publish.disabled = false; els.sendStore.disabled = false;
+        workingFrame = null;
       } catch (e) {
-        setStatus(errMsg(e), true);
+        const message = errMsg(e);
+        frameFillFail(workingFrame, message);
+        setStatus(message, true);
         activeCard(null);
       } finally {
         [els.frame2, els.frame3, els.frame4].forEach(frameFillStop);
