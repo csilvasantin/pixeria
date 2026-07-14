@@ -9,7 +9,6 @@
     ['/imagenes.html', 'Imágenes'],
     ['/video.html', 'Video'],
     ['/publicidad.html', 'Publicidad'],
-    ['/avatar.html', 'Avatar 3D'],
     ['/anonimizador.html', 'Anonimizador'],
     ['/crear/', 'Assets'],
     ['/stock.html', 'Stock']
@@ -20,7 +19,6 @@
     ['/en/imagenes.html', 'Images'],
     ['/en/video.html', 'Video'],
     ['/en/publicidad.html', 'Advertising'],
-    ['/en/avatar.html', '3D Avatar'],
     ['/en/anonimizador.html', 'Anonymizer'],
     ['/en/crear/', 'Assets'],
     ['/en/stock.html', 'Stock']

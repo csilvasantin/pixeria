@@ -5,6 +5,10 @@ cd "$(dirname "$0")/.."
 
 missing=0
 while IFS= read -r file; do
+  if grep -qi '<meta[^>]*http-equiv=["'\'' ]*refresh' "$file"; then
+    continue
+  fi
+
   if ! grep -q '/assets/analytics.js' "$file"; then
     printf 'Falta Analytics: %s\n' "$file" >&2
     missing=1
@@ -15,4 +19,4 @@ if (( missing )); then
   exit 1
 fi
 
-printf 'OK: Analytics presente en todos los HTML.\n'
+printf 'OK: Analytics presente en todos los HTML de contenido (redirecciones excluidas).\n'
