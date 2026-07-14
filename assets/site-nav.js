@@ -287,7 +287,7 @@
     }
     bindLayer(advanced, 'pixNavAdvancedLayer');
     bindLayer(expert, 'pixNavExpertLayer');
-    canonicalHeader(header, menu, brand, nav, advanced, expert);
+    try { canonicalHeader(header, menu, brand, nav, advanced, expert); } catch (_) {}
   }
 
   function upgradeQuadControls() {
@@ -323,7 +323,7 @@
         bottom.classList.add('pix-nav-icon', 'pix-nav-icon-expert');
         bottom.innerHTML = iconSvg('expert');
       }
-      canonicalHeader(topbar, left, topbar.querySelector('.quad-brand'), topbar.querySelector('.quad-links'), right, bottom);
+      try { canonicalHeader(topbar, left, topbar.querySelector('.quad-brand'), topbar.querySelector('.quad-links'), right, bottom); } catch (_) {}
     });
   }
 
