@@ -81,6 +81,12 @@
       '.pf-brand-mark{box-sizing:border-box;width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line,rgba(0,255,65,.38));color:var(--matrix,#00ff41);background:rgba(0,255,65,.10);text-shadow:0 0 12px rgba(0,255,65,.62);font-weight:800}' +
       '.pf-brand-name{color:var(--ink,#e8f2ec);font-weight:800;letter-spacing:.08em}' +
       '.quad-ui.pix-nav-canonical-header{padding-top:0!important}' +
+      '.pix-nav-home-rails.quad-ui{padding-top:70px!important}.pix-nav-home-rails .quad-top{top:0;left:0;right:0;width:auto;height:70px;min-height:70px;box-sizing:border-box;padding:0 28px;border:0;border-bottom:1px solid rgba(26,74,34,.95);box-shadow:0 0 24px rgba(0,255,65,.08);z-index:180}' +
+      '.pix-nav-home-rails .rail{position:fixed;top:70px;bottom:0;z-index:160;width:var(--pf-left-w,300px);max-height:none;overflow:auto;border:1px solid rgba(140,160,150,.30);border-radius:0;background:rgba(2,10,5,.90);box-shadow:0 0 34px rgba(0,255,65,.10);backdrop-filter:blur(8px)}' +
+      '.pix-nav-home-rails .rail-left{left:0;border-left:0;border-top:2px solid #68dce9;border-right-color:#68dce9}.pix-nav-home-rails .rail-right{right:0;width:var(--pf-right-w,330px);border-right:0;border-top:2px solid #e8c268;border-left-color:#e8c268}' +
+      '.pix-nav-home-rails .rail-hd{position:sticky;top:0;z-index:3;margin:0;padding:13px 16px 11px;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#9ab0a4;background:rgba(8,14,10,.78);border-bottom:1px solid rgba(140,160,150,.30)}.pix-nav-home-rails .rail-left .rail-hd{color:#68dce9}.pix-nav-home-rails .rail-right .rail-hd{color:#e8c268}' +
+      '.pix-nav-home-rails .rail-nav{display:flex;flex-direction:column;padding:8px}.pix-nav-home-rails .rail-nav a{display:block;padding:10px 12px;border:1px solid transparent;color:#c8ffd0;text-decoration:none}.pix-nav-home-rails .rail-nav a:hover,.pix-nav-home-rails .rail-nav a[aria-current="page"]{border-color:#00ff41;background:rgba(0,255,65,.07)}.pix-nav-home-rails .rail-nav b{display:block;font-weight:760;font-size:14px;color:#e8f2ec}.pix-nav-home-rails .rail-nav small{display:block;margin-top:2px;font-size:11.5px;color:#7fae8c;line-height:1.3}.pix-nav-home-rails .rail-extra{padding:4px 16px 18px}.pix-nav-home-rails .rail-sub{margin:6px 0 8px;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9ab0a4}.pix-nav-home-rails .rail-doc{display:block;padding:9px 0;font-size:13.5px;color:#e8f2ec;border-bottom:1px solid rgba(140,160,150,.30);text-decoration:none}' +
+      '.pix-nav-home-rails main{margin-left:var(--pf-left-w,300px);margin-right:var(--pf-right-w,330px);transition:margin .16s ease}.pix-nav-home-rails.pf-left-off .rail-left{display:none}.pix-nav-home-rails.pf-right-off .rail-right{display:none}.pix-nav-home-rails.pf-left-off main{margin-left:0}.pix-nav-home-rails.pf-right-off main{margin-right:0}' +
       '.pix-nav-icon{width:42px;height:42px;display:inline-grid;place-items:center;flex:0 0 42px;padding:0;border:1px solid rgba(0,255,65,.42);border-radius:0;background:rgba(0,255,65,.04);color:#00ff41;cursor:pointer;box-shadow:inset 0 0 16px rgba(0,255,65,.04)}' +
       '.pix-nav-icon:hover,.pix-nav-icon[aria-expanded="true"]{background:rgba(0,255,65,.12);box-shadow:0 0 16px rgba(0,255,65,.18),inset 0 0 16px rgba(0,255,65,.08)}' +
       '.pix-nav-icon svg{width:21px;height:19px;display:block}' +
@@ -104,11 +110,11 @@
   }
 
   function canonicalBrand(brand) {
-    var link = brand && (brand.matches('a') ? brand : brand.querySelector('a'));
+    var link = brand && (String(brand.tagName || '').toLowerCase() === 'a' ? brand : brand.querySelector('a'));
     if (!link) return brand;
     if (link !== brand) {
       link.remove();
-      brand.replaceWith(link);
+      brand.parentNode.replaceChild(link, brand);
     }
     link.className = 'pf-topbar-brand';
     var mark = link.querySelector('.brand-mark, span');
@@ -127,11 +133,16 @@
     menu.classList.remove('quad-icon');
     advanced.classList.remove('quad-icon');
     expert.classList.remove('quad-icon');
-    left.append(menu, canonicalBrand(brand));
+    left.appendChild(menu);
+    left.appendChild(canonicalBrand(brand));
     nav.className = 'pf-topbar-nav';
-    right.append(advanced, expert);
+    right.appendChild(advanced);
+    right.appendChild(expert);
     header.className = 'pf-topbar';
-    header.replaceChildren(left, nav, right);
+    while (header.firstChild) header.removeChild(header.firstChild);
+    header.appendChild(left);
+    header.appendChild(nav);
+    header.appendChild(right);
     document.body.classList.add('pix-nav-canonical-header');
   }
 
@@ -152,6 +163,73 @@
       expert.innerHTML = '<span>Pixeria · sistema creativo</span><a href="/stock.html">Stock</a><a href="/documentacion/">Documentación</a><a href="https://www.xpaceos.com">XpaceOS</a><a href="https://www.admira.app">Admira</a>';
       document.body.appendChild(expert);
     }
+  }
+
+  var HOME_RAIL_SECTIONS = [
+    ['/crear/', 'Studio · Crear', 'Generar assets: video, imagen, audio, texto, mobiliario'],
+    ['/musica.html', 'Música', 'Bandas sonoras, jingles y marca sonora'],
+    ['/audio.html', 'Audio · Megafonía', 'Voces, locución y megafonía de marca'],
+    ['/video.html', 'Vídeo', 'Storyboards, generación, edición y loops'],
+    ['/imagenes.html', 'Imágenes', 'Dirección de arte, producto y estilo'],
+    ['/avatar.html', 'Avatar 3D', 'Presentadores y avatares generativos'],
+    ['/anonimizador.html', 'Anonimizador', 'Privacidad en imagen y vídeo'],
+    ['/plataforma.html', 'Plataforma', 'Mapa de capas, motores y salida a XpaceOS'],
+    ['/stock.html', 'Stock', 'Galería pública de assets desplegados'],
+    ['/crear-campana/', 'Campañas', 'Compra y activación en puntos y pantallas'],
+    ['/publicidad.html', 'Publicidad', 'Formatos y activos por canal'],
+    ['/clearchannel/', 'Demo Clear Channel', 'Pixer Feed en vivo sobre pantallas reales']
+  ];
+  var HOME_RAIL_DOCS = [
+    ['/radar/', 'Radar completo de modelos'],
+    ['/plataforma.html', 'Arquitectura de plataforma'],
+    ['/documentacion/', 'Documentación'],
+    ['/concepto.html', 'Concepto Pixeria']
+  ];
+
+  function ensureHomeRails() {
+    if (isHome() || document.querySelector('.rail-left')) return;
+    document.querySelectorAll('.quad-left,.quad-right,.quad-bottom').forEach(function (rail) { rail.remove(); });
+    var here = norm(location.pathname);
+    var left = document.createElement('aside');
+    left.className = 'rail rail-left';
+    left.setAttribute('aria-label', 'Opciones · secciones de Pixeria');
+    left.innerHTML = '<div class="rail-hd">🔍 Opciones</div><nav class="rail-nav" aria-label="Secciones de Pixeria">' +
+      HOME_RAIL_SECTIONS.map(function (s) {
+        var current = norm(s[0]) === here;
+        return '<a href="' + s[0] + '"' + (current ? ' aria-current="page"' : '') + '><b>' + s[1] + '</b><small>' + s[2] + '</small></a>';
+      }).join('') + '</nav>';
+    var right = document.createElement('aside');
+    right.className = 'rail rail-right';
+    right.setAttribute('aria-label', 'Avanzado · método y detalle');
+    right.innerHTML = '<div class="rail-hd">⚙️ Avanzado</div><div class="rail-extra"><p class="rail-sub">Radar ampliado y documentación</p>' +
+      HOME_RAIL_DOCS.map(function (d) { return '<a class="rail-doc" href="' + d[0] + '">' + d[1] + ' →</a>'; }).join('') + '</div>';
+    document.body.appendChild(left);
+    document.body.appendChild(right);
+    document.body.classList.add('pix-nav-home-rails');
+    try {
+      if (localStorage.getItem('pixeria_pf_left') !== '1') document.body.classList.add('pf-left-off');
+      if (localStorage.getItem('pixeria_pf_right') !== '1') document.body.classList.add('pf-right-off');
+    } catch (_) {
+      document.body.classList.add('pf-left-off', 'pf-right-off');
+    }
+  }
+
+  function bindRailToggles() {
+    if (!document.body.classList.contains('pix-nav-home-rails')) return;
+    var controls = [
+      ['.pix-nav-icon-menu', 'pf-left-off', 'pixeria_pf_left'],
+      ['.pix-nav-icon-advanced', 'pf-right-off', 'pixeria_pf_right']
+    ];
+    controls.forEach(function (item) {
+      var button = document.querySelector('.pf-topbar ' + item[0] + ', .quad-top ' + item[0] + ', .site-header ' + item[0] + ', .topnav ' + item[0]);
+      if (!button || button.dataset.railToggle === '1') return;
+      button.dataset.railToggle = '1';
+      button.addEventListener('click', function () {
+        var open = document.body.classList.toggle(item[1]);
+        button.setAttribute('aria-pressed', open ? 'false' : 'true');
+        try { localStorage.setItem(item[2], open ? '0' : '1'); } catch (_) {}
+      });
+    });
   }
 
   function bindStandardControls(header) {
@@ -295,6 +373,8 @@
     });
     upgradeQuadControls();
     upgradeFrameControls();
+    ensureHomeRails();
+    bindRailToggles();
 
     // Si cuadratura.js ya creó la barra canónica, sus tres SVG son los buenos.
     // En las demás familias se montan los mismos controles alrededor del menú.
