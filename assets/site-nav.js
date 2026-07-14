@@ -178,7 +178,7 @@
   function upgradeQuadControls() {
     document.querySelectorAll('.quad-top').forEach(function (topbar) {
       var left = topbar.querySelector('[data-quad-toggle="left"]');
-      var right = topbar.querySelector('[data-quad-toggle="right"]');
+      var right = topbar.querySelector('[data-quad-toggle="right"], .pix-nav-icon-advanced');
       var bottom = topbar.querySelector('[data-quad-toggle="bottom"]');
       if (left) {
         left.classList.add('pix-nav-icon', 'pix-nav-icon-menu');
