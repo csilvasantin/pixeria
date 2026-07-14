@@ -53,6 +53,7 @@
 
   // ── AUTO-CUADRATURA: envuelve <main> e inyecta los raíles estándar ────────
   function buildAutoCuad() {
+    if (document.body.classList.contains('pix-nav-home-rails')) return;
     if (document.querySelector('.cuad')) return;                  // ya es artesanal
     // Las páginas quad-ui (audio/música/imágenes/vídeo, marco de 4 bordes estilo
     // Admira.tv) traen SU propia cuadratura completa — no doble-enmarcar.
