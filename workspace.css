@@ -559,6 +559,36 @@ body[data-page="admira-xp"] .primary-nav a[data-nav="admira-xp"] {
     0 30px 90px rgba(0, 0, 0, 0.72);
   font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
   text-shadow: var(--glow);
+  max-width: calc(100vw - 48px);
+  overscroll-behavior: contain;
+}
+
+/* Mantener todo el formulario dentro de la DMZ del panel. */
+.admira-contact-panel-grid,
+.admira-contact-panel-grid > div,
+.admira-contact-panel-grid > form,
+.admira-contact-form,
+.admira-contact-form label,
+.admira-contact-row,
+.admira-contact-actions {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.admira-contact-form,
+.admira-contact-form label,
+.admira-contact-row,
+.admira-contact-actions,
+.admira-contact-form input:not([type="checkbox"]),
+.admira-contact-form select,
+.admira-contact-form textarea {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .admira-contact-panel {
+    max-width: 100%;
+  }
 }
 
 .admira-contact-panel::before {
