@@ -82,7 +82,10 @@
       '.pix-nav-icon .panel{fill:#8bd49f;opacity:.72}' +
       '.pix-nav-icon-menu .menu-line{fill:none;stroke:#00ff41;stroke-width:2.1;stroke-linecap:square;filter:drop-shadow(0 0 3px rgba(0,255,65,.9))}' +
       '.pix-nav-icon-advanced{border-color:rgba(232,194,104,.58)}' +
-      '.primary-nav a,.site-header .nav a,.quad-links a,.quad-brand,.pf-topbar-brand,.pf-topbar-nav a,.pf-topbar-lang,.pf-topbar-contact{text-decoration:none!important}' +
+      '.primary-nav,.site-header .nav,.quad-links,.pf-topbar-nav{display:flex;align-items:center;justify-content:center;gap:5px!important}' +
+      '.primary-nav a,.site-header .nav a,.quad-links a,.pf-topbar-nav a{flex:0 1 auto;min-width:0;padding:8px 10px!important;border:1px solid transparent!important;border-radius:0!important;background:transparent!important;color:#c8ffd0!important;font-size:12px!important;font-weight:400!important;line-height:1.55!important;letter-spacing:.08em!important;text-transform:uppercase!important;white-space:nowrap;text-decoration:none!important}' +
+      '.primary-nav a:hover,.site-header .nav a:hover,.quad-links a:hover,.pf-topbar-nav a:hover,.primary-nav a.active,.site-header .nav a.active,.quad-links a.active,.pf-topbar-nav a.active,.primary-nav a[aria-current="page"],.site-header .nav a[aria-current="page"],.quad-links a[aria-current="page"],.pf-topbar-nav a[aria-current="page"]{color:#00ff41!important;border-color:#00ff41!important;background:rgba(0,255,65,.1)!important;text-shadow:0 0 12px rgba(0,255,65,.62)!important}' +
+      '.quad-brand,.pf-topbar-brand,.pf-topbar-lang,.pf-topbar-contact{text-decoration:none!important}' +
       '.pix-nav-layer{position:fixed;z-index:1200;border:1px solid rgba(0,255,65,.42);background:rgba(0,10,3,.97);color:#caffd7;box-shadow:0 0 28px rgba(0,255,65,.18);font:700 12px/1.4 "IBM Plex Mono",monospace}' +
       '.pix-nav-layer[hidden]{display:none!important}' +
       '.pix-nav-advanced-layer{top:72px;right:18px;width:min(330px,calc(100vw - 36px));padding:18px;display:grid;gap:8px}' +
