@@ -2844,7 +2844,7 @@
     const label = sel && sel.selectedOptions && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent.trim() : 'Xpacio';
     return {
       screen: screen || 'xtanco-valencia-a',
-      href: href || '/xpacios/grok/?pantalla=A&listen=1',
+      href: href || 'https://www.xpaceos.com/xpacios/grok/?pantalla=A&listen=1',
       label,
     };
   }

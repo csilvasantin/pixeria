@@ -1,213 +1,24 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <!-- ═══════════════ VERJA DE ACCESO · PIXERIA CERRADO HASTA LANZAMIENTO ═══════════════
-       Reutiliza la MISMA verja del ecosistema (admira.live / admiranext.com): auth-gate.js,
-       login con Google + misma whitelist de usuarios (worker admira-whitelist). Verja ACTIVA
-       por defecto. ?gate=off es un escape SOLO para esa carga (no persiste), por si el login
-       falla. Mientras esté cerrado: meta noindex + robots.txt Disallow.
-       PARA REABRIR EL SITIO EL DÍA DEL LANZAMIENTO: borrar TODO este bloque (marcadores
-       GATE-INICIO … GATE-FIN) de cada .html, restaurar robots.public.txt → robots.txt y
-       borrar /auth-gate.js. Ver checklist en el PR de la verja. -->
-  <!-- GATE-INICIO -->
-  <meta name="robots" content="noindex, nofollow">
-  <script>
-  (function(){
-    var GATE_DEFAULT = 'on';                       // verja activa — sitio cerrado
-    var on = GATE_DEFAULT;
-    try{
-      var q = new URLSearchParams(location.search).get('gate');
-      if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
-    }catch(e){}
-    if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js';
-    (document.head||document.documentElement).appendChild(s);
-    // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
-    // origen aún no esté autorizado en Google → mensaje claro en pantalla.
-    setTimeout(function(){
-      if(!document.documentElement.classList.contains('gate-locked')) return;
-      var el=document.getElementById('admira-err');
-      if(el && !el.textContent) el.textContent='\u2716 SI EL LOGIN NO ABRE: ORIGEN www.pixeria.com PENDIENTE DE AUTORIZAR EN GOOGLE CLOUD';
-    }, 10000);
-  })();
-  </script>
-  <!-- GATE-FIN -->
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Xpacios · XpaceOS Locations · Pixeria</title>
-<meta name="theme-color" content="#020602">
-<meta name="description" content="XpaceOS Locations: genera el gemelo isométrico de tu local desde una foto, coloca las pantallas y gestiónalas en remoto desde Pixeria.">
-<link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
-<link rel="canonical" href="https://www.pixeria.com/xpacios/">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Xpacios se ha mudado a xpaceos.com</title>
+<link rel="canonical" href="https://www.xpaceos.com/xpacios/">
+<meta name="robots" content="noindex,follow">
+<meta http-equiv="refresh" content="0; url=https://www.xpaceos.com/xpacios/">
+<script>location.replace("https://www.xpaceos.com/xpacios/"+location.search+location.hash);</script>
 <style>
-  :root{ --matrix:#00ff41; --matrix-deep:#00b82e; --bg:#020602; --panel:#06120a; --line:rgba(0,255,65,.18); --muted:#5f8f6f; --ink:#cfeed6; --spine:#50c8ff; }
-  *{box-sizing:border-box}
-  html,body{margin:0;min-height:100%}
-  body{background:radial-gradient(120% 90% at 50% -10%,#04120a,#020602);color:var(--ink);
-    font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;padding:0 0 60px}
-  a{color:var(--matrix);text-decoration:none}
-  header{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(2,6,2,.92);backdrop-filter:blur(8px);z-index:5}
-  header .logo{font-size:20px}
-  header b{color:var(--matrix);letter-spacing:.5px;font-weight:650}
-  header .sub{color:var(--muted);font-size:11px}
-  header .spacer{flex:1}
-  header .home{color:var(--muted);font-size:12px;border:1px solid var(--line);border-radius:7px;padding:6px 10px}
-  header .home:hover{border-color:var(--matrix);color:var(--ink)}
-  .wrap{max-width:1040px;margin:0 auto;padding:26px 22px}
-  .hero h1{font-size:26px;margin:6px 0 8px;color:#eafff0;letter-spacing:.3px}
-  .hero h1 .x{color:var(--spine)}
-  .hero p{color:var(--ink);opacity:.82;font-size:14px;line-height:1.6;max-width:680px}
-  .hero .steps{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
-  .hero .steps span{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 11px}
-  .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0 6px}
-  .cta{display:inline-flex;align-items:center;gap:9px;background:var(--matrix);color:#02140a;border:1px solid var(--matrix);
-    border-radius:10px;padding:12px 20px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.02em}
-  .cta:hover{background:#5dff86}
-  .cta.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-  .cta.ghost:hover{border-color:var(--matrix)}
-  h2.sec{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:34px 2px 14px;display:flex;align-items:center;gap:10px}
-  h2.sec .n{font-family:inherit;color:var(--matrix);font-size:11px;border:1px solid var(--line);border-radius:999px;padding:2px 8px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;transition:.12s}
-  .card:hover{border-color:var(--matrix);transform:translateY(-2px)}
-  .card .thumb{aspect-ratio:16/10;background:#040d07 center/cover;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:30px}
-  .card .meta{padding:11px 13px}
-  .card .nm{font-weight:700;color:#eafff0;font-size:14px;word-break:break-word}
-  .card .loc{color:var(--muted);font-size:11px;margin-top:3px}
-  .card .row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:var(--muted)}
-  .card .chip{border:1px solid var(--line);border-radius:999px;padding:2px 8px}
-  .card .chip.live{color:#ff8290;border-color:rgba(255,90,106,.4)}
-  .card .chip.live::before{content:"●";color:#ff5a6a;margin-right:4px;animation:pulse 1.4s infinite}
-  @keyframes pulse{50%{opacity:.35}}
-  .card .acts{display:flex;gap:6px;margin-top:10px}
-  .card .act{flex:1;text-align:center;font-size:11px;border:1px solid var(--line);border-radius:8px;padding:7px 4px;color:var(--ink);background:rgba(0,255,65,.05);cursor:pointer}
-  .card .act:hover{border-color:var(--matrix);color:#eafff0}
-  .card .act.bcn{background:rgba(255,77,166,.08)}.card .act.bcn:hover{border-color:#ff4da6}
-  .card.new{display:flex;align-items:center;justify-content:center;border-style:dashed;min-height:150px;color:var(--matrix);font-size:14px;font-weight:700}
-  .card.new:hover{background:rgba(0,255,65,.05)}
-  .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--line);border-radius:14px;padding:40px 20px;line-height:1.6}
-  .empty b{color:var(--ink)}
-  .foot{text-align:center;color:var(--muted);font-size:10.5px;margin-top:40px;letter-spacing:.06em}
-  .foot a{color:var(--muted)}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#0c0510;color:#eee;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;box-sizing:border-box}
+  a{color:#c586ff}
+  .box{max-width:32rem}
 </style>
-  <script defer src="/assets/analytics.js?v=20260714-coverage"></script>
-  <script defer src="/assets/consent.js?v=20260714-universal"></script>
 </head>
 <body>
-<header>
-  <span class="logo">🗺️</span>
-  <div><b>Xpacios</b> <span class="sub">· XpaceOS Locations</span></div>
-  <span class="spacer"></span>
-  <a class="home" href="/">← Pixeria</a>
-</header>
-
-<div class="wrap">
-  <div class="hero">
-    <h1>Tus locales como <span class="x">gemelos isométricos</span>, gestionables en remoto</h1>
-    <p>Sube una foto de un local y <b>XpaceOS Locations</b> reconstruye su espacio en 2.5D (la profundidad se calcula en tu propio navegador, sin servidor). Coloca las pantallas donde están de verdad, guárdalo como un <b>Xpacio</b> y gestiónalo desde aquí: estado, contenido y emisión de cada pantalla.</p>
-    <div class="steps">
-      <span>📷 1 foto</span><span>🧠 profundidad en el navegador</span><span>📐 vista isométrica</span><span>🖥️ coloca pantallas</span><span>💾 guarda el Xpacio</span><span>🛰️ gestiona en remoto</span>
-    </div>
-    <div class="cta-row">
-      <button class="cta" id="newXpacioBtn">＋ Nuevo Xpacio</button>
-      <a class="cta ghost" href="/xpacios/crear/">📷 Generar desde una foto</a>
-      <a class="cta ghost" href="/signage.html">🖥️ Ver signage</a>
-    </div>
-  </div>
-
-  <h2 class="sec">Xpacios destacados</h2>
-  <div class="grid">
-    <div class="card" style="border-color:rgba(255,77,166,.4)">
-      <a class="thumb" href="/xpacios/xtanco-barcelona/" style="text-decoration:none;background:linear-gradient(135deg,#26122a,#0c0510);font-size:0;position:relative">
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:#ff4da6">👗 <b style="color:#ffe6f2">Xtanco Barcelona</b> · flagship Desigual</div>
-      </a>
-      <div class="meta">
-        <div class="nm">Xtanco Barcelona</div>
-        <div class="loc">Gran de Gràcia · Barcelona · estilo Desigual Ginza</div>
-        <div class="row"><span class="chip live">EN VIVO</span><span class="chip">4 DOOH · realista</span></div>
-        <div class="acts">
-          <a class="act bcn" href="/xpacios/xtanco-barcelona/?go=walk">🎮 Pasear</a>
-          <a class="act bcn" href="/xpacios/xtanco-barcelona/?go=tour">🎬 Tour</a>
-          <a class="act bcn" href="/xpacios/xtanco-barcelona/?go=decorar">🖼️ Decorar</a>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <a class="thumb" href="/xpacios/xtanco-valencia/" style="text-decoration:none;background:linear-gradient(135deg,#0a1a2e,#04070d);font-size:0;position:relative">
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--spine)">🏪 <b style="color:#eafff0">Xtanco Valencia</b> · original</div>
-      </a>
-      <div class="meta">
-        <div class="nm">Xtanco Valencia</div>
-        <div class="loc">Estanco · Valencia</div>
-        <div class="row"><span class="chip live">EN VIVO</span><span class="chip">4 DOOH · ~16 m²</span></div>
-        <div class="acts">
-          <a class="act" href="/xpacios/xtanco-valencia/?go=walk">🎮 Pasear</a>
-          <a class="act" href="/xpacios/xtanco-valencia/?go=decorar">🖼️ Decorar</a>
-        </div>
-      </div>
-    </div>
-    <div class="card" style="border-color:rgba(80,200,255,.35)">
-      <a class="thumb" href="/xpacios/grok/" style="text-decoration:none;background:linear-gradient(135deg,#0a1a2e,#04070d);font-size:0;position:relative">
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--spine)">✨ <b style="color:#eafff0">Xtanco · Grok</b> · UX mejorada</div>
-      </a>
-      <div class="meta">
-        <div class="nm">Xtanco Valencia · Grok</div>
-        <div class="loc">Onboarding · móvil · métricas · deep links</div>
-        <div class="row"><span class="chip">UX demo</span></div>
-        <div class="acts"><a class="act" href="/xpacios/grok/">Abrir →</a></div>
-      </div>
-    </div>
-  </div>
-
-  <h2 class="sec">Mis Xpacios <span class="n" id="count">0</span></h2>
-  <div class="grid" id="grid"></div>
-
-  <div class="foot">Pixeria · XpaceOS Locations · powered by ADmira · profundidad: Depth Anything V2 (en el navegador)</div>
+<div class="box">
+  <p>La sección <strong>Xpacios</strong> se ha mudado a <a href="https://www.xpaceos.com/xpacios/">xpaceos.com/xpacios</a>.</p>
+  <p>Si no se te redirige automáticamente, <a href="https://www.xpaceos.com/xpacios/">pulsa aquí</a>.</p>
 </div>
-
-<script>
-  // Índice de Xpacios COMPARTIDO en el backend (pixer-eleven /layout/report+current,
-  // screen="xpacios-index"), con fallback a localStorage. Cada Xpacio creado es una
-  // capa de decoración propia sobre la base 3D (Barcelona/Desigual), abrible con ?xpacio=<id>.
-  const API="https://pixer-eleven.csilvasantin.workers.dev", IDX="xpacios-index", BASE="/xpacios/xtanco-barcelona/";
-  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-  function fmtDate(ts){ try{ return new Date(ts).toLocaleDateString("es-ES",{day:"2-digit",month:"short"}); }catch(e){ return ""; } }
-  function localIdx(){ try{ return JSON.parse(localStorage.getItem("xpacios-index")||"[]"); }catch(e){ return []; } }
-  async function loadIndex(){ let items=null;
-    try{ const r=await fetch(API+"/layout/current?screen="+IDX+"&_="+Date.now()); const j=await r.json(); if(j&&j.current&&Array.isArray(j.current.items)) items=j.current.items; }catch(e){}
-    if(!items) items=localIdx();
-    return items; }
-  async function saveIndex(items){ try{ localStorage.setItem("xpacios-index", JSON.stringify(items)); }catch(e){}
-    try{ await fetch(API+"/layout/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({snapshot:{furniture:[],items},screen:IDX})}); }catch(e){} }
-  function slug(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,28)||"xpacio"; }
-  async function newXpacio(){
-    const name=(prompt("Nombre del nuevo Xpacio (p.ej. «Desigual Passeig de Gràcia»):","")||"").trim(); if(!name) return;
-    const city=(prompt("Ciudad / dirección (opcional):","")||"").trim();
-    const id="xp-"+slug(name)+"-"+Math.floor(Date.now()/1000).toString(36).slice(-4);
-    const items=await loadIndex(); items.push({id,name,city,base:"barcelona",createdAt:Date.now()}); await saveIndex(items);
-    location.href=BASE+"?xpacio="+encodeURIComponent(id)+"&go=decorar";
-  }
-  document.getElementById("newXpacioBtn").addEventListener("click",newXpacio);
-  function cardHTML(x){ return `<div class="card">
-      <a class="thumb" href="${BASE}?xpacio=${encodeURIComponent(x.id)}" style="text-decoration:none;background:linear-gradient(135deg,#26122a,#0c0510);font-size:0;position:relative">
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:#ff4da6">🏬 <b style="color:#ffe6f2">${esc(x.name)}</b></div>
-      </a>
-      <div class="meta">
-        <div class="nm">${esc(x.name)}</div>
-        <div class="loc">${esc(x.city||"Xpacio propio")} · base Desigual · ${fmtDate(x.createdAt)}</div>
-        <div class="acts">
-          <a class="act bcn" href="${BASE}?xpacio=${encodeURIComponent(x.id)}&go=walk">🎮</a>
-          <a class="act bcn" href="${BASE}?xpacio=${encodeURIComponent(x.id)}&go=tour">🎬</a>
-          <a class="act bcn" href="${BASE}?xpacio=${encodeURIComponent(x.id)}&go=decorar">🖼️ Decorar</a>
-        </div>
-      </div></div>`; }
-  async function render(){ const items=await loadIndex(); const grid=document.getElementById("grid");
-    document.getElementById("count").textContent=items.length;
-    grid.innerHTML = `<div class="card new" id="newCard">＋ Nuevo Xpacio</div>` + items.slice().reverse().map(cardHTML).join("");
-    const nc=document.getElementById("newCard"); if(nc) nc.addEventListener("click",newXpacio);
-  }
-  render();
-</script>
 </body>
 </html>
