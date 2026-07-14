@@ -75,6 +75,12 @@
     style.textContent =
       '.pix-nav-leading{display:flex;align-items:center;gap:10px;min-width:0}' +
       '.pix-nav-controls{display:flex;align-items:center;gap:10px}' +
+      '.pf-topbar{box-sizing:border-box;position:sticky;top:0;z-index:180;min-height:70px;display:grid;grid-template-columns:minmax(190px,auto) minmax(0,1fr) auto;align-items:center;gap:18px;padding:0 28px;background:rgba(2,6,2,.92);border:0;border-bottom:1px solid var(--line,rgba(0,255,65,.38));box-shadow:0 0 24px rgba(0,255,65,.08);backdrop-filter:blur(10px)}' +
+      '.pf-topbar-left,.pf-topbar-right{display:flex;align-items:center;gap:12px;min-width:0}.pf-topbar-right{justify-content:flex-end}' +
+      '.pf-topbar-brand{display:inline-flex;align-items:center;gap:12px;min-width:0}' +
+      '.pf-brand-mark{box-sizing:border-box;width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line,rgba(0,255,65,.38));color:var(--matrix,#00ff41);background:rgba(0,255,65,.10);text-shadow:0 0 12px rgba(0,255,65,.62);font-weight:800}' +
+      '.pf-brand-name{color:var(--ink,#e8f2ec);font-weight:800;letter-spacing:.08em}' +
+      '.quad-ui.pix-nav-canonical-header{padding-top:0!important}' +
       '.pix-nav-icon{width:42px;height:42px;display:inline-grid;place-items:center;flex:0 0 42px;padding:0;border:1px solid rgba(0,255,65,.42);border-radius:0;background:rgba(0,255,65,.04);color:#00ff41;cursor:pointer;box-shadow:inset 0 0 16px rgba(0,255,65,.04)}' +
       '.pix-nav-icon:hover,.pix-nav-icon[aria-expanded="true"]{background:rgba(0,255,65,.12);box-shadow:0 0 16px rgba(0,255,65,.18),inset 0 0 16px rgba(0,255,65,.08)}' +
       '.pix-nav-icon svg{width:21px;height:19px;display:block}' +
@@ -92,11 +98,41 @@
       '.pix-nav-expert-layer{left:18px;right:18px;bottom:18px;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap}' +
       '.pix-nav-layer a{color:#caffd7;text-decoration:none;border:1px solid rgba(0,255,65,.22);padding:9px 11px}' +
       '.pix-nav-layer a:hover{color:#00ff41;border-color:#00ff41}' +
-      '.quad-icon.pix-nav-icon{width:34px;height:34px;flex-basis:34px}' +
-      '.quad-icon.pix-nav-icon svg{width:18px;height:16px}' +
       '.quad-right a{min-height:86px;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;text-orientation:mixed;padding:8px 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase}' +
-      '@media(max-width:980px){.pix-nav-icon{width:38px;height:38px;flex-basis:38px}.pix-nav-controls{gap:6px}}';
+      '@media(max-width:980px){.pf-topbar{grid-template-columns:1fr auto;min-height:62px;padding:0 14px;gap:10px}.pf-topbar-left{grid-column:1;grid-row:1}.pf-topbar-right{grid-column:2;grid-row:1}.pf-topbar-nav{grid-column:1/-1;grid-row:2;justify-content:flex-start!important;overflow-x:auto;padding-bottom:8px}.pix-nav-icon{width:38px;height:38px;flex-basis:38px}.pix-nav-controls{gap:6px}}';
     (document.head || document.documentElement).appendChild(style);
+  }
+
+  function canonicalBrand(brand) {
+    var link = brand && (brand.matches('a') ? brand : brand.querySelector('a'));
+    if (!link) return brand;
+    if (link !== brand) {
+      link.remove();
+      brand.replaceWith(link);
+    }
+    link.className = 'pf-topbar-brand';
+    var mark = link.querySelector('.brand-mark, span');
+    var name = link.querySelector('.brand-name, b, span:not(:first-child)');
+    if (mark) mark.className = 'pf-brand-mark';
+    if (name) name.className = 'pf-brand-name';
+    return link;
+  }
+
+  function canonicalHeader(header, menu, brand, nav, advanced, expert) {
+    if (!header || !menu || !brand || !nav || !advanced || !expert) return;
+    var left = document.createElement('div');
+    var right = document.createElement('div');
+    left.className = 'pf-topbar-left';
+    right.className = 'pf-topbar-right';
+    menu.classList.remove('quad-icon');
+    advanced.classList.remove('quad-icon');
+    expert.classList.remove('quad-icon');
+    left.append(menu, canonicalBrand(brand));
+    nav.className = 'pf-topbar-nav';
+    right.append(advanced, expert);
+    header.className = 'pf-topbar';
+    header.replaceChildren(left, nav, right);
+    document.body.classList.add('pix-nav-canonical-header');
   }
 
   function ensureFallbackLayers() {
@@ -166,13 +202,14 @@
         var layer = document.getElementById(id);
         var open = layer.hidden;
         document.querySelectorAll('.pix-nav-layer').forEach(function (other) { other.hidden = true; });
-        document.querySelectorAll('.pix-nav-controls .pix-nav-icon').forEach(function (other) { other.setAttribute('aria-expanded', 'false'); });
+        document.querySelectorAll('.pf-topbar-right .pix-nav-icon, .pix-nav-controls .pix-nav-icon').forEach(function (other) { other.setAttribute('aria-expanded', 'false'); });
         layer.hidden = !open;
         button.setAttribute('aria-expanded', open ? 'true' : 'false');
       });
     }
     bindLayer(advanced, 'pixNavAdvancedLayer');
     bindLayer(expert, 'pixNavExpertLayer');
+    canonicalHeader(header, menu, brand, nav, advanced, expert);
   }
 
   function upgradeQuadControls() {
@@ -208,6 +245,7 @@
         bottom.classList.add('pix-nav-icon', 'pix-nav-icon-expert');
         bottom.innerHTML = iconSvg('expert');
       }
+      canonicalHeader(topbar, left, topbar.querySelector('.quad-brand'), topbar.querySelector('.quad-links'), right, bottom);
     });
   }
 
