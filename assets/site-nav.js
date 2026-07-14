@@ -12,8 +12,7 @@
     ['/avatar.html', 'Avatar 3D'],
     ['/anonimizador.html', 'Anonimizador'],
     ['/crear/', 'Assets'],
-    ['/stock.html', 'Stock'],
-    ['/xpacios/', 'Xpacios']
+    ['/stock.html', 'Stock']
   ];
   var EN = [
     ['/en/audio.html', 'Audio'],
@@ -24,8 +23,7 @@
     ['/en/avatar.html', '3D Avatar'],
     ['/en/anonimizador.html', 'Anonymizer'],
     ['/en/crear/', 'Assets'],
-    ['/en/stock.html', 'Stock'],
-    ['/xpacios/', 'Xpacios']
+    ['/en/stock.html', 'Stock']
   ];
 
   function norm(path) {

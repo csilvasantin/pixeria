@@ -27,7 +27,6 @@
     { href: '/plataforma.html',   t: 'Plataforma',        d: 'Mapa de capas, motores y salida a XpaceOS' },
     { href: '/stock.html',        t: 'Stock',             d: 'Galería pública de assets desplegados' },
     { href: '/crear-campana/',    t: 'Campañas',          d: 'Compra y activación en puntos y pantallas' },
-    { href: '/xpacios/',          t: 'Xpacios',           d: 'Gemelos isométricos de tus locales' },
     { href: '/publicidad.html',   t: 'Publicidad',        d: 'Formatos y activos por canal' },
     { href: '/clearchannel/',     t: 'Demo Clear Channel', d: 'Pixer Feed en vivo sobre pantallas reales' }
   ];
