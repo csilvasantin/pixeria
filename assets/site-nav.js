@@ -68,6 +68,42 @@
     return button;
   }
 
+  // ─── Texto descriptivo plegable ─────────────────────────────────────────────
+  // El .lead de cada página se lee UNA vez y a partir de ahí solo roba sitio a lo
+  // que importa (la galería, los controles). Se pliega POR DEFECTO y se despliega
+  // con un botón junto al cursor del titular. La preferencia se recuerda por
+  // navegador: si lo abres, sigue abierto al navegar.
+  function installLeadToggle() {
+    var head = document.querySelector('header.page-head');
+    if (!head || head.querySelector('.lead-toggle')) return;
+    var lead = head.querySelector('.lead');
+    var h1 = head.querySelector('h1');
+    if (!lead || !h1) return;
+    var KEY = 'pixeria-lead-open';
+    var open = false;
+    try { open = localStorage.getItem(KEY) === '1'; } catch (e) {}
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'lead-toggle';
+    function paint() {
+      lead.hidden = !open;
+      btn.textContent = open ? '\u2212' : '?';          // − / ?
+      btn.setAttribute('aria-expanded', String(open));
+      var t = open ? 'Ocultar la descripción' : 'Qué es esto';
+      btn.setAttribute('aria-label', t);
+      btn.title = t;
+    }
+    btn.addEventListener('click', function () {
+      open = !open;
+      try { localStorage.setItem(KEY, open ? '1' : '0'); } catch (e) {}
+      paint();
+    });
+    lead.id = lead.id || 'page-lead';
+    btn.setAttribute('aria-controls', lead.id);
+    h1.appendChild(btn);                                  // dentro del h1 → junto al ▋
+    paint();
+  }
+
   function installIconStyles() {
     if (document.getElementById('pixeria-site-nav-styles')) return;
     var style = document.createElement('style');
@@ -87,6 +123,15 @@
       '.pix-nav-home-rails .rail-hd{position:sticky;top:0;z-index:3;margin:0;padding:13px 16px 11px;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#9ab0a4;background:rgba(8,14,10,.78);border-bottom:1px solid rgba(140,160,150,.30)}.pix-nav-home-rails .rail-left .rail-hd{color:#68dce9}.pix-nav-home-rails .rail-right .rail-hd{color:#e8c268}' +
       '.pix-nav-home-rails .rail-nav{display:flex;flex-direction:column;padding:8px}.pix-nav-home-rails .rail-nav a{display:block;padding:10px 12px;border:1px solid transparent;color:#c8ffd0;text-decoration:none}.pix-nav-home-rails .rail-nav a:hover,.pix-nav-home-rails .rail-nav a[aria-current="page"]{border-color:#00ff41;background:rgba(0,255,65,.07)}.pix-nav-home-rails .rail-nav b{display:block;font-weight:760;font-size:14px;color:#e8f2ec}.pix-nav-home-rails .rail-nav small{display:block;margin-top:2px;font-size:11.5px;color:#7fae8c;line-height:1.3}.pix-nav-home-rails .rail-extra{padding:4px 16px 18px}.pix-nav-home-rails .rail-sub{margin:6px 0 8px;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9ab0a4}.pix-nav-home-rails .rail-doc{display:block;padding:9px 0;font-size:13.5px;color:#e8f2ec;border-bottom:1px solid rgba(140,160,150,.30);text-decoration:none}' +
       '.pix-nav-home-rails main{margin-left:var(--pf-left-w,300px);margin-right:var(--pf-right-w,330px);transition:margin .16s ease}.pix-nav-home-rails.pf-left-off .rail-left{display:none}.pix-nav-home-rails.pf-right-off .rail-right{display:none}.pix-nav-home-rails.pf-left-off main{margin-left:0}.pix-nav-home-rails.pf-right-off main{margin-right:0}.pix-nav-home-rails.pf-left-off.pf-right-off main{margin-left:auto;margin-right:auto}' +
+      // Botón para plegar/desplegar el texto descriptivo del page-head. Va DENTRO del h1,
+      // justo antes del cursor ▋, y se dimensiona en em para acompañar al titular a
+      // cualquier tamaño de pantalla.
+      '.lead-toggle{display:inline-grid;place-items:center;vertical-align:middle;width:1.15em;height:1.15em;margin-left:.18em;'+
+      'font-family:inherit;font-size:.30em;line-height:1;font-weight:700;color:var(--matrix,#00ff41);background:transparent;'+
+      'border:1px solid currentColor;border-radius:3px;cursor:pointer;opacity:.6;transition:opacity .15s,background .15s;'+
+      'padding:0;text-shadow:none;box-shadow:none}'+
+      '.lead-toggle:hover,.lead-toggle:focus-visible{opacity:1;background:rgba(0,255,65,.14);outline:none}'+
+      '.page-head .lead[hidden]{display:none}'+
       '.pix-nav-icon{width:42px;height:42px;display:inline-grid;place-items:center;flex:0 0 42px;padding:0;border:1px solid rgba(0,255,65,.42);border-radius:0;background:rgba(0,255,65,.04);color:#00ff41;cursor:pointer;box-shadow:inset 0 0 16px rgba(0,255,65,.04)}' +
       '.pix-nav-icon:hover,.pix-nav-icon[aria-expanded="true"]{background:rgba(0,255,65,.12);box-shadow:0 0 16px rgba(0,255,65,.18),inset 0 0 16px rgba(0,255,65,.08)}' +
       '.pix-nav-icon svg{width:21px;height:19px;display:block}' +
@@ -349,6 +394,7 @@
 
   function normalizeInternalNav() {
     installIconStyles();
+    installLeadToggle();
     if (isHome()) {
       upgradeFrameControls();
       return;
