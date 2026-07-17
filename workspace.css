@@ -1029,6 +1029,22 @@ body[data-page="admira-xp"] .primary-nav a[data-nav="admira-xp"] {
 .pixer-progress-status .right { color: var(--ink); opacity: .8; }
 
 main, header.page-head, footer { width: min(1180px, calc(100% - 40px)); margin: 0 auto; position: relative; }
+
+/* El titular tiene que HACER CAJA con el contenido de su página.
+   El page-head va a 1180, pero hay páginas que estrechan su main: .anon-main a 1080
+   (con 20px de padding) y .avatar-main a 1100. Resultado: el titular arrancaba 70px
+   (anonimizador) y 40px (avatar) a la IZQUIERDA de las imágenes — se veía descuadrado.
+   Aquí el head copia el ancho Y el padding del main de cada página, así el texto y las
+   imágenes comparten los dos bordes. Se apunta por data-page (no :has()) para no
+   depender del soporte del navegador. */
+body[data-page="anonimizador"] header.page-head {
+  width: min(1080px, calc(100% - 40px));
+  padding-left: 20px;
+  padding-right: 20px;
+}
+body[data-page="avatar"] header.page-head {
+  width: min(1100px, calc(100% - 32px));
+}
 header.page-head { padding: 46px 0 18px; }
 header.page-head.has-gif::after { content: ""; display: block; clear: both; }
 .page-gif {
