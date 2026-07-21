@@ -179,6 +179,8 @@
   <url><loc>https://www.pixeria.com/mcp/</loc><lastmod>2026-06-25</lastmod><changefreq>monthly</changefreq><priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="es" href="https://www.pixeria.com/mcp/"/>
   </url>
+  <url><loc>https://www.pixeria.com/llms.txt</loc><lastmod>2026-07-21</lastmod><changefreq>monthly</changefreq><priority>0.8</priority>
+  </url>
   <url><loc>https://www.pixeria.com/documentacion/</loc><lastmod>2026-06-25</lastmod><changefreq>monthly</changefreq><priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="es" href="https://www.pixeria.com/documentacion/"/>
   </url>

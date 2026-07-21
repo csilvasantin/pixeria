@@ -4,3 +4,4 @@ User-agent: *
 Disallow: /
 
 Sitemap: https://www.pixeria.com/sitemap.xml
+LLMs: https://www.pixeria.com/llms.txt
