@@ -953,17 +953,22 @@
       if (t && (t.tagName === 'VIDEO' || t.tagName === 'AUDIO')) trackPlay(t);
     }, true);
 
-    // Si llegamos con ?highlight=<id> (post-importación), hacemos scroll
-    // a la card recién creada y un flash visual.
+    // Open ?highlight=<id> directly in the viewer. Search the complete index
+    // so deep links work even when the card is outside the current page or
+    // active filters.
     function highlightFromQuery() {
       const id = new URLSearchParams(location.search).get('highlight');
       if (!id) return;
       const safeId = id.replace(/[^A-Za-z0-9-]/g, '');
+      if (!safeId || safeId !== id) return;
+      const item = allItems.find(it => it && it.id === safeId);
+      if (!item) return;
       const card = grid.querySelector(`.stock-card[data-id="${safeId}"]`);
-      if (!card) return;
-      card.classList.add('stock-card-flash');
-      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => card.classList.remove('stock-card-flash'), 2400);
+      if (card) {
+        card.classList.add('stock-card-flash');
+        setTimeout(() => card.classList.remove('stock-card-flash'), 2400);
+      }
+      openLightbox(item);
       try { history.replaceState({}, '', location.pathname); } catch {}
     }
 
