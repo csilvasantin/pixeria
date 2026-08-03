@@ -69,6 +69,7 @@
     // extensión (/audio ~ /audio.html) o sin barra final (/crear ~ /crear/).
     function normPath(p){ return String(p).replace(/index\.html$/, '').replace(/\.html$/, '').replace(/\/$/, '') || '/'; }
     var here = normPath(location.pathname);
+    var ver = (document.querySelector('meta[name="admiranext-version"]') || {}).content || 'Pixeria';
     var left = document.createElement('aside');
     left.className = 'rail rail-left';
     left.setAttribute('aria-label', 'Opciones · secciones de Pixeria');
@@ -78,7 +79,9 @@
         var cur = normPath(s.href) === here;
         return '<a href="' + s.href + '"' + (cur ? ' class="rail-cur" aria-current="page"' : '') + '>' +
           '<b>' + esc(s.t) + '</b><small>' + esc(s.d) + '</small></a>';
-      }).join('') + '</nav>';
+      }).join('') + '</nav>' +
+      '<div class="rail-options-meta" aria-label="Release de Pixeria">' +
+      '<span class="rail-ver">' + esc(ver) + '</span></div>';
 
     var right = document.createElement('aside');
     right.className = 'rail rail-right';
@@ -89,13 +92,11 @@
       DOCS.map(function (d) { return '<a class="rail-doc" href="' + d.href + '">' + esc(d.t) + ' &rarr;</a>'; }).join('') +
       '</div>');
 
-    var ver = (document.querySelector('meta[name="admiranext-version"]') || {}).content || 'Pixeria';
     var bottom = document.createElement('div');
     bottom.className = 'rows rail-bottom';
     bottom.setAttribute('aria-label', 'Experto · meta y estado');
     bottom.innerHTML = '<div class="rail-hd">🧪 Experto</div>' +
       '<div class="rail-meta">' +
-      '<span class="rail-ver">' + esc(ver) + '</span>' +
       '<a href="https://www.admira.live">Estado del equipo · Live</a>' +
       '<a href="/radar/">Radar</a>' +
       '<a href="/documentacion/">Documentación</a>' +
