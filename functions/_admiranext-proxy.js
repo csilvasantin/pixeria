@@ -19,6 +19,8 @@
  * su pantalla de acceso. Lo único que cambia es por qué dominio entra.
  */
 
+import { SKIN_PATH, skinResponse, injectSkin } from './_tiktok-skin.js';
+
 const UPSTREAM = 'https://www.admiranext.com';
 const ASSET_PREFIX = '_assets/';
 // Solo se reescriben cuerpos de texto; vídeo e imágenes pasan intactos.
@@ -28,6 +30,10 @@ export async function proxyToAdmiranext(context, rest, area) {
   const { request } = context;
   const url = new URL(request.url);
   const path = String(rest || '');
+
+  // La piel de Pixeria se sirve AQUI, no se pide arriba: es nuestra, no del
+  // compositor. Va antes de tocar el upstream para que no se reenvie nunca.
+  if (area === 'tiktok' && path === SKIN_PATH) return skinResponse();
 
   const target = new URL(UPSTREAM);
   target.search = url.search;
@@ -68,9 +74,13 @@ export async function proxyToAdmiranext(context, rest, area) {
     return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers: out });
   }
 
-  const body = (await upstream.text())
+  let body = (await upstream.text())
     .replace(/(["'(])\/assets\//g, `$1/tiktok/${ASSET_PREFIX}`)
     .replace(/https:\/\/www\.admiranext\.com\/tiktok\//g, `${url.origin}/tiktok/`);
+
+  // Solo el HTML se viste, y solo del compositor: una hoja o un JS no llevan
+  // <head>, y colarles el enlace los rompería.
+  if (area === 'tiktok' && /^text\/html/i.test(type)) body = injectSkin(body);
 
   return new Response(body, { status: upstream.status, statusText: upstream.statusText, headers: out });
 }
