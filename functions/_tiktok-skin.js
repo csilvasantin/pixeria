@@ -25,43 +25,95 @@ export const SKIN_PATH = '_skin.css';
 // Sello propio de la piel. El _headers de Pixeria le impone 4 h de cache y la
 // hoja no tiene version en el nombre: sin esto, un retoque tardaba 4 horas en
 // verse (paso al repintar el morado). Se sube A MANO al tocar SKIN_CSS.
-export const SKIN_VERSION = '2026.08.05.r2';
+export const SKIN_VERSION = '2026.08.05.r3';
 
-export const SKIN_CSS = `/* Piel de Pixeria · pixeria.com/tiktok — generada por functions/_tiktok-skin.js */
+export const SKIN_CSS = `/* Piel de Pixeria · pixeria.com/tiktok — functions/_tiktok-skin.js */
+
+/* 1. PALETA. La de verdad: el segundo :root de assets/styles.css, el que
+      gobierna la portada. La primera pasada uso el primero que aparecia —una
+      paleta antigua de cianes y cremas— y por eso no se parecia en nada. */
 :root{
-  --bg:#0b1117;
-  --panel:#111a20;
-  --panel-2:#16222a;
-  --ink:#f4f0e8;
-  --muted:#aeb9bd;
-  --line:rgba(244,240,232,.16);
-  --line-strong:rgba(244,240,232,.32);
-  --cyan:#68dce9;
-  --green:#6bd6a6;
-  --orange:#ff6b5c;
-  --pink:#ff6b5c;
-  --purple:#f1c96a;
-  --dark-cyan:#0e1a20;
+  --bg:#020602;
+  --bg-soft:rgba(2,16,6,.86);
+  --panel:rgba(2,6,2,.84);
+  --panel-2:rgba(2,16,6,.86);
+  --ink:#c8ffd0;
+  --muted:#7cbe84;
+  --line:rgba(47,138,62,.58);
+  --line-strong:rgba(0,255,65,.62);
+  --cyan:#00ff41;
+  --green:#00ff41;
+  --matrix:#00ff41;
+  --matrix-deep:#00b82e;
+  --orange:#d4ff5a;
+  --pink:#7dff9e;
+  --purple:#d4ff5a;
+  --dark-cyan:#031205;
+  --glow:0 0 7px currentColor;
 }
-/* El sitio es de esquinas suaves; el compositor venía de esquinas duras. */
-.pixeria-skin .card,
-.pixeria-skin .panel,
-.pixeria-skin section > div,
-.pixeria-skin .story-card{border-radius:12px}
-.pixeria-skin .button,
-.pixeria-skin button{border-radius:10px}
-/* Los focos del sitio son coral sobre fondo oscuro; se respeta para que el
-   recorrido con teclado se vea igual dentro y fuera del compositor. */
-.pixeria-skin :focus-visible{outline:2px solid #ff6b5c;outline-offset:2px}
 
-/* El morado del compositor esta ESCRITO A FUEGO en unos cuantos sitios
-   —rgba(189,134,255,…)— donde la variable no llega. Se repintan uno a uno con
-   el oro de Pixeria; son los que se ven, no una lista a ciegas. */
-.pixeria-skin .idea-generator{border-color:rgba(241,201,106,.5);background:rgba(241,201,106,.05)}
-.pixeria-skin .idea-generator:hover{background:rgba(241,201,106,.12)}
-.pixeria-skin .package-timeline .is-roll{border-color:rgba(241,201,106,.44)}
-.pixeria-skin .reference-profile{border-left-color:#f1c96a;background:rgba(241,201,106,.06);color:#e6dcc4}
-.pixeria-skin .package-output{border-color:rgba(241,201,106,.45);background:rgba(241,201,106,.05)}
+/* 2. TIPOGRAFIA. Pixeria es monoespaciada de arriba abajo; el compositor traia
+      Inter para todo lo que no fuera un rotulo. Se iguala, incluidos los
+      controles, que por defecto no heredan la fuente del documento. */
+.pixeria-skin, .pixeria-skin body,
+.pixeria-skin input, .pixeria-skin textarea,
+.pixeria-skin select, .pixeria-skin button{
+  font-family:"JetBrains Mono","IBM Plex Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+.pixeria-skin body{background:var(--bg);color:var(--ink);line-height:1.55;overflow-x:hidden}
+
+/* 3. CUADRATURA. Esquinas RECTAS y marcos planos: es el rasgo que da nombre a
+      la interfaz del sitio (assets/cuadratura.css). El compositor venia todo
+      redondeado, y eso es lo que mas lo delataba como ajeno. */
+.pixeria-skin *,
+.pixeria-skin *::before,
+.pixeria-skin *::after{border-radius:0 !important}
+
+/* 4. SUPERFICIES. Paneles translucidos sobre el fondo, con linea verde. */
+.pixeria-skin .card,.pixeria-skin .panel,.pixeria-skin fieldset,
+.pixeria-skin .idea-generator,.pixeria-skin .package-output,
+.pixeria-skin .reference-profile,.pixeria-skin .story-card,
+.pixeria-skin .meta-studio,.pixeria-skin .grok-studio{
+  background:var(--panel);
+  border-color:var(--line);
+}
+.pixeria-skin input,.pixeria-skin textarea,.pixeria-skin select{
+  background:rgba(2,16,6,.7);
+  border-color:var(--line);
+  color:var(--ink);
+}
+
+/* 5. RESPLANDOR. En Pixeria el acento no es plano: brilla. */
+.pixeria-skin .kicker,.pixeria-skin .section-code,
+.pixeria-skin .brand span,.pixeria-skin .st.live,
+.pixeria-skin h1 em,.pixeria-skin .accent{ text-shadow:var(--glow) }
+.pixeria-skin .button.primary,.pixeria-skin .idea-generator{
+  border-color:var(--matrix);
+  color:var(--matrix);
+  background:rgba(0,255,65,.06);
+  text-shadow:var(--glow);
+}
+.pixeria-skin .button.primary:hover,.pixeria-skin .idea-generator:hover{
+  background:rgba(0,255,65,.14);
+}
+
+/* 6. FONDO. Los mismos halos y las mismas lineas de barrido de la portada, sin
+      la lluvia matrix: ahi el visitante viene a trabajar, no a mirar. */
+.pixeria-skin body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(circle at 14% 8%, rgba(0,255,65,.10), transparent 28%),
+    radial-gradient(circle at 86% 6%, rgba(0,255,65,.08), transparent 32%),
+    linear-gradient(180deg, rgba(2,6,2,.30), rgba(2,6,2,.46) 48%, rgba(2,6,2,.34));
+}
+.pixeria-skin body::after{
+  content:"";position:fixed;inset:0;z-index:200;pointer-events:none;
+  background:repeating-linear-gradient(180deg,
+    rgba(0,255,65,.035) 0, rgba(0,255,65,.035) 1px, transparent 1px, transparent 3px);
+}
+
+/* 7. FOCO. Verde, visible y cuadrado, como el resto del sitio. */
+.pixeria-skin :focus-visible{outline:2px solid var(--matrix);outline-offset:2px}
 `;
 
 export function skinResponse() {
