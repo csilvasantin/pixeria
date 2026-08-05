@@ -22,6 +22,10 @@
  * oro, que son los acentos que sí usa el sitio, en vez de inventar dos colores.
  */
 export const SKIN_PATH = '_skin.css';
+// Sello propio de la piel. El _headers de Pixeria le impone 4 h de cache y la
+// hoja no tiene version en el nombre: sin esto, un retoque tardaba 4 horas en
+// verse (paso al repintar el morado). Se sube A MANO al tocar SKIN_CSS.
+export const SKIN_VERSION = '2026.08.05.r2';
 
 export const SKIN_CSS = `/* Piel de Pixeria · pixeria.com/tiktok — generada por functions/_tiktok-skin.js */
 :root{
@@ -93,7 +97,7 @@ function marcaDeLaPuerta(html) {
 
 /** Cuelga la piel al final del <head> y marca el documento. */
 export function injectSkin(html) {
-  const enlace = `<link rel="stylesheet" href="/tiktok/${SKIN_PATH}">`;
+  const enlace = `<link rel="stylesheet" href="/tiktok/${SKIN_PATH}?v=${SKIN_VERSION}">`;
   let out = marcaDeLaPuerta(html);
   // La clase va en <html> para poder vestir también lo que cuelgue del body.
   out = out.replace(/<html\b([^>]*)>/i, (m, attrs) =>
