@@ -49,6 +49,15 @@ export const SKIN_CSS = `/* Piel de Pixeria · pixeria.com/tiktok — generada p
 /* Los focos del sitio son coral sobre fondo oscuro; se respeta para que el
    recorrido con teclado se vea igual dentro y fuera del compositor. */
 .pixeria-skin :focus-visible{outline:2px solid #ff6b5c;outline-offset:2px}
+
+/* El morado del compositor esta ESCRITO A FUEGO en unos cuantos sitios
+   —rgba(189,134,255,…)— donde la variable no llega. Se repintan uno a uno con
+   el oro de Pixeria; son los que se ven, no una lista a ciegas. */
+.pixeria-skin .idea-generator{border-color:rgba(241,201,106,.5);background:rgba(241,201,106,.05)}
+.pixeria-skin .idea-generator:hover{background:rgba(241,201,106,.12)}
+.pixeria-skin .package-timeline .is-roll{border-color:rgba(241,201,106,.44)}
+.pixeria-skin .reference-profile{border-left-color:#f1c96a;background:rgba(241,201,106,.06);color:#e6dcc4}
+.pixeria-skin .package-output{border-color:rgba(241,201,106,.45);background:rgba(241,201,106,.05)}
 `;
 
 export function skinResponse() {
@@ -63,10 +72,29 @@ export function skinResponse() {
   });
 }
 
+/**
+ * La MARCA de la puerta. Quien entra por pixeria.com/tiktok esta en Pixeria, y
+ * la cabecera le decia "ADmiraNeXT". No es un cambio de producto: es la misma
+ * herramienta entrando por otra puerta, que es justo lo que ya hace la URL.
+ *
+ * Se cambian SOLO los rotulos de la cabecera y el titulo, por coincidencia
+ * exacta. Nada de un reemplazo global de "ADmiraNeXT": el cuerpo habla de
+ * Pixeria y de AdmiraNeXT a proposito en varios sitios, y arrasarlo mentiria.
+ * El enlace de la marca pasa a la home de Pixeria, que es donde el visitante
+ * espera volver.
+ */
+function marcaDeLaPuerta(html) {
+  return html
+    .replace('<span>ADmiraNeXT · TikTok</span>', '<span>Pixeria · TikTok</span>')
+    .replace('aria-label="Volver a ADmiraNeXT"', 'aria-label="Volver a Pixeria"')
+    .replace('aria-label="Herramientas ADmiraNeXT"', 'aria-label="Herramientas de Pixeria"')
+    .replace('<title>TikTok Ads 25s · ADmiraNeXT</title>', '<title>TikTok Ads 25s · Pixeria</title>');
+}
+
 /** Cuelga la piel al final del <head> y marca el documento. */
 export function injectSkin(html) {
   const enlace = `<link rel="stylesheet" href="/tiktok/${SKIN_PATH}">`;
-  let out = html;
+  let out = marcaDeLaPuerta(html);
   // La clase va en <html> para poder vestir también lo que cuelgue del body.
   out = out.replace(/<html\b([^>]*)>/i, (m, attrs) =>
     /class=/i.test(attrs)
