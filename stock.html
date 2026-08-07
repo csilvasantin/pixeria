@@ -251,7 +251,8 @@
     .stock-tags-drag{border:1px dashed var(--matrix);background:rgba(0,255,65,.06);color:var(--matrix);border-radius:999px;padding:2px 8px;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:.04em}
     .stock-card.tag-drop-target{outline:2px dashed var(--matrix);outline-offset:3px;background:rgba(0,255,65,.08)}
     body.tag-dragging .stock-card:not(.tag-drop-target){transition:opacity .15s,outline .15s}.stock-tag.tag-drag-source,.stock-tags-drag.tag-drag-source{opacity:.45}
-  </style>
+  .stock-guion-text{white-space:pre-wrap;font:12px/1.55 ui-monospace,Menlo,monospace;color:#a8dfb4;padding:10px 12px;margin:0;max-height:100%;overflow:auto}
+</style>
   <script defer src="/assets/analytics.js?v=20260617-consent"></script>
   <script defer src="/assets/consent.js?v=20260617"></script>
   <script defer src="/assets/site-nav.js?v=20260803-release"></script>
@@ -379,7 +380,7 @@
     </div>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.2026.07.04-stockfix</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.07.08.2026.r1.16:20</a></footer>
 
   <dialog id="importModal" class="keys-modal">
     <form method="dialog" class="keys-form import-form">
@@ -645,6 +646,19 @@
       return `background-image:url('${url}');background-repeat:no-repeat;background-size:${n * 100}% 100%;background-position:${pos}% center;image-rendering:pixelated;`;
     }
     function renderPreview(it) {
+      // GUIÓN: la columna enseña la CARA DEL VÍDEO que explica, no un ladrillo de
+      // texto. La miniatura la hereda al publicarse (pixer-eleven la copia del asset
+      // que declara en externalRef), así que aquí sólo hay que pintarla. Sin ella
+      // —guiones antiguos o sin externalRef— se mantiene el texto, que es mejor que
+      // un hueco. (Carlos, 7-ago-2026.)
+      if (it.type === 'guion') {
+        const cara = it.thumbnail || '';
+        if (cara) {
+          return `<img class="stock-cover" src="${escAttr(cara)}" alt="" loading="lazy">
+                  <span class="stock-orientation landscape" data-role="orientation" title="Guión de formación">✎ guión</span>`;
+        }
+        return `<pre class="stock-guion-text">${String(it.comment || it.title || '').slice(0, 400)}</pre>`;
+      }
       if (isFurni(it)) {
         const fr = it.frames || 1;
         if (fr > 1) {
@@ -1145,6 +1159,9 @@
         const cover = it.thumbnail || '';
         media = `${cover ? `<img class="stock-cover" src="${cover}" alt="">` : '<div class="stock-cover-empty">▶</div>'}
                  <audio src="${it.url}" controls autoplay></audio>`;
+      } else if (it.type === 'guion') {
+        const cara = it.thumbnail ? `<img class="stock-cover" src="${it.thumbnail}" alt="">` : '';
+        media = `${cara}<pre class="stock-guion-text">${String(it.comment || '').trim()}</pre>`;
       } else {
         media = `<pre>${JSON.stringify(it, null, 2)}</pre>`;
       }
