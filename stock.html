@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.09.08.2026.r2.14:43">
+  <meta name="admiranext-version" content="Pixeria v.09.08.2026.r3.14:53">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -388,7 +388,7 @@
     </div>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.09.08.2026.r2.14:43</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.09.08.2026.r3.14:53</a></footer>
 
   <dialog id="importModal" class="keys-modal">
     <form method="dialog" class="keys-form import-form">
@@ -602,6 +602,7 @@
     const typeText = (t) => TYPE_LABELS[t] || t;
     const RATING_VOTER_KEY = 'pixeria-stock-rating-voter-v1';
     const RATING_VOTES_KEY = 'pixeria-stock-ratings-v1';
+    const CONSUMPTION_SESSION_KEY = 'pixeria-stock-consumption-session-v1';
     let allItems = [];
     let currentView = []; // lista filtrada+ordenada actual (para navegar el lightbox)
     let filters = { type: 'video', motor: '', q: '', tags: [], tagMode: 'or', dateQuick: '', dateFrom: '', dateTo: '' };
@@ -642,11 +643,34 @@
     function rememberRating(id, value) {
       try { const votes = JSON.parse(localStorage.getItem(RATING_VOTES_KEY) || '{}'); votes[id] = value; localStorage.setItem(RATING_VOTES_KEY, JSON.stringify(votes)); } catch {}
     }
+    function consumptionViewerId() {
+      try {
+        let value = sessionStorage.getItem(CONSUMPTION_SESSION_KEY);
+        if (!value) { value = crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}consume`; sessionStorage.setItem(CONSUMPTION_SESSION_KEY, value); }
+        return value;
+      } catch { return `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}consume`; }
+    }
     function renderRatingHtml(it) {
       if (!isCapsule(it)) return '';
       const mine = ownRating(it.id), average = Number(it.rating && it.rating.average) || 0, count = Number(it.rating && it.rating.count) || 0;
       const stars = [1,2,3,4,5].map(value => `<button type="button" data-act="rate-capsule" data-rating="${value}" aria-label="Valorar con ${value} ${value === 1 ? 'estrella' : 'estrellas'}" aria-pressed="${mine === value}" class="${value <= mine ? 'selected' : ''}">★</button>`).join('');
-      return `<section class="stock-rating" data-rating-id="${escAttr(it.id)}" aria-label="Valoración de la cápsula"><span>Tu valoración</span><div class="stock-rating-stars">${stars}</div><small>${count ? `${average.toFixed(1)} de 5 · ${count} ${count === 1 ? 'voto' : 'votos'}` : 'Sé el primero en valorar'}</small></section>`;
+      return `<span class="stock-rating" data-rating-id="${escAttr(it.id)}" aria-label="Valoración de la cápsula"><span class="sr-only">Tu valoración</span><span class="stock-rating-stars">${stars}</span><small>${count ? `${average.toFixed(1)}/5 · ${count}` : 'sin votos'}</small></span>`;
+    }
+    function renderConsumptionHtml(it) {
+      if (!isCapsule(it)) return '';
+      const count = Math.max(0, Number(it.consumptions) || 0);
+      return `<span class="stock-consumption" title="Aperturas aproximadas de esta cápsula">◉ ${count} ${count === 1 ? 'consumo' : 'consumos'}</span>`;
+    }
+    async function trackCapsuleConsumption(it) {
+      if (!isCapsule(it) || !it.id) return;
+      try {
+        const response = await fetch(`${STOCK_BASE}/stock/track/${encodeURIComponent(it.id)}?event=consume`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ viewerId: consumptionViewerId() }) });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) return;
+        it.consumptions = Number(result.consumptions) || 0;
+        const current = lightboxMeta.querySelector('.stock-consumption');
+        if (current && window.__lightboxItemId === it.id) current.outerHTML = renderConsumptionHtml(it);
+      } catch {}
     }
     function displayType(it) {
       return isFurni(it) ? 'furni' : (isCapsule(it) ? 'capsula' : it.type);
@@ -1214,12 +1238,12 @@
         : '';
       const tagsEditor = renderTagsEditorHtml(it.id, it.tags);
       const ratingBlock = renderRatingHtml(it);
+      const consumptionBlock = renderConsumptionHtml(it);
       const typeLabel = displayType(it);
       lightboxMeta.innerHTML = `
-        <div><span class="stock-type ${typeLabel}">${typeText(typeLabel)}</span> <span class="stock-motor">${it.motor || ''}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span></div>
+        <div class="stock-lightbox-head"><span class="stock-type ${typeLabel}">${typeText(typeLabel)}</span> <span class="stock-motor">${it.motor || ''}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span>${ratingBlock}${consumptionBlock}</div>
         ${titleBlock}
         ${tagsEditor}
-        ${ratingBlock}
         <p class="stock-prompt">${renderPromptHtml(it.prompt)}</p>
         ${commentBlock}
         <div class="stock-lightbox-actions">
@@ -1232,6 +1256,7 @@
       lightbox.setAttribute('aria-hidden', 'false');
       document.body.classList.add('stock-lightbox-open');
       updateLightboxNav();
+      if (isCapsule(it)) trackCapsuleConsumption(it);
     }
     function lightboxIndex() {
       const id = window.__lightboxItemId;

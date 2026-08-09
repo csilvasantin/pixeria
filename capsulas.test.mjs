@@ -26,3 +26,11 @@ test("el detalle de una cápsula permite valorar de una a cinco estrellas", () =
   assert.match(stock, /ratingVoterId\(\)/);
   assert.match(stock, /rememberRating\(it\.id, value\)/);
 });
+
+test("estrellas y consumos comparten la línea de fecha del detalle", () => {
+  assert.match(stock, /class="stock-lightbox-head"/);
+  assert.match(stock, /\$\{fmtDate\(it\.createdAt\)\}<\/span>\$\{ratingBlock\}\$\{consumptionBlock\}/);
+  assert.match(stock, /event=consume/);
+  assert.match(stock, /sessionStorage\.getItem\(CONSUMPTION_SESSION_KEY\)/);
+  assert.match(stock, /trackCapsuleConsumption\(it\)/);
+});
