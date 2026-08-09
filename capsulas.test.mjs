@@ -18,3 +18,11 @@ test("el Stock pinta cápsulas nuevas y guiones históricos bajo el mismo nombre
   assert.match(stock, /capsula: 'Cápsula', guion: 'Cápsula'/);
   assert.match(stock, /class="stock-capsula"/);
 });
+
+test("el detalle de una cápsula permite valorar de una a cinco estrellas", () => {
+  assert.match(stock, /function renderRatingHtml\(it\)/);
+  assert.match(stock, /data-act="rate-capsule"/);
+  assert.match(stock, /\/rating`/);
+  assert.match(stock, /ratingVoterId\(\)/);
+  assert.match(stock, /rememberRating\(it\.id, value\)/);
+});

@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.09.08.2026.r1.13:00">
+  <meta name="admiranext-version" content="Pixeria v.09.08.2026.r2.14:43">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -388,7 +388,7 @@
     </div>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.07.08.2026.r3.18:37</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.09.08.2026.r2.14:43</a></footer>
 
   <dialog id="importModal" class="keys-modal">
     <form method="dialog" class="keys-form import-form">
@@ -600,6 +600,8 @@
     // Etiquetas legibles para el badge de tipo (las demás se muestran tal cual).
     const TYPE_LABELS = { 'twin-npc': 'Twin NPC', 'digital-twin': 'Digital Twin', capsula: 'Cápsula', guion: 'Cápsula' };
     const typeText = (t) => TYPE_LABELS[t] || t;
+    const RATING_VOTER_KEY = 'pixeria-stock-rating-voter-v1';
+    const RATING_VOTES_KEY = 'pixeria-stock-ratings-v1';
     let allItems = [];
     let currentView = []; // lista filtrada+ordenada actual (para navegar el lightbox)
     let filters = { type: 'video', motor: '', q: '', tags: [], tagMode: 'or', dateQuick: '', dateFrom: '', dateTo: '' };
@@ -624,6 +626,28 @@
         || /tipo:furni|mobiliario creado/i.test(String(it.comment || ''));
     }
     function isCapsule(it) { return it && (it.type === 'capsula' || it.type === 'guion'); }
+    function ratingVoterId() {
+      try {
+        let value = localStorage.getItem(RATING_VOTER_KEY);
+        if (!value) {
+          value = crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}rating`;
+          localStorage.setItem(RATING_VOTER_KEY, value);
+        }
+        return value;
+      } catch { return `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}rating`; }
+    }
+    function ownRating(id) {
+      try { return Number(JSON.parse(localStorage.getItem(RATING_VOTES_KEY) || '{}')[id]) || 0; } catch { return 0; }
+    }
+    function rememberRating(id, value) {
+      try { const votes = JSON.parse(localStorage.getItem(RATING_VOTES_KEY) || '{}'); votes[id] = value; localStorage.setItem(RATING_VOTES_KEY, JSON.stringify(votes)); } catch {}
+    }
+    function renderRatingHtml(it) {
+      if (!isCapsule(it)) return '';
+      const mine = ownRating(it.id), average = Number(it.rating && it.rating.average) || 0, count = Number(it.rating && it.rating.count) || 0;
+      const stars = [1,2,3,4,5].map(value => `<button type="button" data-act="rate-capsule" data-rating="${value}" aria-label="Valorar con ${value} ${value === 1 ? 'estrella' : 'estrellas'}" aria-pressed="${mine === value}" class="${value <= mine ? 'selected' : ''}">★</button>`).join('');
+      return `<section class="stock-rating" data-rating-id="${escAttr(it.id)}" aria-label="Valoración de la cápsula"><span>Tu valoración</span><div class="stock-rating-stars">${stars}</div><small>${count ? `${average.toFixed(1)} de 5 · ${count} ${count === 1 ? 'voto' : 'votos'}` : 'Sé el primero en valorar'}</small></section>`;
+    }
     function displayType(it) {
       return isFurni(it) ? 'furni' : (isCapsule(it) ? 'capsula' : it.type);
     }
@@ -1189,11 +1213,13 @@
         ? `<p class="stock-comment">💬 ${commentSafe}</p>`
         : '';
       const tagsEditor = renderTagsEditorHtml(it.id, it.tags);
+      const ratingBlock = renderRatingHtml(it);
       const typeLabel = displayType(it);
       lightboxMeta.innerHTML = `
         <div><span class="stock-type ${typeLabel}">${typeText(typeLabel)}</span> <span class="stock-motor">${it.motor || ''}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span></div>
         ${titleBlock}
         ${tagsEditor}
+        ${ratingBlock}
         <p class="stock-prompt">${renderPromptHtml(it.prompt)}</p>
         ${commentBlock}
         <div class="stock-lightbox-actions">
@@ -1245,6 +1271,24 @@
 
     // Edición de tags dentro del lightbox (quitar / añadir)
     lightboxMeta.addEventListener('click', async e => {
+      const ratingBtn = e.target.closest('[data-act="rate-capsule"]');
+      if (ratingBtn) {
+        e.preventDefault(); e.stopPropagation();
+        const it = currentItemInLightbox(), value = Number(ratingBtn.dataset.rating);
+        if (!it || !isCapsule(it) || !Number.isInteger(value)) return;
+        const box = lightboxMeta.querySelector('.stock-rating');
+        if (box) box.setAttribute('aria-busy', 'true');
+        try {
+          const response = await fetch(`${STOCK_BASE}/stock/${encodeURIComponent(it.id)}/rating`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rating: value, voterId: ratingVoterId() }) });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ok) throw new Error(result.error || `HTTP ${response.status}`);
+          it.rating = result.rating; rememberRating(it.id, value);
+          if (box) box.outerHTML = renderRatingHtml(it);
+        } catch (error) {
+          if (box) { box.removeAttribute('aria-busy'); box.querySelector('small').textContent = `No se pudo guardar · ${String(error.message || error).slice(0,80)}`; }
+        }
+        return;
+      }
       // ⚠ Prioridad 0: enviar AHORA al destino que se elija, interrumpiendo lo
       // que se esté emitiendo. Abre el distribuidor en modo prioridad-0.
       const prio0Btn = e.target.closest('[data-act="prio0"]');
