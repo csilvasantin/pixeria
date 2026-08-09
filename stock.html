@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.07.08.2026.r3.18:37">
+  <meta name="admiranext-version" content="Pixeria v.09.08.2026.r1.13:00">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -207,9 +207,9 @@
     .dist-source{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
     .dist-source select{ flex:1; background:var(--bg); border:1px solid var(--line-bright); color:var(--matrix); border-radius:6px; padding:6px 8px; font-family:inherit; font-size:12px; }
 
-    /* Un guión no tiene portada que enseñar: su contenido ES el texto. La tarjeta
+    /* Una cápsula no tiene portada que enseñar: su contenido ES el texto. La tarjeta
        lo muestra legible y con scroll propio, que es lo que se va a hacer con él. */
-    .stock-guion{ width:100%; height:100%; min-height:120px; max-height:260px; overflow:auto;
+    .stock-capsula{ width:100%; height:100%; min-height:120px; max-height:260px; overflow:auto;
       padding:10px 12px; background:#0a140a; color:var(--matrix); font-size:12px; line-height:1.5;
       white-space:pre-wrap; overflow-wrap:anywhere; text-align:left; }
 
@@ -338,9 +338,9 @@
             <option value="video" selected>Video</option>
             <option value="animation">Animaciones</option>
             <option value="furni">Mobiliario</option>
-            <!-- Los guiones no son un medio: son el conocimiento que sale de una
+            <!-- Las cápsulas no son un medio: son el conocimiento que sale de una
                  pieza. Van al final porque no se reproducen, se leen. -->
-            <option value="guion">Guiones</option>
+            <option value="capsula">Cápsulas</option>
           </select>
           <button type="button" class="stock-pager-btn" id="tagMgrBtn" title="Gestor de etiquetas: renombrar, fusionar variaciones y borrar en todo el Stock">🏷️ Etiquetas</button>
         </div>
@@ -596,9 +596,9 @@
     const STOCK_PUBLIC_R2 = 'https://pub-bf043a4daa3b43b7a0b769617729d074.r2.dev';
     const STOCK_LIST_URL = STOCK_PUBLIC_R2 + '/stock/index.json';
     const STOCK_LIST_FALLBACK = STOCK_BASE + '/stock/list?limit=200';
-    const TYPE_ORDER = { audio: 0, music: 1, image: 2, 'twin-npc': 3, 'digital-twin': 4, furni: 5, video: 6, animation: 7, guion: 8 };
+    const TYPE_ORDER = { audio: 0, music: 1, image: 2, 'twin-npc': 3, 'digital-twin': 4, furni: 5, video: 6, animation: 7, capsula: 8, guion: 8 };
     // Etiquetas legibles para el badge de tipo (las demás se muestran tal cual).
-    const TYPE_LABELS = { 'twin-npc': 'Twin NPC', 'digital-twin': 'Digital Twin', guion: 'Guión' };
+    const TYPE_LABELS = { 'twin-npc': 'Twin NPC', 'digital-twin': 'Digital Twin', capsula: 'Cápsula', guion: 'Cápsula' };
     const typeText = (t) => TYPE_LABELS[t] || t;
     let allItems = [];
     let currentView = []; // lista filtrada+ordenada actual (para navegar el lightbox)
@@ -623,8 +623,9 @@
         || tags.includes('mobiliario')
         || /tipo:furni|mobiliario creado/i.test(String(it.comment || ''));
     }
+    function isCapsule(it) { return it && (it.type === 'capsula' || it.type === 'guion'); }
     function displayType(it) {
-      return isFurni(it) ? 'furni' : it.type;
+      return isFurni(it) ? 'furni' : (isCapsule(it) ? 'capsula' : it.type);
     }
     function mediaOrientation(it) {
       const width = Number(it && (it.width || it._mediaWidth)) || 0;
@@ -654,13 +655,13 @@
       return `background-image:url('${url}');background-repeat:no-repeat;background-size:${n * 100}% 100%;background-position:${pos}% center;image-rendering:pixelated;`;
     }
     function renderPreview(it) {
-      // GUIÓN: la columna enseña la CARA DEL VÍDEO que explica. La miniatura la
+      // CÁPSULA: la columna enseña la CARA DEL VÍDEO que explica. La miniatura la
       // hereda al publicarse (pixer-eleven la copia del asset que declara en
-      // externalRef). Si no la tiene —guiones antiguos o sin externalRef— se cae al
-      // texto con el estilo .stock-guion, que es lo que había antes.
-      if (it.type === 'guion' && it.thumbnail) {
+      // externalRef). Si no la tiene —activos antiguos o sin externalRef— se cae al
+      // texto con el estilo .stock-capsula.
+      if (isCapsule(it) && it.thumbnail) {
         return `<img class="stock-cover" src="${escAttr(it.thumbnail)}" alt="" loading="lazy">
-                <span class="stock-orientation landscape" data-role="orientation" title="Guión de formación">✎ guión</span>`;
+                <span class="stock-orientation landscape" data-role="orientation" title="Cápsula de formación">✦ cápsula</span>`;
       }
       if (isFurni(it)) {
         const fr = it.frames || 1;
@@ -696,18 +697,18 @@
         return `${cover ? `<img class="stock-cover" src="${cover}" alt="" loading="lazy">` : '<div class="stock-cover-empty">▶</div>'}
                 <audio src="${it.url}" preload="none" controls></audio>`;
       }
-      // Un GUIÓN no se reproduce: se lee. Es el conocimiento que un consejero saca
+      // Una CÁPSULA no se reproduce: se lee. Es el conocimiento que un consejero saca
       // de una pieza —el cuerpo va en `comment`— y sin este caso caía en el volcado
       // de JSON de abajo, que es justo lo contrario de poder leerlo.
-      if (it.type === 'guion') {
+      if (isCapsule(it)) {
         const cuerpo = String(it.comment || it.title || '').trim();
-        return `<div class="stock-guion">${escText(cuerpo) || '<em>guión vacío</em>'}</div>`;
+        return `<div class="stock-capsula">${escText(cuerpo) || '<em>cápsula vacía</em>'}</div>`;
       }
       return `<pre>${JSON.stringify(it).slice(0,200)}</pre>`;
     }
     function escAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
     // El `esc` general vive en OTRO bloque <script> y no está en este ámbito. Un
-    // guión es texto que viene del índice, así que se escapa aquí antes de pintarlo.
+    // Una cápsula es texto que viene del índice, así que se escapa aquí antes de pintarla.
     function escText(s){ return String(s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
     function setMediaOrientation(media, width, height) {
@@ -1064,6 +1065,7 @@
       if (t === 'twin-npc') return isTwinNpc;
       if (t === 'digital-twin') return isDigitalTwin;
       if (t === 'animation') return isAnim;
+      if (t === 'capsula') return isCapsule(it);
       if (t === 'furni') return isFurni(it);
       if (t === 'video') return it.type === 'video' && !isAnim;
       if (t === 'image') return it.type === 'image' && !isFurni(it) && !isTwinNpc && !isDigitalTwin;
@@ -1172,9 +1174,9 @@
         const cover = it.thumbnail || '';
         media = `${cover ? `<img class="stock-cover" src="${cover}" alt="">` : '<div class="stock-cover-empty">▶</div>'}
                  <audio src="${it.url}" controls autoplay></audio>`;
-      } else if (it.type === 'guion') {
+      } else if (isCapsule(it)) {
         const cara = it.thumbnail ? `<img class="stock-cover" src="${it.thumbnail}" alt="">` : '';
-        media = `${cara}<pre class="stock-guion">${String(it.comment || '').trim()}</pre>`;
+        media = `${cara}<pre class="stock-capsula">${String(it.comment || '').trim()}</pre>`;
       } else {
         media = `<pre>${JSON.stringify(it, null, 2)}</pre>`;
       }
