@@ -336,7 +336,7 @@
             <option value="twin-npc">Twin NPCs</option>
             <option value="digital-twin">Digital Twins</option>
             <option value="video" selected>Video</option>
-            <option value="animation">Animaciones</option>
+            <option value="animation">Animaciones (interactivos)</option>
             <option value="furni">Mobiliario</option>
             <!-- Las cápsulas no son un medio: son el conocimiento que sale de una
                  pieza. Van al final porque no se reproducen, se leen. -->
@@ -1103,9 +1103,16 @@
     // admite un type 'animation' real sin redeploy).
     function matchesType(it, t) {
       if (!t) return true;
-      // Animación = tipo real 'animation' o (compat) lo publicado por ainimation
-      // como video con motor=ainimation antes de existir el tipo real.
-      const isAnim = it.type === 'animation' || String(it.motor || '').toLowerCase() === 'ainimation';
+      // Animación = la categoría 'animaciones' del catálogo (donde viven los
+      // INTERACTIVOS que exporta AInimation Studio y emite admira.tv), el tipo
+      // real 'animation', o (compat) lo publicado por ainimation como video con
+      // motor=ainimation antes de existir el tipo real. El motor se compara por
+      // prefijo: las Xperiencias llegan como "AInimation Studio", no "ainimation",
+      // y con la comparación exacta el filtro salía vacío teniendo piezas dentro.
+      const isAnim = it.type === 'animation'
+        || it.type === 'interactive'
+        || it.category === 'animaciones'
+        || String(it.motor || '').toLowerCase().startsWith('ainimation');
       const tagsLc = Array.isArray(it.tags) ? it.tags.map(x => String(x).toLowerCase()) : [];
       // Gemelos del Anonimizador: NPC pixel-art (twin-npc) y persona sintética (digital-twin).
       const isTwinNpc = it.type === 'twin-npc' || tagsLc.includes('twin-npc');
