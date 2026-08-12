@@ -337,6 +337,7 @@
             <option value="digital-twin">Digital Twins</option>
             <option value="video" selected>Video</option>
             <option value="animation">Animaciones (interactivos)</option>
+        <option value="tiktok">TikToks</option>
             <option value="furni">Mobiliario</option>
             <!-- Las cápsulas no son un medio: son el conocimiento que sale de una
                  pieza. Van al final porque no se reproducen, se leen. -->
@@ -1120,6 +1121,10 @@
       if (t === 'twin-npc') return isTwinNpc;
       if (t === 'digital-twin') return isDigitalTwin;
       if (t === 'animation') return isAnim;
+      // Los TikToks son VÍDEOS: no se pueden distinguir por tipo sin llevarse por
+      // delante todo el vídeo del catálogo. Los distingue su categoría o su
+      // etiqueta, que es lo que pone quien los genera.
+      if (t === 'tiktok') return it.category === 'tiktoks' || tagsLc.includes('tiktok');
       if (t === 'capsula') return isCapsule(it);
       if (t === 'furni') return isFurni(it);
       if (t === 'video') return it.type === 'video' && !isAnim;
