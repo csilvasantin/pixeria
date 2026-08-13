@@ -25,4 +25,10 @@ python3 -m http.server 9134
 
 GitHub Pages deploys from `.github/workflows/pages.yml` on every push to `main`.
 
+La producción de Cloudflare Pages usa una verja server-side. El proyecto `pixeria`
+debe conservar el binding D1 `AUTH_DB`, el secreto `PIXERIA_SIGNING_KEY` y
+`fail_open=false` en preview y producción. El cliente Google compartido del
+ecosistema debe tener registrada exactamente la URI de redirección
+`https://www.pixeria.com/auth/callback`.
+
 Para actualizar el radar de modelos edita directamente el bloque `.radar-live` en `index.html`.

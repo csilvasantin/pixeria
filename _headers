@@ -1,3 +1,13 @@
 /llms.txt
   Content-Type: text/plain; charset=utf-8
   Cache-Control: public, max-age=3600
+
+/auth-gate.js
+  Cache-Control: no-store
+
+/backoffice/backoffice-auth.js
+  Cache-Control: no-store
+
+/auth/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
