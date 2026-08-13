@@ -31,4 +31,8 @@ debe conservar el binding D1 `AUTH_DB`, el secreto `PIXERIA_SIGNING_KEY` y
 ecosistema debe tener registrada exactamente la URI de redirección
 `https://www.pixeria.com/auth/callback`.
 
+El acceso es único y neutral respecto al navegador: Google identifica, la
+whitelist compartida autoriza y Pixeria emite su propia cookie de sesión. No hay
+un acceso «interno» distinto del acceso web público.
+
 Para actualizar el radar de modelos edita directamente el bloque `.radar-live` en `index.html`.

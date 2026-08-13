@@ -47,6 +47,8 @@ test('login emite desafío durable y cookie HttpOnly first-party', async () => {
   const html = await response.text();
   assert.match(html, /data-ux_mode="redirect"/);
   assert.match(html, /data-login_uri="https:\/\/www\.pixeria\.com\/auth\/callback"/);
+  assert.match(html, /Acceso con Google/);
+  assert.doesNotMatch(html, /Acceso interno/i);
   assert.doesNotMatch(html, /localStorage|callback:/);
 });
 
