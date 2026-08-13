@@ -64,6 +64,13 @@ test('session ausente falla cerrada y un documento redirige a login', async () =
   assert.equal(response.headers.get('location'), '/auth/login?return_to=%2Fbackoffice%2F%3Fx%3D1');
 });
 
+test('logout directo borra la sesión y vuelve al acceso común', async () => {
+  const response = await handleAuth(new Request('https://www.pixeria.com/auth/logout'), env());
+  assert.equal(response.status, 303);
+  assert.equal(response.headers.get('location'), '/auth/login');
+  assert.match(response.headers.get('set-cookie'), /__Host-pixeria_session=;.*Max-Age=0/);
+});
+
 test('los clientes ya no usan popup, FedCM, JWT ni almacenamiento local', async () => {
   const gate = await readFile(new URL('../auth-gate.js', import.meta.url), 'utf8');
   const backoffice = await readFile(new URL('../backoffice/backoffice-auth.js', import.meta.url), 'utf8');

@@ -304,7 +304,7 @@ export async function handleAuth(request, env) {
       headers:{'cache-control':'no-store', 'referrer-policy':'no-referrer'}
     });
   }
-  if (url.pathname === '/auth/logout' && request.method === 'POST') {
+  if (url.pathname === '/auth/logout' && (request.method === 'GET' || request.method === 'POST')) {
     const response = new Response(null, {status:303, headers:{location:'/auth/login', 'cache-control':'no-store'}});
     response.headers.append('Set-Cookie', `${SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
     return response;
