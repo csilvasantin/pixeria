@@ -723,6 +723,7 @@
             <pre class="player-body">"${text.replace(/</g,'&lt;')}"</pre>
             ${audioCover ? `<img src="${escAttr(audioCover)}" style="width:100%;max-height:240px;object-fit:cover;border:1px solid var(--matrix);box-shadow:0 0 12px rgba(0,255,65,.3);">` : ''}
             <audio controls autoplay src="${url}" data-pixer-title="${escAttr(audioTitle)}"${audioCover ? ` data-pixer-cover="${escAttr(audioCover)}"` : ''} style="width:100%;"></audio>
+            ${downloadBtnHTML({ ...pubMeta, title: audioTitle }, 'Descargar MP3')}
             ${publishBtnHTML(pubMeta)}
             <small class="player-foot">// ${text.length} caracteres · ~$${est} · model_id ${shownModel} · vía worker</small>
           </div>`);
@@ -765,6 +766,7 @@
           <div class="player-head">▶ MEGAFONÍA · gratis (Google TTS) · ${lang}</div>
           <pre class="player-body">"${text.replace(/</g,'&lt;')}"</pre>
           <audio controls autoplay src="${url}" data-pixer-title="${escAttr(audioTitle)}" style="width:100%;"></audio>
+          ${downloadBtnHTML({ ...pubMeta, title: audioTitle }, 'Descargar MP3')}
           ${publishBtnHTML(pubMeta)}
           <small class="player-foot">// TTS libre · gratis · se puede guardar en Stock</small>
         </div>`);
@@ -1087,7 +1089,7 @@
                   <div class="music-result-media">${media}</div>
                   <div class="music-result-actions">
                     ${publishBtnHTML(pubMeta)}
-                    <a class="btn" href="${escAttr(pickedUrl)}" target="_blank" rel="noopener" download>⬇ Descargar</a>
+                    ${downloadBtnHTML({ ...pubMeta, url: pickedUrl }, 'Descargar')}
                     <button type="button" class="btn" data-act="feed-latest" title="Usa esta versión para enviarla al Xpacio elegido">🎧 Preparar escucha</button>
                   </div>
                 </article>`;
@@ -1314,6 +1316,7 @@
             <img class="player-img" src="${url}" alt="generada" data-pixer-title="${escAttr(imgTitle)}">
           </div>
           <pre class="player-body">${fullPrompt.replace(/</g,'&lt;')}</pre>
+          ${downloadBtnHTML({ ...pubMeta, title: imgTitle }, 'Descargar imagen')}
           ${publishBtnHTML(pubMeta)}
           <small class="player-foot">// Gemini API · ${cost}</small>
         </div>`);
@@ -1342,6 +1345,7 @@
           <img class="player-img" crossorigin="anonymous" src="${url}" alt="generada" data-pixer-title="${escAttr(imgTitle)}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none';var l=this.previousElementSibling;l.innerHTML='⚠ ${label} no devolvió imagen.&lt;br&gt;Suele ser: el modelo RECHAZÓ el prompt (personajes con copyright o marcas) o cuota agotada.&lt;br&gt;Prueba sin marcas/personajes, o reintenta.';l.style.color='#ff8a5c';l.style.lineHeight='1.5';">
         </div>
         <pre class="player-body">${fullPrompt.replace(/</g,'&lt;')}</pre>
+        ${downloadBtnHTML({ ...pubMeta, title: imgTitle }, 'Descargar imagen')}
         ${publishBtnHTML(pubMeta)}
         <small class="player-foot">// ${label} · ${headModel} · ${cost}</small>
       </div>`);
@@ -1541,6 +1545,7 @@
               <img class="player-img" src="${url}" alt="generada" data-pixer-title="${escAttr(grokImgTitle)}">
             </div>
             <pre class="player-body">${revised.replace(/</g,'&lt;')}</pre>
+            ${downloadBtnHTML({ ...pubMeta, title: grokImgTitle }, 'Descargar imagen')}
             ${publishBtnHTML(pubMeta)}
             <small class="player-foot">// xAI ${label} · ${cost} · 1 imagen</small>
           </div>`);
@@ -1563,6 +1568,7 @@
           <img class="player-img" crossorigin="anonymous" src="${url}" alt="generada" data-pixer-title="${escAttr(fluxTitle)}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none';var l=this.previousElementSibling;l.innerHTML='⚠ Nano Banana no devolvió imagen — cuota gratis agotada o error.&lt;br&gt;Reintenta en un rato o usa Grok Imagine.';l.style.color='#ff8a5c';l.style.lineHeight='1.5';">
         </div>
         <pre class="player-body">${fullPrompt.replace(/</g,'&lt;')}</pre>
+        ${downloadBtnHTML({ ...pubMeta, title: fluxTitle }, 'Descargar imagen')}
         ${publishBtnHTML(pubMeta)}
         <small class="player-foot">// Nano Banana · Gemini 2.5 Flash Image · gratis (free tier)</small>
       </div>`);
@@ -1668,7 +1674,7 @@
         <div class="player-head">▶ VIDEO · ${label} (Google) · ${aspect} · ${dur4or6or8}s · ${resolution} · audio nativo</div>
         <video controls autoplay src="${res.url}" data-pixer-title="${escAttr(veoTitle)}" style="width:100%; max-height:55vh; border:1px solid var(--matrix); box-shadow:0 0 24px rgba(0,255,65,.30);"></video>
         <pre class="player-body">${prompt.replace(/</g,'&lt;')}</pre>
-        <a class="btn" download="veo-${Date.now()}.mp4" href="${res.url}">⬇ Descargar MP4</a>
+        ${downloadBtnHTML({ ...pubMeta, title: veoTitle }, 'Descargar MP4')}
         ${publishBtnHTML(pubMeta)}
         <small class="player-foot">// Gemini Veo · ${cost} · ${res.elapsed}s de procesado</small>
       </div>`);
@@ -1742,7 +1748,7 @@
         <div class="player-head">▶ VIDEO · Grok Imagine (xAI) · ${aspect} · ${dur}s · ${resolution}</div>
         <video controls autoplay src="${res.url}" data-pixer-title="${escAttr(gTitle)}" style="width:100%; max-height:55vh; border:1px solid var(--matrix); box-shadow:0 0 24px rgba(0,255,65,.30);"></video>
         <pre class="player-body">${prompt.replace(/</g,'&lt;')}</pre>
-        <a class="btn" download="grok-${Date.now()}.mp4" href="${res.url}">⬇ Descargar MP4</a>
+        ${downloadBtnHTML({ ...pubMeta, title: gTitle }, 'Descargar MP4')}
         ${publishBtnHTML(pubMeta)}
         <small class="player-foot">// xAI Grok Imagine · ${res.elapsed}s de procesado</small>
       </div>`);
@@ -1804,7 +1810,7 @@
         <div class="player-head">▶ VIDEO · Pollinations · Wan (gratis) · ${aspect} · ${dur}s · 720p</div>
         <video controls autoplay src="${blobUrl}" data-pixer-title="${escAttr(pTitle)}" style="width:100%; max-height:55vh; border:1px solid var(--matrix); box-shadow:0 0 24px rgba(0,255,65,.30);"></video>
         <pre class="player-body">${prompt.replace(/</g,'&lt;')}</pre>
-        <a class="btn" download="pollinations-${Date.now()}.mp4" href="${blobUrl}">⬇ Descargar MP4</a>
+        ${downloadBtnHTML({ ...pubMeta, title: pTitle }, 'Descargar MP4')}
         ${publishBtnHTML(pubMeta)}
         <small class="player-foot">// Pollinations · Wan-Fast · gratis</small>
       </div>`);
@@ -2726,6 +2732,48 @@
   const STOCK_PUBLISH_URL = ELEVEN_WORKER_URL + '/stock/publish';
   const STOCK_LIST_URL    = ELEVEN_WORKER_URL + '/stock/list';
 
+  // ⬇ DESCARGAR A ESTE ORDENADOR
+  // Antes esto era `<a href="https://…" download>`: el atributo `download` lo
+  // ignoran los navegadores cuando el href es de otro origen, así que el clic
+  // NO guardaba nada — abría el mp4 en una pestaña. Y las imágenes generadas no
+  // tenían ni botón. Ahora lo hace /assets/descarga-local.js (fetch → blob →
+  // objectURL, que ya es same-origin) con un nombre de fichero legible.
+  function downloadBtnHTML(meta, label) {
+    const m = meta || {};
+    const lite = {
+      type: m.type || '',
+      motor: m.motor || '',
+      title: String(m.title || m.prompt || '').slice(0, 140),
+      mime: m.mime || '',
+      // Las data: URL (Imagen/Gemini devuelve base64) pesan megas: no caben en un
+      // atributo. Se leen del propio <img>/<video> de la tarjeta al pulsar.
+      url: /^data:/.test(String(m.url || '')) ? '' : (m.url || ''),
+    };
+    const json = JSON.stringify(lite).replace(/'/g, '&#39;');
+    return `<button type="button" class="btn download-btn" data-download-meta='${json}' title="Guarda el fichero en este ordenador con un nombre legible">⬇ ${label || 'Descargar'}</button>`;
+  }
+
+  // Fichero de la tarjeta en la que vive el botón (para las data: URL y para los
+  // resultados con varias versiones, donde cada una tiene su propio media).
+  function downloadSrcNear(btn) {
+    const card = btn.closest('.music-result-item, .player-card, .cmp-cell') || document;
+    const el = card.querySelector('img.player-img, video, audio, img');
+    return el ? (el.currentSrc || el.src || '') : '';
+  }
+
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('.download-btn');
+    if (!b) return;
+    e.preventDefault();
+    let meta = {};
+    try { meta = JSON.parse(b.dataset.downloadMeta || '{}'); } catch {}
+    const url = meta.url || downloadSrcNear(b);
+    if (!url) { showToast('❌ no hay fichero que descargar'); return; }
+    const DL = window.PixeriaDescarga;
+    if (!DL) { window.open(url, '_blank', 'noopener'); return; }  // sin el módulo, lo de siempre
+    DL.item({ type: meta.type, title: meta.title, mime: meta.mime, url });
+  });
+
   function publishBtnHTML(meta) {
     const json = JSON.stringify(meta).replace(/'/g, '&#39;');
     return `<button type="button" class="btn publish-btn" data-publish-meta='${json}' title="Sube este asset al stock público (R2)">📌 PUBLICAR EN STOCK</button>`;
@@ -3582,7 +3630,7 @@
                 <div class="player-head">📥 IMPORTADO · ${kind.toUpperCase()} · ${sizeMB} MB · ${sec}s · ${ep.kind}</div>
                 <${elTag} controls autoplay src="${blobUrl}" style="width:100%;${kind === 'video' ? 'max-height:55vh;' : ''}"></${elTag}>
                 <pre class="player-body">${url.replace(/</g, '&lt;')}</pre>
-                <a class="btn" download="import-${Date.now()}.${fmt === 'video' ? 'mp4' : 'mp3'}" href="${blobUrl}">⬇ Descargar</a>
+                ${downloadBtnHTML(importMeta, 'Descargar')}
                 ${publishBtnHTML(importMeta)}
                 <small class="player-foot">// vía yt-dlp (${ep.kind}) · publicando en Stock automáticamente...</small>
               </div>`;

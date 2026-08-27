@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.09.08.2026.r3.14:53">
+  <meta name="admiranext-version" content="Pixeria v.28.08.2026.r1.00:40">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -261,6 +261,7 @@
   <script defer src="/assets/analytics.js?v=20260617-consent"></script>
   <script defer src="/assets/consent.js?v=20260617"></script>
   <script defer src="/assets/site-nav.js?v=20260803-release"></script>
+  <script defer src="/assets/descarga-local.js?v=20260828-r1"></script>
 </head>
 <body data-page="stock">
   <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
@@ -389,7 +390,7 @@
     </div>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.09.08.2026.r3.14:53</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.28.08.2026.r1.00:40</a></footer>
 
   <dialog id="importModal" class="keys-modal">
     <form method="dialog" class="keys-form import-form">
@@ -438,6 +439,7 @@
     <span class="count"><b id="distBatchCount">0</b> seleccionados</span>
     <button type="button" class="btn primary" id="distBatchSend">Distribuir →</button>
     <button type="button" class="btn" id="distBatchPlaylist">🎵 A playlist</button>
+    <button type="button" class="btn" id="distBatchDownload" title="Descarga los assets seleccionados a este ordenador, uno detrás de otro">⬇ Descargar</button>
     <button type="button" class="btn" id="distBatchClear">Limpiar</button>
   </div>
 
@@ -1003,6 +1005,34 @@
       renderActiveTagBanner(); applyFilters(false);
       return r;
     }
+    // ── Descarga en local ────────────────────────────────────────────────────
+    // El trabajo lo hace /assets/descarga-local.js (fetch → blob → objectURL).
+    // Aquí solo se le entrega el asset con el tipo ya normalizado, para que el
+    // nombre del fichero salga como lo llama la galería y no como lo llama R2
+    // (todos los 756 se guardaban antes como «asset.mp4» / «asset.png»).
+    function paraDescarga(it) {
+      return Object.assign({}, it, { type: displayType(it) });
+    }
+    function descargarAsset(it) {
+      if (!it) return;
+      const DL = window.PixeriaDescarga;
+      if (!DL) { if (it.url) window.open(it.url, '_blank', 'noopener'); return; }
+      // Las cápsulas no tienen fichero: su contenido es el texto del comentario.
+      if (!it.url && isCapsule(it)) {
+        return DL.texto(String(it.comment || it.prompt || ''), DL.nombre(paraDescarga(it), { ext: 'txt' }));
+      }
+      return DL.item(paraDescarga(it));
+    }
+    function descargarAssets(items) {
+      const lista = (items || []).filter(Boolean);
+      const DL = window.PixeriaDescarga;
+      if (!lista.length || !DL) return;
+      // Aviso antes de soltar una tromba: 40 vídeos son varios GB y el navegador
+      // pregunta por «descargas múltiples». Que sea una decisión, no una sorpresa.
+      if (lista.length > 15 && !confirm(`Vas a descargar ${lista.length} ficheros a este ordenador, uno detrás de otro. ¿Seguimos?`)) return;
+      return DL.lote(lista.map(paraDescarga));
+    }
+
     function renderCard(it) {
       const idAttr = String(it.id || '').replace(/[^A-Za-z0-9-]/g, '');
       const assetUrl = escAttr(it.url || '');
@@ -1035,6 +1065,7 @@
               <button type="button" class="stock-card-btn" data-act="playlist" title="Añadir a una playlist" aria-label="Añadir a playlist"><span aria-hidden="true">🎵</span></button>
               <button type="button" class="stock-card-btn" data-act="feed" title="Distribuir a pantallas (elegir destino, ahora o programado)" aria-label="Distribuir a pantallas"><span aria-hidden="true">📡</span></button>
               <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Abrir asset en pestaña nueva" aria-label="Abrir asset en pestaña nueva" data-act="open"><span aria-hidden="true">↗</span></a>
+              <button type="button" class="stock-card-btn" data-act="descargar" title="Descargar el fichero a este ordenador" aria-label="Descargar a este ordenador"><span aria-hidden="true">⬇</span></button>
               <button type="button" class="stock-card-btn" data-act="max" title="Maximizar" aria-label="Maximizar asset"><span aria-hidden="true">⛶</span></button>
               <button type="button" class="stock-card-btn danger" data-act="del" title="Eliminar" aria-label="Eliminar asset"><span aria-hidden="true">🗑</span></button>
             </div>
@@ -1260,7 +1291,7 @@
         ${commentBlock}
         <div class="stock-lightbox-actions">
           <a class="btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener">AI Abrir en AINimation</a>
-          <a class="btn" href="${it.url}" target="_blank" rel="noopener" download>⬇ Descargar archivo</a>
+          <button type="button" class="btn" data-act="descargar" title="Guarda el fichero en este ordenador con un nombre legible">⬇ Descargar a este ordenador</button>
           <button type="button" class="btn prio0-btn" data-act="prio0" title="Envía este asset AHORA al destino que elijas e interrumpe lo que se esté emitiendo">⚠ Prioridad 0 · interrumpir</button>
         </div>`;
       window.__lightboxItemId = it.id || null;
@@ -1324,6 +1355,16 @@
         } catch (error) {
           if (box) { box.removeAttribute('aria-busy'); box.querySelector('small').textContent = `No se pudo guardar · ${String(error.message || error).slice(0,80)}`; }
         }
+        return;
+      }
+      // ⬇ Descargar: guarda el fichero EN EL DISCO. El <a download> de antes no
+      // servía (href de otro origen → el navegador ignora el atributo y abre el
+      // asset en una pestaña); ahora lo hace descarga-local.js vía blob.
+      const dlBtn = e.target.closest('[data-act="descargar"]');
+      if (dlBtn) {
+        e.preventDefault(); e.stopPropagation();
+        const it = currentItemInLightbox();
+        if (it) descargarAsset(it);
         return;
       }
       // ⚠ Prioridad 0: enviar AHORA al destino que se elija, interrumpiendo lo
@@ -1489,6 +1530,7 @@
         else if (btn.dataset.act === 'del') { e.preventDefault(); deleteAsset(id, card); }
         else if (btn.dataset.act === 'feed') { e.preventDefault(); DIST.open([item]); }
         else if (btn.dataset.act === 'playlist') { e.preventDefault(); PL.open([item]); }
+        else if (btn.dataset.act === 'descargar') { e.preventDefault(); descargarAsset(item); }
         // 'open' es <a target=_blank> → deja burbujear sin preventDefault
         e.stopPropagation();
         return;
@@ -2212,6 +2254,8 @@
         // Barra de lote
         $('distBatchSend').addEventListener('click', () => open(selectedItems()));
         $('distBatchClear').addEventListener('click', clearSelection);
+        const bdl = $('distBatchDownload');
+        if (bdl) bdl.addEventListener('click', () => descargarAssets(selectedItems()));
         const bpl = $('distBatchPlaylist'); if (bpl) bpl.addEventListener('click', () => { if (window.PL) window.PL.open(selectedItems()); });
         const ssel = $('distSourceSel'); if (ssel) ssel.addEventListener('change', () => onSourceChange(ssel.value));
 

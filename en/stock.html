@@ -92,6 +92,7 @@
   <script defer src="/assets/analytics.js?v=20260617-consent"></script>
   <script defer src="/assets/consent.js?v=20260617"></script>
   <script defer src="/assets/site-nav.js?v=20260803-release"></script>
+  <script defer src="/assets/descarga-local.js?v=20260828-r1"></script>
 </head>
 <body data-page="stock">
   <!-- Google Tag Manager (noscript) -->
@@ -420,6 +421,17 @@
         return null;
       }
     }
+    // ── Download to this computer ────────────────────────────────────────────
+    // The old `<a href="https://…r2.dev/…" download>` never saved anything: the
+    // `download` attribute is ignored cross-origin, so the browser just opened
+    // the asset in a tab. /assets/descarga-local.js does it for real (blob).
+    function descargarAsset(it) {
+      if (!it) return;
+      const DL = window.PixeriaDescarga;
+      if (!DL) { if (it.url) window.open(it.url, '_blank', 'noopener'); return; }
+      return DL.item(Object.assign({}, it, { type: displayType(it) }));
+    }
+
     function currentItemInLightbox() {
       const id = window.__lightboxItemId;
       return id ? allItems.find(i => i.id === id) : null;
@@ -452,6 +464,7 @@
               <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Open in AINimation" aria-label="Open in AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
               <button type="button" class="stock-card-btn" data-act="feed" title="Send to Pixer Feed (screens / twin)" aria-label="Send to Pixer Feed"><span aria-hidden="true">📺</span></button>
               <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Open asset in a new tab" aria-label="Open asset in a new tab" data-act="open"><span aria-hidden="true">↗</span></a>
+              <button type="button" class="stock-card-btn" data-act="descargar" title="Download the file to this computer" aria-label="Download to this computer"><span aria-hidden="true">⬇</span></button>
               <button type="button" class="stock-card-btn" data-act="max" title="Maximize" aria-label="Maximize asset"><span aria-hidden="true">⛶</span></button>
               <button type="button" class="stock-card-btn danger" data-act="del" title="Delete" aria-label="Delete asset"><span aria-hidden="true">🗑</span></button>
             </div>
@@ -602,7 +615,7 @@
         ${commentBlock}
         <div class="stock-lightbox-actions">
           <a class="btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener">AI Abrir en AINimation</a>
-          <a class="btn" href="${it.url}" target="_blank" rel="noopener" download>⬇ Descargar archivo</a>
+          <button type="button" class="btn" data-act="descargar" title="Save the file on this computer with a readable name">⬇ Download to this computer</button>
           <a class="btn" href="${it.url}" target="_blank" rel="noopener">↗ Abrir asset</a>
         </div>`;
       window.__lightboxItemId = it.id || null;
@@ -639,6 +652,13 @@
 
     // Edición de tags dentro del lightbox (quitar / añadir)
     lightboxMeta.addEventListener('click', async e => {
+      const dlBtn = e.target.closest('[data-act="descargar"]');
+      if (dlBtn) {
+        e.preventDefault(); e.stopPropagation();
+        const item = currentItemInLightbox();
+        if (item) descargarAsset(item);
+        return;
+      }
       const removeBtn = e.target.closest('[data-act="remove-tag"]');
       const addBtn = e.target.closest('[data-act="add-tag"]');
       if (!removeBtn && !addBtn) return;
@@ -753,6 +773,7 @@
         const item = allItems.find(i => i.id === id);
         if (!item) return;
         if (btn.dataset.act === 'max') { e.preventDefault(); openLightbox(item); }
+        else if (btn.dataset.act === 'descargar') { e.preventDefault(); descargarAsset(item); }
         else if (btn.dataset.act === 'del') { e.preventDefault(); deleteAsset(id, card); }
         else if (btn.dataset.act === 'feed') { e.preventDefault(); sendToPixerFeed(item, btn); }
         // 'open' es <a target=_blank> → deja burbujear sin preventDefault
