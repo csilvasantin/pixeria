@@ -3521,10 +3521,16 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, format: fmt }),
       });
-      // Cualquier respuesta no-OK o no-JSON ⇒ el server no tiene los endpoints
-      // nuevos (404/HTML estático) o rechazó la URL ⇒ caemos al POST único, que
-      // mostrará el error real (p. ej. host no permitido) si lo hubiera.
-      if (!startR.ok) return 'fallback';
+      // 404 (o cuerpo no-JSON) ⇒ el server no tiene los endpoints nuevos ⇒ al
+      // POST único de siempre. Pero un 400 con JSON es el server DICIENDO que no
+      // (host no permitido, post de Telegram sin media): repetirlo por la otra
+      // ruta solo hace esperar más para el mismo «no». Se corta aquí.
+      if (!startR.ok) {
+        if (startR.status === 404) return 'fallback';
+        const msg = await errorLegible(startR.clone ? startR.clone() : startR);
+        if (/^HTTP \d+: <|^HTTP \d+: $/.test(msg)) return 'fallback';   // HTML estático
+        throw new Error(msg);
+      }
       let jobId;
       try { jobId = (await startR.json()).jobId; } catch { return 'fallback'; }
       if (!jobId) return 'fallback';
@@ -3556,42 +3562,40 @@
     }
 
     // Flujo de un solo POST (suno-local, o admira-tube antiguo como fallback).
+    // El proxy responde en JSON y con frases hechas: {error, message, allowed}.
+    // Volcarlo crudo (era `ERROR 400: {"ok":false,"error":"Host not allowed"…`)
+    // llenaba la caja de comillas y se cortaba justo donde estaba el dato útil.
+    async function errorLegible(r) {
+      let d = null, txt = '';
+      try { txt = await r.text(); d = JSON.parse(txt); } catch {}
+      if (d && typeof d === 'object') {
+        if (d.message) return String(d.message);
+        const base = String(d.error || `HTTP ${r.status}`);
+        if (Array.isArray(d.allowed)) {
+          return `${base}${d.host ? ` (${d.host})` : ''}. Hosts permitidos: ${d.allowed.join(', ')}.`;
+        }
+        return base;
+      }
+      return `HTTP ${r.status}: ${String(txt).slice(0, 200)}`;
+    }
+
     async function importOneShot(ep, url, fmt, progress) {
       const r = await fetch(ep.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ep.bodyFor(url, fmt)),
       });
-      if (!r.ok) {
-        let err = ''; try { err = JSON.stringify(await r.json()); } catch { err = await r.text(); }
-        throw new Error(`ERROR ${r.status}: ${err.slice(0, 300)}`);
-      }
+      if (!r.ok) throw new Error(await errorLegible(r));
       let title = ''; try { title = decodeURIComponent(r.headers.get('X-Tube-Title') || ''); } catch {}
       const { blob } = await fetchWithProgress(r, (received, total, sec) => progress?.update(received, total, sec));
       return { blob, title };
     }
 
-    async function runImport() {
-      if (importInFlight || !lastImportArgs) return;
-      const { url, fmt, comment } = lastImportArgs;
-      const stat = document.getElementById('importStatus');
-      stat.style.display = 'block';
-      retryBtn.hidden = true;
-      importInFlight = true;
-      try {
-        // 1) Pre-chequeo: ¿hay backend vivo? Evita esperar a un timeout largo.
-        const ep = await pickHealthyEndpoint(stat);
-        if (!ep) {
-          stat.textContent = `// El importador (Mac Mini) está dormido o apagado ahora mismo.\n`
-            + `// PLAN B: pulsa «📂 Archivo local → Stock» para subir un archivo\n`
-            + `//   desde este dispositivo directo al Stock (funciona sin el Mac).\n`
-            + `// O reintenta (↻) en unos segundos por si el Mac despierta.`;
-          retryBtn.hidden = false;
-          try { localBtn.focus(); } catch {}
-          return;
-        }
-
-        stat.textContent = `// ${ep.kind} OK · descargando ${fmt}…\n// puede tardar 10-60s según media`;
+    // Importa UNA url. Devuelve {ok, id, error} — no navega: de eso se encarga
+    // el lote, que puede tener varias detrás. (Antes esto era todo `runImport`
+    // y saltaba a /stock nada más publicar, que con varias URLs cortaba el resto.)
+    async function importarUna(ep, url, fmt, comment, stat, prefijo) {
+      {
         const progress = importProgressStart(fmt);
         const t0 = Date.now();
         try {
@@ -3635,36 +3639,96 @@
                 <small class="player-foot">// vía yt-dlp (${ep.kind}) · publicando en Stock automáticamente...</small>
               </div>`;
           }
-          stat.textContent = `✓ Importado (${sizeMB} MB en ${sec}s) · subiendo a Stock...`;
+          stat.textContent = `${prefijo}✓ Importado (${sizeMB} MB en ${sec}s) · subiendo a Stock…`;
           // Auto-publicar en Stock al finalizar la importación
           const publishBtn = player?.querySelector('.publish-btn');
           const result = await publishToStock(importMeta, publishBtn);
           if (result && result.ok) {
-            stat.textContent = `✓ Importado (${sizeMB} MB en ${sec}s) · ✅ en Stock · saltando…`;
-            const newId = result.id || '';
-            setTimeout(() => {
-              try { dlg.close(); } catch {}
-              const target = 'https://www.pixeria.com/stock.html' + (newId ? '?highlight=' + encodeURIComponent(newId) : '');
-              location.href = target;
-            }, 900);
-          } else {
-            stat.textContent = `✓ Importado (${sizeMB} MB en ${sec}s) · ❌ Stock: ${(result && result.error || 'fallo').slice(0, 120)}\n// el archivo sigue en el player; pulsa 📌 para reintentar`;
+            stat.textContent = `${prefijo}✓ Importado (${sizeMB} MB en ${sec}s) · ✅ en Stock`;
+            return { ok: true, id: result.id || '' };
           }
+          const fallo = (result && result.error || 'fallo').slice(0, 120);
+          stat.textContent = `${prefijo}✓ Importado (${sizeMB} MB en ${sec}s) · ❌ Stock: ${fallo}\n// el archivo sigue en el player; pulsa 📌 para reintentar`;
+          return { ok: false, error: 'Stock: ' + fallo };
         } catch (e) {
           const msg = String(e && e.message || e);
           progress?.error(msg.slice(0, 80));
           const isNetwork = /Failed to fetch|NetworkError|ERR_|load failed/i.test(msg);
           if (isNetwork && fmt === 'video') {
-            stat.textContent = `// ERROR: ${msg}\n`
+            stat.textContent = `${prefijo}ERROR: ${msg}\n`
               + `// ${ep.kind} respondió al health-check → el proxy NO está caído.\n`
               + `// Probable timeout del Funnel con la descarga de vídeo.\n`
               + `// Reintenta (↻) o importa como AUDIO.`;
           } else if (isNetwork) {
-            stat.textContent = `// ERROR: ${msg}\n// La conexión con ${ep.kind} se cortó. Reintenta (↻).`;
+            stat.textContent = `${prefijo}ERROR: ${msg}\n// La conexión con ${ep.kind} se cortó. Reintenta (↻).`;
           } else {
-            stat.textContent = `// ${msg}\n// Reintenta (↻).`;
+            stat.textContent = `${prefijo}${msg}`;
           }
+          return { ok: false, error: msg };
+        }
+      }
+    }
+
+    // ── LOTE ─────────────────────────────────────────────────────────────────
+    // El campo URL admite VARIAS (una por línea, o separadas por espacios): se
+    // importan una detrás de otra y solo se salta al Stock cuando acaban todas.
+    // Antes solo cabía una, y quien pegaba cinco veía «Invalid URL».
+    function parseUrls(raw) {
+      return String(raw || '')
+        .split(/[\s,;]+/)
+        .map(u => u.trim().replace(/[<>()\[\]"']/g, ''))
+        .filter(u => /^https?:\/\//i.test(u));
+    }
+
+    async function runImport() {
+      if (importInFlight || !lastImportArgs) return;
+      const { urls, fmt, comment } = lastImportArgs;
+      const stat = document.getElementById('importStatus');
+      stat.style.display = 'block';
+      retryBtn.hidden = true;
+      importInFlight = true;
+      try {
+        // Pre-chequeo: ¿hay backend vivo? Evita esperar a un timeout largo.
+        const ep = await pickHealthyEndpoint(stat);
+        if (!ep) {
+          stat.textContent = `// El importador (Mac Mini) está dormido o apagado ahora mismo.\n`
+            + `// PLAN B: pulsa «📂 Archivo local → Stock» para subir un archivo\n`
+            + `//   desde este dispositivo directo al Stock (funciona sin el Mac).\n`
+            + `// O reintenta (↻) en unos segundos por si el Mac despierta.`;
           retryBtn.hidden = false;
+          try { localBtn.focus(); } catch {}
+          return;
+        }
+
+        const total = urls.length;
+        const hechos = [];
+        for (let i = 0; i < total; i++) {
+          const url = urls[i];
+          const prefijo = total > 1 ? `// [${i + 1}/${total}] ` : '// ';
+          stat.textContent = `${prefijo}${ep.kind} OK · descargando ${fmt}…\n// puede tardar 10-60s según media\n// ${url}`;
+          const r = await importarUna(ep, url, fmt, comment, stat, prefijo);
+          hechos.push({ url, ...(r || { ok: false, error: 'sin resultado' }) });
+          if (total > 1 && i < total - 1) await new Promise(r2 => setTimeout(r2, 600));
+        }
+
+        const ok = hechos.filter(h => h.ok);
+        if (total > 1) {
+          stat.textContent = `// ${ok.length} de ${total} en el Stock\n`
+            + hechos.map(h => `// ${h.ok ? '✅' : '❌'} ${h.url}${h.ok ? '' : ' — ' + String(h.error).slice(0, 140)}`).join('\n');
+        }
+        // Las que fallaron se quedan en el campo para poder reintentarlas solas.
+        const fallidas = hechos.filter(h => !h.ok).map(h => h.url);
+        if (fallidas.length) {
+          const campo = document.getElementById('import-url');
+          if (campo) campo.value = fallidas.join('\n');
+          lastImportArgs = { urls: fallidas, fmt, comment };
+          retryBtn.hidden = false;
+        } else if (ok.length) {
+          const newId = ok[ok.length - 1].id || '';
+          setTimeout(() => {
+            try { dlg.close(); } catch {}
+            location.href = 'https://www.pixeria.com/stock.html' + (newId ? '?highlight=' + encodeURIComponent(newId) : '');
+          }, total > 1 ? 1800 : 900);
         }
       } finally {
         importInFlight = false;
@@ -3673,11 +3737,16 @@
 
     retryBtn.addEventListener('click', runImport);
     document.getElementById('doImport')?.addEventListener('click', () => {
-      const url = document.getElementById('import-url').value.trim();
+      const raw = document.getElementById('import-url').value;
+      const urls = parseUrls(raw);
       const fmt = document.querySelector('input[name="import-fmt"]:checked')?.value || 'audio';
       const comment = (document.getElementById('import-comment')?.value || '').trim();
-      if (!url) return;
-      lastImportArgs = { url, fmt, comment };
+      if (!urls.length) {
+        const stat = document.getElementById('importStatus');
+        if (stat && raw.trim()) { stat.style.display = 'block'; stat.textContent = '// Ninguna URL válida: tienen que empezar por http:// o https://'; }
+        return;
+      }
+      lastImportArgs = { urls, fmt, comment };
       runImport();
     });
   }
