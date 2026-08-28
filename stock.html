@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.28.08.2026.r5.02:48">
+  <meta name="admiranext-version" content="Pixeria v.28.08.2026.r6.03:06">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -390,7 +390,7 @@
     </div>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.28.08.2026.r5.02:48</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.28.08.2026.r6.03:06</a></footer>
 
   <dialog id="importModal" class="keys-modal">
     <form method="dialog" class="keys-form import-form">
@@ -598,6 +598,11 @@
     // para operaciones de admin (tags/borrar/push), que requieren el worker.
     const STOCK_PUBLIC_R2 = 'https://pub-bf043a4daa3b43b7a0b769617729d074.r2.dev';
     const STOCK_LIST_URL = STOCK_PUBLIC_R2 + '/stock/index.json';
+    // El MISMO índice, pero por nuestro dominio: pixeria.com es zona de
+    // Cloudflare y comprime en Brotli, así que son ~120 KB en vez de 635. R2
+    // público no negocia Accept-Encoding y siempre manda el JSON en crudo.
+    // Ver functions/stock-index.js. Si falla, se cae al r2.dev de siempre.
+    const STOCK_INDEX_COMPRIMIDO = '/stock-index';
     const STOCK_LIST_FALLBACK = STOCK_BASE + '/stock/list?limit=200';
     const TYPE_ORDER = { audio: 0, music: 1, image: 2, 'twin-npc': 3, 'digital-twin': 4, furni: 5, video: 6, animation: 7, capsula: 8, guion: 8 };
     // Etiquetas legibles para el badge de tipo (las demás se muestran tal cual).
@@ -1685,7 +1690,12 @@
           // llegaba nunca. Ahora esperar de más no cuesta: la galería ya está
           // pintada con el índice desde el primer segundo.
           fetchSource(STOCK_LIST_FALLBACK, 15000).then(l => absorber(l, false)).catch(e => { lastErr = e; }),
-          fetchSource(STOCK_LIST_URL, 12000).then(l => absorber(l, true)).catch(e => { lastErr = e; }),
+          // Primero el índice comprimido de nuestro dominio; si no está (local,
+          // o la Function caída), el r2.dev directo. Uno u otro, no los dos.
+          fetchSource(STOCK_INDEX_COMPRIMIDO, 12000)
+            .catch(() => fetchSource(STOCK_LIST_URL, 12000))
+            .then(l => absorber(l, true))
+            .catch(e => { lastErr = e; }),
         ];
         await Promise.all(enCurso);
         // Sin tope: antes había un .slice(0, 400) que dejaba fuera 358 assets
