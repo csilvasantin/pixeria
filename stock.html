@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.28.08.2026.r4.02:26">
+  <meta name="admiranext-version" content="Pixeria v.28.08.2026.r5.02:48">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -390,7 +390,7 @@
     </div>
   </main>
 
-  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.28.08.2026.r4.02:26</a></footer>
+  <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.28.08.2026.r5.02:48</a></footer>
 
   <dialog id="importModal" class="keys-modal">
     <form method="dialog" class="keys-form import-form">
@@ -1178,7 +1178,8 @@
       el.textContent = playable + ' de ' + total;
       el.dataset.p = playable;
       el.title = playable + ' reproducibles (= los que ves en admira.tv) · ' + total +
-        ' en stock' + (total > playable ? ' (incluye ' + (total - playable) + ' no reproducibles: mobiliario, NPCs y enlaces pendientes)' : '');
+        ' en stock' + (total > playable ? ' (incluye ' + (total - playable) +
+        ' no reproducibles: cápsulas, enlaces, mobiliario y NPCs)' : '');
       if (playable > prev && prev > 0) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
     }
 
@@ -1645,29 +1646,53 @@
         return data.items;
       } finally { if (to) clearTimeout(to); }
     }
-    async function fetchList() {
-      // FUSIÓN de dos fuentes (dedupe por id): el índice estático en r2.dev
-      // (rápido, no bloqueado) + el listado vivo del worker (/stock/list), que
-      // trae lo recién publicado que el índice estático aún no tiene. Antes solo
-      // se leía la primera que respondía → el índice estático stale ocultaba los
-      // furni nuevos. Si una fuente falla, se usa la otra; reintento por fuente.
+    // FUSIÓN de dos fuentes (dedupe por id): el índice estático en r2.dev, que
+    // los tiene TODOS, y el listado vivo del worker (/stock/list), que trae lo
+    // recién publicado que el índice aún no tiene. Si una falla, vale la otra.
+    //
+    // SE PINTA CON LA PRIMERA QUE LLEGUE (Carlos, 28-08-2026). Antes esto era un
+    // Promise.allSettled: las dos en paralelo, sí, pero sin pintar hasta que
+    // respondían LAS DOS — o sea, siempre a la velocidad de la más lenta.
+    //
+    // Y la lenta no es la que parece. Medido desde el navegador, tres muestras
+    // cada uno: el índice estático de r2.dev tarda ~0,9 s y trae los 758; el
+    // /stock/list del worker tarda ~8,7-9 s y trae solo los 200 más nuevos. O
+    // sea que la galería tenía los datos completos al segundo y se quedaba en
+    // blanco ocho segundos más esperando a una fuente que aporta un puñado de
+    // ids. (El índice pesa 635 KB sin comprimir porque r2.dev no comprime —en
+    // gzip serían 120— pero aun así llega antes; comprimirlo es otra mejora,
+    // y esa sí exige tocar el worker.)
+    //
+    // Ahora cada fuente pinta en cuanto llega. El índice estático manda en el
+    // dedupe: sus urls son de r2.dev, inmutables y con Range nativo. El worker
+    // solo añade lo recién publicado que el índice aún no tiene.
+    async function fetchList(onParcial) {
       let lastErr;
       for (let attempt = 1; attempt <= 3; attempt++) {
-        const settled = await Promise.allSettled([
-          fetchSource(STOCK_LIST_URL, 8000),
-          fetchSource(STOCK_LIST_FALLBACK, 9000),
-        ]);
-        const ok = settled.filter(s => s.status === 'fulfilled').map(s => s.value);
-        lastErr = (settled.find(s => s.status === 'rejected') || {}).reason || lastErr;
-        if (ok.length) {
-          // El índice estático va primero → gana en el dedupe (urls r2.dev, no
-          // bloqueadas); el worker añade solo los ids que falten (lo nuevo).
-          const byId = new Map();
-          for (const list of ok) for (const it of list) {
-            if (it && it.id && !byId.has(it.id)) byId.set(it.id, it);
+        const byId = new Map();
+        let hubo = false;
+        const absorber = (lista, mandaEnElDedupe) => {
+          for (const it of lista) {
+            if (!it || !it.id) continue;
+            if (mandaEnElDedupe || !byId.has(it.id)) byId.set(it.id, it);
           }
-          return Array.from(byId.values()).slice(0, 400);
-        }
+          hubo = true;
+          if (onParcial) { try { onParcial(Array.from(byId.values())); } catch (e) {} }
+        };
+        const enCurso = [
+          // 15 s para el worker: tarda ~9 s medidos y el timeout estaba en 9000,
+          // así que se abortaba a sí mismo casi siempre y lo recién publicado no
+          // llegaba nunca. Ahora esperar de más no cuesta: la galería ya está
+          // pintada con el índice desde el primer segundo.
+          fetchSource(STOCK_LIST_FALLBACK, 15000).then(l => absorber(l, false)).catch(e => { lastErr = e; }),
+          fetchSource(STOCK_LIST_URL, 12000).then(l => absorber(l, true)).catch(e => { lastErr = e; }),
+        ];
+        await Promise.all(enCurso);
+        // Sin tope: antes había un .slice(0, 400) que dejaba fuera 358 assets
+        // (los más antiguos) y hacía que el contador dijera «303 de 400» cuando
+        // en el Stock hay 758. No ahorraba red —el JSON se baja entero igual—,
+        // solo escondía catálogo.
+        if (hubo) return Array.from(byId.values());
         if (attempt < 3) await new Promise(res => setTimeout(res, attempt * 800));
       }
       throw lastErr || new Error('no se pudo cargar el stock');
@@ -1693,9 +1718,18 @@
         status.textContent = '// cargando stock...';
         grid.innerHTML = '';
       }
-      // 2) Refresco real en segundo plano.
+      // 2) Refresco real en segundo plano, pintando con cada fuente que llega.
       try {
-        allItems = await fetchList();
+        let pintados = 0;
+        allItems = await fetchList((parcial) => {
+          if (parcial.length <= pintados) return;   // no repintar por menos
+          pintados = parcial.length;
+          allItems = parcial;
+          buildMotorOptions();
+          applyFilters();
+          feedMatrix();
+          status.textContent = '// ' + parcial.length + ' cargados · completando…';
+        });
         writeCache(allItems);
         buildMotorOptions();
         applyFilters();
