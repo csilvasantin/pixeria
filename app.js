@@ -3421,6 +3421,7 @@
     const localInput = document.createElement('input');
     localInput.type = 'file';
     localInput.accept = 'audio/*,video/*,image/*';
+    localInput.multiple = true;   // varios episodios de una tacada, no uno a uno
     localInput.hidden = true;
     localInput.id = 'importLocalFile';
     dlg.appendChild(localInput);
@@ -3428,29 +3429,41 @@
     localBtn.type = 'button';
     localBtn.className = 'btn';
     localBtn.id = 'importLocalBtn';
-    localBtn.textContent = '📂 Archivo local → Stock';
-    localBtn.title = 'Sube un archivo desde este dispositivo directo al Stock (no depende del Mac Mini)';
+    localBtn.textContent = '📂 Archivos locales → Stock';
+    localBtn.title = 'Sube uno o varios archivos de este dispositivo directo al Stock (no depende del Mac Mini)';
     document.querySelector('#importModal .keys-actions')?.appendChild(localBtn);
     localBtn.addEventListener('click', () => localInput.click());
     localInput.addEventListener('change', () => {
-      const file = localInput.files && localInput.files[0];
-      if (file) publishLocalFile(file);
+      const files = Array.from(localInput.files || []);
+      if (files.length) publishLocalFiles(files);
       localInput.value = '';
     });
 
-    // Publica un archivo del dispositivo directo al Stock, sin pasar por el Mac.
-    async function publishLocalFile(file) {
-      if (importInFlight) return;
-      const stat = document.getElementById('importStatus');
-      stat.style.display = 'block';
-      retryBtn.hidden = true;
-      importInFlight = true;
+    // TOPE POR FICHERO. El asset viaja a /stock/publish como data: URL dentro de
+    // un JSON, y base64 infla un 33%: con el límite de 100 MB de cuerpo que tiene
+    // un Worker de Cloudflare, por encima de ~70 MB el POST se cae. Antes eso
+    // salía como un error de red sin explicación después de leer el fichero
+    // entero. El asset más grande que hay hoy en el Stock son 56,5 MB, así que
+    // el tope es real, no teórico. (Carlos, 28-ago-2026.)
+    const MAX_LOCAL = 70 * 1024 * 1024;
+
+    // Publica UN archivo del dispositivo directo al Stock, sin pasar por el Mac.
+    // Devuelve {ok, id, error}; no navega (de eso se encarga el lote).
+    async function publicarUnLocal(file, stat, prefijo) {
       const mt = file.type || '';
       const type = mt.startsWith('video') ? 'video' : mt.startsWith('image') ? 'image' : 'audio';
       const progress = importProgressStart(type === 'video' ? 'video' : 'audio');
       try {
         const sizeMB = (file.size / 1024 / 1024).toFixed(2);
-        stat.textContent = `// archivo local: ${file.name} · ${sizeMB} MB · subiendo al Stock…`;
+        if (file.size > MAX_LOCAL) {
+          progress?.error('demasiado grande');
+          const msg = `${file.name} pesa ${sizeMB} MB y el tope por archivo son 70 MB `
+            + `(el Stock lo recibe en base64, que infla un 33%, y un Worker no admite más de 100 MB de cuerpo). `
+            + `Comprímelo antes o pártelo.`;
+          stat.textContent = `${prefijo}❌ ${msg}`;
+          return { ok: false, error: msg };
+        }
+        stat.textContent = `${prefijo}${file.name} · ${sizeMB} MB · subiendo al Stock…`;
         const dataUrl = await new Promise((res, rej) => {
           const fr = new FileReader();
           fr.onload = () => res(fr.result);
@@ -3470,20 +3483,50 @@
         const result = await publishToStock(meta, null);
         if (result && result.ok) {
           progress?.done(file.size, 0);
-          stat.textContent = `✓ ${file.name} · ✅ en Stock · saltando…`;
-          const newId = result.id || '';
-          setTimeout(() => {
-            try { dlg.close(); } catch {}
-            location.href = 'https://www.pixeria.com/stock.html' + (newId ? '?highlight=' + encodeURIComponent(newId) : '');
-          }, 900);
-        } else {
-          progress?.error('fallo al publicar');
-          stat.textContent = `❌ Stock: ${(result && result.error || 'fallo').slice(0, 140)}`;
+          stat.textContent = `${prefijo}✓ ${file.name} · ✅ en Stock`;
+          return { ok: true, id: result.id || '' };
         }
+        progress?.error('fallo al publicar');
+        const fallo = (result && result.error || 'fallo').slice(0, 140);
+        stat.textContent = `${prefijo}❌ Stock: ${fallo}`;
+        return { ok: false, error: 'Stock: ' + fallo };
       } catch (e) {
         const msg = String(e && e.message || e);
         progress?.error(msg.slice(0, 80));
-        stat.textContent = `// ERROR archivo local: ${msg}`;
+        stat.textContent = `${prefijo}ERROR: ${msg}`;
+        return { ok: false, error: msg };
+      }
+    }
+
+    // Sube VARIOS archivos en serie. Antes solo cabía uno y, además, saltaba al
+    // Stock nada más publicarlo: subir nueve episodios eran nueve vueltas al
+    // diálogo. Ahora se eligen todos de golpe y solo se salta al terminar.
+    async function publishLocalFiles(files) {
+      if (importInFlight) return;
+      const stat = document.getElementById('importStatus');
+      stat.style.display = 'block';
+      retryBtn.hidden = true;
+      importInFlight = true;
+      try {
+        const total = files.length;
+        const hechos = [];
+        for (let i = 0; i < total; i++) {
+          const prefijo = total > 1 ? `// [${i + 1}/${total}] ` : '// ';
+          const r = await publicarUnLocal(files[i], stat, prefijo);
+          hechos.push({ nombre: files[i].name, ...(r || { ok: false, error: 'sin resultado' }) });
+        }
+        const ok = hechos.filter(h => h.ok);
+        if (total > 1) {
+          stat.textContent = `// ${ok.length} de ${total} en el Stock\n`
+            + hechos.map(h => `// ${h.ok ? '✅' : '❌'} ${h.nombre}${h.ok ? '' : ' — ' + String(h.error).slice(0, 160)}`).join('\n');
+        }
+        if (ok.length && ok.length === total) {
+          const newId = ok[ok.length - 1].id || '';
+          setTimeout(() => {
+            try { dlg.close(); } catch {}
+            location.href = 'https://www.pixeria.com/stock.html' + (newId ? '?highlight=' + encodeURIComponent(newId) : '');
+          }, total > 1 ? 1800 : 900);
+        }
       } finally {
         importInFlight = false;
       }
