@@ -3458,8 +3458,9 @@
         if (file.size > MAX_LOCAL) {
           progress?.error('demasiado grande');
           const msg = `${file.name} pesa ${sizeMB} MB y el tope por archivo son 70 MB `
-            + `(el Stock lo recibe en base64, que infla un 33%, y un Worker no admite más de 100 MB de cuerpo). `
-            + `Comprímelo antes o pártelo.`;
+            + `(el Stock lo recibe en base64, que infla un 33%, y el borde corta el cuerpo en 100 MB — 413 medido). `
+            + `Para ficheros grandes usa el script del repo, que lo recodifica solo para que quepa: `
+            + `scripts/stock-subir.py ${file.name}`;
           stat.textContent = `${prefijo}❌ ${msg}`;
           return { ok: false, error: msg };
         }
