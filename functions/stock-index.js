@@ -25,6 +25,13 @@
  */
 const ORIGEN = 'https://pub-bf043a4daa3b43b7a0b769617729d074.r2.dev/stock/index.json';
 
+// HEAD también: Pages no lo deriva a onRequestGet solo, y un `curl -I` (o un
+// chequeo de salud) se comía un 404 de HTML mientras el GET iba perfecto.
+export async function onRequestHead(context) {
+  const r = await onRequestGet(context);
+  return new Response(null, { status: r.status, headers: r.headers });
+}
+
 export async function onRequestGet() {
   let r;
   try {
