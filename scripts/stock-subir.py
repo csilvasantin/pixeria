@@ -9,8 +9,14 @@ de Cloudflare corta el cuerpo de la petición en 100 MB — medido, no estimado:
 un cuerpo de 105 MB devuelve 413 antes de llegar al Worker. Eso deja el techo
 por navegador en ~74 MB de fichero, y un episodio completo no cabe.
 
-Este script hace lo mismo desde el terminal y, cuando el fichero se pasa, lo
-RECODIFICA con ffmpeg para que quepa en vez de rendirse. El original no se toca.
+Cuando el fichero se pasa de ese techo, este script lo SUBE POR PARTES: abre una
+multiparte de R2 en el Worker, manda trozos de 25 MB —cada uno en su propia
+petición, así el límite de cuerpo deja de importar— y lo cierra. Entra entero y
+sin perder un bit.
+
+Si el Worker todavía no tiene esos endpoints, cae al plan B de antes:
+RECODIFICAR con ffmpeg hasta que quepa. Pierde calidad, pero entra. El original
+no se toca en ninguno de los dos casos.
 
 Uso
 ---
@@ -19,11 +25,7 @@ Uso
     ./stock-subir.py --dry-run fichero.mp4     # sin publicar, dice qué haría
 
 Opciones útiles: --tipo, --motor, --titulo, --comentario, --max-mb, --sin-recodificar.
-
-La solución de verdad para ficheros grandes es una subida multiparte a R2 desde
-el Worker (createMultipartUpload), que esquiva el límite de cuerpo troceando.
-Eso exige desplegar pixer-eleven, y el token de la Cúpula de este Mac es solo de
-Pages. Mientras tanto, esto funciona hoy y sin depender de nadie.
+STOCK_API en el entorno apunta a otro Worker (para probar contra `wrangler dev`).
 
 NeoMBP16 · MacBook Pro 16 · 28-08-2026
 """
@@ -35,6 +37,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.error
+import urllib.parse
 import urllib.request
 
 API = os.environ.get("STOCK_API", "https://api.admira.store")
@@ -44,6 +47,15 @@ PUBLISH = API + "/stock/publish"
 # borde, comprobado) y base64 multiplica por 4/3, así que 74 MB es el máximo
 # teórico. 70 deja aire para el resto del JSON y para reintentos.
 MAX_MB_DEF = 70
+
+# Sin User-Agent de navegador, Cloudflare responde 403 «error code: 1010»
+# (Browser Integrity Check) y la petición no llega ni al Worker.
+CABECERAS = {
+    "User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                   "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36"),
+    "Origin": "https://www.pixeria.com",
+    "Referer": "https://www.pixeria.com/stock",
+}
 
 EXT_TIPO = {
     ".mp4": "video", ".mov": "video", ".m4v": "video", ".webm": "video", ".mkv": "video",
@@ -109,6 +121,76 @@ def recodificar(origen, destino, objetivo_bytes, altura_max=720):
     if r.returncode != 0:
         return False, (r.stderr or "").strip()[-300:]
     return True, "%d kbps de vídeo · alto máx %dp" % (video_kbps, altura_max)
+
+
+def pedir(path, obj, metodo="POST", crudo=None, timeout=600):
+    """POST/PUT contra el Worker. Devuelve (ok, dict|str)."""
+    datos = crudo if crudo is not None else json.dumps(obj).encode("utf-8")
+    cab = dict(CABECERAS)
+    cab["Content-Type"] = "application/octet-stream" if crudo is not None else "application/json"
+    req = urllib.request.Request(API + path, data=datos, method=metodo, headers=cab)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return True, json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        return False, "HTTP %s · %s" % (e.code, e.read().decode("utf-8", "replace")[:200])
+    except Exception as e:
+        return False, str(e)
+
+
+def subir_por_partes(path, mime):
+    """Sube el fichero entero a uploads/ troceándolo. Devuelve (clave, detalle).
+
+    clave None + detalle 'sin-soporte' = este Worker todavía no tiene los
+    endpoints; el que llama debe seguir por el camino de siempre.
+    """
+    tam = os.path.getsize(path)
+    ok, ini = pedir("/stock/upload/init", {"mime": mime, "size": tam})
+    if not ok:
+        if "404" in str(ini) or "no encontrado" in str(ini):
+            return None, "sin-soporte"
+        return None, str(ini)
+    key, up = ini.get("key"), ini.get("uploadId")
+    trozo_max = int(ini.get("partSize") or 25 * 1024 * 1024)
+    if not key or not up:
+        return None, "sin-soporte"
+    partes, n, hecho = [], 0, 0
+    with open(path, "rb") as f:
+        while True:
+            trozo = f.read(trozo_max)
+            if not trozo:
+                break
+            n += 1
+            q = "?key=%s&uploadId=%s&n=%d" % (
+                urllib.parse.quote(key, safe=""), urllib.parse.quote(up, safe=""), n)
+            ok, d = pedir("/stock/upload/part" + q, None, crudo=trozo)
+            if not ok:
+                pedir("/stock/upload/abort", {"key": key, "uploadId": up})
+                return None, "trozo %d: %s" % (n, d)
+            partes.append({"partNumber": d["partNumber"], "etag": d["etag"]})
+            hecho += len(trozo)
+            sys.stdout.write("\r      … %d de %d MB en %d trozos" % (hecho // 1048576, tam // 1048576, n))
+            sys.stdout.flush()
+    sys.stdout.write("\r" + " " * 60 + "\r")
+    ok, d = pedir("/stock/upload/complete", {"key": key, "uploadId": up, "parts": partes})
+    if not ok:
+        pedir("/stock/upload/abort", {"key": key, "uploadId": up})
+        return None, "cierre: %s" % d
+    return key, "%d trozos · %.1f MB" % (n, mb(d.get("size") or tam))
+
+
+def publicar_staged(key, tipo, mime, motor, titulo, comentario, prompt):
+    ok, d = pedir("/stock/publish", {
+        "type": tipo, "motor": motor, "mime": mime, "r2Staged": key,
+        "title": (titulo or "")[:120] or None,
+        "comment": (comentario or "")[:500] or None,
+        "prompt": (prompt or "")[:500] or None,
+    })
+    if not ok:
+        return False, str(d)
+    if not d.get("ok", True) and d.get("error"):
+        return False, str(d.get("error"))
+    return True, d.get("id") or "publicado"
 
 
 def publicar(path, tipo, mime, motor, titulo, comentario, prompt, dry):
@@ -188,6 +270,24 @@ def main():
         subir = path
         nota = ""
         print("%s %s · %.1f MB" % (pre, os.path.basename(path), mb(tam)))
+
+        if tam > tope and not a.dry_run:
+            # Primero, subida por partes: entra ENTERO y sin perder calidad.
+            # Recodificar era el plan B de cuando el Worker no sabía trocear.
+            print("      … no cabe en una petición: subiendo por partes")
+            clave, det = subir_por_partes(path, mime)
+            if clave:
+                bien, det2 = publicar_staged(clave, tipo, mime, a.motor,
+                                             a.titulo or os.path.splitext(os.path.basename(path))[0],
+                                             a.comentario, os.path.basename(path))
+                print("      %s %s (%s)" % ("✓" if bien else "✗", det2, det))
+                if bien:
+                    ok += 1
+                continue
+            if det != "sin-soporte":
+                print("      ✗ subida por partes: %s" % det)
+                continue
+            print("      … este Stock aún no trocea; se recodifica para que quepa")
 
         if tam > tope:
             if a.sin_recodificar or tipo != "video":
