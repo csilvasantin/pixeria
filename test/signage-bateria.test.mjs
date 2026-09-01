@@ -90,9 +90,12 @@ test('un 16:9 contra una barra 32:9 se contiene y avisa, no se decapita', () => 
   assert.ok(plan.avisos.some((a) => a.includes('reencuadre')), 'no avisó del reencuadre');
 });
 
-test('apaisado a vertical también se contiene: es el caso del tótem', () => {
+test('apaisado a vertical llena el tótem mediante recorte centrado', () => {
   const plan = planificar(origenFHD, VERTICAL);
-  assert.equal(plan.encaje, 'contener');
+  assert.equal(plan.encaje, 'recortar');
+  assert.ok(plan.recortePerdido > 0.6, 'el plan debe declarar la pérdida lateral real');
+  assert.ok(plan.avisos.some((a) => a.includes('adaptación vertical automática')),
+    'la adaptación automática debe quedar explicada');
 });
 
 test('la gama vieja fuerza Main@3.1 aunque el original venga en High', () => {
