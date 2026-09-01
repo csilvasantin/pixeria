@@ -16,6 +16,7 @@ const BARRA = PERFILES_POR_ID.get('barra-lg-88bh7d');
 const VERTICAL = PERFILES_POR_ID.get('fhd-portrait');
 
 const origenFHD = {ancho: 1920, alto: 1080, bitrateKbps: 12000, fps: 30, duracion: 10, audio: true};
+const motor = readFileSync(new URL('../scripts/signage-bateria.mjs', import.meta.url), 'utf8');
 
 test('la sección vive en /tester y no se añade al menú superior', () => {
   const pagina = readFileSync(new URL('../tester/index.html', import.meta.url), 'utf8');
@@ -108,6 +109,33 @@ test('apaisado a vertical llena el tótem mediante recorte centrado', () => {
     'la adaptación automática debe quedar explicada');
 });
 
+test('vertical a apaisado conserva el centro y exige laterales generativos', () => {
+  const vertical = {ancho: 1080, alto: 1920, bitrateKbps: 6000, fps: 30, duracion: 8, audio: true};
+  const plan = planificar(vertical, FHD);
+  assert.equal(plan.encaje, 'expandir');
+  assert.equal(plan.adaptacion, 'laterales-generativos');
+  assert.equal(plan.requiereIA, true);
+  assert.equal(plan.preservarCentro, true);
+  assert.ok(plan.avisos.some((a) => a.includes('imagina únicamente los laterales')),
+    'el plan debe explicar qué parte puede inventar la IA');
+});
+
+test('el motor solo activa la IA con consentimiento y repone el centro original', () => {
+  assert.match(motor, /--ia-laterales/);
+  assert.match(motor, /\/xai\/video\/edit/);
+  assert.match(motor, /X-AdmiraNeXT-Ingest/);
+  assert.match(motor, /overlay=\(W-w\)\/2:0:shortest=1/);
+  assert.match(motor, /-map', '1:a\?'/, 'el resultado debe recuperar el audio original');
+});
+
+test('el tester explica y previsualiza los laterales generativos sin fingir el resultado', () => {
+  const pagina = readFileSync(new URL('../tester/index.html', import.meta.url), 'utf8');
+  assert.match(pagina, /la IA imagina este lateral/);
+  assert.match(pagina, /centro-protegido/);
+  assert.match(pagina, /--ia-laterales/);
+  assert.match(pagina, /laterales generativos/);
+});
+
 test('la gama vieja fuerza Main@3.1 aunque el original venga en High', () => {
   const plan = planificar(origenFHD, LEGACY);
   assert.equal(plan.h264Perfil, 'main');
@@ -180,6 +208,6 @@ test('todos los perfiles del censo producen un plan válido desde un mismo origi
     assert.equal(plan.ancho, p.ancho, `${p.id}: ancho mal planificado`);
     assert.ok(plan.bitrateKbps > 0, `${p.id}: bitrate cero`);
     assert.ok(plan.bitrateKbps <= p.techoKbps, `${p.id}: se pasa del techo`);
-    assert.ok(['exacto', 'contener', 'recortar'].includes(plan.encaje), `${p.id}: encaje raro`);
+    assert.ok(['exacto', 'contener', 'recortar', 'expandir'].includes(plan.encaje), `${p.id}: encaje raro`);
   }
 });

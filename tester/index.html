@@ -99,6 +99,11 @@
   .marco{ margin:0 12px; border:2px solid rgba(0,255,65,.5); background:#000;
     position:relative; overflow:hidden; max-height:280px; }
   .marco img, .marco video{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .expansion-ia{ position:absolute; inset:0; display:flex; justify-content:space-between;
+    background:linear-gradient(90deg,rgba(0,255,65,.09),rgba(0,255,65,.02) 35%,#000 35%,#000 65%,rgba(0,255,65,.02) 65%,rgba(0,255,65,.09)); }
+  .expansion-ia span{ width:34%; display:grid; place-items:center; font-size:9px; letter-spacing:.12em;
+    text-align:center; text-transform:uppercase; color:var(--dim); border:1px dashed rgba(0,255,65,.25); }
+  .marco .centro-protegido{ z-index:1; object-fit:contain; }
   /* La chapa va FUERA del marco: en una barra de 44 px de alto, encima tapaba
      justo el contenido que la prueba existe para enseñar. */
   .chapa{ margin:4px 12px 0; font-size:10px; letter-spacing:.1em; color:var(--dim); opacity:.75;
@@ -148,7 +153,8 @@
          estirada y tira más bitrate del que aguanta un reproductor Android de entrada. Aquí eso se ve antes
          de llegar a la tienda: se prueba contra el parque real —Samsung, Philips, LG, TCL— bajando el bitrate
          y adaptando la resolución cuando hace falta. Un vídeo horizontal llena automáticamente los perfiles
-         verticales mediante recorte centrado; el panel indica la pérdida lateral para poder reencuadrarlo.</p>
+         verticales mediante recorte centrado tipo TikTok. En el sentido contrario, un vídeo vertical
+         conserva intacto el centro y la IA imagina únicamente los laterales necesarios para llenar 16:9.</p>
     </div>
   </details>
 </header>
@@ -186,8 +192,10 @@
          eso lo hace el motor, con ffmpeg, y su veredicto se carga aquí desde
          <code>signage/bateria-informe.json</code> cuando existe. El motor no se fía de que ffmpeg devuelva 0:
          vuelve a leer cada fichero de salida con ffprobe y compara con lo que se pidió. En los tótems, un
-         original horizontal se adapta a 9:16 llenando la pantalla con un recorte centrado, no con bandas negras.</p>
-      <pre>node scripts/signage-bateria.mjs mi-campana.mp4 --limpiar</pre>
+         original horizontal se adapta a 9:16 llenando la pantalla con un recorte centrado, no con bandas negras.
+         Al pasar de vertical a horizontal, prepara un lienzo 16:9, genera el contexto lateral con IA y vuelve
+         a superponer el original centrado para proteger su imagen y su audio.</p>
+      <pre>node scripts/signage-bateria.mjs mi-campana.mp4 --ia-laterales --limpiar</pre>
       <p>Sale un fichero por pantalla en <code>signage/variantes/</code> y el informe con el veredicto.
          El proceso solo termina en error si alguna pantalla <em>falla</em>; «ajustada» es información,
          no error — una barra estirada siempre saldrá ajustada.</p>
@@ -268,6 +276,9 @@ function veredictoDelMotor(perfilId) {
 }
 
 function comandoFfmpeg(plan) {
+  if (plan.encaje === 'expandir') {
+    return 'node scripts/signage-bateria.mjs entrada.mp4 --ia-laterales --perfiles ' + plan.perfilId;
+  }
   const filtro = plan.encaje === 'recortar'
     ? `scale=${plan.ancho}:${plan.alto}:force_original_aspect_ratio=increase,crop=${plan.ancho}:${plan.alto},setsar=1`
     : plan.encaje === 'contener'
@@ -308,9 +319,14 @@ function pintar() {
     if (soloProblemas && juicio.veredicto === 'ok') continue;
 
     const encaje = plan.encaje === 'recortar' ? 'cover' : 'contain';
+    const expansion = plan.encaje === 'expandir'
+      ? '<div class="expansion-ia" aria-hidden="true"><span>la IA imagina este lateral</span><span>la IA imagina este lateral</span></div>'
+      : '';
+    const claseMedio = plan.encaje === 'expandir' ? ' class="centro-protegido"' : '';
     const medio = sujeto.tipo === 'video'
-      ? `<video src="${sujeto.url}" autoplay muted loop playsinline style="object-fit:${encaje}"></video>`
-      : `<img src="${sujeto.url}" alt="" style="object-fit:${encaje}">`;
+      ? `${expansion}<video${claseMedio} src="${sujeto.url}" autoplay muted loop playsinline style="object-fit:${encaje}"></video>`
+      : `${expansion}<img${claseMedio} src="${sujeto.url}" alt="" style="object-fit:${encaje}">`;
+    const nombreEncaje = plan.encaje === 'expandir' ? 'laterales generativos' : plan.encaje;
 
     tarjetas.push(`<article class="pantalla">
       <h2>${perfil.nombre}</h2>
@@ -322,7 +338,7 @@ function pintar() {
           <span class="chip ${juicio.veredicto}">${juicio.veredicto}</span></div>
         <div class="fila"><span>bitrate</span><span>${plan.bitrateKbps} kbps <small style="opacity:.6">(techo ${perfil.techoKbps})</small></span></div>
         <div class="fila"><span>códec</span><span>H.264 ${plan.h264Perfil}@${plan.h264Nivel}</span></div>
-        <div class="fila"><span>encaje</span><span>${plan.encaje}</span></div>
+        <div class="fila"><span>adaptación</span><span>${nombreEncaje}</span></div>
         ${motor ? `<div class="fila" style="border-top:1px dashed rgba(0,255,65,.22);padding-top:6px;margin-top:2px">
             <span>última batería<br><small style="opacity:.6">${esc(informe.origen.fichero)}</small></span>
             <span style="text-align:right"><span class="chip ${motor.veredicto}">${motor.veredicto}</span><br>

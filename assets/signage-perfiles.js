@@ -182,12 +182,21 @@ export function planificar(origen, perfil) {
   const adaptacionVertical = perfil.orientacion === 'vertical' &&
     origen.ancho > origen.alto && perfil.alto > perfil.ancho;
 
+  // En el sentido contrario no recortamos la cabeza ni ponemos dos barras
+  // negras: el vídeo vertical es la zona protegida y los laterales se generan
+  // como continuación del escenario. El motor vuelve a superponer el original
+  // centrado después de la IA, así que esa zona no cambia ni un píxel.
+  const adaptacionHorizontal = perfil.orientacion === 'apaisada' &&
+    origen.alto > origen.ancho && perfil.ancho > perfil.alto;
+
   // `contener` mete la imagen entera y rellena con negro; `recortar` llena la
   // pantalla y sacrifica bordes. Por defecto contenemos cuando la pérdida es
   // grande, salvo en la adaptación apaisado→vertical descrita arriba.
   const encaje = mismoEncuadre
     ? 'exacto'
-    : (adaptacionVertical ? 'recortar' : (perdido > RECORTE_MAXIMO_ACEPTABLE ? 'contener' : 'recortar'));
+    : (adaptacionVertical ? 'recortar'
+      : (adaptacionHorizontal ? 'expandir'
+        : (perdido > RECORTE_MAXIMO_ACEPTABLE ? 'contener' : 'recortar')));
 
   const bitrate = bitrateObjetivo(origen, perfil);
   const [h264Perfil, h264Nivel] = String(perfil.h264).split('@');
@@ -197,7 +206,10 @@ export function planificar(origen, perfil) {
     avisos.push(`reencuadre humano recomendado: recortar perdería el ${Math.round(perdido * 100)}% de la imagen`);
   }
   if (adaptacionVertical) {
-    avisos.push(`adaptación vertical automática: recorte centrado del ${Math.round(perdido * 100)}% de los laterales`);
+    avisos.push(`adaptación vertical automática tipo TikTok: centro prioritario y recorte del ${Math.round(perdido * 100)}% de los laterales`);
+  }
+  if (adaptacionHorizontal) {
+    avisos.push('expansión generativa horizontal: conserva el vídeo vertical centrado e imagina únicamente los laterales');
   }
   if (perfil.ancho > origen.ancho || perfil.alto > origen.alto) {
     avisos.push('el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo');
@@ -211,6 +223,9 @@ export function planificar(origen, perfil) {
     ancho: perfil.ancho,
     alto: perfil.alto,
     encaje,
+    adaptacion: adaptacionVertical ? 'centro-tiktok' : (adaptacionHorizontal ? 'laterales-generativos' : 'estandar'),
+    requiereIA: adaptacionHorizontal,
+    preservarCentro: adaptacionVertical || adaptacionHorizontal,
     recortePerdido: Number(perdido.toFixed(4)),
     bitrateKbps: bitrate.kbps,
     bitrateMotivo: bitrate.motivo,
@@ -279,6 +294,7 @@ export function verificar(plan, sonda, origen = {}) {
   for (const aviso of plan.avisos || []) notas.push(aviso);
   if (plan.encaje === 'contener') notas.push('sale con bandas negras: la imagen entera cabe, pero no llena');
   if (plan.encaje === 'recortar') notas.push(`llena la pantalla recortando el ${Math.round(plan.recortePerdido * 100)}% de los bordes`);
+  if (plan.encaje === 'expandir') notas.push('llena la pantalla con laterales generados por IA y conserva intacto el centro original');
 
   const veredicto = fallos.length ? 'fallo' : (notas.length ? 'ajustado' : 'ok');
   return { veredicto, fallos, notas };
