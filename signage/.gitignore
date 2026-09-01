@@ -1,0 +1,4 @@
+# Las variantes son artefactos: se regeneran con
+#   node scripts/signage-bateria.mjs <original>
+# y pesan decenas de MB. Al repo va el informe (texto), nunca el vídeo.
+variantes/

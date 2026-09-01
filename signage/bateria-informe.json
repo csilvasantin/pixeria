@@ -1,0 +1,528 @@
+{
+  "generadoEn": "2026-09-01T08:03:20.364Z",
+  "herramienta": "pixeria/signage-bateria",
+  "origen": {
+    "ancho": 1920,
+    "alto": 1080,
+    "codec": "h264",
+    "h264Perfil": "high",
+    "h264Nivel": "4.0",
+    "bitrateKbps": 13222,
+    "fps": 30,
+    "duracion": 6,
+    "audio": true,
+    "fichero": "campana-demo.mp4",
+    "tipo": "video"
+  },
+  "resumen": {
+    "ok": 4,
+    "ajustado": 6,
+    "fallo": 0,
+    "total": 10,
+    "bytesTotales": 60345504
+  },
+  "pruebas": [
+    {
+      "perfil": {
+        "id": "uhd-4k-landscape",
+        "nombre": "UHD 4K apaisada",
+        "familias": [
+          "Samsung QMx/QBx",
+          "LG UM5N / UL3J",
+          "Philips Q-Line",
+          "TCL 4K"
+        ],
+        "ancho": 3840,
+        "alto": 2160,
+        "orientacion": "apaisada",
+        "techoKbps": 20000,
+        "h264": "high@5.1"
+      },
+      "plan": {
+        "perfilId": "uhd-4k-landscape",
+        "ancho": 3840,
+        "alto": 2160,
+        "encaje": "exacto",
+        "recortePerdido": 0,
+        "bitrateKbps": 13222,
+        "bitrateMotivo": "el origen ya cabe: no se re-infla",
+        "h264Perfil": "high",
+        "h264Nivel": "5.1",
+        "fps": 30,
+        "gopSegundos": 2,
+        "avisos": [
+          "el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo"
+        ]
+      },
+      "sonda": {
+        "ancho": 3840,
+        "alto": 2160,
+        "codec": "h264",
+        "h264Perfil": "high",
+        "h264Nivel": "5.1",
+        "bitrateKbps": 13826,
+        "fps": 30,
+        "duracion": 6,
+        "audio": true
+      },
+      "veredicto": "ajustado",
+      "fallos": [],
+      "notas": [
+        "el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo"
+      ],
+      "variante": "signage/variantes/campana-demo--uhd-4k-landscape.mp4",
+      "bytes": 10470545,
+      "segundos": 3.2
+    },
+    {
+      "perfil": {
+        "id": "fhd-landscape",
+        "nombre": "Full HD apaisada",
+        "familias": [
+          "Samsung QMR/QBR",
+          "LG UL3G / SM5KE",
+          "Philips D-Line",
+          "TCL FHD"
+        ],
+        "ancho": 1920,
+        "alto": 1080,
+        "orientacion": "apaisada",
+        "techoKbps": 8000,
+        "h264": "high@4.0"
+      },
+      "plan": {
+        "perfilId": "fhd-landscape",
+        "ancho": 1920,
+        "alto": 1080,
+        "encaje": "exacto",
+        "recortePerdido": 0,
+        "bitrateKbps": 8000,
+        "bitrateMotivo": "el origen (13222 kbps) supera el techo del perfil",
+        "h264Perfil": "high",
+        "h264Nivel": "4.0",
+        "fps": 30,
+        "gopSegundos": 2,
+        "avisos": []
+      },
+      "sonda": {
+        "ancho": 1920,
+        "alto": 1080,
+        "codec": "h264",
+        "h264Perfil": "high",
+        "h264Nivel": "4.0",
+        "bitrateKbps": 8790,
+        "fps": 30,
+        "duracion": 6,
+        "audio": true
+      },
+      "veredicto": "ok",
+      "fallos": [],
+      "notas": [],
+      "variante": "signage/variantes/campana-demo--fhd-landscape.mp4",
+      "bytes": 6694222,
+      "segundos": 1
+    },
+    {
+      "perfil": {
+        "id": "fhd-portrait",
+        "nombre": "Full HD vertical (tótem)",
+        "familias": [
+          "Samsung KM24C",
+          "Philips tótem 10BDL",
+          "LG 55EW5PG"
+        ],
+        "ancho": 1080,
+        "alto": 1920,
+        "orientacion": "vertical",
+        "techoKbps": 8000,
+        "h264": "high@4.0"
+      },
+      "plan": {
+        "perfilId": "fhd-portrait",
+        "ancho": 1080,
+        "alto": 1920,
+        "encaje": "contener",
+        "recortePerdido": 0.6836,
+        "bitrateKbps": 8000,
+        "bitrateMotivo": "el origen (13222 kbps) supera el techo del perfil",
+        "h264Perfil": "high",
+        "h264Nivel": "4.0",
+        "fps": 30,
+        "gopSegundos": 2,
+        "avisos": [
+          "reencuadre humano recomendado: recortar perdería el 68% de la imagen",
+          "el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo"
+        ]
+      },
+      "sonda": {
+        "ancho": 1080,
+        "alto": 1920,
+        "codec": "h264",
+        "h264Perfil": "high",
+        "h264Nivel": "4.0",
+        "bitrateKbps": 6215,
+        "fps": 30,
+        "duracion": 6,
+        "audio": true
+      },
+      "veredicto": "ajustado",
+      "fallos": [],
+      "notas": [
+        "reencuadre humano recomendado: recortar perdería el 68% de la imagen",
+        "el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo",
+        "sale con bandas negras: la imagen entera cabe, pero no llena"
+      ],
+      "variante": "signage/variantes/campana-demo--fhd-portrait.mp4",
+      "bytes": 4762405,
+      "segundos": 0.8
+    },
+    {
+      "perfil": {
+        "id": "uhd-portrait",
+        "nombre": "UHD 4K vertical",
+        "familias": [
+          "Samsung QBx girada",
+          "LG UM5N girada"
+        ],
+        "ancho": 2160,
+        "alto": 3840,
+        "orientacion": "vertical",
+        "techoKbps": 20000,
+        "h264": "high@5.1"
+      },
+      "plan": {
+        "perfilId": "uhd-portrait",
+        "ancho": 2160,
+        "alto": 3840,
+        "encaje": "contener",
+        "recortePerdido": 0.6836,
+        "bitrateKbps": 13222,
+        "bitrateMotivo": "el origen ya cabe: no se re-infla",
+        "h264Perfil": "high",
+        "h264Nivel": "5.1",
+        "fps": 30,
+        "gopSegundos": 2,
+        "avisos": [
+          "reencuadre humano recomendado: recortar perdería el 68% de la imagen",
+          "el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo"
+        ]
+      },
+      "sonda": {
+        "ancho": 2160,
+        "alto": 3840,
+        "codec": "h264",
+        "h264Perfil": "high",
+        "h264Nivel": "5.1",
+        "bitrateKbps": 9619,
+        "fps": 30,
+        "duracion": 6,
+        "audio": true
+      },
+      "veredicto": "ajustado",
+      "fallos": [],
+      "notas": [
+        "reencuadre humano recomendado: recortar perdería el 68% de la imagen",
+        "el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo",
+        "sale con bandas negras: la imagen entera cabe, pero no llena"
+      ],
+      "variante": "signage/variantes/campana-demo--uhd-portrait.mp4",
+      "bytes": 7315425,
+      "segundos": 2.3
+    },
+    {
+      "perfil": {
+        "id": "qhd-landscape",
+        "nombre": "QHD apaisada",
+        "familias": [
+          "Philips B-Line",
+          "TCL gama media"
+        ],
+        "ancho": 2560,
+        "alto": 1440,
+        "orientacion": "apaisada",
+        "techoKbps": 12000,
+        "h264": "high@4.2"
+      },
+      "plan": {
+        "perfilId": "qhd-landscape",
+        "ancho": 2560,
+        "alto": 1440,
+        "encaje": "exacto",
+        "recortePerdido": 0,
+        "bitrateKbps": 12000,
+        "bitrateMotivo": "el origen (13222 kbps) supera el techo del perfil",
+        "h264Perfil": "high",
+        "h264Nivel": "4.2",
+        "fps": 30,
+        "gopSegundos": 2,
+        "avisos": [
+          "el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo"
+        ]
+      },
+      "sonda": {
+        "ancho": 2560,
+        "alto": 1440,
+        "codec": "h264",
+        "h264Perfil": "high",
+        "h264Nivel": "4.2",
+        "bitrateKbps": 12633,
+        "fps": 30,
+        "duracion": 6,
+        "audio": true
+      },
+      "veredicto": "ajustado",
+      "fallos": [],
+      "notas": [
+        "el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo"
+      ],
+      "variante": "signage/variantes/campana-demo--qhd-landscape.mp4",
+      "bytes": 9576279,
+      "segundos": 1.6
+    },
+    {
+      "perfil": {
+        "id": "hd-legacy",
+        "nombre": "HD heredada (parque viejo)",
+        "familias": [
+          "LG SM3C",
+          "Samsung DB-E",
+          "Philips BDL4051D"
+        ],
+        "ancho": 1366,
+        "alto": 768,
+        "orientacion": "apaisada",
+        "techoKbps": 4000,
+        "h264": "main@3.1"
+      },
+      "plan": {
+        "perfilId": "hd-legacy",
+        "ancho": 1366,
+        "alto": 768,
+        "encaje": "exacto",
+        "recortePerdido": 0.0005,
+        "bitrateKbps": 4000,
+        "bitrateMotivo": "el origen (13222 kbps) supera el techo del perfil",
+        "h264Perfil": "main",
+        "h264Nivel": "3.1",
+        "fps": 30,
+        "gopSegundos": 2,
+        "avisos": []
+      },
+      "sonda": {
+        "ancho": 1366,
+        "alto": 768,
+        "codec": "h264",
+        "h264Perfil": "main",
+        "h264Nivel": "3.1",
+        "bitrateKbps": 4344,
+        "fps": 30,
+        "duracion": 6,
+        "audio": true
+      },
+      "veredicto": "ok",
+      "fallos": [],
+      "notas": [],
+      "variante": "signage/variantes/campana-demo--hd-legacy.mp4",
+      "bytes": 3359376,
+      "segundos": 0.6
+    },
+    {
+      "perfil": {
+        "id": "hd-720-android",
+        "nombre": "HD 720 (reproductor Android de entrada)",
+        "familias": [
+          "TCL entrada",
+          "Philips D-Line SoC",
+          "palos Android genéricos"
+        ],
+        "ancho": 1280,
+        "alto": 720,
+        "orientacion": "apaisada",
+        "techoKbps": 3000,
+        "h264": "main@3.1"
+      },
+      "plan": {
+        "perfilId": "hd-720-android",
+        "ancho": 1280,
+        "alto": 720,
+        "encaje": "exacto",
+        "recortePerdido": 0,
+        "bitrateKbps": 3000,
+        "bitrateMotivo": "el origen (13222 kbps) supera el techo del perfil",
+        "h264Perfil": "main",
+        "h264Nivel": "3.1",
+        "fps": 30,
+        "gopSegundos": 2,
+        "avisos": []
+      },
+      "sonda": {
+        "ancho": 1280,
+        "alto": 720,
+        "codec": "h264",
+        "h264Perfil": "main",
+        "h264Nivel": "3.1",
+        "bitrateKbps": 3227,
+        "fps": 30,
+        "duracion": 6,
+        "audio": true
+      },
+      "veredicto": "ok",
+      "fallos": [],
+      "notas": [],
+      "variante": "signage/variantes/campana-demo--hd-720-android.mp4",
+      "bytes": 2522013,
+      "segundos": 0.6
+    },
+    {
+      "perfil": {
+        "id": "barra-samsung-ohn",
+        "nombre": "Barra estirada Samsung",
+        "familias": [
+          "Samsung OHN-D",
+          "Samsung OMN-D stretch"
+        ],
+        "ancho": 1920,
+        "alto": 540,
+        "orientacion": "barra",
+        "techoKbps": 4000,
+        "h264": "high@4.0"
+      },
+      "plan": {
+        "perfilId": "barra-samsung-ohn",
+        "ancho": 1920,
+        "alto": 540,
+        "encaje": "contener",
+        "recortePerdido": 0.5,
+        "bitrateKbps": 4000,
+        "bitrateMotivo": "el origen (13222 kbps) supera el techo del perfil",
+        "h264Perfil": "high",
+        "h264Nivel": "4.0",
+        "fps": 30,
+        "gopSegundos": 2,
+        "avisos": [
+          "reencuadre humano recomendado: recortar perdería el 50% de la imagen"
+        ]
+      },
+      "sonda": {
+        "ancho": 1920,
+        "alto": 540,
+        "codec": "h264",
+        "h264Perfil": "high",
+        "h264Nivel": "4.0",
+        "bitrateKbps": 4147,
+        "fps": 30,
+        "duracion": 6,
+        "audio": true
+      },
+      "veredicto": "ajustado",
+      "fallos": [],
+      "notas": [
+        "reencuadre humano recomendado: recortar perdería el 50% de la imagen",
+        "sale con bandas negras: la imagen entera cabe, pero no llena"
+      ],
+      "variante": "signage/variantes/campana-demo--barra-samsung-ohn.mp4",
+      "bytes": 3211391,
+      "segundos": 0.6
+    },
+    {
+      "perfil": {
+        "id": "barra-lg-88bh7d",
+        "nombre": "Barra estirada LG 88\"",
+        "familias": [
+          "LG 88BH7D",
+          "LG 86BH5F"
+        ],
+        "ancho": 3840,
+        "alto": 600,
+        "orientacion": "barra",
+        "techoKbps": 8000,
+        "h264": "high@4.2"
+      },
+      "plan": {
+        "perfilId": "barra-lg-88bh7d",
+        "ancho": 3840,
+        "alto": 600,
+        "encaje": "contener",
+        "recortePerdido": 0.7222,
+        "bitrateKbps": 8000,
+        "bitrateMotivo": "el origen (13222 kbps) supera el techo del perfil",
+        "h264Perfil": "high",
+        "h264Nivel": "4.2",
+        "fps": 30,
+        "gopSegundos": 2,
+        "avisos": [
+          "reencuadre humano recomendado: recortar perdería el 72% de la imagen",
+          "el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo"
+        ]
+      },
+      "sonda": {
+        "ancho": 3840,
+        "alto": 600,
+        "codec": "h264",
+        "h264Perfil": "high",
+        "h264Nivel": "4.2",
+        "bitrateKbps": 7446,
+        "fps": 30,
+        "duracion": 6,
+        "audio": true
+      },
+      "veredicto": "ajustado",
+      "fallos": [],
+      "notas": [
+        "reencuadre humano recomendado: recortar perdería el 72% de la imagen",
+        "el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo",
+        "sale con bandas negras: la imagen entera cabe, pero no llena"
+      ],
+      "variante": "signage/variantes/campana-demo--barra-lg-88bh7d.mp4",
+      "bytes": 5685704,
+      "segundos": 0.8
+    },
+    {
+      "perfil": {
+        "id": "videowall-tile-fhd",
+        "nombre": "Baldosa de videowall Full HD",
+        "familias": [
+          "Samsung VMx-E",
+          "LG VH7J",
+          "mosaico 2x2 y 3x3"
+        ],
+        "ancho": 1920,
+        "alto": 1080,
+        "orientacion": "apaisada",
+        "techoKbps": 8000,
+        "h264": "high@4.0"
+      },
+      "plan": {
+        "perfilId": "videowall-tile-fhd",
+        "ancho": 1920,
+        "alto": 1080,
+        "encaje": "exacto",
+        "recortePerdido": 0,
+        "bitrateKbps": 8000,
+        "bitrateMotivo": "el origen (13222 kbps) supera el techo del perfil",
+        "h264Perfil": "high",
+        "h264Nivel": "4.0",
+        "fps": 30,
+        "gopSegundos": 1,
+        "avisos": []
+      },
+      "sonda": {
+        "ancho": 1920,
+        "alto": 1080,
+        "codec": "h264",
+        "h264Perfil": "high",
+        "h264Nivel": "4.0",
+        "bitrateKbps": 8862,
+        "fps": 30,
+        "duracion": 6,
+        "audio": true
+      },
+      "veredicto": "ok",
+      "fallos": [],
+      "notas": [],
+      "variante": "signage/variantes/campana-demo--videowall-tile-fhd.mp4",
+      "bytes": 6748144,
+      "segundos": 1
+    }
+  ]
+}

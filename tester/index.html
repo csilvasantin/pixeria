@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- ═══════════════ VERJA DE ACCESO · PIXERIA CERRADO HASTA LANZAMIENTO ═══════════════
+       Reutiliza la MISMA verja del ecosistema (admira.live / admiranext.com): auth-gate.js,
+       login con Google + misma whitelist de usuarios (worker admira-whitelist). Verja ACTIVA
+       por defecto. ?gate=off es un escape SOLO para esa carga (no persiste), por si el login
+       falla. Mientras esté cerrado: meta noindex + robots.txt Disallow.
+       PARA REABRIR EL SITIO EL DÍA DEL LANZAMIENTO: borrar TODO este bloque (marcadores
+       GATE-INICIO … GATE-FIN) de cada .html, restaurar robots.public.txt → robots.txt y
+       borrar /auth-gate.js. Ver checklist en el PR de la verja. -->
+  <!-- GATE-INICIO -->
+  <meta name="robots" content="noindex, nofollow">
+  <script>
+  (function(){
+    var GATE_DEFAULT = 'on';                       // verja activa — sitio cerrado
+    var on = GATE_DEFAULT;
+    try{
+      var q = new URLSearchParams(location.search).get('gate');
+      if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
+    }catch(e){}
+    if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=20260813-auth-redirect';
+    (document.head||document.documentElement).appendChild(s);
+    // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
+    // origen aún no esté autorizado en Google → mensaje claro en pantalla.
+    setTimeout(function(){
+      if(!document.documentElement.classList.contains('gate-locked')) return;
+      var el=document.getElementById('admira-err');
+      if(el && !el.textContent) el.textContent='\u2716 SI EL LOGIN NO ABRE: ORIGEN www.pixeria.com PENDIENTE DE AUTORIZAR EN GOOGLE CLOUD';
+    }, 10000);
+  })();
+  </script>
+  <!-- GATE-FIN -->
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="admiranext-version" content="Pixeria v.01.09.2026.r2.15:00">
+<link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
+<link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
+<link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
+  <title>Tester · Contenidos de prueba para digital signage | Pixeria</title>
+  <meta name="description" content="Tester de Pixeria crea y valida contenidos de digital signage contra hardware real, con resoluciones, bitrates y perfiles H.264 específicos.">
+  <meta name="theme-color" content="#020602">
+  <link rel="canonical" href="https://www.pixeria.com/tester">
+  <link rel="alternate" hreflang="es" href="https://www.pixeria.com/tester">
+  <link rel="alternate" hreflang="x-default" href="https://www.pixeria.com/tester">
+<style>
+  :root{ --matrix:#00ff41; --deep:#00b82e; --bg:#020602; --panel:#04140a; --dim:#7dff9e; --warn:#ffd166; --bad:#ff5c5c; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--matrix); font-family:"JetBrains Mono",ui-monospace,monospace; line-height:1.5; padding-bottom:80px; }
+  a{ color:var(--dim); }
+  .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+  body::after{ content:""; position:fixed; inset:0; z-index:100; pointer-events:none;
+    background:repeating-linear-gradient(180deg,rgba(0,255,65,.035) 0,rgba(0,255,65,.035) 1px,transparent 1px,transparent 3px); }
+  header{ padding:22px 24px 14px; border-bottom:1px solid rgba(0,255,65,.25); }
+  header .brand{ font-size:11px; letter-spacing:.22em; text-transform:uppercase; text-shadow:0 0 6px var(--matrix); }
+  header h1{ font-size:clamp(20px,3.2vw,30px); letter-spacing:.04em; margin-top:8px; text-shadow:0 0 14px rgba(0,255,65,.5); }
+  header p{ color:var(--dim); opacity:.8; font-size:13px; max-width:76ch; margin-top:8px; }
+  .wrap{ padding:20px 24px; max-width:1500px; margin:0 auto; }
+  /* Mando: opciones a la IZQUIERDA, lo avanzado plegado a la DERECHA. */
+  .mando{ display:grid; grid-template-columns:minmax(300px,1fr) auto; gap:20px; align-items:start;
+    border:1px solid rgba(0,255,65,.3); background:var(--panel); padding:16px; margin-bottom:22px; }
+  .op{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  button, .file label{ font:inherit; font-size:12px; letter-spacing:.08em; text-transform:uppercase; cursor:pointer;
+    background:transparent; color:var(--matrix); border:1px solid var(--deep); padding:8px 14px; }
+  button:hover, .file label:hover{ background:rgba(0,255,65,.12); box-shadow:0 0 12px rgba(0,255,65,.35); }
+  button[aria-pressed="true"]{ background:var(--matrix); color:#020602; font-weight:700; }
+  .file input{ display:none; }
+  .avanzado{ text-align:right; }
+  .avanzado > summary{ list-style:none; cursor:pointer; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); }
+  .avanzado > summary::-webkit-details-marker{ display:none; }
+  .avanzado > summary::before{ content:"⚙ "; }
+  .avanzado .cuerpo{ margin-top:12px; display:grid; gap:8px; justify-items:end; font-size:12px; }
+  .origen{ font-size:12px; color:var(--dim); opacity:.85; margin-top:10px; grid-column:1/-1; border-top:1px dashed rgba(0,255,65,.25); padding-top:10px; }
+  .zona{ border:1px dashed rgba(0,255,65,.4); padding:10px 14px; font-size:12px; color:var(--dim); }
+  .zona.sobre{ background:rgba(0,255,65,.12); border-color:var(--matrix); }
+  .resumen{ display:flex; gap:18px; flex-wrap:wrap; font-size:12px; margin-bottom:16px; letter-spacing:.06em; }
+  .resumen b{ font-size:20px; display:block; }
+  .rejilla{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px; }
+  .pantalla{ border:1px solid rgba(0,255,65,.3); background:var(--panel); display:flex; flex-direction:column; }
+  .pantalla h2{ font-size:13px; letter-spacing:.06em; padding:10px 12px 0; }
+  .pantalla .fam{ font-size:11px; color:var(--dim); opacity:.7; padding:2px 12px 10px; }
+  /* El marco replica la geometría REAL del panel: la relación de aspecto la fija
+     el perfil, no el diseño de la tarjeta. Por eso una barra 32:9 se ve como una
+     barra y un tótem como un tótem. */
+  .marco{ margin:0 12px; border:2px solid rgba(0,255,65,.5); background:#000;
+    position:relative; overflow:hidden; max-height:280px; }
+  .marco img, .marco video{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  /* La chapa va FUERA del marco: en una barra de 44 px de alto, encima tapaba
+     justo el contenido que la prueba existe para enseñar. */
+  .chapa{ margin:4px 12px 0; font-size:10px; letter-spacing:.1em; color:var(--dim); opacity:.75;
+    display:flex; justify-content:space-between; gap:8px; }
+  .datos{ padding:12px; display:grid; gap:6px; font-size:11.5px; color:var(--dim); }
+  .datos .fila{ display:flex; justify-content:space-between; gap:10px; }
+  .datos .fila span:last-child{ color:var(--matrix); }
+  .chip{ display:inline-block; font-size:10px; letter-spacing:.12em; text-transform:uppercase; padding:2px 8px; border:1px solid; }
+  .chip.ok{ color:var(--matrix); border-color:var(--matrix); }
+  .chip.ajustado{ color:var(--warn); border-color:var(--warn); }
+  .chip.fallo{ color:var(--bad); border-color:var(--bad); background:rgba(255,92,92,.12); }
+  .chip.pend{ color:var(--dim); border-color:rgba(125,255,158,.5); opacity:.7; }
+  .notas{ list-style:none; display:grid; gap:4px; font-size:11px; color:var(--warn); opacity:.9; }
+  .notas li::before{ content:"~ "; }
+  .notas li.mal{ color:var(--bad); }
+  .notas li.mal::before{ content:"✖ "; }
+  .como{ margin-top:30px; border:1px solid rgba(0,255,65,.3); background:var(--panel); padding:16px; font-size:12.5px; }
+  .como h2{ font-size:13px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:10px; }
+  .como pre{ background:#000; border:1px solid rgba(0,255,65,.25); padding:12px; overflow-x:auto; color:var(--dim); margin:8px 0; }
+  .como p{ color:var(--dim); opacity:.85; max-width:90ch; }
+  @media (max-width:720px){ .mando{ grid-template-columns:1fr; } .avanzado{ text-align:left; } .avanzado .cuerpo{ justify-items:start; } }
+</style>
+  <script defer src="/assets/analytics.js?v=20260617-consent"></script>
+  <script defer src="/assets/consent.js?v=20260617"></script>
+  <script defer src="/assets/site-nav.js?v=20260803-release"></script>
+</head>
+<body>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KD696XW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<header>
+  <div class="brand">PIXERIA // TESTER DE DIGITAL SIGNAGE</div>
+  <h1>Crea una vez. Prueba contra todas las pantallas.</h1>
+  <p>Una creatividad que se ve perfecta en el portátil se queda negra en un tótem, se corta en una barra
+     estirada y tira más bitrate del que aguanta un reproductor Android de entrada. Aquí eso se ve antes
+     de llegar a la tienda: se prueba contra el parque real —Samsung, Philips, LG, TCL— bajando el bitrate
+     y adaptando la resolución cuando hace falta.</p>
+</header>
+
+<div class="wrap">
+  <div class="mando">
+    <div class="op">
+      <span style="font-size:11px;letter-spacing:.14em;opacity:.7">CONTENIDO:</span>
+      <button id="b-16-9" aria-pressed="true">creatividad 16:9</button>
+      <button id="b-9-16" aria-pressed="false">creatividad 9:16</button>
+      <span class="file"><label for="fichero">soltar / elegir fichero</label>
+        <input type="file" id="fichero" accept="video/*,image/*"></span>
+      <span class="zona" id="zona">…o arrastra aquí tu vídeo o imagen — no sale de tu navegador</span>
+    </div>
+
+    <details class="avanzado">
+      <summary>avanzado</summary>
+      <div class="cuerpo">
+        <label><input type="checkbox" id="forzar-recorte"> forzar recorte en todas</label>
+        <label><input type="checkbox" id="ver-comando"> ver el comando ffmpeg</label>
+        <label><input type="checkbox" id="solo-problemas"> solo las que no salen limpias</label>
+      </div>
+    </details>
+
+    <div class="origen" id="origen">// midiendo la creatividad…</div>
+  </div>
+
+  <div class="resumen" id="resumen"></div>
+  <div class="rejilla" id="rejilla"></div>
+
+  <div class="como">
+    <h2>Cómo crea las variantes el motor</h2>
+    <p>Esta página calcula el plan en vivo y enseña el encuadre real de cada pantalla, pero no transcodifica:
+       eso lo hace el motor, con ffmpeg, y su veredicto se carga aquí desde
+       <code>signage/bateria-informe.json</code> cuando existe. El motor no se fía de que ffmpeg devuelva 0:
+       vuelve a leer cada fichero de salida con ffprobe y compara con lo que se pidió.</p>
+    <pre>node scripts/signage-bateria.mjs mi-campana.mp4 --limpiar</pre>
+    <p>Sale un fichero por pantalla en <code>signage/variantes/</code> y el informe con el veredicto.
+       El proceso solo termina en error si alguna pantalla <em>falla</em>; «ajustada» es información,
+       no error — una barra estirada siempre saldrá ajustada.</p>
+  </div>
+</div>
+
+<script type="module">
+import {PERFILES, planificar, verificar} from '/assets/signage-perfiles.js';
+
+const $ = (id) => document.getElementById(id);
+const rejilla = $('rejilla');
+const esc = (valor) => String(valor ?? '').replace(/[&<>"']/g, (caracter) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[caracter]));
+
+// ── Creatividad de muestra ──────────────────────────────────────────────────
+// Va en SVG y no en un mp4 a propósito: no mete un binario de megas en un repo
+// de Pages, se ve nítida a cualquier tamaño y —lo que importa— tiene el mensaje
+// pegado a los bordes, que es justo lo que se pierde cuando una pantalla recorta.
+function creatividad(w, h) {
+  const vertical = h > w;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
+    <rect width="${w}" height="${h}" fill="#061206"/>
+    <rect x="6" y="6" width="${w - 12}" height="${h - 12}" fill="none" stroke="#00ff41" stroke-width="8"/>
+    <text x="50%" y="${vertical ? '26%' : '30%'}" text-anchor="middle" fill="#00ff41"
+      font-family="monospace" font-weight="700" font-size="${Math.round(Math.min(w, h) * 0.13)}">PIXERIA</text>
+    <text x="50%" y="${vertical ? '46%' : '54%'}" text-anchor="middle" fill="#c8ffd0"
+      font-family="monospace" font-size="${Math.round(Math.min(w, h) * 0.085)}">OFERTA 3x2</text>
+    <text x="50%" y="${vertical ? '56%' : '68%'}" text-anchor="middle" fill="#00ff41"
+      font-family="monospace" font-size="${Math.round(Math.min(w, h) * 0.05)}">SOLO HOY</text>
+    <text x="50%" y="${h - Math.round(Math.min(w, h) * 0.05)}" text-anchor="middle" fill="#7dff9e"
+      font-family="monospace" font-size="${Math.round(Math.min(w, h) * 0.038)}">www.pixeria.com</text>
+    <circle cx="${Math.round(w * 0.08)}" cy="${Math.round(h * 0.12)}" r="${Math.round(Math.min(w, h) * 0.035)}" fill="#00ff41"/>
+    <circle cx="${w - Math.round(w * 0.08)}" cy="${h - Math.round(h * 0.12)}" r="${Math.round(Math.min(w, h) * 0.035)}" fill="#00ff41"/>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+// Estado: qué estamos probando ahora mismo.
+let sujeto = null;   // {url, tipo:'imagen'|'video', ancho, alto, bitrateKbps, fps, duracion, audio, nombre}
+let informe = null;  // veredicto real del motor, si está publicado
+
+function muestra(w, h) {
+  return {
+    url: creatividad(w, h), tipo: 'imagen', ancho: w, alto: h,
+    // Una creatividad de muestra no tiene bitrate: sin dato, la regla aplica el
+    // techo del perfil, que es la respuesta honesta y no un número inventado.
+    bitrateKbps: 0, fps: 0, duracion: 0, audio: false,
+    nombre: `creatividad de muestra ${w}×${h}`
+  };
+}
+
+async function desdeFichero(file) {
+  const url = URL.createObjectURL(file);
+  const esVideo = file.type.startsWith('video/');
+  const el = document.createElement(esVideo ? 'video' : 'img');
+  await new Promise((res, rej) => {
+    el.onloadedmetadata = el.onload = res;
+    el.onerror = () => rej(new Error('el navegador no sabe abrir ese fichero'));
+    el.src = url;
+  });
+  const ancho = esVideo ? el.videoWidth : el.naturalWidth;
+  const alto = esVideo ? el.videoHeight : el.naturalHeight;
+  // El navegador no expone el bitrate; se estima por tamaño y duración. Es una
+  // estimación y se dice que lo es: el número exacto lo da ffprobe en el motor.
+  const bitrateKbps = esVideo && el.duration ? Math.round((file.size * 8) / el.duration / 1000) : 0;
+  return {
+    url, tipo: esVideo ? 'video' : 'imagen', ancho, alto, bitrateKbps,
+    fps: 0, duracion: esVideo ? el.duration : 0, audio: false,
+    nombre: file.name, estimado: bitrateKbps > 0
+  };
+}
+
+function veredictoDelMotor(perfilId) {
+  if (!informe) return null;
+  return (informe.pruebas || []).find((p) => p.perfil.id === perfilId) || null;
+}
+
+function comandoFfmpeg(plan) {
+  const filtro = plan.encaje === 'recortar'
+    ? `scale=${plan.ancho}:${plan.alto}:force_original_aspect_ratio=increase,crop=${plan.ancho}:${plan.alto},setsar=1`
+    : plan.encaje === 'contener'
+      ? `scale=${plan.ancho}:${plan.alto}:force_original_aspect_ratio=decrease,pad=${plan.ancho}:${plan.alto}:(ow-iw)/2:(oh-ih)/2:black,setsar=1`
+      : `scale=${plan.ancho}:${plan.alto},setsar=1`;
+  return `ffmpeg -i entrada -vf "${filtro}" -c:v libx264 -profile:v ${plan.h264Perfil} ` +
+         `-level:v ${plan.h264Nivel} -b:v ${plan.bitrateKbps}k -maxrate ${plan.bitrateKbps}k ` +
+         `-bufsize ${plan.bitrateKbps * 2}k -pix_fmt yuv420p salida.mp4`;
+}
+
+function pintar() {
+  if (!sujeto) return;
+  const forzarRecorte = $('forzar-recorte').checked;
+  const verComando = $('ver-comando').checked;
+  const soloProblemas = $('solo-problemas').checked;
+
+  $('origen').innerHTML = `▸ probando <span style="color:var(--matrix)">${esc(sujeto.nombre)}</span> · ` +
+    `${sujeto.ancho}×${sujeto.alto} · ${sujeto.tipo}` +
+    (sujeto.bitrateKbps ? ` · ~${sujeto.bitrateKbps} kbps${sujeto.estimado ? ' (estimado por el navegador)' : ''}` : ' · sin bitrate medible') +
+    ` · contra ${PERFILES.length} pantallas`;
+
+  const tarjetas = [];
+  let ok = 0, ajustado = 0, fallo = 0;
+
+  for (const perfil of PERFILES) {
+    const plan = planificar(sujeto, perfil);
+    if (forzarRecorte && plan.encaje === 'contener') plan.encaje = 'recortar';
+
+    // El juicio es SIEMPRE sobre la creatividad que hay en pantalla: es lo que
+    // el usuario está mirando y lo único que esta página puede afirmar sin
+    // transcodificar. El veredicto del motor va aparte, atado a su original.
+    const juicio = verificar(plan, {ancho: plan.ancho, alto: plan.alto, codec: 'h264',
+                                    h264Perfil: plan.h264Perfil, h264Nivel: plan.h264Nivel,
+                                    bitrateKbps: plan.bitrateKbps}, sujeto);
+    const motor = veredictoDelMotor(perfil.id);
+
+    if (juicio.veredicto === 'ok') ok++; else if (juicio.veredicto === 'ajustado') ajustado++; else fallo++;
+    if (soloProblemas && juicio.veredicto === 'ok') continue;
+
+    const encaje = plan.encaje === 'recortar' ? 'cover' : 'contain';
+    const medio = sujeto.tipo === 'video'
+      ? `<video src="${sujeto.url}" autoplay muted loop playsinline style="object-fit:${encaje}"></video>`
+      : `<img src="${sujeto.url}" alt="" style="object-fit:${encaje}">`;
+
+    tarjetas.push(`<article class="pantalla">
+      <h2>${perfil.nombre}</h2>
+      <div class="fam">${perfil.familias.join(' · ')}</div>
+      <div class="marco" style="aspect-ratio:${perfil.ancho}/${perfil.alto}">${medio}</div>
+      <div class="chapa"><span>${perfil.ancho}×${perfil.alto}</span><span>${perfil.orientacion}</span></div>
+      <div class="datos">
+        <div class="fila"><span>veredicto del plan</span>
+          <span class="chip ${juicio.veredicto}">${juicio.veredicto}</span></div>
+        <div class="fila"><span>bitrate</span><span>${plan.bitrateKbps} kbps <small style="opacity:.6">(techo ${perfil.techoKbps})</small></span></div>
+        <div class="fila"><span>códec</span><span>H.264 ${plan.h264Perfil}@${plan.h264Nivel}</span></div>
+        <div class="fila"><span>encaje</span><span>${plan.encaje}</span></div>
+        ${motor ? `<div class="fila" style="border-top:1px dashed rgba(0,255,65,.22);padding-top:6px;margin-top:2px">
+            <span>última batería<br><small style="opacity:.6">${esc(informe.origen.fichero)}</small></span>
+            <span style="text-align:right"><span class="chip ${motor.veredicto}">${motor.veredicto}</span><br>
+              <small style="opacity:.7">${motor.plan.bitrateKbps} kbps · ${(motor.bytes / 1048576).toFixed(1)} MB</small></span>
+          </div>` : ''}
+        <div class="fila" style="opacity:.65"><span>por qué ese bitrate</span></div>
+        <div style="opacity:.65;font-size:11px">${plan.bitrateMotivo}</div>
+        ${(juicio.fallos.length || juicio.notas.length) ? `<ul class="notas">
+          ${juicio.fallos.map((f) => `<li class="mal">${f}</li>`).join('')}
+          ${juicio.notas.map((n) => `<li>${n}</li>`).join('')}</ul>` : ''}
+        ${verComando ? `<pre style="font-size:10px;background:#000;padding:8px;overflow-x:auto;border:1px solid rgba(0,255,65,.25)">${comandoFfmpeg(plan)}</pre>` : ''}
+      </div>
+    </article>`);
+  }
+
+  rejilla.innerHTML = tarjetas.join('') || '<p style="opacity:.6">// ninguna pantalla con problemas</p>';
+  $('resumen').innerHTML =
+    `<div><b style="color:var(--matrix)">${ok}</b>limpias</div>` +
+    `<div><b style="color:var(--warn)">${ajustado}</b>ajustadas</div>` +
+    `<div><b style="color:var(--bad)">${fallo}</b>fallan</div>` +
+    `<div><b>${PERFILES.length}</b>pantallas del censo</div>` +
+    (informe ? `<div style="align-self:center;opacity:.75">veredicto de fichero: batería del ${new Date(informe.generadoEn).toLocaleString('es-ES')} sobre ${esc(informe.origen.fichero)}</div>`
+             : `<div style="align-self:center;opacity:.6">veredicto de plan — aún sin informe del motor</div>`);
+}
+
+// ── Mando ───────────────────────────────────────────────────────────────────
+function elegirMuestra(w, h, boton) {
+  sujeto = muestra(w, h);
+  for (const b of [$('b-16-9'), $('b-9-16')]) b.setAttribute('aria-pressed', String(b === boton));
+  pintar();
+}
+$('b-16-9').onclick = (e) => elegirMuestra(1920, 1080, e.currentTarget);
+$('b-9-16').onclick = (e) => elegirMuestra(1080, 1920, e.currentTarget);
+
+async function cargar(file) {
+  try {
+    sujeto = await desdeFichero(file);
+    for (const b of [$('b-16-9'), $('b-9-16')]) b.setAttribute('aria-pressed', 'false');
+    pintar();
+  } catch (err) {
+    $('origen').innerHTML = `<span style="color:var(--bad)">✖ ${err.message}</span>`;
+  }
+}
+$('fichero').onchange = (e) => e.target.files[0] && cargar(e.target.files[0]);
+for (const ev of ['dragenter', 'dragover']) {
+  document.addEventListener(ev, (e) => { e.preventDefault(); $('zona').classList.add('sobre'); });
+}
+for (const ev of ['dragleave', 'drop']) {
+  document.addEventListener(ev, (e) => { e.preventDefault(); $('zona').classList.remove('sobre'); });
+}
+document.addEventListener('drop', (e) => { const f = e.dataTransfer?.files?.[0]; if (f) cargar(f); });
+for (const id of ['forzar-recorte', 'ver-comando', 'solo-problemas']) $(id).onchange = pintar;
+
+// ── Arranque ────────────────────────────────────────────────────────────────
+// El informe del motor es opcional: si no está publicado la página funciona
+// igual con el veredicto de plan. Un 404 aquí no es un error que enseñar.
+fetch('/signage/bateria-informe.json', {cache: 'no-store'})
+  .then((r) => (r.ok ? r.json() : null))
+  .then((d) => { informe = d; pintar(); })
+  .catch(() => pintar());
+
+sujeto = muestra(1920, 1080);
+pintar();
+</script>
+  <script src="/assets/admira-version-watch.js" defer></script>
+</body>
+</html>
