@@ -64,6 +64,32 @@ test('session ausente falla cerrada y un documento redirige a login', async () =
   assert.equal(response.headers.get('location'), '/auth/login?return_to=%2Fbackoffice%2F%3Fx%3D1');
 });
 
+test('la verja no depende del Accept: curl y los bots tampoco pasan', async () => {
+  // El 1-sep-2026 `curl https://www.pixeria.com/` devolvía la página entera con
+  // 200: el middleware solo protegía si el cliente PEDÍA text/html, y el Accept
+  // lo elige quien llama (FLT-1484). Ahora manda la ruta.
+  const bindings = env();
+  const documentos = ['/', '/plataforma.html', '/radar/', '/stock', '/en/index.html'];
+  for (const pathname of documentos) {
+    const response = await onRequest({
+      request:new Request('https://www.pixeria.com' + pathname, {headers:{Accept:'*/*'}}),
+      env:bindings,
+      next:async () => new Response('fuga: servido sin sesión')
+    });
+    assert.equal(response.status, 302, pathname + ' se sirvió sin sesión');
+    assert.match(response.headers.get('location'), /^\/auth\/login\?return_to=/);
+  }
+  // Los assets siguen abiertos: si se cerraran, las propias páginas se romperían.
+  for (const pathname of ['/assets/site-nav.js', '/assets/cuadratura.css', '/llms.txt', '/favicon.ico']) {
+    const response = await onRequest({
+      request:new Request('https://www.pixeria.com' + pathname, {headers:{Accept:'*/*'}}),
+      env:bindings,
+      next:async () => new Response('asset')
+    });
+    assert.equal(await response.text(), 'asset', pathname + ' quedó tras la verja');
+  }
+});
+
 test('logout directo borra la sesión y vuelve al acceso común', async () => {
   const response = await handleAuth(new Request('https://www.pixeria.com/auth/logout'), env());
   assert.equal(response.status, 303);

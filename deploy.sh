@@ -31,6 +31,11 @@ declared_signature="$(jq -r '.signature // empty' release-signature.json)"
 [[ "$declared_version" == "$release" ]] || { echo "✗ release-signature.json no coincide con el sello $release" >&2; exit 1; }
 [[ "$declared_agent" == "$ADMIRA_RELEASE_AGENT" && "$declared_machine" == "$ADMIRA_RELEASE_MACHINE" ]] || { echo "✗ La declaración de responsable no coincide con este agente/equipo" >&2; exit 1; }
 [[ "$declared_signature" == "$ADMIRA_RELEASE_AGENT · $ADMIRA_RELEASE_MACHINE" ]] || { echo "✗ Firma inválida en release-signature.json" >&2; exit 1; }
+# Todas las páginas dicen la MISMA versión, no solo index.html (Normativa 09 y 13).
+# El 1-sep-2026 (FLT-1484) 64 de 69 páginas mentían —la home enseñaba un sello de
+# 25 días antes— y este guarda no existía, así que producción salía «verde».
+echo "→ Sello en todas las páginas…"
+python3 scripts/sellar.py --check || { echo "✗ Hay páginas sin el sello $release. Córrelo: python3 scripts/sellar.py $release" >&2; exit 1; }
 git_full="$(git rev-parse main)"
 jq -n \
   --arg version "$release" \

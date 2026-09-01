@@ -434,11 +434,24 @@
     }
   }
 
+  // El sello visible se copia del <meta> canonico, que es el que firma el release
+  // y el que lee /webmaster. Antes iba a mano en cada pagina y derivaba: el
+  // 1-sep-2026 la home enseñaba un sello de 25 dias antes (FLT-1484).
+  function syncRailVersion() {
+    var meta = document.querySelector('meta[name="admiranext-version"]');
+    var version = meta && meta.content;
+    if (!version) return;
+    document.querySelectorAll('.rail-ver').forEach(function (el) {
+      if (el.textContent !== version) el.textContent = version;
+    });
+  }
+
   function start() {
     normalizeInternalNav();
+    syncRailVersion();
     // cuadratura.js crea la barra de la home de forma diferida; esta segunda
     // pasada normaliza tambien esa barra cuando se reutiliza en una interior.
-    setTimeout(normalizeInternalNav, 0);
+    setTimeout(function () { normalizeInternalNav(); syncRailVersion(); }, 0);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
