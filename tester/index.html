@@ -35,17 +35,16 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.01.09.2026.r1.06:39">
+  <meta name="admiranext-version" content="Pixeria v.01.09.2026.r2.15:00">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
 <link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
-  <title>Pixeria · Batería de pruebas de signage</title>
-  <meta name="description" content="Batería de pruebas de digital signage: el mismo contenido validado contra las resoluciones reales de Samsung, Philips, LG y TCL.">
+  <title>Tester · Contenidos de prueba para digital signage | Pixeria</title>
+  <meta name="description" content="Tester de Pixeria crea y valida contenidos de digital signage contra hardware real, con resoluciones, bitrates y perfiles H.264 específicos.">
   <meta name="theme-color" content="#020602">
-  <link rel="canonical" href="https://www.pixeria.com/signage-bateria.html">
-  <link rel="alternate" hreflang="es" href="https://www.pixeria.com/signage-bateria.html">
-  <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/signage-bateria.html">
-  <link rel="alternate" hreflang="x-default" href="https://www.pixeria.com/signage-bateria.html">
+  <link rel="canonical" href="https://www.pixeria.com/tester">
+  <link rel="alternate" hreflang="es" href="https://www.pixeria.com/tester">
+  <link rel="alternate" hreflang="x-default" href="https://www.pixeria.com/tester">
 <style>
   :root{ --matrix:#00ff41; --deep:#00b82e; --bg:#020602; --panel:#04140a; --dim:#7dff9e; --warn:#ffd166; --bad:#ff5c5c; }
   *{ box-sizing:border-box; margin:0; padding:0; }
@@ -118,8 +117,8 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KD696XW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <header>
-  <div class="brand">PIXERIA // BATERÍA DE PRUEBAS DE DIGITAL SIGNAGE</div>
-  <h1>El mismo contenido, contra todas las pantallas del mercado</h1>
+  <div class="brand">PIXERIA // TESTER DE DIGITAL SIGNAGE</div>
+  <h1>Crea una vez. Prueba contra todas las pantallas.</h1>
   <p>Una creatividad que se ve perfecta en el portátil se queda negra en un tótem, se corta en una barra
      estirada y tira más bitrate del que aguanta un reproductor Android de entrada. Aquí eso se ve antes
      de llegar a la tienda: se prueba contra el parque real —Samsung, Philips, LG, TCL— bajando el bitrate
@@ -153,7 +152,7 @@
   <div class="rejilla" id="rejilla"></div>
 
   <div class="como">
-    <h2>Cómo se ejecuta la batería de verdad</h2>
+    <h2>Cómo crea las variantes el motor</h2>
     <p>Esta página calcula el plan en vivo y enseña el encuadre real de cada pantalla, pero no transcodifica:
        eso lo hace el motor, con ffmpeg, y su veredicto se carga aquí desde
        <code>signage/bateria-informe.json</code> cuando existe. El motor no se fía de que ffmpeg devuelva 0:
@@ -170,6 +169,9 @@ import {PERFILES, planificar, verificar} from '/assets/signage-perfiles.js';
 
 const $ = (id) => document.getElementById(id);
 const rejilla = $('rejilla');
+const esc = (valor) => String(valor ?? '').replace(/[&<>"']/g, (caracter) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[caracter]));
 
 // ── Creatividad de muestra ──────────────────────────────────────────────────
 // Va en SVG y no en un mp4 a propósito: no mete un binario de megas en un repo
@@ -251,7 +253,7 @@ function pintar() {
   const verComando = $('ver-comando').checked;
   const soloProblemas = $('solo-problemas').checked;
 
-  $('origen').innerHTML = `▸ probando <span style="color:var(--matrix)">${sujeto.nombre}</span> · ` +
+  $('origen').innerHTML = `▸ probando <span style="color:var(--matrix)">${esc(sujeto.nombre)}</span> · ` +
     `${sujeto.ancho}×${sujeto.alto} · ${sujeto.tipo}` +
     (sujeto.bitrateKbps ? ` · ~${sujeto.bitrateKbps} kbps${sujeto.estimado ? ' (estimado por el navegador)' : ''}` : ' · sin bitrate medible') +
     ` · contra ${PERFILES.length} pantallas`;
@@ -291,7 +293,7 @@ function pintar() {
         <div class="fila"><span>códec</span><span>H.264 ${plan.h264Perfil}@${plan.h264Nivel}</span></div>
         <div class="fila"><span>encaje</span><span>${plan.encaje}</span></div>
         ${motor ? `<div class="fila" style="border-top:1px dashed rgba(0,255,65,.22);padding-top:6px;margin-top:2px">
-            <span>última batería<br><small style="opacity:.6">${informe.origen.fichero}</small></span>
+            <span>última batería<br><small style="opacity:.6">${esc(informe.origen.fichero)}</small></span>
             <span style="text-align:right"><span class="chip ${motor.veredicto}">${motor.veredicto}</span><br>
               <small style="opacity:.7">${motor.plan.bitrateKbps} kbps · ${(motor.bytes / 1048576).toFixed(1)} MB</small></span>
           </div>` : ''}
@@ -311,7 +313,7 @@ function pintar() {
     `<div><b style="color:var(--warn)">${ajustado}</b>ajustadas</div>` +
     `<div><b style="color:var(--bad)">${fallo}</b>fallan</div>` +
     `<div><b>${PERFILES.length}</b>pantallas del censo</div>` +
-    (informe ? `<div style="align-self:center;opacity:.75">veredicto de fichero: batería del ${new Date(informe.generadoEn).toLocaleString('es-ES')} sobre ${informe.origen.fichero}</div>`
+    (informe ? `<div style="align-self:center;opacity:.75">veredicto de fichero: batería del ${new Date(informe.generadoEn).toLocaleString('es-ES')} sobre ${esc(informe.origen.fichero)}</div>`
              : `<div style="align-self:center;opacity:.6">veredicto de plan — aún sin informe del motor</div>`);
 }
 

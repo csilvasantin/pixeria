@@ -3,6 +3,7 @@
 // de la flota y en cualquier CI, aunque no haya binarios de vídeo instalados.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {
   PERFILES, PERFILES_POR_ID, aspecto, recortePerdido,
   bitrateObjetivo, planificar, verificar
@@ -15,6 +16,15 @@ const BARRA = PERFILES_POR_ID.get('barra-lg-88bh7d');
 const VERTICAL = PERFILES_POR_ID.get('fhd-portrait');
 
 const origenFHD = {ancho: 1920, alto: 1080, bitrateKbps: 12000, fps: 30, duracion: 10, audio: true};
+
+test('la sección vive en /tester y no se añade al menú superior', () => {
+  const pagina = readFileSync(new URL('../tester/index.html', import.meta.url), 'utf8');
+  const menu = readFileSync(new URL('../assets/site-nav.js', import.meta.url), 'utf8');
+  assert.match(pagina, /<link rel="canonical" href="https:\/\/www\.pixeria\.com\/tester">/);
+  assert.match(pagina, /PIXERIA \/\/ TESTER DE DIGITAL SIGNAGE/);
+  assert.doesNotMatch(menu, /['"]\/tester\/?['"]/,
+    'Tester debe seguir fuera del menú superior hasta que Carlos lo pida');
+});
 
 test('el censo de perfiles está completo y sin ids repetidos', () => {
   assert.ok(PERFILES.length >= 10, 'el parque real no cabe en menos de 10 perfiles');
