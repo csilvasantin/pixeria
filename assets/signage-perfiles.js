@@ -172,10 +172,22 @@ export function planificar(origen, perfil) {
   const perdido = recortePerdido(origen, perfil);
   const mismoEncuadre = Math.abs(aspecto(origen.ancho, origen.alto) - aspecto(perfil.ancho, perfil.alto)) <= TOLERANCIA_ASPECTO;
 
+  // Un vídeo apaisado dentro de un tótem no está adaptado si se limita a
+  // conservar el 16:9 con dos bandas negras enormes. En ese caso concreto la
+  // promesa de Pixeria es entregar una pieza 9:16 que LLENE la pantalla: se
+  // hace un recorte centrado automático y se deja a la vista cuánto material
+  // lateral se pierde, para que el diseñador pueda reencuadrar si el sujeto no
+  // está en el centro. Las barras ultrapanorámicas siguen siendo conservadoras:
+  // recortarlas automáticamente sí puede borrar todo el mensaje.
+  const adaptacionVertical = perfil.orientacion === 'vertical' &&
+    origen.ancho > origen.alto && perfil.alto > perfil.ancho;
+
   // `contener` mete la imagen entera y rellena con negro; `recortar` llena la
-  // pantalla y sacrifica bordes. Por defecto contenemos: perder mensaje es peor
-  // que ver una banda negra, y el negro en signage no se nota tanto como parece.
-  const encaje = mismoEncuadre ? 'exacto' : (perdido > RECORTE_MAXIMO_ACEPTABLE ? 'contener' : 'recortar');
+  // pantalla y sacrifica bordes. Por defecto contenemos cuando la pérdida es
+  // grande, salvo en la adaptación apaisado→vertical descrita arriba.
+  const encaje = mismoEncuadre
+    ? 'exacto'
+    : (adaptacionVertical ? 'recortar' : (perdido > RECORTE_MAXIMO_ACEPTABLE ? 'contener' : 'recortar'));
 
   const bitrate = bitrateObjetivo(origen, perfil);
   const [h264Perfil, h264Nivel] = String(perfil.h264).split('@');
@@ -183,6 +195,9 @@ export function planificar(origen, perfil) {
   const avisos = [];
   if (encaje === 'contener') {
     avisos.push(`reencuadre humano recomendado: recortar perdería el ${Math.round(perdido * 100)}% de la imagen`);
+  }
+  if (adaptacionVertical) {
+    avisos.push(`adaptación vertical automática: recorte centrado del ${Math.round(perdido * 100)}% de los laterales`);
   }
   if (perfil.ancho > origen.ancho || perfil.alto > origen.alto) {
     avisos.push('el perfil es mayor que el original: se escala hacia arriba, no hay detalle nuevo');
