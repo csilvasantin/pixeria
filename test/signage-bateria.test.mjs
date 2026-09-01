@@ -26,6 +26,16 @@ test('la sección vive en /tester y no se añade al menú superior', () => {
     'Tester debe seguir fuera del menú superior hasta que Carlos lo pida');
 });
 
+test('la información de apoyo queda plegada por defecto para priorizar el tester', () => {
+  const pagina = readFileSync(new URL('../tester/index.html', import.meta.url), 'utf8');
+  assert.match(pagina, /<details class="info-panel">[\s\S]*mostrar información[\s\S]*<\/details>/);
+  assert.doesNotMatch(pagina, /<details class="info-panel"\s+open/,
+    'la introducción no debe ocupar la zona de trabajo al entrar');
+  assert.match(pagina, /<details class="como">[\s\S]*Cómo crea las variantes el motor[\s\S]*<\/details>/);
+  assert.doesNotMatch(pagina, /<details class="como"\s+open/,
+    'la explicación técnica también debe comenzar cerrada');
+});
+
 test('el censo de perfiles está completo y sin ids repetidos', () => {
   assert.ok(PERFILES.length >= 10, 'el parque real no cabe en menos de 10 perfiles');
   const ids = PERFILES.map((p) => p.id);
