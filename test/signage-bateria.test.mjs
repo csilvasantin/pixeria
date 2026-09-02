@@ -46,6 +46,8 @@ test('el tester separa formato de salida y bitrate/códec en dos zonas', () => {
   assert.match(pagina, /cuadrado · 1:1/);
   assert.match(pagina, /vertical · 3:4/);
   assert.match(pagina, /barra · 32:9/);
+  assert.match(pagina, /signage-perfiles\.js\?v=20260902-r3/,
+    'los presets nuevos deben invalidar el catálogo anterior del navegador');
   assert.match(pagina, /id="salida-custom"/);
   assert.match(pagina, /02<\/b> Bitrate y códec/);
   assert.match(pagina, /Cualquier equipo/);
