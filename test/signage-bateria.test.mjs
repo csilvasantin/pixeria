@@ -5,8 +5,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {
-  PERFILES, PERFILES_POR_ID, aspecto, recortePerdido,
-  bitrateObjetivo, planificar, verificar
+  COMPATIBILIDADES_POR_ID, PERFILES, PERFILES_POR_ID, aspecto, recortePerdido,
+  bitrateObjetivo, evaluarCompatibilidad, perfilDeSalida, planificar, verificar
 } from '../assets/signage-perfiles.js';
 
 const FHD = PERFILES_POR_ID.get('fhd-landscape');
@@ -16,6 +16,7 @@ const BARRA = PERFILES_POR_ID.get('barra-lg-88bh7d');
 const VERTICAL = PERFILES_POR_ID.get('fhd-portrait');
 
 const origenFHD = {ancho: 1920, alto: 1080, bitrateKbps: 12000, fps: 30, duracion: 10, audio: true};
+const motor = readFileSync(new URL('../scripts/signage-bateria.mjs', import.meta.url), 'utf8');
 
 test('la sección vive en /tester y no se añade al menú superior', () => {
   const pagina = readFileSync(new URL('../tester/index.html', import.meta.url), 'utf8');
@@ -34,6 +35,78 @@ test('la información de apoyo queda plegada por defecto para priorizar el teste
   assert.match(pagina, /<details class="como">[\s\S]*Cómo crea las variantes el motor[\s\S]*<\/details>/);
   assert.doesNotMatch(pagina, /<details class="como"\s+open/,
     'la explicación técnica también debe comenzar cerrada');
+});
+
+test('el tester separa formato de salida y bitrate/códec en dos zonas', () => {
+  const pagina = readFileSync(new URL('../tester/index.html', import.meta.url), 'utf8');
+  assert.match(pagina, /01<\/b> Formato de salida/);
+  assert.match(pagina, /horizontal · 16:9/);
+  assert.match(pagina, /vertical · 9:16/);
+  assert.match(pagina, /id="salida-custom"/);
+  assert.match(pagina, /02<\/b> Bitrate y códec/);
+  assert.match(pagina, /Cualquier equipo/);
+  assert.match(pagina, /H\.264 Main@3\.1/);
+});
+
+test('los formatos universales salen en 720p horizontal o vertical', () => {
+  assert.deepEqual(
+    (({ancho, alto}) => ({ancho, alto}))(perfilDeSalida({formato: '16:9', compatibilidad: 'universal'})),
+    {ancho: 1280, alto: 720}
+  );
+  assert.deepEqual(
+    (({ancho, alto}) => ({ancho, alto}))(perfilDeSalida({formato: '9:16', compatibilidad: 'universal'})),
+    {ancho: 720, alto: 1280}
+  );
+});
+
+test('custom exige dimensiones pares válidas y limita el tamaño al equipo elegido', () => {
+  const salida = perfilDeSalida({formato: 'custom', ancho: 3840, alto: 600, compatibilidad: 'universal'});
+  assert.ok(salida.reducida, 'un custom panorámico grande debe reducirse para seguir siendo universal');
+  assert.ok(salida.ancho * salida.alto <= COMPATIBILIDADES_POR_ID.get('universal').maxPixeles);
+  assert.ok(Math.max(salida.ancho, salida.alto) <= 1280);
+  assert.ok(Math.ceil(salida.ancho / 16) * Math.ceil(salida.alto / 16) <= 3600,
+    'el custom debe caber también en los macroblocks de H.264 Level 3.1');
+  assert.ok(Math.abs((salida.ancho / salida.alto) - (3840 / 600)) < 0.02,
+    'la reducción debe conservar la relación de aspecto');
+  assert.throws(() => perfilDeSalida({formato: 'custom', ancho: 1919, alto: 1080}), /número par/);
+  assert.throws(() => perfilDeSalida({formato: 'custom', ancho: 0, alto: 1080}), /entre 64 y 7680/);
+  assert.throws(() => perfilDeSalida({formato: 'custom', ancho: 64, alto: 7680}), /relación custom es demasiado extrema/);
+});
+
+test('máxima compatibilidad fija el denominador común técnico', () => {
+  const salida = perfilDeSalida({formato: '16:9', compatibilidad: 'universal'});
+  const plan = planificar(origenFHD, salida);
+  assert.equal(plan.h264Perfil, 'main');
+  assert.equal(plan.h264Nivel, '3.1');
+  assert.equal(plan.codec, 'h264');
+  assert.equal(plan.pixelFormat, 'yuv420p');
+  assert.equal(plan.audioCodec, 'aac');
+  assert.equal(plan.contenedor, 'mp4');
+  assert.equal(plan.fps, 30);
+  assert.ok(plan.bitrateKbps <= 3000);
+  assert.equal(PERFILES.filter((perfil) => evaluarCompatibilidad(plan, perfil).compatible).length, PERFILES.length);
+});
+
+test('la matriz técnica separa una salida universal de una exigente', () => {
+  const universal = planificar(origenFHD, perfilDeSalida({formato: '16:9', compatibilidad: 'universal'}));
+  assert.equal(evaluarCompatibilidad(universal, LEGACY).compatible, true);
+  const cuatroK = planificar({ancho: 3840, alto: 2160, bitrateKbps: 20000, fps: 60},
+    perfilDeSalida({formato: '16:9', compatibilidad: 'uhd'}));
+  const juicio = evaluarCompatibilidad(cuatroK, LEGACY);
+  assert.equal(juicio.compatible, false);
+  assert.ok(juicio.fallos.some((f) => f.includes('nivel')));
+  assert.ok(juicio.fallos.some((f) => f.includes('bitrate')));
+  assert.ok(juicio.fallos.some((f) => f.includes('fps')));
+});
+
+test('el motor acepta formato y compatibilidad sin mezclarlo con el censo', () => {
+  assert.match(motor, /--formato/);
+  assert.match(motor, /--compatibilidad/);
+  assert.match(motor, /perfilDeSalida/);
+  assert.match(motor, /equiposCompatibles/);
+  assert.match(motor, /compatibilidadIndicada/);
+  assert.match(motor, /--compatibilidad necesita --formato/);
+  assert.match(motor, /--formato y --perfiles son alternativas/);
 });
 
 test('el censo de perfiles está completo y sin ids repetidos', () => {
@@ -108,6 +181,33 @@ test('apaisado a vertical llena el tótem mediante recorte centrado', () => {
     'la adaptación automática debe quedar explicada');
 });
 
+test('vertical a apaisado conserva el centro y exige laterales generativos', () => {
+  const vertical = {ancho: 1080, alto: 1920, bitrateKbps: 6000, fps: 30, duracion: 8, audio: true};
+  const plan = planificar(vertical, FHD);
+  assert.equal(plan.encaje, 'expandir');
+  assert.equal(plan.adaptacion, 'laterales-generativos');
+  assert.equal(plan.requiereIA, true);
+  assert.equal(plan.preservarCentro, true);
+  assert.ok(plan.avisos.some((a) => a.includes('imagina únicamente los laterales')),
+    'el plan debe explicar qué parte puede inventar la IA');
+});
+
+test('el motor solo activa la IA con consentimiento y repone el centro original', () => {
+  assert.match(motor, /--ia-laterales/);
+  assert.match(motor, /\/xai\/video\/edit/);
+  assert.match(motor, /X-AdmiraNeXT-Ingest/);
+  assert.match(motor, /overlay=\(W-w\)\/2:0:shortest=1/);
+  assert.match(motor, /-map', '1:a\?'/, 'el resultado debe recuperar el audio original');
+});
+
+test('el tester explica y previsualiza los laterales generativos sin fingir el resultado', () => {
+  const pagina = readFileSync(new URL('../tester/index.html', import.meta.url), 'utf8');
+  assert.match(pagina, /la IA imagina este lateral/);
+  assert.match(pagina, /centro-protegido/);
+  assert.match(pagina, /--ia-laterales/);
+  assert.match(pagina, /laterales generativos/);
+});
+
 test('la gama vieja fuerza Main@3.1 aunque el original venga en High', () => {
   const plan = planificar(origenFHD, LEGACY);
   assert.equal(plan.h264Perfil, 'main');
@@ -174,12 +274,25 @@ test('un códec que no es h264 rompe el contrato de la batería', () => {
   assert.equal(r.veredicto, 'fallo');
 });
 
+test('el verificador caza píxel, audio, contenedor y fps incompatibles', () => {
+  const plan = planificar(origenFHD, perfilDeSalida({formato: '16:9', compatibilidad: 'universal'}));
+  const r = verificar(plan, {
+    ancho: 1280, alto: 720, codec: 'h264', pixFmt: 'yuv444p',
+    h264Perfil: 'main', h264Nivel: '3.1', bitrateKbps: 2500, fps: 60,
+    duracion: 10, audio: true, audioCodec: 'opus', contenedor: 'matroska,webm'
+  }, origenFHD);
+  assert.equal(r.veredicto, 'fallo');
+  for (const texto of ['formato de píxel', 'audio opus', 'contenedor', 'fotogramas']) {
+    assert.ok(r.fallos.some((f) => f.includes(texto)), `no detectó ${texto}: ${r.fallos}`);
+  }
+});
+
 test('todos los perfiles del censo producen un plan válido desde un mismo original', () => {
   for (const p of PERFILES) {
     const plan = planificar(origenFHD, p);
     assert.equal(plan.ancho, p.ancho, `${p.id}: ancho mal planificado`);
     assert.ok(plan.bitrateKbps > 0, `${p.id}: bitrate cero`);
     assert.ok(plan.bitrateKbps <= p.techoKbps, `${p.id}: se pasa del techo`);
-    assert.ok(['exacto', 'contener', 'recortar'].includes(plan.encaje), `${p.id}: encaje raro`);
+    assert.ok(['exacto', 'contener', 'recortar', 'expandir'].includes(plan.encaje), `${p.id}: encaje raro`);
   }
 });

@@ -35,7 +35,7 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.01.09.2026.r4.18:54">
+  <meta name="admiranext-version" content="Pixeria v.02.09.2026.r1.06:43">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
 <link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
@@ -70,25 +70,50 @@
   .info-panel .info-copy{ margin-top:9px; padding-top:9px; border-top:1px dashed rgba(0,255,65,.25); }
   .info-panel p{ color:var(--dim); opacity:.8; font-size:12px; max-width:100ch; }
   .wrap{ padding:20px 24px; max-width:1500px; margin:0 auto; }
-  /* Mando: opciones a la IZQUIERDA, lo avanzado plegado a la DERECHA. */
-  .mando{ display:grid; grid-template-columns:minmax(300px,1fr) auto; gap:20px; align-items:start;
-    border:1px solid rgba(0,255,65,.3); background:var(--panel); padding:16px; margin-bottom:22px; }
+  .estaciones{ display:grid; grid-template-columns:1.15fr .85fr; gap:16px; margin-bottom:18px; }
+  .mando{ border:1px solid rgba(0,255,65,.3); background:var(--panel); padding:16px; min-width:0; }
+  .paso{ font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); margin-bottom:12px; }
+  .paso b{ color:var(--matrix); font-size:18px; margin-right:8px; }
   .op{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
-  button, .file label{ font:inherit; font-size:12px; letter-spacing:.08em; text-transform:uppercase; cursor:pointer;
+  button, .file label, select, input[type="number"]{ font:inherit; font-size:12px; letter-spacing:.06em;
+    background:transparent; color:var(--matrix); border:1px solid var(--deep); padding:8px 12px; }
+  button, .file label{ text-transform:uppercase; cursor:pointer;
     background:transparent; color:var(--matrix); border:1px solid var(--deep); padding:8px 14px; }
   button:hover, .file label:hover{ background:rgba(0,255,65,.12); box-shadow:0 0 12px rgba(0,255,65,.35); }
   button[aria-pressed="true"]{ background:var(--matrix); color:#020602; font-weight:700; }
   .file input{ display:none; }
+  .custom{ display:flex; gap:6px; align-items:center; color:var(--dim); }
+  .custom[hidden]{ display:none; }
+  .custom input{ width:92px; }
+  .fuente{ border-top:1px dashed rgba(0,255,65,.25); margin-top:14px; padding-top:12px; }
+  .fuente .rotulo{ display:block; font-size:10px; letter-spacing:.14em; opacity:.65; margin-bottom:8px; }
+  .compat{ display:grid; gap:8px; }
+  .compat button{ text-align:left; display:grid; grid-template-columns:1fr auto; gap:3px 12px; }
+  .compat button small{ grid-column:1/-1; text-transform:none; letter-spacing:0; opacity:.7; }
+  .tecnica{ margin-top:12px; border-top:1px dashed rgba(0,255,65,.25); padding-top:10px;
+    color:var(--dim); font-size:11px; display:grid; gap:5px; }
   .avanzado{ text-align:right; }
   .avanzado > summary{ list-style:none; cursor:pointer; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); }
   .avanzado > summary::-webkit-details-marker{ display:none; }
   .avanzado > summary::before{ content:"⚙ "; }
   .avanzado .cuerpo{ margin-top:12px; display:grid; gap:8px; justify-items:end; font-size:12px; }
-  .origen{ font-size:12px; color:var(--dim); opacity:.85; margin-top:10px; grid-column:1/-1; border-top:1px dashed rgba(0,255,65,.25); padding-top:10px; }
+  .origen{ font-size:12px; color:var(--dim); opacity:.85; margin-top:10px; border-top:1px dashed rgba(0,255,65,.25); padding-top:10px; }
   .zona{ border:1px dashed rgba(0,255,65,.4); padding:10px 14px; font-size:12px; color:var(--dim); }
   .zona.sobre{ background:rgba(0,255,65,.12); border-color:var(--matrix); }
   .resumen{ display:flex; gap:18px; flex-wrap:wrap; font-size:12px; margin-bottom:16px; letter-spacing:.06em; }
   .resumen b{ font-size:20px; display:block; }
+  .salida-maestra{ border:1px solid var(--deep); background:rgba(0,255,65,.035); padding:14px; margin-bottom:18px; }
+  .salida-maestra > h2{ font-size:13px; letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
+  .salida-layout{ display:grid; grid-template-columns:minmax(260px,.85fr) minmax(280px,1.15fr); gap:16px; align-items:start; }
+  .salida-layout .marco{ margin:0; }
+  .salida-datos{ color:var(--dim); font-size:12px; display:grid; gap:7px; }
+  .salida-datos .fila{ display:flex; justify-content:space-between; gap:12px; border-bottom:1px dashed rgba(0,255,65,.14); padding-bottom:4px; }
+  .salida-datos pre{ background:#000; border:1px solid rgba(0,255,65,.25); padding:8px; overflow-x:auto; white-space:pre-wrap; }
+  .parque{ border-top:1px solid rgba(0,255,65,.25); padding-top:14px; }
+  .parque > summary{ cursor:pointer; list-style:none; font-size:12px; letter-spacing:.12em; text-transform:uppercase; margin-bottom:14px; }
+  .parque > summary::-webkit-details-marker{ display:none; }
+  .parque > summary::before{ content:"＋ "; }
+  .parque[open] > summary::before{ content:"− "; }
   .rejilla{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px; }
   .pantalla{ border:1px solid rgba(0,255,65,.3); background:var(--panel); display:flex; flex-direction:column; }
   .pantalla h2{ font-size:13px; letter-spacing:.06em; padding:10px 12px 0; }
@@ -99,6 +124,11 @@
   .marco{ margin:0 12px; border:2px solid rgba(0,255,65,.5); background:#000;
     position:relative; overflow:hidden; max-height:280px; }
   .marco img, .marco video{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .expansion-ia{ position:absolute; inset:0; display:flex; justify-content:space-between;
+    background:linear-gradient(90deg,rgba(0,255,65,.09),rgba(0,255,65,.02) 35%,#000 35%,#000 65%,rgba(0,255,65,.02) 65%,rgba(0,255,65,.09)); }
+  .expansion-ia span{ width:34%; display:grid; place-items:center; font-size:9px; letter-spacing:.12em;
+    text-align:center; text-transform:uppercase; color:var(--dim); border:1px dashed rgba(0,255,65,.25); }
+  .marco .centro-protegido{ z-index:1; object-fit:contain; }
   /* La chapa va FUERA del marco: en una barra de 44 px de alto, encima tapaba
      justo el contenido que la prueba existe para enseñar. */
   .chapa{ margin:4px 12px 0; font-size:10px; letter-spacing:.1em; color:var(--dim); opacity:.75;
@@ -126,7 +156,7 @@
     .info-panel{ grid-column:2; grid-row:1; }
     .info-panel[open]{ grid-column:1/-1; grid-row:3; }
     .wrap{ padding:14px; }
-    .mando{ grid-template-columns:1fr; }
+    .estaciones, .salida-layout{ grid-template-columns:1fr; }
     .avanzado{ text-align:left; }
     .avanzado .cuerpo{ justify-items:start; }
   }
@@ -148,36 +178,71 @@
          estirada y tira más bitrate del que aguanta un reproductor Android de entrada. Aquí eso se ve antes
          de llegar a la tienda: se prueba contra el parque real —Samsung, Philips, LG, TCL— bajando el bitrate
          y adaptando la resolución cuando hace falta. Un vídeo horizontal llena automáticamente los perfiles
-         verticales mediante recorte centrado; el panel indica la pérdida lateral para poder reencuadrarlo.</p>
+         verticales mediante recorte centrado tipo TikTok. En el sentido contrario, un vídeo vertical
+         conserva intacto el centro y la IA imagina únicamente los laterales necesarios para llenar 16:9.
+         Primero eliges formato —horizontal, vertical o custom— y después el contrato de bitrate y códec.</p>
     </div>
   </details>
 </header>
 
 <div class="wrap">
-  <div class="mando">
-    <div class="op">
-      <span style="font-size:11px;letter-spacing:.14em;opacity:.7">CONTENIDO:</span>
-      <button id="b-16-9" aria-pressed="true">creatividad 16:9</button>
-      <button id="b-9-16" aria-pressed="false">creatividad 9:16</button>
-      <span class="file"><label for="fichero">soltar / elegir fichero</label>
-        <input type="file" id="fichero" accept="video/*,image/*"></span>
-      <span class="zona" id="zona">…o arrastra aquí tu vídeo o imagen — no sale de tu navegador</span>
-    </div>
-
-    <details class="avanzado">
-      <summary>avanzado</summary>
-      <div class="cuerpo">
-        <label><input type="checkbox" id="forzar-recorte"> forzar recorte en todas</label>
-        <label><input type="checkbox" id="ver-comando"> ver el comando ffmpeg</label>
-        <label><input type="checkbox" id="solo-problemas"> solo las que no salen limpias</label>
+  <div class="estaciones">
+    <section class="mando" aria-labelledby="titulo-formato">
+      <div class="paso" id="titulo-formato"><b>01</b> Formato de salida</div>
+      <div class="op">
+        <button id="salida-16-9" aria-pressed="true">horizontal · 16:9</button>
+        <button id="salida-9-16" aria-pressed="false">vertical · 9:16</button>
+        <button id="salida-custom" aria-pressed="false">custom</button>
+        <span class="custom" id="custom-medidas" hidden>
+          <label><span class="sr-only">ancho personalizado</span><input type="number" id="custom-ancho" min="64" max="7680" step="2" value="1920"></label>
+          <span>×</span>
+          <label><span class="sr-only">alto personalizado</span><input type="number" id="custom-alto" min="64" max="7680" step="2" value="540"></label>
+          <span>px</span>
+        </span>
       </div>
-    </details>
 
-    <div class="origen" id="origen">// midiendo la creatividad…</div>
+      <div class="fuente">
+        <span class="rotulo">Contenido de prueba / origen</span>
+        <div class="op">
+          <button id="b-16-9" aria-pressed="true">muestra horizontal</button>
+          <button id="b-9-16" aria-pressed="false">muestra vertical</button>
+          <span class="file"><label for="fichero">elegir fichero</label>
+            <input type="file" id="fichero" accept="video/*,image/*"></span>
+          <span class="zona" id="zona">…o arrástralo aquí — no sale de tu navegador</span>
+        </div>
+      </div>
+      <div class="origen" id="origen">// midiendo la creatividad…</div>
+    </section>
+
+    <section class="mando" aria-labelledby="titulo-tecnica">
+      <div class="paso" id="titulo-tecnica"><b>02</b> Bitrate y códec</div>
+      <div class="compat" role="group" aria-label="Compatibilidad de reproducción">
+        <button id="compat-universal" aria-pressed="true"><span>Cualquier equipo</span><span>3 Mbps</span><small>H.264 Main@3.1 · 30 fps · 720p · recomendado</small></button>
+        <button id="compat-fhd" aria-pressed="false"><span>Parque Full HD</span><span>8 Mbps</span><small>H.264 High@4.0 · 30 fps · exige equipos actuales</small></button>
+        <button id="compat-uhd" aria-pressed="false"><span>Parque 4K</span><span>20 Mbps</span><small>H.264 High@5.1 · 60 fps · solo hardware moderno</small></button>
+      </div>
+      <div class="tecnica" id="tecnica"></div>
+      <details class="avanzado">
+        <summary>avanzado</summary>
+        <div class="cuerpo">
+          <label><input type="checkbox" id="forzar-recorte"> forzar recorte en todas</label>
+          <label><input type="checkbox" id="ver-comando"> ver el comando ffmpeg</label>
+          <label><input type="checkbox" id="solo-problemas"> solo las que no salen limpias</label>
+        </div>
+      </details>
+    </section>
   </div>
 
-  <div class="resumen" id="resumen"></div>
-  <div class="rejilla" id="rejilla"></div>
+  <section class="salida-maestra" aria-labelledby="titulo-salida">
+    <h2 id="titulo-salida">Salida que va a crear el adaptador</h2>
+    <div id="salida-maestra" aria-live="polite" aria-atomic="true"></div>
+  </section>
+
+  <details class="parque">
+    <summary>Comprobar además contra las 10 pantallas del censo</summary>
+    <div class="resumen" id="resumen"></div>
+    <div class="rejilla" id="rejilla"></div>
+  </details>
 
   <details class="como">
     <summary>Cómo crea las variantes el motor</summary>
@@ -186,8 +251,10 @@
          eso lo hace el motor, con ffmpeg, y su veredicto se carga aquí desde
          <code>signage/bateria-informe.json</code> cuando existe. El motor no se fía de que ffmpeg devuelva 0:
          vuelve a leer cada fichero de salida con ffprobe y compara con lo que se pidió. En los tótems, un
-         original horizontal se adapta a 9:16 llenando la pantalla con un recorte centrado, no con bandas negras.</p>
-      <pre>node scripts/signage-bateria.mjs mi-campana.mp4 --limpiar</pre>
+         original horizontal se adapta a 9:16 llenando la pantalla con un recorte centrado, no con bandas negras.
+         Al pasar de vertical a horizontal, prepara un lienzo 16:9, genera el contexto lateral con IA y vuelve
+         a superponer el original centrado para proteger su imagen y su audio.</p>
+      <pre>node scripts/signage-bateria.mjs mi-campana.mp4 --formato 16:9 --compatibilidad universal --ia-laterales --limpiar</pre>
       <p>Sale un fichero por pantalla en <code>signage/variantes/</code> y el informe con el veredicto.
          El proceso solo termina en error si alguna pantalla <em>falla</em>; «ajustada» es información,
          no error — una barra estirada siempre saldrá ajustada.</p>
@@ -196,7 +263,7 @@
 </div>
 
 <script type="module">
-import {PERFILES, planificar, verificar} from '/assets/signage-perfiles.js';
+import {COMPATIBILIDADES_POR_ID, PERFILES, evaluarCompatibilidad, perfilDeSalida, planificar, verificar} from '/assets/signage-perfiles.js';
 
 const $ = (id) => document.getElementById(id);
 const rejilla = $('rejilla');
@@ -230,6 +297,8 @@ function creatividad(w, h) {
 // Estado: qué estamos probando ahora mismo.
 let sujeto = null;   // {url, tipo:'imagen'|'video', ancho, alto, bitrateKbps, fps, duracion, audio, nombre}
 let informe = null;  // veredicto real del motor, si está publicado
+let formatoSalida = '16:9';
+let compatibilidad = 'universal';
 
 function muestra(w, h) {
   return {
@@ -268,6 +337,16 @@ function veredictoDelMotor(perfilId) {
 }
 
 function comandoFfmpeg(plan) {
+  if (plan.compatibilidad !== 'por-equipo') {
+    const formato = plan.formato === 'custom'
+      ? `${plan.solicitada.ancho}x${plan.solicitada.alto}`
+      : plan.formato;
+    return `node scripts/signage-bateria.mjs entrada.mp4 --formato ${formato} ` +
+      `--compatibilidad ${plan.compatibilidad}${plan.encaje === 'expandir' ? ' --ia-laterales' : ''} --limpiar`;
+  }
+  if (plan.encaje === 'expandir') {
+    return 'node scripts/signage-bateria.mjs entrada.mp4 --ia-laterales --perfiles ' + plan.perfilId;
+  }
   const filtro = plan.encaje === 'recortar'
     ? `scale=${plan.ancho}:${plan.alto}:force_original_aspect_ratio=increase,crop=${plan.ancho}:${plan.alto},setsar=1`
     : plan.encaje === 'contener'
@@ -278,11 +357,71 @@ function comandoFfmpeg(plan) {
          `-bufsize ${plan.bitrateKbps * 2}k -pix_fmt yuv420p salida.mp4`;
 }
 
+function perfilSalidaActual() {
+  return perfilDeSalida({
+    formato: formatoSalida,
+    ancho: $('custom-ancho').value,
+    alto: $('custom-alto').value,
+    compatibilidad
+  });
+}
+
+function medioDelPlan(plan) {
+  const encaje = plan.encaje === 'recortar' ? 'cover' : 'contain';
+  const expansion = plan.encaje === 'expandir'
+    ? '<div class="expansion-ia" aria-hidden="true"><span>la IA imagina este lateral</span><span>la IA imagina este lateral</span></div>'
+    : '';
+  const clase = plan.encaje === 'expandir' ? ' class="centro-protegido"' : '';
+  return sujeto.tipo === 'video'
+    ? `${expansion}<video${clase} src="${sujeto.url}" autoplay muted loop playsinline style="object-fit:${encaje}"></video>`
+    : `${expansion}<img${clase} src="${sujeto.url}" alt="" style="object-fit:${encaje}">`;
+}
+
+function pintarSalidaMaestra() {
+  const tecnica = COMPATIBILIDADES_POR_ID.get(compatibilidad);
+  $('tecnica').innerHTML =
+    `<div>Contenedor <b>MP4</b> · píxel <b>yuv420p</b> · audio <b>AAC-LC 128 kbps</b></div>` +
+    `<div>Techo <b>${tecnica.techoKbps} kbps</b> · H.264 <b>${tecnica.h264}</b> · hasta <b>${tecnica.fps} fps</b></div>` +
+    `<div>${tecnica.id === 'universal' ? '✓ denominador común del censo' : '△ no garantiza los reproductores más antiguos'}</div>`;
+
+  let perfil;
+  try {
+    perfil = perfilSalidaActual();
+  } catch (error) {
+    $('salida-maestra').innerHTML = `<p style="color:var(--bad)">✖ ${esc(error.message)}</p>`;
+    return;
+  }
+  const plan = planificar(sujeto, perfil);
+  const compatibles = PERFILES.filter((equipo) => evaluarCompatibilidad(plan, equipo).compatible).length;
+  const accion = plan.adaptacion === 'centro-tiktok' ? 'recorte central tipo TikTok'
+    : plan.adaptacion === 'laterales-generativos' ? 'laterales generativos con centro protegido'
+      : plan.encaje;
+
+  $('salida-maestra').innerHTML = `<div class="salida-layout">
+    <div>
+      <div class="marco" style="aspect-ratio:${perfil.ancho}/${perfil.alto}">${medioDelPlan(plan)}</div>
+      <div class="chapa" style="margin-left:0;margin-right:0"><span>${perfil.ancho}×${perfil.alto}</span><span>${perfil.orientacion}</span></div>
+    </div>
+    <div class="salida-datos">
+      <div class="fila"><span>formato</span><strong>${formatoSalida === 'custom' ? 'custom' : formatoSalida}</strong></div>
+      <div class="fila"><span>adaptación</span><strong>${accion}</strong></div>
+      <div class="fila"><span>bitrate</span><strong>${plan.bitrateKbps} kbps</strong></div>
+      <div class="fila"><span>códec</span><strong>H.264 ${plan.h264Perfil}@${plan.h264Nivel}</strong></div>
+      <div class="fila"><span>reproducción</span><strong>${esc(tecnica.nombre)}</strong></div>
+      <div class="fila"><span>equipos compatibles</span><strong>${compatibles}/${PERFILES.length}</strong></div>
+      ${plan.avisos.length ? `<ul class="notas">${plan.avisos.map((n) => `<li>${n}</li>`).join('')}</ul>` : ''}
+      <pre>${esc(comandoFfmpeg(plan))}</pre>
+    </div>
+  </div>`;
+}
+
 function pintar() {
   if (!sujeto) return;
   const forzarRecorte = $('forzar-recorte').checked;
   const verComando = $('ver-comando').checked;
   const soloProblemas = $('solo-problemas').checked;
+
+  pintarSalidaMaestra();
 
   $('origen').innerHTML = `▸ probando <span style="color:var(--matrix)">${esc(sujeto.nombre)}</span> · ` +
     `${sujeto.ancho}×${sujeto.alto} · ${sujeto.tipo}` +
@@ -307,10 +446,8 @@ function pintar() {
     if (juicio.veredicto === 'ok') ok++; else if (juicio.veredicto === 'ajustado') ajustado++; else fallo++;
     if (soloProblemas && juicio.veredicto === 'ok') continue;
 
-    const encaje = plan.encaje === 'recortar' ? 'cover' : 'contain';
-    const medio = sujeto.tipo === 'video'
-      ? `<video src="${sujeto.url}" autoplay muted loop playsinline style="object-fit:${encaje}"></video>`
-      : `<img src="${sujeto.url}" alt="" style="object-fit:${encaje}">`;
+    const medio = medioDelPlan(plan);
+    const nombreEncaje = plan.encaje === 'expandir' ? 'laterales generativos' : plan.encaje;
 
     tarjetas.push(`<article class="pantalla">
       <h2>${perfil.nombre}</h2>
@@ -322,7 +459,7 @@ function pintar() {
           <span class="chip ${juicio.veredicto}">${juicio.veredicto}</span></div>
         <div class="fila"><span>bitrate</span><span>${plan.bitrateKbps} kbps <small style="opacity:.6">(techo ${perfil.techoKbps})</small></span></div>
         <div class="fila"><span>códec</span><span>H.264 ${plan.h264Perfil}@${plan.h264Nivel}</span></div>
-        <div class="fila"><span>encaje</span><span>${plan.encaje}</span></div>
+        <div class="fila"><span>adaptación</span><span>${nombreEncaje}</span></div>
         ${motor ? `<div class="fila" style="border-top:1px dashed rgba(0,255,65,.22);padding-top:6px;margin-top:2px">
             <span>última batería<br><small style="opacity:.6">${esc(informe.origen.fichero)}</small></span>
             <span style="text-align:right"><span class="chip ${motor.veredicto}">${motor.veredicto}</span><br>
@@ -349,6 +486,38 @@ function pintar() {
 }
 
 // ── Mando ───────────────────────────────────────────────────────────────────
+const botonesFormato = {
+  '16:9': $('salida-16-9'),
+  '9:16': $('salida-9-16'),
+  custom: $('salida-custom')
+};
+const botonesCompatibilidad = {
+  universal: $('compat-universal'),
+  fhd: $('compat-fhd'),
+  uhd: $('compat-uhd')
+};
+
+function elegirFormato(formato) {
+  formatoSalida = formato;
+  for (const [id, boton] of Object.entries(botonesFormato)) {
+    boton.setAttribute('aria-pressed', String(id === formato));
+  }
+  $('custom-medidas').hidden = formato !== 'custom';
+  pintar();
+}
+
+function elegirCompatibilidad(id) {
+  compatibilidad = id;
+  for (const [clave, boton] of Object.entries(botonesCompatibilidad)) {
+    boton.setAttribute('aria-pressed', String(clave === id));
+  }
+  pintar();
+}
+
+for (const [formato, boton] of Object.entries(botonesFormato)) boton.onclick = () => elegirFormato(formato);
+for (const [id, boton] of Object.entries(botonesCompatibilidad)) boton.onclick = () => elegirCompatibilidad(id);
+for (const id of ['custom-ancho', 'custom-alto']) $(id).oninput = pintar;
+
 function elegirMuestra(w, h, boton) {
   sujeto = muestra(w, h);
   for (const b of [$('b-16-9'), $('b-9-16')]) b.setAttribute('aria-pressed', String(b === boton));
