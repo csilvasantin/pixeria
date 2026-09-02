@@ -42,10 +42,22 @@ test('el tester separa formato de salida y bitrate/códec en dos zonas', () => {
   assert.match(pagina, /01<\/b> Formato de salida/);
   assert.match(pagina, /horizontal · 16:9/);
   assert.match(pagina, /vertical · 9:16/);
+  assert.match(pagina, /horizontal · 4:3/);
+  assert.match(pagina, /cuadrado · 1:1/);
+  assert.match(pagina, /vertical · 3:4/);
+  assert.match(pagina, /barra · 32:9/);
   assert.match(pagina, /id="salida-custom"/);
   assert.match(pagina, /02<\/b> Bitrate y códec/);
   assert.match(pagina, /Cualquier equipo/);
   assert.match(pagina, /H\.264 Main@3\.1/);
+});
+
+test('el TikTok vertical pasa al Tester en local y abre por defecto una adaptación 16:9', () => {
+  const pagina = readFileSync(new URL('../tester/index.html', import.meta.url), 'utf8');
+  assert.match(pagina, /const TRANSFER_DB = 'pixeria-media-transfer'/);
+  assert.match(pagina, /new URLSearchParams\(location\.search\)\.get\('source'\) !== 'tiktok'/);
+  assert.match(pagina, /await cargar\(file\)/);
+  assert.match(pagina, /elegirFormato\('16:9'\)/);
 });
 
 test('los formatos universales salen en 720p horizontal o vertical', () => {
@@ -57,6 +69,19 @@ test('los formatos universales salen en 720p horizontal o vertical', () => {
     (({ancho, alto}) => ({ancho, alto}))(perfilDeSalida({formato: '9:16', compatibilidad: 'universal'})),
     {ancho: 720, alto: 1280}
   );
+});
+
+test('los presets de signage conservan su relación y respetan el perfil técnico', () => {
+  const esperados = {
+    '4:3': [960, 720],
+    '1:1': [720, 720],
+    '3:4': [720, 960],
+    '32:9': [1280, 360]
+  };
+  for (const [formato, [ancho, alto]] of Object.entries(esperados)) {
+    const salida = perfilDeSalida({formato, compatibilidad: 'universal'});
+    assert.deepEqual([salida.ancho, salida.alto], [ancho, alto], formato);
+  }
 });
 
 test('custom exige dimensiones pares válidas y limita el tamaño al equipo elegido', () => {

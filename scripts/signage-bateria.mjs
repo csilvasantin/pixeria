@@ -7,7 +7,7 @@
 //   --salida <dir>      dónde dejar las variantes   (por defecto signage/variantes)
 //   --informe <fich>    dónde dejar el veredicto    (por defecto signage/bateria-informe.json)
 //   --perfiles a,b,c    solo estos perfiles          (por defecto, el censo entero)
-//   --formato <16:9|9:16|ANCHOxALTO> crea una única salida con ese encuadre
+//   --formato <16:9|4:3|1:1|9:16|3:4|32:9|ANCHOxALTO> crea una única salida con ese encuadre
 //   --compatibilidad <universal|fhd|uhd> fija bitrate, H.264, fps y techo de resolución
 //   --ia-laterales      genera contexto al pasar de vertical a horizontal
 //   --limpiar           borra las variantes previas antes de empezar
@@ -31,7 +31,7 @@ import {spawn} from 'node:child_process';
 import {mkdir, mkdtemp, readFile, rm, writeFile, stat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {PERFILES, PERFILES_POR_ID, evaluarCompatibilidad, perfilDeSalida, planificar, verificar} from '../assets/signage-perfiles.js';
+import {FORMATOS_SALIDA, PERFILES, PERFILES_POR_ID, evaluarCompatibilidad, perfilDeSalida, planificar, verificar} from '../assets/signage-perfiles.js';
 
 const IMAGENES = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif']);
 
@@ -224,18 +224,18 @@ function perfilSolicitado(op) {
     return null;
   }
   if (op.perfiles) throw new Error('--formato y --perfiles son alternativas: elige una salida o el censo');
-  if (op.formato === '16:9' || op.formato === '9:16') {
+  if (FORMATOS_SALIDA[op.formato]) {
     return perfilDeSalida({formato: op.formato, compatibilidad: op.compatibilidad});
   }
   const custom = op.formato.match(/^(\d{2,4})x(\d{2,4})$/);
-  if (!custom) throw new Error('--formato admite 16:9, 9:16 o ANCHOxALTO (por ejemplo 1920x540)');
+  if (!custom) throw new Error('--formato admite 16:9, 4:3, 1:1, 9:16, 3:4, 32:9 o ANCHOxALTO (por ejemplo 1920x540)');
   return perfilDeSalida({formato: 'custom', ancho: Number(custom[1]), alto: Number(custom[2]), compatibilidad: op.compatibilidad});
 }
 
 async function main() {
   const op = parsear(process.argv.slice(2));
   if (!op.origen) {
-    console.error('uso: node scripts/signage-bateria.mjs <original> [--formato 16:9|9:16|ANCHOxALTO] [--compatibilidad universal|fhd|uhd] [--perfiles a,b] [--ia-laterales] [--limpiar]');
+    console.error('uso: node scripts/signage-bateria.mjs <original> [--formato 16:9|4:3|1:1|9:16|3:4|32:9|ANCHOxALTO] [--compatibilidad universal|fhd|uhd] [--perfiles a,b] [--ia-laterales] [--limpiar]');
     process.exit(2);
   }
   if ((await ejecutar('ffmpeg', ['-version'])).codigo !== 0) {

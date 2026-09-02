@@ -35,7 +35,7 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.02.09.2026.r1.06:43">
+  <meta name="admiranext-version" content="Pixeria v.02.09.2026.r2.08:42">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
 <link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
@@ -191,7 +191,11 @@
       <div class="paso" id="titulo-formato"><b>01</b> Formato de salida</div>
       <div class="op">
         <button id="salida-16-9" aria-pressed="true">horizontal · 16:9</button>
+        <button id="salida-4-3" aria-pressed="false">horizontal · 4:3</button>
+        <button id="salida-1-1" aria-pressed="false">cuadrado · 1:1</button>
         <button id="salida-9-16" aria-pressed="false">vertical · 9:16</button>
+        <button id="salida-3-4" aria-pressed="false">vertical · 3:4</button>
+        <button id="salida-32-9" aria-pressed="false">barra · 32:9</button>
         <button id="salida-custom" aria-pressed="false">custom</button>
         <span class="custom" id="custom-medidas" hidden>
           <label><span class="sr-only">ancho personalizado</span><input type="number" id="custom-ancho" min="64" max="7680" step="2" value="1920"></label>
@@ -299,6 +303,9 @@ let sujeto = null;   // {url, tipo:'imagen'|'video', ancho, alto, bitrateKbps, f
 let informe = null;  // veredicto real del motor, si está publicado
 let formatoSalida = '16:9';
 let compatibilidad = 'universal';
+const TRANSFER_DB = 'pixeria-media-transfer';
+const TRANSFER_STORE = 'media';
+const TRANSFER_KEY = 'latest-tiktok';
 
 function muestra(w, h) {
   return {
@@ -329,6 +336,40 @@ async function desdeFichero(file) {
     fps: 0, duracion: esVideo ? el.duration : 0, audio: false,
     nombre: file.name, estimado: bitrateKbps > 0
   };
+}
+
+function leerTikTokTransferido() {
+  if (!('indexedDB' in window)) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const request = indexedDB.open(TRANSFER_DB, 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(TRANSFER_STORE)) request.result.createObjectStore(TRANSFER_STORE);
+    };
+    request.onerror = () => resolve(null);
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction(TRANSFER_STORE, 'readonly');
+      const get = tx.objectStore(TRANSFER_STORE).get(TRANSFER_KEY);
+      get.onsuccess = () => { db.close(); resolve(get.result || null); };
+      get.onerror = () => { db.close(); resolve(null); };
+    };
+  });
+}
+
+async function cargarTikTokTransferido() {
+  if (new URLSearchParams(location.search).get('source') !== 'tiktok') return false;
+  const transferencia = await leerTikTokTransferido();
+  if (!transferencia?.blob) {
+    $('origen').innerHTML = '<span style="color:var(--warn)">~ No encuentro una exportación reciente. Vuelve a TikTok, exporta el vídeo y pulsa “Probar en Tester”.</span>';
+    return false;
+  }
+  const file = new File([transferencia.blob], transferencia.filename || 'tiktok-vertical.webm', {
+    type: transferencia.type || transferencia.blob.type || 'video/webm'
+  });
+  await cargar(file);
+  elegirFormato('16:9');
+  $('origen').insertAdjacentHTML('beforeend', ' · <strong>recibido del generador TikTok</strong>');
+  return true;
 }
 
 function veredictoDelMotor(perfilId) {
@@ -488,7 +529,11 @@ function pintar() {
 // ── Mando ───────────────────────────────────────────────────────────────────
 const botonesFormato = {
   '16:9': $('salida-16-9'),
+  '4:3': $('salida-4-3'),
+  '1:1': $('salida-1-1'),
   '9:16': $('salida-9-16'),
+  '3:4': $('salida-3-4'),
+  '32:9': $('salida-32-9'),
   custom: $('salida-custom')
 };
 const botonesCompatibilidad = {
@@ -555,6 +600,7 @@ fetch('/signage/bateria-informe.json', {cache: 'no-store'})
 
 sujeto = muestra(1920, 1080);
 pintar();
+cargarTikTokTransferido();
 </script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>

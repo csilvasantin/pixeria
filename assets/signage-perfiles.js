@@ -130,6 +130,15 @@ export const COMPATIBILIDADES = [
 
 export const COMPATIBILIDADES_POR_ID = new Map(COMPATIBILIDADES.map((p) => [p.id, p]));
 
+export const FORMATOS_SALIDA = Object.freeze({
+  '16:9': [16, 9],
+  '4:3': [4, 3],
+  '1:1': [1, 1],
+  '9:16': [9, 16],
+  '3:4': [3, 4],
+  '32:9': [32, 9]
+});
+
 function enteroPar(valor, minimo = 64, maximo = 7680) {
   const numero = Math.min(maximo, Math.max(minimo, Math.round(Number(valor) || 0)));
   return numero % 2 ? numero - 1 : numero;
@@ -175,15 +184,19 @@ export function perfilDeSalida({formato = '16:9', ancho = 1920, alto = 1080, com
   if (!tecnica) throw new Error(`compatibilidad desconocida: ${compatibilidad}`);
 
   let solicitada;
-  if (formato === '16:9') solicitada = {ancho: tecnica.ancho16, alto: tecnica.alto16};
-  else if (formato === '9:16') solicitada = {ancho: tecnica.alto16, alto: tecnica.ancho16};
-  else if (formato === 'custom') solicitada = {ancho: dimensionCustom(ancho, 'ancho'), alto: dimensionCustom(alto, 'alto')};
-  else throw new Error(`formato desconocido: ${formato}`);
+  if (formato === 'custom') solicitada = {ancho: dimensionCustom(ancho, 'ancho'), alto: dimensionCustom(alto, 'alto')};
+  else if (FORMATOS_SALIDA[formato]) {
+    const [ratioAncho, ratioAlto] = FORMATOS_SALIDA[formato];
+    const base = tecnica.alto16;
+    solicitada = ratioAncho >= ratioAlto
+      ? {ancho: redondearPar(base * ratioAncho / ratioAlto), alto: base}
+      : {ancho: base, alto: redondearPar(base * ratioAlto / ratioAncho)};
+  } else throw new Error(`formato desconocido: ${formato}`);
 
   const limitada = limitarResolucion(solicitada.ancho, solicitada.alto, tecnica);
   const orientacion = limitada.ancho > limitada.alto ? 'apaisada' : limitada.alto > limitada.ancho ? 'vertical' : 'custom';
   return {
-    id: `salida-${formato.replace(':', 'x')}-${tecnica.id}`,
+    id: `salida-${formato.replaceAll(':', 'x')}-${tecnica.id}`,
     nombre: `Salida ${formato === 'custom' ? 'custom' : formato} · ${tecnica.nombre}`,
     ancho: limitada.ancho,
     alto: limitada.alto,
