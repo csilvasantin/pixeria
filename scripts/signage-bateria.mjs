@@ -7,6 +7,8 @@
 //   --salida <dir>      dónde dejar las variantes   (por defecto signage/variantes)
 //   --informe <fich>    dónde dejar el veredicto    (por defecto signage/bateria-informe.json)
 //   --perfiles a,b,c    solo estos perfiles          (por defecto, el censo entero)
+//   --formato <16:9|9:16|ANCHOxALTO> crea una única salida con ese encuadre
+//   --compatibilidad <universal|fhd|uhd> fija bitrate, H.264, fps y techo de resolución
 //   --ia-laterales      genera contexto al pasar de vertical a horizontal
 //   --limpiar           borra las variantes previas antes de empezar
 //
@@ -29,7 +31,7 @@ import {spawn} from 'node:child_process';
 import {mkdir, mkdtemp, readFile, rm, writeFile, stat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {PERFILES, PERFILES_POR_ID, planificar, verificar} from '../assets/signage-perfiles.js';
+import {PERFILES, PERFILES_POR_ID, evaluarCompatibilidad, perfilDeSalida, planificar, verificar} from '../assets/signage-perfiles.js';
 
 const IMAGENES = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif']);
 
@@ -78,12 +80,15 @@ async function sondar(fichero) {
     ancho: Number(video.width) || 0,
     alto: Number(video.height) || 0,
     codec: String(video.codec_name || '').toLowerCase(),
+    pixFmt: String(video.pix_fmt || '').toLowerCase(),
     h264Perfil: String(video.profile || '').toLowerCase(),
     h264Nivel: nivelDesdeEntero(video.level),
     bitrateKbps: bitrateBits ? Math.round(bitrateBits / 1000) : 0,
     fps: fpsDesdeFraccion(video.r_frame_rate),
     duracion,
-    audio: !!audio
+    audio: !!audio,
+    audioCodec: String((audio && audio.codec_name) || '').toLowerCase(),
+    contenedor: String(formato.format_name || '').toLowerCase()
   };
 }
 
@@ -194,12 +199,18 @@ async function expandirLaterales(origen, entrada, token) {
 }
 
 function parsear(argv) {
-  const o = {origen: '', salida: 'signage/variantes', informe: 'signage/bateria-informe.json', perfiles: null, limpiar: false, iaLaterales: false};
+  const o = {origen: '', salida: 'signage/variantes', informe: 'signage/bateria-informe.json', perfiles: null,
+    formato: '', compatibilidad: 'universal', compatibilidadIndicada: false, limpiar: false, iaLaterales: false};
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--salida') o.salida = argv[++i];
     else if (a === '--informe') o.informe = argv[++i];
     else if (a === '--perfiles') o.perfiles = String(argv[++i]).split(',').map((s) => s.trim()).filter(Boolean);
+    else if (a === '--formato') o.formato = String(argv[++i] || '').toLowerCase();
+    else if (a === '--compatibilidad') {
+      o.compatibilidad = String(argv[++i] || '').toLowerCase();
+      o.compatibilidadIndicada = true;
+    }
     else if (a === '--ia-laterales') o.iaLaterales = true;
     else if (a === '--limpiar') o.limpiar = true;
     else if (!a.startsWith('--') && !o.origen) o.origen = a;
@@ -207,10 +218,24 @@ function parsear(argv) {
   return o;
 }
 
+function perfilSolicitado(op) {
+  if (!op.formato) {
+    if (op.compatibilidadIndicada) throw new Error('--compatibilidad necesita --formato: no modifica en silencio el censo completo');
+    return null;
+  }
+  if (op.perfiles) throw new Error('--formato y --perfiles son alternativas: elige una salida o el censo');
+  if (op.formato === '16:9' || op.formato === '9:16') {
+    return perfilDeSalida({formato: op.formato, compatibilidad: op.compatibilidad});
+  }
+  const custom = op.formato.match(/^(\d{2,4})x(\d{2,4})$/);
+  if (!custom) throw new Error('--formato admite 16:9, 9:16 o ANCHOxALTO (por ejemplo 1920x540)');
+  return perfilDeSalida({formato: 'custom', ancho: Number(custom[1]), alto: Number(custom[2]), compatibilidad: op.compatibilidad});
+}
+
 async function main() {
   const op = parsear(process.argv.slice(2));
   if (!op.origen) {
-    console.error('uso: node scripts/signage-bateria.mjs <original> [--salida dir] [--informe f] [--perfiles a,b] [--ia-laterales] [--limpiar]');
+    console.error('uso: node scripts/signage-bateria.mjs <original> [--formato 16:9|9:16|ANCHOxALTO] [--compatibilidad universal|fhd|uhd] [--perfiles a,b] [--ia-laterales] [--limpiar]');
     process.exit(2);
   }
   if ((await ejecutar('ffmpeg', ['-version'])).codigo !== 0) {
@@ -218,7 +243,8 @@ async function main() {
     process.exit(3);
   }
 
-  const perfiles = op.perfiles
+  const salidaSolicitada = perfilSolicitado(op);
+  const perfiles = salidaSolicitada ? [salidaSolicitada] : op.perfiles
     ? op.perfiles.map((id) => {
         const p = PERFILES_POR_ID.get(id);
         if (!p) { console.error(`✖ perfil desconocido: ${id}`); process.exit(2); }
@@ -314,7 +340,18 @@ async function main() {
   const informe = {
     generadoEn: new Date().toISOString(),
     herramienta: 'pixeria/signage-bateria',
-    origen, resumen, pruebas
+    origen,
+    formatoSalida: salidaSolicitada ? {
+      formato: salidaSolicitada.formato,
+      solicitada: salidaSolicitada.solicitada,
+      ancho: salidaSolicitada.ancho,
+      alto: salidaSolicitada.alto
+    } : null,
+    compatibilidad: salidaSolicitada?.compatibilidad || null,
+    equiposCompatibles: salidaSolicitada
+      ? PERFILES.map((perfil) => ({perfil: perfil.id, ...evaluarCompatibilidad(pruebas[0].plan, perfil)}))
+      : null,
+    resumen, pruebas
   };
   await mkdir(path.dirname(op.informe), {recursive: true});
   await writeFile(op.informe, JSON.stringify(informe, null, 2) + '\n');

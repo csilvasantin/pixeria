@@ -5,8 +5,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {
-  PERFILES, PERFILES_POR_ID, aspecto, recortePerdido,
-  bitrateObjetivo, planificar, verificar
+  COMPATIBILIDADES_POR_ID, PERFILES, PERFILES_POR_ID, aspecto, recortePerdido,
+  bitrateObjetivo, evaluarCompatibilidad, perfilDeSalida, planificar, verificar
 } from '../assets/signage-perfiles.js';
 
 const FHD = PERFILES_POR_ID.get('fhd-landscape');
@@ -35,6 +35,78 @@ test('la información de apoyo queda plegada por defecto para priorizar el teste
   assert.match(pagina, /<details class="como">[\s\S]*Cómo crea las variantes el motor[\s\S]*<\/details>/);
   assert.doesNotMatch(pagina, /<details class="como"\s+open/,
     'la explicación técnica también debe comenzar cerrada');
+});
+
+test('el tester separa formato de salida y bitrate/códec en dos zonas', () => {
+  const pagina = readFileSync(new URL('../tester/index.html', import.meta.url), 'utf8');
+  assert.match(pagina, /01<\/b> Formato de salida/);
+  assert.match(pagina, /horizontal · 16:9/);
+  assert.match(pagina, /vertical · 9:16/);
+  assert.match(pagina, /id="salida-custom"/);
+  assert.match(pagina, /02<\/b> Bitrate y códec/);
+  assert.match(pagina, /Cualquier equipo/);
+  assert.match(pagina, /H\.264 Main@3\.1/);
+});
+
+test('los formatos universales salen en 720p horizontal o vertical', () => {
+  assert.deepEqual(
+    (({ancho, alto}) => ({ancho, alto}))(perfilDeSalida({formato: '16:9', compatibilidad: 'universal'})),
+    {ancho: 1280, alto: 720}
+  );
+  assert.deepEqual(
+    (({ancho, alto}) => ({ancho, alto}))(perfilDeSalida({formato: '9:16', compatibilidad: 'universal'})),
+    {ancho: 720, alto: 1280}
+  );
+});
+
+test('custom exige dimensiones pares válidas y limita el tamaño al equipo elegido', () => {
+  const salida = perfilDeSalida({formato: 'custom', ancho: 3840, alto: 600, compatibilidad: 'universal'});
+  assert.ok(salida.reducida, 'un custom panorámico grande debe reducirse para seguir siendo universal');
+  assert.ok(salida.ancho * salida.alto <= COMPATIBILIDADES_POR_ID.get('universal').maxPixeles);
+  assert.ok(Math.max(salida.ancho, salida.alto) <= 1280);
+  assert.ok(Math.ceil(salida.ancho / 16) * Math.ceil(salida.alto / 16) <= 3600,
+    'el custom debe caber también en los macroblocks de H.264 Level 3.1');
+  assert.ok(Math.abs((salida.ancho / salida.alto) - (3840 / 600)) < 0.02,
+    'la reducción debe conservar la relación de aspecto');
+  assert.throws(() => perfilDeSalida({formato: 'custom', ancho: 1919, alto: 1080}), /número par/);
+  assert.throws(() => perfilDeSalida({formato: 'custom', ancho: 0, alto: 1080}), /entre 64 y 7680/);
+  assert.throws(() => perfilDeSalida({formato: 'custom', ancho: 64, alto: 7680}), /relación custom es demasiado extrema/);
+});
+
+test('máxima compatibilidad fija el denominador común técnico', () => {
+  const salida = perfilDeSalida({formato: '16:9', compatibilidad: 'universal'});
+  const plan = planificar(origenFHD, salida);
+  assert.equal(plan.h264Perfil, 'main');
+  assert.equal(plan.h264Nivel, '3.1');
+  assert.equal(plan.codec, 'h264');
+  assert.equal(plan.pixelFormat, 'yuv420p');
+  assert.equal(plan.audioCodec, 'aac');
+  assert.equal(plan.contenedor, 'mp4');
+  assert.equal(plan.fps, 30);
+  assert.ok(plan.bitrateKbps <= 3000);
+  assert.equal(PERFILES.filter((perfil) => evaluarCompatibilidad(plan, perfil).compatible).length, PERFILES.length);
+});
+
+test('la matriz técnica separa una salida universal de una exigente', () => {
+  const universal = planificar(origenFHD, perfilDeSalida({formato: '16:9', compatibilidad: 'universal'}));
+  assert.equal(evaluarCompatibilidad(universal, LEGACY).compatible, true);
+  const cuatroK = planificar({ancho: 3840, alto: 2160, bitrateKbps: 20000, fps: 60},
+    perfilDeSalida({formato: '16:9', compatibilidad: 'uhd'}));
+  const juicio = evaluarCompatibilidad(cuatroK, LEGACY);
+  assert.equal(juicio.compatible, false);
+  assert.ok(juicio.fallos.some((f) => f.includes('nivel')));
+  assert.ok(juicio.fallos.some((f) => f.includes('bitrate')));
+  assert.ok(juicio.fallos.some((f) => f.includes('fps')));
+});
+
+test('el motor acepta formato y compatibilidad sin mezclarlo con el censo', () => {
+  assert.match(motor, /--formato/);
+  assert.match(motor, /--compatibilidad/);
+  assert.match(motor, /perfilDeSalida/);
+  assert.match(motor, /equiposCompatibles/);
+  assert.match(motor, /compatibilidadIndicada/);
+  assert.match(motor, /--compatibilidad necesita --formato/);
+  assert.match(motor, /--formato y --perfiles son alternativas/);
 });
 
 test('el censo de perfiles está completo y sin ids repetidos', () => {
@@ -200,6 +272,19 @@ test('un códec que no es h264 rompe el contrato de la batería', () => {
   const plan = planificar(origenFHD, FHD);
   const r = verificar(plan, {ancho: 1920, alto: 1080, codec: 'hevc', bitrateKbps: 3000}, origenFHD);
   assert.equal(r.veredicto, 'fallo');
+});
+
+test('el verificador caza píxel, audio, contenedor y fps incompatibles', () => {
+  const plan = planificar(origenFHD, perfilDeSalida({formato: '16:9', compatibilidad: 'universal'}));
+  const r = verificar(plan, {
+    ancho: 1280, alto: 720, codec: 'h264', pixFmt: 'yuv444p',
+    h264Perfil: 'main', h264Nivel: '3.1', bitrateKbps: 2500, fps: 60,
+    duracion: 10, audio: true, audioCodec: 'opus', contenedor: 'matroska,webm'
+  }, origenFHD);
+  assert.equal(r.veredicto, 'fallo');
+  for (const texto of ['formato de píxel', 'audio opus', 'contenedor', 'fotogramas']) {
+    assert.ok(r.fallos.some((f) => f.includes(texto)), `no detectó ${texto}: ${r.fallos}`);
+  }
 });
 
 test('todos los perfiles del censo producen un plan válido desde un mismo original', () => {

@@ -106,6 +106,100 @@ export const PERFILES = [
 
 export const PERFILES_POR_ID = new Map(PERFILES.map((p) => [p.id, p]));
 
+// ─── SALIDAS DEL ADAPTADOR ─────────────────────────────────────────────────
+// La geometría y la compatibilidad son decisiones distintas. El usuario elige
+// primero el encuadre y después cuánto puede exigir al reproductor. «Universal»
+// usa el suelo común del censo: H.264 Main@3.1, 30 fps y hasta 3 Mbps.
+export const COMPATIBILIDADES = [
+  {
+    id: 'universal', nombre: 'Cualquier equipo', detalle: 'máxima compatibilidad',
+    ancho16: 1280, alto16: 720, maxPixeles: 1280 * 720, maxLado: 1280,
+    maxMacroblocks: 3600, techoKbps: 3000, sueloKbps: 900, h264: 'main@3.1', fps: 30
+  },
+  {
+    id: 'fhd', nombre: 'Parque Full HD', detalle: 'más detalle en equipos actuales',
+    ancho16: 1920, alto16: 1080, maxPixeles: 1920 * 1080, maxLado: 1920,
+    maxMacroblocks: 8192, techoKbps: 8000, sueloKbps: 2500, h264: 'high@4.0', fps: 30
+  },
+  {
+    id: 'uhd', nombre: 'Parque 4K', detalle: 'máxima calidad, exige hardware moderno',
+    ancho16: 3840, alto16: 2160, maxPixeles: 3840 * 2160, maxLado: 3840,
+    maxMacroblocks: 36864, techoKbps: 20000, sueloKbps: 6000, h264: 'high@5.1', fps: 60
+  }
+];
+
+export const COMPATIBILIDADES_POR_ID = new Map(COMPATIBILIDADES.map((p) => [p.id, p]));
+
+function enteroPar(valor, minimo = 64, maximo = 7680) {
+  const numero = Math.min(maximo, Math.max(minimo, Math.round(Number(valor) || 0)));
+  return numero % 2 ? numero - 1 : numero;
+}
+
+function redondearPar(valor) {
+  const numero = Math.max(2, Math.round(Number(valor) || 0));
+  return numero % 2 ? numero - 1 : numero;
+}
+
+function dimensionCustom(valor, nombre) {
+  const numero = Number(valor);
+  if (!Number.isInteger(numero) || numero < 64 || numero > 7680 || numero % 2 !== 0) {
+    throw new Error(`${nombre} debe ser un número par entre 64 y 7680 píxeles`);
+  }
+  return numero;
+}
+
+function limitarResolucion(ancho, alto, compatibilidad) {
+  const w = enteroPar(ancho);
+  const h = enteroPar(alto);
+  const escala = Math.min(
+    1,
+    compatibilidad.maxLado / Math.max(w, h),
+    Math.sqrt(compatibilidad.maxPixeles / (w * h))
+  );
+  let salidaAncho = redondearPar(w * escala);
+  let salidaAlto = redondearPar(h * escala);
+  // Level 3.1 y compañía limitan bloques de 16×16, no píxeles exactos. Un
+  // custom puede caber por píxeles y pasarse por el redondeo de macroblocks.
+  while (Math.ceil(salidaAncho / 16) * Math.ceil(salidaAlto / 16) > compatibilidad.maxMacroblocks) {
+    salidaAncho = redondearPar(salidaAncho * 0.995);
+    salidaAlto = redondearPar(salidaAlto * 0.995);
+  }
+  if (salidaAncho < 64 || salidaAlto < 64) {
+    throw new Error('la relación custom es demasiado extrema para conservar al menos 64 píxeles por lado en este perfil');
+  }
+  return {ancho: salidaAncho, alto: salidaAlto, reducida: escala < 0.999 || salidaAncho !== w || salidaAlto !== h};
+}
+
+export function perfilDeSalida({formato = '16:9', ancho = 1920, alto = 1080, compatibilidad = 'universal'} = {}) {
+  const tecnica = COMPATIBILIDADES_POR_ID.get(compatibilidad);
+  if (!tecnica) throw new Error(`compatibilidad desconocida: ${compatibilidad}`);
+
+  let solicitada;
+  if (formato === '16:9') solicitada = {ancho: tecnica.ancho16, alto: tecnica.alto16};
+  else if (formato === '9:16') solicitada = {ancho: tecnica.alto16, alto: tecnica.ancho16};
+  else if (formato === 'custom') solicitada = {ancho: dimensionCustom(ancho, 'ancho'), alto: dimensionCustom(alto, 'alto')};
+  else throw new Error(`formato desconocido: ${formato}`);
+
+  const limitada = limitarResolucion(solicitada.ancho, solicitada.alto, tecnica);
+  const orientacion = limitada.ancho > limitada.alto ? 'apaisada' : limitada.alto > limitada.ancho ? 'vertical' : 'custom';
+  return {
+    id: `salida-${formato.replace(':', 'x')}-${tecnica.id}`,
+    nombre: `Salida ${formato === 'custom' ? 'custom' : formato} · ${tecnica.nombre}`,
+    ancho: limitada.ancho,
+    alto: limitada.alto,
+    orientacion,
+    familias: [tecnica.detalle],
+    techoKbps: tecnica.techoKbps,
+    sueloKbps: tecnica.sueloKbps,
+    h264: tecnica.h264,
+    fps: tecnica.fps,
+    formato,
+    compatibilidad: tecnica.id,
+    solicitada,
+    reducida: limitada.reducida
+  };
+}
+
 // ─── REGLAS DE ADAPTACIÓN ───────────────────────────────────────────────────
 
 // Tolerancia de relación de aspecto por debajo de la cual dos formatos se
@@ -217,6 +311,9 @@ export function planificar(origen, perfil) {
   if (origen.fps && perfil.fps && origen.fps > perfil.fps) {
     avisos.push(`fotogramas de ${origen.fps} a ${perfil.fps}: la gama no sostiene más`);
   }
+  if (perfil.reducida) {
+    avisos.push(`resolución custom limitada de ${perfil.solicitada.ancho}×${perfil.solicitada.alto} a ${perfil.ancho}×${perfil.alto} para respetar el perfil ${perfil.compatibilidad}`);
+  }
 
   return {
     perfilId: perfil.id,
@@ -229,8 +326,15 @@ export function planificar(origen, perfil) {
     recortePerdido: Number(perdido.toFixed(4)),
     bitrateKbps: bitrate.kbps,
     bitrateMotivo: bitrate.motivo,
+    codec: 'h264',
+    pixelFormat: 'yuv420p',
+    audioCodec: 'aac',
+    contenedor: 'mp4',
     h264Perfil,
     h264Nivel,
+    compatibilidad: perfil.compatibilidad || 'por-equipo',
+    formato: perfil.formato || '',
+    solicitada: perfil.solicitada || null,
     fps: Math.min(origen.fps || perfil.fps, perfil.fps),
     gopSegundos: perfil.gopSegundos || 2,
     avisos
@@ -260,6 +364,20 @@ function perfilExcede(obtenido, maximo) {
   return a > b;
 }
 
+// Decide si UNA salida ya codificada entra en el decodificador de cada perfil.
+// No reencuadra ni fabrica otra variante: aquí solo se juzga reproducción.
+export function evaluarCompatibilidad(plan, perfil) {
+  const fallos = [];
+  const [perfilMaximo, nivelMaximo] = String(perfil.h264).split('@');
+  if (plan.codec !== 'h264') fallos.push(`códec ${plan.codec}: ${perfil.nombre} exige H.264`);
+  if (perfilExcede(plan.h264Perfil, perfilMaximo)) fallos.push(`perfil ${plan.h264Perfil} por encima de ${perfilMaximo}`);
+  if (nivelExcede(plan.h264Nivel, nivelMaximo)) fallos.push(`nivel ${plan.h264Nivel} por encima de ${nivelMaximo}`);
+  if (plan.bitrateKbps > perfil.techoKbps) fallos.push(`bitrate ${plan.bitrateKbps} sobre ${perfil.techoKbps} kbps`);
+  if (plan.fps > perfil.fps) fallos.push(`${plan.fps} fps sobre el máximo de ${perfil.fps}`);
+  if (plan.pixelFormat !== 'yuv420p') fallos.push(`formato de píxel ${plan.pixelFormat}`);
+  return {compatible: fallos.length === 0, fallos};
+}
+
 // Compara lo que PEDIMOS con lo que el fichero resultante DICE que es.
 // No se fía del encoder: ffprobe lee el fichero de salida y esto lo juzga.
 // Veredictos: 'ok' (salió tal cual), 'ajustado' (salió, con concesiones que hay
@@ -274,11 +392,23 @@ export function verificar(plan, sonda, origen = {}) {
   if (sonda.codec && String(sonda.codec).toLowerCase() !== 'h264') {
     fallos.push(`códec ${sonda.codec}: fuera del contrato de la batería (h264)`);
   }
+  if (sonda.pixFmt && String(sonda.pixFmt).toLowerCase() !== plan.pixelFormat) {
+    fallos.push(`formato de píxel ${sonda.pixFmt}: se pidió ${plan.pixelFormat} para compatibilidad`);
+  }
+  if (sonda.audio && sonda.audioCodec && String(sonda.audioCodec).toLowerCase() !== plan.audioCodec) {
+    fallos.push(`audio ${sonda.audioCodec}: se pidió ${plan.audioCodec}`);
+  }
+  if (sonda.contenedor && !String(sonda.contenedor).toLowerCase().split(',').includes(plan.contenedor)) {
+    fallos.push(`contenedor ${sonda.contenedor}: se pidió ${plan.contenedor}`);
+  }
   if (sonda.h264Perfil && perfilExcede(sonda.h264Perfil, plan.h264Perfil)) {
     fallos.push(`perfil H.264 ${sonda.h264Perfil} por encima de ${plan.h264Perfil}: pantalla negra en esa gama`);
   }
   if (sonda.h264Nivel && nivelExcede(sonda.h264Nivel, plan.h264Nivel)) {
     fallos.push(`nivel H.264 ${sonda.h264Nivel} por encima de ${plan.h264Nivel}: el decodificador lo rechaza`);
+  }
+  if (sonda.fps && plan.fps && sonda.fps > plan.fps + 0.5) {
+    fallos.push(`fotogramas ${sonda.fps} fps por encima del máximo de ${plan.fps}`);
   }
   const limite = plan.bitrateKbps * (1 + TOLERANCIA_BITRATE);
   if (sonda.bitrateKbps && sonda.bitrateKbps > limite) {
