@@ -61,34 +61,6 @@
     .stock-lightbox-nav[disabled]{opacity:0;pointer-events:none}
     .stock-lightbox[hidden] .stock-lightbox-nav{display:none}
     @media (max-width:640px){ .stock-lightbox-nav{width:42px;height:64px;font-size:26px} .stock-lightbox-nav.prev{left:8px} .stock-lightbox-nav.next{right:8px} }
-
-    /* ── CAMPAIGNS section (metatag-packaged series, e.g. #sabiasqueXtanco) ── */
-    .camp-section{ margin:0 0 28px; }
-    .camp-head{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
-    .camp-head h2{ font-size:20px; color:var(--matrix); letter-spacing:.03em; margin:0; }
-    .camp-head .camp-lead{ font-size:12px; color:var(--muted); margin:0; }
-    .camp-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
-    .camp-card{ display:flex; flex-direction:column; border:1px solid var(--line-bright); border-radius:12px;
-      background:var(--panel-2); overflow:hidden; transition:border-color .15s, box-shadow .15s; }
-    .camp-card:hover{ border-color:var(--matrix); box-shadow:var(--glow); }
-    .camp-prevlink{ display:block; position:relative; aspect-ratio:16/9; background:#0a0f14; }
-    .camp-prev{ position:absolute; inset:0; width:100%; height:100%; border:0; pointer-events:none; }
-    .camp-prevlink::after{ content:'▶ PLAY LOOP'; position:absolute; right:10px; bottom:10px; font-size:10px;
-      letter-spacing:.1em; color:var(--matrix); background:rgba(0,0,0,.7); border:1px solid var(--line-bright);
-      border-radius:6px; padding:3px 8px; opacity:0; transition:opacity .15s; }
-    .camp-prevlink:hover::after{ opacity:1; }
-    .camp-body{ display:flex; flex-direction:column; gap:8px; padding:12px 14px 14px; }
-    .camp-body h3{ font-size:14px; color:var(--matrix); margin:0; }
-    .camp-tags{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
-    .camp-tag{ border:1px solid #aa88ff; background:rgba(170,136,255,.14); color:#e6dcff; border-radius:999px;
-      padding:2px 8px; font-size:11px; }
-    .camp-target{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
-    .camp-items{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px; font-size:12px; }
-    .camp-items a{ color:var(--matrix); text-decoration:none; }
-    .camp-items a:hover{ text-decoration:underline; }
-    .camp-seg{ font-size:10px; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:0 5px; margin-left:4px; }
-    .camp-actions{ display:flex; align-items:center; gap:10px; margin-top:4px; }
-    .camp-meta{ font-size:11px; color:var(--muted); }
   </style>
   <script defer src="/assets/analytics.js?v=20260617-consent"></script>
   <script defer src="/assets/consent.js?v=20260617"></script>
@@ -144,16 +116,6 @@
   </header>
 
   <main>
-    <!-- CAMPAIGNS: metatag-packaged content series (e.g. #sabiasqueXtanco),
-         listed from /campanas/index.json + each campaign's feed.json. -->
-    <section class="camp-section" id="campSection" hidden aria-label="Campaigns">
-      <div class="camp-head">
-        <h2>📣 Campaigns · <span id="campCount">0</span></h2>
-        <p class="camp-lead">Metatag-packaged series, ready to be distributed to the network's screens (Xtanco and circuits).</p>
-      </div>
-      <div id="campGrid" class="camp-grid"></div>
-    </section>
-
     <section class="stock-toolbar">
       <nav class="stock-pager stock-pager-top" aria-label="Vista, filtros, búsqueda, orden y paginación">
         <div class="stock-view" role="group" aria-label="View">
@@ -999,61 +961,6 @@
       await load();
       setTimeout(highlightFromQuery, 80);
     })();
-  })();
-  </script>
-  <script>
-  // ── CAMPAIGNS: renders metatag-packaged series (e.g. #sabiasqueXtanco) ────
-  // Manifest: /campanas/index.json (ids) → /campanas/<id>/feed.json (detail).
-  // Self-contained: if the manifest is missing or fails, the section stays hidden.
-  (function(){
-    const sec = document.getElementById('campSection');
-    const grid = document.getElementById('campGrid');
-    if(!sec || !grid) return;
-    const esc = s => String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const segText = s => s ? Object.entries(s).map(([k,v])=>`${k}: ${v}`).join(' · ') : '';
-    fetch('/campanas/index.json', {cache:'no-store'})
-      .then(r => r.ok ? r.json() : null)
-      .then(async idx => {
-        const ids = (idx && Array.isArray(idx.campaigns)) ? idx.campaigns : [];
-        if(!ids.length) return;
-        const feeds = (await Promise.allSettled(ids.map(id =>
-          fetch(`/campanas/${encodeURIComponent(id)}/feed.json`, {cache:'no-store'})
-            .then(r => r.ok ? r.json() : null)
-            .then(f => f && { id, ...f })
-        ))).map(r => r.status==='fulfilled' ? r.value : null).filter(Boolean);
-        if(!feeds.length) return;
-        const cnt = document.getElementById('campCount');
-        if(cnt) cnt.textContent = feeds.length;
-        grid.innerHTML = feeds.map(c => {
-          const base = `/campanas/${encodeURIComponent(c.id)}/`;
-          const player = base + (c.player || 'bucle.html');
-          const items = (c.items||[]).map(it =>
-            `<li><a href="${esc(base + it.url)}" target="_blank" rel="noopener">${esc(it.title||it.id)}</a>${it.segment ? ` <span class="camp-seg">${esc(segText(it.segment))}</span>` : ''}</li>`
-          ).join('');
-          const tags = (c.tags||[]).map(t => `<span class="camp-tag">#${esc(t)}</span>`).join('');
-          const meta = [
-            `${(c.items||[]).length} pieces`,
-            c.dwell_ms ? Math.round(c.dwell_ms/1000)+' s/piece' : '',
-            c.updatedAt ? esc(c.updatedAt) : ''
-          ].filter(Boolean).join(' · ');
-          return `<article class="camp-card">
-            <a class="camp-prevlink" href="${esc(player)}" target="_blank" rel="noopener" title="Open the loop full screen">
-              <iframe class="camp-prev" src="${esc(player)}" loading="lazy" tabindex="-1" title="Preview ${esc(c.title||c.id)}"></iframe>
-            </a>
-            <div class="camp-body">
-              <h3>${esc(c.title||c.id)}</h3>
-              <div class="camp-tags">${tags}${c.target ? `<span class="camp-target">→ ${esc(c.target)}</span>` : ''}</div>
-              <ul class="camp-items">${items}</ul>
-              <div class="camp-actions">
-                <a class="btn primary" href="${esc(player)}" target="_blank" rel="noopener">▶ Play loop</a>
-                <span class="camp-meta">${meta}</span>
-              </div>
-            </div>
-          </article>`;
-        }).join('');
-        sec.hidden = false;
-      })
-      .catch(()=>{});
   })();
   </script>
 </body>
