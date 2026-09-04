@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.02.09.2026.r4.15:47">
+  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r1.21:29">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -313,7 +313,7 @@
 
   <header class="page-head">
     <p class="eyebrow stock">Galería pública</p>
-    <h1>Stock · <span id="stockCount" class="stock-count" data-n="0">…</span> assets desplegados desde los 4 motores.</h1>
+    <h1>Stock · <span id="stockCount" class="stock-count" data-n="0">…</span> assets, desde <span id="stockMotores">…</span> motores.</h1>
     <p class="lead">Todo lo que se publica desde el botón <strong>📌 Publicar en Stock</strong> en audio, música, imágenes o video aparece aquí. Filtros por tipo y motor; búsqueda por prompt.</p>
   </header>
 
@@ -740,11 +740,22 @@
         return `${orientationBadgeHtml(it)}<img data-orientation-media src="${it.thumbnail || it.url}" alt="" loading="lazy">`;
       }
       if (it.type === 'video' || it.type === 'animation') {
-        // PREVIEW = fotograma real del propio vídeo (buscado a ~1s), NO el póster
-        // guardado: ese se generaba del frame 0 y salía en NEGRO (fundido de
-        // entrada). Carga PEREZOSA (IntersectionObserver, margen 600px) para no
-        // penalizar la rejilla; al pulsar ▶ se reproduce aquí. Clic en el vídeo
-        // abre el detalle.
+        // PREVIEW = el póster del asset cuando lo hay: desde el 4-sep-2026 (FLT
+        // pixeria stock) es un fotograma REAL del vídeo, sacado con ffmpeg en el
+        // Mac Mini al segundo 1,2 (stock-posters.py → POST /stock/poster), o la
+        // miniatura de YouTube en lo importado con yt-dlp. Una <img> de ~30 KB.
+        // Antes cada tarjeta era un <video preload=metadata> sin póster: 1-3 MB por
+        // tarjeta, 51 MB medidos en la primera página, solo para diez fotogramas.
+        // (El póster del frame 0 que salía NEGRO por el fundido de entrada ya no
+        // existe: el generador busca el 12 % de la duración.)
+        // Sin póster todavía (recién publicado, el launchd pasa cada 10 min): el
+        // <video> perezoso de siempre (IntersectionObserver, margen 600px), que
+        // hace seek a ~1s para enseñar algo con contenido.
+        const poster = /^https?:\/\//.test(String(it.thumbnail || '')) ? it.thumbnail : '';
+        if (poster) {
+          return `${orientationBadgeHtml(it)}<img class="stock-cover stock-video-poster" data-orientation-media src="${escAttr(poster)}" alt="" loading="lazy" decoding="async" style="background:#0a0f14;">
+                <button type="button" class="stock-media-play" data-act="playmini" data-url="${escAttr(it.url)}" title="Reproducir aquí (pequeño)" aria-label="Reproducir aquí">▶</button>`;
+        }
         return `${orientationBadgeHtml(it)}<video class="stock-cover stock-video-preview" data-orientation-media data-src="${escAttr(it.url)}" preload="metadata" muted playsinline disablepictureinpicture style="background:#0a0f14;"></video>
                 <button type="button" class="stock-media-play" data-act="playmini" data-url="${escAttr(it.url)}" title="Reproducir aquí (pequeño)" aria-label="Reproducir aquí">▶</button>`;
       }
@@ -1180,8 +1191,13 @@
       const total = allItems.length;
       const playable = allItems.filter(i => i && ADMIRATV_MEDIA.has(i.type) && i.url).length;
       const prev = parseInt(el.dataset.p || '0', 10);
-      el.textContent = playable + ' de ' + total;
+      // «661 reproducibles de 820»: a secas «661 de 820» parecía un fallo de carga
+      // (Carlos, 4-sep-2026). Y los motores se cuentan, no se fijan en 4: hay 35.
+      el.textContent = playable + ' reproducibles de ' + total;
       el.dataset.p = playable;
+      const motores = new Set(allItems.map(i => i && i.motor).filter(Boolean));
+      const em = document.getElementById('stockMotores');
+      if (em) { em.textContent = String(motores.size); em.title = Array.from(motores).sort().join(' · '); }
       el.title = playable + ' reproducibles (= los que ves en admira.tv) · ' + total +
         ' en stock' + (total > playable ? ' (incluye ' + (total - playable) +
         ' no reproducibles: cápsulas, enlaces, mobiliario y NPCs)' : '');
@@ -1648,7 +1664,9 @@
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const data = await r.json();
         if (!data || !Array.isArray(data.items)) throw new Error('respuesta sin items');
-        return data.items;
+        const items = data.items;
+        items.builtAt = data.builtAt || '';   // el índice estático dice cuándo se construyó
+        return items;
       } finally { if (to) clearTimeout(to); }
     }
     // FUSIÓN de dos fuentes (dedupe por id): el índice estático en r2.dev, que
@@ -1684,20 +1702,28 @@
           hubo = true;
           if (onParcial) { try { onParcial(Array.from(byId.values())); } catch (e) {} }
         };
-        const enCurso = [
-          // 15 s para el worker: tarda ~9 s medidos y el timeout estaba en 9000,
-          // así que se abortaba a sí mismo casi siempre y lo recién publicado no
-          // llegaba nunca. Ahora esperar de más no cuesta: la galería ya está
-          // pintada con el índice desde el primer segundo.
-          fetchSource(STOCK_LIST_FALLBACK, 15000).then(l => absorber(l, false)).catch(e => { lastErr = e; }),
-          // Primero el índice comprimido de nuestro dominio; si no está (local,
-          // o la Function caída), el r2.dev directo. Uno u otro, no los dos.
-          fetchSource(STOCK_INDEX_COMPRIMIDO, 12000)
-            .catch(() => fetchSource(STOCK_LIST_URL, 12000))
-            .then(l => absorber(l, true))
-            .catch(e => { lastErr = e; }),
-        ];
-        await Promise.all(enCurso);
+        // EL ÍNDICE MANDA Y EL LISTADO VIVO YA NO SE PIDE AL ARRANCAR (4-sep-2026,
+        // FLT pixeria stock). Medido en el navegador de Carlos: el índice llegaba
+        // en 0,2 s con los 820 y /stock/list tardaba 4 s (otros días 9) para
+        // aportar UN asset recién publicado; mientras tanto la barra decía
+        // «completando…» y el contador bailaba delante del usuario. El worker
+        // reconstruye el índice tras cada publicación (y un cron cada 10 min lo
+        // repasa), así que lo «recién publicado que el índice aún no tiene» dura
+        // segundos. El listado vivo queda de RESPALDO: si el índice no llega, o
+        // si llega rancio (builtAt de hace más de 20 min: el cron ha fallado).
+        // Primero el índice comprimido de nuestro dominio; si no está (local,
+        // o la Function caída), el r2.dev directo. Uno u otro, no los dos.
+        let indice = null;
+        try {
+          indice = await fetchSource(STOCK_INDEX_COMPRIMIDO, 12000).catch(() => fetchSource(STOCK_LIST_URL, 12000));
+          absorber(indice, true);
+        } catch (e) { lastErr = e; }
+        const edadMin = (indice && indice.builtAt) ? (Date.now() - Date.parse(indice.builtAt)) / 60000 : Infinity;
+        if (!indice || !(edadMin < 20)) {
+          // 15 s para el worker: tarda 4-9 s medidos; con timeout de 9000 se
+          // abortaba a sí mismo casi siempre.
+          try { absorber(await fetchSource(STOCK_LIST_FALLBACK, 15000), false); } catch (e) { lastErr = e; }
+        }
         // Sin tope: antes había un .slice(0, 400) que dejaba fuera 358 assets
         // (los más antiguos) y hacía que el contador dijera «303 de 400» cuando
         // en el Stock hay 758. No ahorraba red —el JSON se baja entero igual—,
