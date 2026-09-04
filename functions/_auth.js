@@ -1,6 +1,7 @@
 const CLIENT_ID = '861856772040-e1ri6kpu6maagtb6crdfbb923hsaalgb.apps.googleusercontent.com';
 const CALLBACK_URI = 'https://www.pixeria.com/auth/callback';
-const WHITELIST_URL = 'https://admira-whitelist.csilvasantin.workers.dev/list';
+// dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
+const WHITELIST_URL = 'https://whitelist.admira.store/list';
 const SESSION_COOKIE = '__Host-pixeria_session';
 const CHALLENGE_COOKIE = '__Host-pixeria_login_nonce';
 const SESSION_TTL_SECONDS = 12 * 60 * 60;

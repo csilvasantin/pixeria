@@ -4,7 +4,8 @@
  * perder la suscripcion. Honeypot anti-bots + validacion basica en cliente.
  */
 (function () {
-  var WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
+  // dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
+  var WORKER = 'https://api.admira.store';
   var ENDPOINT = WORKER + '/newsletter/subscribe';
   var COUNT_ENDPOINT = WORKER + '/newsletter/count';
   var PROOF_MIN = 25; // umbral: por debajo no mostramos prueba social (resta credibilidad)

@@ -1357,7 +1357,8 @@
   // Devuelve los bytes de la imagen directamente → usable en <img src>.
   function genFluxUrl(fullPrompt, w, h) {
     const ar = (w && h) ? (w / h >= 1.25 ? '16:9' : (h / w >= 1.25 ? '9:16' : '1:1')) : '16:9';
-    return `https://admira-imagen.csilvasantin.workers.dev/img?prompt=${encodeURIComponent(fullPrompt)}&ar=${ar}&model=gemini-2.5-flash-image`;
+    // dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
+    return `https://imagen.admira.store/img?prompt=${encodeURIComponent(fullPrompt)}&ar=${ar}&model=gemini-2.5-flash-image`;
   }
   async function genGrokRaw(fullPrompt, model) {
     try {
@@ -1389,7 +1390,7 @@
   function nanoBananaUrl(fullPrompt, aspectRatio, model) {
     const ar = aspectRatio || '1:1';
     const m = model || 'gemini-2.5-flash-image';
-    return `https://admira-imagen.csilvasantin.workers.dev/img?prompt=${encodeURIComponent(fullPrompt)}&ar=${ar}&model=${m}`;
+    return `https://imagen.admira.store/img?prompt=${encodeURIComponent(fullPrompt)}&ar=${ar}&model=${m}`;
   }
   async function genNanoBananaRaw(fullPrompt, aspectRatio) {
     return { ok: true, url: nanoBananaUrl(fullPrompt, aspectRatio) };

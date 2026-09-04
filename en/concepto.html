@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r2.21:51">
+  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r3.22:26">
   <title>Pixeria · Concept — chat with Nemotron</title>
   <meta name="description" content="Bring any question to Nemotron and get an answer. A conversation space to shape your ideas with AI, inside Pixeria.">
   <meta name="theme-color" content="#020602">
@@ -51,7 +51,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/favicon-180.png">
   <link rel="preconnect" href="https://www.carlossilva.info" crossorigin>
-  <link rel="preconnect" href="https://pixer-eleven.csilvasantin.workers.dev" crossorigin>
+  <!-- dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633 -->
+  <link rel="preconnect" href="https://api.admira.store" crossorigin>
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
@@ -306,7 +307,8 @@
 
     (function () {
       // Proxy endpoint (pixer-eleven worker). Keeps the API key server-side.
-      const ENDPOINT = "https://pixer-eleven.csilvasantin.workers.dev/idea";
+      // dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
+      const ENDPOINT = "https://api.admira.store/idea";
 
       const log = document.getElementById("log");
       const empty = document.getElementById("empty");

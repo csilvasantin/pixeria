@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r2.21:51">
+  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r3.22:26">
   <link rel="canonical" href="https://www.pixeria.com/anonimizador.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/anonimizador.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/anonimizador.html">
@@ -272,7 +272,8 @@
   <script>
   (function () {
     const $ = (s) => document.querySelector(s);
-    const WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
+    // dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
+    const WORKER = 'https://api.admira.store';
 
     // ---- Prompts: NPC 8-bit, NPC 16-bit, y la vuelta a humano anónimo ----
     const NPC8_SYS = 'Eres un artista de pixel-art 8-bit estilo NES / simulador de gestión (tipo Kairosoft). A partir de la foto, genera un SPRITE de personaje DIMINUTO y achaparrado: proporción chibi, cabezón, solo 2 a 2,5 cabezas de alto, de cuerpo entero y de frente. MUY baja resolución (como un sprite de ~32×40 px), píxeles grandes y cuadrados bien visibles, paleta de SOLO 4-5 colores planos, contorno duro, sin degradados, sombras ni antialias. Fondo de UN SOLO color plano y uniforme (blanco puro) para poder recortarlo. MANTÉN el SEXO/género aparente de la persona (si es mujer, mujer; si es hombre, hombre), el color de ropa y pelo y la complexión aproximada. NO conserves rasgos faciales reconocibles: es un NPC anónimo minúsculo, no un retrato. Debe verse claramente MÁS SIMPLE, MÁS PEQUEÑO y MÁS achaparrado que un sprite de 16 bits.';

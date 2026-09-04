@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r2.21:51">
+  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r3.22:26">
   <title>Calendario de emisión · Pixeria</title>
   <meta name="description" content="Parrilla diaria del circuito de pantallas: qué se emite hoy y qué huecos quedan disponibles para campañas creadas en Pixeria.">
   <meta name="theme-color" content="#0b1117">
@@ -304,7 +304,8 @@
     })();
 
     (function () {
-      var WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
+      // dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
+      var WORKER = 'https://api.admira.store';
       var $ = function (s) { return document.querySelector(s); };
       var state = { allStores: [], stores: [], store: null, screens: [], screen: null, date: '', cal: null, filters: { circuit: 'all', locality: 'all' } };
 

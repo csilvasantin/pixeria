@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r2.21:51">
+  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r3.22:26">
   <title>Pixeria Studio Assets</title>
   <meta name="description" content="Assets de Pixeria para crear mobiliario y elementos listos para gemelos digitales XpaceOS.">
   <meta name="theme-color" content="#0b1117">
@@ -1375,7 +1375,8 @@
       publishToStock(lastGeneratedAsset);
     }
 
-    const ELEVEN_WORKER_URL = 'https://pixer-eleven.csilvasantin.workers.dev';
+    // dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
+    const ELEVEN_WORKER_URL = 'https://api.admira.store';
     const STOCK_PUBLISH_URL = ELEVEN_WORKER_URL + '/stock/publish';
     const ADMIRA_BUY_URL = 'https://admira.app/';
 
@@ -2552,7 +2553,8 @@
       // Envía un comando del Xtanco: al gemelo EMBEBIDO (preview, si la vista 📐 está
       // abierta → postMessage 'xtcmd' a su iframe) y/o al Xpacio LIVE del punto (cola del
       // worker bridge /remote/cmd, si hay REMOTE_KEY guardada). logLine(html) pinta el log.
-      const BRIDGE_URL='https://admira-telegram-bridge.csilvasantin.workers.dev';
+      // dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
+      const BRIDGE_URL='https://bridge.admira.store';
       function liveOnNow(){ try{ return !!(typeof __liveTimer!=='undefined' && __liveTimer && st && st.loadedScreen); }catch(_){ return false; } }
       // Pinta los botones 🔑 del CLI: 🔴 si estás EN VIVO (el live se auto-enciende),
       // ✓ si guardaste la REMOTE_KEY, o plano si nada. Llamado al conectar/parar En vivo.
@@ -2754,7 +2756,7 @@
               // worker no permite X-Remote-Key). Lo pollea el gemelo desplegado del punto.
               const rkey=(function(){ try{ return localStorage.getItem('xpace_remote_key')||''; }catch(_){ return ''; } })();
               if(rkey){
-                fetch('https://admira-telegram-bridge.csilvasantin.workers.dev/remote/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:rkey,text:cmd})})
+                fetch('https://bridge.admira.store/remote/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:rkey,text:cmd})})
                   .then(r=>r.json()).then(d=>{ if(d&&d.ok) logLine('<span style="color:#7ee0a0;">live ⇡</span> encolado al punto (#'+esc(String(d.commandId||'?'))+')'); else logLine('<span style="color:#e0a14a;">live</span> '+esc((d&&d.error)||'no encolado')); })
                   .catch(e=>logLine('<span style="color:#e0a14a;">live</span> '+esc(String(e&&e.message||e))+' · ¿worker con CORS de pixeria desplegado?'));
               }

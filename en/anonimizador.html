@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r2.21:51">
+  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r3.22:26">
   <link rel="canonical" href="https://www.pixeria.com/en/anonimizador.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/anonimizador.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/anonimizador.html">
@@ -266,7 +266,8 @@
   <script>
   (function () {
     const $ = (s) => document.querySelector(s);
-    const WORKER = 'https://pixer-eleven.csilvasantin.workers.dev';
+    // dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
+    const WORKER = 'https://api.admira.store';
 
     const NPC8_SYS = 'You are an 8-bit pixel-art artist, NES / management-sim style (à la Kairosoft). From the given photo, generate a TINY, stubby character SPRITE: chibi proportions, big head, only 2 to 2.5 heads tall, full body facing front. VERY low resolution (like a ~32×40 px sprite), large clearly-visible square pixels, a palette of ONLY 4-5 flat colors, hard outline, no gradients, shadows or antialiasing. A SINGLE flat uniform background color (pure white) so it can be cut out. KEEP the apparent SEX/gender of the person (if female, female; if male, male), the clothing and hair color and the approximate build. Do NOT keep recognizable facial features: it is a tiny anonymous NPC, not a portrait. It must look clearly SIMPLER, SMALLER and stubbier than a 16-bit sprite.';
     const NPC8_PROMPT = 'Turn it into a TINY, stubby 8-bit NPC sprite (chibi, big head, ~2 heads tall), very low resolution, large pixels and only 4-5 flat colors, like the tiny passers-by of the Admira XP digital twin.';
