@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.04.09.2026.r3.22:26">
+  <meta name="admiranext-version" content="Pixeria v.11.09.2026.r1.20:08">
   <link rel="canonical" href="https://www.pixeria.com/en/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -653,13 +653,44 @@
       }
     });
 
+    // 11-sep-2026 (Yokup #3103 · api.admira.store r1.20:10): DELETE /stock/<id> exige la
+    // clave NOTIFY_KEY. Se pide UNA vez y se guarda en localStorage; si el worker responde
+    // 401 se olvida y se vuelve a pedir. Va en el body {secret} (alternativa documentada):
+    // la cabecera X-Notify-Key no pasa el preflight CORS del worker (allow-headers solo
+    // admite Content-Type y Authorization) y en la URL (?secret=) quedaría en logs.
+    const STOCK_KEY_LS = 'admira.stock.notifyKey';
+    function stockNotifyKey(force) {
+      let k = '';
+      if (!force) { try { k = localStorage.getItem(STOCK_KEY_LS) || ''; } catch {} }
+      if (!k) {
+        k = (prompt('Stock key (NOTIFY_KEY) required to delete assets:') || '').trim();
+        if (k) { try { localStorage.setItem(STOCK_KEY_LS, k); } catch {} }
+      }
+      return k;
+    }
+    function forgetStockNotifyKey() { try { localStorage.removeItem(STOCK_KEY_LS); } catch {} }
+
     async function deleteAsset(id, card) {
       if (!id) return;
       if (!confirm('¿Eliminar este asset del Stock? Borra el archivo y la metadata en R2. No se puede deshacer.')) return;
-      const beforeStatus = status.textContent;
-      status.textContent = `// borrando ${id}...`;
-      try {
-        const r = await fetch(`${STOCK_BASE}/stock/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      for (let intento = 0; intento < 2; intento++) {
+        const key = stockNotifyKey(intento > 0);
+        if (!key) { status.textContent = '// cancelled: nothing is deleted without the Stock key.'; return; }
+        status.textContent = `// borrando ${id}...`;
+        let r;
+        try {
+          r = await fetch(`${STOCK_BASE}/stock/${encodeURIComponent(id)}`, {
+            method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ secret: key })
+          });
+        } catch (e) {
+          status.textContent = `// ERROR red: ${e}`;
+          return;
+        }
+        if (r.status === 401) {
+          forgetStockNotifyKey();
+          status.textContent = '// wrong Stock key (401): forgotten, you will be asked again.';
+          continue;
+        }
         if (!r.ok) {
           let body = '';
           try { body = JSON.stringify(await r.json()); } catch {}
@@ -668,8 +699,7 @@
         }
         allItems = allItems.filter(i => i.id !== id);
         applyFilters();
-      } catch (e) {
-        status.textContent = `// ERROR red: ${e}`;
+        return;
       }
     }
 
