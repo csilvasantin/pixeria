@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.12.09.2026.r1.13:45">
+  <meta name="admiranext-version" content="Pixeria v.12.09.2026.r2.15:12">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -821,7 +821,10 @@
         // Sin póster todavía (recién publicado, el launchd pasa cada 10 min): el
         // <video> perezoso de siempre (IntersectionObserver, margen 600px), que
         // hace seek a ~1s para enseñar algo con contenido.
-        const poster = /^https?:\/\//.test(String(it.thumbnail || '')) ? it.thumbnail : '';
+        // Yokup #3199 (12-sep-2026): meta.poster es la URL estable del póster
+        // representativo (GET api.admira.store/stock/poster/<id>, elegido por luma y
+        // varianza, nunca el frame 0 negro); thumbnail (R2 directo) queda de respaldo.
+        const poster = /^https?:\/\//.test(String(it.poster || '')) ? it.poster : (/^https?:\/\//.test(String(it.thumbnail || '')) ? it.thumbnail : '');
         if (poster) {
           return `${orientationBadgeHtml(it)}<img class="stock-cover stock-video-poster" data-orientation-media src="${escAttr(poster)}" alt="" loading="lazy" decoding="async" style="background:#0a0f14;">
                 <button type="button" class="stock-media-play" data-act="playmini" data-url="${escAttr(it.url)}" title="Reproducir aquí (pequeño)" aria-label="Reproducir aquí">▶</button>`;
@@ -1354,7 +1357,7 @@
       } else if (it.type === 'image' || it.type === 'digital-twin') {
         media = `<img src="${it.thumbnail || it.url}" alt="">`;
       } else if (it.type === 'video' || it.type === 'animation') {
-        media = `<video src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} controls autoplay></video>`;
+        media = `<video src="${it.url}" ${(it.poster || it.thumbnail) ? `poster="${escAttr(it.poster || it.thumbnail)}"` : ''} controls autoplay></video>`;
       } else if (it.type === 'audio' || it.type === 'locucion' || it.type === 'music') {
         const cover = it.thumbnail || '';
         media = `${cover ? `<img class="stock-cover" src="${cover}" alt="">` : '<div class="stock-cover-empty">▶</div>'}

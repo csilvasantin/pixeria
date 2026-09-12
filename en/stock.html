@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.12.09.2026.r1.13:45">
+  <meta name="admiranext-version" content="Pixeria v.12.09.2026.r2.15:12">
   <link rel="canonical" href="https://www.pixeria.com/en/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -353,8 +353,14 @@
         return `<img src="${it.thumbnail || it.url}" alt="" loading="lazy">`;
       }
       if (it.type === 'video' || it.type === 'animation') {
-        // Preview = a real frame from the video (seeked to ~1s), NOT the stored
-        // poster (frame 0 came out BLACK on fade-ins). Lazy-loaded.
+        // Yokup #3199 (12-sep-2026): meta.poster is the stable URL of the
+        // representative poster (GET api.admira.store/stock/poster/<id>, picked by
+        // luma/variance, never the black frame 0); thumbnail is the R2 fallback.
+        // Without either, the lazy <video> seeks to ~1s as before.
+        const poster = /^https?:\/\//.test(String(it.poster || '')) ? it.poster : (/^https?:\/\//.test(String(it.thumbnail || '')) ? it.thumbnail : '');
+        if (poster) {
+          return `<img class="stock-cover stock-video-poster" src="${escAttr(poster)}" alt="" loading="lazy" decoding="async" style="background:#0a0f14;object-fit:cover;">`;
+        }
         return `<video class="stock-cover stock-video-preview" data-src="${escAttr(it.url)}" preload="metadata" muted playsinline disablepictureinpicture style="background:#0a0f14;object-fit:cover;"></video>`;
       }
       if (it.type === 'audio' || it.type === 'music') {
@@ -623,7 +629,7 @@
       } else if (it.type === 'image') {
         media = `<img src="${it.thumbnail || it.url}" alt="">`;
       } else if (it.type === 'video' || it.type === 'animation') {
-        media = `<video src="${it.url}" ${it.thumbnail ? `poster="${it.thumbnail}"` : ''} controls autoplay></video>`;
+        media = `<video src="${it.url}" ${(it.poster || it.thumbnail) ? `poster="${escAttr(it.poster || it.thumbnail)}"` : ''} controls autoplay></video>`;
       } else if (it.type === 'audio' || it.type === 'music') {
         const cover = it.thumbnail || '';
         media = `${cover ? `<img class="stock-cover" src="${cover}" alt="">` : '<div class="stock-cover-empty">▶</div>'}
