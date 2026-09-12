@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.11.09.2026.r1.20:08">
+  <meta name="admiranext-version" content="Pixeria v.12.09.2026.r1.13:45">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -257,6 +257,47 @@
     .stock-tags-drag{border:1px dashed var(--matrix);background:rgba(0,255,65,.06);color:var(--matrix);border-radius:999px;padding:2px 8px;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:.04em}
     .stock-card.tag-drop-target{outline:2px dashed var(--matrix);outline-offset:3px;background:rgba(0,255,65,.08)}
     body.tag-dragging .stock-card:not(.tag-drop-target){transition:opacity .15s,outline .15s}.stock-tag.tag-drag-source,.stock-tags-drag.tag-drag-source{opacity:.45}
+
+    /* ── Catálogos (Yokup #3183): vista por catálogo + asignación a circuito ── */
+    body.cat-mode .stock-pager-sort, body.cat-mode .stock-pager-controls, body.cat-mode .stock-pager-bottom, body.cat-mode #stockEmpty{ display:none !important; }
+    .cat-bar{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12px; color:var(--muted); margin:0 0 10px; }
+    .cat-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:10px; margin:0 0 16px; }
+    .cat-card{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:var(--panel-2); cursor:pointer; transition:border-color .15s,box-shadow .15s; display:flex; flex-direction:column; gap:6px; }
+    .cat-card:hover{ border-color:var(--line-bright); }
+    .cat-card.sel{ border-color:var(--matrix); box-shadow:var(--glow); }
+    .cat-card header{ display:flex; align-items:center; gap:8px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+    .cat-card h3{ margin:0; font-size:15px; color:var(--matrix); line-height:1.25; }
+    .cat-cliente{ font-weight:700; color:var(--matrix); }
+    .cat-count{ margin-left:auto; text-transform:none; letter-spacing:0; }
+    .cat-badge{ border:1px solid; border-radius:999px; padding:1px 7px; font-size:10px; }
+    .cat-badge.on{ color:var(--matrix); border-color:var(--matrix); }
+    .cat-badge.off{ color:#ff8866; border-color:#7a3a2a; }
+    .cat-val{ font-size:12px; color:var(--muted); }
+    .cat-tags{ display:flex; flex-wrap:wrap; gap:4px; }
+    .cat-tags .stock-tag{ cursor:default; }
+    .cat-status{ font-size:11px; color:var(--muted); }
+    .cat-status.ok{ color:var(--matrix); }
+    .cat-status.ok b{ color:#dfffae; }
+    .cat-fail{ color:#ff8866; }
+    .cat-empty{ color:var(--muted); font-size:12px; padding:8px; margin:0; }
+    .cat-head{ border:1px solid var(--matrix); border-radius:12px; padding:12px 16px; margin:0 0 14px; background:rgba(0,255,65,.04); box-shadow:var(--glow); }
+    .cat-head-main{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+    .cat-head-txt{ flex:1; min-width:240px; display:flex; flex-direction:column; gap:5px; }
+    .cat-head-txt h2{ margin:0; font-size:18px; color:var(--matrix); }
+    .cat-head-txt h2 small{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-left:8px; }
+    #catAssignModal{ width:min(660px,94vw); max-height:88vh; }
+    #catAssignModal .cat-modal-body{ display:flex; flex-direction:column; gap:12px; max-height:calc(88vh - 130px); overflow:auto; }
+    #catAssignModal select{ width:100%; background:var(--bg); border:1px solid var(--line-bright); color:var(--matrix); border-radius:6px; padding:7px; font-family:inherit; font-size:12px; }
+    .cat-screen{ cursor:pointer; }
+    .cat-screen input{ accent-color:var(--matrix); }
+    .cat-screen .cat-canal{ text-decoration:none; font-size:14px; }
+    .cat-replace{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
+    .cat-results{ display:flex; flex-direction:column; gap:4px; font-size:12px; }
+    .cat-result{ padding:6px 9px; border:1px solid var(--line); border-radius:6px; }
+    .cat-result.ok{ color:var(--matrix); border-color:var(--matrix); }
+    .cat-result.bad{ color:#ff8866; border-color:#7a3a2a; }
+    .cat-result.sum{ color:var(--muted); border-style:dashed; }
+    .cat-result a{ color:var(--matrix); }
   </style>
   <script defer src="/assets/analytics.js?v=20260617-consent"></script>
   <script defer src="/assets/consent.js?v=20260617"></script>
@@ -337,6 +378,7 @@
             <option value="twin-npc">Twin NPCs</option>
             <option value="digital-twin">Digital Twins</option>
             <option value="video" selected>Video</option>
+            <option value="catalogo">Catálogos</option>
             <option value="animation">Animaciones (interactivos)</option>
         <option value="tiktok">TikToks</option>
             <option value="furni">Mobiliario</option>
@@ -364,6 +406,13 @@
 
     <section>
 
+
+      <!-- Vista Catálogos (Yokup #3183): piezas creadas desde catálogos, agrupadas, y asignación a circuito -->
+      <section id="catSection" hidden aria-label="Catálogos">
+        <div class="cat-bar"><span id="catSource"></span><button type="button" class="stock-pager-btn" id="catRefresh" title="Recargar catálogos">↻</button></div>
+        <div id="catList" class="cat-list"></div>
+        <div id="catHead" class="cat-head" hidden></div>
+      </section>
       <div id="stockGrid" class="stock-grid"></div>
       <div id="stockEmpty" class="stock-empty" hidden>
         <p>// Stock vacío.</p>
@@ -391,6 +440,25 @@
   </main>
 
   <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — ultima version del Gemelo Digital">Pixeria AI Workspace · Pixeria · v.28.08.2026.r8.03:43</a></footer>
+
+
+  <dialog id="catAssignModal" class="keys-modal">
+    <form method="dialog" class="keys-form">
+      <h3 id="catAssignTitle">📡 ASIGNAR AL CIRCUITO</h3>
+      <p class="dist-items-note" id="catAssignNote">—</p>
+      <div class="cat-modal-body">
+        <div class="pl-field"><label for="catProject" style="display:block;font-size:11px;color:var(--muted);margin-bottom:3px;">Proyecto / circuito</label><select id="catProject" aria-label="Proyecto"></select></div>
+        <div class="dist-screens-head"><span>Pantallas · <span id="catScreensSummary">—</span></span><a id="catReload" role="button" tabindex="0">↻ estado actual</a></div>
+        <div class="dist-screens" id="catScreens"></div>
+        <label class="cat-replace"><input type="checkbox" id="catReplace" checked> Sustituir la playlist actual de cada pantalla (si no, las piezas se añaden al final)</label>
+        <div class="cat-results" id="catResults" hidden></div>
+      </div>
+      <div class="dist-actions">
+        <button type="button" class="btn primary" id="catGo">Asignar</button>
+        <button type="button" class="btn" id="catCancel">Cancelar</button>
+      </div>
+    </form>
+  </dialog>
 
   <dialog id="importModal" class="keys-modal">
     <form method="dialog" class="keys-form import-form">
@@ -1207,6 +1275,8 @@
     }
 
     function applyFilters(resetPage) {
+      // Vista Catálogos: la rejilla la pinta CATALOGO (piezas del catálogo elegido).
+      if (filters.type === 'catalogo') { if (window.CATALOGO) window.CATALOGO.repaint(); return; }
       const items = allItems.filter(it => {
         if (!matchesType(it, filters.type)) return false;
         if (filters.motor && it.motor !== filters.motor) return false;
@@ -1814,7 +1884,13 @@
         }
       }
     }
-    typeFilter.addEventListener('change', () => { filters.type = typeFilter.value; applyFilters(true); });
+    typeFilter.addEventListener('change', () => {
+      const was = filters.type === 'catalogo';
+      filters.type = typeFilter.value;
+      if (filters.type === 'catalogo') { CATALOGO.enter(); return; }
+      if (was) CATALOGO.leave();
+      applyFilters(true);
+    });
     if (motorFilter) motorFilter.addEventListener('change', () => { filters.motor = motorFilter.value; applyFilters(true); });
     search.addEventListener('input', () => {
       filters.q = search.value.trim().toLowerCase();
@@ -2708,10 +2784,304 @@
     })();
     window.TM = TM;
 
+    // ── CATÁLOGOS (Yokup #3183 · NeoMBA16 · 12-sep-2026) ─────────────────────
+    // La opción «Catálogos» del selector de tipo agrupa las piezas creadas desde
+    // catálogos (admira.tv/contentcatalogue → Stock, con #catalogo #<cliente>
+    // #<catalogo-id> #<aaaa-mm>) y permite ASIGNARLAS a los players de un circuito:
+    // escribe la playlist por defecto de cada pantalla (admira.tv/api/playlist, la
+    // misma KV que lee canal.html cada 30 s) con la clave del Stock, la que ya se
+    // usa para Eliminar. Fuente: GET /stock/catalogos + /stock/list?catalogo=<id>;
+    // si la API no responde, se derivan de las etiquetas del índice ya cargado.
+    const CATALOGO = (function () {
+      const $ = id => document.getElementById(id);
+      const T = {"sinAsignar": "sin asignar", "asignadoA": "Asignado a", "pantallas": "pantallas", "fallos": "fallo(s)", "vigente": "VIGENTE", "caducado": "CADUCADO", "piezas": "piezas", "pieza": "pieza", "ultimo": "última", "volver": "Todos los catálogos", "asignar": "Asignar al circuito…", "cargando": "// cargando catálogos…", "cargandoPiezas": "// cargando piezas del catálogo…", "sinCatalogos": "// No hay catálogos en el Stock. Se crean desde admira.tv/contentcatalogue.", "sinResultados": "// ningún catálogo coincide con la búsqueda.", "sinPiezas": "// este catálogo no tiene piezas reproducibles.", "fuenteIndice": "derivados de las etiquetas #catalogo del índice (la API /stock/catalogos no responde)", "fuenteApi": "fuente: api.admira.store/stock/catalogos", "sinPantallas": "Este proyecto no tiene pantallas registradas en /grid/screens.", "piezasAhora": "piezas ahora", "sinPlaylist": "sin playlist (o sin acceso)", "verCanal": "ver canal", "asignarTitulo": "📡 ASIGNAR AL CIRCUITO", "segCadaUna": "s cada una", "notaPlaylist": "se escribe la playlist por defecto de cada pantalla marcada (admira.tv la relee en ≤30 s).", "cargandoPantallas": "cargando proyectos y pantallas…", "asignarBtn": "Asignar", "sinProyectos": "— sin proyectos —", "pagina": "página", "eligePantalla": "Marca al menos una pantalla.", "asignando": "Asignando…", "errorRed": "error de red", "claveMala": "clave del Stock incorrecta (401)", "sinClave": "cancelado: sin clave del Stock no se asigna.", "releen": "las pantallas releen la playlist en ≤30 s.", "catalogo": "Catálogo"};
+      const localOverride = name => {
+        try { const o = new URLSearchParams(location.search).get(name); return (o && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o)) ? o : ''; } catch { return ''; }
+      };
+      const API = localOverride('stockapi') || STOCK_BASE;      // ?stockapi=http://localhost:8788 → mock local
+      const TV = localOverride('tvapi') || 'https://admira.tv';  // ?tvapi=… → mock local de api/playlist
+      const ASSIGN_LS = 'admira.stock.catalogo.asignaciones';
+      const SLOT_SECONDS = 15;
+      const CAT_ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*-\d{4}-\d{2}-\d{2}$/;
+      let catalogos = [], loadedAt = 0, selected = null, piezas = [], loadingPiezas = 0;
+      let projects = [], screens = [], tsel = new Set(), live = {}, assigning = false;
+      const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const isActive = () => filters.type === 'catalogo';
+      const tagsLc = it => Array.isArray(it && it.tags) ? it.tags.map(t => String(t).toLowerCase()) : [];
+      const metaCat = it => (it && it.meta && it.meta.catalogo && typeof it.meta.catalogo === 'object') ? it.meta.catalogo : null;
+      const catIdOf = it => { const m = metaCat(it); if (m && m.id) return String(m.id); return tagsLc(it).find(t => CAT_ID_RE.test(t)) || ''; };
+      const fmtDay = d => { if (!d) return ''; const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d)); return m ? `${m[3]}/${m[2]}/${m[1]}` : String(d); };
+      const hashtags = c => { const out = ['catalogo']; if (c.cliente) out.push(String(c.cliente).toLowerCase()); if (c.id) out.push(c.id); const ym = /^(\d{4}-\d{2})/.exec(c.desde || c.id.slice(-10)); if (ym) out.push(ym[1]); return Array.from(new Set(out)); };
+      function readAssign() { try { return JSON.parse(localStorage.getItem(ASSIGN_LS) || '{}') || {}; } catch { return {}; } }
+      function writeAssign(all) { try { localStorage.setItem(ASSIGN_LS, JSON.stringify(all)); } catch {} }
+
+      // ── Catálogos: API o derivados del índice ──
+      function derivedFromIndex() {
+        const by = new Map();
+        for (const it of allItems) {
+          if (!it || !tagsLc(it).includes('catalogo')) continue;
+          const id = catIdOf(it); if (!id) continue;
+          const m = metaCat(it) || {};
+          let c = by.get(id);
+          if (!c) { c = { id, cliente: m.cliente || id.replace(/-\d{4}-\d{2}-\d{2}$/, ''), nombre: m.nombre || '', desde: m.desde || id.slice(-10), hasta: m.hasta || '', proyecto: m.proyecto || '', count: 0, ultimo: '', vigente: null, ids: [], derivado: true }; by.set(id, c); }
+          c.count++; c.ids.push(it.id);
+          if (String(it.createdAt || '') > c.ultimo) c.ultimo = String(it.createdAt || '');
+        }
+        const hoy = new Date().toISOString().slice(0, 10);
+        return Array.from(by.values()).map(c => { if (c.hasta) c.vigente = c.desde <= hoy && hoy <= c.hasta; return c; }).sort((a, b) => (b.ultimo || '').localeCompare(a.ultimo || ''));
+      }
+      async function loadCatalogos(force) {
+        if (!force && catalogos.length && (Date.now() - loadedAt) < 60000) return catalogos;
+        let api = null;
+        try {
+          const r = await fetch(`${API}/stock/catalogos`, { cache: 'no-store' });
+          const d = r.ok ? await r.json() : null;
+          if (d && d.ok && Array.isArray(d.catalogos)) api = d.catalogos;
+        } catch {}
+        catalogos = api || derivedFromIndex();
+        loadedAt = Date.now();
+        return catalogos;
+      }
+      const byId = id => catalogos.find(c => c.id === id) || null;
+
+      // ── Piezas de un catálogo (orden por página del folleto, si no por fecha) ──
+      const pagina = it => { const m = metaCat(it); const p = m && (m.pagina != null ? m.pagina : (m.producto && typeof m.producto === 'object' ? m.producto.pagina : null)); if (p != null && isFinite(+p)) return +p; const mm = /p[áa]g(?:ina)?\.?\s*(\d+)/i.exec(String(it.comment || '')); return mm ? +mm[1] : Infinity; };
+      function sortPiezas(items) {
+        return items.slice().sort((a, b) => { const pa = pagina(a), pb = pagina(b); if (pa !== pb) return pa - pb; return String(a.createdAt || '').localeCompare(String(b.createdAt || '')); });
+      }
+      async function loadPiezas(c) {
+        const token = ++loadingPiezas;
+        let items = null;
+        try {
+          const r = await fetch(`${API}/stock/list?catalogo=${encodeURIComponent(c.id)}&type=video`, { cache: 'no-store' });
+          const d = r.ok ? await r.json() : null;
+          if (d && Array.isArray(d.items)) items = d.items;
+        } catch {}
+        if (!items) {
+          const ids = new Set(Array.isArray(c.ids) ? c.ids : []);
+          items = allItems.filter(it => it && (ids.has(it.id) || catIdOf(it) === c.id));
+        }
+        if (token !== loadingPiezas) return; // llegó otra selección mientras tanto
+        piezas = sortPiezas(items.filter(it => it && it.url));
+        renderPiezas();
+      }
+
+      // ── Pintado ──
+      function statusHtml(c) {
+        const a = readAssign()[c.id];
+        if (!a) return `<span class="cat-status none">${T.sinAsignar}</span>`;
+        return `<span class="cat-status ok" title="${esc((a.screens || []).join(', '))}">${T.asignadoA} <b>${esc(a.circuitLabel || a.project || a.circuit)}</b> · ${(a.screens || []).length} ${T.pantallas} · ${esc(fmtDate(a.at))}${a.fail ? ` · <span class="cat-fail">${a.fail} ${T.fallos}</span>` : ''}</span>`;
+      }
+      function cardHtml(c) {
+        const vig = c.vigente === true ? `<span class="cat-badge on">${T.vigente}</span>` : c.vigente === false ? `<span class="cat-badge off">${T.caducado}</span>` : '';
+        const val = (c.desde || c.hasta) ? `${fmtDay(c.desde)} → ${fmtDay(c.hasta) || '…'}` : '';
+        return `<article class="cat-card${selected === c.id ? ' sel' : ''}" data-cat="${esc(c.id)}" tabindex="0" role="button">
+          <header><span class="cat-cliente">${esc(c.cliente || '')}</span>${vig}<span class="cat-count">${+c.count || (c.ids || []).length} ${T.piezas}</span></header>
+          <h3>${esc(c.nombre || c.id)}</h3>
+          <div class="cat-val">${esc(val)}${c.ultimo ? ` · ${T.ultimo} ${esc(fmtDate(c.ultimo))}` : ''}</div>
+          <div class="cat-tags">${hashtags(c).map(t => `<span class="stock-tag" title="#${esc(t)}">#${esc(t)}</span>`).join('')}</div>
+          <footer>${statusHtml(c)}</footer>
+        </article>`;
+      }
+      function renderList() {
+        const box = $('catList'); if (!box) return;
+        const q = (filters.q || '').toLowerCase();
+        const lst = catalogos.filter(c => !q || `${c.id} ${c.cliente} ${c.nombre} ${hashtags(c).join(' ')}`.toLowerCase().includes(q));
+        box.innerHTML = lst.length ? lst.map(cardHtml).join('') : `<p class="cat-empty">${catalogos.length ? T.sinResultados : T.sinCatalogos}</p>`;
+        const src = $('catSource'); if (src) src.textContent = catalogos.length ? (catalogos[0].derivado ? T.fuenteIndice : T.fuenteApi) : '';
+      }
+      function renderHead() {
+        const head = $('catHead'); if (!head) return;
+        const c = selected && byId(selected);
+        if (!c) { head.hidden = true; head.innerHTML = ''; return; }
+        head.hidden = false;
+        const val = (c.desde || c.hasta) ? `${fmtDay(c.desde)} → ${fmtDay(c.hasta) || '…'}` : '';
+        head.innerHTML = `
+          <div class="cat-head-main">
+            <button type="button" class="stock-pager-btn" id="catBack" title="${T.volver}">‹ ${T.volver}</button>
+            <div class="cat-head-txt">
+              <h2>${esc(c.nombre || c.id)} <small>${esc(c.cliente || '')}</small></h2>
+              <div class="cat-val">${esc(val)} · <span id="catPiezasN">${piezas.length}</span> ${T.piezas} · ${SLOT_SECONDS} s/${T.pieza} · ${statusHtml(c)}</div>
+              <div class="cat-tags">${hashtags(c).map(t => `<span class="stock-tag">#${esc(t)}</span>`).join('')}</div>
+            </div>
+            <button type="button" class="btn primary" id="catAssignBtn" ${piezas.length ? '' : 'disabled'}>📡 ${T.asignar}</button>
+          </div>`;
+        $('catBack').addEventListener('click', () => select(null));
+        $('catAssignBtn').addEventListener('click', openAssign);
+      }
+      function renderPiezas() {
+        if (!isActive()) return;
+        const c = selected && byId(selected);
+        if (!c) { grid.innerHTML = ''; currentView = []; empty.hidden = true; renderHead(); return; }
+        currentView = piezas;
+        grid.classList.remove('stock-grid-grouped');
+        grid.innerHTML = piezas.map(renderCard).join('');
+        if (typeof hydrateMediaOrientations === 'function') hydrateMediaOrientations();
+        if (typeof observeLazyVideos === 'function') observeLazyVideos();
+        empty.hidden = true;
+        renderHead();
+        const n = $('catPiezasN'); if (n) n.textContent = piezas.length;
+      }
+      function repaint() { if (!catalogos.length && allItems.length) catalogos = derivedFromIndex(); renderList(); renderPiezas(); }
+
+      // ── Entrar / salir / seleccionar ──
+      async function enter() {
+        document.body.classList.add('cat-mode');
+        const sec = $('catSection'); if (sec) sec.hidden = false;
+        grid.innerHTML = ''; empty.hidden = true;
+        status.textContent = T.cargando;
+        await loadCatalogos(true);
+        status.textContent = catalogos.length ? '' : T.sinCatalogos;
+        repaint();
+        if (selected) select(selected, true);
+      }
+      function leave() {
+        document.body.classList.remove('cat-mode');
+        const sec = $('catSection'); if (sec) sec.hidden = true;
+        selected = null; piezas = [];
+        try { const u = new URL(location.href); if (u.searchParams.has('catalogo')) { u.searchParams.delete('catalogo'); history.replaceState({}, '', u.pathname + (u.search || '') + u.hash); } } catch {}
+      }
+      function select(id, keep) {
+        selected = id && byId(id) ? id : null;
+        try { const u = new URL(location.href); if (selected) u.searchParams.set('catalogo', selected); else u.searchParams.delete('catalogo'); history.replaceState({}, '', u.pathname + (u.search || '') + u.hash); } catch {}
+        piezas = [];
+        renderList();
+        if (!selected) { renderPiezas(); return; }
+        status.textContent = T.cargandoPiezas;
+        loadPiezas(byId(selected)).then(() => { status.textContent = piezas.length ? '' : T.sinPiezas; });
+        if (!keep) { const h = $('catHead'); if (h) h.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+      }
+
+      // ── Asignar al circuito: proyectos/circuitos/pantallas de api.admira.store/grid ──
+      async function loadGrid() {
+        const [p, s] = await Promise.all([
+          fetch(`${API}/grid/projects`, { cache: 'no-store' }).then(r => r.json()).catch(() => null),
+          fetch(`${API}/grid/screens`, { cache: 'no-store' }).then(r => r.json()).catch(() => null),
+        ]);
+        projects = (p && Array.isArray(p.projects)) ? p.projects : [];
+        screens = (s && Array.isArray(s.screens)) ? s.screens : [];
+      }
+      const projectById = id => projects.find(p => p.id === id) || null;
+      const screensOf = p => p ? screens.filter(s => (p.circuits || []).includes(s.circuit)) : [];
+      const canalUrl = s => `https://admira.tv/canal.html?clean=1&screen=${encodeURIComponent(s.screen)}&circuit=${encodeURIComponent(s.circuit || '')}&muted=1`;
+      async function livePlaylist(screen) {
+        try { const r = await fetch(`${TV}/api/playlist?screen=${encodeURIComponent(screen)}&_=${Date.now()}`, { cache: 'no-store' }); const d = r.ok ? await r.json() : null; return (d && d.ok && d.draft) ? d.draft : null; } catch { return null; }
+      }
+      function renderScreens() {
+        const box = $('catScreens'); if (!box) return;
+        const p = projectById($('catProject').value);
+        const lst = screensOf(p);
+        if (!lst.length) { box.innerHTML = `<p class="cat-empty">${T.sinPantallas}</p>`; return; }
+        box.innerHTML = lst.map(s => {
+          const lv = live[s.screen];
+          const now = lv ? `${(lv.items || []).length} ${T.piezasAhora}${lv.updatedBy ? ` · ${esc(String(lv.updatedBy).slice(0, 40))}` : ''}` : (lv === null ? T.sinPlaylist : '…');
+          return `<label class="dist-screen cat-screen${tsel.has(s.screen) ? ' sel' : ''}" data-sid="${esc(s.screen)}">
+            <input type="checkbox" ${tsel.has(s.screen) ? 'checked' : ''} aria-label="${esc(s.name || s.screen)}">
+            <span class="sid">${esc(s.name || s.screen)}</span><span class="srole">${esc(s.screen)} · ${esc(s.circuit || '')}</span>
+            <span class="snow">${now}</span>
+            <a class="cat-canal" href="${canalUrl(s)}" target="_blank" rel="noopener" title="${T.verCanal}">📺</a>
+          </label>`;
+        }).join('');
+        const sum = $('catScreensSummary'); if (sum) sum.textContent = `${tsel.size}/${lst.length} ${T.pantallas}`;
+      }
+      async function refreshLive() {
+        const p = projectById($('catProject').value);
+        await Promise.all(screensOf(p).map(async s => { live[s.screen] = await livePlaylist(s.screen); }));
+        renderScreens();
+      }
+      function onProjectChange() {
+        const p = projectById($('catProject').value);
+        tsel = new Set(screensOf(p).map(s => s.screen));
+        renderScreens();
+        refreshLive();
+      }
+      async function openAssign() {
+        const c = selected && byId(selected); if (!c || !piezas.length) return;
+        const dlg = $('catAssignModal'); if (!dlg) return;
+        $('catAssignTitle').textContent = `${T.asignarTitulo} · ${c.nombre || c.id}`;
+        $('catAssignNote').textContent = `${piezas.length} ${T.piezas} · ${SLOT_SECONDS} ${T.segCadaUna} · ${T.notaPlaylist}`;
+        $('catResults').innerHTML = ''; $('catResults').hidden = true;
+        $('catScreens').innerHTML = `<p class="cat-empty">${T.cargandoPantallas}</p>`;
+        $('catGo').disabled = false; $('catGo').textContent = T.asignarBtn;
+        dlg.showModal();
+        await loadGrid();
+        const sel = $('catProject');
+        sel.innerHTML = projects.length ? projects.map(p => `<option value="${esc(p.id)}">${esc(p.name || p.id)} · ${(p.circuits || []).join(', ')} · ${screensOf(p).length} ${T.pantallas}</option>`).join('') : `<option value="">${T.sinProyectos}</option>`;
+        const pref = [c.proyecto, String(c.cliente || '').toLowerCase()].map(x => x && projectById(x)).find(Boolean) || projects.find(p => (p.circuits || []).some(x => x === String(c.cliente || '').toLowerCase())) || projects[0];
+        if (pref) sel.value = pref.id;
+        onProjectChange();
+      }
+      function toItem(it, c) {
+        const m = metaCat(it) || {};
+        const pg = pagina(it);
+        const tags = Array.from(new Set(tagsLc(it).concat(['catalogo', c.id]))).slice(0, 32);
+        return { id: it.id, stockId: it.id, title: it.title || it.id, sub: [m.cliente || c.cliente, isFinite(pg) ? `${T.pagina} ${pg}` : ''].filter(Boolean).join(' · ').slice(0, 300),
+          lane: 'publicidad', seconds: SLOT_SECONDS, asset: it.url, assetType: it.type === 'image' ? 'image' : 'video', tags };
+      }
+      async function assign() {
+        const c = selected && byId(selected); if (!c || assigning) return;
+        const p = projectById($('catProject').value);
+        const targets = screensOf(p).filter(s => tsel.has(s.screen));
+        if (!targets.length) { alert(T.eligePantalla); return; }
+        const replace = $('catReplace').checked;
+        const items = piezas.map(it => toItem(it, c));
+        assigning = true; $('catGo').disabled = true; $('catGo').textContent = T.asignando;
+        const res = $('catResults'); res.hidden = false; res.innerHTML = '';
+        let ok = 0, fail = 0, key = stockNotifyKey(false);
+        const rows = [], okScreens = [];
+        for (const s of targets) {
+          let line = '';
+          for (let intento = 0; intento < 2 && key; intento++) {
+            let list = items;
+            if (!replace) { const lv = live[s.screen] || await livePlaylist(s.screen); const prev = (lv && lv.items || []).filter(x => !(x.tags || []).includes(c.id)); list = prev.concat(items).slice(0, 200); }
+            let r, d = {};
+            try {
+              r = await fetch(`${TV}/api/playlist`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ screen: s.screen, items: list, secret: key, name: `${T.catalogo} ${c.nombre || c.id}`.slice(0, 80), source: `catalogo ${c.id}` }) });
+              d = await r.json().catch(() => ({}));
+            } catch (e) { line = `✗ ${esc(s.name || s.screen)} · ${T.errorRed}`; break; }
+            if (r.status === 401) { forgetStockNotifyKey(); key = stockNotifyKey(true); line = `✗ ${esc(s.name || s.screen)} · ${T.claveMala}`; continue; }
+            if (r.ok && d.ok) { ok++; okScreens.push(s.screen); live[s.screen] = d.draft || null; line = `✓ ${esc(s.name || s.screen)} · ${list.length} ${T.piezas} · rev ${esc(d.rev)} · <a href="${canalUrl(s)}" target="_blank" rel="noopener">${T.verCanal} ↗</a>`; }
+            else line = `✗ ${esc(s.name || s.screen)} · HTTP ${r.status} ${esc(d.error || '')}`;
+            break;
+          }
+          if (!key) line = `✗ ${esc(s.name || s.screen)} · ${T.sinClave}`;
+          if (!line.startsWith('✓')) fail++;
+          rows.push(`<div class="cat-result${line.startsWith('✓') ? ' ok' : ' bad'}">${line}</div>`);
+          res.innerHTML = rows.join('');
+        }
+        const all = readAssign();
+        if (ok) { all[c.id] = { project: p ? p.id : '', circuitLabel: p ? (p.name || p.id) : '', circuit: (p && p.circuits || []).join(','), screens: okScreens, at: new Date().toISOString(), ok, fail }; writeAssign(all); }
+        res.innerHTML += `<div class="cat-result sum">${ok} OK · ${fail} ${T.fallos} · ${T.releen}</div>`;
+        assigning = false; $('catGo').disabled = false; $('catGo').textContent = T.asignarBtn;
+        renderHead(); renderList(); renderScreens();
+      }
+
+      function init() {
+        const dlg = $('catAssignModal'); if (!dlg) return;
+        $('catProject').addEventListener('change', onProjectChange);
+        $('catScreens').addEventListener('change', e => { const row = e.target.closest('[data-sid]'); if (!row) return; const sid = row.dataset.sid; if (e.target.checked) tsel.add(sid); else tsel.delete(sid); row.classList.toggle('sel', e.target.checked); const sum = $('catScreensSummary'); if (sum) sum.textContent = `${tsel.size}/${row.parentElement.children.length} ${T.pantallas}`; });
+        $('catGo').addEventListener('click', assign);
+        $('catCancel').addEventListener('click', () => dlg.close());
+        $('catReload').addEventListener('click', e => { e.preventDefault(); refreshLive(); });
+        const list = $('catList');
+        list.addEventListener('click', e => { const card = e.target.closest('.cat-card'); if (card) select(card.dataset.cat); });
+        list.addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const card = e.target.closest('.cat-card'); if (card) { e.preventDefault(); select(card.dataset.cat); } });
+        $('catRefresh').addEventListener('click', async () => { status.textContent = T.cargando; await loadCatalogos(true); status.textContent = ''; repaint(); });
+        // Deep-link: stock.html?catalogo=<id> abre la vista Catálogo con ese catálogo.
+        let deep = ''; try { deep = new URLSearchParams(location.search).get('catalogo') || ''; } catch {}
+        if (deep) { selected = deep; filters.type = 'catalogo'; typeFilter.value = 'catalogo'; }
+      }
+      return { init, isActive, enter, leave, repaint, select };
+    })();
+    window.CATALOGO = CATALOGO;
+
     (async () => {
       DIST.init();
       PL.init();
       TM.init();
+      CATALOGO.init();
+      if (CATALOGO.isActive()) CATALOGO.enter();
       await load();
       setTimeout(highlightFromQuery, 80);
     })();
