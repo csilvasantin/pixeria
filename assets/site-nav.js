@@ -11,6 +11,7 @@
     ['/tiktok', 'TikTok'],
     ['/publicidad.html', 'Publicidad'],
     ['/anonimizador.html', 'Anonimizador'],
+    ['/ideas.html', 'Ideas'],
     ['/crear/', 'Assets'],
     ['/stock.html', 'Stock']
   ];
@@ -22,6 +23,9 @@
     ['/tiktok', 'TikTok'],
     ['/en/publicidad.html', 'Advertising'],
     ['/en/anonimizador.html', 'Anonymizer'],
+    // Ideas todavía no tiene versión inglesa: se apunta a la española antes que
+    // dejar un enlace roto o esconder la categoría a quien navega en inglés.
+    ['/ideas.html', 'Ideas'],
     ['/en/crear/', 'Assets'],
     ['/en/stock.html', 'Stock']
   ];
@@ -221,6 +225,7 @@
     ['/imagenes.html', 'Imágenes', 'Dirección de arte, producto y estilo'],
     ['/avatar.html', 'Avatar 3D', 'Presentadores y avatares generativos'],
     ['/anonimizador.html', 'Anonimizador', 'Privacidad en imagen y vídeo'],
+    ['/ideas.html', 'Ideas', 'Mapas del tesoro del Consejo: ideas para debatir'],
     ['/plataforma.html', 'Plataforma', 'Mapa de capas, motores y salida a XpaceOS'],
     ['/stock.html', 'Stock', 'Galería pública de assets desplegados'],
     ['/crear-campana/', 'Campañas', 'Compra y activación en puntos y pantallas'],
