@@ -719,9 +719,14 @@
         const seg = segment ? { sex: segment.sex, age: segment.age, desc: (segment.desc || '').slice(0, 120) } : null;
         const hasSeg = seg && (seg.sex !== 'any' || seg.age !== 'any' || seg.desc);
         const npcName = 'Anonymous' + (hasSeg ? '||' + JSON.stringify(seg) : '');
+        // XpaceOS 16/32/64 bits: la persona realista (y el NPC 16-bit) viajan con el
+        // envío; el worker fabrica una sola vez su paquete de caminata y ficha
+        // (/twin/persona*). Sin persona, el gemelo sigue igual (solo 8-bit).
+        const persona = anon ? await downscale(anon, 768, 'image/jpeg') : null;
+        const npc16Small = npc16 ? await downscale(npc16, 256, 'image/png') : null;
         const r = await fetch(WORKER + '/twin/spawn', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: sprite, name: npcName })
+          body: JSON.stringify(Object.assign({ image: sprite, name: npcName }, persona ? { persona } : {}, npc16Small ? { npc16: npc16Small } : {}))
         });
         const d = await r.json().catch(() => ({}));
         if (!r.ok || !d.ok) throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status));
