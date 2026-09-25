@@ -2,15 +2,15 @@
   "mission": "FLT-101042",
   "assignment": 4376,
   "geometry": {
-    "uniqueAssets": 45,
+    "uniqueAssets": 48,
     "inventoryObjects": 66,
-    "alsea": 29,
+    "alsea": 32,
     "xtanco": 16,
     "baseOrigin": "center-bottom",
     "units": "metres",
     "reimportVerified": true
   },
-  "unitTests": 21,
+  "unitTests": 22,
   "catalog": [
     {
       "id": "1790368291504-gruas8",
@@ -171,26 +171,6 @@
         42.000000551342964
       ],
       "materials": 2
-    },
-    {
-      "id": "1790368592506-ca7e3w",
-      "file": "alsea-lampara",
-      "dimensionsCm": [
-        39.70443904399872,
-        39.70443904399872,
-        137.99999952316284
-      ],
-      "materials": 3
-    },
-    {
-      "id": "1790368601152-7o2fq5",
-      "file": "alsea-planta",
-      "dimensionsCm": [
-        54.90294098854065,
-        54.90294098854065,
-        160.0000023841858
-      ],
-      "materials": 4
     },
     {
       "id": "1790368605841-3tot96",
@@ -461,6 +441,56 @@
         138.17870616912842
       ],
       "materials": 3
+    },
+    {
+      "id": "1790369405902-ptvh20",
+      "file": "alsea-planta-2",
+      "dimensionsCm": [
+        44.92039084434509,
+        44.92039084434509,
+        129.99999523162842
+      ],
+      "materials": 4
+    },
+    {
+      "id": "1790369405888-1056k4",
+      "file": "alsea-planta-3",
+      "dimensionsCm": [
+        49.91165101528168,
+        49.91165101528168,
+        139.9999976158142
+      ],
+      "materials": 4
+    },
+    {
+      "id": "1790369405884-xo0noj",
+      "file": "alsea-planta-1",
+      "dimensionsCm": [
+        54.90294098854065,
+        54.90294098854065,
+        160.0000023841858
+      ],
+      "materials": 4
+    },
+    {
+      "id": "1790369440611-0j3hgy",
+      "file": "alsea-lampara",
+      "dimensionsCm": [
+        39.70443904399872,
+        39.70443904399872,
+        137.99999952316284
+      ],
+      "materials": 3
+    },
+    {
+      "id": "1790369440624-b44eek",
+      "file": "alsea-lampara-4",
+      "dimensionsCm": [
+        39.70443904399872,
+        39.70443904399872,
+        99.99999403953552
+      ],
+      "materials": 3
     }
   ],
   "ui": [
@@ -683,6 +713,90 @@
       ]
     },
     {
+      "slug": "alsea",
+      "target": "planta-1",
+      "error": 0,
+      "before": [
+        10.350485682487488,
+        0.06499999761581421,
+        6.85048520565033,
+        10.899515092372894,
+        1.6650000214576721,
+        7.399514615535736
+      ],
+      "after": [
+        10.350485682487488,
+        0.06499999761581421,
+        6.85048520565033,
+        10.899515092372894,
+        1.6650000214576721,
+        7.399514615535736
+      ]
+    },
+    {
+      "slug": "alsea",
+      "target": "planta-2",
+      "error": 0,
+      "before": [
+        0.4503980278968811,
+        0.06499999761581421,
+        5.500397861003876,
+        0.899601936340332,
+        1.3649999499320984,
+        5.949601769447327
+      ],
+      "after": [
+        0.4503980278968811,
+        0.06499999761581421,
+        5.500397861003876,
+        0.899601936340332,
+        1.3649999499320984,
+        5.949601769447327
+      ]
+    },
+    {
+      "slug": "alsea",
+      "target": "planta-3",
+      "error": 0,
+      "before": [
+        10.45044194161892,
+        0.06499999761581421,
+        2.5504418462514877,
+        10.949558451771736,
+        1.4649999737739563,
+        3.0495583564043045
+      ],
+      "after": [
+        10.45044194161892,
+        0.06499999761581421,
+        2.5504418462514877,
+        10.949558451771736,
+        1.4649999737739563,
+        3.0495583564043045
+      ]
+    },
+    {
+      "slug": "alsea",
+      "target": "lampara-4",
+      "error": 0,
+      "before": [
+        9.751478001475334,
+        2.26500004529953,
+        1.5514778345823288,
+        10.148522391915321,
+        3.2649999856948853,
+        1.948522225022316
+      ],
+      "after": [
+        9.751478001475334,
+        2.26500004529953,
+        1.5514778345823288,
+        10.148522391915321,
+        3.2649999856948853,
+        1.948522225022316
+      ]
+    },
+    {
       "slug": "xtanco",
       "target": "mostrador",
       "error": 1.7229467630386353e-08,
@@ -880,6 +994,17 @@
       "shareURL": "http://127.0.0.1:9440/en/stock.html?gate=off&type=xpaces&highlight=1790365002072-l9tpjw&xhide-1790365002072-l9tpjw=%5B%22taburete-1%22%5D"
     }
   ],
-  "stockOriginalsVerified": 45,
-  "duplicates": 0
+  "stockOriginalsVerified": 48,
+  "duplicates": 0,
+  "retiredGroupingDrafts": [
+    "1790368601152-7o2fq5",
+    "1790368592506-ca7e3w"
+  ],
+  "liveVerification": {
+    "method": "Native Chrome existing signed-in session; no cookie extraction",
+    "assetsOriginal": "45×45×85 cm",
+    "assetsVariant": "45×45×95 cm; blue",
+    "xpace": "silla-1 variant visible and selected in inventory",
+    "unsignedBrowser": "Google access gate remains required"
+  }
 }

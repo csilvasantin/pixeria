@@ -782,108 +782,6 @@
     "slug": "alsea",
     "xpace": "1790364696893-14ykfy",
     "inventoryIds": [
-      "lampara-1",
-      "lampara-2",
-      "lampara-3",
-      "lampara-4"
-    ],
-    "quantity": 4,
-    "dimensionsCm": [
-      39.704,
-      39.704,
-      138.0
-    ],
-    "materials": [
-      "LED_fff1c8",
-      "MAT_laton",
-      "NEGRO_MATE"
-    ],
-    "baseLocal": [
-      0.0,
-      0.0,
-      0.0
-    ],
-    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
-    "file": "alsea-lampara",
-    "title": "Alsea · Lámparas colgantes latón Ø40",
-    "category": "Iluminacion",
-    "ok": true,
-    "id": "1790368592506-ca7e3w",
-    "num": 1144,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "alsea"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790368592506-ca7e3w",
-    "createdAt": "2026-09-25T20:36:32.506Z",
-    "contentHash": "2a6ec95ae87a82a031cd714880847ef2b984a97604481cba92cb8f2ee328576c",
-    "poster": "https://api.admira.store/stock/poster/1790368592506-ca7e3w",
-    "thumbnail": "https://stock.admira.store/stock/1790368592506-ca7e3w/poster.jpg?v=3082",
-    "validacion": null,
-    "type": "furni",
-    "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"lampara-1\",\"lampara-2\",\"lampara-3\",\"lampara-4\"],\"quantity\":4,\"dimensionsCm\":[39.704,39.704,138.0],\"baseLocal\":[0.0,0.0,0.0]}",
-    "externalRef": "furniture:1790364696893-14ykfy:lampara-1",
-    "sha256": "2a6ec95ae87a82a031cd714880847ef2b984a97604481cba92cb8f2ee328576c"
-  },
-  {
-    "schema": "pixeria.furniture/1",
-    "slug": "alsea",
-    "xpace": "1790364696893-14ykfy",
-    "inventoryIds": [
-      "planta-1",
-      "planta-2",
-      "planta-3"
-    ],
-    "quantity": 3,
-    "dimensionsCm": [
-      54.903,
-      54.903,
-      160.0
-    ],
-    "materials": [
-      "HOJA_VERDE_CLARA",
-      "HOJA_VERDE_OSCURA",
-      "MAT_terracota",
-      "SUSTRATO"
-    ],
-    "baseLocal": [
-      0.0,
-      0.0,
-      0.0
-    ],
-    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
-    "file": "alsea-planta",
-    "title": "Alsea · Plantas en maceta",
-    "category": "Vegetacion",
-    "ok": true,
-    "id": "1790368601152-7o2fq5",
-    "num": 1145,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "alsea"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790368601152-7o2fq5",
-    "createdAt": "2026-09-25T20:36:41.152Z",
-    "contentHash": "f85c3ce28fffb728a8b84005caf8bdb52b81dfe8fde00994b911e278af7fea5f",
-    "poster": "https://api.admira.store/stock/poster/1790368601152-7o2fq5",
-    "thumbnail": "https://stock.admira.store/stock/1790368601152-7o2fq5/poster.jpg?v=3984",
-    "validacion": null,
-    "type": "furni",
-    "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"planta-1\",\"planta-2\",\"planta-3\"],\"quantity\":3,\"dimensionsCm\":[54.903,54.903,160.0],\"baseLocal\":[0.0,0.0,0.0]}",
-    "externalRef": "furniture:1790364696893-14ykfy:planta-1",
-    "sha256": "f85c3ce28fffb728a8b84005caf8bdb52b81dfe8fde00994b911e278af7fea5f"
-  },
-  {
-    "schema": "pixeria.furniture/1",
-    "slug": "alsea",
-    "xpace": "1790364696893-14ykfy",
-    "inventoryIds": [
       "tpv"
     ],
     "quantity": 1,
@@ -2154,5 +2052,250 @@
     "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"planta\"],\"quantity\":1,\"dimensionsCm\":[50.0,50.0,138.179],\"baseLocal\":[0.0,0.0,0.0]}",
     "externalRef": "furniture:1790365002072-l9tpjw:planta",
     "sha256": "4fe7316a409ad2fbe8e9d9f937a8ba614f59283ad0c2219dfd739dfdcfc7f0f1"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "planta-2"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      44.92,
+      44.92,
+      130.0
+    ],
+    "materials": [
+      "HOJA_VERDE_CLARA",
+      "HOJA_VERDE_OSCURA",
+      "MAT_terracota",
+      "SUSTRATO"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-planta-2",
+    "title": "Alsea · Plantas",
+    "category": "Vegetacion",
+    "ok": true,
+    "id": "1790369405902-ptvh20",
+    "num": 1176,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790369405902-ptvh20",
+    "createdAt": "2026-09-25T20:50:05.902Z",
+    "contentHash": "c98f8cfbc2cde8f4a98a7f073a0800077f98d0323120e27f2446368ead887706",
+    "poster": "https://api.admira.store/stock/poster/1790369405902-ptvh20",
+    "thumbnail": "https://stock.admira.store/stock/1790369405902-ptvh20/poster.jpg?v=3878",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"planta-2\"],\"quantity\":1,\"dimensionsCm\":[44.92,44.92,130.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:planta-2",
+    "sha256": "c98f8cfbc2cde8f4a98a7f073a0800077f98d0323120e27f2446368ead887706"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "planta-3"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      49.912,
+      49.912,
+      140.0
+    ],
+    "materials": [
+      "HOJA_VERDE_CLARA",
+      "HOJA_VERDE_OSCURA",
+      "MAT_terracota",
+      "SUSTRATO"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-planta-3",
+    "title": "Alsea · Plantas",
+    "category": "Vegetacion",
+    "ok": true,
+    "id": "1790369405888-1056k4",
+    "num": 1175,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790369405888-1056k4",
+    "createdAt": "2026-09-25T20:50:05.888Z",
+    "contentHash": "8c60ac0fdc2134446627a971e90da091478bf6b858a83ff1521c1a4c98952523",
+    "poster": "https://api.admira.store/stock/poster/1790369405888-1056k4",
+    "thumbnail": "https://stock.admira.store/stock/1790369405888-1056k4/poster.jpg?v=3926",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"planta-3\"],\"quantity\":1,\"dimensionsCm\":[49.912,49.912,140.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:planta-3",
+    "sha256": "8c60ac0fdc2134446627a971e90da091478bf6b858a83ff1521c1a4c98952523"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "planta-1"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      54.903,
+      54.903,
+      160.0
+    ],
+    "materials": [
+      "HOJA_VERDE_CLARA",
+      "HOJA_VERDE_OSCURA",
+      "MAT_terracota",
+      "SUSTRATO"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-planta-1",
+    "title": "Alsea · Plantas en maceta",
+    "category": "Vegetacion",
+    "ok": true,
+    "id": "1790369405884-xo0noj",
+    "num": 1176,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790369405884-xo0noj",
+    "createdAt": "2026-09-25T20:50:05.884Z",
+    "contentHash": "126a7ac54422a2c61710c736e701f603a2b7aeb8c09ebf3105e0aee15e5ab158",
+    "poster": "https://api.admira.store/stock/poster/1790369405884-xo0noj",
+    "thumbnail": "https://stock.admira.store/stock/1790369405884-xo0noj/poster.jpg?v=3982",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"planta-1\"],\"quantity\":1,\"dimensionsCm\":[54.903,54.903,160.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:planta-1",
+    "sha256": "126a7ac54422a2c61710c736e701f603a2b7aeb8c09ebf3105e0aee15e5ab158"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "lampara-1",
+      "lampara-2",
+      "lampara-3"
+    ],
+    "quantity": 3,
+    "dimensionsCm": [
+      39.704,
+      39.704,
+      138.0
+    ],
+    "materials": [
+      "LED_fff1c8",
+      "MAT_laton",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-lampara",
+    "title": "Alsea · Lámparas colgantes latón Ø40",
+    "category": "Iluminacion",
+    "ok": true,
+    "id": "1790369440611-0j3hgy",
+    "num": 1179,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790369440611-0j3hgy",
+    "createdAt": "2026-09-25T20:50:40.611Z",
+    "contentHash": "10604dc2dd90bde14029e65969579b9e13c0a0e3f1358ce68f67bb190bd482a0",
+    "poster": "https://api.admira.store/stock/poster/1790369440611-0j3hgy",
+    "thumbnail": "https://stock.admira.store/stock/1790369440611-0j3hgy/poster.jpg?v=3078",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"lampara-1\",\"lampara-2\",\"lampara-3\"],\"quantity\":3,\"dimensionsCm\":[39.704,39.704,138.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:lampara-1",
+    "sha256": "10604dc2dd90bde14029e65969579b9e13c0a0e3f1358ce68f67bb190bd482a0"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "lampara-4"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      39.704,
+      39.704,
+      100.0
+    ],
+    "materials": [
+      "LED_fff1c8",
+      "MAT_laton",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-lampara-4",
+    "title": "Alsea · Lámparas",
+    "category": "Iluminacion",
+    "ok": true,
+    "id": "1790369440624-b44eek",
+    "num": 1178,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790369440624-b44eek",
+    "createdAt": "2026-09-25T20:50:40.624Z",
+    "contentHash": "152add8b259016988ea6ba57b30557ccea259bdc94eedd0b4e82edad862e492b",
+    "poster": "https://api.admira.store/stock/poster/1790369440624-b44eek",
+    "thumbnail": "https://stock.admira.store/stock/1790369440624-b44eek/poster.jpg?v=3349",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"lampara-4\"],\"quantity\":1,\"dimensionsCm\":[39.704,39.704,100.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:lampara-4",
+    "sha256": "152add8b259016988ea6ba57b30557ccea259bdc94eedd0b4e82edad862e492b"
   }
 ]

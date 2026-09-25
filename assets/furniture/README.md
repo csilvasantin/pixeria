@@ -9,10 +9,10 @@ from the whole-space Xpaces filter.
 
 ## Source and publication
 
-45 unique GLBs represent 66 inventory objects from #4375: 29 Alsea assets and
+48 unique GLBs represent 66 inventory objects from #4375: 32 Alsea assets and
 16 Xtanco assets. Architecture is excluded; movable furniture, equipment, screens,
 plants, lighting (including distinct perimeter segments) and IoT equipment are
-included. Repeated chairs, stools, tables, pendants, plants and speakers have one
+included. Repeated chairs, stools, tables, pendants, speakers have one
 asset with `quantity` and all associated `inventoryIds`. Screen content differences
 are retained. Every item links to its source Xpace, measurement inventory IDs and
 source measurement URL. Manufacturer/model/warranty are not invented.
@@ -67,7 +67,7 @@ GLB available in Stock. No server-side rewrite of the source Xpace is implied.
 
 ## Verification
 
-- Blender reimport: all 45 GLBs, 66 inventory IDs, base at zero, named materials,
+- Blender reimport: all 48 GLBs, 66 inventory IDs, base at zero, named materials,
   centred bounds and dimensions within 0.005 cm of recorded envelopes.
 - `node --test test/furniture.test.mjs test/xpace-inventory.test.mjs test/xpaces.test.mjs test/stock-deep-link.test.cjs test/auth-flow.test.mjs`
 - `scripts/verify-furniture.cjs`: desktop and 390×844 touch emulation, proportional
@@ -81,7 +81,15 @@ GLB available in Stock. No server-side rewrite of the source Xpace is implied.
 A second saved example verifies uploaded texture embedding: Xtanco stool, oak
 texture and 40×40×85 cm. Reloading its saved GLB retains the uploaded texture.
 
-Final catalogue QA opened all 45 assets in Better, decoded all posters, and matched
-all displayed dimensions to the exported envelopes. Fifteen source placements
+Final catalogue QA opened all 48 assets in Better, decoded all posters, and matched
+all displayed dimensions to the exported envelopes. Nineteen source placements
 (including rotated chairs/screens and IoT) match the source bounds within 2 cm.
 The existing inventory browser suite also passes in ES/EN and desktop/mobile.
+
+Final grouping audit separated Alsea’s three differently sized plants and its
+shorter fourth pendant suspension. The two initial grouping drafts were reversibly
+hidden in Stock; 48 originals now cover the same 66 IDs without duplicates.
+
+Production was additionally checked in the existing signed-in Chrome session:
+original chair, saved blue 95 cm chair in Assets, and that variant inside Alsea.
+The unauthenticated automated browser correctly reaches the existing Google gate.

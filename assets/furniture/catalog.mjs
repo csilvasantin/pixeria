@@ -1,5 +1,7 @@
+// Superseded grouping drafts: plants and suspension lengths differ.
+const retired=new Set(['1790368601152-7o2fq5','1790368592506-ca7e3w']);
 export const API='https://api.admira.store';
-export const isFurniture3D=item=>item?.type==='furni'&&String(item.mime).split(';')[0]==='model/gltf-binary';
+export const isFurniture3D=item=>!retired.has(item?.id)&&!item?.oculto&&item?.type==='furni'&&String(item.mime).split(';')[0]==='model/gltf-binary';
 export function furnitureData(item){
  try{const d=JSON.parse(item.prompt);return d.schema==='pixeria.furniture/1'&&typeof d.xpace==='string'&&typeof d.slug==='string'&&Number.isInteger(d.quantity)&&d.quantity>0&&Array.isArray(d.inventoryIds)&&d.inventoryIds.length>0&&d.inventoryIds.every(id=>typeof id==='string')&&Array.isArray(d.dimensionsCm)&&d.dimensionsCm.length===3&&d.dimensionsCm.every(n=>Number.isFinite(n)&&n>0)?d:null;}catch{return null;}
 }

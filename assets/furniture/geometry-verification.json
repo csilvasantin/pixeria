@@ -316,50 +316,6 @@
     ]
   },
   {
-    "file": "alsea-lampara",
-    "quantity": 4,
-    "ids": [
-      "lampara-1",
-      "lampara-2",
-      "lampara-3",
-      "lampara-4"
-    ],
-    "dimensionsCm": [
-      39.70443904399872,
-      39.70443904399872,
-      137.99999952316284
-    ],
-    "base": 0.0,
-    "meshes": 3,
-    "materials": [
-      "LED_fff1c8",
-      "MAT_laton",
-      "NEGRO_MATE"
-    ]
-  },
-  {
-    "file": "alsea-planta",
-    "quantity": 3,
-    "ids": [
-      "planta-1",
-      "planta-2",
-      "planta-3"
-    ],
-    "dimensionsCm": [
-      54.90294098854065,
-      54.90294098854065,
-      160.0000023841858
-    ],
-    "base": 0.0,
-    "meshes": 21,
-    "materials": [
-      "HOJA_VERDE_CLARA",
-      "HOJA_VERDE_OSCURA",
-      "MAT_terracota",
-      "SUSTRATO"
-    ]
-  },
-  {
     "file": "alsea-tpv",
     "quantity": 1,
     "ids": [
@@ -547,6 +503,106 @@
     "meshes": 1,
     "materials": [
       "IOT_CARCASA"
+    ]
+  },
+  {
+    "file": "alsea-planta-1",
+    "quantity": 1,
+    "ids": [
+      "planta-1"
+    ],
+    "dimensionsCm": [
+      54.90294098854065,
+      54.90294098854065,
+      160.0000023841858
+    ],
+    "base": 0.0,
+    "meshes": 21,
+    "materials": [
+      "HOJA_VERDE_CLARA",
+      "HOJA_VERDE_OSCURA",
+      "MAT_terracota",
+      "SUSTRATO"
+    ]
+  },
+  {
+    "file": "alsea-planta-2",
+    "quantity": 1,
+    "ids": [
+      "planta-2"
+    ],
+    "dimensionsCm": [
+      44.92039084434509,
+      44.92039084434509,
+      129.99999523162842
+    ],
+    "base": 0.0,
+    "meshes": 21,
+    "materials": [
+      "HOJA_VERDE_CLARA",
+      "HOJA_VERDE_OSCURA",
+      "MAT_terracota",
+      "SUSTRATO"
+    ]
+  },
+  {
+    "file": "alsea-planta-3",
+    "quantity": 1,
+    "ids": [
+      "planta-3"
+    ],
+    "dimensionsCm": [
+      49.91165101528168,
+      49.91165101528168,
+      139.9999976158142
+    ],
+    "base": 0.0,
+    "meshes": 21,
+    "materials": [
+      "HOJA_VERDE_CLARA",
+      "HOJA_VERDE_OSCURA",
+      "MAT_terracota",
+      "SUSTRATO"
+    ]
+  },
+  {
+    "file": "alsea-lampara",
+    "quantity": 3,
+    "ids": [
+      "lampara-1",
+      "lampara-2",
+      "lampara-3"
+    ],
+    "dimensionsCm": [
+      39.70443904399872,
+      39.70443904399872,
+      137.99999952316284
+    ],
+    "base": 0.0,
+    "meshes": 3,
+    "materials": [
+      "LED_fff1c8",
+      "MAT_laton",
+      "NEGRO_MATE"
+    ]
+  },
+  {
+    "file": "alsea-lampara-4",
+    "quantity": 1,
+    "ids": [
+      "lampara-4"
+    ],
+    "dimensionsCm": [
+      39.70443904399872,
+      39.70443904399872,
+      99.99999403953552
+    ],
+    "base": 0.0,
+    "meshes": 3,
+    "materials": [
+      "LED_fff1c8",
+      "MAT_laton",
+      "NEGRO_MATE"
     ]
   },
   {

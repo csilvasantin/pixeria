@@ -9,11 +9,15 @@ manifest=json.loads((repo/'assets/xpaces/inventory'/f'{slug}.json').read_text())
 source=bpy.context.scene
 glb=pathlib.Path(bpy.data.filepath).with_suffix('.glb').read_bytes()
 nodes=json.loads(glb[20:20+struct.unpack_from('<I',glb,12)[0]])['nodes']
-groups={}
+groups={};group_sizes={}
 for row in manifest['items']:
  if row['categoria']=='Arquitectura':continue
  # Repeated designed pieces share one reusable model. Screens retain their content.
- key=re.sub(r'-\d+$','',row['id']) if re.match(r'^(silla|mesa|taburete|lampara|planta)-\d+$',row['id']) else ('S' if re.match(r'^S\d+$',row['id']) else row['id'])
+ key=re.sub(r'-\d+$','',row['id']) if re.match(r'^(silla|mesa|taburete|lampara)-\d+$',row['id']) else ('S' if re.match(r'^S\d+$',row['id']) else row['id'])
+ obj=bpy.data.objects[nodes[row['node']]['name']];inv=obj.matrix_world.inverted();points=[inv@o.matrix_world@Vector(c) for o in [obj,*obj.children_recursive] if o.type=='MESH' for c in o.bound_box]
+ size=tuple(round(max(p[i] for p in points)-min(p[i] for p in points),4) for i in range(3))
+ if key in group_sizes and size!=group_sizes[key]:key=row['id']
+ group_sizes[key]=size
  groups.setdefault(key,[]).append(row)
 only=os.environ.get('FURNITURE_ONLY','').split(',') if os.environ.get('FURNITURE_ONLY') else []
 results=json.loads((out/(slug+'-export.json')).read_text()) if only else []
