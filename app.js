@@ -5,6 +5,25 @@
   const COSTES_FECHA = '2026-05-15';
   const ELEVEN_WORKER_URL = 'https://api.admira.store';
   const XAI_WORKER_URL    = 'https://api.admira.store';
+  let _pxTok = '', _pxExp = 0;
+  async function pixeriaApiToken() {
+    const now = Date.now() / 1000;
+    if (_pxTok && _pxExp > now + 20) return _pxTok;
+    const r = await fetch('/auth/api-token', { credentials: 'include', cache: 'no-store', headers: { Accept: 'application/json' } });
+    if (!r.ok) return '';
+    const data = await r.json().catch(() => ({}));
+    _pxTok = data.token || '';
+    _pxExp = Number(data.exp) || 0;
+    return _pxTok;
+  }
+  async function paidFetch(url, init) {
+    const next = Object.assign({}, init);
+    const headers = new Headers(next.headers || {});
+    const tok = await pixeriaApiToken();
+    if (tok && !headers.has('Authorization')) headers.set('Authorization', 'Bearer ' + tok);
+    next.headers = headers;
+    return fetch(url, next);
+  }
 
   // ─── API keys (localStorage) ───────────────────────────────────────
   function loadKeys() {
@@ -693,7 +712,7 @@
         </div>`);
       const stopElevenProg = startProgress('eleven');
       try {
-        const r = await fetch(ELEVEN_WORKER_URL + '/tts', {
+        const r = await paidFetch(ELEVEN_WORKER_URL + '/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -750,7 +769,7 @@
       </div>`);
     const stopGtts = startProgress('gtts');
     try {
-      const r = await fetch(ELEVEN_WORKER_URL + '/tts/free', {
+      const r = await paidFetch(ELEVEN_WORKER_URL + '/tts/free', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, lang }),
       });
@@ -1158,7 +1177,7 @@
       </div>`);
     const stop = startProgress('lyria3');
     try {
-      const r = await fetch(ELEVEN_WORKER_URL + '/lyria3/generate', {
+      const r = await paidFetch(ELEVEN_WORKER_URL + '/lyria3/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, lyrics, model }),
@@ -1287,7 +1306,7 @@
       </div>`);
     const stop = startProgress('imagen');
     try {
-      const r = await fetch(ELEVEN_WORKER_URL + '/imagen/generate', {
+      const r = await paidFetch(ELEVEN_WORKER_URL + '/imagen/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: fullPrompt, aspectRatio, numberOfImages: 1, model, imageSize: '2K' }),
@@ -1362,7 +1381,7 @@
   }
   async function genGrokRaw(fullPrompt, model) {
     try {
-      const r = await fetch(XAI_WORKER_URL + '/xai/image', {
+      const r = await paidFetch(XAI_WORKER_URL + '/xai/image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: fullPrompt, n: 1, model }),
@@ -1375,7 +1394,7 @@
   }
   async function genImagenRaw(fullPrompt, aspectRatio) {
     try {
-      const r = await fetch(ELEVEN_WORKER_URL + '/imagen/generate', {
+      const r = await paidFetch(ELEVEN_WORKER_URL + '/imagen/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: fullPrompt, aspectRatio, numberOfImages: 1, model: 'imagen-4.0-ultra-generate-001', imageSize: '2K' }),
@@ -1517,7 +1536,7 @@
         </div>`);
       const stopGrokImg = startProgress('grokimg');
       try {
-        const r = await fetch(XAI_WORKER_URL + '/xai/image', {
+        const r = await paidFetch(XAI_WORKER_URL + '/xai/image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: fullPrompt, n: 1, model: motor }),
@@ -1615,7 +1634,7 @@
   // para refrescar etiquetas (barra de progreso o celda del comparador).
   async function genVeoRaw(prompt, aspect, durationSeconds, resolution, model, onTick) {
     try {
-      const r = await fetch(ELEVEN_WORKER_URL + '/veo/generate', {
+      const r = await paidFetch(ELEVEN_WORKER_URL + '/veo/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, aspectRatio: aspect, durationSeconds, resolution, model }),
@@ -1631,13 +1650,16 @@
         attempt++;
         const elapsed = ((Date.now() - t0) / 1000).toFixed(0);
         if (onTick) onTick(elapsed, attempt);
-        const pollR = await fetch(`${ELEVEN_WORKER_URL}/veo/status/${opName}`);
+        const pollR = await paidFetch(`${ELEVEN_WORKER_URL}/veo/status/${opName}`);
         if (!pollR.ok) return { ok: false, error: `poll ${pollR.status}` };
         const poll = await pollR.json();
         if (poll.done) {
           const uri = poll?.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri;
           if (!uri) return { ok: false, error: 'sin URI: ' + JSON.stringify(poll).slice(0, 200) };
-          return { ok: true, url: `${ELEVEN_WORKER_URL}/veo/download?uri=${encodeURIComponent(uri)}`, elapsed };
+          const dl = await paidFetch(`${ELEVEN_WORKER_URL}/veo/download?uri=${encodeURIComponent(uri)}`);
+          if (!dl.ok) return { ok: false, error: `download ${dl.status}` };
+          const blob = await dl.blob();
+          return { ok: true, url: URL.createObjectURL(blob), elapsed };
         }
         if (attempt > 60) return { ok: false, error: 'timeout (>5min)' };
       }
@@ -1686,7 +1708,7 @@
   // GET /xai/video/{id} hasta status "done" → video.url (https://vidgen.x.ai/…).
   async function genGrokVideoRaw(prompt, aspect, durationSeconds, resolution, onTick) {
     try {
-      const r = await fetch(ELEVEN_WORKER_URL + '/xai/video', {
+      const r = await paidFetch(ELEVEN_WORKER_URL + '/xai/video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, duration: durationSeconds, aspect_ratio: aspect, resolution }),
@@ -1702,7 +1724,7 @@
         attempt++;
         const elapsed = ((Date.now() - t0) / 1000).toFixed(0);
         if (onTick) onTick(elapsed, attempt);
-        const pollR = await fetch(`${ELEVEN_WORKER_URL}/xai/video/${encodeURIComponent(reqId)}`);
+        const pollR = await paidFetch(`${ELEVEN_WORKER_URL}/xai/video/${encodeURIComponent(reqId)}`);
         if (!pollR.ok) return { ok: false, error: `poll ${pollR.status}` };
         const poll = await pollR.json();
         const status = poll.status || poll.state;
@@ -1776,7 +1798,7 @@
     const to = setTimeout(() => ctrl.abort(), 150000);
     let blobUrl, errMsg;
     try {
-      const r = await fetch(`${ELEVEN_WORKER_URL}/pvideo?${qs.toString()}`, { signal: ctrl.signal });
+      const r = await paidFetch(`${ELEVEN_WORKER_URL}/pvideo?${qs.toString()}`, { signal: ctrl.signal });
       clearTimeout(to);
       if (!r.ok) {
         const raw = (await r.text()).slice(0, 300);
@@ -2487,7 +2509,7 @@
       const ctxSuffix = (t._ctx && t._ctx.promptSuffix) ? ' ' + t._ctx.promptSuffix.charAt(0).toUpperCase() + t._ctx.promptSuffix.slice(1) + '.' : '';
       const prompt = `Anuncio publicitario de ${t.offer} dirigido a: ${t.label}.${ctxSuffix} Estilo retail premium, composición limpia, llamada a la acción clara, alta calidad fotográfica, sin texto ilegible.`;
       try {
-        const r = await fetch(XAI_WORKER_URL + '/xai/image', {
+        const r = await paidFetch(XAI_WORKER_URL + '/xai/image', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt, model: 'grok-imagine-image', b64: true }),
         });
@@ -2698,7 +2720,7 @@
       btn.disabled = true;
       ta.value = '// generando letra con Gemini 2.5 Flash...';
       try {
-        const r = await fetch(ELEVEN_WORKER_URL + '/llm/lyrics', {
+        const r = await paidFetch(ELEVEN_WORKER_URL + '/llm/lyrics', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ brief, idioma }),

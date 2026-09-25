@@ -30,7 +30,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.24.09.2026.r1.14:01">
+  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r1.09:35">
   <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
   <title>Pixeria · Megafonía</title>
   <meta name="description" content="Megafonía del Xpacio: envía un aviso de audio en cualquier idioma y voz a la tienda (Instore Media).">
@@ -160,11 +160,19 @@
     }
     var previewAudio=null;
     // ESCUCHAR aquí: /tts devuelve el mp3 directo, lo reproducimos en el navegador.
+    function pixeriaPaidHeaders(){
+      return fetch('/auth/api-token',{credentials:'include',cache:'no-store',headers:{Accept:'application/json'}})
+        .then(function(r){ return r.ok ? r.json() : {}; })
+        .then(function(d){ var h={'Content-Type':'application/json'}; if(d&&d.token) h.Authorization='Bearer '+d.token; return h; })
+        .catch(function(){ return {'Content-Type':'application/json'}; });
+    }
     $('preview').onclick=function(){
       var p=payload(); if(!p.text){ setStatus('Escribe el aviso primero.','err'); return; }
       setStatus('Generando voz…','wait'); this.disabled=true; var btn=this;
-      fetch(API+'/tts',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({text:p.text, voice_id:p.voice_id})})
+      pixeriaPaidHeaders().then(function(h){
+      return fetch(API+'/tts',{method:'POST',headers:h,
+        body:JSON.stringify({text:p.text, voice_id:p.voice_id})});
+      })
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.blob(); })
       .then(function(b){ if(previewAudio){try{previewAudio.pause();}catch(e){}} previewAudio=new Audio(URL.createObjectURL(b));
         previewAudio.play(); setStatus('▶ Reproduciendo aquí (no en la tienda).','ok'); })

@@ -5,6 +5,7 @@ const WHITELIST_URL = 'https://whitelist.admira.store/list';
 const SESSION_COOKIE = '__Host-pixeria_session';
 const CHALLENGE_COOKIE = '__Host-pixeria_login_nonce';
 const SESSION_TTL_SECONDS = 12 * 60 * 60;
+const API_TOKEN_TTL_SECONDS = 15 * 60;
 const CHALLENGE_TTL_MS = 10 * 60 * 1000;
 const OWNER_FALLBACK = new Set(['csilva@admira.com', 'csilvasantin@gmail.com']);
 const encoder = new TextEncoder();
@@ -200,6 +201,33 @@ async function upsertUser(env, identity) {
   return env.AUTH_DB.prepare('SELECT * FROM pixeria_users WHERE email=?').bind(identity.email).first();
 }
 
+export async function createApiToken(env, email, now = Math.floor(Date.now() / 1000)) {
+  if (!env.PIXERIA_SIGNING_KEY) throw new Error('PIXERIA_SIGNING_KEY no configurado');
+  const payload = base64url(encoder.encode(JSON.stringify({
+    v:1, aud:'api.admira.store', email, iat:now, exp:now + API_TOKEN_TTL_SECONDS,
+  })));
+  return { token:`${payload}.${await hmac(env.PIXERIA_SIGNING_KEY, `api:${payload}`)}`, exp:now + API_TOKEN_TTL_SECONDS };
+}
+
+export async function verifyApiToken(token, env, now = Math.floor(Date.now() / 1000)) {
+  try {
+    if (!env.PIXERIA_SIGNING_KEY || !token || String(token).length > 4096) return null;
+    const separator = String(token).lastIndexOf('.');
+    if (separator < 1) return null;
+    const payloadPart = String(token).slice(0, separator);
+    const signature = String(token).slice(separator + 1);
+    if (!sameValue(signature, await hmac(env.PIXERIA_SIGNING_KEY, `api:${payloadPart}`))) return null;
+    const payload = JSON.parse(new TextDecoder().decode(decodeBase64url(payloadPart)));
+    if (payload.aud !== 'api.admira.store' || payload.v !== 1) return null;
+    if (Number(payload.exp) <= now || Number(payload.iat) > now + 60) return null;
+    const email = normalEmail(payload.email);
+    if (!email) return null;
+    return { email, exp:Number(payload.exp) };
+  } catch (_) {
+    return null;
+  }
+}
+
 async function createSessionToken(env, user) {
   if (!env.PIXERIA_SIGNING_KEY) throw new Error('PIXERIA_SIGNING_KEY no configurado');
   const now = Math.floor(Date.now() / 1000);
@@ -297,6 +325,23 @@ export async function handleAuth(request, env) {
     response.headers.append('Set-Cookie', `${CHALLENGE_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None`);
     response.headers.append('Set-Cookie', 'g_csrf_token=; Path=/; Max-Age=0; Secure; SameSite=Lax');
     return response;
+  }
+  if (url.pathname === '/auth/api-token' && request.method === 'GET') {
+    const session = await readSession(request, env);
+    if (!session) return Response.json({ok:false}, {status:401, headers:{'cache-control':'no-store'}});
+    const minted = await createApiToken(env, session.email);
+    return Response.json({ok:true, token:minted.token, exp:minted.exp, email:session.email}, {
+      headers:{'cache-control':'no-store', 'referrer-policy':'no-referrer'}
+    });
+  }
+  if (url.pathname === '/auth/verify' && request.method === 'POST') {
+    let body = {};
+    try { body = await request.json(); } catch (_) {}
+    const session = await verifyApiToken(String(body.token || ''), env);
+    return Response.json(session ? {ok:true, email:session.email, exp:session.exp} : {ok:false}, {
+      status:session ? 200 : 401,
+      headers:{'cache-control':'no-store'}
+    });
   }
   if (url.pathname === '/auth/session' && request.method === 'GET') {
     const session = await readSession(request, env);

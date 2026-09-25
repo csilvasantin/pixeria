@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {handleAuth, hasSession, safeReturnTo} from '../functions/_auth.js';
+import {createApiToken, handleAuth, hasSession, safeReturnTo, verifyApiToken} from '../functions/_auth.js';
 import {onRequest} from '../functions/_middleware.js';
 import {readFile} from 'node:fs/promises';
 
@@ -88,6 +88,19 @@ test('la verja no depende del Accept: curl y los bots tampoco pasan', async () =
     });
     assert.equal(await response.text(), 'asset', pathname + ' quedó tras la verja');
   }
+});
+
+test('el token de API sale de la sesión y se verifica sin abrir el proveedor', async () => {
+  const bindings = env();
+  const minted = await createApiToken(bindings, 'csilva@admira.com');
+  assert.equal((await verifyApiToken(minted.token, bindings)).email, 'csilva@admira.com');
+  const verify = await handleAuth(new Request('https://www.pixeria.com/auth/verify', {
+    method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({token:minted.token})
+  }), bindings);
+  assert.equal(verify.status, 200);
+  assert.equal((await verify.json()).ok, true);
+  const anon = await handleAuth(new Request('https://www.pixeria.com/auth/api-token'), bindings);
+  assert.equal(anon.status, 401);
 });
 
 test('logout directo borra la sesión y vuelve al acceso común', async () => {
