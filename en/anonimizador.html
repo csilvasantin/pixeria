@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.24.09.2026.r1.14:01">
+  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r1.09:35">
   <link rel="canonical" href="https://www.pixeria.com/en/anonimizador.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/anonimizador.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/anonimizador.html">
@@ -439,13 +439,21 @@
       const m = ((e.message || '') + ' ' + (e.reason || '')).toLowerCase();
       return /high demand|overload|try again|temporar|unavailable|resource_exhausted|rate.?limit|busy|503|429/.test(m);
     }
+    async function pixeriaPaidHeaders() {
+      const headers = { 'Content-Type': 'application/json' };
+      try {
+        const s = await fetch('/auth/api-token', { credentials: 'include', cache: 'no-store' });
+        if (s.ok) { const d = await s.json(); if (d.token) headers.Authorization = 'Bearer ' + d.token; }
+      } catch (e) {}
+      return headers;
+    }
     async function imageEditOnce(image, sys, prompt) {
       let r;
       const ctrl = new AbortController();
       const timeout = setTimeout(() => ctrl.abort(), 90000);
       try {
         r = await fetch(WORKER + '/image/edit', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await pixeriaPaidHeaders(),
           body: JSON.stringify({ image, sys, prompt }), signal: ctrl.signal
         });
       } catch (netErr) {
@@ -488,7 +496,7 @@
     const REFUSAL = new Set(['image-declined', 'safety', 'copyright']);
     async function grokImage(prompt) {
       const r = await fetch(WORKER + '/xai/image', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: await pixeriaPaidHeaders(),
         body: JSON.stringify({ prompt, b64: true, model: 'grok-imagine-image' })
       });
       const d = await r.json().catch(() => ({}));
@@ -617,7 +625,7 @@
       activeCard(els.card1); frameFillCreep(els.frame1);
       try {
         const r = await fetch(WORKER + '/xai/image', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await pixeriaPaidHeaders(),
           body: JSON.stringify({ prompt: inventPrompt(seg), b64: true, model: 'grok-imagine-image' })
         });
         const d = await r.json().catch(() => ({}));

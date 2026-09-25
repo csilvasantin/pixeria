@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.24.09.2026.r1.14:01">
+  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r1.09:35">
   <title>Pixeria Studio Assets</title>
   <meta name="description" content="Assets de Pixeria para crear mobiliario y elementos listos para gemelos digitales XpaceOS.">
   <meta name="theme-color" content="#0b1117">
@@ -1782,7 +1782,8 @@
     }
     // Llama a Grok Imagine y devuelve la imagen CRUDA (dataURL, sin recortar).
     async function furniGenRaw(full) {
-      const r = await fetch(ELEVEN_WORKER_URL + '/xai/image', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: full, model: 'grok-imagine-image', b64: true }) });
+      const paidH = await (async () => { const h = { 'Content-Type': 'application/json' }; try { const s = await fetch('/auth/api-token', { credentials: 'include', cache: 'no-store' }); if (s.ok) { const d = await s.json(); if (d.token) h.Authorization = 'Bearer ' + d.token; } } catch (e) {} return h; })();
+      const r = await fetch(ELEVEN_WORKER_URL + '/xai/image', { method: 'POST', headers: paidH, body: JSON.stringify({ prompt: full, model: 'grok-imagine-image', b64: true }) });
       const data = await r.json().catch(() => ({}));
       const first = data && data.data && data.data[0];
       const b64 = first && first.b64_json;
@@ -3194,7 +3195,8 @@
         if(inp) inp.disabled=true;
         let dots=0; const tick=setInterval(()=>{ dots=(dots+1)%4; editStatus('✨ Gemini pintando «'+prompt+'»'+'·'.repeat(dots)+' (~10-20s)'); },500);
         try{
-          const r=await fetch(dBase()+'/image/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ image:dataUrl, prompt })});
+          const paidH = await (async () => { const h = { 'Content-Type': 'application/json' }; try { const s = await fetch('/auth/api-token', { credentials: 'include', cache: 'no-store' }); if (s.ok) { const d = await s.json(); if (d.token) h.Authorization = 'Bearer ' + d.token; } } catch (e) {} return h; })();
+          const r=await fetch(dBase()+'/image/edit',{method:'POST',headers:paidH,body:JSON.stringify({ image:dataUrl, prompt })});
           const d=await r.json(); if(!r.ok||!d.ok||!d.image) throw new Error(d.error||d.detail||('HTTP '+r.status));
           const preMax=Math.max(EDIT.sc.width||0,EDIT.sc.height||0)||256;  // conserva el tamaño con el que se trabajaba (no encoger a 256)
           editPushUndo();  // permite deshacer el cambio de la IA
