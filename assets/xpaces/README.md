@@ -39,3 +39,40 @@ Deep link: add `&highlight=<stock-id>`. Existing Pixeria Google access is unchan
 - `qa-results.json` contains measured results (not a physical-phone benchmark).
 - Existing `stock-posters.test.mjs` has one stale thumbnail-only regex assertion;
   the identical failure was reproduced on the pre-change main commit 2a03ce1.
+
+## Inventory — FLT-101041 / #4375
+
+`inventory/alsea.json` and `inventory/xtanco.json` link each measurement ID to
+its exact glTF node index. Dimensions and names come from the published rev.1
+measurement JSON (source URLs recorded in each manifest); categories come from
+`users_collection` in the delivered Blender files. SHA-256 checks prevent a
+changed model from silently using an obsolete mapping. There are 34/13 measured
+items and 33/41 additional architecture, perimeter lighting and IoT objects.
+Additional dimensions are world-space GLB envelopes in metres; the measured
+items always use the source JSON dimensions. Each ID represents one unit,
+including separately listed chairs/stools/lamps whose source labels mention
+an overall group quantity. No commercial fields are inferred.
+
+Batching now happens only within an inventory object. Root visibility therefore
+controls all of its geometry while preserving the original materials. Raycasts
+skip invisible ancestors; list and model selection share an outline. Visibility
+changes also invalidate the static shadow map. All/Nothing applies to the whole
+model, including the collapsible additional objects section.
+
+The URL stores hidden IDs in `xhide-<stock-id>` plus `highlight=<stock-id>`;
+separate models retain independent visibility. Exports include only checked
+items, with `id`, `nombre`, `tipo`, `categoria`, `cantidad`, metric `medidas`,
+`pantalla`, `fabricante`, `modelo`, `garantia` and `origen`. JSON adds schema,
+source and a public view URL; CSV flattens the dimensions and uses UTF-8 BOM,
+quoted values and CRLF. JSON/CSV saving uses the existing `/stock/publish`
+endpoint and Stock's supported `digital-twin` type (MIME identifies the format),
+with tags `3d`, `inventario`, `alsea`/`xtanco`. Partial save retries reuse the
+confirmed file from that panel to avoid duplicate uploads.
+
+`node --test test/xpace-inventory.test.mjs test/xpaces.test.mjs test/stock-deep-link.test.cjs test/auth-flow.test.mjs`
+checks inventory/export/URL rules plus existing viewer and access behavior.
+`scripts/verify-xpace-inventory.cjs` exercises both models in desktop, touch/mobile
+emulation and English: all measured checkboxes, category tri-state, All/None,
+3D picking, reload from URL, real JSON/CSV downloads, close/disposal and overflow.
+`PUBLISH_INVENTORIES=1` also publishes the two full inventories via the actual UI;
+leave it unset for routine repeat tests. `XPACES_BASE` overrides the local base.

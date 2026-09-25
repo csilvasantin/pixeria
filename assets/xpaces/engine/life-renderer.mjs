@@ -52,6 +52,7 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
     const bounds=canvas.getBoundingClientRect();raycaster.setFromCamera(new T.Vector2((x-bounds.left)/bounds.width*2-1,-(y-bounds.top)/bounds.height*2+1),camera);
     model.scene.updateMatrixWorld(true);selected=null;
     for(const hit of raycaster.intersectObjects([model.world,model.actors],true)){
+      let visible=true;for(let n=hit.object;n;n=n.parent)if(!n.visible)visible=false;if(!visible)continue;
       for(let node=hit.object;node;node=node.parent){if(node.userData.item||node.userData.actor){selected=node;break;}}
       if(selected)break;
     }
@@ -109,5 +110,5 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
   function dispose(){if(disposed)return;disposed=true;for(const [event,handler]of Object.entries(handlers))canvas.removeEventListener(event,handler);pointers.clear();haloGeometry.dispose();haloMaterial.dispose();halo.removeFromParent();model.dispose();renderer.dispose();renderer.forceContextLoss();}
   resize(canvas.clientWidth||1000,canvas.clientHeight||700);
   onCameraChange(cameraState());
-  return {resize,update,render,preset,rotate,zoomBy,setLighting,clearSelection,dispose,get bestPeopleCount(){return peopleStatus().ready;},get bestPeopleStatus(){return peopleStatus();},get blenderAssets(){return model.world.children.filter(o=>o.userData.assetStatus==='ready').length;},get blenderCounters(){return model.world.children.filter(o=>o.userData.type==='counter'&&o.userData.assetStatus==='ready').length;},get snapshot(){return model.snapshot;},get cameraState(){return cameraState();}};
+  return {invalidateShadows:()=>{renderer.shadowMap.needsUpdate=true;},resize,update,render,preset,rotate,zoomBy,setLighting,clearSelection,dispose,get bestPeopleCount(){return peopleStatus().ready;},get bestPeopleStatus(){return peopleStatus();},get blenderAssets(){return model.world.children.filter(o=>o.userData.assetStatus==='ready').length;},get blenderCounters(){return model.world.children.filter(o=>o.userData.type==='counter'&&o.userData.assetStatus==='ready').length;},get snapshot(){return model.snapshot;},get cameraState(){return cameraState();}};
 }

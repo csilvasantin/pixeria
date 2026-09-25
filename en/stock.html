@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r2.22:08">
+  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r3.22:25">
   <link rel="canonical" href="https://www.pixeria.com/en/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -471,6 +471,7 @@
       if (!it) return;
       const DL = window.PixeriaDescarga;
       if (!DL) { if (it.url) window.open(it.url, '_blank', 'noopener'); return; }
+      if (['application/json','text/csv'].includes(String(it.mime).split(';')[0])) return DL.descargar(it.url, DL.nombre(it, {ext: it.mime.startsWith('application/json') ? 'json' : 'csv'}));
       if (isXpace(it) || it.mime === 'application/x-blender') return DL.descargar(it.url, DL.nombre(it, {ext: isXpace(it) ? 'glb' : 'blend'}));
       return DL.item(Object.assign({}, it, { type: displayType(it) }));
     }
