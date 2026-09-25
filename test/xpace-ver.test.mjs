@@ -79,7 +79,8 @@ test('Comprar / Vender: Casa del Libro (o su búsqueda) y Wallapop, en pestaña 
  const shelf=JSON.parse(fs.readFileSync(new URL('../assets/xpaces/libros/estanteria-libros.json',import.meta.url)));
  const meta=slug=>shelf.libros.find(l=>l.slug===slug);
  const co={libro:'Co-Intelligence',meta:meta('co-intelligence-en')};assert.equal(compraURL(co),'https://www.casadellibro.com/libro-cointeligencia/9788418053214/16155367');
- const imp={libro:'The Impossible Factory',meta:meta('the-impossible-factory-en')};assert.equal(imp.meta.casadellibro_url,null);assert.equal(compraURL(imp),'https://www.casadellibro.com/?query=The%20Impossible%20Factory');
+ const imp={libro:'The Impossible Factory',meta:meta('the-impossible-factory-en')};assert.equal(compraURL(imp),'https://www.casadellibro.com/ebook-the-impossible-factory-ebook/9781524745523/17403821');
+ assert.equal(compraURL({libro:'Sin ficha',meta:{titulo:'Sin ficha',casadellibro_url:null}}),'https://www.casadellibro.com/?query=Sin%20ficha','sin ficha cae en la búsqueda');
  for(const l of shelf.libros)assert.match(compraURL({libro:l.titulo,meta:l}),/^https:\/\/www\.casadellibro\.com\//);
  const t=anuncioTexto(co);assert.match(t,/^Libro: Co-Intelligence/);assert.match(t,/Autor: Ethan Mollick/);assert.match(t,/ISBN: 9788418053214/);assert.ok(!/€|precio/i.test(t),'sin precios');
  assert.equal(WALLAPOP_UPLOAD,'https://es.wallapop.com/app/catalog/upload');
@@ -89,4 +90,24 @@ test('Comprar / Vender: Casa del Libro (o su búsqueda) y Wallapop, en pestaña 
  assert.match(c,/data-comprar href="\$\{esc\(compraURL\(b\)\)\}" target="_blank" rel="noopener"/);assert.match(c,/data-vender href="\$\{WALLAPOP_UPLOAD\}" target="_blank" rel="noopener"/);
  assert.match(c,/Texto del anuncio copiado/);
  const css=fs.readFileSync(new URL('../assets/xpaces/viewer.css',import.meta.url),'utf8');assert.match(css,/\.xpace-libro-compra\{display:grid;grid-template-columns:1fr 1fr/);assert.match(css,/\.xpace-libro-compra a\{[^}]*min-width:0/);
+});
+
+test('Portadas de Casa del Libro: 6 ficheros en el despliegue, origen imagessl, Blinkist aparte, sin deformar',async()=>{
+ const {coverPath,coverURL,coverCrop,dims}=await import('../assets/xpaces/capsulas.mjs');
+ const shelf=JSON.parse(fs.readFileSync(new URL('../assets/xpaces/libros/estanteria-libros.json',import.meta.url)));
+ assert.equal(shelf.libros.length,6);
+ for(const l of shelf.libros){
+  assert.match(l.portada_casadellibro,/^https:\/\/imagessl\d?\.casadellibro\.com\/a\/l\/t\d\/\d\d\/97[89]\d{10}\.jpg$/,l.slug);
+  assert.match(l.portada_blinkist_url,/images\.blinkist\.io/,'Blinkist se conserva aparte');
+  assert.equal(coverPath(l),`portadas/${l.slug}-casadellibro.jpg`);assert.match(coverURL(l),new RegExp(`/libros/portadas/${l.slug}-casadellibro\\.jpg$`));
+  const buf=fs.readFileSync(new URL(`../assets/xpaces/libros/${coverPath(l)}`,import.meta.url));assert.equal(buf[0],0xff);assert.equal(buf[1],0xd8,'JPEG');assert.ok(buf.length>20000,'no es un placeholder');
+  assert.ok(l.portada_px.alto/l.portada_px.ancho>1.4&&l.portada_px.alto/l.portada_px.ancho<1.7,'portada vertical');
+  assert.match(l.casadellibro_url,/^https:\/\/www\.casadellibro\.com\/(libro|ebook)-/,'todas con ficha');
+ }
+ const tif=shelf.libros.find(l=>l.slug==='the-impossible-factory-en');assert.equal(tif.isbn_ebook,'9781524745523');assert.equal(tif.isbn,'9781524745516');assert.match(tif.portada_casadellibro,/9781524745523/);
+ assert.deepEqual(coverCrop(1.5,1.5),{repeat:[1,1],offset:[0,0]});
+ let c=coverCrop(1.6,1.5);assert.equal(c.repeat[0],1);assert.ok(Math.abs(c.repeat[1]-1.5/1.6)<1e-9);assert.ok(Math.abs(c.offset[1]-(1-1.5/1.6)/2)<1e-9);
+ c=coverCrop(1.4,1.5);assert.ok(Math.abs(c.repeat[0]-1.4/1.5)<1e-9);assert.equal(c.repeat[1],1);
+ const d=dims({slug:'x',cover:{width:650,height:1000},medidas:{L:.23}});assert.ok(Math.abs(d.L/d.D-1000/650)<1e-9,'provisional con la proporción de la portada');
+ const src=fs.readFileSync(new URL('../assets/xpaces/capsulas.mjs',import.meta.url),'utf8');assert.match(src,/applyCover\(obj,b\)/,'GLB con la portada de Casa del Libro');assert.match(src,/coverAspect\(b\)\|\|1\.43/,'pizarra con la proporción real');
 });

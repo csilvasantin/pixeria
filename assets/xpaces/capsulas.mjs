@@ -7,7 +7,13 @@ import {GLTFLoader} from './engine/vendor/GLTFLoader.mjs';
 
 export const STOCK_INDEX='https://stock.admira.store/stock/index.json';
 // Ficha de la estantería (#4397/#4399): portadas reales de Blinkist en espejo, ISBN, medidas y formato de modelos.
-export const SHELF_META=new URL('./libros/estanteria-libros.json?v=libros-4397',import.meta.url).href;
+export const SHELF_META=new URL('./libros/estanteria-libros.json?v=libros-cdl',import.meta.url).href;
+// Portadas de verdad (Carlos, 26-sep 01:26): la imagen de la ficha de Casa del Libro, copiada al despliegue (CORS).
+// La de Blinkist queda como respaldo si falta la de Casa del Libro.
+export function coverPath(m){if(!m)return null;if(m.portada_local)return m.portada_local;if(m.portada_espejo)return `portadas/${m.slug}.jpg`;return null;}
+export function coverURL(m){const p=coverPath(m);return p?new URL(p,SHELF_META).href:null;}
+// Recorte centrado (sin deformar) de una portada de proporción img (alto/ancho) sobre una cara de proporción face.
+export function coverCrop(img,face){if(!(img>0)||!(face>0))return {repeat:[1,1],offset:[0,0]};if(img>face){const r=face/img;return {repeat:[1,r],offset:[0,(1-r)/2]};}const r=img/face;return {repeat:[r,1],offset:[(1-r)/2,0]};}
 const REFRESH_MS=5*60*1000, PAGE_MS=9000;
 // Respaldo para cápsulas antiguas sin línea «Fuente:» (datos de capsulas-blinkist/usados.json).
 const USADOS={
@@ -84,7 +90,7 @@ export async function loadBooks(signal){
  await Promise.all(books.map(async b=>{
   const m=(meta.libros||[]).find(x=>x.slug===b.slug);b.meta=m||null;b.media=mediaFor(b,items);
   if(m?.medidas_cm?.alto)b.medidas={L:m.medidas_cm.alto/100,D:(m.medidas_cm.ancho||15)/100,th:(m.medidas_cm.grueso||0)/100||null};
-  b.cover=await loadImage(m?.portada_espejo?new URL(`./libros/portadas/${b.slug}.jpg`,import.meta.url).href:null);
+  b.cover=await loadImage(coverURL(m));
   if(b.cover){const [c,t]=sampleColor(b.cover);b.color=c;b.tinta=t;}
   // Modelo definitivo de Trinity (#4399): GLB en Stock con externalRef estanteria-libros:<slug>.
   const glb=items.filter(x=>x.externalRef==='estanteria-libros:'+b.slug&&(String(x.mime).startsWith('model/gltf')||/\.glb/i.test(x.url||'')||x.ext==='glb')).sort((a,c)=>String(c.createdAt).localeCompare(String(a.createdAt)))[0];
@@ -121,7 +127,8 @@ function spineTexture(b,L,th){
  ctx.textAlign='right';const au=(b.autor||'').split(',')[0];const a=fitLines(ctx,au,'400 % Georgia, serif',Math.round(H*.3),W*.22,1,Math.round(H*.16));ctx.font=`400 ${a.size}px Georgia, serif`;ctx.globalAlpha=.9;ctx.fillText(a.lines[0],W-70,H/2);ctx.globalAlpha=1;
  return texture(c);
 }
-function coverTexture(b,ribbon){const c=document.createElement('canvas');c.width=600;c.height=b.cover?Math.round(600*b.cover.height/b.cover.width):860;drawCover(c.getContext('2d'),b,0,0,600,860,{ribbon});return texture(c);}
+function coverTexture(b,ribbon){const c=document.createElement('canvas');c.width=600;c.height=b.cover?Math.round(600*b.cover.height/b.cover.width):860;drawCover(c.getContext('2d'),b,0,0,c.width,c.height,{ribbon});return texture(c);}
+export const coverAspect=b=>b?.cover?.width>0?b.cover.height/b.cover.width:(b?.meta?.portada_px?.ancho>0?b.meta.portada_px.alto/b.meta.portada_px.ancho:null);
 let pagesTex;function pages(){if(pagesTex)return pagesTex;const c=document.createElement('canvas');c.width=64;c.height=256;const x=c.getContext('2d');x.fillStyle='#efe6cf';x.fillRect(0,0,64,256);x.strokeStyle='rgba(120,100,70,.25)';for(let i=0;i<64;i+=3){x.beginPath();x.moveTo(i,0);x.lineTo(i,256);x.stroke();}pagesTex=texture(c);return pagesTex;}
 
 // ---------- libro 3D ----------
@@ -139,7 +146,9 @@ function bookMesh(b,{L,th,D,cover=false}){
  }
  const m=new T.Mesh(geo,mats);m.castShadow=true;m.receiveShadow=true;m.userData.capsula=b.id;m.name='libro:'+b.slug;return m;
 }
-function dims(b){const h=hash(b.slug),m=b.medidas||{};return {L:Math.min(.3,m.L||.215+(h%7)*.011),th:m.th||.028+((h>>3)%6)*.0055,D:Math.min(.22,m.D||.15+((h>>6)%4)*.01)};}
+export function dims(b){const h=hash(b.slug),m=b.medidas||{},L=Math.min(.3,m.L||.215+(h%7)*.011),a=coverAspect(b);return {L,th:m.th||.028+((h>>3)%6)*.0055,D:Math.min(.22,a?L/a:(m.D||.15+((h>>6)%4)*.01))};}
+// En los GLB de Trinity la cara «portada_real_Blinkist» lleva la de Blinkist estirada: se cambia por la de Casa del Libro con recorte centrado.
+function applyCover(obj,b){if(!b.cover)return;obj.traverse(n=>{if(!n.isMesh)return;const mat=[n.material].flat()[0];if(!/portada/i.test(mat?.name||'')&&!/portada/i.test(n.name))return;if(!n.geometry.boundingBox)n.geometry.computeBoundingBox();const e=n.geometry.boundingBox.getSize(new T.Vector3()),[w,h]=[e.x,e.y,e.z].sort((p,q)=>q-p).slice(0,2).reverse();const tex=new T.Texture(b.cover);tex.flipY=false;tex.colorSpace=T.SRGBColorSpace;tex.anisotropy=8;const c=coverCrop(b.cover.height/b.cover.width,h/w);tex.repeat.set(...c.repeat);tex.offset.set(...c.offset);tex.needsUpdate=true;const next=mat.clone();next.map=tex;next.name=mat.name;n.material=next;n.userData.portada='casadellibro';});}
 const gltfCache=new Map();
 function loadGLB(url){if(!gltfCache.has(url))gltfCache.set(url,new GLTFLoader().loadAsync(url).then(g=>g.scene).catch(()=>null));return gltfCache.get(url);}
 
@@ -177,7 +186,7 @@ export async function fillShelf(shelf,books,featuredId){
  const left=-s.W/2+s.t+.03,right=s.W/2-s.t-.03,floor=row=>row*s.gap+s.t+.002;
  const featured=books.find(b=>b.id===featuredId)||books[0];
  const rest=books.filter(b=>b!==featured).slice(0,60);
- const copy=b=>{const src=models.get(b.id);if(!src)return null;const obj=src.clone(true);obj.name='libro-glb:'+b.slug;obj.userData.capsula=b.id;obj.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;}});return obj;};
+ const copy=b=>{const src=models.get(b.id);if(!src)return null;const obj=src.clone(true);applyCover(obj,b);obj.name='libro-glb:'+b.slug;obj.userData.capsula=b.id;obj.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;}});return obj;};
  const size=o=>new T.Box3().setFromObject(o).getSize(new T.Vector3());
  const face=(b,x,row)=>{let o=copy(b);if(!o){const d=dims(b);o=bookMesh(b,{L:d.L,th:d.th,D:d.D,cover:true});o.position.set(x,floor(row)+d.L/2,s.D-d.th/2-.015);g.add(o);return;}
   const d=size(o);o.rotation.y=-Math.PI/2;o.position.set(x,floor(row),s.D-d.x/2-.015);g.add(o);};
@@ -201,7 +210,7 @@ export function drawScreen(canvas,b,page=0,total=0){
  ctx.fillStyle='#0d3b2c';ctx.fillRect(0,0,W,H);const g=ctx.createRadialGradient(W*.3,H*.2,50,W*.5,H*.5,W*.8);g.addColorStop(0,'rgba(255,255,255,.08)');g.addColorStop(1,'rgba(0,0,0,.25)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
  const pad=W*.045;ctx.textBaseline='top';ctx.textAlign='left';
  if(!b){ctx.fillStyle='#f3ead3';ctx.font=`700 ${W*.04}px Georgia, serif`;ctx.fillText('El libro del día',pad,pad);ctx.font=`400 ${W*.022}px Georgia, serif`;ctx.fillText('Cargando las cápsulas del Stock…',pad,pad+W*.07);return;}
- const cw=H*.62,ch=cw*1.43,cx=pad,cy=(H-ch)/2+H*.02;ctx.save();ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=30;ctx.shadowOffsetY=12;ctx.fillStyle='#000';ctx.fillRect(cx,cy,cw,ch);ctx.restore();drawCover(ctx,b,cx,cy,cw,ch);
+ const ar=coverAspect(b)||1.43,ch0=H*.62*1.43,cw=ch0/ar,ch=ch0,cx=pad,cy=(H-ch)/2+H*.02;ctx.save();ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=30;ctx.shadowOffsetY=12;ctx.fillStyle='#000';ctx.fillRect(cx,cy,cw,ch);ctx.restore();drawCover(ctx,b,cx,cy,cw,ch);
  const x=cx+cw+pad,w=W-x-pad;let y=pad*.9;
  ctx.fillStyle='#d9b25a';ctx.font=`800 ${Math.round(W*.02)}px "Helvetica Neue", Arial, sans-serif`;ctx.fillText('☕  EL LIBRO DEL DÍA',x,y);y+=W*.036;
  ctx.fillStyle='#f6efdc';let t=fitLines(ctx,b.libro,'700 % Georgia, serif',Math.round(W*.046),w,2,Math.round(W*.028));for(const l of t.lines){ctx.fillText(l,x,y);y+=t.size*1.08;}
@@ -252,7 +261,7 @@ export function mountCapsulas({scene,entries,signal}){
   closeBook();
   // Resalte: el libro sale 4 cm de la balda y lleva un contorno amarillo.
   let scene=node;while(scene.parent)scene=scene.parent;const helper=new T.BoxHelper(node,0xffd766);helper.material.depthTest=false;helper.renderOrder=1001;chosen={node,z:node.position.z,helper,id:b.id};node.position.z+=.04;node.updateMatrixWorld(true);helper.update();scene.add(helper);viewer?.invalidateShadows();
-  const m=b.media||{},cover=b.cover?.src||b.meta?.portada_espejo&&new URL(`./libros/portadas/${b.slug}.jpg`,import.meta.url).href||'';
+  const m=b.media||{},cover=b.cover?.src||coverURL(b.meta)||'';
   const portrait=globalThis.matchMedia?.('(orientation: portrait)').matches&&innerWidth<700,video=pickVideo(m,portrait);const kind=video?'video':m.audio?'audio':'voz';state.libroAbierto=b.id;state.medio=kind;state.video=video?{id:video.id,orientacion:video.orientacion}:null;
   panel=document.createElement('div');panel.className='xpace-libro';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',(en?'Capsule: ':'Cápsula: ')+b.libro);panel.dataset.medio=kind;
   const media=kind==='video'?`<video src="${esc(video.url)}" data-orient="${video.orientacion||'vertical'}" controls playsinline preload="auto"${cover?` poster="${esc(cover)}"`:''}></video>`:(cover?`<img src="${esc(cover)}" alt="${esc(b.libro)}">`:'')+(kind==='audio'?`<audio src="${esc(m.audio.url)}" controls preload="auto"></audio>`:'');
