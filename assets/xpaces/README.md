@@ -31,7 +31,7 @@ Deep link: add `&highlight=<stock-id>`. Existing Pixeria Google access is unchan
 
 ## Verification
 
-- `node --test test/xpaces.test.mjs test/stock-deep-link.test.cjs test/auth-flow.test.mjs`: 12 passing.
+- `node --test test/xpaces.test.mjs test/stock-deep-link.test.cjs test/auth-flow.test.mjs`: 13 passing.
 - `scripts/verify-xpaces.cjs`: both assets, decoded render thumbnails, three views,
   orbit, pan, pinch gestures, zoom, day/night, GLB/BLEND download filenames and hashes,
   close/dispose, ES and EN, desktop and 390×844 touch emulation. Requires Playwright

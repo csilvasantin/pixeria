@@ -14,10 +14,10 @@ function release(root) {
 // Blender exports hundreds of static opaque meshes. Batch equal materials using
 // the same Three r160 utility already shipped with Better's GLTFLoader.
 // Transparent, skinned and animated geometry keeps its original draw order.
-function batchStatic(root) {
+export function batchStatic(root) {
   root.updateMatrixWorld(true);const groups=new Map(),merged=[];
   root.traverseVisible(node=>{
-    if(!node.isMesh || node.isSkinnedMesh || node.morphTargetInfluences?.length || Array.isArray(node.material) || node.material.transparent)return;
+    if(!node.isMesh || node.children.length || node.isSkinnedMesh || node.morphTargetInfluences?.length || Array.isArray(node.material) || node.material.transparent)return;
     const signature=Object.keys(node.geometry.attributes).sort().map(k=>k+':'+node.geometry.attributes[k].itemSize+':'+node.geometry.attributes[k].normalized).join('|');
     const key=node.material.uuid+':'+!!node.geometry.index+':'+signature;
     if(!groups.has(key))groups.set(key,[]);groups.get(key).push(node);

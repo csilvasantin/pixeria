@@ -19,3 +19,16 @@ test('posters use asset renders and support the verified Xtanco delivery',()=>{
  assert.equal(xpacePoster(glb,[{type:'image',externalRef:'family',title:'Isométrica',url:'iso.png'}]),'iso.png');
  assert.match(xpacePoster({id:'1790365002072-l9tpjw'},[]),/1790364854974-klpanl$/);
 });
+
+// A screen can be a child of its frame in Blender's hierarchy. Batching the
+// frame must not hide the child screen (visible=false propagates to children).
+test('static batching keeps nested screen meshes visible',async()=>{
+ const T=await import('../assets/xpaces/engine/premium-three.mjs');
+ const {batchStatic}=await import('../assets/xpaces/viewer.mjs');
+ const root=new T.Group(),material=new T.MeshStandardMaterial();
+ const frame=new T.Mesh(new T.BoxGeometry(),material),peer=new T.Mesh(new T.BoxGeometry(),material);
+ const screen=new T.Mesh(new T.PlaneGeometry(),new T.MeshStandardMaterial());
+ frame.add(screen);root.add(frame,peer);batchStatic(root);
+ assert.equal(frame.visible,true);assert.equal(screen.visible,true);
+ let visibleScreen=false;root.traverseVisible(node=>{if(node===screen)visibleScreen=true;});assert.equal(visibleScreen,true);
+});
