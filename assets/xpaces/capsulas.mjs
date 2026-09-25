@@ -141,31 +141,28 @@ function plant(group,x,y,z){
 }
 function disposeTree(o){o.traverse(n=>{if(n.geometry)n.geometry.dispose();for(const m of [n.material].flat().filter(Boolean)){if(m.map&&m.map!==pagesTex)m.map.dispose();m.dispose();}});}
 export async function fillShelf(shelf,books,featuredId){
+ // Sólo colocación de libros: la geometría de la estantería y pizarra-3 pertenecen a George.
  const models=new Map(await Promise.all(books.filter(b=>b.glb).map(async b=>[b.id,await loadGLB(b.glb)])));
- const s=shelf.userData.shelf,g=s.books;for(const c of [...g.children]){g.remove(c);disposeTree(c);}
- const inner=s.W-2*s.t-.02,left=-s.W/2+s.t+.01,rowY=i=>i*s.gap+s.t; // i=0 abajo
- const featured=books.find(b=>b.id===featuredId)||books[0];const rest=books.filter(b=>b!==featured).slice(0,60);
- // Fila del medio: libro del día de cara + taza.
- if(featured){const d=dims(featured),L=Math.min(.29,d.L*1.1),m=bookMesh(featured,{L,th:Math.max(.02,d.th||.03),D:Math.min(.21,d.D*1.1),cover:true});m.position.set(left+inner*.5,rowY(1)+L/2+.004,.075);m.rotation.x=-.1;g.add(m);
-  deco(g,left+inner*.5+.19,rowY(1),s.D*.55);}
- const fillRow=(row,list,from='left')=>{let x=from==='left'?left:left+inner*.5+.28;for(const b of list){
-  const model=models.get(b.id);
-  if(model){ // Contrato #4399: metros, Y arriba, lomo a +Z, grosor en X, origen en el centro de la base.
-   const o=model.clone(true),box=new T.Box3().setFromObject(o),size=box.getSize(new T.Vector3());o.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;}});
-   o.position.set(x+size.x/2,rowY(row)+.002,s.D-size.z/2-.012);o.name='libro-glb:'+b.slug;o.userData.capsula=b.id;g.add(o);x+=size.x+.003;continue;}
-  const d=dims(b),m=bookMesh(b,d);m.rotation.z=Math.PI/2;m.position.set(x+d.th/2,rowY(row)+d.L/2+.002,s.D-d.D/2-.012);g.add(m);x+=d.th+.003;}return x;};
- // Hueco superior: portadas de cara (las más recientes). Central y bajo: lomos (el resto, cuando la colección crece).
- const faceOut=rest.slice(0,8),spines=rest.slice(faceOut.length);
- if(faceOut.length){const widths=faceOut.map(b=>{const d=dims(b);return Math.min(.2,d.D*1.05);}),gapX=Math.min(.05,(inner-widths.reduce((a,c)=>a+c,0))/(faceOut.length+1));
-  let x=left+gapX;faceOut.forEach((b,i)=>{const d=dims(b),w=widths[i],L=Math.min(.27,d.L*1.05);const model=models.get(b.id);
-   if(model){const o=model.clone(true),box=new T.Box3().setFromObject(o),size=box.getSize(new T.Vector3());o.rotation.y=-Math.PI/2;o.position.set(x+w/2,rowY(2)+.002,.06+size.x/2);o.name='libro-glb:'+b.slug;g.add(o);} // portada (+X) girada al frente
-   else{const m=bookMesh(b,{L,th:Math.max(.018,d.th||.025),D:w,cover:true});m.position.set(x+w/2,rowY(2)+L/2+.004,.06);m.rotation.x=-.09;g.add(m);}
-   x+=w+gapX;});}
- const capRow=(inner*.5-.14)/.045|0;
- const midL=spines.slice(0,capRow),low=spines.slice(midL.length,midL.length+Math.floor((inner-.2)/.045));
- fillRow(1,midL,'left');
- if(low.length)fillRow(0,low);else{plant(g,left+.1,rowY(0),s.D*.5);plant(g,left+inner-.1,rowY(0),s.D*.5);}
- if(!midL.length)plant(g,left+.14,rowY(1),s.D*.5);
+ const s=shelf.userData.shelf,g=s.books;
+ for(const child of [...g.children]){g.remove(child);if(!child.name.startsWith('libro-glb:'))disposeTree(child);}
+ const left=-s.W/2+s.t+.03,right=s.W/2-s.t-.03,floor=row=>row*s.gap+s.t+.002;
+ const featured=books.find(b=>b.id===featuredId)||books[0];
+ const rest=books.filter(b=>b!==featured).slice(0,60);
+ const copy=b=>{const src=models.get(b.id);if(!src)return null;const obj=src.clone(true);obj.name='libro-glb:'+b.slug;obj.userData.capsula=b.id;obj.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;}});return obj;};
+ const size=o=>new T.Box3().setFromObject(o).getSize(new T.Vector3());
+ const face=(b,x,row)=>{let o=copy(b);if(!o){const d=dims(b);o=bookMesh(b,{L:d.L,th:d.th,D:d.D,cover:true});o.position.set(x,floor(row)+d.L/2,s.D-d.th/2-.015);g.add(o);return;}
+  const d=size(o);o.rotation.y=-Math.PI/2;o.position.set(x,floor(row),s.D-d.x/2-.015);g.add(o);};
+ const spine=(b,x,row)=>{let o=copy(b);if(!o){const d=dims(b);o=bookMesh(b,{L:d.L,th:d.th,D:d.D,cover:false});o.rotation.z=Math.PI/2;o.position.set(x+d.th/2,floor(row)+d.L/2,s.D-d.D/2-.014);g.add(o);return d.th;}
+  const d=size(o);o.position.set(x+d.x/2,floor(row),s.D-d.z/2-.014);g.add(o);return d.x;};
+ const stack=(b,x,row,rise)=>{let o=copy(b);if(!o){const d=dims(b);o=bookMesh(b,{L:d.L,th:d.th,D:d.D,cover:true});o.rotation.z=Math.PI/2;o.position.set(x,floor(row)+rise+d.th/2,s.D-d.D/2-.02);g.add(o);return d.th;}
+  const d=size(o);o.rotation.z=Math.PI/2;o.position.set(x,floor(row)+rise+d.x/2,s.D-d.z/2-.02);g.add(o);return d.x;};
+ if(featured)face(featured,left+.2,1);
+ // Tres lomos, una portada y una pequeña pila: composición distinta por balda.
+ let x=left+.11;for(const b of rest.slice(0,3)){x+=spine(b,x,2)+.007;}
+ if(rest[3])face(rest[3],left+.49,0);
+ let rise=0;for(const b of rest.slice(4,6))rise+=stack(b,right-.08,0,rise)+.002;
+ for(const b of rest.slice(6)){if(x+.07>right)break;x+=spine(b,x,2)+.007;}
+ if(rest.length<4)plant(g,left+.53,floor(0),s.D*.5);
  return {featured,books};
 }
 

@@ -77,8 +77,11 @@
         "grueso": null
       },
       "modelo_glb": {
-        "estado": "pendiente (#4399 · Trinity)",
-        "externalRef": "estanteria-libros:the-hero-with-a-thousand-faces-en"
+        "estado": "publicado Pixeria Stock · FLT-101050",
+        "externalRef": "estanteria-libros:the-hero-with-a-thousand-faces-en",
+        "url": "https://api.admira.store/stock/asset/1790374898228-sylcvc",
+        "id": "1790374898228-sylcvc",
+        "archivo": "modelos/the-hero-with-a-thousand-faces-en.glb"
       }
     },
     {
@@ -107,8 +110,11 @@
         "grueso": 5.3
       },
       "modelo_glb": {
-        "estado": "pendiente (#4399 · Trinity)",
-        "externalRef": "estanteria-libros:sapiens-en"
+        "estado": "publicado Pixeria Stock · FLT-101050",
+        "externalRef": "estanteria-libros:sapiens-en",
+        "url": "https://api.admira.store/stock/asset/1790374957269-cqttzk",
+        "id": "1790374957269-cqttzk",
+        "archivo": "modelos/sapiens-en.glb"
       }
     },
     {
@@ -139,8 +145,11 @@
         "grueso": 3.0
       },
       "modelo_glb": {
-        "estado": "pendiente (#4399 · Trinity)",
-        "externalRef": "estanteria-libros:creatividad-sa-es"
+        "estado": "publicado Pixeria Stock · FLT-101050",
+        "externalRef": "estanteria-libros:creatividad-sa-es",
+        "url": "https://api.admira.store/stock/asset/1790375013351-f6ip4j",
+        "id": "1790375013351-f6ip4j",
+        "archivo": "modelos/creatividad-sa-es.glb"
       }
     },
     {
@@ -165,8 +174,11 @@
       "casadellibro_url": null,
       "medidas_cm": null,
       "modelo_glb": {
-        "estado": "pendiente (#4399 · Trinity)",
-        "externalRef": "estanteria-libros:the-impossible-factory-en"
+        "estado": "publicado Pixeria Stock · FLT-101050",
+        "externalRef": "estanteria-libros:the-impossible-factory-en",
+        "url": "https://api.admira.store/stock/asset/1790375069695-idmmd3",
+        "id": "1790375069695-idmmd3",
+        "archivo": "modelos/the-impossible-factory-en.glb"
       }
     },
     {
@@ -195,8 +207,11 @@
         "grueso": 1.7
       },
       "modelo_glb": {
-        "estado": "pendiente (#4399 · Trinity)",
-        "externalRef": "estanteria-libros:co-intelligence-en"
+        "estado": "publicado Pixeria Stock · FLT-101050",
+        "externalRef": "estanteria-libros:co-intelligence-en",
+        "url": "https://api.admira.store/stock/asset/1790375124838-wgsi5x",
+        "id": "1790375124838-wgsi5x",
+        "archivo": "modelos/co-intelligence-en.glb"
       }
     },
     {
@@ -221,8 +236,11 @@
       "casadellibro_url": "https://www.casadellibro.com/ebook-creative-confidence-ebook/9780385349376/17352716",
       "medidas_cm": null,
       "modelo_glb": {
-        "estado": "pendiente (#4399 · Trinity)",
-        "externalRef": "estanteria-libros:creative-confidence-en"
+        "estado": "publicado Pixeria Stock · FLT-101050",
+        "externalRef": "estanteria-libros:creative-confidence-en",
+        "url": "https://api.admira.store/stock/asset/1790375180840-lnodeq",
+        "id": "1790375180840-lnodeq",
+        "archivo": "modelos/creative-confidence-en.glb"
       }
     }
   ],
