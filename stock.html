@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.26.09.2026.r3.00:43">
+  <meta name="admiranext-version" content="Pixeria v.26.09.2026.r4.00:57">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -303,7 +303,7 @@
   <script defer src="/assets/consent.js?v=20260617"></script>
   <script defer src="/assets/site-nav.js?v=20260920-ideas"></script>
   <script defer src="/assets/descarga-local.js?v=20260828-r1"></script>
-  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=ver-mueble">
+  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=ver-libro">
 <link rel="stylesheet" href="/assets/furniture/editor.css">
 </head>
 <body data-page="stock">
@@ -1418,7 +1418,7 @@
         actions.querySelector('[data-xpace-download="blend"]').onclick = () => blend && descargarAsset({...blend, mime:'application/x-blender'});
         const controller = xpaceController = new AbortController();
         const host = lightboxInner.querySelector('.xpace-viewer');
-        import('./assets/xpaces/viewer.mjs?v=ver-mueble').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'No se ha podido cargar el 3D. Cierra y vuelve a abrir para reintentar.';});
+        import('./assets/xpaces/viewer.mjs?v=ver-libro').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'No se ha podido cargar el 3D. Cierra y vuelve a abrir para reintentar.';});
       }
       window.__lightboxItemId = it.id || null;
       lightbox.hidden = false;

@@ -68,6 +68,18 @@ whole and centred, and flashes a translucent yellow box plus the selection
 outline for ~2.4 s. The view link then carries `ver=<id>`; opening it frames
 that item again. Selecting another item removes `ver`.
 
+For `estanteria-libros`, «Ver» enters a detail mode instead: frontal camera
+(angle π/2, elevation 0.04 rad) filling the stage, with near-plane clipping of
+whatever stands between the camera and the shelf. Books are picked with a
+raycast (tap or click). The chosen book slides out 4 cm with a yellow outline
+and a panel opens over the stage: the capsule video from Stock with sound (the
+tap is the user gesture), or its recorded voice-over, or—when Stock has
+neither—the capsule text read by the browser's `speechSynthesis` (es-ES), stated
+as such. Media are matched by `externalRef: capsula:<id>` or, failing that, by
+the exact capsule title (`mediaFor` in capsulas.mjs). «Volver a la estantería»
+closes the panel; «Salir del modo detalle» returns to the isometric view.
+pizarra-3 is untouched.
+
 The URL stores hidden IDs in `xhide-<stock-id>` plus `highlight=<stock-id>`;
 separate models retain independent visibility. Exports include only checked
 items, with `id`, `nombre`, `tipo`, `categoria`, `cantidad`, metric `medidas`,

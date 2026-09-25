@@ -38,7 +38,29 @@ test('encuadre: la caja del objeto queda entera y centrada en la cámara ortogr�
 });
 test('visor: el renderer expone frameObject y el inventario lo usa con resalte y &ver',()=>{
  const r=fs.readFileSync(new URL('../assets/xpaces/engine/life-renderer.mjs',import.meta.url),'utf8'),inv=fs.readFileSync(new URL('../assets/xpaces/inventory.mjs',import.meta.url),'utf8'),v=fs.readFileSync(new URL('../assets/xpaces/viewer.mjs',import.meta.url),'utf8');
- assert.match(r,/needsUpdate=true;\},frameObject,resize,/);assert.match(inv,/viewer\.frameObject\?\.\(e\.object\);pulse\(e\);/);assert.match(inv,/if\(!e\.visible\)\{e\.visible=true;apply\(\);\}/);assert.match(v,/inventory\?\.openFromURL\(\)/);
+ assert.match(r,/needsUpdate=true;\},frameObject,pick,clearClip,/);assert.match(inv,/viewer\.frameObject\?\.\(e\.object,fromDetail\?\{angle:Math\.PI\/4\}:\{\}\);pulse\(e\);/);assert.match(inv,/e\.id===capsulas\.shelfId&&capsulas\.enterDetail\(\)/);assert.match(inv,/select:id=>\{if\(capsulas\?\.state\.detail\)return;/);assert.match(inv,/if\(!e\.visible\)\{e\.visible=true;apply\(\);\}/);assert.match(v,/inventory\?\.openFromURL\(\)/);
  const css=fs.readFileSync(new URL('../assets/xpaces/viewer.css',import.meta.url),'utf8');assert.match(css,/\.xpace-ver\{flex:none/);
- for(const page of ['../stock.html','../en/stock.html'])assert.match(fs.readFileSync(new URL(page,import.meta.url),'utf8'),/viewer\.mjs\?v=ver-mueble/);
+ for(const page of ['../stock.html','../en/stock.html'])assert.match(fs.readFileSync(new URL(page,import.meta.url),'utf8'),/viewer\.mjs\?v=ver-libro/);
+});
+
+test('modo detalle: medios de cada cápsula sin inventar (vínculo explícito, luego título exacto)',async()=>{
+ const {mediaFor,speechText}=await import('../assets/xpaces/capsulas.mjs');
+ const b={id:'c1',capsula:'Co-Intelligence: la IA como compañera',libro:'Co-Intelligence',autor:'Ethan Mollick',secciones:[['Para carbono','A'],['Aplicación','C']]};
+ const items=[{id:'c1',type:'capsula',title:b.capsula,url:'u0'},
+  {id:'v-old',type:'video',mime:'video/mp4',title:'Co-Intelligence:  la IA como compañera ',url:'v1',createdAt:'2026-09-25T10:00:00Z'},
+  {id:'v-new',type:'video',mime:'video/mp4',title:b.capsula,url:'v2',createdAt:'2026-09-25T12:00:00Z'},
+  {id:'otro',type:'video',mime:'video/mp4',title:'Otra cosa',url:'v3'},
+  {id:'loc',type:'locucion',mime:'text/markdown',title:b.capsula,url:'g'}];
+ let m=mediaFor(b,items);assert.equal(m.video.id,'v-new');assert.equal(m.audio,null,'un guion en texto no es locución');
+ m=mediaFor(b,[...items,{id:'v-link',type:'video',mime:'video/mp4',title:'x',externalRef:'capsula:c1',url:'v4',createdAt:'2020-01-01'},{id:'a1',type:'audio',mime:'audio/mpeg',title:b.capsula,url:'a'}]);assert.equal(m.video.id,'v-link');assert.equal(m.audio.id,'a1');
+ assert.deepEqual(mediaFor({id:'s',capsula:'Sapiens'},items),{video:null,audio:null});
+ const t=speechText(b);assert.match(t,/^Co-Intelligence, de Ethan Mollick\./);assert.match(t,/Para carbono\. A/);assert.match(t,/Aplicación\. C$/);
+});
+test('modo detalle: zoom frontal con recorte, libros seleccionables y panel con cerrar / salir',()=>{
+ const c=fs.readFileSync(new URL('../assets/xpaces/capsulas.mjs',import.meta.url),'utf8'),r=fs.readFileSync(new URL('../assets/xpaces/engine/life-renderer.mjs',import.meta.url),'utf8');
+ assert.match(c,/frameObject\(shelfEntry\.object,\{angle:Math\.PI\/2,elevation:\.04,margin:1\.08,clip:true\}\)/);
+ assert.match(c,/viewer\.pick\(e\.clientX,e\.clientY,\[shelfEntry\.object\.userData\.shelf\.books\]\)/);
+ for(const k of ['data-cerrar','data-salir','data-leer','playsinline',"u.lang='es-ES'",'player.muted=false;player.play()'])assert.ok(c.includes(k),k);
+ assert.match(r,/near=Math\.max\(\.1,d-\.06\)/);assert.match(r,/clipBox=clip\?box\.clone\(\)/);
+ assert.ok(!/drawScreen|screenOverlay/.test(c.slice(c.indexOf('modo detalle de la estantería'),c.indexOf('function openBook'))),'pizarra-3 no se toca');
 });
