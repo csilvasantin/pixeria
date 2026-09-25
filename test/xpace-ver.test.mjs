@@ -53,7 +53,7 @@ test('modo detalle: medios de cada cápsula sin inventar (vínculo explícito, l
   {id:'loc',type:'locucion',mime:'text/markdown',title:b.capsula,url:'g'}];
  let m=mediaFor(b,items);assert.equal(m.video.id,'v-new');assert.equal(m.audio,null,'un guion en texto no es locución');
  m=mediaFor(b,[...items,{id:'v-link',type:'video',mime:'video/mp4',title:'x',externalRef:'capsula:c1',url:'v4',createdAt:'2020-01-01'},{id:'a1',type:'audio',mime:'audio/mpeg',title:b.capsula,url:'a'}]);assert.equal(m.video.id,'v-link');assert.equal(m.audio.id,'a1');
- assert.deepEqual(mediaFor({id:'s',capsula:'Sapiens'},items),{video:null,audio:null});
+ assert.deepEqual(mediaFor({id:'s',capsula:'Sapiens'},items),{video:null,videos:{vertical:null,horizontal:null},audio:null});
  const t=speechText(b);assert.match(t,/^Co-Intelligence, de Ethan Mollick\./);assert.match(t,/Para carbono\. A/);assert.match(t,/Aplicación\. C$/);
 });
 test('modo detalle: zoom frontal con recorte, libros seleccionables y panel con cerrar / salir',()=>{
@@ -63,4 +63,13 @@ test('modo detalle: zoom frontal con recorte, libros seleccionables y panel con 
  for(const k of ['data-cerrar','data-salir','data-leer','playsinline',"u.lang='es-ES'",'player.muted=false;player.play()'])assert.ok(c.includes(k),k);
  assert.match(r,/near=Math\.max\(\.1,d-\.06\)/);assert.match(r,/clipBox=clip\?box\.clone\(\)/);
  assert.ok(!/drawScreen|screenOverlay/.test(c.slice(c.indexOf('modo detalle de la estantería'),c.indexOf('function openBook'))),'pizarra-3 no se toca');
+});
+
+test('norma 16:9 / 9:16: vertical en móvil en vertical, horizontal en escritorio, y la que haya si solo existe una',async()=>{
+ const {mediaFor,pickVideo,orientation}=await import('../assets/xpaces/capsulas.mjs');
+ const b={id:'j',capsula:'Cápsula de Jobs'},v=(id,extra)=>({id,type:'video',mime:'video/mp4',title:b.capsula,url:id,createdAt:'2026-09-26',...extra});
+ assert.equal(orientation({tags:['tiktok','vertical']}),'vertical');assert.equal(orientation({orientacion:'16:9'}),'horizontal');assert.equal(orientation({ancho:1920,alto:1080}),'horizontal');assert.equal(orientation({}),null);
+ const both=mediaFor(b,[v('ver',{tags:['vertical']}),v('hor',{orientacion:'horizontal'})]);
+ assert.equal(pickVideo(both,true).id,'ver');assert.equal(pickVideo(both,false).id,'hor');
+ const solo=mediaFor(b,[v('ver',{tags:['vertical']})]);assert.equal(pickVideo(solo,false).id,'ver');assert.equal(pickVideo({video:null,videos:{}},true),null);
 });

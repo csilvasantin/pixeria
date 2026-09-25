@@ -54,9 +54,20 @@ export function mediaFor(b,items){
  const newest=a=>a.sort((p,q)=>String(q.createdAt).localeCompare(String(p.createdAt)))[0]||null;
  const isVideo=x=>x.type==='video'&&/^video\//.test(x.mime||''),isAudio=x=>['audio','locucion'].includes(x.type)&&/^audio\//.test(x.mime||'');
  const find=test=>newest(list.filter(x=>test(x)&&linked(x)))||newest(list.filter(x=>test(x)&&same(x)));
- const out=x=>x?{id:x.id,url:x.url,title:x.title||'',createdAt:x.createdAt||null}:null;
- return {video:out(find(isVideo)),audio:out(find(isAudio))};
+ const out=x=>x?{id:x.id,url:x.url,title:x.title||'',createdAt:x.createdAt||null,orientacion:orientation(x)}:null;
+ // Norma de Carlos: cada cápsula puede tener versión vertical 9:16 y horizontal 16:9.
+ const video=find(isVideo),vertical=find(x=>isVideo(x)&&orientation(x)==='vertical'),horizontal=find(x=>isVideo(x)&&orientation(x)==='horizontal');
+ return {video:out(video),videos:{vertical:out(vertical),horizontal:out(horizontal)},audio:out(find(isAudio))};
 }
+export function orientation(x){
+ const o=norm(x.orientacion),tags=(x.tags||[]).map(norm);
+ if(/vertical|portrait|9:16/.test(o)||tags.some(t=>['vertical','9:16','9x16'].includes(t)))return 'vertical';
+ if(/horizontal|landscape|16:9/.test(o)||tags.some(t=>['horizontal','16:9','16x9'].includes(t)))return 'horizontal';
+ if(x.ancho>0&&x.alto>0)return x.ancho>=x.alto?'horizontal':'vertical';
+ return null;
+}
+export function pickVideo(media,portrait){const v=media?.videos||{};return (portrait?v.vertical||v.horizontal:v.horizontal||v.vertical)||media?.video||null;}
+
 export function speechText(b){return [b.libro+(b.autor?', de '+b.autor:'')+'.',b.capsula?b.capsula+'.':'',...(b.secciones||[]).map(([name,body])=>name+'. '+body)].filter(Boolean).join('\n\n');}
 let metaCache=null;
 async function loadMeta(signal){if(metaCache)return metaCache;try{const r=await fetch(SHELF_META,{signal});metaCache=r.ok?await r.json():{libros:[]};}catch{metaCache={libros:[]};}return metaCache;}
@@ -238,9 +249,9 @@ export function mountCapsulas({scene,entries,signal}){
   // Resalte: el libro sale 4 cm de la balda y lleva un contorno amarillo.
   let scene=node;while(scene.parent)scene=scene.parent;const helper=new T.BoxHelper(node,0xffd766);helper.material.depthTest=false;helper.renderOrder=1001;chosen={node,z:node.position.z,helper,id:b.id};node.position.z+=.04;node.updateMatrixWorld(true);helper.update();scene.add(helper);viewer?.invalidateShadows();
   const m=b.media||{},cover=b.cover?.src||b.meta?.portada_espejo&&new URL(`./libros/portadas/${b.slug}.jpg`,import.meta.url).href||'';
-  const kind=m.video?'video':m.audio?'audio':'voz';state.libroAbierto=b.id;state.medio=kind;
+  const portrait=globalThis.matchMedia?.('(orientation: portrait)').matches&&innerWidth<700,video=pickVideo(m,portrait);const kind=video?'video':m.audio?'audio':'voz';state.libroAbierto=b.id;state.medio=kind;state.video=video?{id:video.id,orientacion:video.orientacion}:null;
   panel=document.createElement('div');panel.className='xpace-libro';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',(en?'Capsule: ':'Cápsula: ')+b.libro);panel.dataset.medio=kind;
-  const media=kind==='video'?`<video src="${esc(m.video.url)}" controls playsinline preload="auto"${cover?` poster="${esc(cover)}"`:''}></video>`:(cover?`<img src="${esc(cover)}" alt="${esc(b.libro)}">`:'')+(kind==='audio'?`<audio src="${esc(m.audio.url)}" controls preload="auto"></audio>`:'');
+  const media=kind==='video'?`<video src="${esc(video.url)}" data-orient="${video.orientacion||'vertical'}" controls playsinline preload="auto"${cover?` poster="${esc(cover)}"`:''}></video>`:(cover?`<img src="${esc(cover)}" alt="${esc(b.libro)}">`:'')+(kind==='audio'?`<audio src="${esc(m.audio.url)}" controls preload="auto"></audio>`:'');
   const nota=kind==='video'?(en?'Capsule video from Pixeria Stock, with its soundtrack.':'Vídeo de la cápsula en el Stock de Pixeria, con su sonido.'):kind==='audio'?(en?'Recorded voice-over from Stock.':'Locución grabada del Stock.'):(en?'This capsule has no video or recorded voice-over in Stock: the summary is read by the browser voice (es-ES).':'Esta cápsula no tiene vídeo ni locución en el Stock: el resumen lo lee la voz del navegador (es-ES).');
   panel.innerHTML=`<div class="xpace-libro-top"><button type="button" data-cerrar>← ${en?'Back to shelf':'Volver a la estantería'}</button><button type="button" data-salir>${en?'Exit detail':'Salir del modo detalle'}</button></div><div class="xpace-libro-media">${media}</div><div class="xpace-libro-texto"><p class="xpace-libro-kicker">${en?'Blinkist capsule':'Cápsula Blinkist'} · ${esc(b.consejero)}</p><h4>${esc(b.libro)}</h4>${b.autor?`<p class="xpace-libro-autor">${en?'by':'de'} ${esc(b.autor)}</p>`:''}<p class="xpace-libro-capsula">«${esc(b.capsula)}»</p><p class="xpace-libro-nota" data-kind="${kind}">${nota}</p><p class="xpace-libro-estado" role="status"></p><div class="xpace-libro-acciones"><button type="button" data-leer>🔊 ${kind==='voz'?(en?'Read again':'Volver a leer'):(en?'Read full summary (browser voice)':'Leer el resumen completo (voz del navegador)')}</button></div>${b.secciones.map(([name,body])=>`<section><h5>${esc(name)}</h5><p>${esc(body)}</p></section>`).join('')}</div>`;
   ui.stage.append(panel);const status=panel.querySelector('[role=status]');
@@ -255,7 +266,7 @@ export function mountCapsulas({scene,entries,signal}){
  function paint(){if(!screen)return;const f=books.find(b=>b.id===forced)||books[0];drawScreen(screen.canvas,f,page,books.length);screen.tex.needsUpdate=true;}
  async function refresh(){
   try{const next=await loadBooks(signal);if(signal?.aborted)return;const sig=next.map(b=>b.id).join();const full=sig+'|'+next.map(b=>b.glb||'').join();if(full!==state.sig){books=next;if(shelfEntry)await fillShelf(shelfEntry.object,books,forced);state.sig=full;page=0;paint();viewer?.invalidateShadows();}
-   state.books=books.map(b=>({id:b.id,libro:b.libro,autor:b.autor,consejero:b.consejero,createdAt:b.createdAt,portada:!!b.cover,glb:b.glb,isbn:b.meta?.isbn||null,video:b.media?.video?.id||null,audio:b.media?.audio?.id||null}));const f=books.find(b=>b.id===forced)||books[0];state.libroDelDia=f?{id:f.id,libro:f.libro,autor:f.autor,consejero:f.consejero,capsula:f.capsula}:null;state.updatedAt=new Date().toISOString();state.error=null;
+   state.books=books.map(b=>({id:b.id,libro:b.libro,autor:b.autor,consejero:b.consejero,createdAt:b.createdAt,portada:!!b.cover,glb:b.glb,isbn:b.meta?.isbn||null,video:b.media?.video?.id||null,videos:{vertical:b.media?.videos?.vertical?.id||null,horizontal:b.media?.videos?.horizontal?.id||null},audio:b.media?.audio?.id||null}));const f=books.find(b=>b.id===forced)||books[0];state.libroDelDia=f?{id:f.id,libro:f.libro,autor:f.autor,consejero:f.consejero,capsula:f.capsula}:null;state.updatedAt=new Date().toISOString();state.error=null;
    document.documentElement.dataset.libroDelDia=f?.id||'';
   }catch(e){if(!signal?.aborted){state.error=e.message;if(!books.length)paint();}}
  }
