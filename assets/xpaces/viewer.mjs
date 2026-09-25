@@ -2,7 +2,7 @@ import {createLifeRenderer} from './engine/life-renderer.mjs?v=inventory-4375';
 import {createLifeScene} from './engine/life-scene.mjs?v=px-1';
 import {GLTFLoader} from './engine/vendor/GLTFLoader.mjs';
 import * as T from './engine/premium-three.mjs';
-import {bindInventory,mountInventory} from './inventory.mjs?v=inventory-4375';
+import {bindInventory,mountInventory} from './inventory.mjs?v=libros-4397';
 import {mergeGeometries} from './engine/vendor/BufferGeometryUtils.mjs';
 
 function release(root) {
@@ -65,6 +65,7 @@ export async function mountXpace(host, item, {signal,furniture=false,onModel}={}
       const scene=createLifeScene(input,{...options,inventory:true});scene.world.add(root);return scene;
     }});
     viewer.preset('home');
+    bound?.capsulas?.setViewer(viewer);
     if(bound)inventory=mountInventory(host,item,bound,viewer,on,signal);
     // Let Better's existing Shift-drag handler work with an explicit touch-friendly Pan toggle.
     on(canvas,'pointerdown',event=>{if(pan)Object.defineProperty(event,'shiftKey',{value:true});},true);
@@ -82,7 +83,7 @@ export async function mountXpace(host, item, {signal,furniture=false,onModel}={}
     status.hidden=true;host.dataset.ready='true';
     function tick(now){if(disposed)return;if(!document.hidden)viewer.render(now);frame=requestAnimationFrame(tick);}frame=requestAnimationFrame(tick);
     // Read-only diagnostics make camera motion and resource cleanup testable.
-    host.xpaceState=()=>({camera:viewer.cameraState,disposed,inventory:inventory?.state()});
+    host.xpaceState=()=>({camera:viewer.cameraState,disposed,inventory:inventory?.state(),capsulas:bound?.capsulas?.state||null});
     return dispose;
   } catch(error) {
     dispose();if(signal?.aborted)return dispose;

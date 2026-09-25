@@ -13,18 +13,29 @@ export function selectionURL(url,assetId,entries){const u=new URL(url);u.searchP
 export async function bindInventory(gltf,item,bytes,signal){
  const slug=sources[item.id];let manifest;
  if(slug){
-  const r=await fetch(new URL(`./inventory/${slug}.json`,import.meta.url),{signal});if(!r.ok)throw Error('Inventario: HTTP '+r.status);manifest=await r.json();
+  const r=await fetch(new URL(`./inventory/${slug}.json?v=libros-4397`,import.meta.url),{signal});if(!r.ok)throw Error('Inventario: HTTP '+r.status);manifest=await r.json();
   const sha=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(n=>n.toString(16).padStart(2,'0')).join('');
   if(sha!==manifest.glbSha256)throw Error('El modelo ha cambiado: hay que actualizar su inventario');
  }else manifest={slug:'xpace',measuredCount:0,items:gltf.scene.children.map((n,i)=>({id:n.userData.admira_id||`glb:${n.name||i}`,nombre:n.userData.admira_nombre||n.name||`Objeto ${i+1}`,tipo:n.userData.admira_tipo||'objeto-3d',categoria:n.userData.categoria||'Sin categoría',cantidad:1,origen:'glb',object:n}))};
  const nodes=new Map();gltf.scene.traverse(n=>{const index=gltf.parser.associations.get(n)?.nodes;if(index!==undefined)nodes.set(index,n);});
+ // Muebles añadidos en el visor (#4397): se construyen en tiempo de ejecución junto a un elemento medido.
+ const hasRuntime=manifest.items.some(r=>r.runtime||r.contenido);const capsulasModule=hasRuntime?await import('./capsulas.mjs?v=libros-4397'):null;
+ function runtimeObject(row){
+  if(row.runtime.builder!=='estanteria-libros'||!capsulasModule)return null;
+  const material=name=>{let found;gltf.scene.traverse(o=>{for(const m of [o.material].flat())if(!found&&m?.name===name)found=m;});return found;};
+  const shelf=capsulasModule.buildShelf(row,{nogal:material('MAT_nogal'),laton:material('MAT_laton')});
+  const anchor=nodes.get(manifest.items.find(r=>r.id===row.runtime.junto)?.node);if(!anchor)return null;
+  gltf.scene.updateMatrixWorld(true);const box=new T.Box3().setFromObject(anchor);
+  shelf.position.set((box.min.x+box.max.x)/2+(row.runtime.desplazamientoX||0),box.min.y+(row.runtime.alturaSuelo||0),box.min.z+.012);shelf.updateMatrixWorld(true);gltf.scene.attach(shelf);return shelf;
+ }
  const entries=manifest.items.map(row=>{
-  const object=row.object||nodes.get(row.node);if(!object)throw Error('Elemento sin geometría: '+row.id);
+  const object=row.object||(row.runtime?runtimeObject(row):nodes.get(row.node));if(!object)throw Error('Elemento sin geometría: '+row.id);
   const e={...row,object,visible:true};
   if(!e.medidas){const size=new T.Box3().setFromObject(object).getSize(new T.Vector3());e.medidas={ancho:+size.x.toFixed(4),fondo:+size.z.toFixed(4),alto:+size.y.toFixed(4),unidad:'m'};e.medidasFuente='envolvente-glb';}
   object.userData.item={id:e.id};return e;
  });
- return {manifest,entries};
+ const capsulas=capsulasModule&&!signal?.aborted?capsulasModule.mountCapsulas({scene:gltf.scene,entries,signal}):null;
+ return {manifest,entries,capsulas};
 }
 const labels={Iluminacion:'Iluminación',Vegetacion:'Vegetación'};
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

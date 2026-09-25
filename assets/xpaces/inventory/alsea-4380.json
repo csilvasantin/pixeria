@@ -5,7 +5,7 @@
   "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
   "sourceVersion": "v2 · 2026-09-25",
   "glbSha256": "6f76c5cee1ef0d3aae2639ee2d99e4baf38b888ef2d6cd35209ff0080bb06ce4",
-  "measuredCount": 34,
+  "measuredCount": 35,
   "items": [
     {
       "id": "barra",
@@ -145,7 +145,13 @@
       "garantia": "",
       "origen": "json-medidas",
       "node": 323,
-      "nodeName": "pizarra-3"
+      "nodeName": "pizarra-3",
+      "contenido": {
+        "tipo": "libro-del-dia",
+        "fuente": "https://stock.admira.store/stock/index.json",
+        "regla": "Cápsula Blinkist más reciente (createdAt); se relee cada 5 min",
+        "encargo": "#4397 · FLT-101048"
+      }
     },
     {
       "id": "pantalla-recogida",
@@ -526,6 +532,36 @@
       "origen": "json-medidas",
       "node": 195,
       "nodeName": "mesa-baja"
+    },
+    {
+      "id": "estanteria-libros",
+      "nombre": "Estantería de libros nogal · cápsulas Blinkist",
+      "tipo": "bookshelf",
+      "categoria": "Mobiliario",
+      "cantidad": 1,
+      "medidas": {
+        "ancho": 1.6,
+        "fondo": 0.28,
+        "alto": 1.1,
+        "unidad": "m"
+      },
+      "pantalla": "",
+      "fabricante": "",
+      "modelo": "",
+      "garantia": "",
+      "origen": "json-medidas",
+      "node": null,
+      "nodeName": "estanteria-libros",
+      "runtime": {
+        "builder": "estanteria-libros",
+        "junto": "sofa",
+        "alturaSuelo": 1.15,
+        "desplazamientoX": 0,
+        "material": "MAT_nogal",
+        "ubicacion": "Pared de fondo del rincón del sofá verde (zona de estar), colgada sobre el sofá",
+        "fuente": "https://stock.admira.store/stock/index.json · type=capsula + etiqueta/enlace Blinkist · un libro por título, el más reciente primero",
+        "encargo": "#4397 · FLT-101048"
+      }
     },
     {
       "id": "lampara-1",
@@ -1183,5 +1219,6 @@
       "nodeName": "iot_G1"
     }
   ],
-  "revision": "4380"
+  "revision": "4397",
+  "revisionBase": "4380"
 }

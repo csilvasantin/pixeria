@@ -1,0 +1,233 @@
+{
+  "schema": "pixeria.estanteria-libros/1",
+  "xpace": {
+    "nombre": "Cafetería Alsea",
+    "glb": "1790370079244-cv7t5i",
+    "blend": "1790370032661-p2nbzi",
+    "inventario": "assets/xpaces/inventory/alsea-4380.json"
+  },
+  "generado": "2026-09-26",
+  "fuente": "https://stock.admira.store/stock/index.json (type=capsula + etiqueta/enlace Blinkist) + capsulas-blinkist/usados.json",
+  "libro_del_dia": {
+    "regla": "La cápsula Blinkist más reciente por createdAt; el visor relee el índice cada 5 min y al volver a la pestaña",
+    "actual": "the-hero-with-a-thousand-faces-en"
+  },
+  "estanteria": {
+    "id": "estanteria-libros",
+    "material": "MAT_nogal (el mismo del GLB: mueble-trasero, mesa-baja)",
+    "exterior_m": {
+      "ancho": 1.6,
+      "fondo": 0.28,
+      "alto": 1.1
+    },
+    "tablero_m": 0.025,
+    "trasera_m": 0.012,
+    "baldas": {
+      "tableros": 4,
+      "huecos": 3,
+      "ancho_util_m": 1.55,
+      "fondo_util_m": 0.268,
+      "alto_libre_entre_baldas_m": 0.333
+    },
+    "posicion_glb_m": {
+      "x_centro": 9.8,
+      "z_pared": 0.012,
+      "y_base": 1.15,
+      "suelo_huecos_y": [
+        1.175,
+        1.533,
+        1.892
+      ],
+      "nota": "Coordenadas del GLB 1790370079244-cv7t5i (Y arriba, pared de fondo en z=0, suelo en y=0). Colgada en la pared de fondo, centrada sobre el sofá verde (sofa: x 8.8–10.8, z 0–0.85)"
+    },
+    "reparto": "Hueco superior: libros de pie, lomo al frente, del más reciente al más antiguo. Hueco central: el libro del día de cara (portada al frente) + taza. Hueco inferior: libros que no caben arriba."
+  },
+  "formato_modelos": {
+    "entrega": "Un GLB por libro publicado en Pixeria Stock (POST api.admira.store/stock/publish, mime model/gltf-binary) con externalRef \"estanteria-libros:<slug>\" y tags [\"3d\",\"libro\",\"estanteria-libros\",\"<slug>\"]. El visor lo detecta solo en stock/index.json y sustituye al provisional.",
+    "unidades": "metros, medidas reales del libro (medidas_cm si constan)",
+    "ejes": "glTF Y arriba; libro de pie; lomo mirando a +Z (hacia la sala); portada hacia +X; grosor en X",
+    "origen": "centro de la cara inferior (apoya en la balda en y=0)",
+    "limites": "alto ≤ 0.30 m, fondo ≤ 0.25 m; ≤ 1.5 MB por GLB; texturas ≤ 1024 px",
+    "alternativa_local": "O bien, fichero en assets/xpaces/libros/modelos/<slug>.glb del repo pixeria y rellenar libros[].modelo_glb.url = \"modelos/<slug>.glb\" (relativo a este JSON). Stock (externalRef) tiene prioridad sobre la ruta local."
+  },
+  "libros": [
+    {
+      "slug": "the-hero-with-a-thousand-faces-en",
+      "titulo": "The Hero with a Thousand Faces",
+      "autor": "Joseph Campbell",
+      "consejero": "George Lucas",
+      "consejero_id": "georgelucas",
+      "capsula": {
+        "id": "1790359342375-25shx5",
+        "titulo": "El héroe de las mil caras: volver con un don",
+        "fecha": "2026-09-25T18:02:22.375Z",
+        "pixeria_url": "https://www.pixeria.com/stock?highlight=1790359342375-25shx5",
+        "asset_url": "https://stock.admira.store/stock/1790359342375-25shx5/asset.bin?v=1305",
+        "otras_capsulas": []
+      },
+      "blinkist_url": "https://www.blinkist.com/en/books/the-hero-with-a-thousand-faces-en",
+      "portada_blinkist_url": "https://images.blinkist.io/images/books/6440db6b4463be00089843a8/3_4/470.jpg",
+      "portada_espejo": "https://www.pixeria.com/assets/xpaces/libros/portadas/the-hero-with-a-thousand-faces-en.jpg",
+      "isbn": "9788412213003",
+      "edicion": "El héroe de las mil caras · Ediciones Atalanta, 2020 · tapa blanda · castellano",
+      "casadellibro_url": "https://www.casadellibro.com/libro-el-heroe-de-las-mil-caras/9788412213003/11804209",
+      "medidas_cm": {
+        "alto": 22.0,
+        "ancho": 14.0,
+        "grueso": null
+      },
+      "modelo_glb": {
+        "estado": "pendiente (#4399 · Trinity)",
+        "externalRef": "estanteria-libros:the-hero-with-a-thousand-faces-en"
+      }
+    },
+    {
+      "slug": "sapiens-en",
+      "titulo": "Sapiens: A Brief History of Humankind",
+      "autor": "Yuval Noah Harari",
+      "consejero": "George Lucas",
+      "consejero_id": "georgelucas",
+      "capsula": {
+        "id": "1790336978263-3e2al2",
+        "titulo": "Sapiens: la historia compartida es la tecnología que escala",
+        "fecha": "2026-09-25T11:49:38.263Z",
+        "pixeria_url": "https://www.pixeria.com/stock?highlight=1790336978263-3e2al2",
+        "asset_url": "https://stock.admira.store/stock/1790336978263-3e2al2/asset.bin?v=1370",
+        "otras_capsulas": []
+      },
+      "blinkist_url": "https://www.blinkist.com/en/books/sapiens-en",
+      "portada_blinkist_url": "https://images.blinkist.io/images/books/559266ac6561380007da0000/3_4/470.jpg",
+      "portada_espejo": "https://www.pixeria.com/assets/xpaces/libros/portadas/sapiens-en.jpg",
+      "isbn": "9788419399717",
+      "edicion": "Sapiens. De animales a dioses · Debate, 2023 · tapa dura · castellano",
+      "casadellibro_url": "https://www.casadellibro.com/libro-sapiens-de-animales-a-dioses/9788419399717/13931313",
+      "medidas_cm": {
+        "alto": 23.8,
+        "ancho": 16.1,
+        "grueso": 5.3
+      },
+      "modelo_glb": {
+        "estado": "pendiente (#4399 · Trinity)",
+        "externalRef": "estanteria-libros:sapiens-en"
+      }
+    },
+    {
+      "slug": "creatividad-sa-es",
+      "titulo": "Creatividad, S.A.",
+      "autor": "Ed Catmull",
+      "consejero": "Walt Disney",
+      "consejero_id": "waltdisney",
+      "capsula": {
+        "id": "1790336924950-k6ylio",
+        "titulo": "Creatividad, S.A.: la cultura que protege las ideas frágiles",
+        "fecha": "2026-09-25T11:48:44.950Z",
+        "pixeria_url": "https://www.pixeria.com/stock?highlight=1790336924950-k6ylio",
+        "asset_url": "https://stock.admira.store/stock/1790336924950-k6ylio/asset.bin?v=1635",
+        "otras_capsulas": [
+          "1789973175020-3cjma4"
+        ]
+      },
+      "blinkist_url": "https://www.blinkist.com/en/books/creatividad-sa-es",
+      "portada_blinkist_url": "https://images.blinkist.io/images/books/63d2dbb578120c00099e634a/3_4/470.jpg",
+      "portada_espejo": "https://www.pixeria.com/assets/xpaces/libros/portadas/creatividad-sa-es.jpg",
+      "isbn": "9788418053245",
+      "edicion": "Creatividad, S.A. (nueva edición ampliada y actualizada) · Conecta, 2024 · tapa blanda · castellano",
+      "casadellibro_url": "https://www.casadellibro.com/libro-creatividad-sa-nueva-edicion-ampliada-y-actualizada/9788418053245/15952450",
+      "medidas_cm": {
+        "alto": 23.0,
+        "ancho": 15.3,
+        "grueso": 3.0
+      },
+      "modelo_glb": {
+        "estado": "pendiente (#4399 · Trinity)",
+        "externalRef": "estanteria-libros:creatividad-sa-es"
+      }
+    },
+    {
+      "slug": "the-impossible-factory-en",
+      "titulo": "The Impossible Factory",
+      "autor": "Josh Dean",
+      "consejero": "Steve Wozniak",
+      "consejero_id": "stevewozniak",
+      "capsula": {
+        "id": "1790336870230-3gr58a",
+        "titulo": "Skunk Works: equipos pequeños, cero burocracia, ingeniería simple",
+        "fecha": "2026-09-25T11:47:50.230Z",
+        "pixeria_url": "https://www.pixeria.com/stock?highlight=1790336870230-3gr58a",
+        "asset_url": "https://stock.admira.store/stock/1790336870230-3gr58a/asset.bin?v=1363",
+        "otras_capsulas": []
+      },
+      "blinkist_url": "https://www.blinkist.com/en/books/the-impossible-factory-en",
+      "portada_blinkist_url": "https://images.blinkist.io/images/books/6a96b6a01ae22c000895f154/3_4/470.jpg",
+      "portada_espejo": "https://www.pixeria.com/assets/xpaces/libros/portadas/the-impossible-factory-en.jpg",
+      "isbn": "9781524745516",
+      "edicion": "The Impossible Factory · Dutton, 2026 · tapa dura en inglés (sin edición en castellano). Ficha de Casa del Libro NO verificada",
+      "casadellibro_url": null,
+      "medidas_cm": null,
+      "modelo_glb": {
+        "estado": "pendiente (#4399 · Trinity)",
+        "externalRef": "estanteria-libros:the-impossible-factory-en"
+      }
+    },
+    {
+      "slug": "co-intelligence-en",
+      "titulo": "Co-Intelligence: Living and Working with AI",
+      "autor": "Ethan Mollick",
+      "consejero": "Steve Jobs",
+      "consejero_id": "stevejobs",
+      "capsula": {
+        "id": "1790336817010-dieu0q",
+        "titulo": "Co-Intelligence: la IA como compañera, no como piloto automático",
+        "fecha": "2026-09-25T11:46:57.010Z",
+        "pixeria_url": "https://www.pixeria.com/stock?highlight=1790336817010-dieu0q",
+        "asset_url": "https://stock.admira.store/stock/1790336817010-dieu0q/asset.bin?v=1433",
+        "otras_capsulas": []
+      },
+      "blinkist_url": "https://www.blinkist.com/en/books/co-intelligence-en",
+      "portada_blinkist_url": "https://images.blinkist.io/images/books/663b4e4c195d960008e2c08f/3_4/470.jpg",
+      "portada_espejo": "https://www.pixeria.com/assets/xpaces/libros/portadas/co-intelligence-en.jpg",
+      "isbn": "9788418053214",
+      "edicion": "Cointeligencia. Vivir y trabajar con la IA · Conecta, 2024 · tapa blanda · castellano",
+      "casadellibro_url": "https://www.casadellibro.com/libro-cointeligencia/9788418053214/16155367",
+      "medidas_cm": {
+        "alto": 22.9,
+        "ancho": 15.2,
+        "grueso": 1.7
+      },
+      "modelo_glb": {
+        "estado": "pendiente (#4399 · Trinity)",
+        "externalRef": "estanteria-libros:co-intelligence-en"
+      }
+    },
+    {
+      "slug": "creative-confidence-en",
+      "titulo": "Creative Confidence",
+      "autor": "Tom Kelley, David Kelley",
+      "consejero": "Walt Disney",
+      "consejero_id": "waltdisney",
+      "capsula": {
+        "id": "1789973466669-pw0xxa",
+        "titulo": "La chispa antes del pixel: creatividad canónica AdmiraNeXT",
+        "fecha": "2026-09-21T06:51:06.669Z",
+        "pixeria_url": "https://www.pixeria.com/stock?highlight=1789973466669-pw0xxa",
+        "asset_url": "https://stock.admira.store/stock/1789973466669-pw0xxa/asset.bin?v=521",
+        "otras_capsulas": []
+      },
+      "blinkist_url": "https://www.blinkist.com/en/books/creative-confidence-en",
+      "portada_blinkist_url": "https://images.blinkist.io/images/books/53fcd12e3762620008000000/3_4/470.jpg",
+      "portada_espejo": "https://www.pixeria.com/assets/xpaces/libros/portadas/creative-confidence-en.jpg",
+      "isbn": "9780385349376",
+      "edicion": "Creative Confidence · Crown · eBook en inglés (sin edición en castellano; es la que vende Casa del Libro). Tapa en inglés: 9780385349369",
+      "casadellibro_url": "https://www.casadellibro.com/ebook-creative-confidence-ebook/9780385349376/17352716",
+      "medidas_cm": null,
+      "modelo_glb": {
+        "estado": "pendiente (#4399 · Trinity)",
+        "externalRef": "estanteria-libros:creative-confidence-en"
+      }
+    }
+  ],
+  "url_estable": {
+    "produccion": "https://www.pixeria.com/assets/xpaces/libros/estanteria-libros.json",
+    "github": "https://raw.githubusercontent.com/csilvasantin/pixeria/main/assets/xpaces/libros/estanteria-libros.json"
+  }
+}
