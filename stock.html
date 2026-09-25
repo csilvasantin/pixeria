@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r1.09:35">
+  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r1.22:04">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -303,6 +303,7 @@
   <script defer src="/assets/consent.js?v=20260617"></script>
   <script defer src="/assets/site-nav.js?v=20260920-ideas"></script>
   <script defer src="/assets/descarga-local.js?v=20260828-r1"></script>
+  <link rel="stylesheet" href="assets/xpaces/viewer.css">
 </head>
 <body data-page="stock">
   <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
@@ -377,6 +378,7 @@
             <option value="image">Imagen</option>
             <option value="twin-npc">Twin NPCs</option>
             <option value="digital-twin">Digital Twins</option>
+            <option value="xpaces">Xpaces</option>
             <option value="video" selected>Video</option>
             <option value="catalogo">Catálogos</option>
             <option value="animation">Animaciones (interactivos)</option>
@@ -643,7 +645,8 @@
 
   <script defer src="/matrix-rain.js?v=20260608-sides"></script>
   <script src="app.js?v=20260925-flt100980"></script>
-  <script>
+  <script type="module">
+  import {isXpace, blendFor, xpacePoster} from "./assets/xpaces/catalog.mjs";
   (function () {
     const grid = document.getElementById('stockGrid');
     const status = document.getElementById('stockStatus');
@@ -674,9 +677,9 @@
     // Ver functions/stock-index.js. Si falla, se cae al r2.dev de siempre.
     const STOCK_INDEX_COMPRIMIDO = '/stock-index';
     const STOCK_LIST_FALLBACK = STOCK_BASE + '/stock/list?limit=200';
-    const TYPE_ORDER = { audio: 0, music: 1, image: 2, 'twin-npc': 3, 'digital-twin': 4, furni: 5, video: 6, animation: 7, capsula: 8, guion: 8 };
+    const TYPE_ORDER = { xpaces: 4, audio: 0, music: 1, image: 2, 'twin-npc': 3, 'digital-twin': 4, furni: 5, video: 6, animation: 7, capsula: 8, guion: 8 };
     // Etiquetas legibles para el badge de tipo (las demás se muestran tal cual).
-    const TYPE_LABELS = { 'twin-npc': 'Twin NPC', 'digital-twin': 'Digital Twin', capsula: 'Cápsula', guion: 'Cápsula' };
+    const TYPE_LABELS = { xpaces: 'Xpaces', 'twin-npc': 'Twin NPC', 'digital-twin': 'Digital Twin', capsula: 'Cápsula', guion: 'Cápsula' };
     const typeText = (t) => TYPE_LABELS[t] || t;
     const RATING_VOTER_KEY = 'pixeria-stock-rating-voter-v1';
     const RATING_VOTES_KEY = 'pixeria-stock-ratings-v1';
@@ -751,7 +754,7 @@
       } catch {}
     }
     function displayType(it) {
-      return isFurni(it) ? 'furni' : (isCapsule(it) ? 'capsula' : it.type);
+      return isXpace(it) ? 'xpaces' : isFurni(it) ? 'furni' : (isCapsule(it) ? 'capsula' : it.type);
     }
     function mediaOrientation(it) {
       const width = Number(it && (it.width || it._mediaWidth)) || 0;
@@ -781,6 +784,7 @@
       return `background-image:url('${url}');background-repeat:no-repeat;background-size:${n * 100}% 100%;background-position:${pos}% center;image-rendering:pixelated;`;
     }
     function renderPreview(it) {
+      if (isXpace(it)) return `<img src="${escAttr(xpacePoster(it, allItems))}" alt="${escAttr(it.title)}" loading="lazy"><span class="xpace-badge">◈ Xpaces · 3D</span>`;
       // CÁPSULA: la columna enseña la CARA DEL VÍDEO que explica. La miniatura la
       // hereda al publicarse (pixer-eleven la copia del asset que declara en
       // externalRef). Si no la tiene —activos antiguos o sin externalRef— se cae al
@@ -1110,6 +1114,7 @@
       if (!it.url && isCapsule(it)) {
         return DL.texto(String(it.comment || it.prompt || ''), DL.nombre(paraDescarga(it), { ext: 'txt' }));
       }
+      if (isXpace(it) || it.mime === 'application/x-blender') return DL.descargar(it.url, DL.nombre(it, {ext: isXpace(it) ? 'glb' : 'blend'}));
       return DL.item(paraDescarga(it));
     }
     function descargarAssets(items) {
@@ -1224,6 +1229,7 @@
     // admite un type 'animation' real sin redeploy).
     function matchesType(it, t) {
       if (!t) return true;
+      if (t === 'xpaces') return isXpace(it);
       // Animación = la categoría 'animaciones' del catálogo (donde viven los
       // INTERACTIVOS que exporta AInimation Studio y emite admira.tv), el tipo
       // real 'animation', o (compat) lo publicado por ainimation como video con
@@ -1348,9 +1354,15 @@
       });
     }
 
+    let xpaceController;
     function openLightbox(it) {
+      xpaceController?.abort();
+      xpaceController = null;
+      lightbox.classList.toggle('is-xpace', isXpace(it));
       let media = '';
-      if (isFurni(it)) {
+      if (isXpace(it)) {
+        media = '<div class="xpace-viewer"></div>';
+      } else if (isFurni(it)) {
         media = `<img src="${it.url}" alt="" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
       } else if (it.type === 'twin-npc') {
         media = `<img src="${it.url}" alt="" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
@@ -1391,6 +1403,18 @@
           <button type="button" class="btn" data-act="descargar" title="Guarda el fichero en este ordenador con un nombre legible">⬇ Descargar a este ordenador</button>
           <button type="button" class="btn prio0-btn" data-act="prio0" title="Envía este asset AHORA al destino que elijas e interrumpe lo que se esté emitiendo">⚠ Prioridad 0 · interrumpir</button>
         </div>`;
+      if (isXpace(it)) {
+        const blend = blendFor(it, allItems);
+        const actions = lightboxMeta.querySelector('.stock-lightbox-actions');
+        lightboxMeta.prepend(actions);
+        actions.innerHTML = '<button type="button" class="btn" data-xpace-download="glb">⬇ GLB</button><button type="button" class="btn" data-xpace-download="blend" '+(blend?'':'disabled')+'>⬇ Blender (.blend)</button>';
+        if (!blend) actions.insertAdjacentHTML('beforeend', '<span>Editable Blender aún no disponible</span>');
+        actions.querySelector('[data-xpace-download="glb"]').onclick = () => descargarAsset({...it, mime:'model/gltf-binary'});
+        actions.querySelector('[data-xpace-download="blend"]').onclick = () => blend && descargarAsset({...blend, mime:'application/x-blender'});
+        const controller = xpaceController = new AbortController();
+        const host = lightboxInner.querySelector('.xpace-viewer');
+        import('./assets/xpaces/viewer.mjs').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'No se ha podido cargar el 3D. Cierra y vuelve a abrir para reintentar.';});
+      }
       window.__lightboxItemId = it.id || null;
       lightbox.hidden = false;
       lightbox.setAttribute('aria-hidden', 'false');
@@ -1417,6 +1441,9 @@
       openLightbox(currentView[j]);
     }
     function closeLightbox() {
+      xpaceController?.abort();
+      xpaceController = null;
+      lightbox.classList.remove('is-xpace');
       lightbox.hidden = true;
       lightbox.setAttribute('aria-hidden', 'true');
       lightboxInner.innerHTML = '';
@@ -1887,9 +1914,13 @@
         }
       }
     }
+    if (new URLSearchParams(location.search).get('type') === 'xpaces') { filters.type = 'xpaces'; typeFilter.value = 'xpaces'; }
     typeFilter.addEventListener('change', () => {
       const was = filters.type === 'catalogo';
       filters.type = typeFilter.value;
+      const filterUrl = new URL(location.href);
+      if (filters.type === 'xpaces') filterUrl.searchParams.set('type','xpaces'); else filterUrl.searchParams.delete('type');
+      history.replaceState({}, '', filterUrl);
       if (filters.type === 'catalogo') { CATALOGO.enter(); return; }
       if (was) CATALOGO.leave();
       applyFilters(true);
@@ -2019,7 +2050,7 @@
         setTimeout(() => card.classList.remove('stock-card-flash'), 2400);
       }
       openLightbox(item);
-      try { history.replaceState({}, '', location.pathname); } catch {}
+      try { const u = new URL(location.href); u.searchParams.delete('highlight'); history.replaceState({}, '', u); } catch {}
     }
 
     // ── DISTRIBUIDOR DE ASSETS ────────────────────────────────────────────

@@ -1,0 +1,47 @@
+[
+  {
+    "file": "life-renderer.mjs",
+    "source": "https://www.xpaceos.com/admira-xp/scripts/life-renderer.mjs?v=px-1",
+    "sha256": "5a0320bd5bca89ed91a7e82bbe99e2fdbc9180f46aed1f50ee6765c27c55cec1"
+  },
+  {
+    "file": "life-scene.mjs",
+    "source": "https://www.xpaceos.com/admira-xp/scripts/life-scene.mjs?v=px-1",
+    "sha256": "7ec1a380b4e4697e51f3e74e8ade7343762f0ed0511a446b543fd0a382500ad0"
+  },
+  {
+    "file": "life-camera.mjs",
+    "source": "https://www.xpaceos.com/admira-xp/scripts/life-camera.mjs",
+    "sha256": "f271ec4d8a40728b5d2361f4e8bef3582ee8d5cfa2256fb30ca35f6630bc3e76"
+  },
+  {
+    "file": "vendor/GLTFLoader.mjs",
+    "source": "https://www.xpaceos.com/admira-xp/scripts/vendor/GLTFLoader.mjs",
+    "sha256": "0d851fd992802f5c63b6336fd0386019f8acbe761edaddd67aef77ef8fd187ef"
+  },
+  {
+    "file": "premium-three.mjs",
+    "source": "https://www.xpaceos.com/admira-xp/scripts/premium-three.mjs",
+    "sha256": "76dea8151bc9352aef3528b4262e249b2604f62543828328db978d060d61a495"
+  },
+  {
+    "file": "premium-model.mjs",
+    "source": "https://www.xpaceos.com/admira-xp/scripts/premium-model.mjs",
+    "sha256": "aaad54c75f2cf73fd303cc8f2237ce7f278f2789ea80c9f80fbaed38af3ba8fb"
+  },
+  {
+    "file": "customer-navigation.mjs",
+    "source": "https://www.xpaceos.com/admira-xp/scripts/customer-navigation.mjs?v=customer-motion-1",
+    "sha256": "b8429e6105877a76f967aa7c0a6923ac6ddbdf2f2abb7f8c3d8e8e0258e60592"
+  },
+  {
+    "file": "customer-motion.mjs",
+    "source": "https://www.xpaceos.com/admira-xp/scripts/customer-motion.mjs?v=customer-motion-1",
+    "sha256": "36d16980e9586cb6b0b1fb1921f1e368678d72f7efb6ad2346a734616772ca5a"
+  },
+  {
+    "file": "vendor/BufferGeometryUtils.mjs",
+    "source": "https://www.xpaceos.com/admira-xp/scripts/vendor/BufferGeometryUtils.mjs",
+    "sha256": "be7f69bf9a331e232a854cd7349bd7cd9f6f8997cbd81edff0aab80d83b4452d"
+  }
+]

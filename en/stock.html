@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r1.09:35">
+  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r1.22:04">
   <link rel="canonical" href="https://www.pixeria.com/en/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -107,6 +107,7 @@
   <script defer src="/assets/consent.js?v=20260617"></script>
   <script defer src="/assets/site-nav.js?v=20260920-ideas"></script>
   <script defer src="/assets/descarga-local.js?v=20260828-r1"></script>
+  <link rel="stylesheet" href="../assets/xpaces/viewer.css">
 </head>
 <body data-page="stock">
   <!-- Google Tag Manager (noscript) -->
@@ -173,6 +174,7 @@
             <option value="audio">Audio</option>
             <option value="music">Música</option>
             <option value="image">Imágenes</option>
+            <option value="xpaces">Xpaces</option>
             <option value="video" selected>Video</option>
             <option value="catalogo">Catalogues</option>
             <option value="animation">Animaciones</option>
@@ -295,7 +297,8 @@
 
   <script defer src="/matrix-rain.js?v=20260608-sides"></script>
   <script src="../app.js?v=20260925-flt100980"></script>
-  <script>
+  <script type="module">
+  import {isXpace, blendFor, xpacePoster} from "../assets/xpaces/catalog.mjs";
   (function () {
     const grid = document.getElementById('stockGrid');
     const status = document.getElementById('stockStatus');
@@ -317,7 +320,7 @@
     const STOCK_PUBLIC_R2 = 'https://stock.admira.store';
     const STOCK_LIST_URL = STOCK_PUBLIC_R2 + '/stock/index.json';
     const STOCK_LIST_FALLBACK = STOCK_BASE + '/stock/list?limit=200';
-    const TYPE_ORDER = { audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
+    const TYPE_ORDER = { xpaces: 4, audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
     let allItems = [];
     let currentView = [];
     let filters = { type: 'video', motor: '', q: '', tag: '', dateQuick: '', dateFrom: '', dateTo: '' };
@@ -342,9 +345,10 @@
         || /tipo:furni|mobiliario creado/i.test(String(it.comment || ''));
     }
     function displayType(it) {
-      return isFurni(it) ? 'furni' : it.type;
+      return isXpace(it) ? 'xpaces' : isFurni(it) ? 'furni' : it.type;
     }
     function renderPreview(it) {
+      if (isXpace(it)) return `<img src="${escAttr(xpacePoster(it, allItems))}" alt="${escAttr(it.title)}" loading="lazy"><span class="xpace-badge">◈ Xpaces · 3D</span>`;
       if (isFurni(it)) {
         // Mobiliario del gemelo: sprite pixelado → render nítido.
         return `<img src="${it.url}" alt="" loading="lazy" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
@@ -467,6 +471,7 @@
       if (!it) return;
       const DL = window.PixeriaDescarga;
       if (!DL) { if (it.url) window.open(it.url, '_blank', 'noopener'); return; }
+      if (isXpace(it) || it.mime === 'application/x-blender') return DL.descargar(it.url, DL.nombre(it, {ext: isXpace(it) ? 'glb' : 'blend'}));
       return DL.item(Object.assign({}, it, { type: displayType(it) }));
     }
 
@@ -554,6 +559,7 @@
     // admite un type 'animation' real sin redeploy).
     function matchesType(it, t) {
       if (!t) return true;
+      if (t === 'xpaces') return isXpace(it);
       // Animación = tipo real 'animation' o (compat) lo publicado por ainimation
       // como video con motor=ainimation antes de existir el tipo real.
       const isAnim = it.type === 'animation' || String(it.motor || '').toLowerCase() === 'ainimation';
@@ -622,9 +628,15 @@
       });
     }
 
+    let xpaceController;
     function openLightbox(it) {
+      xpaceController?.abort();
+      xpaceController = null;
+      lightbox.classList.toggle('is-xpace', isXpace(it));
       let media = '';
-      if (isFurni(it)) {
+      if (isXpace(it)) {
+        media = '<div class="xpace-viewer"></div>';
+      } else if (isFurni(it)) {
         media = `<img src="${it.url}" alt="" style="image-rendering:pixelated;object-fit:contain;background:#0a140a;">`;
       } else if (it.type === 'image') {
         media = `<img src="${it.thumbnail || it.url}" alt="">`;
@@ -658,6 +670,18 @@
           <button type="button" class="btn" data-act="descargar" title="Save the file on this computer with a readable name">⬇ Download to this computer</button>
           <a class="btn" href="${it.url}" target="_blank" rel="noopener">↗ Abrir asset</a>
         </div>`;
+      if (isXpace(it)) {
+        const blend = blendFor(it, allItems);
+        const actions = lightboxMeta.querySelector('.stock-lightbox-actions');
+        lightboxMeta.prepend(actions);
+        actions.innerHTML = '<button type="button" class="btn" data-xpace-download="glb">⬇ GLB</button><button type="button" class="btn" data-xpace-download="blend" '+(blend?'':'disabled')+'>⬇ Blender (.blend)</button>';
+        if (!blend) actions.insertAdjacentHTML('beforeend', '<span>Blender source not yet available</span>');
+        actions.querySelector('[data-xpace-download="glb"]').onclick = () => descargarAsset({...it, mime:'model/gltf-binary'});
+        actions.querySelector('[data-xpace-download="blend"]').onclick = () => blend && descargarAsset({...blend, mime:'application/x-blender'});
+        const controller = xpaceController = new AbortController();
+        const host = lightboxInner.querySelector('.xpace-viewer');
+        import('../assets/xpaces/viewer.mjs').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'Could not load 3D. Close and reopen to retry.';});
+      }
       window.__lightboxItemId = it.id || null;
       const i = currentView.findIndex(x => x.id === it.id);
       lightboxPrev.disabled = !(i > 0);
@@ -667,6 +691,9 @@
       document.body.classList.add('stock-lightbox-open');
     }
     function closeLightbox() {
+      xpaceController?.abort();
+      xpaceController = null;
+      lightbox.classList.remove('is-xpace');
       lightbox.hidden = true;
       lightbox.setAttribute('aria-hidden', 'true');
       lightboxInner.innerHTML = '';
@@ -938,9 +965,13 @@
         }
       }
     }
+    if (new URLSearchParams(location.search).get('type') === 'xpaces') { filters.type = 'xpaces'; typeFilter.value = 'xpaces'; }
     typeFilter.addEventListener('change', () => {
       const was = filters.type === 'catalogo';
       filters.type = typeFilter.value;
+      const filterUrl = new URL(location.href);
+      if (filters.type === 'xpaces') filterUrl.searchParams.set('type','xpaces'); else filterUrl.searchParams.delete('type');
+      history.replaceState({}, '', filterUrl);
       if (filters.type === 'catalogo') { CATALOGO.enter(); return; }
       if (was) CATALOGO.leave();
       applyFilters(true);
@@ -1067,7 +1098,7 @@
         setTimeout(() => card.classList.remove('stock-card-flash'), 2400);
       }
       openLightbox(item);
-      try { history.replaceState({}, '', location.pathname); } catch {}
+      try { const u = new URL(location.href); u.searchParams.delete('highlight'); history.replaceState({}, '', u); } catch {}
     }
 
     // ── CATÁLOGOS (Yokup #3183 · NeoMBA16 · 12-sep-2026) ─────────────────────

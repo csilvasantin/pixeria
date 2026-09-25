@@ -38,6 +38,7 @@
     'video/mp4': 'mp4', 'video/webm': 'webm', 'video/quicktime': 'mov',
     'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif',
     'audio/mpeg': 'mp3', 'audio/mp4': 'm4a', 'audio/wav': 'wav', 'audio/ogg': 'ogg',
+    'model/gltf-binary': 'glb', 'application/x-blender': 'blend',
     'application/json': 'json', 'text/plain': 'txt'
   };
 

@@ -1,0 +1,97 @@
+{
+  "environment": "Chrome headless / ANGLE Metal Apple M4 / Mac Mini; mobile is touch emulation at 390x844, not physical phone",
+  "results": [
+    {
+      "case": "desktop",
+      "id": "1790364696893-14ykfy",
+      "download": "glb",
+      "bytes": 5681708,
+      "sha256": "8d4580aa43c9ab1bb12ccf8fe8dcfe92c39ef0c1c65a774461e2a43e6b069723"
+    },
+    {
+      "case": "desktop",
+      "id": "1790364696893-14ykfy",
+      "download": "blend",
+      "bytes": 1052487,
+      "sha256": "d90db509dbc62ba988ffca350335e605f0a8a5327f6aeda9e70e5fc5b4f46706"
+    },
+    {
+      "case": "desktop",
+      "id": "1790364696893-14ykfy",
+      "fps": 40,
+      "p95ms": 50
+    },
+    {
+      "case": "desktop",
+      "id": "1790365002072-l9tpjw",
+      "download": "glb",
+      "bytes": 5251988,
+      "sha256": "78c47e42c73bdd92badf0c0fcbab6cd60f72fdeb6a8e894ad067eececeb48a79"
+    },
+    {
+      "case": "desktop",
+      "id": "1790365002072-l9tpjw",
+      "download": "blend",
+      "bytes": 1611742,
+      "sha256": "5450d5b139ddbe5aad5facc03e2d1f898acfbd290989342cdec3e865276a076d"
+    },
+    {
+      "case": "desktop",
+      "id": "1790365002072-l9tpjw",
+      "fps": 43,
+      "p95ms": 33.4
+    },
+    {
+      "case": "mobile",
+      "id": "1790364696893-14ykfy",
+      "fps": 30,
+      "p95ms": 66.7
+    },
+    {
+      "case": "mobile",
+      "id": "1790365002072-l9tpjw",
+      "fps": 27,
+      "p95ms": 66.7
+    },
+    {
+      "case": "english",
+      "id": "1790364696893-14ykfy",
+      "download": "glb",
+      "bytes": 5681708,
+      "sha256": "8d4580aa43c9ab1bb12ccf8fe8dcfe92c39ef0c1c65a774461e2a43e6b069723"
+    },
+    {
+      "case": "english",
+      "id": "1790364696893-14ykfy",
+      "download": "blend",
+      "bytes": 1052487,
+      "sha256": "d90db509dbc62ba988ffca350335e605f0a8a5327f6aeda9e70e5fc5b4f46706"
+    },
+    {
+      "case": "english",
+      "id": "1790364696893-14ykfy",
+      "fps": 45,
+      "p95ms": 33.4
+    },
+    {
+      "case": "english",
+      "id": "1790365002072-l9tpjw",
+      "download": "glb",
+      "bytes": 5251988,
+      "sha256": "78c47e42c73bdd92badf0c0fcbab6cd60f72fdeb6a8e894ad067eececeb48a79"
+    },
+    {
+      "case": "english",
+      "id": "1790365002072-l9tpjw",
+      "download": "blend",
+      "bytes": 1611742,
+      "sha256": "5450d5b139ddbe5aad5facc03e2d1f898acfbd290989342cdec3e865276a076d"
+    },
+    {
+      "case": "english",
+      "id": "1790365002072-l9tpjw",
+      "fps": 43,
+      "p95ms": 33.4
+    }
+  ]
+}

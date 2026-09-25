@@ -1,0 +1,18 @@
+.xpace-badge{position:absolute;bottom:8px;left:8px;background:#142522;color:#bdf7d5;border:1px solid #48695b;border-radius:6px;padding:5px 9px;font-size:12px}
+.stock-lightbox.is-xpace{backdrop-filter:none;-webkit-backdrop-filter:none;background:#030a07;overflow-y:auto;display:block;padding:56px 4vw 24px}
+.stock-lightbox.is-xpace[hidden]{display:none}
+.stock-lightbox.is-xpace .stock-lightbox-inner{width:min(1200px,100%);max-width:none;max-height:none;margin:0 auto;display:block}
+.stock-lightbox.is-xpace .stock-lightbox-meta{width:min(1200px,100%);max-width:none;margin:16px auto 0;position:static;max-height:none;overflow:visible}
+.xpace-viewer{width:100%;overflow:hidden;background:#142522;border:1px solid #446154;border-radius:12px}
+.xpace-stage{position:relative;width:100%;height:min(62vh,680px);min-height:280px;background:#dce4db}
+.xpace-stage canvas{display:block;width:100%;height:100%;touch-action:none;outline-offset:-4px}
+.xpace-loading{position:absolute;inset:0;margin:0;display:grid;place-content:center;padding:32px;color:#172b25;background:#dce4dbe8;text-align:center}
+.xpace-loading[hidden]{display:none}
+.xpace-tools{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding:12px}
+.xpace-tools [role=group]{display:flex;gap:5px;flex-wrap:wrap}
+.xpace-tools button{min-height:42px;padding:8px 12px;border:1px solid #628372;border-radius:6px;background:#203c31;color:#f3f5e7;font:inherit;cursor:pointer}
+.xpace-tools button:hover,.xpace-tools button[aria-pressed=true]{background:#bdf7d5;color:#142522}
+.xpace-tools button:focus-visible{outline:3px solid #f4d780}
+.xpace-help{margin:0;padding:0 12px 12px;color:#c6d3cb;font-size:13px;line-height:1.5}
+@media(max-width:600px){.stock-lightbox.is-xpace{padding:52px 10px 20px}.xpace-stage{height:52vh;min-height:260px}.xpace-tools{gap:8px;padding:8px}.xpace-tools button{padding:8px 10px;font-size:13px}.stock-lightbox.is-xpace .stock-lightbox-meta{padding:10px}.stock-lightbox.is-xpace .stock-lightbox-nav{top:20px}}
+@media(max-width:600px){.stock-lightbox.is-xpace .stock-lightbox-nav{top:6px;left:12px;right:auto;transform:none;min-width:40px;width:40px;height:40px;padding:0}.stock-lightbox.is-xpace .stock-lightbox-nav.next{left:62px}.stock-lightbox.is-xpace .stock-lightbox-close{top:6px;right:12px;z-index:3}}
