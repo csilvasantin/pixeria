@@ -1,8 +1,8 @@
-import {createLifeRenderer} from './engine/life-renderer.mjs';
+import {createLifeRenderer} from './engine/life-renderer.mjs?v=inventory-4375';
 import {createLifeScene} from './engine/life-scene.mjs?v=px-1';
 import {GLTFLoader} from './engine/vendor/GLTFLoader.mjs';
 import * as T from './engine/premium-three.mjs';
-import {bindInventory,mountInventory} from './inventory.mjs';
+import {bindInventory,mountInventory} from './inventory.mjs?v=inventory-4375';
 import {mergeGeometries} from './engine/vendor/BufferGeometryUtils.mjs';
 
 function release(root) {
