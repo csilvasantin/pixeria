@@ -1,0 +1,861 @@
+[
+  {
+    "file": "alsea-barra",
+    "quantity": 1,
+    "ids": [
+      "barra"
+    ],
+    "dimensionsCm": [
+      480.0000190734863,
+      76.19999349117279,
+      104.99999523162842
+    ],
+    "base": 0.0,
+    "meshes": 64,
+    "materials": [
+      "LED_c9a227",
+      "MAT_roble_claro",
+      "MAT_salvia",
+      "MAT_verde",
+      "NEGRO_MATE"
+    ]
+  },
+  {
+    "file": "alsea-mueble-trasero",
+    "quantity": 1,
+    "ids": [
+      "mueble-trasero"
+    ],
+    "dimensionsCm": [
+      480.0000190734863,
+      61.20000183582306,
+      89.99999761581421
+    ],
+    "base": 0.0,
+    "meshes": 18,
+    "materials": [
+      "MAT_laton",
+      "MAT_nogal",
+      "MAT_roble_claro"
+    ]
+  },
+  {
+    "file": "alsea-cafetera",
+    "quantity": 1,
+    "ids": [
+      "cafetera"
+    ],
+    "dimensionsCm": [
+      94.00001466274261,
+      56.79999589920044,
+      50.00000596046448
+    ],
+    "base": 0.0,
+    "meshes": 36,
+    "materials": [
+      "MAT_acero",
+      "NEGRO_MATE",
+      "VIDRIO"
+    ]
+  },
+  {
+    "file": "alsea-vitrina-bolleria",
+    "quantity": 1,
+    "ids": [
+      "vitrina-bolleria"
+    ],
+    "dimensionsCm": [
+      130.00000715255737,
+      58.000004291534424,
+      50.000011920928955
+    ],
+    "base": 0.0,
+    "meshes": 66,
+    "materials": [
+      "CARPINTERIA_BRONCE",
+      "CHOCOLATE",
+      "MASA_HORNEADA",
+      "MAT_acero",
+      "MAT_nogal",
+      "VIDRIO"
+    ]
+  },
+  {
+    "file": "alsea-pizarra-1",
+    "quantity": 1,
+    "ids": [
+      "pizarra-1"
+    ],
+    "dimensionsCm": [
+      109.00000333786011,
+      5.200000107288361,
+      62.00000047683716
+    ],
+    "base": 0.0,
+    "meshes": 2,
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pizarra-1"
+    ]
+  },
+  {
+    "file": "alsea-pizarra-2",
+    "quantity": 1,
+    "ids": [
+      "pizarra-2"
+    ],
+    "dimensionsCm": [
+      109.00000333786011,
+      5.200000107288361,
+      62.00000047683716
+    ],
+    "base": 0.0,
+    "meshes": 2,
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pizarra-2"
+    ]
+  },
+  {
+    "file": "alsea-pizarra-3",
+    "quantity": 1,
+    "ids": [
+      "pizarra-3"
+    ],
+    "dimensionsCm": [
+      109.00000333786011,
+      5.200000107288361,
+      62.00000047683716
+    ],
+    "base": 0.0,
+    "meshes": 2,
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pizarra-3"
+    ]
+  },
+  {
+    "file": "alsea-pantalla-recogida",
+    "quantity": 1,
+    "ids": [
+      "pantalla-recogida"
+    ],
+    "dimensionsCm": [
+      95.99999785423279,
+      5.200000107288361,
+      55.000001192092896
+    ],
+    "base": 0.0,
+    "meshes": 2,
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pantalla-recogida"
+    ]
+  },
+  {
+    "file": "alsea-balda-recogida",
+    "quantity": 1,
+    "ids": [
+      "balda-recogida"
+    ],
+    "dimensionsCm": [
+      129.99999523162842,
+      34.99999940395355,
+      18.999996781349182
+    ],
+    "base": 0.0,
+    "meshes": 7,
+    "materials": [
+      "CAFE",
+      "CERAMICA",
+      "MAT_roble_claro"
+    ]
+  },
+  {
+    "file": "alsea-nevera",
+    "quantity": 1,
+    "ids": [
+      "nevera"
+    ],
+    "dimensionsCm": [
+      80.00000417232513,
+      71.29999995231628,
+      200.0
+    ],
+    "base": 0.0,
+    "meshes": 83,
+    "materials": [
+      "BOTELLA_0",
+      "BOTELLA_1",
+      "BOTELLA_2",
+      "BOTELLA_3",
+      "CARPINTERIA_BRONCE",
+      "MAT_acero",
+      "NEGRO_MATE",
+      "PAPEL_SIN_MARCA",
+      "VIDRIO"
+    ]
+  },
+  {
+    "file": "alsea-barra-ventana",
+    "quantity": 1,
+    "ids": [
+      "barra-ventana"
+    ],
+    "dimensionsCm": [
+      44.999998807907104,
+      419.9999809265137,
+      104.99999523162842
+    ],
+    "base": 0.0,
+    "meshes": 5,
+    "materials": [
+      "MAT_roble_claro",
+      "NEGRO_MATE"
+    ]
+  },
+  {
+    "file": "alsea-taburete",
+    "quantity": 4,
+    "ids": [
+      "taburete-1",
+      "taburete-2",
+      "taburete-3",
+      "taburete-4"
+    ],
+    "dimensionsCm": [
+      40.00000059604645,
+      40.00000059604645,
+      75.0
+    ],
+    "base": 0.0,
+    "meshes": 4,
+    "materials": [
+      "MAT_roble_claro",
+      "NEGRO_MATE"
+    ]
+  },
+  {
+    "file": "alsea-mesa",
+    "quantity": 3,
+    "ids": [
+      "mesa-1",
+      "mesa-2",
+      "mesa-3"
+    ],
+    "dimensionsCm": [
+      69.9999988079071,
+      69.9999988079071,
+      82.99999833106995
+    ],
+    "base": 0.0,
+    "meshes": 5,
+    "materials": [
+      "CAFE",
+      "CERAMICA",
+      "MAT_roble_claro",
+      "NEGRO_MATE"
+    ]
+  },
+  {
+    "file": "alsea-silla",
+    "quantity": 6,
+    "ids": [
+      "silla-1",
+      "silla-2",
+      "silla-3",
+      "silla-4",
+      "silla-5",
+      "silla-6"
+    ],
+    "dimensionsCm": [
+      45.00000178813934,
+      44.999998807907104,
+      85.00000238418579
+    ],
+    "base": 0.0,
+    "meshes": 6,
+    "materials": [
+      "MAT_nogal"
+    ]
+  },
+  {
+    "file": "alsea-sofa",
+    "quantity": 1,
+    "ids": [
+      "sofa"
+    ],
+    "dimensionsCm": [
+      200.00004768371582,
+      85.00000238418579,
+      80.0000011920929
+    ],
+    "base": 0.0,
+    "meshes": 8,
+    "materials": [
+      "MAT_terciopelo",
+      "NEGRO_MATE"
+    ]
+  },
+  {
+    "file": "alsea-mesa-baja",
+    "quantity": 1,
+    "ids": [
+      "mesa-baja"
+    ],
+    "dimensionsCm": [
+      110.00000238418579,
+      60.00000238418579,
+      42.000001668930054
+    ],
+    "base": 0.0,
+    "meshes": 5,
+    "materials": [
+      "MAT_nogal",
+      "NEGRO_MATE"
+    ]
+  },
+  {
+    "file": "alsea-lampara",
+    "quantity": 4,
+    "ids": [
+      "lampara-1",
+      "lampara-2",
+      "lampara-3",
+      "lampara-4"
+    ],
+    "dimensionsCm": [
+      39.70443904399872,
+      39.70443904399872,
+      137.99999952316284
+    ],
+    "base": 0.0,
+    "meshes": 3,
+    "materials": [
+      "LED_fff1c8",
+      "MAT_laton",
+      "NEGRO_MATE"
+    ]
+  },
+  {
+    "file": "alsea-planta",
+    "quantity": 3,
+    "ids": [
+      "planta-1",
+      "planta-2",
+      "planta-3"
+    ],
+    "dimensionsCm": [
+      54.90294098854065,
+      54.90294098854065,
+      160.0000023841858
+    ],
+    "base": 0.0,
+    "meshes": 21,
+    "materials": [
+      "HOJA_VERDE_CLARA",
+      "HOJA_VERDE_OSCURA",
+      "MAT_terracota",
+      "SUSTRATO"
+    ]
+  },
+  {
+    "file": "alsea-tpv",
+    "quantity": 1,
+    "ids": [
+      "tpv"
+    ],
+    "dimensionsCm": [
+      31.999999284744263,
+      25.999999046325684,
+      12.300000339746475
+    ],
+    "base": 0.0,
+    "meshes": 2,
+    "materials": [
+      "MAT_negro",
+      "PANTALLA_tpv"
+    ]
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fachada0",
+    "quantity": 1,
+    "ids": [
+      "glb:led_perimetral_fachada0"
+    ],
+    "dimensionsCm": [
+      1.4999999664723873,
+      89.99999761581421,
+      2.9999999329447746
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "LED_c9a227"
+    ]
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fachada1",
+    "quantity": 1,
+    "ids": [
+      "glb:led_perimetral_fachada1"
+    ],
+    "dimensionsCm": [
+      1.4999999664723873,
+      20.000000298023224,
+      2.9999999329447746
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "LED_c9a227"
+    ]
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fachada2",
+    "quantity": 1,
+    "ids": [
+      "glb:led_perimetral_fachada2"
+    ],
+    "dimensionsCm": [
+      1.4999999664723873,
+      60.00000238418579,
+      2.9999999329447746
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "LED_c9a227"
+    ]
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fachada3",
+    "quantity": 1,
+    "ids": [
+      "glb:led_perimetral_fachada3"
+    ],
+    "dimensionsCm": [
+      1.4999999664723873,
+      50.0,
+      2.9999999329447746
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "LED_c9a227"
+    ]
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fondo0",
+    "quantity": 1,
+    "ids": [
+      "glb:led_perimetral_fondo0"
+    ],
+    "dimensionsCm": [
+      135.0000023841858,
+      1.2000000104308128,
+      1.2000000104308128
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "LED_c9a227"
+    ]
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fondo1",
+    "quantity": 1,
+    "ids": [
+      "glb:led_perimetral_fondo1"
+    ],
+    "dimensionsCm": [
+      885.0000381469727,
+      1.2000000104308128,
+      1.2000000104308128
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "LED_c9a227"
+    ]
+  },
+  {
+    "file": "alsea-S",
+    "quantity": 3,
+    "ids": [
+      "S1",
+      "S2",
+      "S3"
+    ],
+    "dimensionsCm": [
+      20.000000298023224,
+      20.000000298023224,
+      2.9999999329447746
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "IOT_CARCASA"
+    ]
+  },
+  {
+    "file": "alsea-A1",
+    "quantity": 1,
+    "ids": [
+      "A1"
+    ],
+    "dimensionsCm": [
+      15.999999642372131,
+      5.999999865889549,
+      20.000000298023224
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "IOT_CARCASA"
+    ]
+  },
+  {
+    "file": "alsea-W1",
+    "quantity": 1,
+    "ids": [
+      "W1"
+    ],
+    "dimensionsCm": [
+      20.000000298023224,
+      20.000000298023224,
+      2.9999999329447746
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "IOT_CARCASA"
+    ]
+  },
+  {
+    "file": "alsea-G1",
+    "quantity": 1,
+    "ids": [
+      "G1"
+    ],
+    "dimensionsCm": [
+      15.999999642372131,
+      5.999999865889549,
+      20.000000298023224
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "IOT_CARCASA"
+    ]
+  },
+  {
+    "file": "xtanco-mostrador",
+    "quantity": 1,
+    "ids": [
+      "mostrador"
+    ],
+    "dimensionsCm": [
+      300.0,
+      71.00000381469727,
+      104.99999523162842
+    ],
+    "base": 0.0,
+    "meshes": 64,
+    "materials": [
+      "LED_d9a83f",
+      "MAT_encimera",
+      "MAT_laton",
+      "MAT_roble",
+      "NEGRO_MATE"
+    ]
+  },
+  {
+    "file": "xtanco-vitrina",
+    "quantity": 1,
+    "ids": [
+      "vitrina"
+    ],
+    "dimensionsCm": [
+      320.0000047683716,
+      44.999998807907104,
+      209.99999046325684
+    ],
+    "base": 0.0,
+    "meshes": 322,
+    "materials": [
+      "ENVASE_GENERICO_0",
+      "ENVASE_GENERICO_1",
+      "ENVASE_GENERICO_2",
+      "ENVASE_GENERICO_3",
+      "ENVASE_GENERICO_4",
+      "ENVASE_GENERICO_5",
+      "ETIQUETA_MARFIL",
+      "LED_fff1c8",
+      "MAT_laton",
+      "MAT_roble",
+      "VIDRIO"
+    ]
+  },
+  {
+    "file": "xtanco-pantalla-pared",
+    "quantity": 1,
+    "ids": [
+      "pantalla-pared"
+    ],
+    "dimensionsCm": [
+      264.0000104904175,
+      6.199999898672104,
+      74.00000095367432
+    ],
+    "base": 0.0,
+    "meshes": 2,
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pantalla-pared"
+    ]
+  },
+  {
+    "file": "xtanco-pantalla-mostrador",
+    "quantity": 1,
+    "ids": [
+      "pantalla-mostrador"
+    ],
+    "dimensionsCm": [
+      51.99999809265137,
+      11.999999731779099,
+      47.00000882148743
+    ],
+    "base": 0.0,
+    "meshes": 4,
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pantalla-mostrador"
+    ]
+  },
+  {
+    "file": "xtanco-pantalla-escaparate",
+    "quantity": 1,
+    "ids": [
+      "pantalla-escaparate"
+    ],
+    "dimensionsCm": [
+      44.999998807907104,
+      124.00000095367432,
+      190.00000953674316
+    ],
+    "base": 0.0,
+    "meshes": 5,
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pantalla-escaparate"
+    ]
+  },
+  {
+    "file": "xtanco-expendedora",
+    "quantity": 1,
+    "ids": [
+      "expendedora"
+    ],
+    "dimensionsCm": [
+      89.99999761581421,
+      81.00000023841858,
+      185.0000023841858
+    ],
+    "base": 0.0,
+    "meshes": 36,
+    "materials": [
+      "ENVASE_GENERICO_0",
+      "ENVASE_GENERICO_1",
+      "ENVASE_GENERICO_2",
+      "ENVASE_GENERICO_3",
+      "ENVASE_GENERICO_4",
+      "ENVASE_GENERICO_5",
+      "MAT_acero",
+      "MAT_noche",
+      "NEGRO_MATE",
+      "PANTALLA_expendedora_display",
+      "VIDRIO"
+    ]
+  },
+  {
+    "file": "xtanco-taburete",
+    "quantity": 2,
+    "ids": [
+      "taburete-1",
+      "taburete-2"
+    ],
+    "dimensionsCm": [
+      40.00000059604645,
+      40.00000059604645,
+      75.0
+    ],
+    "base": 0.0,
+    "meshes": 4,
+    "materials": [
+      "MAT_rojo",
+      "NEGRO_MATE"
+    ]
+  },
+  {
+    "file": "xtanco-tpv",
+    "quantity": 1,
+    "ids": [
+      "tpv"
+    ],
+    "dimensionsCm": [
+      30.000001192092896,
+      25.0,
+      12.300000339746475
+    ],
+    "base": 0.0,
+    "meshes": 2,
+    "materials": [
+      "MAT_negro",
+      "PANTALLA_tpv"
+    ]
+  },
+  {
+    "file": "xtanco-A1",
+    "quantity": 1,
+    "ids": [
+      "A1"
+    ],
+    "dimensionsCm": [
+      15.999999642372131,
+      5.999999865889549,
+      20.000000298023224
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "IOT_aroma"
+    ]
+  },
+  {
+    "file": "xtanco-G1",
+    "quantity": 1,
+    "ids": [
+      "G1"
+    ],
+    "dimensionsCm": [
+      15.999999642372131,
+      5.999999865889549,
+      20.000000298023224
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "IOT_gateway"
+    ]
+  },
+  {
+    "file": "xtanco-S",
+    "quantity": 2,
+    "ids": [
+      "S1",
+      "S2"
+    ],
+    "dimensionsCm": [
+      20.000000298023224,
+      20.000000298023224,
+      2.9999999329447746
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "IOT_speaker"
+    ]
+  },
+  {
+    "file": "xtanco-W1",
+    "quantity": 1,
+    "ids": [
+      "W1"
+    ],
+    "dimensionsCm": [
+      20.000000298023224,
+      20.000000298023224,
+      2.9999999329447746
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "IOT_wifi"
+    ]
+  },
+  {
+    "file": "xtanco-glb_led_perimetral_fachada",
+    "quantity": 1,
+    "ids": [
+      "glb:led_perimetral_fachada"
+    ],
+    "dimensionsCm": [
+      1.4999999664723873,
+      450.0,
+      2.9999999329447746
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "LED_ffd866"
+    ]
+  },
+  {
+    "file": "xtanco-glb_led_perimetral_fondo",
+    "quantity": 1,
+    "ids": [
+      "glb:led_perimetral_fondo"
+    ],
+    "dimensionsCm": [
+      600.0,
+      1.4999999664723873,
+      2.9999999329447746
+    ],
+    "base": 0.0,
+    "meshes": 1,
+    "materials": [
+      "LED_ffd866"
+    ]
+  },
+  {
+    "file": "xtanco-lampara",
+    "quantity": 3,
+    "ids": [
+      "lampara-1",
+      "lampara-2",
+      "lampara-3"
+    ],
+    "dimensionsCm": [
+      36.000001430511475,
+      36.000001430511475,
+      119.99999284744263
+    ],
+    "base": 0.0,
+    "meshes": 3,
+    "materials": [
+      "LED_fff1c8",
+      "MAT_laton",
+      "NEGRO_MATE"
+    ]
+  },
+  {
+    "file": "xtanco-planta",
+    "quantity": 1,
+    "ids": [
+      "planta"
+    ],
+    "dimensionsCm": [
+      50.0,
+      50.0,
+      138.17870616912842
+    ],
+    "base": 0.0,
+    "meshes": 146,
+    "materials": [
+      "KENTIA_VERDE",
+      "MAT_terracota",
+      "TIERRA"
+    ]
+  }
+]

@@ -27,8 +27,8 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
   const haloGeometry=new T.RingGeometry(.55,.59,64),haloMaterial=new T.MeshBasicMaterial({color:'#4d967a',transparent:true,opacity:.85,depthWrite:false,side:T.DoubleSide});
   const halo=new T.Mesh(haloGeometry,haloMaterial);halo.rotation.x=-Math.PI/2;halo.position.y=.035;halo.visible=false;model.scene.add(halo);
   function frameCamera(){
-    const s=model.snapshot,radius=Math.hypot(s.cols,s.rows)*2.8,{angle,elevation,zoom,panX,panY}=current;
-    target.set(s.cols*.5,.65,s.rows*.5);
+    const s=stockCamera==='furniture'?snapshot:model.snapshot,radius=Math.max(Math.hypot(s.cols,s.rows),s.wallHeight)*2.8,{angle,elevation,zoom,panX,panY}=current;
+    target.set(s.cols*.5,stockCamera==='furniture'?s.wallHeight/2:.65,s.rows*.5);
     camera.position.set(target.x+Math.cos(angle)*Math.cos(elevation)*radius,target.y+Math.sin(elevation)*radius,target.z+Math.sin(angle)*Math.cos(elevation)*radius);
     camera.lookAt(target);camera.updateMatrixWorld(true);
     const mapped=framing==='mapped'?mappedCameraFrame(s,width,height):null;
@@ -38,7 +38,8 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
       camera.left=centerX-horizontal/2;camera.right=centerX+horizontal/2;camera.top=centerY+vertical/2;camera.bottom=centerY-vertical/2;camera.updateProjectionMatrix();return;
     }
     let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-    for(const x of [-.8,s.cols+2.1])for(const y of [-.5,s.wallHeight+.5])for(const z of [-.7,s.rows+1.2]){
+    const pad=stockCamera==='furniture'?Math.max(s.cols,s.rows,s.wallHeight)*.12:null;
+    for(const x of [pad===null?-.8:-pad,s.cols+(pad??2.1)])for(const y of [pad===null?-.5:-pad,s.wallHeight+(pad??.5)])for(const z of [pad===null?-.7:-pad,s.rows+(pad??1.2)]){
       const p=new T.Vector3(x,y,z).applyMatrix4(camera.matrixWorldInverse);
       minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);
     }

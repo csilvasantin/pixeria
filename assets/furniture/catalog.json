@@ -1,0 +1,2158 @@
+[
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "barra"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      480.0,
+      76.2,
+      105.0
+    ],
+    "materials": [
+      "LED_c9a227",
+      "MAT_roble_claro",
+      "MAT_salvia",
+      "MAT_verde",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      -0.005999967455863953,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-barra",
+    "title": "Alsea · Barra frente verde friso + encimera roble",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368291504-gruas8",
+    "num": 1128,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368291504-gruas8",
+    "createdAt": "2026-09-25T20:31:31.504Z",
+    "contentHash": "5dbd422b1765d9a06df1829e081abbafc55cea21288cbfa097d343b117a09727",
+    "poster": "https://api.admira.store/stock/poster/1790368291504-gruas8",
+    "thumbnail": "https://stock.admira.store/stock/1790368291504-gruas8/poster.jpg?v=4563",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"barra\"],\"quantity\":1,\"dimensionsCm\":[480.0,76.2,105.0],\"baseLocal\":[0.0,-0.005999967455863953,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:barra",
+    "sha256": "5dbd422b1765d9a06df1829e081abbafc55cea21288cbfa097d343b117a09727"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "mueble-trasero"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      480.0,
+      61.2,
+      90.0
+    ],
+    "materials": [
+      "MAT_laton",
+      "MAT_nogal",
+      "MAT_roble_claro"
+    ],
+    "baseLocal": [
+      0.0,
+      -0.00599999725818634,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-mueble-trasero",
+    "title": "Alsea · Mueble trasero nogal",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368325710-fnzcvr",
+    "num": 1129,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368325710-fnzcvr",
+    "createdAt": "2026-09-25T20:32:05.710Z",
+    "contentHash": "f074bd9805a077914ce0002d0e57079ba5e78ee4dddf7306721fed01f633eb82",
+    "poster": "https://api.admira.store/stock/poster/1790368325710-fnzcvr",
+    "thumbnail": "https://stock.admira.store/stock/1790368325710-fnzcvr/poster.jpg?v=3774",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"mueble-trasero\"],\"quantity\":1,\"dimensionsCm\":[480.0,61.2,90.0],\"baseLocal\":[0.0,-0.00599999725818634,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:mueble-trasero",
+    "sha256": "f074bd9805a077914ce0002d0e57079ba5e78ee4dddf7306721fed01f633eb82"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "cafetera"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      94.0,
+      56.8,
+      50.0
+    ],
+    "materials": [
+      "MAT_acero",
+      "NEGRO_MATE",
+      "VIDRIO"
+    ],
+    "baseLocal": [
+      0.09500005841255188,
+      -0.008999958634376526,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-cafetera",
+    "title": "Alsea · Cafetera espresso 3 grupos + molinos",
+    "category": "Equipamiento",
+    "ok": true,
+    "id": "1790368359200-1fppi2",
+    "num": 1130,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368359200-1fppi2",
+    "createdAt": "2026-09-25T20:32:39.200Z",
+    "contentHash": "1b5cb7df075eb218cb660cea1e69b8afd1bd11046182462958331f09e50c221b",
+    "poster": "https://api.admira.store/stock/poster/1790368359200-1fppi2",
+    "thumbnail": "https://stock.admira.store/stock/1790368359200-1fppi2/poster.jpg?v=4693",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"cafetera\"],\"quantity\":1,\"dimensionsCm\":[94.0,56.8,50.0],\"baseLocal\":[0.09500005841255188,-0.008999958634376526,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:cafetera",
+    "sha256": "1b5cb7df075eb218cb660cea1e69b8afd1bd11046182462958331f09e50c221b"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "vitrina-bolleria"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      130.0,
+      58.0,
+      50.0
+    ],
+    "materials": [
+      "CARPINTERIA_BRONCE",
+      "CHOCOLATE",
+      "MASA_HORNEADA",
+      "MAT_acero",
+      "MAT_nogal",
+      "VIDRIO"
+    ],
+    "baseLocal": [
+      -8.940696716308594e-08,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-vitrina-bolleria",
+    "title": "Alsea · Vitrina de bollería refrigerada",
+    "category": "Equipamiento",
+    "ok": true,
+    "id": "1790368387109-jrzy92",
+    "num": 1131,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368387109-jrzy92",
+    "createdAt": "2026-09-25T20:33:07.109Z",
+    "contentHash": "a2149e0eb4ec91073980002a3c4d847f3f815b8d87090f994abf0e8f85322bc8",
+    "poster": "https://api.admira.store/stock/poster/1790368387109-jrzy92",
+    "thumbnail": "https://stock.admira.store/stock/1790368387109-jrzy92/poster.jpg?v=5692",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"vitrina-bolleria\"],\"quantity\":1,\"dimensionsCm\":[130.0,58.0,50.0],\"baseLocal\":[-8.940696716308594e-08,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:vitrina-bolleria",
+    "sha256": "a2149e0eb4ec91073980002a3c4d847f3f815b8d87090f994abf0e8f85322bc8"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "pizarra-1"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      109.0,
+      5.2,
+      62.0
+    ],
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pizarra-1"
+    ],
+    "baseLocal": [
+      0.0,
+      -0.0010000001639127731,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-pizarra-1",
+    "title": "Alsea · Pizarra digital 49\" · cafés",
+    "category": "Pantallas",
+    "ok": true,
+    "id": "1790368420346-1hckqx",
+    "num": 1132,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368420346-1hckqx",
+    "createdAt": "2026-09-25T20:33:40.346Z",
+    "contentHash": "87754c42f5dc7b531ff8c7045833125b13e5483e356bff519e9024909102f626",
+    "poster": "https://api.admira.store/stock/poster/1790368420346-1hckqx",
+    "thumbnail": "https://stock.admira.store/stock/1790368420346-1hckqx/poster.jpg?v=5580",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"pizarra-1\"],\"quantity\":1,\"dimensionsCm\":[109.0,5.2,62.0],\"baseLocal\":[0.0,-0.0010000001639127731,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:pizarra-1",
+    "sha256": "87754c42f5dc7b531ff8c7045833125b13e5483e356bff519e9024909102f626"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "pizarra-2"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      109.0,
+      5.2,
+      62.0
+    ],
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pizarra-2"
+    ],
+    "baseLocal": [
+      0.0,
+      -0.0010000001639127731,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-pizarra-2",
+    "title": "Alsea · Pizarra digital 49\" · bollería",
+    "category": "Pantallas",
+    "ok": true,
+    "id": "1790368457216-l1vsri",
+    "num": 1133,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368457216-l1vsri",
+    "createdAt": "2026-09-25T20:34:17.216Z",
+    "contentHash": "fdf9d21566796c9d9a2ca2d499ed9bda125c793ff8decd9d8b54d785073efeb3",
+    "poster": "https://api.admira.store/stock/poster/1790368457216-l1vsri",
+    "thumbnail": "https://stock.admira.store/stock/1790368457216-l1vsri/poster.jpg?v=5620",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"pizarra-2\"],\"quantity\":1,\"dimensionsCm\":[109.0,5.2,62.0],\"baseLocal\":[0.0,-0.0010000001639127731,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:pizarra-2",
+    "sha256": "fdf9d21566796c9d9a2ca2d499ed9bda125c793ff8decd9d8b54d785073efeb3"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "pizarra-3"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      109.0,
+      5.2,
+      62.0
+    ],
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pizarra-3"
+    ],
+    "baseLocal": [
+      0.0,
+      -0.0010000001639127731,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-pizarra-3",
+    "title": "Alsea · Pizarra digital 49\" · temporada",
+    "category": "Pantallas",
+    "ok": true,
+    "reused": true,
+    "reason": "duplicate_content",
+    "id": "1790368490554-8yte2c",
+    "url": "https://api.admira.store/stock/asset/1790368490554-8yte2c",
+    "createdAt": "2026-09-25T20:34:50.554Z",
+    "contentHash": "9f75a4876a89d2756252ff74b14bb61432fddd81dbd884ae5767270cf071f28a",
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"pizarra-3\"],\"quantity\":1,\"dimensionsCm\":[109.0,5.2,62.0],\"baseLocal\":[0.0,-0.0010000001639127731,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:pizarra-3",
+    "poster": "https://api.admira.store/stock/poster/1790368490554-8yte2c",
+    "sha256": "9f75a4876a89d2756252ff74b14bb61432fddd81dbd884ae5767270cf071f28a"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "balda-recogida"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      130.0,
+      35.0,
+      19.0
+    ],
+    "materials": [
+      "CAFE",
+      "CERAMICA",
+      "MAT_roble_claro"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-balda-recogida",
+    "title": "Alsea · Balda de recogida (latón/roble)",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368504264-fiuoqb",
+    "num": 1135,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368504264-fiuoqb",
+    "createdAt": "2026-09-25T20:35:04.264Z",
+    "contentHash": "7559afda7a93f649345b5565987f6209ff80b37c39731844394b2bf2f204a221",
+    "poster": "https://api.admira.store/stock/poster/1790368504264-fiuoqb",
+    "thumbnail": "https://stock.admira.store/stock/1790368504264-fiuoqb/poster.jpg?v=3894",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"balda-recogida\"],\"quantity\":1,\"dimensionsCm\":[130.0,35.0,19.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:balda-recogida",
+    "sha256": "7559afda7a93f649345b5565987f6209ff80b37c39731844394b2bf2f204a221"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "nevera"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      80.0,
+      71.3,
+      200.0
+    ],
+    "materials": [
+      "BOTELLA_0",
+      "BOTELLA_1",
+      "BOTELLA_2",
+      "BOTELLA_3",
+      "CARPINTERIA_BRONCE",
+      "MAT_acero",
+      "NEGRO_MATE",
+      "PAPEL_SIN_MARCA",
+      "VIDRIO"
+    ],
+    "baseLocal": [
+      0.4000000059604645,
+      -0.3564999997615814,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-nevera",
+    "title": "Alsea · Nevera bebidas frías puerta vidrio",
+    "category": "Equipamiento",
+    "ok": true,
+    "id": "1790368504947-b8vab2",
+    "num": 1136,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368504947-b8vab2",
+    "createdAt": "2026-09-25T20:35:04.947Z",
+    "contentHash": "5a2b8b9db53e31c7722b1c3fa7742ff510ee37199d4fcf9dc76c670fb1a98860",
+    "poster": "https://api.admira.store/stock/poster/1790368504947-b8vab2",
+    "thumbnail": "https://stock.admira.store/stock/1790368504947-b8vab2/poster.jpg?v=4473",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"nevera\"],\"quantity\":1,\"dimensionsCm\":[80.0,71.3,200.0],\"baseLocal\":[0.4000000059604645,-0.3564999997615814,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:nevera",
+    "sha256": "5a2b8b9db53e31c7722b1c3fa7742ff510ee37199d4fcf9dc76c670fb1a98860"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "pantalla-recogida"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      96.0,
+      5.2,
+      55.0
+    ],
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pantalla-recogida"
+    ],
+    "baseLocal": [
+      0.0,
+      -0.0010000001639127731,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-pantalla-recogida",
+    "title": "Alsea · Pantalla recogida de pedidos 43\"",
+    "category": "Pantallas",
+    "ok": true,
+    "id": "1790368504243-t54hu4",
+    "num": 1137,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368504243-t54hu4",
+    "createdAt": "2026-09-25T20:35:04.243Z",
+    "contentHash": "7c62bb71e537bbe6666196a7eda284ae34b3c05bbe92b12efa44797b8bdd4d1c",
+    "poster": "https://api.admira.store/stock/poster/1790368504243-t54hu4",
+    "thumbnail": "https://stock.admira.store/stock/1790368504243-t54hu4/poster.jpg?v=5805",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"pantalla-recogida\"],\"quantity\":1,\"dimensionsCm\":[96.0,5.2,55.0],\"baseLocal\":[0.0,-0.0010000001639127731,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:pantalla-recogida",
+    "sha256": "7c62bb71e537bbe6666196a7eda284ae34b3c05bbe92b12efa44797b8bdd4d1c"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "barra-ventana"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      45.0,
+      420.0,
+      105.0
+    ],
+    "materials": [
+      "MAT_roble_claro",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      -1.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-barra-ventana",
+    "title": "Alsea · Barra de ventana roble",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368533667-6empu0",
+    "num": 1138,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368533667-6empu0",
+    "createdAt": "2026-09-25T20:35:33.667Z",
+    "contentHash": "999ec12f20b7b1e4e7d9a1f9f1cfde7e21b4610daf4ac17a19a9d3c450b5d297",
+    "poster": "https://api.admira.store/stock/poster/1790368533667-6empu0",
+    "thumbnail": "https://stock.admira.store/stock/1790368533667-6empu0/poster.jpg?v=3558",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"barra-ventana\"],\"quantity\":1,\"dimensionsCm\":[45.0,420.0,105.0],\"baseLocal\":[0.0,0.0,-1.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:barra-ventana",
+    "sha256": "999ec12f20b7b1e4e7d9a1f9f1cfde7e21b4610daf4ac17a19a9d3c450b5d297"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "taburete-1",
+      "taburete-2",
+      "taburete-3",
+      "taburete-4"
+    ],
+    "quantity": 4,
+    "dimensionsCm": [
+      40.0,
+      40.0,
+      75.0
+    ],
+    "materials": [
+      "MAT_roble_claro",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      -0.6899999976158142
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-taburete",
+    "title": "Alsea · Taburetes negro/roble",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368534828-2pgqcr",
+    "num": 1139,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368534828-2pgqcr",
+    "createdAt": "2026-09-25T20:35:34.828Z",
+    "contentHash": "5deeeadb10a3296e25069a467f4c36fe891e4dc0502f1537dad5676128a60416",
+    "poster": "https://api.admira.store/stock/poster/1790368534828-2pgqcr",
+    "thumbnail": "https://stock.admira.store/stock/1790368534828-2pgqcr/poster.jpg?v=4525",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"taburete-1\",\"taburete-2\",\"taburete-3\",\"taburete-4\"],\"quantity\":4,\"dimensionsCm\":[40.0,40.0,75.0],\"baseLocal\":[0.0,0.0,-0.6899999976158142]}",
+    "externalRef": "furniture:1790364696893-14ykfy:taburete-1",
+    "sha256": "5deeeadb10a3296e25069a467f4c36fe891e4dc0502f1537dad5676128a60416"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "mesa-1",
+      "mesa-2",
+      "mesa-3"
+    ],
+    "quantity": 3,
+    "dimensionsCm": [
+      70.0,
+      70.0,
+      83.0
+    ],
+    "materials": [
+      "CAFE",
+      "CERAMICA",
+      "MAT_roble_claro",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      -0.7099999785423279
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-mesa",
+    "title": "Alsea · Mesas redondas Ø70 roble + pie negro",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368536628-uueijh",
+    "num": 1140,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368536628-uueijh",
+    "createdAt": "2026-09-25T20:35:36.628Z",
+    "contentHash": "dbb75dfd5b6d3325952a6e536bd59bbfe80121adac902b1d36d227d7f40a1b09",
+    "poster": "https://api.admira.store/stock/poster/1790368536628-uueijh",
+    "thumbnail": "https://stock.admira.store/stock/1790368536628-uueijh/poster.jpg?v=4958",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"mesa-1\",\"mesa-2\",\"mesa-3\"],\"quantity\":3,\"dimensionsCm\":[70.0,70.0,83.0],\"baseLocal\":[0.0,0.0,-0.7099999785423279]}",
+    "externalRef": "furniture:1790364696893-14ykfy:mesa-1",
+    "sha256": "dbb75dfd5b6d3325952a6e536bd59bbfe80121adac902b1d36d227d7f40a1b09"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "silla-1",
+      "silla-2",
+      "silla-3",
+      "silla-4",
+      "silla-5",
+      "silla-6"
+    ],
+    "quantity": 6,
+    "dimensionsCm": [
+      45.0,
+      45.0,
+      85.0
+    ],
+    "materials": [
+      "MAT_nogal"
+    ],
+    "baseLocal": [
+      -2.9802322387695312e-08,
+      0.0,
+      -0.44999998807907104
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-silla",
+    "title": "Alsea · Sillas de madera",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368563868-q9dg78",
+    "num": 1141,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368563868-q9dg78",
+    "createdAt": "2026-09-25T20:36:03.868Z",
+    "contentHash": "88cea4b68e7f87c5957a04cb8f60aa0c768062dc581cd49ea5d4b1671cc1235d",
+    "poster": "https://api.admira.store/stock/poster/1790368563868-q9dg78",
+    "thumbnail": "https://stock.admira.store/stock/1790368563868-q9dg78/poster.jpg?v=5273",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"silla-1\",\"silla-2\",\"silla-3\",\"silla-4\",\"silla-5\",\"silla-6\"],\"quantity\":6,\"dimensionsCm\":[45.0,45.0,85.0],\"baseLocal\":[-2.9802322387695312e-08,0.0,-0.44999998807907104]}",
+    "externalRef": "furniture:1790364696893-14ykfy:silla-1",
+    "sha256": "88cea4b68e7f87c5957a04cb8f60aa0c768062dc581cd49ea5d4b1671cc1235d"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "sofa"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      200.0,
+      85.0,
+      80.0
+    ],
+    "materials": [
+      "MAT_terciopelo",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      0.09999996423721313,
+      -0.07999999821186066
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-sofa",
+    "title": "Alsea · Sofá terciopelo verde 3 plazas",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368570433-cya0y5",
+    "num": 1142,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368570433-cya0y5",
+    "createdAt": "2026-09-25T20:36:10.433Z",
+    "contentHash": "db455372cef7d385ef0b1f2b16700799aa1164fa32e7d8bca08ff15cb27e1481",
+    "poster": "https://api.admira.store/stock/poster/1790368570433-cya0y5",
+    "thumbnail": "https://stock.admira.store/stock/1790368570433-cya0y5/poster.jpg?v=4833",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"sofa\"],\"quantity\":1,\"dimensionsCm\":[200.0,85.0,80.0],\"baseLocal\":[0.0,0.09999996423721313,-0.07999999821186066]}",
+    "externalRef": "furniture:1790364696893-14ykfy:sofa",
+    "sha256": "db455372cef7d385ef0b1f2b16700799aa1164fa32e7d8bca08ff15cb27e1481"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "mesa-baja"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      110.0,
+      60.0,
+      42.0
+    ],
+    "materials": [
+      "MAT_nogal",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      -0.3700000047683716
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-mesa-baja",
+    "title": "Alsea · Mesa baja nogal",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368572287-cb9jy5",
+    "num": 1143,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368572287-cb9jy5",
+    "createdAt": "2026-09-25T20:36:12.287Z",
+    "contentHash": "7c140e86dd59460b1f265b2186eac770bb7911972e7948b268c2f0d8ede9a942",
+    "poster": "https://api.admira.store/stock/poster/1790368572287-cb9jy5",
+    "thumbnail": "https://stock.admira.store/stock/1790368572287-cb9jy5/poster.jpg?v=4820",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"mesa-baja\"],\"quantity\":1,\"dimensionsCm\":[110.0,60.0,42.0],\"baseLocal\":[0.0,0.0,-0.3700000047683716]}",
+    "externalRef": "furniture:1790364696893-14ykfy:mesa-baja",
+    "sha256": "7c140e86dd59460b1f265b2186eac770bb7911972e7948b268c2f0d8ede9a942"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "lampara-1",
+      "lampara-2",
+      "lampara-3",
+      "lampara-4"
+    ],
+    "quantity": 4,
+    "dimensionsCm": [
+      39.704,
+      39.704,
+      138.0
+    ],
+    "materials": [
+      "LED_fff1c8",
+      "MAT_laton",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-lampara",
+    "title": "Alsea · Lámparas colgantes latón Ø40",
+    "category": "Iluminacion",
+    "ok": true,
+    "id": "1790368592506-ca7e3w",
+    "num": 1144,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368592506-ca7e3w",
+    "createdAt": "2026-09-25T20:36:32.506Z",
+    "contentHash": "2a6ec95ae87a82a031cd714880847ef2b984a97604481cba92cb8f2ee328576c",
+    "poster": "https://api.admira.store/stock/poster/1790368592506-ca7e3w",
+    "thumbnail": "https://stock.admira.store/stock/1790368592506-ca7e3w/poster.jpg?v=3082",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"lampara-1\",\"lampara-2\",\"lampara-3\",\"lampara-4\"],\"quantity\":4,\"dimensionsCm\":[39.704,39.704,138.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:lampara-1",
+    "sha256": "2a6ec95ae87a82a031cd714880847ef2b984a97604481cba92cb8f2ee328576c"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "planta-1",
+      "planta-2",
+      "planta-3"
+    ],
+    "quantity": 3,
+    "dimensionsCm": [
+      54.903,
+      54.903,
+      160.0
+    ],
+    "materials": [
+      "HOJA_VERDE_CLARA",
+      "HOJA_VERDE_OSCURA",
+      "MAT_terracota",
+      "SUSTRATO"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-planta",
+    "title": "Alsea · Plantas en maceta",
+    "category": "Vegetacion",
+    "ok": true,
+    "id": "1790368601152-7o2fq5",
+    "num": 1145,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368601152-7o2fq5",
+    "createdAt": "2026-09-25T20:36:41.152Z",
+    "contentHash": "f85c3ce28fffb728a8b84005caf8bdb52b81dfe8fde00994b911e278af7fea5f",
+    "poster": "https://api.admira.store/stock/poster/1790368601152-7o2fq5",
+    "thumbnail": "https://stock.admira.store/stock/1790368601152-7o2fq5/poster.jpg?v=3984",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"planta-1\",\"planta-2\",\"planta-3\"],\"quantity\":3,\"dimensionsCm\":[54.903,54.903,160.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:planta-1",
+    "sha256": "f85c3ce28fffb728a8b84005caf8bdb52b81dfe8fde00994b911e278af7fea5f"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "tpv"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      32.0,
+      26.0,
+      12.3
+    ],
+    "materials": [
+      "MAT_negro",
+      "PANTALLA_tpv"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-tpv",
+    "title": "Alsea · TPV / caja",
+    "category": "Equipamiento",
+    "ok": true,
+    "id": "1790368605841-3tot96",
+    "num": 1146,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368605841-3tot96",
+    "createdAt": "2026-09-25T20:36:45.841Z",
+    "contentHash": "96fad4d7343d6818bb5c79212c99da095376c352145a8eeb4366727c0e705ae3",
+    "poster": "https://api.admira.store/stock/poster/1790368605841-3tot96",
+    "thumbnail": "https://stock.admira.store/stock/1790368605841-3tot96/poster.jpg?v=5114",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"tpv\"],\"quantity\":1,\"dimensionsCm\":[32.0,26.0,12.3],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:tpv",
+    "sha256": "96fad4d7343d6818bb5c79212c99da095376c352145a8eeb4366727c0e705ae3"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "glb:led_perimetral_fachada0"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      1.5,
+      90.0,
+      3.0
+    ],
+    "materials": [
+      "LED_c9a227"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-glb_led_perimetral_fachada0",
+    "title": "Alsea · led perimetral fachada0",
+    "category": "Iluminacion",
+    "ok": true,
+    "id": "1790368625383-khj500",
+    "num": 1147,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368625383-khj500",
+    "createdAt": "2026-09-25T20:37:05.383Z",
+    "contentHash": "ba222f3f4e2af94432add0e58fb43385e0114f4b5f6f839295b53fb2c7bab3e5",
+    "poster": "https://api.admira.store/stock/poster/1790368625383-khj500",
+    "thumbnail": "https://stock.admira.store/stock/1790368625383-khj500/poster.jpg?v=3477",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"glb:led_perimetral_fachada0\"],\"quantity\":1,\"dimensionsCm\":[1.5,90.0,3.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:glb:led_perimetral_fachada0",
+    "sha256": "ba222f3f4e2af94432add0e58fb43385e0114f4b5f6f839295b53fb2c7bab3e5"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "glb:led_perimetral_fachada1"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      1.5,
+      20.0,
+      3.0
+    ],
+    "materials": [
+      "LED_c9a227"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-glb_led_perimetral_fachada1",
+    "title": "Alsea · led perimetral fachada1",
+    "category": "Iluminacion",
+    "ok": true,
+    "id": "1790368636639-rq1oxl",
+    "num": 1148,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368636639-rq1oxl",
+    "createdAt": "2026-09-25T20:37:16.639Z",
+    "contentHash": "291f18ee1484a0b1842b73a3ede4aff4449ffa787f3808942f8ab68cd1323a42",
+    "poster": "https://api.admira.store/stock/poster/1790368636639-rq1oxl",
+    "thumbnail": "https://stock.admira.store/stock/1790368636639-rq1oxl/poster.jpg?v=3983",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"glb:led_perimetral_fachada1\"],\"quantity\":1,\"dimensionsCm\":[1.5,20.0,3.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:glb:led_perimetral_fachada1",
+    "sha256": "291f18ee1484a0b1842b73a3ede4aff4449ffa787f3808942f8ab68cd1323a42"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "glb:led_perimetral_fachada2"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      1.5,
+      60.0,
+      3.0
+    ],
+    "materials": [
+      "LED_c9a227"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-glb_led_perimetral_fachada2",
+    "title": "Alsea · led perimetral fachada2",
+    "category": "Iluminacion",
+    "ok": true,
+    "id": "1790368648679-ehm53i",
+    "num": 1149,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368648679-ehm53i",
+    "createdAt": "2026-09-25T20:37:28.679Z",
+    "contentHash": "996d83c612d527136247037c2c6a77de1031a8bd6b589d7c5e634b991a05b7ee",
+    "poster": "https://api.admira.store/stock/poster/1790368648679-ehm53i",
+    "thumbnail": "https://stock.admira.store/stock/1790368648679-ehm53i/poster.jpg?v=3653",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"glb:led_perimetral_fachada2\"],\"quantity\":1,\"dimensionsCm\":[1.5,60.0,3.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:glb:led_perimetral_fachada2",
+    "sha256": "996d83c612d527136247037c2c6a77de1031a8bd6b589d7c5e634b991a05b7ee"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "glb:led_perimetral_fachada3"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      1.5,
+      50.0,
+      3.0
+    ],
+    "materials": [
+      "LED_c9a227"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-glb_led_perimetral_fachada3",
+    "title": "Alsea · led perimetral fachada3",
+    "category": "Iluminacion",
+    "ok": true,
+    "reused": true,
+    "reason": "duplicate_content",
+    "id": "1790368664991-ewa7gq",
+    "url": "https://api.admira.store/stock/asset/1790368664991-ewa7gq",
+    "createdAt": "2026-09-25T20:37:44.991Z",
+    "contentHash": "645c8b7df3123c1bcc015f113df4079b802e3035cf5e5ab86a7983000518626d",
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"glb:led_perimetral_fachada3\"],\"quantity\":1,\"dimensionsCm\":[1.5,50.0,3.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:glb:led_perimetral_fachada3",
+    "poster": "https://api.admira.store/stock/poster/1790368664991-ewa7gq",
+    "sha256": "645c8b7df3123c1bcc015f113df4079b802e3035cf5e5ab86a7983000518626d"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "glb:led_perimetral_fondo1"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      885.0,
+      1.2,
+      1.2
+    ],
+    "materials": [
+      "LED_c9a227"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-glb_led_perimetral_fondo1",
+    "title": "Alsea · led perimetral fondo1",
+    "category": "Iluminacion",
+    "ok": true,
+    "reused": true,
+    "reason": "duplicate_content",
+    "id": "1790368686240-2k9bo3",
+    "url": "https://api.admira.store/stock/asset/1790368686240-2k9bo3",
+    "createdAt": "2026-09-25T20:38:06.240Z",
+    "contentHash": "8f76ac6411a5a0714ac24aa459594cb51df9cbdf28bb2a05976fc3021e8bcdfd",
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"glb:led_perimetral_fondo1\"],\"quantity\":1,\"dimensionsCm\":[885.0,1.2,1.2],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:glb:led_perimetral_fondo1",
+    "poster": "https://api.admira.store/stock/poster/1790368686240-2k9bo3",
+    "sha256": "8f76ac6411a5a0714ac24aa459594cb51df9cbdf28bb2a05976fc3021e8bcdfd"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "glb:led_perimetral_fondo0"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      135.0,
+      1.2,
+      1.2
+    ],
+    "materials": [
+      "LED_c9a227"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-glb_led_perimetral_fondo0",
+    "title": "Alsea · led perimetral fondo0",
+    "category": "Iluminacion",
+    "ok": true,
+    "reused": true,
+    "reason": "duplicate_content",
+    "id": "1790368671519-dzs78w",
+    "url": "https://api.admira.store/stock/asset/1790368671519-dzs78w",
+    "createdAt": "2026-09-25T20:37:51.519Z",
+    "contentHash": "2112177308b1481db1fe914adefce580609b73194cc247f3ac1b1a5c003d049b",
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"glb:led_perimetral_fondo0\"],\"quantity\":1,\"dimensionsCm\":[135.0,1.2,1.2],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:glb:led_perimetral_fondo0",
+    "poster": "https://api.admira.store/stock/poster/1790368671519-dzs78w",
+    "sha256": "2112177308b1481db1fe914adefce580609b73194cc247f3ac1b1a5c003d049b"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "A1"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      16.0,
+      6.0,
+      20.0
+    ],
+    "materials": [
+      "IOT_CARCASA"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-A1",
+    "title": "Alsea · Difusor de aroma (pared)",
+    "category": "IoT",
+    "ok": true,
+    "id": "1790368749562-kutoci",
+    "num": 1154,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368749562-kutoci",
+    "createdAt": "2026-09-25T20:39:09.562Z",
+    "contentHash": "d10bfbff16c7158e44a6f8f2b466a6d550ce3dbe80036600bb2fc7802ae2a65e",
+    "poster": "https://api.admira.store/stock/poster/1790368749562-kutoci",
+    "thumbnail": "https://stock.admira.store/stock/1790368749562-kutoci/poster.jpg?v=4370",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"A1\"],\"quantity\":1,\"dimensionsCm\":[16.0,6.0,20.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:A1",
+    "sha256": "d10bfbff16c7158e44a6f8f2b466a6d550ce3dbe80036600bb2fc7802ae2a65e"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "W1"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      20.0,
+      20.0,
+      3.0
+    ],
+    "materials": [
+      "IOT_CARCASA"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-W1",
+    "title": "Alsea · Punto de acceso wifi (techo)",
+    "category": "IoT",
+    "ok": true,
+    "id": "1790368750021-jswoyf",
+    "num": 1155,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368750021-jswoyf",
+    "createdAt": "2026-09-25T20:39:10.021Z",
+    "contentHash": "112c51f8a0ad2a5076b559982e75e2b854efa4910cf25085d1397180226b37c0",
+    "poster": "https://api.admira.store/stock/poster/1790368750021-jswoyf",
+    "thumbnail": "https://stock.admira.store/stock/1790368750021-jswoyf/poster.jpg?v=3895",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"W1\"],\"quantity\":1,\"dimensionsCm\":[20.0,20.0,3.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:W1",
+    "sha256": "112c51f8a0ad2a5076b559982e75e2b854efa4910cf25085d1397180226b37c0"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "S1",
+      "S2",
+      "S3"
+    ],
+    "quantity": 3,
+    "dimensionsCm": [
+      20.0,
+      20.0,
+      3.0
+    ],
+    "materials": [
+      "IOT_CARCASA"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-S",
+    "title": "Alsea · Altavoz techo · hilo musical",
+    "category": "IoT",
+    "ok": true,
+    "id": "1790368741956-3y6np1",
+    "num": 1156,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368741956-3y6np1",
+    "createdAt": "2026-09-25T20:39:01.956Z",
+    "contentHash": "8583d9fd44a99b5635e32df6df88ce3cae58bf97bcc13a2d3b75d1420bd109ee",
+    "poster": "https://api.admira.store/stock/poster/1790368741956-3y6np1",
+    "thumbnail": "https://stock.admira.store/stock/1790368741956-3y6np1/poster.jpg?v=3894",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"S1\",\"S2\",\"S3\"],\"quantity\":3,\"dimensionsCm\":[20.0,20.0,3.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:S1",
+    "sha256": "8583d9fd44a99b5635e32df6df88ce3cae58bf97bcc13a2d3b75d1420bd109ee"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "alsea",
+    "xpace": "1790364696893-14ykfy",
+    "inventoryIds": [
+      "G1"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      16.0,
+      6.0,
+      20.0
+    ],
+    "materials": [
+      "IOT_CARCASA"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
+    "file": "alsea-G1",
+    "title": "Alsea · Gateway IoT / players (obrador)",
+    "category": "IoT",
+    "ok": true,
+    "id": "1790368779754-c5ud0e",
+    "num": 1157,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "alsea"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368779754-c5ud0e",
+    "createdAt": "2026-09-25T20:39:39.754Z",
+    "contentHash": "8fc82a4cb0578575171286fed4aeb2ea5b2df889d28dc141e2bc40a816a7b8e1",
+    "poster": "https://api.admira.store/stock/poster/1790368779754-c5ud0e",
+    "thumbnail": "https://stock.admira.store/stock/1790368779754-c5ud0e/poster.jpg?v=4370",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"G1\"],\"quantity\":1,\"dimensionsCm\":[16.0,6.0,20.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790364696893-14ykfy:G1",
+    "sha256": "8fc82a4cb0578575171286fed4aeb2ea5b2df889d28dc141e2bc40a816a7b8e1"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "mostrador"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      300.0,
+      71.0,
+      105.0
+    ],
+    "materials": [
+      "LED_d9a83f",
+      "MAT_encimera",
+      "MAT_laton",
+      "MAT_roble",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      -0.005000010132789612,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-mostrador",
+    "title": "Xtanco · Mostrador roble + encimera crema",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368786092-gbc1dm",
+    "num": 1158,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368786092-gbc1dm",
+    "createdAt": "2026-09-25T20:39:46.092Z",
+    "contentHash": "8727781ca49ddaf2ec8b54f90133a449ef8b9e54c67ad134e29208c5cbee1263",
+    "poster": "https://api.admira.store/stock/poster/1790368786092-gbc1dm",
+    "thumbnail": "https://stock.admira.store/stock/1790368786092-gbc1dm/poster.jpg?v=4663",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"mostrador\"],\"quantity\":1,\"dimensionsCm\":[300.0,71.0,105.0],\"baseLocal\":[0.0,-0.005000010132789612,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:mostrador",
+    "sha256": "8727781ca49ddaf2ec8b54f90133a449ef8b9e54c67ad134e29208c5cbee1263"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "vitrina"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      320.0,
+      45.0,
+      210.0
+    ],
+    "materials": [
+      "ENVASE_GENERICO_0",
+      "ENVASE_GENERICO_1",
+      "ENVASE_GENERICO_2",
+      "ENVASE_GENERICO_3",
+      "ENVASE_GENERICO_4",
+      "ENVASE_GENERICO_5",
+      "ETIQUETA_MARFIL",
+      "LED_fff1c8",
+      "MAT_laton",
+      "MAT_roble",
+      "VIDRIO"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-vitrina",
+    "title": "Xtanco · Vitrina retroiluminada roble/vidrio",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368788851-usnrcj",
+    "num": 1159,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368788851-usnrcj",
+    "createdAt": "2026-09-25T20:39:48.851Z",
+    "contentHash": "b5311e7f2145cfda3d7026c6aa3d983a312d882dc5cf971436e87b50df5a513a",
+    "poster": "https://api.admira.store/stock/poster/1790368788851-usnrcj",
+    "thumbnail": "https://stock.admira.store/stock/1790368788851-usnrcj/poster.jpg?v=7749",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"vitrina\"],\"quantity\":1,\"dimensionsCm\":[320.0,45.0,210.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:vitrina",
+    "sha256": "b5311e7f2145cfda3d7026c6aa3d983a312d882dc5cf971436e87b50df5a513a"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "pantalla-pared"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      264.0,
+      6.2,
+      74.0
+    ],
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pantalla-pared"
+    ],
+    "baseLocal": [
+      0.0,
+      -0.0009999992325901985,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-pantalla-pared",
+    "title": "Xtanco · Videowall menú 2×55\" (2,64×0,74 m)",
+    "category": "Pantallas",
+    "ok": true,
+    "id": "1790368812926-gkzart",
+    "num": 1160,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368812926-gkzart",
+    "createdAt": "2026-09-25T20:40:12.926Z",
+    "contentHash": "5754e78f3f638d0272db8d667eb9e337c4b114ebe46c2b3bd0a72b1e10a44e33",
+    "poster": "https://api.admira.store/stock/poster/1790368812926-gkzart",
+    "thumbnail": "https://stock.admira.store/stock/1790368812926-gkzart/poster.jpg?v=4469",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"pantalla-pared\"],\"quantity\":1,\"dimensionsCm\":[264.0,6.2,74.0],\"baseLocal\":[0.0,-0.0009999992325901985,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:pantalla-pared",
+    "sha256": "5754e78f3f638d0272db8d667eb9e337c4b114ebe46c2b3bd0a72b1e10a44e33"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "pantalla-mostrador"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      52.0,
+      12.0,
+      47.0
+    ],
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pantalla-mostrador"
+    ],
+    "baseLocal": [
+      0.0,
+      0.009999992325901985,
+      -0.15000009536743164
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-pantalla-mostrador",
+    "title": "Xtanco · Pantalla de mostrador 21,5\" cara cliente",
+    "category": "Pantallas",
+    "ok": true,
+    "id": "1790368821297-0pp7op",
+    "num": 1161,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368821297-0pp7op",
+    "createdAt": "2026-09-25T20:40:21.297Z",
+    "contentHash": "fcd59f4f2e828e8c31220c8622e3c8074127a17a6d1d15f5af2991deaa5b2880",
+    "poster": "https://api.admira.store/stock/poster/1790368821297-0pp7op",
+    "thumbnail": "https://stock.admira.store/stock/1790368821297-0pp7op/poster.jpg?v=7399",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"pantalla-mostrador\"],\"quantity\":1,\"dimensionsCm\":[52.0,12.0,47.0],\"baseLocal\":[0.0,0.009999992325901985,-0.15000009536743164]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:pantalla-mostrador",
+    "sha256": "fcd59f4f2e828e8c31220c8622e3c8074127a17a6d1d15f5af2991deaa5b2880"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "pantalla-escaparate"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      45.0,
+      124.0,
+      190.0
+    ],
+    "materials": [
+      "NEGRO_MATE",
+      "PANTALLA_pantalla-escaparate"
+    ],
+    "baseLocal": [
+      -0.004999995231628418,
+      0.0,
+      -1.2000000476837158
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-pantalla-escaparate",
+    "title": "Xtanco · Pantalla escaparate 55\" doble cara",
+    "category": "Pantallas",
+    "ok": true,
+    "id": "1790368823609-hm8zmk",
+    "num": 1162,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368823609-hm8zmk",
+    "createdAt": "2026-09-25T20:40:23.609Z",
+    "contentHash": "3904b7284cefd967f3044856c1981f16cee2e25acaa090bf352577c6f00f8695",
+    "poster": "https://api.admira.store/stock/poster/1790368823609-hm8zmk",
+    "thumbnail": "https://stock.admira.store/stock/1790368823609-hm8zmk/poster.jpg?v=4972",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"pantalla-escaparate\"],\"quantity\":1,\"dimensionsCm\":[45.0,124.0,190.0],\"baseLocal\":[-0.004999995231628418,0.0,-1.2000000476837158]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:pantalla-escaparate",
+    "sha256": "3904b7284cefd967f3044856c1981f16cee2e25acaa090bf352577c6f00f8695"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "expendedora"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      90.0,
+      81.0,
+      185.0
+    ],
+    "materials": [
+      "ENVASE_GENERICO_0",
+      "ENVASE_GENERICO_1",
+      "ENVASE_GENERICO_2",
+      "ENVASE_GENERICO_3",
+      "ENVASE_GENERICO_4",
+      "ENVASE_GENERICO_5",
+      "MAT_acero",
+      "MAT_noche",
+      "NEGRO_MATE",
+      "PANTALLA_expendedora_display",
+      "VIDRIO"
+    ],
+    "baseLocal": [
+      0.0,
+      -0.004999995231628418,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-expendedora",
+    "title": "Xtanco · Expendedora con display y verificación de edad",
+    "category": "Equipamiento",
+    "ok": true,
+    "id": "1790368844094-regk76",
+    "num": 1163,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368844094-regk76",
+    "createdAt": "2026-09-25T20:40:44.094Z",
+    "contentHash": "bb27dbab9cec0c2ec30f858ffedbe78197a4ab1540aff7f75170b4dc02d268c3",
+    "poster": "https://api.admira.store/stock/poster/1790368844094-regk76",
+    "thumbnail": "https://stock.admira.store/stock/1790368844094-regk76/poster.jpg?v=5361",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"expendedora\"],\"quantity\":1,\"dimensionsCm\":[90.0,81.0,185.0],\"baseLocal\":[0.0,-0.004999995231628418,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:expendedora",
+    "sha256": "bb27dbab9cec0c2ec30f858ffedbe78197a4ab1540aff7f75170b4dc02d268c3"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "taburete-1",
+      "taburete-2"
+    ],
+    "quantity": 2,
+    "dimensionsCm": [
+      40.0,
+      40.0,
+      75.0
+    ],
+    "materials": [
+      "MAT_rojo",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      -0.6899999976158142
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-taburete",
+    "title": "Xtanco · Taburetes lacados rojo",
+    "category": "Mobiliario",
+    "ok": true,
+    "id": "1790368853729-q66hbt",
+    "num": 1164,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368853729-q66hbt",
+    "createdAt": "2026-09-25T20:40:53.729Z",
+    "contentHash": "1fc887c0df09527eb57c7135782fbda88972625ed40e9bfb7df2c986c56300a6",
+    "poster": "https://api.admira.store/stock/poster/1790368853729-q66hbt",
+    "thumbnail": "https://stock.admira.store/stock/1790368853729-q66hbt/poster.jpg?v=4390",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"taburete-1\",\"taburete-2\"],\"quantity\":2,\"dimensionsCm\":[40.0,40.0,75.0],\"baseLocal\":[0.0,0.0,-0.6899999976158142]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:taburete-1",
+    "sha256": "1fc887c0df09527eb57c7135782fbda88972625ed40e9bfb7df2c986c56300a6"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "tpv"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      30.0,
+      25.0,
+      12.3
+    ],
+    "materials": [
+      "MAT_negro",
+      "PANTALLA_tpv"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-tpv",
+    "title": "Xtanco · TPV contactless",
+    "category": "Equipamiento",
+    "ok": true,
+    "id": "1790368857752-eg0014",
+    "num": 1165,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368857752-eg0014",
+    "createdAt": "2026-09-25T20:40:57.752Z",
+    "contentHash": "cf496ec8eca931fd3eea3e95b4839eaed42a22c4cdb41cd6c60620ccc07ccd89",
+    "poster": "https://api.admira.store/stock/poster/1790368857752-eg0014",
+    "thumbnail": "https://stock.admira.store/stock/1790368857752-eg0014/poster.jpg?v=5138",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"tpv\"],\"quantity\":1,\"dimensionsCm\":[30.0,25.0,12.3],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:tpv",
+    "sha256": "cf496ec8eca931fd3eea3e95b4839eaed42a22c4cdb41cd6c60620ccc07ccd89"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "A1"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      16.0,
+      6.0,
+      20.0
+    ],
+    "materials": [
+      "IOT_aroma"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-A1",
+    "title": "Xtanco · Difusor de aroma (pared)",
+    "category": "IoT",
+    "ok": true,
+    "id": "1790368876763-j9x7yi",
+    "num": 1166,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368876763-j9x7yi",
+    "createdAt": "2026-09-25T20:41:16.763Z",
+    "contentHash": "be051907d8d63ab4e17e3ff8c35fafd0190bcbf2da645c55485525bd34b25e9d",
+    "poster": "https://api.admira.store/stock/poster/1790368876763-j9x7yi",
+    "thumbnail": "https://stock.admira.store/stock/1790368876763-j9x7yi/poster.jpg?v=4194",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"A1\"],\"quantity\":1,\"dimensionsCm\":[16.0,6.0,20.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:A1",
+    "sha256": "be051907d8d63ab4e17e3ff8c35fafd0190bcbf2da645c55485525bd34b25e9d"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "G1"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      16.0,
+      6.0,
+      20.0
+    ],
+    "materials": [
+      "IOT_gateway"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-G1",
+    "title": "Xtanco · Gateway IoT / player (almacén)",
+    "category": "IoT",
+    "ok": true,
+    "id": "1790368883521-gqinmi",
+    "num": 1167,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368883521-gqinmi",
+    "createdAt": "2026-09-25T20:41:23.521Z",
+    "contentHash": "c781eb18367d2e743ec3eea02ec84f1d5e17ba4817a7af60eb9ccbda1844c08c",
+    "poster": "https://api.admira.store/stock/poster/1790368883521-gqinmi",
+    "thumbnail": "https://stock.admira.store/stock/1790368883521-gqinmi/poster.jpg?v=4085",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"G1\"],\"quantity\":1,\"dimensionsCm\":[16.0,6.0,20.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:G1",
+    "sha256": "c781eb18367d2e743ec3eea02ec84f1d5e17ba4817a7af60eb9ccbda1844c08c"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "S1",
+      "S2"
+    ],
+    "quantity": 2,
+    "dimensionsCm": [
+      20.0,
+      20.0,
+      3.0
+    ],
+    "materials": [
+      "IOT_speaker"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-S",
+    "title": "Xtanco · Altavoz techo · hilo musical",
+    "category": "IoT",
+    "ok": true,
+    "id": "1790368892994-bul1b3",
+    "num": 1168,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368892994-bul1b3",
+    "createdAt": "2026-09-25T20:41:32.994Z",
+    "contentHash": "857f5ee05805924e0b5656059d34f0311b6f52428c6e5fee0a99ff975d1c1d9e",
+    "poster": "https://api.admira.store/stock/poster/1790368892994-bul1b3",
+    "thumbnail": "https://stock.admira.store/stock/1790368892994-bul1b3/poster.jpg?v=3778",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"S1\",\"S2\"],\"quantity\":2,\"dimensionsCm\":[20.0,20.0,3.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:S1",
+    "sha256": "857f5ee05805924e0b5656059d34f0311b6f52428c6e5fee0a99ff975d1c1d9e"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "W1"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      20.0,
+      20.0,
+      3.0
+    ],
+    "materials": [
+      "IOT_wifi"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-W1",
+    "title": "Xtanco · Punto de acceso wifi (techo)",
+    "category": "IoT",
+    "ok": true,
+    "id": "1790368910435-2jj88n",
+    "num": 1169,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368910435-2jj88n",
+    "createdAt": "2026-09-25T20:41:50.435Z",
+    "contentHash": "1280c05db63c05419525c49dfb4c09e9b2c6141f13df0037e254bd441166af38",
+    "poster": "https://api.admira.store/stock/poster/1790368910435-2jj88n",
+    "thumbnail": "https://stock.admira.store/stock/1790368910435-2jj88n/poster.jpg?v=3990",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"W1\"],\"quantity\":1,\"dimensionsCm\":[20.0,20.0,3.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:W1",
+    "sha256": "1280c05db63c05419525c49dfb4c09e9b2c6141f13df0037e254bd441166af38"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "glb:led_perimetral_fachada"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      1.5,
+      450.0,
+      3.0
+    ],
+    "materials": [
+      "LED_ffd866"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-glb_led_perimetral_fachada",
+    "title": "Xtanco · led perimetral fachada",
+    "category": "Iluminacion",
+    "ok": true,
+    "id": "1790368914286-yzgs1g",
+    "num": 1171,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368914286-yzgs1g",
+    "createdAt": "2026-09-25T20:41:54.286Z",
+    "contentHash": "4ae395d0296a9828dd561274f9fc032fc34a36d10d6ffecadada2d7a397d78c9",
+    "poster": "https://api.admira.store/stock/poster/1790368914286-yzgs1g",
+    "thumbnail": "https://stock.admira.store/stock/1790368914286-yzgs1g/poster.jpg?v=3276",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"glb:led_perimetral_fachada\"],\"quantity\":1,\"dimensionsCm\":[1.5,450.0,3.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:glb:led_perimetral_fachada",
+    "sha256": "4ae395d0296a9828dd561274f9fc032fc34a36d10d6ffecadada2d7a397d78c9"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "glb:led_perimetral_fondo"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      600.0,
+      1.5,
+      3.0
+    ],
+    "materials": [
+      "LED_ffd866"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-glb_led_perimetral_fondo",
+    "title": "Xtanco · led perimetral fondo",
+    "category": "Iluminacion",
+    "ok": true,
+    "id": "1790368926879-anvgln",
+    "num": 1172,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368926879-anvgln",
+    "createdAt": "2026-09-25T20:42:06.879Z",
+    "contentHash": "c5a7c5caa588402325f6cfdda159b452fe308530811d3ab43199acea6928f2a2",
+    "poster": "https://api.admira.store/stock/poster/1790368926879-anvgln",
+    "thumbnail": "https://stock.admira.store/stock/1790368926879-anvgln/poster.jpg?v=3263",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"glb:led_perimetral_fondo\"],\"quantity\":1,\"dimensionsCm\":[600.0,1.5,3.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:glb:led_perimetral_fondo",
+    "sha256": "c5a7c5caa588402325f6cfdda159b452fe308530811d3ab43199acea6928f2a2"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "lampara-1",
+      "lampara-2",
+      "lampara-3"
+    ],
+    "quantity": 3,
+    "dimensionsCm": [
+      36.0,
+      36.0,
+      120.0
+    ],
+    "materials": [
+      "LED_fff1c8",
+      "MAT_laton",
+      "NEGRO_MATE"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-lampara",
+    "title": "Xtanco · Lámparas colgantes latón Ø36",
+    "category": "Iluminacion",
+    "ok": true,
+    "id": "1790368944990-j2ohsk",
+    "num": 1173,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368944990-j2ohsk",
+    "createdAt": "2026-09-25T20:42:24.990Z",
+    "contentHash": "6f14a725cf5dc9ee8985f023e7366c86fd5ffdb12f7aedf1e2b17b49abfa0433",
+    "poster": "https://api.admira.store/stock/poster/1790368944990-j2ohsk",
+    "thumbnail": "https://stock.admira.store/stock/1790368944990-j2ohsk/poster.jpg?v=3080",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"lampara-1\",\"lampara-2\",\"lampara-3\"],\"quantity\":3,\"dimensionsCm\":[36.0,36.0,120.0],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:lampara-1",
+    "sha256": "6f14a725cf5dc9ee8985f023e7366c86fd5ffdb12f7aedf1e2b17b49abfa0433"
+  },
+  {
+    "schema": "pixeria.furniture/1",
+    "slug": "xtanco",
+    "xpace": "1790365002072-l9tpjw",
+    "inventoryIds": [
+      "planta"
+    ],
+    "quantity": 1,
+    "dimensionsCm": [
+      50.0,
+      50.0,
+      138.179
+    ],
+    "materials": [
+      "KENTIA_VERDE",
+      "MAT_terracota",
+      "TIERRA"
+    ],
+    "baseLocal": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
+    "file": "xtanco-planta",
+    "title": "Xtanco · Planta kentia en maceta",
+    "category": "Vegetacion",
+    "ok": true,
+    "id": "1790368951823-l0bf4e",
+    "num": 1174,
+    "orientacion": null,
+    "tags": [
+      "3d",
+      "mueble",
+      "xtanco"
+    ],
+    "url": "https://api.admira.store/stock/asset/1790368951823-l0bf4e",
+    "createdAt": "2026-09-25T20:42:31.823Z",
+    "contentHash": "4fe7316a409ad2fbe8e9d9f937a8ba614f59283ad0c2219dfd739dfdcfc7f0f1",
+    "poster": "https://api.admira.store/stock/poster/1790368951823-l0bf4e",
+    "thumbnail": "https://stock.admira.store/stock/1790368951823-l0bf4e/poster.jpg?v=3889",
+    "validacion": null,
+    "type": "furni",
+    "mime": "model/gltf-binary",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"planta\"],\"quantity\":1,\"dimensionsCm\":[50.0,50.0,138.179],\"baseLocal\":[0.0,0.0,0.0]}",
+    "externalRef": "furniture:1790365002072-l9tpjw:planta",
+    "sha256": "4fe7316a409ad2fbe8e9d9f937a8ba614f59283ad0c2219dfd739dfdcfc7f0f1"
+  }
+]

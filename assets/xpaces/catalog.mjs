@@ -1,6 +1,6 @@
 // Stock stores some binary uploads with ext=bin; MIME is authoritative.
 export function isXpace(item) {
-  return !!item && (Array.isArray(item.tags) ? item.tags : []).some(tag => String(tag).toLowerCase() === '3d') &&
+  return !!item && item.type!=='furni' && (Array.isArray(item.tags) ? item.tags : []).some(tag => String(tag).toLowerCase() === '3d') &&
     (String(item.mime).split(';')[0] === 'model/gltf-binary' || String(item.ext).toLowerCase() === 'glb' || /\.glb(?:[?#]|$)/i.test(item.url || ''));
 }
 export function blendFor(item, items) {

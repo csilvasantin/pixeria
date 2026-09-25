@@ -43,5 +43,17 @@
     "file": "vendor/BufferGeometryUtils.mjs",
     "source": "https://www.xpaceos.com/admira-xp/scripts/vendor/BufferGeometryUtils.mjs",
     "sha256": "be7f69bf9a331e232a854cd7349bd7cd9f6f8997cbd81edff0aab80d83b4452d"
+  },
+  {
+    "file": "vendor/GLTFExporter.mjs",
+    "source": "https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/jsm/exporters/GLTFExporter.js",
+    "sha256": "d7c57b0c7146349a1166504369bcdd7d91d943f0a809276e7c978587efcc1dcf",
+    "modifications": "Local relative imports only. Same Three r160 used by Better."
+  },
+  {
+    "file": "vendor/TextureUtils.mjs",
+    "source": "https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/jsm/utils/TextureUtils.js",
+    "sha256": "c1a3089d85596c626166bd9346ac9cfd5ae725581f152b22060d861033207b83",
+    "modifications": "Local relative imports only. Same Three r160 used by Better."
   }
 ]

@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r4.22:27">
+  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r5.22:44">
   <title>Pixeria Studio Assets</title>
   <meta name="description" content="Assets de Pixeria para crear mobiliario y elementos listos para gemelos digitales XpaceOS.">
   <meta name="theme-color" content="#0b1117">
@@ -358,6 +358,7 @@
   <script defer src="/assets/analytics.js?v=20260617-consent"></script>
   <script defer src="/assets/consent.js?v=20260617"></script>
   <script defer src="/assets/site-nav.js?v=20260920-ideas"></script>
+<link rel="stylesheet" href="/assets/furniture/editor.css">
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->
@@ -645,8 +646,8 @@
 
         <!-- EDICIÓN — editor pixel-art de los muebles (Mis muebles): pintar + proporción/recorte -->
         <div class="studio-panel xpace-focus" id="edit-panel" data-view="edicion" style="display:none;margin-top:0;">
-          <h4>🎨 Edición de muebles · pixel art</h4>
-          <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Retoca tus muebles: pinta píxel a píxel, <b>recorta el margen transparente</b> (arregla el efecto «flotando») y ajusta <b>altura</b> y <b>footprint</b> (tamaño en la sala). Guarda y se actualiza en la paleta, el plano y el gemelo.</p>
+          <h4>🎨 Edición de muebles · 3D y pixel art</h4>
+          <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Abre un mueble 3D para editar materiales y medidas y guardar una variante para su Xpace. En pixel art, retoca tus muebles: pinta píxel a píxel, <b>recorta el margen transparente</b> (arregla el efecto «flotando») y ajusta <b>altura</b> y <b>footprint</b> (tamaño en la sala). Guarda y se actualiza en la paleta, el plano y el gemelo.</p>
           <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
             <div style="flex:0 0 200px;">
               <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px;">🪑 Muebles <span style="opacity:.6;">· últimos 3</span></label>
@@ -2192,6 +2193,12 @@
           if(!items.length){ g.innerHTML='<div style="grid-column:1/-1;color:var(--muted);text-align:center;padding:14px;">Aún no hay muebles en el catálogo. Crea alguno en «Creación».</div>'; return; }
           g.innerHTML='';
           items.forEach(it=>{
+            if(it.mime==='model/gltf-binary'){
+              const card=document.createElement('button');card.className='furniture-choice';card.type='button';
+              const image=document.createElement('img');image.src=it.poster||it.thumbnail;image.alt='';
+              const label=document.createElement('span');label.textContent=(it.title||'Mueble')+' · Ver y editar en 3D';card.append(image,label);
+              card.onclick=()=>import('/assets/furniture/editor.mjs').then(m=>m.openFurniture(it));g.append(card);return;
+            }
             const url=it.url||it.src||''; if(!url) return; const title=it.title||it.prompt||'Mueble';
             const fp=Array.isArray(it.fp)?it.fp:[1,1]; const price=furniDisplayPrice(it); const frames=it.frames||1;
             const card=document.createElement('div'); card.style.cssText='background:#0b1117;border:1px solid #28323a;border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;';
@@ -3067,9 +3074,10 @@
       // Muebles propios (del wallet): solo los 3 más recientes → al editor.
       function loadEditList(){
         const box=$('edit-list'); if(!box) return;
+        box.replaceChildren();const models=document.createElement('div');models.style.cssText='display:grid;gap:5px';box.append(models);
+        import('/assets/furniture/editor.mjs').then(m=>m.mountFurnitureList(models)).catch(()=>{models.textContent='No se pudo cargar el editor 3D. Recarga para reintentar.';});
         const owned=ownedFurni().slice().sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,3);
-        if(!owned.length){ box.innerHTML='<div style="font-size:11px;color:var(--muted);">Sin muebles. Crea o compra.</div>'; return; }
-        box.innerHTML='';
+        if(!owned.length)return;
         owned.forEach(o=>{
           const sel=EDIT.item&&EDIT.item.url===o.url;
           box.appendChild(editRecentBtn(window.furniFrameStyle(o.img||o.url,o.frames||1,0), o.title||'mueble', sel, ()=>openEdit(o)));
@@ -3333,7 +3341,7 @@
           finally{ if(btn) btn.disabled=false; }
         });
         loadWallet();
-        setView('creacion');
+        setView(new URL(location.href).searchParams.has('furniture')||new URL(location.href).searchParams.get('view')==='edicion'?'edicion':'creacion');
         loadLib();
       }
       if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();

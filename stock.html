@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r4.22:27">
+  <meta name="admiranext-version" content="Pixeria v.25.09.2026.r5.22:44">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -304,6 +304,7 @@
   <script defer src="/assets/site-nav.js?v=20260920-ideas"></script>
   <script defer src="/assets/descarga-local.js?v=20260828-r1"></script>
   <link rel="stylesheet" href="assets/xpaces/viewer.css?v=inventory-4375">
+<link rel="stylesheet" href="/assets/furniture/editor.css">
 </head>
 <body data-page="stock">
   <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
@@ -647,6 +648,7 @@
   <script src="app.js?v=20260925-flt100980"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "./assets/xpaces/catalog.mjs";
+  import {isFurniture3D} from "./assets/furniture/catalog.mjs";
   (function () {
     const grid = document.getElementById('stockGrid');
     const status = document.getElementById('stockStatus');
@@ -784,6 +786,7 @@
       return `background-image:url('${url}');background-repeat:no-repeat;background-size:${n * 100}% 100%;background-position:${pos}% center;image-rendering:pixelated;`;
     }
     function renderPreview(it) {
+      if (isFurniture3D(it)) return `<img src="${escAttr(it.poster || it.thumbnail)}" alt="${escAttr(it.title)}" loading="lazy"><span class="xpace-badge">Mueble · 3D</span>`;
       if (isXpace(it)) return `<img src="${escAttr(xpacePoster(it, allItems))}" alt="${escAttr(it.title)}" loading="lazy"><span class="xpace-badge">◈ Xpaces · 3D</span>`;
       // CÁPSULA: la columna enseña la CARA DEL VÍDEO que explica. La miniatura la
       // hereda al publicarse (pixer-eleven la copia del asset que declara en
@@ -1115,7 +1118,7 @@
         return DL.texto(String(it.comment || it.prompt || ''), DL.nombre(paraDescarga(it), { ext: 'txt' }));
       }
       if (['application/json','text/csv'].includes(String(it.mime).split(';')[0])) return DL.descargar(it.url, DL.nombre(it, {ext: it.mime.startsWith('application/json') ? 'json' : 'csv'}));
-      if (isXpace(it) || it.mime === 'application/x-blender') return DL.descargar(it.url, DL.nombre(it, {ext: isXpace(it) ? 'glb' : 'blend'}));
+      if (isFurniture3D(it) || isXpace(it) || it.mime === 'application/x-blender') return DL.descargar(it.url, DL.nombre(it, {ext: (isFurniture3D(it)||isXpace(it)) ? 'glb' : 'blend'}));
       return DL.item(paraDescarga(it));
     }
     function descargarAssets(items) {
@@ -1357,6 +1360,7 @@
 
     let xpaceController;
     function openLightbox(it) {
+      if(isFurniture3D(it)){import('./assets/furniture/editor.mjs').then(m=>m.openFurniture(it));return;}
       xpaceController?.abort();
       xpaceController = null;
       lightbox.classList.toggle('is-xpace', isXpace(it));
@@ -1414,7 +1418,7 @@
         actions.querySelector('[data-xpace-download="blend"]').onclick = () => blend && descargarAsset({...blend, mime:'application/x-blender'});
         const controller = xpaceController = new AbortController();
         const host = lightboxInner.querySelector('.xpace-viewer');
-        import('./assets/xpaces/viewer.mjs?v=inventory-4375').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'No se ha podido cargar el 3D. Cierra y vuelve a abrir para reintentar.';});
+        import('./assets/xpaces/viewer.mjs?v=furniture-4376').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'No se ha podido cargar el 3D. Cierra y vuelve a abrir para reintentar.';});
       }
       window.__lightboxItemId = it.id || null;
       lightbox.hidden = false;
