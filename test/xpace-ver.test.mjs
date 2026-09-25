@@ -1,0 +1,44 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import * as T from '../assets/xpaces/engine/premium-three.mjs';
+import {rowMarkup,selectionURL,readView} from '../assets/xpaces/inventory.mjs';
+import {fitBoxFrame} from '../assets/xpaces/engine/life-camera.mjs';
+const e={id:'estanteria-libros',nombre:'Estantería <libros>',categoria:'Mobiliario',cantidad:1,medidas:{ancho:1.2,fondo:.3,alto:1.8}};
+test('ficha de inventario: botón «Ver» a la derecha, hermano del checkbox y sin HTML inyectable',()=>{
+ const html=rowMarkup(e);
+ const iCheck=html.indexOf('type="checkbox"'),iItem=html.indexOf('class="xpace-item"'),iVer=html.indexOf('class="xpace-ver"');
+ assert.ok(iCheck>=0&&iCheck<iItem&&iItem<iVer,'orden: checkbox · ficha · Ver');
+ assert.match(html,/<button type="button" class="xpace-ver" data-ver="estanteria-libros" aria-label="Ver Estantería &lt;libros&gt; en 3D"/);
+ assert.ok(!html.includes('<label'),'la ficha no es un <label>: pulsar «Ver» no alterna el checkbox');
+ assert.ok(!html.includes('<libros>'));assert.match(html,/<svg[^>]*aria-hidden="true"/);assert.match(html,/<span>Ver<\/span><\/button>$/);
+ assert.match(rowMarkup(e,true),/aria-label="View Estantería &lt;libros&gt; in 3D"[^>]*>.*<span>View<\/span>/);
+});
+test('enlace de la vista: &ver=<id> se añade, se conserva y se quita',()=>{
+ const entries=[{id:'sofa',visible:true},{id:'silla-1',visible:false}];
+ const u=selectionURL('https://www.pixeria.com/stock?type=xpaces','alsea',entries,'estanteria-libros');
+ assert.equal(readView(u),'estanteria-libros');assert.equal(u.searchParams.get('highlight'),'alsea');assert.equal(u.searchParams.get('xhide-alsea'),'["silla-1"]');
+ assert.equal(readView(selectionURL(u,'alsea',entries)),'estanteria-libros','sin argumento se conserva');
+ assert.equal(readView(selectionURL(u,'alsea',entries,null)),null,'null lo elimina');
+ assert.equal(readView('nota-url'),null);
+});
+test('encuadre: la caja del objeto queda entera y centrada en la cámara ortográfica',()=>{
+ const cam=new T.OrthographicCamera();cam.position.set(20,15,20);cam.lookAt(5,.65,4);cam.updateMatrixWorld(true);
+ const ext=pts=>{const r={minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity};for(const p of pts){const v=p.clone().applyMatrix4(cam.matrixWorldInverse);r.minX=Math.min(r.minX,v.x);r.maxX=Math.max(r.maxX,v.x);r.minY=Math.min(r.minY,v.y);r.maxY=Math.max(r.maxY,v.y);}return r;};
+ const corners=(a,b)=>{const out=[];for(const x of [a.x,b.x])for(const y of [a.y,b.y])for(const z of [a.z,b.z])out.push(new T.Vector3(x,y,z));return out;};
+ const room=ext(corners(new T.Vector3(-.8,-.5,-.7),new T.Vector3(12.1,3.5,9.2)));
+ for(const aspect of [390/300,1600/820])for(const [a,b] of [[new T.Vector3(1,0,.1),new T.Vector3(2.2,1.8,.4)],[new T.Vector3(8,0,6),new T.Vector3(8.3,.9,6.6)]]){
+  const box=ext(corners(a,b)),fit=fitBoxFrame(room,box,aspect,1.4);
+  const vertical=Math.max(room.maxY-room.minY,(room.maxX-room.minX)/aspect)*1.06/fit.zoom,horizontal=vertical*aspect;
+  const cx=(room.minX+room.maxX)/2+fit.panX,cy=(room.minY+room.maxY)/2+fit.panY;
+  assert.ok(box.minX>=cx-horizontal/2&&box.maxX<=cx+horizontal/2&&box.minY>=cy-vertical/2&&box.maxY<=cy+vertical/2,'entera');
+  assert.ok(Math.abs((box.minX+box.maxX)/2-cx)<1e-9&&Math.abs((box.minY+box.maxY)/2-cy)<1e-9,'centrada');
+  assert.ok(fit.zoom>1,'se acerca');
+ }
+});
+test('visor: el renderer expone frameObject y el inventario lo usa con resalte y &ver',()=>{
+ const r=fs.readFileSync(new URL('../assets/xpaces/engine/life-renderer.mjs',import.meta.url),'utf8'),inv=fs.readFileSync(new URL('../assets/xpaces/inventory.mjs',import.meta.url),'utf8'),v=fs.readFileSync(new URL('../assets/xpaces/viewer.mjs',import.meta.url),'utf8');
+ assert.match(r,/needsUpdate=true;\},frameObject,resize,/);assert.match(inv,/viewer\.frameObject\?\.\(e\.object\);pulse\(e\);/);assert.match(inv,/if\(!e\.visible\)\{e\.visible=true;apply\(\);\}/);assert.match(v,/inventory\?\.openFromURL\(\)/);
+ const css=fs.readFileSync(new URL('../assets/xpaces/viewer.css',import.meta.url),'utf8');assert.match(css,/\.xpace-ver\{flex:none/);
+ for(const page of ['../stock.html','../en/stock.html'])assert.match(fs.readFileSync(new URL(page,import.meta.url),'utf8'),/viewer\.mjs\?v=ver-mueble/);
+});

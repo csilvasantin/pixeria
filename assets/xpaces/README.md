@@ -59,6 +59,15 @@ skip invisible ancestors; list and model selection share an outline. Visibility
 changes also invalidate the static shadow map. All/Nothing applies to the whole
 model, including the collapsible additional objects section.
 
+Each inventory row (measured items and additional model objects alike) has a
+compact «Ver» button on the right, a sibling of the checkbox so tapping it never
+toggles visibility. It makes the item visible if it was hidden, selects it,
+scrolls to the 3D stage, animates the existing orbit camera (`frameObject`,
+same angle, elevation clamped to 0.35–1.0 rad) so the item's bounding box fits
+whole and centred, and flashes a translucent yellow box plus the selection
+outline for ~2.4 s. The view link then carries `ver=<id>`; opening it frames
+that item again. Selecting another item removes `ver`.
+
 The URL stores hidden IDs in `xhide-<stock-id>` plus `highlight=<stock-id>`;
 separate models retain independent visibility. Exports include only checked
 items, with `id`, `nombre`, `tipo`, `categoria`, `cantidad`, metric `medidas`,

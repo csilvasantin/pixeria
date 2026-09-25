@@ -29,3 +29,13 @@ export function mappedCameraFrame(snapshot={},width=1,height=1){
   return {...result,registration:'good-canvas-contain',pixelsPerUnit,source:{width:p.width,height:p.height,ox:p.ox,oy:p.oy,tileW:p.tileW,tileH:p.tileH},
     frustum:{left:centerX-horizontal/2,right:centerX+horizontal/2,top:centerY+vertical/2,bottom:centerY-vertical/2}};
 }
+
+/** Encuadre de un objeto (#ver-mueble): room y box son extensiones en espacio de
+ * cámara {minX,maxX,minY,maxY}. Devuelve zoom y desplazamiento para que la caja
+ * quede entera y centrada en el mismo encuadre «room-fit» de frameCamera(). */
+export function fitBoxFrame(room,box,aspect=1,margin=1.4){
+  const a=positive(aspect)?aspect:1;
+  const base=Math.max(room.maxY-room.minY,(room.maxX-room.minX)/a)*1.06;
+  const need=Math.max(box.maxY-box.minY,(box.maxX-box.minX)/a,1e-3)*(positive(margin)?margin:1.4);
+  return {zoom:base/need,panX:(box.minX+box.maxX)/2-(room.minX+room.maxX)/2,panY:(box.minY+box.maxY)/2-(room.minY+room.maxY)/2};
+}

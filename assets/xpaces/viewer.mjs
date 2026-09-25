@@ -1,8 +1,8 @@
-import {createLifeRenderer} from './engine/life-renderer.mjs?v=inventory-4375';
+import {createLifeRenderer} from './engine/life-renderer.mjs?v=ver-mueble';
 import {createLifeScene} from './engine/life-scene.mjs?v=px-1';
 import {GLTFLoader} from './engine/vendor/GLTFLoader.mjs';
 import * as T from './engine/premium-three.mjs';
-import {bindInventory,mountInventory} from './inventory.mjs?v=libros-4397';
+import {bindInventory,mountInventory} from './inventory.mjs?v=ver-mueble';
 import {mergeGeometries} from './engine/vendor/BufferGeometryUtils.mjs';
 
 function release(root) {
@@ -81,6 +81,8 @@ export async function mountXpace(host, item, {signal,furniture=false,onModel}={}
     if(disposed)return dispose;
     if(onModel)await onModel({root,viewer,size,canvas,on,resizeModel:next=>{snapshot.cols=next[0]/100;snapshot.rows=next[1]/100;snapshot.wallHeight=next[2]/100;}});
     status.hidden=true;host.dataset.ready='true';
+    // Enlace de vista con &ver=<id>: encuadra y resalta ese objeto al abrir.
+    inventory?.openFromURL();
     function tick(now){if(disposed)return;if(!document.hidden)viewer.render(now);frame=requestAnimationFrame(tick);}frame=requestAnimationFrame(tick);
     // Read-only diagnostics make camera motion and resource cleanup testable.
     host.xpaceState=()=>({camera:viewer.cameraState,disposed,inventory:inventory?.state(),capsulas:bound?.capsulas?.state||null});
