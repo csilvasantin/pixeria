@@ -73,3 +73,20 @@ test('norma 16:9 / 9:16: vertical en móvil en vertical, horizontal en escritori
  assert.equal(pickVideo(both,true).id,'ver');assert.equal(pickVideo(both,false).id,'hor');
  const solo=mediaFor(b,[v('ver',{tags:['vertical']})]);assert.equal(pickVideo(solo,false).id,'ver');assert.equal(pickVideo({video:null,videos:{}},true),null);
 });
+
+test('Comprar / Vender: Casa del Libro (o su búsqueda) y Wallapop, en pestaña nueva y sin precios',async()=>{
+ const {compraURL,anuncioTexto,WALLAPOP_UPLOAD}=await import('../assets/xpaces/capsulas.mjs');
+ const shelf=JSON.parse(fs.readFileSync(new URL('../assets/xpaces/libros/estanteria-libros.json',import.meta.url)));
+ const meta=slug=>shelf.libros.find(l=>l.slug===slug);
+ const co={libro:'Co-Intelligence',meta:meta('co-intelligence-en')};assert.equal(compraURL(co),'https://www.casadellibro.com/libro-cointeligencia/9788418053214/16155367');
+ const imp={libro:'The Impossible Factory',meta:meta('the-impossible-factory-en')};assert.equal(imp.meta.casadellibro_url,null);assert.equal(compraURL(imp),'https://www.casadellibro.com/?query=The%20Impossible%20Factory');
+ for(const l of shelf.libros)assert.match(compraURL({libro:l.titulo,meta:l}),/^https:\/\/www\.casadellibro\.com\//);
+ const t=anuncioTexto(co);assert.match(t,/^Libro: Co-Intelligence/);assert.match(t,/Autor: Ethan Mollick/);assert.match(t,/ISBN: 9788418053214/);assert.ok(!/€|precio/i.test(t),'sin precios');
+ assert.equal(WALLAPOP_UPLOAD,'https://es.wallapop.com/app/catalog/upload');
+ const c=fs.readFileSync(new URL('../assets/xpaces/capsulas.mjs',import.meta.url),'utf8');
+ const iMedia=c.indexOf('<div class="xpace-libro-media">'),iBuy=c.indexOf('<div class="xpace-libro-compra">'),iKicker=c.indexOf('<p class="xpace-libro-kicker">');
+ assert.ok(iMedia<iBuy&&iBuy<iKicker,'debajo del vídeo y encima de «Cápsula Blinkist · consejero»');
+ assert.match(c,/data-comprar href="\$\{esc\(compraURL\(b\)\)\}" target="_blank" rel="noopener"/);assert.match(c,/data-vender href="\$\{WALLAPOP_UPLOAD\}" target="_blank" rel="noopener"/);
+ assert.match(c,/Texto del anuncio copiado/);
+ const css=fs.readFileSync(new URL('../assets/xpaces/viewer.css',import.meta.url),'utf8');assert.match(css,/\.xpace-libro-compra\{display:grid;grid-template-columns:1fr 1fr/);assert.match(css,/\.xpace-libro-compra a\{[^}]*min-width:0/);
+});

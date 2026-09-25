@@ -82,6 +82,10 @@ closes the panel; «Salir del modo detalle» returns to the isometric view.
 When Stock has both a vertical (9:16) and a horizontal (16:9) video for a
 capsule (`orientacion`, tags or `ancho`/`alto`), the panel plays the vertical
 one on a portrait phone and the horizontal one elsewhere (`pickVideo`).
+Under the video, «Comprar» opens the book's `casadellibro_url` (or Casa del
+Libro's own search `?query=<title>` when it is null) and «Vender» opens
+Wallapop's upload page and copies a listing text (title, author, ISBN; no
+price). Both open in a new tab (`_blank`, `noopener`), no affiliation.
 pizarra-3 is untouched.
 
 The URL stores hidden IDs in `xhide-<stock-id>` plus `highlight=<stock-id>`;
