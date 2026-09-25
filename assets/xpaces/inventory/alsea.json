@@ -24,7 +24,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 328
+      "node": 328,
+      "nodeName": "barra"
     },
     {
       "id": "mueble-trasero",
@@ -43,7 +44,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 346
+      "node": 346,
+      "nodeName": "mueble-trasero"
     },
     {
       "id": "cafetera",
@@ -62,7 +64,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 474
+      "node": 474,
+      "nodeName": "cafetera"
     },
     {
       "id": "vitrina-bolleria",
@@ -81,7 +84,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 540
+      "node": 540,
+      "nodeName": "vitrina-bolleria"
     },
     {
       "id": "pizarra-1",
@@ -100,7 +104,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 628
+      "node": 628,
+      "nodeName": "pizarra-1"
     },
     {
       "id": "pizarra-2",
@@ -119,7 +124,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 630
+      "node": 630,
+      "nodeName": "pizarra-2"
     },
     {
       "id": "pizarra-3",
@@ -138,7 +144,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 632
+      "node": 632,
+      "nodeName": "pizarra-3"
     },
     {
       "id": "pantalla-recogida",
@@ -157,7 +164,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 634
+      "node": 634,
+      "nodeName": "pantalla-recogida"
     },
     {
       "id": "balda-recogida",
@@ -176,7 +184,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 353
+      "node": 353,
+      "nodeName": "balda-recogida"
     },
     {
       "id": "nevera",
@@ -195,7 +204,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 626
+      "node": 626,
+      "nodeName": "nevera"
     },
     {
       "id": "barra-ventana",
@@ -214,7 +224,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 358
+      "node": 358,
+      "nodeName": "barra-ventana"
     },
     {
       "id": "taburete-1",
@@ -233,7 +244,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 362
+      "node": 362,
+      "nodeName": "taburete-1"
     },
     {
       "id": "taburete-2",
@@ -252,7 +264,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 366
+      "node": 366,
+      "nodeName": "taburete-2"
     },
     {
       "id": "taburete-3",
@@ -271,7 +284,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 370
+      "node": 370,
+      "nodeName": "taburete-3"
     },
     {
       "id": "taburete-4",
@@ -290,7 +304,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 374
+      "node": 374,
+      "nodeName": "taburete-4"
     },
     {
       "id": "mesa-1",
@@ -309,7 +324,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 379
+      "node": 379,
+      "nodeName": "mesa-1"
     },
     {
       "id": "mesa-2",
@@ -328,7 +344,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 384
+      "node": 384,
+      "nodeName": "mesa-2"
     },
     {
       "id": "mesa-3",
@@ -347,7 +364,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 389
+      "node": 389,
+      "nodeName": "mesa-3"
     },
     {
       "id": "silla-1",
@@ -366,7 +384,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 395
+      "node": 395,
+      "nodeName": "silla-1"
     },
     {
       "id": "silla-2",
@@ -385,7 +404,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 401
+      "node": 401,
+      "nodeName": "silla-2"
     },
     {
       "id": "silla-3",
@@ -404,7 +424,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 407
+      "node": 407,
+      "nodeName": "silla-3"
     },
     {
       "id": "silla-4",
@@ -423,7 +444,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 413
+      "node": 413,
+      "nodeName": "silla-4"
     },
     {
       "id": "silla-5",
@@ -442,7 +464,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 419
+      "node": 419,
+      "nodeName": "silla-5"
     },
     {
       "id": "silla-6",
@@ -461,7 +484,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 425
+      "node": 425,
+      "nodeName": "silla-6"
     },
     {
       "id": "sofa",
@@ -480,7 +504,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 433
+      "node": 433,
+      "nodeName": "sofa"
     },
     {
       "id": "mesa-baja",
@@ -499,7 +524,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 438
+      "node": 438,
+      "nodeName": "mesa-baja"
     },
     {
       "id": "lampara-1",
@@ -518,7 +544,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 249
+      "node": 249,
+      "nodeName": "lampara-1"
     },
     {
       "id": "lampara-2",
@@ -537,7 +564,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 252
+      "node": 252,
+      "nodeName": "lampara-2"
     },
     {
       "id": "lampara-3",
@@ -556,7 +584,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 255
+      "node": 255,
+      "nodeName": "lampara-3"
     },
     {
       "id": "lampara-4",
@@ -575,7 +604,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 258
+      "node": 258,
+      "nodeName": "lampara-4"
     },
     {
       "id": "planta-1",
@@ -594,7 +624,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 655
+      "node": 655,
+      "nodeName": "planta-1"
     },
     {
       "id": "planta-2",
@@ -613,7 +644,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 676
+      "node": 676,
+      "nodeName": "planta-2"
     },
     {
       "id": "planta-3",
@@ -632,7 +664,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 697
+      "node": 697,
+      "nodeName": "planta-3"
     },
     {
       "id": "tpv",
@@ -651,7 +684,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 542
+      "node": 542,
+      "nodeName": "tpv"
     },
     {
       "id": "glb:suelo",
@@ -665,7 +699,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 210
+      "node": 210,
+      "nodeName": "suelo"
     },
     {
       "id": "glb:pared_fachada",
@@ -679,7 +714,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 222
+      "node": 222,
+      "nodeName": "pared_fachada"
     },
     {
       "id": "glb:escaparate_1",
@@ -693,7 +729,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 223
+      "node": 223,
+      "nodeName": "escaparate_1"
     },
     {
       "id": "glb:escaparate_3",
@@ -707,7 +744,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 224
+      "node": 224,
+      "nodeName": "escaparate_3"
     },
     {
       "id": "glb:puerta_entrada",
@@ -721,7 +759,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 225
+      "node": 225,
+      "nodeName": "puerta_entrada"
     },
     {
       "id": "glb:puerta_obrador",
@@ -735,7 +774,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 226
+      "node": 226,
+      "nodeName": "puerta_obrador"
     },
     {
       "id": "glb:pared_fondo",
@@ -749,7 +789,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 232
+      "node": 232,
+      "nodeName": "pared_fondo"
     },
     {
       "id": "glb:marco_0_jamba_0.9",
@@ -763,7 +804,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 233
+      "node": 233,
+      "nodeName": "marco_0_jamba_0.9"
     },
     {
       "id": "glb:marco_0_jamba_2.975",
@@ -777,7 +819,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 234
+      "node": 234,
+      "nodeName": "marco_0_jamba_2.975"
     },
     {
       "id": "glb:marco_0_travesano_0.25",
@@ -791,7 +834,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 235
+      "node": 235,
+      "nodeName": "marco_0_travesano_0.25"
     },
     {
       "id": "glb:marco_0_travesano_2.6750000000000003",
@@ -805,7 +849,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 236
+      "node": 236,
+      "nodeName": "marco_0_travesano_2.6750000000000003"
     },
     {
       "id": "glb:marco_1_jamba_3.2",
@@ -819,7 +864,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 237
+      "node": 237,
+      "nodeName": "marco_1_jamba_3.2"
     },
     {
       "id": "glb:marco_1_jamba_5.2749999999999995",
@@ -833,7 +879,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 238
+      "node": 238,
+      "nodeName": "marco_1_jamba_5.2749999999999995"
     },
     {
       "id": "glb:marco_1_travesano_0.25",
@@ -847,7 +894,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 239
+      "node": 239,
+      "nodeName": "marco_1_travesano_0.25"
     },
     {
       "id": "glb:marco_1_travesano_2.6750000000000003",
@@ -861,7 +909,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 240
+      "node": 240,
+      "nodeName": "marco_1_travesano_2.6750000000000003"
     },
     {
       "id": "glb:marco_2_jamba_5.9",
@@ -875,7 +924,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 241
+      "node": 241,
+      "nodeName": "marco_2_jamba_5.9"
     },
     {
       "id": "glb:marco_2_jamba_6.975",
@@ -889,7 +939,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 242
+      "node": 242,
+      "nodeName": "marco_2_jamba_6.975"
     },
     {
       "id": "glb:marco_2_travesano_0",
@@ -903,7 +954,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 243
+      "node": 243,
+      "nodeName": "marco_2_travesano_0"
     },
     {
       "id": "glb:marco_2_travesano_2.475",
@@ -917,7 +969,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 244
+      "node": 244,
+      "nodeName": "marco_2_travesano_2.475"
     },
     {
       "id": "glb:puerta_entrada__tirador",
@@ -931,7 +984,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 245
+      "node": 245,
+      "nodeName": "puerta_entrada__tirador"
     },
     {
       "id": "glb:puerta_obrador__tirador",
@@ -945,7 +999,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 246
+      "node": 246,
+      "nodeName": "puerta_obrador__tirador"
     },
     {
       "id": "glb:led_perimetral_fachada0",
@@ -959,7 +1014,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 259
+      "node": 259,
+      "nodeName": "led_perimetral_fachada0"
     },
     {
       "id": "glb:led_perimetral_fachada1",
@@ -973,7 +1029,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 260
+      "node": 260,
+      "nodeName": "led_perimetral_fachada1"
     },
     {
       "id": "glb:led_perimetral_fachada2",
@@ -987,7 +1044,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 261
+      "node": 261,
+      "nodeName": "led_perimetral_fachada2"
     },
     {
       "id": "glb:led_perimetral_fachada3",
@@ -1001,7 +1059,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 262
+      "node": 262,
+      "nodeName": "led_perimetral_fachada3"
     },
     {
       "id": "glb:led_perimetral_fondo0",
@@ -1015,7 +1074,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 263
+      "node": 263,
+      "nodeName": "led_perimetral_fondo0"
     },
     {
       "id": "glb:led_perimetral_fondo1",
@@ -1029,7 +1089,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 264
+      "node": 264,
+      "nodeName": "led_perimetral_fondo1"
     },
     {
       "id": "S1",
@@ -1043,7 +1104,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-iot",
-      "node": 698
+      "node": 698,
+      "nodeName": "iot_S1"
     },
     {
       "id": "S2",
@@ -1057,7 +1119,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-iot",
-      "node": 699
+      "node": 699,
+      "nodeName": "iot_S2"
     },
     {
       "id": "S3",
@@ -1071,7 +1134,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-iot",
-      "node": 700
+      "node": 700,
+      "nodeName": "iot_S3"
     },
     {
       "id": "A1",
@@ -1085,7 +1149,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-iot",
-      "node": 701
+      "node": 701,
+      "nodeName": "iot_A1"
     },
     {
       "id": "W1",
@@ -1099,7 +1164,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-iot",
-      "node": 702
+      "node": 702,
+      "nodeName": "iot_W1"
     },
     {
       "id": "G1",
@@ -1113,7 +1179,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-iot",
-      "node": 703
+      "node": 703,
+      "nodeName": "iot_G1"
     }
   ]
 }

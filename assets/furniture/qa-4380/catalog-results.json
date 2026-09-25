@@ -1,0 +1,482 @@
+[
+  {
+    "id": "1790368291504-gruas8",
+    "file": "alsea-barra",
+    "dimensionsCm": [
+      480.0000190734863,
+      76.19999079033732,
+      105.0000000745058
+    ],
+    "materials": 5
+  },
+  {
+    "id": "1790370234557-547m45",
+    "file": "alsea-mueble-trasero",
+    "dimensionsCm": [
+      480.0000190734863,
+      61.20000211521983,
+      90.00000040978193
+    ],
+    "materials": 3
+  },
+  {
+    "id": "1790370186236-n4eyaq",
+    "file": "alsea-cafetera",
+    "dimensionsCm": [
+      94.0000131726265,
+      56.79997205734253,
+      50.00000298023224
+    ],
+    "materials": 3
+  },
+  {
+    "id": "1790370269879-0xo5zi",
+    "file": "alsea-vitrina-bolleria",
+    "dimensionsCm": [
+      130.000005569309,
+      58.00000270828605,
+      50.00001033768058
+    ],
+    "materials": 6
+  },
+  {
+    "id": "1790368420346-1hckqx",
+    "file": "alsea-pizarra-1",
+    "dimensionsCm": [
+      109.00000333786011,
+      5.200000107288361,
+      62.00000047683716
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790368457216-l1vsri",
+    "file": "alsea-pizarra-2",
+    "dimensionsCm": [
+      109.00000333786011,
+      5.200000107288361,
+      62.00000047683716
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790368490554-8yte2c",
+    "file": "alsea-pizarra-3",
+    "dimensionsCm": [
+      109.00000333786011,
+      5.200000107288361,
+      62.00000047683716
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790370234535-uwisay",
+    "file": "alsea-balda-recogida",
+    "dimensionsCm": [
+      129.99999523162842,
+      34.99999940395355,
+      18.999996781349182
+    ],
+    "materials": 3
+  },
+  {
+    "id": "1790368504947-b8vab2",
+    "file": "alsea-nevera",
+    "dimensionsCm": [
+      80.00000342726707,
+      71.30000065080822,
+      199.99999925494194
+    ],
+    "materials": 9
+  },
+  {
+    "id": "1790368504243-t54hu4",
+    "file": "alsea-pantalla-recogida",
+    "dimensionsCm": [
+      95.99999785423279,
+      5.200000107288361,
+      55.000001192092896
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790368533667-6empu0",
+    "file": "alsea-barra-ventana",
+    "dimensionsCm": [
+      44.999998807907104,
+      419.9999827891588,
+      105.0000000745058
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790368534828-2pgqcr",
+    "file": "alsea-taburete",
+    "dimensionsCm": [
+      40.00000059604645,
+      40.00000059604645,
+      74.99999962747097
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790370234962-5533l2",
+    "file": "alsea-mesa",
+    "dimensionsCm": [
+      69.9999988079071,
+      69.9999988079071,
+      82.99999982118607
+    ],
+    "materials": 4
+  },
+  {
+    "id": "1790368563868-q9dg78",
+    "file": "alsea-silla",
+    "dimensionsCm": [
+      45.0000012293458,
+      44.999998807907104,
+      85.00000238418579
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368570433-cya0y5",
+    "file": "alsea-sofa",
+    "dimensionsCm": [
+      200.0000387430191,
+      85.00000238418579,
+      80.00000268220901
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790368572287-cb9jy5",
+    "file": "alsea-mesa-baja",
+    "dimensionsCm": [
+      110.00000238418579,
+      60.00000238418579,
+      42.000000551342964
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790368605841-3tot96",
+    "file": "alsea-tpv",
+    "dimensionsCm": [
+      31.999999284744263,
+      25.999999046325684,
+      12.300000479444861
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790368625383-khj500",
+    "file": "alsea-glb_led_perimetral_fachada0",
+    "dimensionsCm": [
+      1.4999999664723873,
+      89.99999761581421,
+      2.9999999329447746
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368636639-rq1oxl",
+    "file": "alsea-glb_led_perimetral_fachada1",
+    "dimensionsCm": [
+      1.4999999664723873,
+      20.000000298023224,
+      2.9999999329447746
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368648679-ehm53i",
+    "file": "alsea-glb_led_perimetral_fachada2",
+    "dimensionsCm": [
+      1.4999999664723873,
+      60.00000238418579,
+      2.9999999329447746
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368664991-ewa7gq",
+    "file": "alsea-glb_led_perimetral_fachada3",
+    "dimensionsCm": [
+      1.4999999664723873,
+      50,
+      2.9999999329447746
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368686240-2k9bo3",
+    "file": "alsea-glb_led_perimetral_fondo1",
+    "dimensionsCm": [
+      885.0000381469727,
+      1.2000000104308128,
+      1.2000000104308128
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368671519-dzs78w",
+    "file": "alsea-glb_led_perimetral_fondo0",
+    "dimensionsCm": [
+      135.0000023841858,
+      1.2000000104308128,
+      1.2000000104308128
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368749562-kutoci",
+    "file": "alsea-A1",
+    "dimensionsCm": [
+      15.999999642372131,
+      5.999999865889549,
+      20.000000298023224
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368750021-jswoyf",
+    "file": "alsea-W1",
+    "dimensionsCm": [
+      20.000000298023224,
+      20.000000298023224,
+      2.9999999329447746
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368741956-3y6np1",
+    "file": "alsea-S",
+    "dimensionsCm": [
+      20.000000298023224,
+      20.000000298023224,
+      2.9999999329447746
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368779754-c5ud0e",
+    "file": "alsea-G1",
+    "dimensionsCm": [
+      15.999999642372131,
+      5.999999865889549,
+      20.000000298023224
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368786092-gbc1dm",
+    "file": "xtanco-mostrador",
+    "dimensionsCm": [
+      300,
+      71.00000279024243,
+      105.0000000745058
+    ],
+    "materials": 5
+  },
+  {
+    "id": "1790370294820-dgqg8a",
+    "file": "xtanco-vitrina",
+    "dimensionsCm": [
+      320.0000071898103,
+      44.999998807907104,
+      209.99999791383743
+    ],
+    "materials": 11
+  },
+  {
+    "id": "1790368812926-gkzart",
+    "file": "xtanco-pantalla-pared",
+    "dimensionsCm": [
+      264.0000104904175,
+      6.199999805539846,
+      74.00000095367432
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790368821297-0pp7op",
+    "file": "xtanco-pantalla-mostrador",
+    "dimensionsCm": [
+      51.99999809265137,
+      11.999999731779099,
+      47.00000882148743
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790368823609-hm8zmk",
+    "file": "xtanco-pantalla-escaparate",
+    "dimensionsCm": [
+      44.999998807907104,
+      124.00000095367432,
+      190.0000035762787
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790370302886-2gy9ow",
+    "file": "xtanco-expendedora",
+    "dimensionsCm": [
+      89.99999761581421,
+      81.00000070407987,
+      185.0000023841858
+    ],
+    "materials": 11
+  },
+  {
+    "id": "1790368853729-q66hbt",
+    "file": "xtanco-taburete",
+    "dimensionsCm": [
+      40.00000059604645,
+      40.00000059604645,
+      74.99999962747097
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790368857752-eg0014",
+    "file": "xtanco-tpv",
+    "dimensionsCm": [
+      30.000001192092896,
+      25,
+      12.300000479444861
+    ],
+    "materials": 2
+  },
+  {
+    "id": "1790368876763-j9x7yi",
+    "file": "xtanco-A1",
+    "dimensionsCm": [
+      15.999999642372131,
+      5.999999865889549,
+      20.000000298023224
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368883521-gqinmi",
+    "file": "xtanco-G1",
+    "dimensionsCm": [
+      15.999999642372131,
+      5.999999865889549,
+      20.000000298023224
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368892994-bul1b3",
+    "file": "xtanco-S",
+    "dimensionsCm": [
+      20.000000298023224,
+      20.000000298023224,
+      2.9999999329447746
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368910435-2jj88n",
+    "file": "xtanco-W1",
+    "dimensionsCm": [
+      20.000000298023224,
+      20.000000298023224,
+      2.9999999329447746
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368914286-yzgs1g",
+    "file": "xtanco-glb_led_perimetral_fachada",
+    "dimensionsCm": [
+      1.4999999664723873,
+      450,
+      2.9999999329447746
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790368926879-anvgln",
+    "file": "xtanco-glb_led_perimetral_fondo",
+    "dimensionsCm": [
+      600,
+      1.4999999664723873,
+      2.9999999329447746
+    ],
+    "materials": 1
+  },
+  {
+    "id": "1790370300414-b0tx39",
+    "file": "xtanco-lampara",
+    "dimensionsCm": [
+      36.000001430511475,
+      36.000001430511475,
+      119.99999284744263
+    ],
+    "materials": 3
+  },
+  {
+    "id": "1790370324506-hpgyfw",
+    "file": "xtanco-planta",
+    "dimensionsCm": [
+      50,
+      50,
+      139.47807550430298
+    ],
+    "materials": 3
+  },
+  {
+    "id": "1790369405902-ptvh20",
+    "file": "alsea-planta-2",
+    "dimensionsCm": [
+      44.92039084434509,
+      44.92039084434509,
+      129.99999523162842
+    ],
+    "materials": 4
+  },
+  {
+    "id": "1790369405888-1056k4",
+    "file": "alsea-planta-3",
+    "dimensionsCm": [
+      49.91165101528168,
+      49.91165101528168,
+      139.9999976158142
+    ],
+    "materials": 4
+  },
+  {
+    "id": "1790369405884-xo0noj",
+    "file": "alsea-planta-1",
+    "dimensionsCm": [
+      54.90294098854065,
+      54.90294098854065,
+      160.0000023841858
+    ],
+    "materials": 4
+  },
+  {
+    "id": "1790370265563-cw51cx",
+    "file": "alsea-lampara",
+    "dimensionsCm": [
+      39.70443904399872,
+      39.70443904399872,
+      137.99999952316284
+    ],
+    "materials": 3
+  },
+  {
+    "id": "1790370267985-d7abna",
+    "file": "alsea-lampara-4",
+    "dimensionsCm": [
+      39.70443904399872,
+      39.70443904399872,
+      99.99999403953552
+    ],
+    "materials": 3
+  }
+]

@@ -1,5 +1,5 @@
 // Superseded grouping drafts: plants and suspension lengths differ.
-const retired=new Set(['1790368601152-7o2fq5','1790368592506-ca7e3w']);
+const retired=new Set(["1790368325710-fnzcvr", "1790368359200-1fppi2", "1790368387109-jrzy92", "1790368504264-fiuoqb", "1790368536628-uueijh", "1790368592506-ca7e3w", "1790368601152-7o2fq5", "1790368788851-usnrcj", "1790368844094-regk76", "1790368944990-j2ohsk", "1790368951823-l0bf4e", "1790369440611-0j3hgy", "1790369440624-b44eek"]);
 export const API='https://api.admira.store';
 export const isFurniture3D=item=>!retired.has(item?.id)&&!item?.oculto&&item?.type==='furni'&&String(item.mime).split(';')[0]==='model/gltf-binary';
 export function furnitureData(item){

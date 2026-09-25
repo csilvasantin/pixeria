@@ -21,66 +21,6 @@
     ]
   },
   {
-    "file": "alsea-mueble-trasero",
-    "quantity": 1,
-    "ids": [
-      "mueble-trasero"
-    ],
-    "dimensionsCm": [
-      480.0000190734863,
-      61.20000183582306,
-      89.99999761581421
-    ],
-    "base": 0.0,
-    "meshes": 18,
-    "materials": [
-      "MAT_laton",
-      "MAT_nogal",
-      "MAT_roble_claro"
-    ]
-  },
-  {
-    "file": "alsea-cafetera",
-    "quantity": 1,
-    "ids": [
-      "cafetera"
-    ],
-    "dimensionsCm": [
-      94.00001466274261,
-      56.79999589920044,
-      50.00000596046448
-    ],
-    "base": 0.0,
-    "meshes": 36,
-    "materials": [
-      "MAT_acero",
-      "NEGRO_MATE",
-      "VIDRIO"
-    ]
-  },
-  {
-    "file": "alsea-vitrina-bolleria",
-    "quantity": 1,
-    "ids": [
-      "vitrina-bolleria"
-    ],
-    "dimensionsCm": [
-      130.00000715255737,
-      58.000004291534424,
-      50.000011920928955
-    ],
-    "base": 0.0,
-    "meshes": 66,
-    "materials": [
-      "CARPINTERIA_BRONCE",
-      "CHOCOLATE",
-      "MASA_HORNEADA",
-      "MAT_acero",
-      "MAT_nogal",
-      "VIDRIO"
-    ]
-  },
-  {
     "file": "alsea-pizarra-1",
     "quantity": 1,
     "ids": [
@@ -153,25 +93,6 @@
     ]
   },
   {
-    "file": "alsea-balda-recogida",
-    "quantity": 1,
-    "ids": [
-      "balda-recogida"
-    ],
-    "dimensionsCm": [
-      129.99999523162842,
-      34.99999940395355,
-      18.999996781349182
-    ],
-    "base": 0.0,
-    "meshes": 7,
-    "materials": [
-      "CAFE",
-      "CERAMICA",
-      "MAT_roble_claro"
-    ]
-  },
-  {
     "file": "alsea-nevera",
     "quantity": 1,
     "ids": [
@@ -231,28 +152,6 @@
     "base": 0.0,
     "meshes": 4,
     "materials": [
-      "MAT_roble_claro",
-      "NEGRO_MATE"
-    ]
-  },
-  {
-    "file": "alsea-mesa",
-    "quantity": 3,
-    "ids": [
-      "mesa-1",
-      "mesa-2",
-      "mesa-3"
-    ],
-    "dimensionsCm": [
-      69.9999988079071,
-      69.9999988079071,
-      82.99999833106995
-    ],
-    "base": 0.0,
-    "meshes": 5,
-    "materials": [
-      "CAFE",
-      "CERAMICA",
       "MAT_roble_claro",
       "NEGRO_MATE"
     ]
@@ -566,6 +465,85 @@
     ]
   },
   {
+    "file": "alsea-cafetera",
+    "quantity": 1,
+    "ids": [
+      "cafetera"
+    ],
+    "dimensionsCm": [
+      94.00001466274261,
+      56.79997205734253,
+      50.0
+    ],
+    "base": 0.0,
+    "meshes": 62,
+    "materials": [
+      "MAT_acero",
+      "NEGRO_MATE",
+      "VIDRIO"
+    ]
+  },
+  {
+    "file": "alsea-mueble-trasero",
+    "quantity": 1,
+    "ids": [
+      "mueble-trasero"
+    ],
+    "dimensionsCm": [
+      480.0000190734863,
+      61.20000183582306,
+      89.99999761581421
+    ],
+    "base": 0.0,
+    "meshes": 18,
+    "materials": [
+      "MAT_laton",
+      "MAT_nogal",
+      "MAT_roble_claro"
+    ]
+  },
+  {
+    "file": "alsea-balda-recogida",
+    "quantity": 1,
+    "ids": [
+      "balda-recogida"
+    ],
+    "dimensionsCm": [
+      129.99999523162842,
+      34.99999940395355,
+      18.999996781349182
+    ],
+    "base": 0.0,
+    "meshes": 7,
+    "materials": [
+      "CAFE",
+      "CERAMICA",
+      "MAT_roble_claro"
+    ]
+  },
+  {
+    "file": "alsea-mesa",
+    "quantity": 3,
+    "ids": [
+      "mesa-1",
+      "mesa-2",
+      "mesa-3"
+    ],
+    "dimensionsCm": [
+      69.9999988079071,
+      69.9999988079071,
+      82.99999833106995
+    ],
+    "base": 0.0,
+    "meshes": 5,
+    "materials": [
+      "CAFE",
+      "CERAMICA",
+      "MAT_roble_claro",
+      "NEGRO_MATE"
+    ]
+  },
+  {
     "file": "alsea-lampara",
     "quantity": 3,
     "ids": [
@@ -606,6 +584,28 @@
     ]
   },
   {
+    "file": "alsea-vitrina-bolleria",
+    "quantity": 1,
+    "ids": [
+      "vitrina-bolleria"
+    ],
+    "dimensionsCm": [
+      130.00000715255737,
+      58.000004291534424,
+      50.000011920928955
+    ],
+    "base": 0.0,
+    "meshes": 70,
+    "materials": [
+      "CARPINTERIA_BRONCE",
+      "CHOCOLATE",
+      "MASA_HORNEADA",
+      "MAT_acero",
+      "MAT_nogal",
+      "VIDRIO"
+    ]
+  },
+  {
     "file": "xtanco-mostrador",
     "quantity": 1,
     "ids": [
@@ -624,33 +624,6 @@
       "MAT_laton",
       "MAT_roble",
       "NEGRO_MATE"
-    ]
-  },
-  {
-    "file": "xtanco-vitrina",
-    "quantity": 1,
-    "ids": [
-      "vitrina"
-    ],
-    "dimensionsCm": [
-      320.0000047683716,
-      44.999998807907104,
-      209.99999046325684
-    ],
-    "base": 0.0,
-    "meshes": 322,
-    "materials": [
-      "ENVASE_GENERICO_0",
-      "ENVASE_GENERICO_1",
-      "ENVASE_GENERICO_2",
-      "ENVASE_GENERICO_3",
-      "ENVASE_GENERICO_4",
-      "ENVASE_GENERICO_5",
-      "ETIQUETA_MARFIL",
-      "LED_fff1c8",
-      "MAT_laton",
-      "MAT_roble",
-      "VIDRIO"
     ]
   },
   {
@@ -705,33 +678,6 @@
     "materials": [
       "NEGRO_MATE",
       "PANTALLA_pantalla-escaparate"
-    ]
-  },
-  {
-    "file": "xtanco-expendedora",
-    "quantity": 1,
-    "ids": [
-      "expendedora"
-    ],
-    "dimensionsCm": [
-      89.99999761581421,
-      81.00000023841858,
-      185.0000023841858
-    ],
-    "base": 0.0,
-    "meshes": 36,
-    "materials": [
-      "ENVASE_GENERICO_0",
-      "ENVASE_GENERICO_1",
-      "ENVASE_GENERICO_2",
-      "ENVASE_GENERICO_3",
-      "ENVASE_GENERICO_4",
-      "ENVASE_GENERICO_5",
-      "MAT_acero",
-      "MAT_noche",
-      "NEGRO_MATE",
-      "PANTALLA_expendedora_display",
-      "VIDRIO"
     ]
   },
   {
@@ -875,6 +821,33 @@
     ]
   },
   {
+    "file": "xtanco-vitrina",
+    "quantity": 1,
+    "ids": [
+      "vitrina"
+    ],
+    "dimensionsCm": [
+      320.0000047683716,
+      44.999998807907104,
+      209.99999046325684
+    ],
+    "base": 0.0,
+    "meshes": 326,
+    "materials": [
+      "ENVASE_GENERICO_0",
+      "ENVASE_GENERICO_1",
+      "ENVASE_GENERICO_2",
+      "ENVASE_GENERICO_3",
+      "ENVASE_GENERICO_4",
+      "ENVASE_GENERICO_5",
+      "ETIQUETA_MARFIL",
+      "LED_fff1c8",
+      "MAT_laton",
+      "MAT_roble",
+      "VIDRIO"
+    ]
+  },
+  {
     "file": "xtanco-lampara",
     "quantity": 3,
     "ids": [
@@ -896,6 +869,33 @@
     ]
   },
   {
+    "file": "xtanco-expendedora",
+    "quantity": 1,
+    "ids": [
+      "expendedora"
+    ],
+    "dimensionsCm": [
+      89.99999761581421,
+      81.00000023841858,
+      185.0000023841858
+    ],
+    "base": 0.0,
+    "meshes": 42,
+    "materials": [
+      "ENVASE_GENERICO_0",
+      "ENVASE_GENERICO_1",
+      "ENVASE_GENERICO_2",
+      "ENVASE_GENERICO_3",
+      "ENVASE_GENERICO_4",
+      "ENVASE_GENERICO_5",
+      "MAT_acero",
+      "MAT_noche",
+      "NEGRO_MATE",
+      "PANTALLA_expendedora_display",
+      "VIDRIO"
+    ]
+  },
+  {
     "file": "xtanco-planta",
     "quantity": 1,
     "ids": [
@@ -904,10 +904,10 @@
     "dimensionsCm": [
       50.0,
       50.0,
-      138.17870616912842
+      139.47807550430298
     ],
     "base": 0.0,
-    "meshes": 146,
+    "meshes": 155,
     "materials": [
       "KENTIA_VERDE",
       "MAT_terracota",

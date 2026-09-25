@@ -24,7 +24,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 127
+      "node": 127,
+      "nodeName": "mostrador"
     },
     {
       "id": "vitrina",
@@ -43,7 +44,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 653
+      "node": 653,
+      "nodeName": "vitrina"
     },
     {
       "id": "pantalla-pared",
@@ -62,7 +64,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 138
+      "node": 138,
+      "nodeName": "pantalla-pared"
     },
     {
       "id": "pantalla-mostrador",
@@ -81,7 +84,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 136
+      "node": 136,
+      "nodeName": "pantalla-mostrador"
     },
     {
       "id": "pantalla-escaparate",
@@ -100,7 +104,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 132
+      "node": 132,
+      "nodeName": "pantalla-escaparate"
     },
     {
       "id": "expendedora",
@@ -119,7 +124,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 41
+      "node": 41,
+      "nodeName": "expendedora"
     },
     {
       "id": "taburete-1",
@@ -138,7 +144,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 325
+      "node": 325,
+      "nodeName": "taburete-1"
     },
     {
       "id": "taburete-2",
@@ -157,7 +164,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 329
+      "node": 329,
+      "nodeName": "taburete-2"
     },
     {
       "id": "lampara-1",
@@ -176,7 +184,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 55
+      "node": 55,
+      "nodeName": "lampara-1"
     },
     {
       "id": "lampara-2",
@@ -195,7 +204,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 58
+      "node": 58,
+      "nodeName": "lampara-2"
     },
     {
       "id": "lampara-3",
@@ -214,7 +224,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 61
+      "node": 61,
+      "nodeName": "lampara-3"
     },
     {
       "id": "planta",
@@ -233,7 +244,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 302
+      "node": 302,
+      "nodeName": "planta"
     },
     {
       "id": "tpv",
@@ -252,7 +264,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-medidas",
-      "node": 331
+      "node": 331,
+      "nodeName": "tpv"
     },
     {
       "id": "glb:almacen__dintel",
@@ -266,7 +279,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 0
+      "node": 0,
+      "nodeName": "almacen__dintel"
     },
     {
       "id": "glb:almacen__manilla",
@@ -280,7 +294,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 1
+      "node": 1,
+      "nodeName": "almacen__manilla"
     },
     {
       "id": "glb:almacen__marco_5.08",
@@ -294,7 +309,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 2
+      "node": 2,
+      "nodeName": "almacen__marco_5.08"
     },
     {
       "id": "glb:almacen__marco_5.89",
@@ -308,7 +324,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 3
+      "node": 3,
+      "nodeName": "almacen__marco_5.89"
     },
     {
       "id": "glb:entrada__tirador",
@@ -322,7 +339,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 4
+      "node": 4,
+      "nodeName": "entrada__tirador"
     },
     {
       "id": "glb:escaparate_1",
@@ -336,7 +354,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 5
+      "node": 5,
+      "nodeName": "escaparate_1"
     },
     {
       "id": "glb:fachada__montante_1",
@@ -350,7 +369,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 42
+      "node": 42,
+      "nodeName": "fachada__montante_1"
     },
     {
       "id": "glb:fachada__montante_3",
@@ -364,7 +384,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 43
+      "node": 43,
+      "nodeName": "fachada__montante_3"
     },
     {
       "id": "glb:fachada__montante_3.25",
@@ -378,7 +399,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 44
+      "node": 44,
+      "nodeName": "fachada__montante_3.25"
     },
     {
       "id": "glb:fachada__montante_4.25",
@@ -392,7 +414,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 45
+      "node": 45,
+      "nodeName": "fachada__montante_4.25"
     },
     {
       "id": "glb:fachada__travesano_0.3",
@@ -406,7 +429,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 46
+      "node": 46,
+      "nodeName": "fachada__travesano_0.3"
     },
     {
       "id": "glb:fachada__travesano_2.6",
@@ -420,7 +444,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 47
+      "node": 47,
+      "nodeName": "fachada__travesano_2.6"
     },
     {
       "id": "A1",
@@ -434,7 +459,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-iot",
-      "node": 48
+      "node": 48,
+      "nodeName": "iot_A1"
     },
     {
       "id": "G1",
@@ -448,7 +474,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-iot",
-      "node": 49
+      "node": 49,
+      "nodeName": "iot_G1"
     },
     {
       "id": "S1",
@@ -462,7 +489,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-iot",
-      "node": 50
+      "node": 50,
+      "nodeName": "iot_S1"
     },
     {
       "id": "S2",
@@ -476,7 +504,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-iot",
-      "node": 51
+      "node": 51,
+      "nodeName": "iot_S2"
     },
     {
       "id": "W1",
@@ -490,7 +519,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "json-iot",
-      "node": 52
+      "node": 52,
+      "nodeName": "iot_W1"
     },
     {
       "id": "glb:led_perimetral_fachada",
@@ -504,7 +534,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 62
+      "node": 62,
+      "nodeName": "led_perimetral_fachada"
     },
     {
       "id": "glb:led_perimetral_fondo",
@@ -518,7 +549,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 63
+      "node": 63,
+      "nodeName": "led_perimetral_fondo"
     },
     {
       "id": "glb:pared__rodapie_fondo",
@@ -532,7 +564,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 139
+      "node": 139,
+      "nodeName": "pared__rodapie_fondo"
     },
     {
       "id": "glb:pared_fachada",
@@ -546,7 +579,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 146
+      "node": 146,
+      "nodeName": "pared_fachada"
     },
     {
       "id": "glb:pared_fondo",
@@ -560,7 +594,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 147
+      "node": 147,
+      "nodeName": "pared_fondo"
     },
     {
       "id": "glb:puerta_almacén",
@@ -574,7 +609,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 303
+      "node": 303,
+      "nodeName": "puerta_almacén"
     },
     {
       "id": "glb:puerta_entrada",
@@ -588,7 +624,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 304
+      "node": 304,
+      "nodeName": "puerta_entrada"
     },
     {
       "id": "glb:suelo",
@@ -602,7 +639,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 305
+      "node": 305,
+      "nodeName": "suelo"
     },
     {
       "id": "glb:suelo__junta_x1",
@@ -616,7 +654,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 306
+      "node": 306,
+      "nodeName": "suelo__junta_x1"
     },
     {
       "id": "glb:suelo__junta_x2",
@@ -630,7 +669,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 307
+      "node": 307,
+      "nodeName": "suelo__junta_x2"
     },
     {
       "id": "glb:suelo__junta_x3",
@@ -644,7 +684,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 308
+      "node": 308,
+      "nodeName": "suelo__junta_x3"
     },
     {
       "id": "glb:suelo__junta_x4",
@@ -658,7 +699,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 309
+      "node": 309,
+      "nodeName": "suelo__junta_x4"
     },
     {
       "id": "glb:suelo__junta_x5",
@@ -672,7 +714,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 310
+      "node": 310,
+      "nodeName": "suelo__junta_x5"
     },
     {
       "id": "glb:suelo__junta_x6",
@@ -686,7 +729,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 311
+      "node": 311,
+      "nodeName": "suelo__junta_x6"
     },
     {
       "id": "glb:suelo__junta_x7",
@@ -700,7 +744,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 312
+      "node": 312,
+      "nodeName": "suelo__junta_x7"
     },
     {
       "id": "glb:suelo__junta_x8",
@@ -714,7 +759,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 313
+      "node": 313,
+      "nodeName": "suelo__junta_x8"
     },
     {
       "id": "glb:suelo__junta_x9",
@@ -728,7 +774,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 314
+      "node": 314,
+      "nodeName": "suelo__junta_x9"
     },
     {
       "id": "glb:suelo__junta_y1",
@@ -742,7 +789,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 315
+      "node": 315,
+      "nodeName": "suelo__junta_y1"
     },
     {
       "id": "glb:suelo__junta_y2",
@@ -756,7 +804,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 316
+      "node": 316,
+      "nodeName": "suelo__junta_y2"
     },
     {
       "id": "glb:suelo__junta_y3",
@@ -770,7 +819,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 317
+      "node": 317,
+      "nodeName": "suelo__junta_y3"
     },
     {
       "id": "glb:suelo__junta_y4",
@@ -784,7 +834,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 318
+      "node": 318,
+      "nodeName": "suelo__junta_y4"
     },
     {
       "id": "glb:suelo__junta_y5",
@@ -798,7 +849,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 319
+      "node": 319,
+      "nodeName": "suelo__junta_y5"
     },
     {
       "id": "glb:suelo__junta_y6",
@@ -812,7 +864,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 320
+      "node": 320,
+      "nodeName": "suelo__junta_y6"
     },
     {
       "id": "glb:suelo__junta_y7",
@@ -826,7 +879,8 @@
       "modelo": "",
       "garantia": "",
       "origen": "glb",
-      "node": 321
+      "node": 321,
+      "nodeName": "suelo__junta_y7"
     }
   ]
 }

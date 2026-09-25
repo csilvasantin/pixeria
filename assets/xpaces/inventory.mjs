@@ -1,6 +1,6 @@
 import {mountReplacements} from '../furniture/replacements.mjs';
 import * as T from './engine/premium-three.mjs';
-const sources={'1790364696893-14ykfy':'alsea','1790365002072-l9tpjw':'xtanco'};
+const sources={'1790370079244-cv7t5i':'alsea-4380','1790370139269-2ty118':'xtanco-4380','1790364696893-14ykfy':'alsea','1790365002072-l9tpjw':'xtanco'};
 const fields=['id','nombre','tipo','categoria','cantidad','medidas','pantalla','fabricante','modelo','garantia','origen','variant'];
 export function exportRows(entries){return entries.filter(e=>e.visible).map(e=>Object.fromEntries(fields.map(k=>[k,e[k]??''])));}
 export function toCSV(rows){

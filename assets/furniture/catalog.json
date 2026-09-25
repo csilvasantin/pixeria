@@ -52,7 +52,7 @@
   {
     "schema": "pixeria.furniture/1",
     "slug": "alsea",
-    "xpace": "1790364696893-14ykfy",
+    "xpace": "1790370079244-cv7t5i",
     "inventoryIds": [
       "mueble-trasero"
     ],
@@ -74,33 +74,31 @@
     ],
     "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
     "file": "alsea-mueble-trasero",
-    "title": "Alsea · Mueble trasero nogal",
+    "title": "Alsea · Mueble trasero nogal · corregido",
     "category": "Mobiliario",
-    "ok": true,
-    "id": "1790368325710-fnzcvr",
-    "num": 1129,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "alsea"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790368325710-fnzcvr",
-    "createdAt": "2026-09-25T20:32:05.710Z",
-    "contentHash": "f074bd9805a077914ce0002d0e57079ba5e78ee4dddf7306721fed01f633eb82",
-    "poster": "https://api.admira.store/stock/poster/1790368325710-fnzcvr",
-    "thumbnail": "https://stock.admira.store/stock/1790368325710-fnzcvr/poster.jpg?v=3774",
-    "validacion": null,
     "type": "furni",
     "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"mueble-trasero\"],\"quantity\":1,\"dimensionsCm\":[480.0,61.2,90.0],\"baseLocal\":[0.0,-0.00599999725818634,0.0]}",
-    "externalRef": "furniture:1790364696893-14ykfy:mueble-trasero",
-    "sha256": "f074bd9805a077914ce0002d0e57079ba5e78ee4dddf7306721fed01f633eb82"
+    "motor": "Blender 5.2.2 · TrinityMacMini",
+    "tags": [
+      "3d",
+      "alsea",
+      "4380"
+    ],
+    "quality": "better",
+    "contentHash": "42d3e454018ff2cc6e9167bafccfaf08fd9ad2a4987f6f5e1531402d0d6b6201",
+    "externalRef": "furniture:1790370079244-cv7t5i:mueble-trasero",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790370079244-cv7t5i\",\"inventoryIds\":[\"mueble-trasero\"],\"quantity\":1,\"dimensionsCm\":[480.0,61.2,90.0],\"baseLocal\":[0.0,-0.00599999725818634,0.0],\"revision\":\"4380\"}",
+    "comment": "FLT-101043 / #4380. Geometría revisada, componentes expuestos y conectados.",
+    "id": "1790370234557-547m45",
+    "url": "https://api.admira.store/stock/asset/1790370234557-547m45",
+    "poster": "https://api.admira.store/stock/poster/1790370234557-547m45",
+    "sha256": "42d3e454018ff2cc6e9167bafccfaf08fd9ad2a4987f6f5e1531402d0d6b6201",
+    "bytes": 378924
   },
   {
     "schema": "pixeria.furniture/1",
     "slug": "alsea",
-    "xpace": "1790364696893-14ykfy",
+    "xpace": "1790370079244-cv7t5i",
     "inventoryIds": [
       "cafetera"
     ],
@@ -117,38 +115,36 @@
     ],
     "baseLocal": [
       0.09500005841255188,
-      -0.008999958634376526,
+      -0.008999884128570557,
       0.0
     ],
     "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
     "file": "alsea-cafetera",
-    "title": "Alsea · Cafetera espresso 3 grupos + molinos",
+    "title": "Alsea · Cafetera espresso 3 grupos + molinos · corregido",
     "category": "Equipamiento",
-    "ok": true,
-    "id": "1790368359200-1fppi2",
-    "num": 1130,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "alsea"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790368359200-1fppi2",
-    "createdAt": "2026-09-25T20:32:39.200Z",
-    "contentHash": "1b5cb7df075eb218cb660cea1e69b8afd1bd11046182462958331f09e50c221b",
-    "poster": "https://api.admira.store/stock/poster/1790368359200-1fppi2",
-    "thumbnail": "https://stock.admira.store/stock/1790368359200-1fppi2/poster.jpg?v=4693",
-    "validacion": null,
     "type": "furni",
     "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"cafetera\"],\"quantity\":1,\"dimensionsCm\":[94.0,56.8,50.0],\"baseLocal\":[0.09500005841255188,-0.008999958634376526,0.0]}",
-    "externalRef": "furniture:1790364696893-14ykfy:cafetera",
-    "sha256": "1b5cb7df075eb218cb660cea1e69b8afd1bd11046182462958331f09e50c221b"
+    "motor": "Blender 5.2.2 · TrinityMacMini",
+    "tags": [
+      "3d",
+      "alsea",
+      "4380"
+    ],
+    "quality": "better",
+    "contentHash": "98479c57b4a4d09bf21f8005be4b9faec12ba6878f872187bc1b6fd4493a3d34",
+    "externalRef": "furniture:1790370079244-cv7t5i:cafetera",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790370079244-cv7t5i\",\"inventoryIds\":[\"cafetera\"],\"quantity\":1,\"dimensionsCm\":[94.0,56.8,50.0],\"baseLocal\":[0.09500005841255188,-0.008999884128570557,0.0],\"revision\":\"4380\"}",
+    "comment": "FLT-101043 / #4380. Geometría revisada, componentes expuestos y conectados.",
+    "id": "1790370186236-n4eyaq",
+    "url": "https://api.admira.store/stock/asset/1790370186236-n4eyaq",
+    "poster": "https://api.admira.store/stock/poster/1790370186236-n4eyaq",
+    "sha256": "98479c57b4a4d09bf21f8005be4b9faec12ba6878f872187bc1b6fd4493a3d34",
+    "bytes": 238720
   },
   {
     "schema": "pixeria.furniture/1",
     "slug": "alsea",
-    "xpace": "1790364696893-14ykfy",
+    "xpace": "1790370079244-cv7t5i",
     "inventoryIds": [
       "vitrina-bolleria"
     ],
@@ -173,28 +169,26 @@
     ],
     "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
     "file": "alsea-vitrina-bolleria",
-    "title": "Alsea · Vitrina de bollería refrigerada",
+    "title": "Alsea · Vitrina de bollería refrigerada · corregido",
     "category": "Equipamiento",
-    "ok": true,
-    "id": "1790368387109-jrzy92",
-    "num": 1131,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "alsea"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790368387109-jrzy92",
-    "createdAt": "2026-09-25T20:33:07.109Z",
-    "contentHash": "a2149e0eb4ec91073980002a3c4d847f3f815b8d87090f994abf0e8f85322bc8",
-    "poster": "https://api.admira.store/stock/poster/1790368387109-jrzy92",
-    "thumbnail": "https://stock.admira.store/stock/1790368387109-jrzy92/poster.jpg?v=5692",
-    "validacion": null,
     "type": "furni",
     "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"vitrina-bolleria\"],\"quantity\":1,\"dimensionsCm\":[130.0,58.0,50.0],\"baseLocal\":[-8.940696716308594e-08,0.0,0.0]}",
-    "externalRef": "furniture:1790364696893-14ykfy:vitrina-bolleria",
-    "sha256": "a2149e0eb4ec91073980002a3c4d847f3f815b8d87090f994abf0e8f85322bc8"
+    "motor": "Blender 5.2.2 · TrinityMacMini",
+    "tags": [
+      "3d",
+      "alsea",
+      "4380"
+    ],
+    "quality": "better",
+    "contentHash": "7ab5454fc8224b08763df7aba664fb9dfb1b4b7ccb3be97e98909021bf9f60a7",
+    "externalRef": "furniture:1790370079244-cv7t5i:vitrina-bolleria",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790370079244-cv7t5i\",\"inventoryIds\":[\"vitrina-bolleria\"],\"quantity\":1,\"dimensionsCm\":[130.0,58.0,50.0],\"baseLocal\":[-8.940696716308594e-08,0.0,0.0],\"revision\":\"4380\"}",
+    "comment": "FLT-101043 / #4380. Geometría revisada, componentes expuestos y conectados.",
+    "id": "1790370269879-0xo5zi",
+    "url": "https://api.admira.store/stock/asset/1790370269879-0xo5zi",
+    "poster": "https://api.admira.store/stock/poster/1790370269879-0xo5zi",
+    "sha256": "7ab5454fc8224b08763df7aba664fb9dfb1b4b7ccb3be97e98909021bf9f60a7",
+    "bytes": 302996
   },
   {
     "schema": "pixeria.furniture/1",
@@ -338,7 +332,7 @@
   {
     "schema": "pixeria.furniture/1",
     "slug": "alsea",
-    "xpace": "1790364696893-14ykfy",
+    "xpace": "1790370079244-cv7t5i",
     "inventoryIds": [
       "balda-recogida"
     ],
@@ -360,28 +354,26 @@
     ],
     "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
     "file": "alsea-balda-recogida",
-    "title": "Alsea · Balda de recogida (latón/roble)",
+    "title": "Alsea · Balda de recogida (latón/roble) · corregido",
     "category": "Mobiliario",
-    "ok": true,
-    "id": "1790368504264-fiuoqb",
-    "num": 1135,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "alsea"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790368504264-fiuoqb",
-    "createdAt": "2026-09-25T20:35:04.264Z",
-    "contentHash": "7559afda7a93f649345b5565987f6209ff80b37c39731844394b2bf2f204a221",
-    "poster": "https://api.admira.store/stock/poster/1790368504264-fiuoqb",
-    "thumbnail": "https://stock.admira.store/stock/1790368504264-fiuoqb/poster.jpg?v=3894",
-    "validacion": null,
     "type": "furni",
     "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"balda-recogida\"],\"quantity\":1,\"dimensionsCm\":[130.0,35.0,19.0],\"baseLocal\":[0.0,0.0,0.0]}",
-    "externalRef": "furniture:1790364696893-14ykfy:balda-recogida",
-    "sha256": "7559afda7a93f649345b5565987f6209ff80b37c39731844394b2bf2f204a221"
+    "motor": "Blender 5.2.2 · TrinityMacMini",
+    "tags": [
+      "3d",
+      "alsea",
+      "4380"
+    ],
+    "quality": "better",
+    "contentHash": "b5ac7576a3caba36a8ba3b8c6ba7823bb6be42e77cbba4bc21ef7b69835b7dbd",
+    "externalRef": "furniture:1790370079244-cv7t5i:balda-recogida",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790370079244-cv7t5i\",\"inventoryIds\":[\"balda-recogida\"],\"quantity\":1,\"dimensionsCm\":[130.0,35.0,19.0],\"baseLocal\":[0.0,0.0,0.0],\"revision\":\"4380\"}",
+    "comment": "FLT-101043 / #4380. Geometría revisada, componentes expuestos y conectados.",
+    "id": "1790370234535-uwisay",
+    "url": "https://api.admira.store/stock/asset/1790370234535-uwisay",
+    "poster": "https://api.admira.store/stock/poster/1790370234535-uwisay",
+    "sha256": "b5ac7576a3caba36a8ba3b8c6ba7823bb6be42e77cbba4bc21ef7b69835b7dbd",
+    "bytes": 178108
   },
   {
     "schema": "pixeria.furniture/1",
@@ -584,7 +576,7 @@
   {
     "schema": "pixeria.furniture/1",
     "slug": "alsea",
-    "xpace": "1790364696893-14ykfy",
+    "xpace": "1790370079244-cv7t5i",
     "inventoryIds": [
       "mesa-1",
       "mesa-2",
@@ -609,28 +601,26 @@
     ],
     "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
     "file": "alsea-mesa",
-    "title": "Alsea · Mesas redondas Ø70 roble + pie negro",
+    "title": "Alsea · Mesas redondas Ø70 roble + pie negro · corregido",
     "category": "Mobiliario",
-    "ok": true,
-    "id": "1790368536628-uueijh",
-    "num": 1140,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "alsea"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790368536628-uueijh",
-    "createdAt": "2026-09-25T20:35:36.628Z",
-    "contentHash": "dbb75dfd5b6d3325952a6e536bd59bbfe80121adac902b1d36d227d7f40a1b09",
-    "poster": "https://api.admira.store/stock/poster/1790368536628-uueijh",
-    "thumbnail": "https://stock.admira.store/stock/1790368536628-uueijh/poster.jpg?v=4958",
-    "validacion": null,
     "type": "furni",
     "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"mesa-1\",\"mesa-2\",\"mesa-3\"],\"quantity\":3,\"dimensionsCm\":[70.0,70.0,83.0],\"baseLocal\":[0.0,0.0,-0.7099999785423279]}",
-    "externalRef": "furniture:1790364696893-14ykfy:mesa-1",
-    "sha256": "dbb75dfd5b6d3325952a6e536bd59bbfe80121adac902b1d36d227d7f40a1b09"
+    "motor": "Blender 5.2.2 · TrinityMacMini",
+    "tags": [
+      "3d",
+      "alsea",
+      "4380"
+    ],
+    "quality": "better",
+    "contentHash": "c9f6c8e5fd4578275d8d0ab8506c533e79b2d0be9b789004917b6d9363e07faf",
+    "externalRef": "furniture:1790370079244-cv7t5i:mesa-1",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790370079244-cv7t5i\",\"inventoryIds\":[\"mesa-1\",\"mesa-2\",\"mesa-3\"],\"quantity\":3,\"dimensionsCm\":[70.0,70.0,83.0],\"baseLocal\":[0.0,0.0,-0.7099999785423279],\"revision\":\"4380\"}",
+    "comment": "FLT-101043 / #4380. Geometría revisada, componentes expuestos y conectados.",
+    "id": "1790370234962-5533l2",
+    "url": "https://api.admira.store/stock/asset/1790370234962-5533l2",
+    "poster": "https://api.admira.store/stock/poster/1790370234962-5533l2",
+    "sha256": "c9f6c8e5fd4578275d8d0ab8506c533e79b2d0be9b789004917b6d9363e07faf",
+    "bytes": 178816
   },
   {
     "schema": "pixeria.furniture/1",
@@ -1333,7 +1323,7 @@
   {
     "schema": "pixeria.furniture/1",
     "slug": "xtanco",
-    "xpace": "1790365002072-l9tpjw",
+    "xpace": "1790370139269-2ty118",
     "inventoryIds": [
       "vitrina"
     ],
@@ -1363,28 +1353,26 @@
     ],
     "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
     "file": "xtanco-vitrina",
-    "title": "Xtanco · Vitrina retroiluminada roble/vidrio",
+    "title": "Xtanco · Vitrina retroiluminada roble/vidrio · corregido",
     "category": "Mobiliario",
-    "ok": true,
-    "id": "1790368788851-usnrcj",
-    "num": 1159,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "xtanco"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790368788851-usnrcj",
-    "createdAt": "2026-09-25T20:39:48.851Z",
-    "contentHash": "b5311e7f2145cfda3d7026c6aa3d983a312d882dc5cf971436e87b50df5a513a",
-    "poster": "https://api.admira.store/stock/poster/1790368788851-usnrcj",
-    "thumbnail": "https://stock.admira.store/stock/1790368788851-usnrcj/poster.jpg?v=7749",
-    "validacion": null,
     "type": "furni",
     "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"vitrina\"],\"quantity\":1,\"dimensionsCm\":[320.0,45.0,210.0],\"baseLocal\":[0.0,0.0,0.0]}",
-    "externalRef": "furniture:1790365002072-l9tpjw:vitrina",
-    "sha256": "b5311e7f2145cfda3d7026c6aa3d983a312d882dc5cf971436e87b50df5a513a"
+    "motor": "Blender 5.2.2 · TrinityMacMini",
+    "tags": [
+      "3d",
+      "xtanco",
+      "4380"
+    ],
+    "quality": "better",
+    "contentHash": "0193d49f46d629b8bb54d2a540c59baf7b3e3c52989664b71565ee6e2db85769",
+    "externalRef": "furniture:1790370139269-2ty118:vitrina",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790370139269-2ty118\",\"inventoryIds\":[\"vitrina\"],\"quantity\":1,\"dimensionsCm\":[320.0,45.0,210.0],\"baseLocal\":[0.0,0.0,0.0],\"revision\":\"4380\"}",
+    "comment": "FLT-101043 / #4380. Geometría revisada, componentes expuestos y conectados.",
+    "id": "1790370294820-dgqg8a",
+    "url": "https://api.admira.store/stock/asset/1790370294820-dgqg8a",
+    "poster": "https://api.admira.store/stock/poster/1790370294820-dgqg8a",
+    "sha256": "0193d49f46d629b8bb54d2a540c59baf7b3e3c52989664b71565ee6e2db85769",
+    "bytes": 877984
   },
   {
     "schema": "pixeria.furniture/1",
@@ -1530,7 +1518,7 @@
   {
     "schema": "pixeria.furniture/1",
     "slug": "xtanco",
-    "xpace": "1790365002072-l9tpjw",
+    "xpace": "1790370139269-2ty118",
     "inventoryIds": [
       "expendedora"
     ],
@@ -1560,28 +1548,26 @@
     ],
     "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
     "file": "xtanco-expendedora",
-    "title": "Xtanco · Expendedora con display y verificación de edad",
+    "title": "Xtanco · Expendedora con display y verificación de edad · corregido",
     "category": "Equipamiento",
-    "ok": true,
-    "id": "1790368844094-regk76",
-    "num": 1163,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "xtanco"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790368844094-regk76",
-    "createdAt": "2026-09-25T20:40:44.094Z",
-    "contentHash": "bb27dbab9cec0c2ec30f858ffedbe78197a4ab1540aff7f75170b4dc02d268c3",
-    "poster": "https://api.admira.store/stock/poster/1790368844094-regk76",
-    "thumbnail": "https://stock.admira.store/stock/1790368844094-regk76/poster.jpg?v=5361",
-    "validacion": null,
     "type": "furni",
     "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"expendedora\"],\"quantity\":1,\"dimensionsCm\":[90.0,81.0,185.0],\"baseLocal\":[0.0,-0.004999995231628418,0.0]}",
-    "externalRef": "furniture:1790365002072-l9tpjw:expendedora",
-    "sha256": "bb27dbab9cec0c2ec30f858ffedbe78197a4ab1540aff7f75170b4dc02d268c3"
+    "motor": "Blender 5.2.2 · TrinityMacMini",
+    "tags": [
+      "3d",
+      "xtanco",
+      "4380"
+    ],
+    "quality": "better",
+    "contentHash": "267d21d7e01a07aa22812d3ea28cb1dc555b6d0e4f944238e76676d34d05b37b",
+    "externalRef": "furniture:1790370139269-2ty118:expendedora",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790370139269-2ty118\",\"inventoryIds\":[\"expendedora\"],\"quantity\":1,\"dimensionsCm\":[90.0,81.0,185.0],\"baseLocal\":[0.0,-0.004999995231628418,0.0],\"revision\":\"4380\"}",
+    "comment": "FLT-101043 / #4380. Geometría revisada, componentes expuestos y conectados.",
+    "id": "1790370302886-2gy9ow",
+    "url": "https://api.admira.store/stock/asset/1790370302886-2gy9ow",
+    "poster": "https://api.admira.store/stock/poster/1790370302886-2gy9ow",
+    "sha256": "267d21d7e01a07aa22812d3ea28cb1dc555b6d0e4f944238e76676d34d05b37b",
+    "bytes": 85296
   },
   {
     "schema": "pixeria.furniture/1",
@@ -1958,7 +1944,7 @@
   {
     "schema": "pixeria.furniture/1",
     "slug": "xtanco",
-    "xpace": "1790365002072-l9tpjw",
+    "xpace": "1790370139269-2ty118",
     "inventoryIds": [
       "lampara-1",
       "lampara-2",
@@ -1982,33 +1968,31 @@
     ],
     "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
     "file": "xtanco-lampara",
-    "title": "Xtanco · Lámparas colgantes latón Ø36",
+    "title": "Xtanco · Lámparas colgantes latón Ø36 · corregido",
     "category": "Iluminacion",
-    "ok": true,
-    "id": "1790368944990-j2ohsk",
-    "num": 1173,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "xtanco"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790368944990-j2ohsk",
-    "createdAt": "2026-09-25T20:42:24.990Z",
-    "contentHash": "6f14a725cf5dc9ee8985f023e7366c86fd5ffdb12f7aedf1e2b17b49abfa0433",
-    "poster": "https://api.admira.store/stock/poster/1790368944990-j2ohsk",
-    "thumbnail": "https://stock.admira.store/stock/1790368944990-j2ohsk/poster.jpg?v=3080",
-    "validacion": null,
     "type": "furni",
     "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"lampara-1\",\"lampara-2\",\"lampara-3\"],\"quantity\":3,\"dimensionsCm\":[36.0,36.0,120.0],\"baseLocal\":[0.0,0.0,0.0]}",
-    "externalRef": "furniture:1790365002072-l9tpjw:lampara-1",
-    "sha256": "6f14a725cf5dc9ee8985f023e7366c86fd5ffdb12f7aedf1e2b17b49abfa0433"
+    "motor": "Blender 5.2.2 · TrinityMacMini",
+    "tags": [
+      "3d",
+      "xtanco",
+      "4380"
+    ],
+    "quality": "better",
+    "contentHash": "d26241e88a4b30cb5577749f84c13546126892e087b162815e0be89c2a327f34",
+    "externalRef": "furniture:1790370139269-2ty118:lampara-1",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790370139269-2ty118\",\"inventoryIds\":[\"lampara-1\",\"lampara-2\",\"lampara-3\"],\"quantity\":3,\"dimensionsCm\":[36.0,36.0,120.0],\"baseLocal\":[0.0,0.0,0.0],\"revision\":\"4380\"}",
+    "comment": "FLT-101043 / #4380. Geometría revisada, componentes expuestos y conectados.",
+    "id": "1790370300414-b0tx39",
+    "url": "https://api.admira.store/stock/asset/1790370300414-b0tx39",
+    "poster": "https://api.admira.store/stock/poster/1790370300414-b0tx39",
+    "sha256": "d26241e88a4b30cb5577749f84c13546126892e087b162815e0be89c2a327f34",
+    "bytes": 13224
   },
   {
     "schema": "pixeria.furniture/1",
     "slug": "xtanco",
-    "xpace": "1790365002072-l9tpjw",
+    "xpace": "1790370139269-2ty118",
     "inventoryIds": [
       "planta"
     ],
@@ -2016,7 +2000,7 @@
     "dimensionsCm": [
       50.0,
       50.0,
-      138.179
+      139.478
     ],
     "materials": [
       "KENTIA_VERDE",
@@ -2030,28 +2014,26 @@
     ],
     "source": "https://api.admira.store/stock/asset/1790361732043-m0akcn",
     "file": "xtanco-planta",
-    "title": "Xtanco · Planta kentia en maceta",
+    "title": "Xtanco · Planta kentia en maceta · corregido",
     "category": "Vegetacion",
-    "ok": true,
-    "id": "1790368951823-l0bf4e",
-    "num": 1174,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "xtanco"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790368951823-l0bf4e",
-    "createdAt": "2026-09-25T20:42:31.823Z",
-    "contentHash": "4fe7316a409ad2fbe8e9d9f937a8ba614f59283ad0c2219dfd739dfdcfc7f0f1",
-    "poster": "https://api.admira.store/stock/poster/1790368951823-l0bf4e",
-    "thumbnail": "https://stock.admira.store/stock/1790368951823-l0bf4e/poster.jpg?v=3889",
-    "validacion": null,
     "type": "furni",
     "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790365002072-l9tpjw\",\"inventoryIds\":[\"planta\"],\"quantity\":1,\"dimensionsCm\":[50.0,50.0,138.179],\"baseLocal\":[0.0,0.0,0.0]}",
-    "externalRef": "furniture:1790365002072-l9tpjw:planta",
-    "sha256": "4fe7316a409ad2fbe8e9d9f937a8ba614f59283ad0c2219dfd739dfdcfc7f0f1"
+    "motor": "Blender 5.2.2 · TrinityMacMini",
+    "tags": [
+      "3d",
+      "xtanco",
+      "4380"
+    ],
+    "quality": "better",
+    "contentHash": "292ca9bffd650ad6e231984bfd8dc19c9f80f0312207b3920b343427d4d0a48b",
+    "externalRef": "furniture:1790370139269-2ty118:planta",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"xtanco\",\"xpace\":\"1790370139269-2ty118\",\"inventoryIds\":[\"planta\"],\"quantity\":1,\"dimensionsCm\":[50.0,50.0,139.478],\"baseLocal\":[0.0,0.0,0.0],\"revision\":\"4380\"}",
+    "comment": "FLT-101043 / #4380. Geometría revisada, componentes expuestos y conectados.",
+    "id": "1790370324506-hpgyfw",
+    "url": "https://api.admira.store/stock/asset/1790370324506-hpgyfw",
+    "poster": "https://api.admira.store/stock/poster/1790370324506-hpgyfw",
+    "sha256": "292ca9bffd650ad6e231984bfd8dc19c9f80f0312207b3920b343427d4d0a48b",
+    "bytes": 147940
   },
   {
     "schema": "pixeria.furniture/1",
@@ -2203,7 +2185,7 @@
   {
     "schema": "pixeria.furniture/1",
     "slug": "alsea",
-    "xpace": "1790364696893-14ykfy",
+    "xpace": "1790370079244-cv7t5i",
     "inventoryIds": [
       "lampara-1",
       "lampara-2",
@@ -2227,33 +2209,31 @@
     ],
     "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
     "file": "alsea-lampara",
-    "title": "Alsea · Lámparas colgantes latón Ø40",
+    "title": "Alsea · Lámparas colgantes latón Ø40 · corregido",
     "category": "Iluminacion",
-    "ok": true,
-    "id": "1790369440611-0j3hgy",
-    "num": 1179,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "alsea"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790369440611-0j3hgy",
-    "createdAt": "2026-09-25T20:50:40.611Z",
-    "contentHash": "10604dc2dd90bde14029e65969579b9e13c0a0e3f1358ce68f67bb190bd482a0",
-    "poster": "https://api.admira.store/stock/poster/1790369440611-0j3hgy",
-    "thumbnail": "https://stock.admira.store/stock/1790369440611-0j3hgy/poster.jpg?v=3078",
-    "validacion": null,
     "type": "furni",
     "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"lampara-1\",\"lampara-2\",\"lampara-3\"],\"quantity\":3,\"dimensionsCm\":[39.704,39.704,138.0],\"baseLocal\":[0.0,0.0,0.0]}",
-    "externalRef": "furniture:1790364696893-14ykfy:lampara-1",
-    "sha256": "10604dc2dd90bde14029e65969579b9e13c0a0e3f1358ce68f67bb190bd482a0"
+    "motor": "Blender 5.2.2 · TrinityMacMini",
+    "tags": [
+      "3d",
+      "alsea",
+      "4380"
+    ],
+    "quality": "better",
+    "contentHash": "18187a2bf66d0fe5e22880162bbc4df848134fea7729623e5770aa26099277ae",
+    "externalRef": "furniture:1790370079244-cv7t5i:lampara-1",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790370079244-cv7t5i\",\"inventoryIds\":[\"lampara-1\",\"lampara-2\",\"lampara-3\"],\"quantity\":3,\"dimensionsCm\":[39.704,39.704,138.0],\"baseLocal\":[0.0,0.0,0.0],\"revision\":\"4380\"}",
+    "comment": "FLT-101043 / #4380. Geometría revisada, componentes expuestos y conectados.",
+    "id": "1790370265563-cw51cx",
+    "url": "https://api.admira.store/stock/asset/1790370265563-cw51cx",
+    "poster": "https://api.admira.store/stock/poster/1790370265563-cw51cx",
+    "sha256": "18187a2bf66d0fe5e22880162bbc4df848134fea7729623e5770aa26099277ae",
+    "bytes": 48672
   },
   {
     "schema": "pixeria.furniture/1",
     "slug": "alsea",
-    "xpace": "1790364696893-14ykfy",
+    "xpace": "1790370079244-cv7t5i",
     "inventoryIds": [
       "lampara-4"
     ],
@@ -2275,27 +2255,25 @@
     ],
     "source": "https://api.admira.store/stock/asset/1790361853968-ig9z38",
     "file": "alsea-lampara-4",
-    "title": "Alsea · Lámparas",
+    "title": "Alsea · Lámparas · corregido",
     "category": "Iluminacion",
-    "ok": true,
-    "id": "1790369440624-b44eek",
-    "num": 1178,
-    "orientacion": null,
-    "tags": [
-      "3d",
-      "mueble",
-      "alsea"
-    ],
-    "url": "https://api.admira.store/stock/asset/1790369440624-b44eek",
-    "createdAt": "2026-09-25T20:50:40.624Z",
-    "contentHash": "152add8b259016988ea6ba57b30557ccea259bdc94eedd0b4e82edad862e492b",
-    "poster": "https://api.admira.store/stock/poster/1790369440624-b44eek",
-    "thumbnail": "https://stock.admira.store/stock/1790369440624-b44eek/poster.jpg?v=3349",
-    "validacion": null,
     "type": "furni",
     "mime": "model/gltf-binary",
-    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790364696893-14ykfy\",\"inventoryIds\":[\"lampara-4\"],\"quantity\":1,\"dimensionsCm\":[39.704,39.704,100.0],\"baseLocal\":[0.0,0.0,0.0]}",
-    "externalRef": "furniture:1790364696893-14ykfy:lampara-4",
-    "sha256": "152add8b259016988ea6ba57b30557ccea259bdc94eedd0b4e82edad862e492b"
+    "motor": "Blender 5.2.2 · TrinityMacMini",
+    "tags": [
+      "3d",
+      "alsea",
+      "4380"
+    ],
+    "quality": "better",
+    "contentHash": "fef2547ccdc2dd2ef80849b3a72b7a2ffd340ba6a1bf1f5c747debbeecc7d3d0",
+    "externalRef": "furniture:1790370079244-cv7t5i:lampara-4",
+    "prompt": "{\"schema\":\"pixeria.furniture/1\",\"slug\":\"alsea\",\"xpace\":\"1790370079244-cv7t5i\",\"inventoryIds\":[\"lampara-4\"],\"quantity\":1,\"dimensionsCm\":[39.704,39.704,100.0],\"baseLocal\":[0.0,0.0,0.0],\"revision\":\"4380\"}",
+    "comment": "FLT-101043 / #4380. Geometría revisada, componentes expuestos y conectados.",
+    "id": "1790370267985-d7abna",
+    "url": "https://api.admira.store/stock/asset/1790370267985-d7abna",
+    "poster": "https://api.admira.store/stock/poster/1790370267985-d7abna",
+    "sha256": "fef2547ccdc2dd2ef80849b3a72b7a2ffd340ba6a1bf1f5c747debbeecc7d3d0",
+    "bytes": 48620
   }
 ]

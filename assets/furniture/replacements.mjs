@@ -6,7 +6,7 @@ export function readReplacements(url,id){try{const d=JSON.parse(new URL(url).sea
 function release(root){const resources=new Set();root.traverse(n=>{if(n.geometry)resources.add(n.geometry);for(const m of [n.material].flat().filter(Boolean)){resources.add(m);for(const v of Object.values(m))if(v?.isTexture)resources.add(v);}});for(const r of resources){r.source?.data?.close?.();r.dispose();}}
 export async function mountReplacements({item,bound,viewer,on,signal,host,refresh}){
  const assets=await loadFurniture(signal,Object.values(readReplacements(location.href,item.id)));if(signal?.aborted)return;
- const relevant=assets.filter(asset=>furnitureData(asset)?.xpace===item.id),selected=readReplacements(location.href,item.id),originals=new Map();
+ const relevant=assets.filter(asset=>(furnitureData(asset)?.xpace===item.id||furnitureData(asset)?.slug===bound.manifest.slug)),selected=readReplacements(location.href,item.id),originals=new Map();
  for(const e of bound.entries){
   const choices=relevant.filter(a=>furnitureData(a).inventoryIds.includes(e.id));if(!choices.length)continue;
   const select=document.createElement('select');select.className='furniture-replace';select.setAttribute('aria-label','Mueble de '+e.id);

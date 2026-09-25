@@ -1,0 +1,122 @@
+[
+  {
+    "file": "alsea.blend",
+    "id": "1790370032661-p2nbzi",
+    "url": "https://api.admira.store/stock/asset/1790370032661-p2nbzi",
+    "poster": "https://api.admira.store/stock/poster/1790370032661-p2nbzi",
+    "sha256": "307a80c458d918ab49fd5df701451d52f6165bd49a663a1e1d0e26da2c12b98c",
+    "bytes": 1171830
+  },
+  {
+    "file": "alsea.glb",
+    "id": "1790370079244-cv7t5i",
+    "url": "https://api.admira.store/stock/asset/1790370079244-cv7t5i",
+    "poster": "https://api.admira.store/stock/poster/1790370079244-cv7t5i",
+    "sha256": "6f76c5cee1ef0d3aae2639ee2d99e4baf38b888ef2d6cd35209ff0080bb06ce4",
+    "bytes": 5858720
+  },
+  {
+    "file": "xtanco.blend",
+    "id": "1790370117649-5pa5pm",
+    "url": "https://api.admira.store/stock/asset/1790370117649-5pa5pm",
+    "poster": "https://api.admira.store/stock/poster/1790370117649-5pa5pm",
+    "sha256": "d87459f25a62d4a4bcfbf7f800f94b2ad947ffaebeb98ca883614023b3cf81dd",
+    "bytes": 1628869
+  },
+  {
+    "file": "xtanco.glb",
+    "id": "1790370139269-2ty118",
+    "url": "https://api.admira.store/stock/asset/1790370139269-2ty118",
+    "poster": "https://api.admira.store/stock/poster/1790370139269-2ty118",
+    "sha256": "a6a670ad3edebb9b3a56e22707b4bb89dabb4ad000ced9eec3fc51cbe91b2706",
+    "bytes": 5241196
+  },
+  {
+    "file": "alsea-cafetera.glb",
+    "id": "1790370186236-n4eyaq",
+    "url": "https://api.admira.store/stock/asset/1790370186236-n4eyaq",
+    "poster": "https://api.admira.store/stock/poster/1790370186236-n4eyaq",
+    "sha256": "98479c57b4a4d09bf21f8005be4b9faec12ba6878f872187bc1b6fd4493a3d34",
+    "bytes": 238720
+  },
+  {
+    "file": "alsea-mueble-trasero.glb",
+    "id": "1790370234557-547m45",
+    "url": "https://api.admira.store/stock/asset/1790370234557-547m45",
+    "poster": "https://api.admira.store/stock/poster/1790370234557-547m45",
+    "sha256": "42d3e454018ff2cc6e9167bafccfaf08fd9ad2a4987f6f5e1531402d0d6b6201",
+    "bytes": 378924
+  },
+  {
+    "file": "alsea-balda-recogida.glb",
+    "id": "1790370234535-uwisay",
+    "url": "https://api.admira.store/stock/asset/1790370234535-uwisay",
+    "poster": "https://api.admira.store/stock/poster/1790370234535-uwisay",
+    "sha256": "b5ac7576a3caba36a8ba3b8c6ba7823bb6be42e77cbba4bc21ef7b69835b7dbd",
+    "bytes": 178108
+  },
+  {
+    "file": "alsea-mesa.glb",
+    "id": "1790370234962-5533l2",
+    "url": "https://api.admira.store/stock/asset/1790370234962-5533l2",
+    "poster": "https://api.admira.store/stock/poster/1790370234962-5533l2",
+    "sha256": "c9f6c8e5fd4578275d8d0ab8506c533e79b2d0be9b789004917b6d9363e07faf",
+    "bytes": 178816
+  },
+  {
+    "file": "alsea-lampara.glb",
+    "id": "1790370265563-cw51cx",
+    "url": "https://api.admira.store/stock/asset/1790370265563-cw51cx",
+    "poster": "https://api.admira.store/stock/poster/1790370265563-cw51cx",
+    "sha256": "18187a2bf66d0fe5e22880162bbc4df848134fea7729623e5770aa26099277ae",
+    "bytes": 48672
+  },
+  {
+    "file": "alsea-lampara-4.glb",
+    "id": "1790370267985-d7abna",
+    "url": "https://api.admira.store/stock/asset/1790370267985-d7abna",
+    "poster": "https://api.admira.store/stock/poster/1790370267985-d7abna",
+    "sha256": "fef2547ccdc2dd2ef80849b3a72b7a2ffd340ba6a1bf1f5c747debbeecc7d3d0",
+    "bytes": 48620
+  },
+  {
+    "file": "alsea-vitrina-bolleria.glb",
+    "id": "1790370269879-0xo5zi",
+    "url": "https://api.admira.store/stock/asset/1790370269879-0xo5zi",
+    "poster": "https://api.admira.store/stock/poster/1790370269879-0xo5zi",
+    "sha256": "7ab5454fc8224b08763df7aba664fb9dfb1b4b7ccb3be97e98909021bf9f60a7",
+    "bytes": 302996
+  },
+  {
+    "file": "xtanco-vitrina.glb",
+    "id": "1790370294820-dgqg8a",
+    "url": "https://api.admira.store/stock/asset/1790370294820-dgqg8a",
+    "poster": "https://api.admira.store/stock/poster/1790370294820-dgqg8a",
+    "sha256": "0193d49f46d629b8bb54d2a540c59baf7b3e3c52989664b71565ee6e2db85769",
+    "bytes": 877984
+  },
+  {
+    "file": "xtanco-lampara.glb",
+    "id": "1790370300414-b0tx39",
+    "url": "https://api.admira.store/stock/asset/1790370300414-b0tx39",
+    "poster": "https://api.admira.store/stock/poster/1790370300414-b0tx39",
+    "sha256": "d26241e88a4b30cb5577749f84c13546126892e087b162815e0be89c2a327f34",
+    "bytes": 13224
+  },
+  {
+    "file": "xtanco-expendedora.glb",
+    "id": "1790370302886-2gy9ow",
+    "url": "https://api.admira.store/stock/asset/1790370302886-2gy9ow",
+    "poster": "https://api.admira.store/stock/poster/1790370302886-2gy9ow",
+    "sha256": "267d21d7e01a07aa22812d3ea28cb1dc555b6d0e4f944238e76676d34d05b37b",
+    "bytes": 85296
+  },
+  {
+    "file": "xtanco-planta.glb",
+    "id": "1790370324506-hpgyfw",
+    "url": "https://api.admira.store/stock/asset/1790370324506-hpgyfw",
+    "poster": "https://api.admira.store/stock/poster/1790370324506-hpgyfw",
+    "sha256": "292ca9bffd650ad6e231984bfd8dc19c9f80f0312207b3920b343427d4d0a48b",
+    "bytes": 147940
+  }
+]

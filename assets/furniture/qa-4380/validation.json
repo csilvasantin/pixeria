@@ -1,0 +1,386 @@
+[
+  {
+    "file": "alsea-barra",
+    "meshes": 64,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-pizarra-1",
+    "meshes": 2,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-pizarra-2",
+    "meshes": 2,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-pizarra-3",
+    "meshes": 2,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-pantalla-recogida",
+    "meshes": 2,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-nevera",
+    "meshes": 83,
+    "components": 1,
+    "groundedSupports": 1,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-barra-ventana",
+    "meshes": 5,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-taburete",
+    "meshes": 4,
+    "components": 1,
+    "groundedSupports": 1,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-silla",
+    "meshes": 6,
+    "components": 1,
+    "groundedSupports": 4,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-sofa",
+    "meshes": 8,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-mesa-baja",
+    "meshes": 5,
+    "components": 1,
+    "groundedSupports": 4,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-tpv",
+    "meshes": 2,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fachada0",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fachada1",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fachada2",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fachada3",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fondo0",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-glb_led_perimetral_fondo1",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-S",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-A1",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-W1",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-G1",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-planta-1",
+    "meshes": 21,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-planta-2",
+    "meshes": 21,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-planta-3",
+    "meshes": 21,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-cafetera",
+    "meshes": 62,
+    "components": 2,
+    "groundedSupports": 4,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-mueble-trasero",
+    "meshes": 18,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-balda-recogida",
+    "meshes": 7,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-mesa",
+    "meshes": 5,
+    "components": 1,
+    "groundedSupports": 1,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-lampara",
+    "meshes": 3,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-lampara-4",
+    "meshes": 3,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "alsea-vitrina-bolleria",
+    "meshes": 70,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-mostrador",
+    "meshes": 64,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-pantalla-pared",
+    "meshes": 2,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-pantalla-mostrador",
+    "meshes": 4,
+    "components": 1,
+    "groundedSupports": 1,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-pantalla-escaparate",
+    "meshes": 5,
+    "components": 1,
+    "groundedSupports": 1,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-taburete",
+    "meshes": 4,
+    "components": 1,
+    "groundedSupports": 1,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-tpv",
+    "meshes": 2,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-A1",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-G1",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-S",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-W1",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-glb_led_perimetral_fachada",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-glb_led_perimetral_fondo",
+    "meshes": 1,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-vitrina",
+    "meshes": 326,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-lampara",
+    "meshes": 3,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-expendedora",
+    "meshes": 42,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  },
+  {
+    "file": "xtanco-planta",
+    "meshes": 155,
+    "components": 1,
+    "groundedSupports": 0,
+    "floating": [],
+    "reviewedInterior": []
+  }
+]
