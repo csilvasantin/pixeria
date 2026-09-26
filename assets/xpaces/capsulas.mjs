@@ -74,6 +74,17 @@ export function orientation(x){
 }
 export function pickVideo(media,portrait){const v=media?.videos||{};return (portrait?v.vertical||v.horizontal:v.horizontal||v.vertical)||media?.video||null;}
 
+// La serie tiene su propia firma: no confundirla con los resúmenes Blinkist de Campbell.
+export function sabiasQueLiteraria(items){
+ const list=Array.isArray(items)?items:items?.items||[];
+ return list.filter(x=>{
+  if(x?.type!=='video'||!/^video\//.test(x.mime||'')||!x.url||orientation(x)!=='horizontal')return false;
+  const tags=(x.tags||[]).map(norm),name=norm(x.title),ref=norm(x.externalRef);
+  return (tags.includes('sabias-que')||tags.includes('¿sabías que?')||/sab[ií]as que/.test(name)||ref.includes('sabias-que'))
+   &&(tags.includes('literaria')||/literaria|campbell|h[eé]roe de las mil caras/.test(name+' '+ref));
+ }).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)))[0]||null;
+}
+
 // Comprar / Vender (#comprar-vender): enlaces directos, sin afiliación y sin precios.
 export const WALLAPOP_UPLOAD='https://es.wallapop.com/app/catalog/upload';
 export function compraURL(b){const m=b?.meta||{};return m.casadellibro_url||'https://www.casadellibro.com/?query='+encodeURIComponent(m.titulo||b?.libro||m.isbn||'');}
@@ -168,6 +179,20 @@ export function buildShelf(row,{nogal,laton}={}){
  box(W*.98,.012,.012,0,H+.03,D*.6,brass); // listón de latón
  const books=new T.Group();books.name='libros-capsulas';group.add(books);
  group.userData.shelf={W,D,H,t,gap,rows,books};
+ // Tele de sobremesa en la balda superior, a la derecha de los libros y vinilos.
+ const tv=new T.Group();tv.name='tele-sabias-que';
+ tv.position.set(W/2-.19,2*gap+t+.014,D*.48);group.add(tv);
+ const shell=new T.MeshStandardMaterial({color:'#8a5a3b',roughness:.56}),dark=new T.MeshStandardMaterial({color:'#1b1917',roughness:.38});
+ const part=(geo,mat,x,y,z)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;tv.add(m);return m;};
+ part(new T.BoxGeometry(.30,.225,.17),shell,0,.119,0);
+ part(new T.BoxGeometry(.248,.174,.008),dark,-.012,.128,.09);
+ const glass=document.createElement('canvas');glass.width=512;glass.height=288;
+ const cx=glass.getContext('2d');cx.fillStyle='#111';cx.fillRect(0,0,512,288);
+ const display=texture(glass),face=new T.MeshBasicMaterial({map:display,toneMapped:false});
+ part(new T.PlaneGeometry(.228,.145),face,-.012,.128,.096);
+ part(new T.CylinderGeometry(.011,.011,.009,16),brass,.13,.1,.095).rotation.x=Math.PI/2;
+ for(const x of [-.1,.1])part(new T.BoxGeometry(.032,.016,.14),dark,x,.008,0);
+ tv.userData.sabiasQue={canvas:glass,texture:display};group.userData.shelf.tv=tv;
  return group;
 }
 function deco(group,x,y,z){ // taza y planta pequeña para el hueco, sin texto
@@ -255,21 +280,52 @@ export function screenOverlay(screenObject){
 export function mountCapsulas({scene,entries,signal}){
  const byId=id=>entries.find(e=>e.id===id);let viewer=null,books=[],page=0,timer=0,pager=0;
  const shelfEntry=entries.find(e=>e.runtime?.builder==='estanteria-libros'),screenEntry=entries.find(e=>e.contenido?.tipo==='libro-del-dia');
+ const tv=shelfEntry?.object.userData.shelf.tv||null;
  const screen=screenEntry?screenOverlay(screenEntry.object):null;
  const forced=new URL(location.href).searchParams.get('libro');
- const state={books:[],libroDelDia:null,updatedAt:null,error:null,detail:false,libroAbierto:null,medio:null};
+ const state={books:[],libroDelDia:null,updatedAt:null,error:null,detail:false,libroAbierto:null,medio:null,tele:{encendida:false,video:null}};
  // ---------- modo detalle de la estantería (#ver-mueble) ----------
- let ui=null,chosen=null,panel=null,bar=null,down=null,playing=null;
+ let ui=null,chosen=null,panel=null,bar=null,down=null,playing=null,tvPanel=null,tvTimeout=0,tvVideo=null;
  const en=document.documentElement.lang==='en',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function tvFace(mark=''){
+  if(!tv)return;const {canvas,texture:tex}=tv.userData.sabiasQue,c=canvas.getContext('2d');
+  c.fillStyle='#111';c.fillRect(0,0,canvas.width,canvas.height);
+  if(mark){c.fillStyle='#f5f0e6';c.textAlign='center';c.textBaseline='middle';c.font=`900 ${mark==='¿?'?230:110}px Arial,sans-serif`;c.fillText(mark,256,143);}
+  tex.needsUpdate=true;
+ }
+ function closeTV(){clearTimeout(tvTimeout);tvPanel?.querySelector('video')?.pause();tvPanel?.remove();tvPanel=null;state.tele.encendida=false;tvFace();}
+ function revealTV(){
+  if(!tvPanel)return;tvFace('▶');
+  const area=tvPanel.querySelector('[data-tv-media]');area.hidden=false;
+  if(tvVideo){area.innerHTML=`<video controls playsinline preload="metadata" src="${esc(tvVideo.url)}" aria-label="${en?'Literary Did you know? capsule':'Cápsula literaria ¿Sabías que?'}"></video>`;area.querySelector('video').play().catch(()=>{});}
+  else area.innerHTML=`<p role="status">${en?'The literary capsule will play here as soon as it is published in Pixeria Stock.':'La cápsula literaria se reproducirá aquí en cuanto se publique en Pixeria Stock.'}</p>`;
+ }
+ function openTV(){
+  if(!ui||!tv)return;closeBook();closeTV();state.tele.encendida=true;tvFace('¿?');
+  tvPanel=document.createElement('div');tvPanel.className='xpace-tele';tvPanel.setAttribute('role','dialog');tvPanel.setAttribute('aria-label',en?'Retro TV · Did you know?':'Tele retro · ¿Sabías que?');
+  tvPanel.innerHTML=`<button type="button" data-tv-close aria-label="${en?'Close TV':'Cerrar tele'}">✕</button><div class="xpace-tele-caja"><div class="xpace-tele-pantalla"><span class="xpace-tele-chispa" aria-hidden="true">✦</span><strong>¿?</strong><div data-tv-media hidden></div></div><div class="xpace-tele-mando" aria-hidden="true"><span></span><span></span></div></div><p>${en?'Did you know? · Literary capsule':'¿Sabías que? · Cápsula literaria'}</p>`;
+  ui.stage.append(tvPanel);ui.on(tvPanel.querySelector('[data-tv-close]'),'click',closeTV);
+  tvPanel.querySelector('[data-tv-close]').focus({preventScroll:true});
+  tvTimeout=setTimeout(revealTV,3000);
+  refreshTV();
+ }
+ async function refreshTV(){
+  if(!tv)return;
+  try{const r=await fetch(STOCK_INDEX+'?t='+Math.floor(Date.now()/60000),{signal,cache:'no-store'});if(!r.ok)return;
+   const found=sabiasQueLiteraria(await r.json());if(signal?.aborted)return;
+   if(found?.url!==tvVideo?.url){tvVideo=found;state.tele.video=found?.id||null;if(tvPanel&&!tvPanel.querySelector('[data-tv-media]').hidden)revealTV();}
+  }catch{} // Stock puede tardar en publicar; se reintenta en el siguiente refresco.
+ }
  function attachUI({stage,canvas,on}){
   if(!shelfEntry)return;ui={stage,canvas,on};
-  bar=document.createElement('div');bar.className='xpace-detalle-bar';bar.hidden=true;bar.innerHTML=`<span>${en?'Detail · tap a book':'Modo detalle · toca un libro'}</span><button type="button" data-salir>${en?'Exit detail':'Salir del modo detalle'}</button>`;stage.append(bar);
+  bar=document.createElement('div');bar.className='xpace-detalle-bar';bar.hidden=true;bar.innerHTML=`<span>${en?'Detail · tap a book or TV':'Modo detalle · toca un libro o la tele'}</span><button type="button" data-tele>${en?'Watch TV':'Ver tele'}</button><button type="button" data-salir>${en?'Exit detail':'Salir del modo detalle'}</button>`;stage.append(bar);
   on(bar.querySelector('[data-salir]'),'click',()=>exitDetail());
+  on(bar.querySelector('[data-tele]'),'click',openTV);
   on(canvas,'pointerdown',e=>{down={x:e.clientX,y:e.clientY};});
-  on(canvas,'pointerup',e=>{if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>8)return;down=null;if(playing&&screenEntry&&viewer.pick(e.clientX,e.clientY,[screenEntry.object]).length){window.open(compraURL(playing),'_blank','noopener');return;}if(!state.detail)return;const hit=viewer.pick(e.clientX,e.clientY,[shelfEntry.object.userData.shelf.books])[0];let node=hit?.object;while(node&&!node.userData.capsula)node=node.parent;const b=node&&books.find(x=>x.id===node.userData.capsula);if(b)openBook(b,node);});
+  on(canvas,'pointerup',e=>{if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>8)return;down=null;if(playing&&screenEntry&&viewer.pick(e.clientX,e.clientY,[screenEntry.object]).length){window.open(compraURL(playing),'_blank','noopener');return;}if(!state.detail)return;if(tv&&viewer.pick(e.clientX,e.clientY,[tv]).length){openTV();return;}const hit=viewer.pick(e.clientX,e.clientY,[shelfEntry.object.userData.shelf.books])[0];let node=hit?.object;while(node&&!node.userData.capsula)node=node.parent;const b=node&&books.find(x=>x.id===node.userData.capsula);if(b)openBook(b,node);});
  }
- function enterDetail(){if(!shelfEntry||!viewer||!ui)return false;state.detail=true;if(bar)bar.hidden=false;viewer.frameObject(shelfEntry.object,{angle:Math.PI/2,elevation:.04,margin:1.08,clip:true});return true;}
- function exitDetail({reset=true}={}){closeBook();const was=state.detail;state.detail=false;if(bar)bar.hidden=true;viewer?.clearClip();if(was&&reset)viewer.preset('home');return was;}
+ function enterDetail(){if(!shelfEntry||!viewer||!ui)return false;state.detail=true;if(bar)bar.hidden=false;viewer.frameObject(shelfEntry.object,{angle:Math.PI/2,elevation:.04,margin:2.4,clip:true});return true;}
+ function exitDetail({reset=true}={}){closeTV();closeBook();const was=state.detail;state.detail=false;if(bar)bar.hidden=true;viewer?.clearClip();if(was&&reset)viewer.preset('home');return was;}
  function restoreBook(){if(!chosen)return;chosen.node.position.z=chosen.z;chosen.helper.removeFromParent();chosen.helper.geometry.dispose();chosen.helper.material.dispose();chosen=null;viewer?.invalidateShadows();}
  function closeBook(){if(panel){panel.querySelector('video,audio')?.pause();panel.remove();panel=null;}try{globalThis.speechSynthesis?.cancel();}catch{}playing=null;restoreBook();state.libroAbierto=null;state.medio=null;paint();}
  function speak(b,status){const synth=globalThis.speechSynthesis;if(!synth||typeof SpeechSynthesisUtterance==='undefined'){status.textContent=en?'This browser cannot read aloud.':'Este navegador no puede leer en voz alta.';return false;}synth.cancel();const u=new SpeechSynthesisUtterance(speechText(b));u.lang='es-ES';const voice=synth.getVoices().find(v=>/^es(-|_)ES/i.test(v.lang))||synth.getVoices().find(v=>/^es/i.test(v.lang));if(voice)u.voice=voice;u.rate=1;synth.speak(u);return true;}
@@ -297,6 +353,7 @@ export function mountCapsulas({scene,entries,signal}){
  }
  function paint(){if(!screen)return;const f=books.find(b=>b.id===forced)||books[0];if(playing)drawPlayingScreen(screen.canvas,playing);else drawScreen(screen.canvas,f,page,books.length);screen.tex.needsUpdate=true;}
  async function refresh(){
+  refreshTV();
   try{const next=await loadBooks(signal);if(signal?.aborted)return;const sig=next.map(b=>b.id).join();const full=sig+'|'+next.map(b=>b.glb||'').join();if(full!==state.sig){books=next;if(shelfEntry)await fillShelf(shelfEntry.object,books,forced);state.sig=full;page=0;paint();viewer?.invalidateShadows();}
    state.books=books.map(b=>({id:b.id,libro:b.libro,autor:b.autor,consejero:b.consejero,createdAt:b.createdAt,portada:!!b.cover,glb:b.glb,isbn:b.meta?.isbn||null,video:b.media?.video?.id||null,videos:{vertical:b.media?.videos?.vertical?.id||null,horizontal:b.media?.videos?.horizontal?.id||null},audio:b.media?.audio?.id||null}));const f=books.find(b=>b.id===forced)||books[0];state.libroDelDia=f?{id:f.id,libro:f.libro,autor:f.autor,consejero:f.consejero,capsula:f.capsula}:null;state.updatedAt=new Date().toISOString();state.error=null;
    document.documentElement.dataset.libroDelDia=f?.id||'';
@@ -305,7 +362,7 @@ export function mountCapsulas({scene,entries,signal}){
  paint();const ready=refresh();
  timer=setInterval(refresh,REFRESH_MS);pager=setInterval(()=>{if(books.length&&!document.hidden&&!playing){page++;paint();}},PAGE_MS);
  const vis=()=>{if(!document.hidden)refresh();};document.addEventListener('visibilitychange',vis);
- signal?.addEventListener('abort',()=>{clearInterval(timer);clearInterval(pager);document.removeEventListener('visibilitychange',vis);closeBook();bar?.remove();},{once:true});
+ signal?.addEventListener('abort',()=>{clearInterval(timer);clearInterval(pager);document.removeEventListener('visibilitychange',vis);closeTV();closeBook();bar?.remove();},{once:true});
  const bookScreen=id=>{const b=books.find(x=>x.id===id);let node=null;shelfEntry?.object.userData.shelf.books.traverse(n=>{if(!node&&n.userData.capsula===id)node=n;});if(b&&node)openBook(b,node);return !!(b&&node);};
  const bookCenter=id=>{let node=null;shelfEntry?.object.userData.shelf.books.traverse(n=>{if(!node&&n.userData.capsula===id)node=n;});return node?new T.Box3().setFromObject(node).getCenter(new T.Vector3()):null;};
  return {ready,state,bookCenter,setViewer:v=>{viewer=v;v.invalidateShadows();},refresh,attachUI,enterDetail,exitDetail,openBook:bookScreen,shelfId:shelfEntry?.id||null};

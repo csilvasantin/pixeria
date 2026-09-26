@@ -58,7 +58,7 @@ test('modo detalle: medios de cada cápsula sin inventar (vínculo explícito, l
 });
 test('modo detalle: zoom frontal con recorte, libros seleccionables y panel con cerrar / salir',()=>{
  const c=fs.readFileSync(new URL('../assets/xpaces/capsulas.mjs',import.meta.url),'utf8'),r=fs.readFileSync(new URL('../assets/xpaces/engine/life-renderer.mjs',import.meta.url),'utf8');
- assert.match(c,/frameObject\(shelfEntry\.object,\{angle:Math\.PI\/2,elevation:\.04,margin:1\.08,clip:true\}\)/);
+ assert.match(c,/frameObject\(shelfEntry\.object,\{angle:Math\.PI\/2,elevation:\.04,margin:2\.4,clip:true\}\)/);
  assert.match(c,/viewer\.pick\(e\.clientX,e\.clientY,\[shelfEntry\.object\.userData\.shelf\.books\]\)/);
  for(const k of ['data-cerrar','data-salir','data-leer','data-parar',"u.lang='es-ES'",'player.play().catch','drawPlayingScreen(screen.canvas,playing)'])assert.ok(c.includes(k),k);
  assert.match(r,/near=Math\.max\(\.1,d-\.06\)/);assert.match(r,/clipBox=clip\?box\.clone\(\)/);
@@ -86,6 +86,14 @@ test('norma 16:9 / 9:16: vertical en móvil en vertical, horizontal en escritori
  const both=mediaFor(b,[v('ver',{tags:['vertical']}),v('hor',{orientacion:'horizontal'})]);
  assert.equal(pickVideo(both,true).id,'ver');assert.equal(pickVideo(both,false).id,'hor');
  const solo=mediaFor(b,[v('ver',{tags:['vertical']})]);assert.equal(pickVideo(solo,false).id,'ver');assert.equal(pickVideo({video:null,videos:{}},true),null);
+});
+
+test('tele ¿Sabías que?: usa solo la cápsula literaria 16:9 del Stock',async()=>{
+ const {sabiasQueLiteraria}=await import('../assets/xpaces/capsulas.mjs');
+ const video=(id,title,tags)=>({id,title,tags,type:'video',mime:'video/mp4',url:'https://stock.example/'+id,createdAt:id});
+ const items=[video('1','El héroe de las mil caras: volver con un don',['horizontal','capsula']),video('2','¿Sabías que? · Joseph Campbell',['vertical','literaria']),video('3','¿Sabías que? · Joseph Campbell',['horizontal','literaria'])];
+ assert.equal(sabiasQueLiteraria(items)?.id,'3');
+ assert.equal(sabiasQueLiteraria(items.slice(0,2)),null);
 });
 
 test('Comprar / Vender: Casa del Libro (o su búsqueda) y Wallapop, en pestaña nueva y sin precios',async()=>{
