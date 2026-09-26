@@ -56,6 +56,7 @@ test('el visor no llama a batchStatic con un objeto nulo ni gira la pizarra', ()
   assert.equal(inventory.includes('rotateZ'), false);
   assert.match(inventory, /sin modelo 3D/);
   assert.match(inventory, /componerPizarraVertical/);
+  assert.match(inventory, /tex\.flipY=false/);
 });
 
 test('el inventario apunta al modelo de los seis libros y a la estantería', () => {

@@ -61,7 +61,7 @@ function componerPizarraVertical(object){
   g.font='46px Georgia, serif';g.fillStyle='#f3efe2';g.textAlign='left';g.fillText(nombre,56,y);
   g.fillStyle='#d6b15a';g.textAlign='right';g.fillText(precio,664,y);
  });
- const tex=new T.CanvasTexture(canvas);if('colorSpace' in tex && T.SRGBColorSpace)tex.colorSpace=T.SRGBColorSpace;
+ const tex=new T.CanvasTexture(canvas);tex.flipY=false;if('colorSpace' in tex && T.SRGBColorSpace)tex.colorSpace=T.SRGBColorSpace;
  tex.needsUpdate=true;
  object.traverse(node=>{for(const material of [node.material].flat())if(material?.name==='PANTALLA_pizarra-2'){material.map=tex;material.emissiveMap=tex;material.needsUpdate=true;}});
 }
