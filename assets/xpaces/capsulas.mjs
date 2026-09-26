@@ -7,6 +7,8 @@ import {GLTFLoader} from './engine/vendor/GLTFLoader.mjs';
 import {buildVinyls,drawDiscScreen,playCapsule,safeDisc} from './vinilos.mjs';
 
 export const STOCK_INDEX='https://stock.admira.store/stock/index.json';
+// Identidad exclusiva de esta tele: /canal reproduce el Stock vivo filtrado por ambas etiquetas.
+export const SABIAS_QUE_CANAL='https://admira.tv/canal?embed=mupi&clean=1&fit=screen&playerType=virtual&screen=virtual-pixeria-alsea-sabiasque&circuit=pixeria-alsea&mode=local&modeLock=1&medio=video&tag=sabias-que%2Chorizontal&refresh=30&muted=1';
 // Ficha de la estantería (#4397/#4399): portadas reales de Blinkist en espejo, ISBN, medidas y formato de modelos.
 export const SHELF_META=new URL('./libros/estanteria-libros.json?v=vinilos-4419',import.meta.url).href;
 // Portadas de verdad (Carlos, 26-sep 01:26): la imagen de la ficha de Casa del Libro, copiada al despliegue (CORS).
@@ -286,7 +288,7 @@ export function mountCapsulas({scene,entries,signal}){
  const forced=new URL(location.href).searchParams.get('libro');
  const state={books:[],discos:[],discoAbierto:null,discoFase:null,libroDelDia:null,updatedAt:null,error:null,detail:false,libroAbierto:null,medio:null,tele:{encendida:false,video:null}};
  // ---------- modo detalle de la estantería (#ver-mueble) ----------
- let ui=null,chosen=null,panel=null,discPanel=null,discPlayer=null,bar=null,down=null,playing=null,tvPanel=null,tvTimeout=0,tvVideo=null;
+ let ui=null,chosen=null,panel=null,discPanel=null,discPlayer=null,bar=null,down=null,playing=null,tvPanel=null,tvTimeout=0;
  const en=document.documentElement.lang==='en',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function tvFace(mark=''){
   if(!tv)return;const {canvas,texture:tex}=tv.userData.sabiasQue,c=canvas.getContext('2d');
@@ -294,7 +296,7 @@ export function mountCapsulas({scene,entries,signal}){
   if(mark){c.fillStyle='#f5f0e6';c.textAlign='center';c.textBaseline='middle';c.font=`900 ${mark==='¿?'?230:110}px Arial,sans-serif`;c.fillText(mark,256,143);}
   tex.needsUpdate=true;
  }
- function closeTV(){clearTimeout(tvTimeout);tvPanel?.querySelector('video')?.pause();tvPanel?.remove();tvPanel=null;state.tele.encendida=false;tvFace();}
+ function closeTV(){clearTimeout(tvTimeout);tvPanel?.remove();tvPanel=null;state.tele.encendida=false;tvFace();}
  function closeDisc(){discPlayer?.stop();discPlayer=null;discPanel?.remove();discPanel=null;state.discoAbierto=null;state.discoFase=null;paint();}
  function openDisc(d){
   if(!ui||!safeDisc(d))return;closeTV();closeBook();closeDisc();state.discoAbierto=d.slug;
@@ -308,24 +310,15 @@ export function mountCapsulas({scene,entries,signal}){
  function revealTV(){
   if(!tvPanel)return;tvFace('▶');
   const area=tvPanel.querySelector('[data-tv-media]');area.hidden=false;
-  if(tvVideo){area.innerHTML=`<video controls playsinline preload="metadata" src="${esc(tvVideo.url)}" aria-label="${en?'Literary Did you know? capsule':'Cápsula literaria ¿Sabías que?'}"></video>`;area.querySelector('video').play().catch(()=>{});}
-  else area.innerHTML=`<p role="status">${en?'The literary capsule will play here as soon as it is published in Pixeria Stock.':'La cápsula literaria se reproducirá aquí en cuanto se publique en Pixeria Stock.'}</p>`;
+  area.innerHTML=`<iframe src="${SABIAS_QUE_CANAL}" title="${en?'Admira.tv player · Did you know?':'Player de admira.tv · ¿Sabías que?'}" allow="autoplay; fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
  }
  function openTV(){
   if(!ui||!tv)return;closeDisc();closeBook();closeTV();state.tele.encendida=true;tvFace('¿?');
   tvPanel=document.createElement('div');tvPanel.className='xpace-tele';tvPanel.setAttribute('role','dialog');tvPanel.setAttribute('aria-label',en?'Retro TV · Did you know?':'Tele retro · ¿Sabías que?');
-  tvPanel.innerHTML=`<button type="button" data-tv-close aria-label="${en?'Close TV':'Cerrar tele'}">✕</button><div class="xpace-tele-caja"><div class="xpace-tele-pantalla"><span class="xpace-tele-chispa" aria-hidden="true">✦</span><strong>¿?</strong><div data-tv-media hidden></div></div><div class="xpace-tele-mando" aria-hidden="true"><span></span><span></span></div></div><p>${en?'Did you know? · Literary capsule':'¿Sabías que? · Cápsula literaria'}</p>`;
+  tvPanel.innerHTML=`<button type="button" data-tv-close aria-label="${en?'Close TV':'Cerrar tele'}">✕</button><div class="xpace-tele-caja"><div class="xpace-tele-pantalla"><span class="xpace-tele-chispa" aria-hidden="true">✦</span><strong>¿?</strong><div data-tv-media hidden></div></div><div class="xpace-tele-mando" aria-hidden="true"><span></span><span></span></div></div><p>${en?'Did you know? · Admira.tv':'¿Sabías que? · Admira.tv'}</p>`;
   ui.stage.append(tvPanel);ui.on(tvPanel.querySelector('[data-tv-close]'),'click',closeTV);
   tvPanel.querySelector('[data-tv-close]').focus({preventScroll:true});
   tvTimeout=setTimeout(revealTV,3000);
-  refreshTV();
- }
- async function refreshTV(){
-  if(!tv)return;
-  try{const r=await fetch(STOCK_INDEX+'?t='+Math.floor(Date.now()/60000),{signal,cache:'no-store'});if(!r.ok)return;
-   const found=sabiasQueLiteraria(await r.json());if(signal?.aborted)return;
-   if(found?.url!==tvVideo?.url){tvVideo=found;state.tele.video=found?.id||null;if(tvPanel&&!tvPanel.querySelector('[data-tv-media]').hidden)revealTV();}
-  }catch{} // Stock puede tardar en publicar; se reintenta en el siguiente refresco.
  }
  function attachUI({stage,canvas,on}){
   if(!shelfEntry)return;ui={stage,canvas,on};
@@ -364,7 +357,6 @@ export function mountCapsulas({scene,entries,signal}){
  }
  function paint(){if(!screen)return;const f=books.find(b=>b.id===forced)||books[0],d=discs.find(x=>x.slug===state.discoAbierto);if(d)drawDiscScreen(screen.canvas,d,state.discoFase);else if(playing)drawPlayingScreen(screen.canvas,playing);else drawScreen(screen.canvas,f,page,books.length);screen.tex.needsUpdate=true;}
  async function refresh(){
-  refreshTV();
   try{const next=await loadBooks(signal);if(signal?.aborted)return;const meta=await loadMeta(signal);if(!discs.length&&shelfEntry){discs=(meta.discos?.piezas||[]).filter(safeDisc);if(discs.length)buildVinyls(shelfEntry.object,discs);state.discos=discs.map(d=>({slug:d.slug,artist:d.artist,title:d.title,formatos:d.formats}));}const sig=next.map(b=>b.id).join();const full=sig+'|'+next.map(b=>b.glb||'').join();if(full!==state.sig){books=next;if(shelfEntry)await fillShelf(shelfEntry.object,books,forced);state.sig=full;page=0;paint();viewer?.invalidateShadows();}
    state.books=books.map(b=>({id:b.id,libro:b.libro,autor:b.autor,consejero:b.consejero,createdAt:b.createdAt,portada:!!b.cover,glb:b.glb,isbn:b.meta?.isbn||null,video:b.media?.video?.id||null,videos:{vertical:b.media?.videos?.vertical?.id||null,horizontal:b.media?.videos?.horizontal?.id||null},audio:b.media?.audio?.id||null}));const f=books.find(b=>b.id===forced)||books[0];state.libroDelDia=f?{id:f.id,libro:f.libro,autor:f.autor,consejero:f.consejero,capsula:f.capsula}:null;state.updatedAt=new Date().toISOString();state.error=null;
    document.documentElement.dataset.libroDelDia=f?.id||'';
