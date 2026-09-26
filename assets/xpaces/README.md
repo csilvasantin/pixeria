@@ -105,3 +105,19 @@ emulation and English: all measured checkboxes, category tri-state, All/None,
 3D picking, reload from URL, real JSON/CSV downloads, close/disposal and overflow.
 `PUBLISH_INVENTORIES=1` also publishes the two full inventories via the actual UI;
 leave it unset for routine repeat tests. `XPACES_BASE` overrides the local base.
+
+## ITIL layer (Cafebrería · Alsea) — DEMO traffic light
+
+`itil.mjs` overlays one ITIL pin per tech item of the Cafebrería inventory
+(`inventory/alsea-4380.json`; screens, POS, speakers, aroma, Wi-Fi, gateway, router,
+camera). Nothing is added to the inventory; items without 3D geometry go to a tray.
+The viewer has a single 3D renderer, so the 8/16/32/64 bar buttons pick the **art tier**
+of the pins (pixel-art 8 bits · sprite 16 · illustration 32 · hyper-real render with
+green code 64, WebP), same progression as XpaceOS (`itil/`, `itil-glyphs.mjs`).
+The traffic light is **DEMO only** (`DEMO_STATUS`), always labelled «DEMO» on screen.
+
+Switch off: `?itil=0` (remembered in `localStorage.xpace_itil`; `?itil=1` turns it back
+on), expert command `itil off`, or the button in the Advanced rail. Remove entirely:
+delete the `import('./itil.mjs…')` line in `viewer.mjs` (the viewer keeps working).
+Only the asset ids in `ITIL_ASSETS` get the layer; if it fails to load, the viewer
+continues unchanged.

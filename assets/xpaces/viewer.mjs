@@ -3,7 +3,7 @@ import {createLifeScene} from './engine/life-scene.mjs?v=px-1';
 import {GLTFLoader} from './engine/vendor/GLTFLoader.mjs';
 import * as T from './engine/premium-three.mjs';
 import {bindInventory,mountInventory} from './inventory.mjs?v=tele-admira-4438-audio';
-import {bindChrome,cafeTitle,viewerShell} from './chrome.mjs?v=ui-4448';
+import {bindChrome,cafeTitle,viewerShell} from './chrome.mjs?v=itil-capa-1';
 import {mergeGeometries} from './engine/vendor/BufferGeometryUtils.mjs';
 
 function release(root) {
@@ -72,7 +72,10 @@ export async function mountXpace(host, item, {signal,furniture=false,onModel}={}
     viewer.preset('home');
     bound?.capsulas?.setViewer(viewer);bound?.capsulas?.attachUI?.({stage,canvas,on});
     if(bound)inventory=mountInventory(host,item,bound,viewer,on,signal);
-    chrome?.attach({inventory});
+    // Capa ITIL (solo la Cafebrería, semáforo DEMO). Se carga aparte: si falla, el visor sigue igual.
+    let itil=null;
+    if(!furniture&&inventory&&bound){try{const m=await import('./itil.mjs?v=itil-1');if(!disposed&&m.ITIL_ASSETS.has(item.id)){itil=m.mountItil({host,stage,entries:bound.entries,viewer,inventory,assetId:item.id,on,signal,en});listeners.push(()=>itil?.dispose());}}catch(error){console.warn('[itil]',error);}}
+    chrome?.attach({inventory,itil});
     // Let Better's existing Shift-drag handler work with an explicit touch-friendly Pan toggle.
     on(canvas,'pointerdown',event=>{if(pan)Object.defineProperty(event,'shiftKey',{value:true});},true);
     for(const button of host.querySelectorAll('[data-preset]'))on(button,'click',()=>{viewer.preset(button.dataset.preset);for(const b of host.querySelectorAll('[data-preset]'))b.setAttribute('aria-pressed',String(b===button));});
@@ -92,7 +95,7 @@ export async function mountXpace(host, item, {signal,furniture=false,onModel}={}
     function tick(now){if(disposed)return;if(!document.hidden)viewer.render(now);frame=requestAnimationFrame(tick);}frame=requestAnimationFrame(tick);
     // Read-only diagnostics make camera motion and resource cleanup testable.
     host.xpaceBookPoint=id=>{const c=bound?.capsulas?.bookCenter?.(id);return c?viewer.project(c):null;};
-    host.xpaceState=()=>({camera:viewer.cameraState,disposed,inventory:inventory?.state(),capsulas:bound?.capsulas?.state||null});
+    host.xpaceState=()=>({camera:viewer.cameraState,disposed,inventory:inventory?.state(),capsulas:bound?.capsulas?.state||null,itil:itil?.state?.()||null});
     return dispose;
   } catch(error) {
     dispose();if(signal?.aborted)return dispose;

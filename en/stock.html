@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.26.09.2026.r15.20:23">
+  <meta name="admiranext-version" content="Pixeria v.26.09.2026.r16.20:46">
   <link rel="canonical" href="https://www.pixeria.com/en/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -685,7 +685,7 @@
         actions.querySelector('[data-xpace-download="blend"]').onclick = () => blend && descargarAsset({...blend, mime:'application/x-blender'});
         const controller = xpaceController = new AbortController();
         const host = lightboxInner.querySelector('.xpace-viewer');
-        import('../assets/xpaces/viewer.mjs?v=tele-admira-4438-audio').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'Could not load 3D. Close and reopen to retry.';});
+        import('../assets/xpaces/viewer.mjs?v=itil-capa-1').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'Could not load 3D. Close and reopen to retry.';});
       }
       window.__lightboxItemId = it.id || null;
       const i = currentView.findIndex(x => x.id === it.id);

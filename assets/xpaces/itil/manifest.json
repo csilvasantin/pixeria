@@ -1,0 +1,450 @@
+{
+ "schema": "admira.xpaceos.itil-glyphs/1",
+ "status": {
+  "ok": "#00cc66",
+  "warn": "#ff9900",
+  "down": "#ff3333",
+  "unknown": "#999999"
+ },
+ "statusLabels": {
+  "ok": "Operativo",
+  "warn": "Aviso",
+  "down": "Caído",
+  "unknown": "Sin dato"
+ },
+ "items": {
+  "pantalla": {
+   "nombre": "Pantalla / pizarra digital",
+   "clase": "Hardware · Display",
+   "tiers": {
+    "good": {
+     "bits": 8,
+     "url": "8bit/pantalla.png",
+     "width": 16,
+     "height": 16,
+     "led": [
+      13,
+      12
+     ],
+     "grid": true
+    },
+    "matrix": {
+     "bits": 64,
+     "url": "64bit/pantalla.webp",
+     "code": "64bit/pantalla-code.webp",
+     "width": 684,
+     "height": 485,
+     "led": [
+      636.7,
+      464.7
+     ]
+    },
+    "better": {
+     "bits": 16,
+     "url": "16bit/pantalla.png",
+     "width": 48,
+     "height": 35,
+     "led": [
+      43.8,
+      32.3
+     ]
+    },
+    "best": {
+     "bits": 32,
+     "url": "32bit/pantalla.webp",
+     "width": 350,
+     "height": 250,
+     "led": [
+      322.3,
+      235.9
+     ]
+    }
+   }
+  },
+  "player": {
+   "nombre": "Player de contenidos",
+   "clase": "Hardware · Media player",
+   "tiers": {
+    "good": {
+     "bits": 8,
+     "url": "8bit/player.png",
+     "width": 16,
+     "height": 16,
+     "led": [
+      12,
+      9
+     ],
+     "grid": true
+    },
+    "matrix": {
+     "bits": 64,
+     "url": "64bit/player.webp",
+     "code": "64bit/player-code.webp",
+     "width": 676,
+     "height": 387,
+     "led": [
+      479.6,
+      232.8
+     ]
+    },
+    "better": {
+     "bits": 16,
+     "url": "16bit/player.png",
+     "width": 48,
+     "height": 28,
+     "led": [
+      33.6,
+      16.8
+     ]
+    },
+    "best": {
+     "bits": 32,
+     "url": "32bit/player.webp",
+     "width": 347,
+     "height": 201,
+     "led": [
+      244.8,
+      119.9
+     ]
+    }
+   }
+  },
+  "altavoz": {
+   "nombre": "Altavoz · hilo musical",
+   "clase": "Hardware · Audio",
+   "tiers": {
+    "good": {
+     "bits": 8,
+     "url": "8bit/altavoz.png",
+     "width": 16,
+     "height": 16,
+     "led": [
+      10,
+      13
+     ],
+     "grid": true
+    },
+    "matrix": {
+     "bits": 64,
+     "url": "64bit/altavoz.webp",
+     "code": "64bit/altavoz-code.webp",
+     "width": 452,
+     "height": 662,
+     "led": [
+      289.7,
+      627.4
+     ]
+    },
+    "better": {
+     "bits": 16,
+     "url": "16bit/altavoz.png",
+     "width": 33,
+     "height": 48,
+     "led": [
+      21.1,
+      44.6
+     ]
+    },
+    "best": {
+     "bits": 32,
+     "url": "32bit/altavoz.webp",
+     "width": 236,
+     "height": 342,
+     "led": [
+      149.9,
+      319.2
+     ]
+    }
+   }
+  },
+  "aroma": {
+   "nombre": "Difusor de aroma",
+   "clase": "Hardware · IoT ambiental",
+   "tiers": {
+    "good": {
+     "bits": 8,
+     "url": "8bit/aroma.png",
+     "width": 16,
+     "height": 16,
+     "led": [
+      7,
+      12
+     ],
+     "grid": true
+    },
+    "matrix": {
+     "bits": 64,
+     "url": "64bit/aroma.webp",
+     "code": "64bit/aroma-code.webp",
+     "width": 200,
+     "height": 655,
+     "led": [
+      70.9,
+      579.9
+     ]
+    },
+    "better": {
+     "bits": 16,
+     "url": "16bit/aroma.png",
+     "width": 16,
+     "height": 48,
+     "led": [
+      6.0,
+      41.7
+     ]
+    },
+    "best": {
+     "bits": 32,
+     "url": "32bit/aroma.webp",
+     "width": 108,
+     "height": 336,
+     "led": [
+      39.4,
+      293.9
+     ]
+    }
+   }
+  },
+  "router": {
+   "nombre": "Router / punto de acceso wifi",
+   "clase": "Red · Conectividad",
+   "tiers": {
+    "good": {
+     "bits": 8,
+     "url": "8bit/router.png",
+     "width": 16,
+     "height": 16,
+     "led": [
+      12,
+      12
+     ],
+     "grid": true
+    },
+    "matrix": {
+     "bits": 64,
+     "url": "64bit/router.webp",
+     "code": "64bit/router-code.webp",
+     "width": 676,
+     "height": 595,
+     "led": [
+      475.5,
+      543.9
+     ]
+    },
+    "better": {
+     "bits": 16,
+     "url": "16bit/router.png",
+     "width": 48,
+     "height": 42,
+     "led": [
+      33.4,
+      38.0
+     ]
+    },
+    "best": {
+     "bits": 32,
+     "url": "32bit/router.webp",
+     "width": 346,
+     "height": 306,
+     "led": [
+      242.2,
+      275.4
+     ]
+    }
+   }
+  },
+  "tpv": {
+   "nombre": "Terminal punto de venta (TPV)",
+   "clase": "Hardware · Punto de venta",
+   "tiers": {
+    "good": {
+     "bits": 8,
+     "url": "8bit/tpv.png",
+     "width": 16,
+     "height": 16,
+     "led": [
+      12,
+      8
+     ],
+     "grid": true
+    },
+    "matrix": {
+     "bits": 64,
+     "url": "64bit/tpv.webp",
+     "code": "64bit/tpv-code.webp",
+     "width": 680,
+     "height": 522,
+     "led": [
+      461.7,
+      309.3
+     ]
+    },
+    "better": {
+     "bits": 16,
+     "url": "16bit/tpv.png",
+     "width": 48,
+     "height": 37,
+     "led": [
+      32.2,
+      21.9
+     ]
+    },
+    "best": {
+     "bits": 32,
+     "url": "32bit/tpv.webp",
+     "width": 349,
+     "height": 269,
+     "led": [
+      234.9,
+      158.6
+     ]
+    }
+   }
+  },
+  "camara": {
+   "nombre": "Cámara",
+   "clase": "Hardware · Vídeo / aforo",
+   "tiers": {
+    "good": {
+     "bits": 8,
+     "url": "8bit/camara.png",
+     "width": 16,
+     "height": 16,
+     "led": [
+      10,
+      9
+     ],
+     "grid": true
+    },
+    "matrix": {
+     "bits": 64,
+     "url": "64bit/camara.webp",
+     "code": "64bit/camara-code.webp",
+     "width": 679,
+     "height": 279,
+     "led": [
+      100.0,
+      231.8
+     ]
+    },
+    "better": {
+     "bits": 16,
+     "url": "16bit/camara.png",
+     "width": 48,
+     "height": 21,
+     "led": [
+      7.8,
+      16.7
+     ]
+    },
+    "best": {
+     "bits": 32,
+     "url": "32bit/camara.webp",
+     "width": 347,
+     "height": 147,
+     "led": [
+      53.5,
+      119.9
+     ]
+    }
+   }
+  },
+  "altavoz-techo": {
+   "nombre": "Altavoz de techo · hilo musical",
+   "clase": "Hardware · Audio",
+   "tiers": {
+    "good": {
+     "bits": 8,
+     "url": "8bit/altavoz-techo.png",
+     "width": 16,
+     "height": 16,
+     "led": [
+      11,
+      10
+     ],
+     "grid": true
+    },
+    "matrix": {
+     "bits": 64,
+     "url": "64bit/altavoz-techo.webp",
+     "code": "64bit/altavoz-techo-code.webp",
+     "width": 686,
+     "height": 502,
+     "led": [
+      476.3,
+      430.9
+     ]
+    },
+    "better": {
+     "bits": 16,
+     "url": "16bit/altavoz-techo.png",
+     "width": 48,
+     "height": 36,
+     "led": [
+      32.9,
+      29.9
+     ]
+    },
+    "best": {
+     "bits": 32,
+     "url": "32bit/altavoz-techo.webp",
+     "width": 351,
+     "height": 258,
+     "led": [
+      242.7,
+      218.9
+     ]
+    }
+   }
+  },
+  "wifi-techo": {
+   "nombre": "Punto de acceso wifi de techo",
+   "clase": "Red · Conectividad",
+   "tiers": {
+    "good": {
+     "bits": 8,
+     "url": "8bit/wifi-techo.png",
+     "width": 16,
+     "height": 16,
+     "led": [
+      7,
+      12
+     ],
+     "grid": true
+    },
+    "matrix": {
+     "bits": 64,
+     "url": "64bit/wifi-techo.webp",
+     "code": "64bit/wifi-techo-code.webp",
+     "width": 678,
+     "height": 634,
+     "led": [
+      314.1,
+      542.6
+     ]
+    },
+    "better": {
+     "bits": 16,
+     "url": "16bit/wifi-techo.png",
+     "width": 48,
+     "height": 45,
+     "led": [
+      22.3,
+      37.8
+     ]
+    },
+    "best": {
+     "bits": 32,
+     "url": "32bit/wifi-techo.webp",
+     "width": 348,
+     "height": 325,
+     "led": [
+      161.6,
+      274.8
+     ]
+    }
+   }
+  }
+ },
+ "nota": "Copia de XpaceOS (rama itil-niveles-graficos, commit 0d39f2d). 32/64 bits convertidos a WebP. Modelos de diseño, sin datos de inventario."
+}

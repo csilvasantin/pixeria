@@ -1,0 +1,92 @@
+/* Elementos ITIL · 4 niveles visuales. Todo va bajo .itil-glyph / .itil-layer: no afecta al resto. */
+.itil-glyph{--itil-c:#94a3b8;--itil-c8:#999;position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:4px;pointer-events:auto;user-select:none}
+.itil-art{position:relative;flex:none}
+.itil-img,.itil-code{position:absolute;inset:0;width:100%;height:100%;display:block}
+.itil-led{position:absolute;width:0;height:0;pointer-events:none}
+.itil-led::after{content:"";position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--itil-c);box-shadow:0 0 6px 2px var(--itil-c)}
+.itil-plate{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.itil-lamps{display:inline-flex;gap:2px}
+.itil-lamps b{display:block;width:7px;height:7px;background:#222;opacity:.9}
+.itil-glyph[data-status=ok] .itil-lamps b[data-s=ok],
+.itil-glyph[data-status=warn] .itil-lamps b[data-s=warn],
+.itil-glyph[data-status=down] .itil-lamps b[data-s=down]{background:var(--itil-c)}
+.itil-glyph[data-status=unknown] .itil-lamps b{background:#555}
+
+/* 8 bits · Good: píxel duro, paleta cuantizada, sin sombras suaves ni fundidos */
+.itil-good .itil-img{image-rendering:pixelated;image-rendering:crisp-edges}
+.itil-good .itil-art{background:#000;outline:2px solid #fff;box-shadow:4px 4px 0 #000;padding:0}
+.itil-good .itil-plate{background:#000;border:2px solid #fff;padding:1px 4px;font:700 8px/1 "Press Start 2P",ui-monospace,monospace;color:#fff;letter-spacing:.06em;text-transform:uppercase}
+.itil-good .itil-lamps b{width:5px;height:5px;background:#333}
+.itil-good[data-status=ok] .itil-lamps b[data-s=ok],.itil-good[data-status=warn] .itil-lamps b[data-s=warn],.itil-good[data-status=down] .itil-lamps b[data-s=down]{background:var(--itil-c8)}
+.itil-good[data-status=warn] .itil-lamps b[data-s=warn]{animation:itil-step .6s steps(1) infinite}
+.itil-good[data-status=down] .itil-lamps b[data-s=down]{animation:itil-step .3s steps(1) infinite}
+@keyframes itil-step{50%{background:#333}}
+
+/* 16 bits · Better: sprite con sombreado, ventana tipo consola 16 bits con bisel de 2 tonos */
+.itil-better .itil-img{image-rendering:pixelated}
+.itil-better .itil-art{filter:drop-shadow(3px 3px 0 rgba(0,0,0,.35))}
+.itil-better .itil-led::after{left:-3px;top:-3px;width:6px;height:6px;border-radius:1px;box-shadow:0 0 0 1px #140f1e,0 0 4px 1px var(--itil-c)}
+.itil-better .itil-plate{padding:2px 6px;border-radius:3px;background:linear-gradient(#2c4a6b,#1a2d44);border:2px solid #9fc1e6;border-right-color:#0c1624;border-bottom-color:#0c1624;font:700 9px/1.1 ui-monospace,monospace;color:#f2f7ff;text-shadow:1px 1px 0 #000}
+.itil-better .itil-lamps b{width:6px;height:6px;border-radius:1px;box-shadow:inset -1px -1px 0 rgba(0,0,0,.45),inset 1px 1px 0 rgba(255,255,255,.35)}
+.itil-better[data-status=warn] .itil-lamps b[data-s=warn],.itil-better[data-status=down] .itil-lamps b[data-s=down]{animation:itil-pulse16 1s steps(2) infinite}
+@keyframes itil-pulse16{50%{filter:brightness(.55)}}
+
+/* 32 bits · Best: ilustración con tinta, tarjeta de vidrio, lámparas brillantes con halo */
+.itil-best .itil-art{filter:drop-shadow(0 6px 8px rgba(20,30,28,.35))}
+.itil-best .itil-plate{padding:4px 9px;border-radius:999px;background:rgba(16,34,30,.78);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(8px);font:600 10px/1.1 system-ui,sans-serif;color:#f4f7ec;letter-spacing:.03em;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.itil-best .itil-lamps{gap:3px}
+.itil-best .itil-lamps b{width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#666,#1b1b1b)}
+.itil-best[data-status=ok] .itil-lamps b[data-s=ok],.itil-best[data-status=warn] .itil-lamps b[data-s=warn],.itil-best[data-status=down] .itil-lamps b[data-s=down]{background:radial-gradient(circle at 35% 30%,#fff 0 12%,var(--itil-c) 45%);box-shadow:0 0 8px 1px var(--itil-c)}
+.itil-best[data-status=warn] .itil-led::after,.itil-best[data-status=down] .itil-led::after,.itil-best[data-status=warn] .itil-lamps b[data-s=warn],.itil-best[data-status=down] .itil-lamps b[data-s=down]{animation:itil-glow 1.4s ease-in-out infinite}
+@keyframes itil-glow{50%{opacity:.35}}
+
+/* 64 bits · Matrix: render hiperrealista + barrido de código verde, marco fósforo */
+.itil-matrix .itil-art{filter:drop-shadow(0 10px 12px rgba(0,0,0,.55))}
+.itil-matrix .itil-code{opacity:0;mix-blend-mode:screen;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 18%,#000 30%,transparent 48%);mask-image:linear-gradient(180deg,transparent 0,#000 18%,#000 30%,transparent 48%);-webkit-mask-size:100% 300%;mask-size:100% 300%;animation:itil-scan 3.2s linear infinite}
+.itil-matrix[data-status=unknown] .itil-code{animation-duration:6s}
+.itil-matrix .itil-code{opacity:.95}
+.itil-matrix[data-status=warn] .itil-code{filter:hue-rotate(-75deg) saturate(1.6)}
+.itil-matrix[data-status=down] .itil-code{filter:hue-rotate(-125deg) saturate(2)}
+.itil-matrix[data-status=unknown] .itil-code{filter:grayscale(1) brightness(.8)}
+@keyframes itil-scan{from{-webkit-mask-position:0 100%;mask-position:0 100%}to{-webkit-mask-position:0 -50%;mask-position:0 -50%}}
+.itil-matrix .itil-led::after{left:-5px;top:-5px;width:10px;height:10px;box-shadow:0 0 10px 4px var(--itil-c),0 0 22px 8px color-mix(in srgb,var(--itil-c) 40%,transparent)}
+.itil-matrix .itil-plate{position:relative;padding:4px 10px;background:rgba(2,14,8,.86);border:1px solid rgba(90,255,150,.55);font:700 9px/1.1 ui-monospace,"Geist Mono",monospace;color:#9dffb9;letter-spacing:.14em;text-transform:uppercase;text-shadow:0 0 6px rgba(80,255,140,.7);box-shadow:0 0 14px rgba(40,255,120,.18),inset 0 0 10px rgba(40,255,120,.12)}
+.itil-matrix .itil-plate::before{content:"CI>";color:#4cff88;margin-right:2px}
+.itil-matrix .itil-lamps b{width:7px;height:7px;border-radius:0;background:#0c2a18;box-shadow:inset 0 0 0 1px #1c5a33}
+.itil-matrix[data-status=ok] .itil-lamps b[data-s=ok],.itil-matrix[data-status=warn] .itil-lamps b[data-s=warn],.itil-matrix[data-status=down] .itil-lamps b[data-s=down]{background:var(--itil-c);box-shadow:0 0 8px 2px var(--itil-c)}
+
+/* Capa en escena: chincheta = glifo + tallo hasta el objeto + halo de estado en el suelo */
+.itil-layer{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+.itil-layer[hidden]{display:none}
+.itil-pin{position:absolute;left:0;top:0;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;transition:opacity .3s}
+.itil-pin.flip{transform:translate(-50%,0);flex-direction:column-reverse}
+.itil-pin.flip .itil-halo{bottom:auto;top:0;transform:translate(-50%,-50%)}
+.itil-pin .itil-stem{width:2px;height:var(--stem,26px);background:var(--itil-c,#94a3b8);opacity:.85}
+.itil-pin .itil-halo{position:absolute;left:50%;bottom:0;width:46px;height:16px;transform:translate(-50%,50%);border-radius:50%;border:2px solid var(--itil-c);pointer-events:none}
+.itil-pin.tier-good .itil-stem{width:2px;background:repeating-linear-gradient(#fff 0 3px,#000 3px 6px)}
+.itil-pin.tier-good .itil-halo{border-radius:0;border-width:2px;width:24px;height:8px;border-color:var(--itil-c8)}
+.itil-pin.tier-better .itil-halo{border-radius:40%;border-width:3px;image-rendering:pixelated}
+.itil-pin.tier-best .itil-halo{background:radial-gradient(closest-side,color-mix(in srgb,var(--itil-c) 45%,transparent),transparent);border-width:1px;animation:itil-ring 2.4s ease-out infinite}
+.itil-pin.tier-matrix .itil-halo{border:1px solid var(--itil-c);background:radial-gradient(closest-side,color-mix(in srgb,var(--itil-c) 35%,transparent),transparent);box-shadow:0 0 14px var(--itil-c),inset 0 0 8px var(--itil-c);animation:itil-ring 1.8s ease-out infinite}
+.itil-pin.tier-matrix .itil-stem{width:1px;background:linear-gradient(#4cff88,var(--itil-c));box-shadow:0 0 6px #4cff88}
+@keyframes itil-ring{0%{transform:translate(-50%,50%) scale(.6);opacity:1}100%{transform:translate(-50%,50%) scale(1.5);opacity:0}}
+@keyframes itil-spin{to{transform:translate(-50%,50%) rotate(360deg)}}
+.itil-pin .itil-companion{position:absolute;left:calc(100% - 6px);top:6px}
+.itil-legend{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid rgba(125,255,181,.25);border-radius:8px;font:12px/1.4 ui-monospace,monospace;color:#d9f7ff}
+.itil-legend label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.itil-legend .itil-sem{display:flex;gap:10px;flex-wrap:wrap;font-size:11px}
+.itil-legend .itil-sem i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+@media (prefers-reduced-motion:reduce){.itil-glyph *,.itil-pin *{animation:none!important}}
+
+/* Pixeria · visor de Xpaces */
+.itil-pin{cursor:pointer}
+.itil-pin .itil-glyph{pointer-events:auto}
+.itil-demo-banner{position:absolute;z-index:4;top:10px;right:10px;margin:0;padding:6px 12px;border:2px dashed #ffd766;border-radius:6px;background:#142522ee;color:#ffd766;font:700 12px/1.2 ui-monospace,monospace;letter-spacing:.08em;text-align:center;pointer-events:none;white-space:nowrap}
+.itil-demo-banner small{display:block;font-weight:400;letter-spacing:.02em;color:#f3f5e7;font-size:10px;margin-top:2px}
+.itil-tray{position:absolute;z-index:4;left:10px;bottom:10px;display:flex;align-items:flex-end;gap:8px;padding:6px 8px;border-radius:6px;background:#142522cc;pointer-events:auto;max-width:calc(100% - 20px);overflow-x:auto}
+.itil-tray>span{font:600 10px/1.2 system-ui,sans-serif;color:#c6d3cb;max-width:80px}
+.itil-panel{display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid #628372;border-radius:6px}
+.itil-panel button{text-align:left}
+.itil-panel .itil-sem{display:flex;gap:8px;flex-wrap:wrap;font-size:11px}
+.itil-panel .itil-sem i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+@media(max-width:600px){.itil-demo-banner{font-size:10px;top:52px}.itil-demo-banner small{display:none}}

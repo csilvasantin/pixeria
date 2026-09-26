@@ -30,8 +30,8 @@ export function levelNote(id, en=false) {
 
 export function helpText(en=false) {
   return en
-    ? 'ver <id> · ficha <id> · vista iso|planta|frontal · luz dia|atardecer|noche · zoom +|- · mostrar|ocultar <id|categoría> · todo · nada · export json|csv · enlace · estado · nivel 8|16|32|64 · ayuda'
-    : 'ver <id> · ficha <id> · vista iso|planta|frontal · luz dia|atardecer|noche · zoom +|- · mostrar|ocultar <id|categoría> · todo · nada · export json|csv · enlace · estado · nivel 8|16|32|64 · ayuda';
+    ? 'ver <id> · ficha <id> · vista iso|planta|frontal · luz dia|atardecer|noche · zoom +|- · mostrar|ocultar <id|categoría> · todo · nada · export json|csv · enlace · estado · nivel 8|16|32|64 · itil on|off · ayuda'
+    : 'ver <id> · ficha <id> · vista iso|planta|frontal · luz dia|atardecer|noche · zoom +|- · mostrar|ocultar <id|categoría> · todo · nada · export json|csv · enlace · estado · nivel 8|16|32|64 · itil on|off · ayuda';
 }
 
 /** Traduce una línea a una acción. No toca el DOM: el visor ejecuta `run`. */
@@ -81,6 +81,7 @@ export function executeCommand(line, api, en=false) {
     api.nivel(arg);
     return levelNote(arg, en) || `nivel ${arg}`;
   }
+  if (cmd === 'itil') return api.itil ? api.itil(arg) : (en ? 'ITIL layer not available here' : 'la capa ITIL no está en este Xpacio');
   return helpText(en);
 }
 
@@ -201,6 +202,7 @@ export function bindChrome(host, {storage, en=false}={}) {
           return [count, selected ? `ficha ${selected}` : ''].filter(Boolean).join(' · ') || (en ? 'no status' : 'sin estado');
         },
         nivel: setNivel,
+        itil: next.itil ? arg => next.itil.command(arg) : null,
       };
       for (const button of host.querySelectorAll('.xpace-rail-left [data-all]')) {
         button.addEventListener('click', () => click(`.xpace-inventory [data-all="${button.dataset.all}"]`));
