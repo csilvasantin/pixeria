@@ -10,7 +10,7 @@ export const ITIL_STATUS_LABEL={ok:'Operativo',warn:'Aviso',down:'Caído',unknow
 // Mismo semáforo en los cuatro niveles. En 8 bits se usa la versión cuantizada (quant8).
 export const ITIL_STATUS_COLOR={ok:'#22c55e',warn:'#f59e0b',down:'#ef4444',unknown:'#94a3b8'};
 export const ITIL_STATUS_COLOR8={ok:'#00cc66',warn:'#ff9900',down:'#ff3333',unknown:'#999999'};
-export const ITIL_KIND_SHORT={pantalla:'PANTALLA',player:'PLAYER',altavoz:'AUDIO',aroma:'AROMA',router:'ROUTER',tpv:'TPV',camara:'CÁMARA','altavoz-techo':'AUDIO TECHO','wifi-techo':'AP WIFI'};
+export const ITIL_KIND_SHORT={pantalla:'PANTALLA',player:'PLAYER',altavoz:'AUDIO',aroma:'AROMA',router:'ROUTER',tpv:'TPV',camara:'CÁMARA','altavoz-techo':'AUDIO TECHO','wifi-techo':'AP WIFI',generico:'PENDIENTE'};
 // Orden de presentación (prioridad del pitch de Alsea primero).
 export const ITIL_KIND_ORDER=['pantalla','player','altavoz','altavoz-techo','aroma','router','wifi-techo','tpv','camara'];
 // Tipo de objeto (inventario Pixeria/Cafebrería o layout Xtanco) → clase ITIL.
@@ -41,8 +41,8 @@ let manifestPromise=null;
 // En Pixeria los assets viven junto al módulo: assets/xpaces/itil/ (32 y 64 bits en WebP).
 export const ITIL_BASE=new URL('./itil/',import.meta.url).href;
 export function loadItilManifest(base=ITIL_BASE){
-  if(!manifestPromise)manifestPromise=fetch(base+'manifest.json?v=itil-1').then(r=>{if(!r.ok)throw new Error('manifest ITIL '+r.status);return r.json();})
-    .then(json=>fetch(base+'8bit/sprites.json?v=itil-1').then(r=>r.json()).then(s=>{json.sprites8=s;json.base=base;return json;}));
+  if(!manifestPromise)manifestPromise=fetch(base+'manifest.json?v=itil-2').then(r=>{if(!r.ok)throw new Error('manifest ITIL '+r.status);return r.json();})
+    .then(json=>fetch(base+'8bit/sprites.json?v=itil-2').then(r=>r.json()).then(s=>{json.sprites8=s;json.base=base;return json;}));
   manifestPromise.catch(()=>{manifestPromise=null;});
   return manifestPromise;
 }

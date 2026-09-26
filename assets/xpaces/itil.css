@@ -90,3 +90,22 @@
 .itil-panel .itil-sem{display:flex;gap:8px;flex-wrap:wrap;font-size:11px}
 .itil-panel .itil-sem i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
 @media(max-width:600px){.itil-demo-banner{font-size:10px;top:52px}.itil-demo-banner small{display:none}}
+/* Recuento ITIL en Avanzado: sale del inventario (fuente única), idéntico en 8/16/32/64 bits */
+.itil-count{display:flex;flex-direction:column;gap:2px;font:600 12px/1.3 system-ui,sans-serif;color:#eef5ea}
+.itil-count>b{font:800 30px/1 ui-monospace,monospace;color:#7dffb5;letter-spacing:.02em}
+.itil-count-src{font:400 10px/1.3 system-ui,sans-serif;color:#b9c9bf}
+.itil-count-sem{list-style:none;margin:2px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;font:500 11px/1.3 system-ui,sans-serif;color:#dfe9e2}
+.itil-count-sem li{display:flex;align-items:center;gap:5px}
+.itil-count-sem li i{flex:none;width:9px;height:9px;border-radius:50%}
+.itil-count-sem li b{margin-left:auto;font:700 12px/1 ui-monospace,monospace;color:#fff}
+.itil-count-demo{color:#ffd766;font-weight:700;font-size:10px}
+.itil-count-det,.itil-count-crit{font-size:10px;color:#b9c9bf}
+.itil-count-crit summary{cursor:pointer;color:#dfe9e2}
+.itil-glyph[data-pendiente] .itil-plate{border-style:dashed}
+/* 64 bits: placas más compactas para que la fila superior respire */
+.itil-layer .itil-matrix .itil-plate{letter-spacing:.06em;padding:3px 7px}
+/* Bandeja «sin posición 3D»: todos los elementos visibles (se reparte en filas, sin scroll) */
+.itil-tray{flex-wrap:wrap;align-items:flex-end;row-gap:4px;max-height:45%;overflow:auto}
+.itil-tray>span{flex-basis:100%;max-width:none}
+.itil-tray .itil-plate{font-size:8px}
+.itil-layer .itil-matrix .itil-plate::before,.itil-tray .itil-matrix .itil-plate::before{content:none}

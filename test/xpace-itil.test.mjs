@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {itilEnabled,itilEntries,demoStatus,DEMO_STATUS,ITIL_ASSETS,ITIL_KEY} from '../assets/xpaces/itil.mjs';
+import {itilEnabled,itilEntries,itilCatalog,itilCount,isItilCI,demoStatus,DEMO_STATUS,ITIL_ASSETS,ITIL_KEY} from '../assets/xpaces/itil.mjs';
+import {ITIL_TIERS} from '../assets/xpaces/itil-glyphs.mjs';
 const mem=()=>{const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),m};};
 const CAFE='1790375438696-1ladz7',URL0='https://www.pixeria.com/stock?type=xpaces&highlight='+CAFE;
 test('capa ITIL: encendida por defecto solo en la Cafebrería; ?itil=0 la apaga y se recuerda',()=>{
@@ -39,4 +40,37 @@ test('capa ITIL: arte de los 4 niveles presente (8 bits JSON, 16 PNG, 32/64 WebP
  assert.ok(urls.length>=27,String(urls.length));
  for(const u of urls)assert.ok(fs.existsSync(new URL(u,base)),u);
  assert.ok(!urls.some(u=>/64bit\/.*\.png$/.test(u)),'64 bits en WebP');
+});
+
+test('recuento ITIL: fuente única (inventario alsea-4380) e IDÉNTICO en 8/16/32/64 bits',()=>{
+ const inv=JSON.parse(fs.readFileSync(new URL('../assets/xpaces/inventory/alsea-4380.json',import.meta.url)));
+ const man=JSON.parse(fs.readFileSync(new URL('../assets/xpaces/itil/manifest.json',import.meta.url)));
+ const sprites=JSON.parse(fs.readFileSync(new URL('../assets/xpaces/itil/8bit/sprites.json',import.meta.url)));
+ // Criterio escrito a mano sobre el JSON, independiente del módulo
+ const esperado=inv.items.filter(e=>e.categoria==='IoT'||e.categoria==='Pantallas'||(e.categoria==='Equipamiento'&&['pos','ups'].includes(e.tipo))).map(e=>e.id);
+ const cat=itilCatalog(inv.items);
+ assert.deepEqual(cat.map(x=>x.e.id),esperado);
+ const c=itilCount(inv.items);
+ assert.equal(c.total,esperado.length);
+ assert.equal(c.total,19);
+ assert.equal(c.ok+c.warn+c.down+c.unknown,c.total,'el desglose suma el total');
+ assert.equal(c.conDibujo+c.pendiente,c.total);
+ assert.ok(!cat.some(x=>x.e.id==='barra'),'la barra es mobiliario, no CI');
+ // Cada nivel dibuja el MISMO conjunto: todo CI tiene arte (propio o genérico «pendiente») en los 4 niveles
+ const porNivel={};
+ for(const tier of ITIL_TIERS){
+  porNivel[tier]=cat.filter(x=>{const it=man.items[x.kind]||man.items.generico;const t=it?.tiers?.[tier];if(!t)return false;return tier==='good'?!!sprites.sprites[x.kind]:true;}).length;
+ }
+ assert.deepEqual(Object.values(porNivel),[c.total,c.total,c.total,c.total],JSON.stringify(porNivel));
+ assert.ok(man.items.generico?.pendiente,'icono genérico marcado pendiente');
+ for(const x of cat.filter(x=>x.pendiente))assert.equal(x.kind,'generico');
+});
+test('criterio ITIL: mobiliario, iluminación, cocina y clima no cuentan; TPV y SAI sí',()=>{
+ assert.equal(isItilCI({categoria:'Mobiliario',tipo:'counter'}),false);
+ assert.equal(isItilCI({categoria:'Equipamiento',tipo:'espresso'}),false);
+ assert.equal(isItilCI({categoria:'Equipamiento',tipo:'hvac'}),false);
+ assert.equal(isItilCI({categoria:'Equipamiento',tipo:'pos'}),true);
+ assert.equal(isItilCI({categoria:'Equipamiento',tipo:'ups'}),true);
+ assert.equal(isItilCI({categoria:'IoT',tipo:'switch'}),true);
+ assert.equal(demoStatus('switch-1',true),'unknown');
 });

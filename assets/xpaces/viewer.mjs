@@ -74,7 +74,7 @@ export async function mountXpace(host, item, {signal,furniture=false,onModel}={}
     if(bound)inventory=mountInventory(host,item,bound,viewer,on,signal);
     // Capa ITIL (solo la Cafebrería, semáforo DEMO). Se carga aparte: si falla, el visor sigue igual.
     let itil=null;
-    if(!furniture&&inventory&&bound){try{const m=await import('./itil.mjs?v=itil-1');if(!disposed&&m.ITIL_ASSETS.has(item.id)){itil=m.mountItil({host,stage,entries:bound.entries,viewer,inventory,assetId:item.id,on,signal,en});listeners.push(()=>itil?.dispose());}}catch(error){console.warn('[itil]',error);}}
+    if(!furniture&&inventory&&bound){try{const m=await import('./itil.mjs?v=itil-2');if(!disposed&&m.ITIL_ASSETS.has(item.id)){itil=m.mountItil({host,stage,entries:bound.entries,viewer,inventory,assetId:item.id,on,signal,en});listeners.push(()=>itil?.dispose());}}catch(error){console.warn('[itil]',error);}}
     chrome?.attach({inventory,itil});
     // Let Better's existing Shift-drag handler work with an explicit touch-friendly Pan toggle.
     on(canvas,'pointerdown',event=>{if(pan)Object.defineProperty(event,'shiftKey',{value:true});},true);

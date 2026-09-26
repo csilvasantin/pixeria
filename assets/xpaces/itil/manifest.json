@@ -444,6 +444,55 @@
      ]
     }
    }
+  },
+  "generico": {
+   "nombre": "Elemento ITIL sin dibujo propio (pendiente)",
+   "clase": "Genérico · pendiente de dibujo",
+   "pendiente": true,
+   "tiers": {
+    "good": {
+     "bits": 8,
+     "url": "8bit/generico.png",
+     "width": 16,
+     "height": 16,
+     "led": [
+      12,
+      11
+     ],
+     "grid": true
+    },
+    "better": {
+     "bits": 16,
+     "url": "16bit/generico.png",
+     "width": 48,
+     "height": 42,
+     "led": [
+      39,
+      31
+     ]
+    },
+    "best": {
+     "bits": 32,
+     "url": "32bit/generico.webp",
+     "width": 346,
+     "height": 306,
+     "led": [
+      276.5,
+      221.5
+     ]
+    },
+    "matrix": {
+     "bits": 64,
+     "url": "64bit/generico.webp",
+     "code": "64bit/generico-code.webp",
+     "width": 676,
+     "height": 595,
+     "led": [
+      540.5,
+      431.0
+     ]
+    }
+   }
   }
  },
  "nota": "Copia de XpaceOS (rama itil-niveles-graficos, commit 0d39f2d). 32/64 bits convertidos a WebP. Modelos de diseño, sin datos de inventario."
