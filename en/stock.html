@@ -107,7 +107,7 @@
   <script defer src="/assets/consent.js?v=20260617"></script>
   <script defer src="/assets/site-nav.js?v=20260920-ideas"></script>
   <script defer src="/assets/descarga-local.js?v=20260828-r1"></script>
-  <link rel="stylesheet" href="../assets/xpaces/viewer.css?v=ver-libro3">
+  <link rel="stylesheet" href="../assets/xpaces/viewer.css?v=vinilos-4419">
 <link rel="stylesheet" href="/assets/furniture/editor.css">
 </head>
 <body data-page="stock">
@@ -685,7 +685,7 @@
         actions.querySelector('[data-xpace-download="blend"]').onclick = () => blend && descargarAsset({...blend, mime:'application/x-blender'});
         const controller = xpaceController = new AbortController();
         const host = lightboxInner.querySelector('.xpace-viewer');
-        import('../assets/xpaces/viewer.mjs?v=libros-4418').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'Could not load 3D. Close and reopen to retry.';});
+        import('../assets/xpaces/viewer.mjs?v=vinilos-4419').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'Could not load 3D. Close and reopen to retry.';});
       }
       window.__lightboxItemId = it.id || null;
       const i = currentView.findIndex(x => x.id === it.id);

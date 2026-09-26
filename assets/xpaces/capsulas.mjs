@@ -4,10 +4,11 @@
 // Libro del día = la cápsula Blinkist más reciente (createdAt). Nunca se inventan títulos: solo datos del Stock.
 import * as T from './engine/premium-three.mjs';
 import {GLTFLoader} from './engine/vendor/GLTFLoader.mjs';
+import {buildVinyls,drawDiscScreen,playCapsule,safeDisc} from './vinilos.mjs';
 
 export const STOCK_INDEX='https://stock.admira.store/stock/index.json';
 // Ficha de la estantería (#4397/#4399): portadas reales de Blinkist en espejo, ISBN, medidas y formato de modelos.
-export const SHELF_META=new URL('./libros/estanteria-libros.json?v=libros-4418',import.meta.url).href;
+export const SHELF_META=new URL('./libros/estanteria-libros.json?v=vinilos-4419',import.meta.url).href;
 // Portadas de verdad (Carlos, 26-sep 01:26): la imagen de la ficha de Casa del Libro, copiada al despliegue (CORS).
 // La de Blinkist queda como respaldo si falta la de Casa del Libro.
 export function coverPath(m){if(!m)return null;if(m.portada_local)return m.portada_local;if(m.portada_espejo)return `portadas/${m.slug}.jpg`;return null;}
@@ -224,8 +225,8 @@ export async function fillShelf(shelf,books,featuredId){
  if(featured)face(featured,left+.2,1);
  // Tres lomos, una portada y una pequeña pila: composición distinta por balda.
  let x=left+.11;for(const b of rest.slice(0,3)){x+=spine(b,x,2)+.007;}
- if(rest[3])face(rest[3],left+.49,0);
- let rise=0;for(const b of rest.slice(4,6))rise+=stack(b,right-.08,0,rise)+.002;
+ if(rest[3])face(rest[3],left+.49,1);
+ let rise=0;for(const b of rest.slice(4,6))rise+=stack(b,right-.08,1,rise)+.002;
  for(const b of rest.slice(6)){if(x+.07>right)break;x+=spine(b,x,2)+.007;}
  if(rest.length<4)plant(g,left+.53,floor(0),s.D*.5);
  return {featured,books};
@@ -278,14 +279,14 @@ export function screenOverlay(screenObject){
 
 // ---------- montaje en el Xpace ----------
 export function mountCapsulas({scene,entries,signal}){
- const byId=id=>entries.find(e=>e.id===id);let viewer=null,books=[],page=0,timer=0,pager=0;
+ const byId=id=>entries.find(e=>e.id===id);let viewer=null,books=[],discs=[],page=0,timer=0,pager=0;
  const shelfEntry=entries.find(e=>e.runtime?.builder==='estanteria-libros'),screenEntry=entries.find(e=>e.contenido?.tipo==='libro-del-dia');
  const tv=shelfEntry?.object.userData.shelf.tv||null;
  const screen=screenEntry?screenOverlay(screenEntry.object):null;
  const forced=new URL(location.href).searchParams.get('libro');
- const state={books:[],libroDelDia:null,updatedAt:null,error:null,detail:false,libroAbierto:null,medio:null,tele:{encendida:false,video:null}};
+ const state={books:[],discos:[],discoAbierto:null,discoFase:null,libroDelDia:null,updatedAt:null,error:null,detail:false,libroAbierto:null,medio:null,tele:{encendida:false,video:null}};
  // ---------- modo detalle de la estantería (#ver-mueble) ----------
- let ui=null,chosen=null,panel=null,bar=null,down=null,playing=null,tvPanel=null,tvTimeout=0,tvVideo=null;
+ let ui=null,chosen=null,panel=null,discPanel=null,discPlayer=null,bar=null,down=null,playing=null,tvPanel=null,tvTimeout=0,tvVideo=null;
  const en=document.documentElement.lang==='en',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function tvFace(mark=''){
   if(!tv)return;const {canvas,texture:tex}=tv.userData.sabiasQue,c=canvas.getContext('2d');
@@ -294,6 +295,16 @@ export function mountCapsulas({scene,entries,signal}){
   tex.needsUpdate=true;
  }
  function closeTV(){clearTimeout(tvTimeout);tvPanel?.querySelector('video')?.pause();tvPanel?.remove();tvPanel=null;state.tele.encendida=false;tvFace();}
+ function closeDisc(){discPlayer?.stop();discPlayer=null;discPanel?.remove();discPanel=null;state.discoAbierto=null;state.discoFase=null;paint();}
+ function openDisc(d){
+  if(!ui||!safeDisc(d))return;closeTV();closeBook();closeDisc();state.discoAbierto=d.slug;
+  discPanel=document.createElement('div');discPanel.className='xpace-vinilo';discPanel.setAttribute('role','dialog');discPanel.setAttribute('aria-label','Cápsula sonora: '+d.title);
+  discPanel.innerHTML=`<div class="xpace-vinilo-card"><button type="button" data-vinilo-close>← ${en?'Back to shelf':'Volver a la estantería'}</button><div class="xpace-vinilo-art"><img src="${esc(d.artworkUrl)}" alt="${esc(d.album)}"></div><div class="xpace-vinilo-copy"><p>${en?'Sound capsule':'Cápsula sonora'} · ${esc(d.artist)}</p><h4>${esc(d.title)}</h4><p data-vinilo-status role="status"></p><button type="button" data-vinilo-play>${en?'Play again':'Reproducir de nuevo'}</button><a href="${esc(d.appleMusicUrl)}" target="_blank" rel="noopener">${en?'Get it on Apple Music ↗':'Comprar en Apple Music ↗'}</a></div></div>`;
+  ui.stage.append(discPanel);const status=discPanel.querySelector('[data-vinilo-status]');
+  const start=()=>{discPlayer?.stop();discPlayer=playCapsule(d,{onPhase:phase=>{state.discoFase=phase;status.textContent=phase==='voz'?'Locución · la canción espera a que termine la voz':'Preview oficial · 20 segundos';paint();},onDone:()=>{state.discoFase=null;status.textContent='Preview terminada';paint();},onError:msg=>{state.discoFase=null;status.textContent=msg;paint();}});};
+  ui.on(discPanel.querySelector('[data-vinilo-close]'),'click',closeDisc);ui.on(discPanel.querySelector('[data-vinilo-play]'),'click',start);
+  start();discPanel.querySelector('[data-vinilo-close]').focus({preventScroll:true});
+ }
  function revealTV(){
   if(!tvPanel)return;tvFace('▶');
   const area=tvPanel.querySelector('[data-tv-media]');area.hidden=false;
@@ -301,7 +312,7 @@ export function mountCapsulas({scene,entries,signal}){
   else area.innerHTML=`<p role="status">${en?'The literary capsule will play here as soon as it is published in Pixeria Stock.':'La cápsula literaria se reproducirá aquí en cuanto se publique en Pixeria Stock.'}</p>`;
  }
  function openTV(){
-  if(!ui||!tv)return;closeBook();closeTV();state.tele.encendida=true;tvFace('¿?');
+  if(!ui||!tv)return;closeDisc();closeBook();closeTV();state.tele.encendida=true;tvFace('¿?');
   tvPanel=document.createElement('div');tvPanel.className='xpace-tele';tvPanel.setAttribute('role','dialog');tvPanel.setAttribute('aria-label',en?'Retro TV · Did you know?':'Tele retro · ¿Sabías que?');
   tvPanel.innerHTML=`<button type="button" data-tv-close aria-label="${en?'Close TV':'Cerrar tele'}">✕</button><div class="xpace-tele-caja"><div class="xpace-tele-pantalla"><span class="xpace-tele-chispa" aria-hidden="true">✦</span><strong>¿?</strong><div data-tv-media hidden></div></div><div class="xpace-tele-mando" aria-hidden="true"><span></span><span></span></div></div><p>${en?'Did you know? · Literary capsule':'¿Sabías que? · Cápsula literaria'}</p>`;
   ui.stage.append(tvPanel);ui.on(tvPanel.querySelector('[data-tv-close]'),'click',closeTV);
@@ -318,19 +329,19 @@ export function mountCapsulas({scene,entries,signal}){
  }
  function attachUI({stage,canvas,on}){
   if(!shelfEntry)return;ui={stage,canvas,on};
-  bar=document.createElement('div');bar.className='xpace-detalle-bar';bar.hidden=true;bar.innerHTML=`<span>${en?'Detail · tap a book or TV':'Modo detalle · toca un libro o la tele'}</span><button type="button" data-tele>${en?'Watch TV':'Ver tele'}</button><button type="button" data-salir>${en?'Exit detail':'Salir del modo detalle'}</button>`;stage.append(bar);
+  bar=document.createElement('div');bar.className='xpace-detalle-bar';bar.hidden=true;bar.innerHTML=`<span>${en?'Tap a book, record or TV':'Toca un libro, vinilo o tele'}</span><button type="button" data-tele>${en?'Watch TV':'Ver tele'}</button><button type="button" data-salir>${en?'Exit detail':'Salir del modo detalle'}</button>`;stage.append(bar);
   on(bar.querySelector('[data-salir]'),'click',()=>exitDetail());
   on(bar.querySelector('[data-tele]'),'click',openTV);
   on(canvas,'pointerdown',e=>{down={x:e.clientX,y:e.clientY};});
-  on(canvas,'pointerup',e=>{if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>8)return;down=null;if(playing&&screenEntry&&viewer.pick(e.clientX,e.clientY,[screenEntry.object]).length){window.open(compraURL(playing),'_blank','noopener');return;}if(!state.detail)return;if(tv&&viewer.pick(e.clientX,e.clientY,[tv]).length){openTV();return;}const hit=viewer.pick(e.clientX,e.clientY,[shelfEntry.object.userData.shelf.books])[0];let node=hit?.object;while(node&&!node.userData.capsula)node=node.parent;const b=node&&books.find(x=>x.id===node.userData.capsula);if(b)openBook(b,node);});
+  on(canvas,'pointerup',e=>{if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>8)return;down=null;if(state.discoAbierto&&screenEntry&&viewer.pick(e.clientX,e.clientY,[screenEntry.object]).length){const d=discs.find(x=>x.slug===state.discoAbierto);if(d)window.open(d.appleMusicUrl,'_blank','noopener');return;}if(playing&&screenEntry&&viewer.pick(e.clientX,e.clientY,[screenEntry.object]).length){window.open(compraURL(playing),'_blank','noopener');return;}if(!state.detail)return;if(tv&&viewer.pick(e.clientX,e.clientY,[tv]).length){openTV();return;}const vinyls=shelfEntry.object.userData.shelf.vinyls,vh=vinyls&&viewer.pick(e.clientX,e.clientY,[vinyls])[0];if(vh){let n=vh.object;while(n&&!n.userData.vinilo)n=n.parent;const d=discs.find(x=>x.slug===n?.userData.vinilo);if(d){openDisc(d);return;}}const hit=viewer.pick(e.clientX,e.clientY,[shelfEntry.object.userData.shelf.books])[0];let node=hit?.object;while(node&&!node.userData.capsula)node=node.parent;const b=node&&books.find(x=>x.id===node.userData.capsula);if(b)openBook(b,node);});
  }
  function enterDetail(){if(!shelfEntry||!viewer||!ui)return false;state.detail=true;if(bar)bar.hidden=false;viewer.frameObject(shelfEntry.object,{angle:Math.PI/2,elevation:.04,margin:2.4,clip:true});return true;}
- function exitDetail({reset=true}={}){closeTV();closeBook();const was=state.detail;state.detail=false;if(bar)bar.hidden=true;viewer?.clearClip();if(was&&reset)viewer.preset('home');return was;}
+ function exitDetail({reset=true}={}){closeTV();closeBook();closeDisc();const was=state.detail;state.detail=false;if(bar)bar.hidden=true;viewer?.clearClip();if(was&&reset)viewer.preset('home');return was;}
  function restoreBook(){if(!chosen)return;chosen.node.position.z=chosen.z;chosen.helper.removeFromParent();chosen.helper.geometry.dispose();chosen.helper.material.dispose();chosen=null;viewer?.invalidateShadows();}
  function closeBook(){if(panel){panel.querySelector('video,audio')?.pause();panel.remove();panel=null;}try{globalThis.speechSynthesis?.cancel();}catch{}playing=null;restoreBook();state.libroAbierto=null;state.medio=null;paint();}
  function speak(b,status){const synth=globalThis.speechSynthesis;if(!synth||typeof SpeechSynthesisUtterance==='undefined'){status.textContent=en?'This browser cannot read aloud.':'Este navegador no puede leer en voz alta.';return false;}synth.cancel();const u=new SpeechSynthesisUtterance(speechText(b));u.lang='es-ES';const voice=synth.getVoices().find(v=>/^es(-|_)ES/i.test(v.lang))||synth.getVoices().find(v=>/^es/i.test(v.lang));if(voice)u.voice=voice;u.rate=1;synth.speak(u);return true;}
  function openBook(b,node){
-  closeBook();
+  closeDisc();closeTV();closeBook();
   // Resalte: el libro sale 4 cm de la balda y lleva un contorno amarillo.
   let scene=node;while(scene.parent)scene=scene.parent;const helper=new T.BoxHelper(node,0xffd766);helper.material.depthTest=false;helper.renderOrder=1001;chosen={node,z:node.position.z,helper,id:b.id};node.position.z+=.04;node.updateMatrixWorld(true);helper.update();scene.add(helper);viewer?.invalidateShadows();
   const cover=b.cover?.src||coverURL(b.meta)||'';
@@ -351,10 +362,10 @@ export function mountCapsulas({scene,entries,signal}){
   start();
   panel.querySelector('[data-cerrar]').focus({preventScroll:true});
  }
- function paint(){if(!screen)return;const f=books.find(b=>b.id===forced)||books[0];if(playing)drawPlayingScreen(screen.canvas,playing);else drawScreen(screen.canvas,f,page,books.length);screen.tex.needsUpdate=true;}
+ function paint(){if(!screen)return;const f=books.find(b=>b.id===forced)||books[0],d=discs.find(x=>x.slug===state.discoAbierto);if(d)drawDiscScreen(screen.canvas,d,state.discoFase);else if(playing)drawPlayingScreen(screen.canvas,playing);else drawScreen(screen.canvas,f,page,books.length);screen.tex.needsUpdate=true;}
  async function refresh(){
   refreshTV();
-  try{const next=await loadBooks(signal);if(signal?.aborted)return;const sig=next.map(b=>b.id).join();const full=sig+'|'+next.map(b=>b.glb||'').join();if(full!==state.sig){books=next;if(shelfEntry)await fillShelf(shelfEntry.object,books,forced);state.sig=full;page=0;paint();viewer?.invalidateShadows();}
+  try{const next=await loadBooks(signal);if(signal?.aborted)return;const meta=await loadMeta(signal);if(!discs.length&&shelfEntry){discs=(meta.discos?.piezas||[]).filter(safeDisc);if(discs.length)buildVinyls(shelfEntry.object,discs);state.discos=discs.map(d=>({slug:d.slug,artist:d.artist,title:d.title,formatos:d.formats}));}const sig=next.map(b=>b.id).join();const full=sig+'|'+next.map(b=>b.glb||'').join();if(full!==state.sig){books=next;if(shelfEntry)await fillShelf(shelfEntry.object,books,forced);state.sig=full;page=0;paint();viewer?.invalidateShadows();}
    state.books=books.map(b=>({id:b.id,libro:b.libro,autor:b.autor,consejero:b.consejero,createdAt:b.createdAt,portada:!!b.cover,glb:b.glb,isbn:b.meta?.isbn||null,video:b.media?.video?.id||null,videos:{vertical:b.media?.videos?.vertical?.id||null,horizontal:b.media?.videos?.horizontal?.id||null},audio:b.media?.audio?.id||null}));const f=books.find(b=>b.id===forced)||books[0];state.libroDelDia=f?{id:f.id,libro:f.libro,autor:f.autor,consejero:f.consejero,capsula:f.capsula}:null;state.updatedAt=new Date().toISOString();state.error=null;
    document.documentElement.dataset.libroDelDia=f?.id||'';
   }catch(e){if(!signal?.aborted){state.error=e.message;if(!books.length)paint();}}
@@ -362,7 +373,7 @@ export function mountCapsulas({scene,entries,signal}){
  paint();const ready=refresh();
  timer=setInterval(refresh,REFRESH_MS);pager=setInterval(()=>{if(books.length&&!document.hidden&&!playing){page++;paint();}},PAGE_MS);
  const vis=()=>{if(!document.hidden)refresh();};document.addEventListener('visibilitychange',vis);
- signal?.addEventListener('abort',()=>{clearInterval(timer);clearInterval(pager);document.removeEventListener('visibilitychange',vis);closeTV();closeBook();bar?.remove();},{once:true});
+ signal?.addEventListener('abort',()=>{clearInterval(timer);clearInterval(pager);document.removeEventListener('visibilitychange',vis);closeTV();closeBook();closeDisc();bar?.remove();},{once:true});
  const bookScreen=id=>{const b=books.find(x=>x.id===id);let node=null;shelfEntry?.object.userData.shelf.books.traverse(n=>{if(!node&&n.userData.capsula===id)node=n;});if(b&&node)openBook(b,node);return !!(b&&node);};
  const bookCenter=id=>{let node=null;shelfEntry?.object.userData.shelf.books.traverse(n=>{if(!node&&n.userData.capsula===id)node=n;});return node?new T.Box3().setFromObject(node).getCenter(new T.Vector3()):null;};
  return {ready,state,bookCenter,setViewer:v=>{viewer=v;v.invalidateShadows();},refresh,attachUI,enterDetail,exitDetail,openBook:bookScreen,shelfId:shelfEntry?.id||null};

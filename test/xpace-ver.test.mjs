@@ -40,7 +40,7 @@ test('visor: el renderer expone frameObject y el inventario lo usa con resalte y
  const r=fs.readFileSync(new URL('../assets/xpaces/engine/life-renderer.mjs',import.meta.url),'utf8'),inv=fs.readFileSync(new URL('../assets/xpaces/inventory.mjs',import.meta.url),'utf8'),v=fs.readFileSync(new URL('../assets/xpaces/viewer.mjs',import.meta.url),'utf8');
  assert.match(r,/needsUpdate=true;\},frameObject,pick,clearClip,/);assert.match(inv,/viewer\.frameObject\?\.\(e\.object,fromDetail\?\{angle:Math\.PI\/4\}:\{\}\);pulse\(e\);/);assert.match(inv,/e\.id===capsulas\.shelfId&&capsulas\.enterDetail\(\)/);assert.match(inv,/select:id=>\{if\(capsulas\?\.state\.detail\)return;/);assert.match(inv,/if\(!e\.visible\)\{e\.visible=true;apply\(\);\}/);assert.match(v,/inventory\?\.openFromURL\(\)/);
  const css=fs.readFileSync(new URL('../assets/xpaces/viewer.css',import.meta.url),'utf8');assert.match(css,/\.xpace-ver\{flex:none/);
- for(const page of ['../stock.html','../en/stock.html'])assert.match(fs.readFileSync(new URL(page,import.meta.url),'utf8'),/viewer\.mjs\?v=libros-4418/);
+ for(const page of ['../stock.html','../en/stock.html'])assert.match(fs.readFileSync(new URL(page,import.meta.url),'utf8'),/viewer\.mjs\?v=vinilos-4419/);
 });
 
 test('modo detalle: medios de cada cápsula sin inventar (vínculo explícito, luego título exacto)',async()=>{

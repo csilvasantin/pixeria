@@ -343,5 +343,119 @@
     "fuente": "Casa del Libro (imagen de portada de la ficha casadellibro_url; mayor resolución disponible en imagessl*.casadellibro.com), copiada al despliegue por CORS",
     "blinkist": "portada_blinkist_url y portada_espejo se conservan aparte",
     "verificado": "2026-09-26"
+  },
+  "discos": {
+    "fuente": "iTunes Search API (country=es); previews oficiales reproducidas desde Apple, sin alojar MP3",
+    "etiqueta_stock": "capsula-sonora",
+    "piezas": [
+      {
+        "slug": "billie-jean",
+        "artist": "Michael Jackson",
+        "title": "Billie Jean",
+        "album": "Thriller",
+        "trackId": 269573364,
+        "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/dc/bc/8a/dcbc8a3e-4ce1-c00d-cc02-eda2212053c7/mzaf_8347559338388601510.plus.aac.p.m4a",
+        "appleMusicUrl": "https://music.apple.com/es/album/billie-jean/269572838?i=269573364&uo=4",
+        "artworkUrl": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/32/4f/fd/324ffda2-9e51-8f6a-0c2d-c6fd2b41ac55/074643811224.jpg/600x600bb.jpg",
+        "hook": "El pulso imposible de Billie Jean convirtió una línea de bajo en suspense. Michael Jackson dejó espacio para cada golpe; escucha cómo una canción puede hacer bailar antes de contar su historia.",
+        "durationSeconds": 20,
+        "formats": [
+          "16:9",
+          "9:16"
+        ],
+        "stockId": "1790427924321-mmzq9g",
+        "stockUrl": "https://www.pixeria.com/stock?highlight=1790427924321-mmzq9g"
+      },
+      {
+        "slug": "beat-it",
+        "artist": "Michael Jackson",
+        "title": "Beat It",
+        "album": "Thriller",
+        "trackId": 269573341,
+        "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/88/cd/46/88cd46bd-dba7-1dc2-a63b-e8c111ac4fc3/mzaf_4042555053237612653.plus.aac.p.m4a",
+        "appleMusicUrl": "https://music.apple.com/es/album/beat-it/269572838?i=269573341&uo=4",
+        "artworkUrl": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/32/4f/fd/324ffda2-9e51-8f6a-0c2d-c6fd2b41ac55/074643811224.jpg/600x600bb.jpg",
+        "hook": "Beat It une pop y guitarra de rock para hablar de salir de una pelea. La tensión crece en cada compás; escucha cómo Jackson convierte un consejo en un himno.",
+        "durationSeconds": 20,
+        "formats": [
+          "16:9",
+          "9:16"
+        ],
+        "stockId": "1790427964026-e6mcae",
+        "stockUrl": "https://www.pixeria.com/stock?highlight=1790427964026-e6mcae"
+      },
+      {
+        "slug": "1999",
+        "artist": "Prince",
+        "title": "1999",
+        "album": "1999",
+        "trackId": 214145248,
+        "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/9f/61/90/9f61901a-ad1e-5d03-210d-a68e3ed8af98/mzaf_1053844714447175007.plus.aac.p.m4a",
+        "appleMusicUrl": "https://music.apple.com/es/album/1999/214145240?i=214145248&uo=4",
+        "artworkUrl": "https://is1-ssl.mzstatic.com/image/thumb/Music20/v4/b7/f7/51/b7f75189-e6d0-21e0-caf2-c2b5acbb6f33/dj.rpyatgbj.jpg/600x600bb.jpg",
+        "hook": "Prince imaginó una fiesta al borde del cambio de siglo. Sintetizadores brillantes y una frase inolvidable: escucha cómo 1999 invita a celebrar incluso cuando el futuro inquieta.",
+        "durationSeconds": 20,
+        "formats": [
+          "16:9",
+          "9:16"
+        ],
+        "stockId": "1790428024105-0dookx",
+        "stockUrl": "https://www.pixeria.com/stock?highlight=1790428024105-0dookx"
+      },
+      {
+        "slug": "when-doves-cry",
+        "artist": "Prince",
+        "title": "When Doves Cry",
+        "album": "The Hits/The B-Sides",
+        "trackId": 212972932,
+        "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/f0/51/fc/f051fcce-eb4f-f9d5-d7ea-eb137750d9a8/mzaf_15769385331104997195.plus.aac.p.m4a",
+        "appleMusicUrl": "https://music.apple.com/es/album/when-doves-cry/212972881?i=212972932&uo=4",
+        "artworkUrl": "https://is1-ssl.mzstatic.com/image/thumb/Music/2b/d8/bf/mzi.leavbcjk.jpg/600x600bb.jpg",
+        "hook": "When Doves Cry rompió la fórmula del pop: Prince quitó el bajo y dejó que la batería y la voz llevaran el conflicto. Escucha ese vacío lleno de energía.",
+        "durationSeconds": 20,
+        "formats": [
+          "16:9",
+          "9:16"
+        ],
+        "stockId": "1790428081867-3ys3lr",
+        "stockUrl": "https://www.pixeria.com/stock?highlight=1790428081867-3ys3lr"
+      },
+      {
+        "slug": "careless-whisper",
+        "artist": "George Michael",
+        "title": "Careless Whisper",
+        "album": "Ladies & Gentlemen",
+        "trackId": 429945616,
+        "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/7c/bb/d8/7cbbd80c-29a1-6142-d0f3-de33e8569a0e/mzaf_12978360432335063808.plus.aac.p.m4a",
+        "appleMusicUrl": "https://music.apple.com/es/album/careless-whisper/429945575?i=429945616&uo=4",
+        "artworkUrl": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/89/46/95/8946959a-e959-f22d-ced2-745feb799454/mzm.upagbaeg.jpg/600x600bb.jpg",
+        "hook": "Careless Whisper abre con un saxofón que ya parece una confesión. George Michael convirtió el remordimiento en melodía; escucha cómo la canción sostiene la emoción sin necesidad de explicarla.",
+        "durationSeconds": 20,
+        "formats": [
+          "16:9",
+          "9:16"
+        ],
+        "stockId": "1790428141954-yt4akd",
+        "stockUrl": "https://www.pixeria.com/stock?highlight=1790428141954-yt4akd"
+      },
+      {
+        "slug": "faith",
+        "artist": "George Michael",
+        "title": "Faith",
+        "album": "Faith (2010 Remastered)",
+        "trackId": 395918958,
+        "previewUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/3b/ba/fc/3bbafcda-8454-2df5-300a-3a215beb4abb/mzaf_17008812206809633065.plus.aac.p.m4a",
+        "appleMusicUrl": "https://music.apple.com/es/album/faith/395918916?i=395918958&uo=4",
+        "artworkUrl": "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/87/29/d2/8729d243-f06f-e588-3ddf-ffa87a2ce17e/mzi.yupygcca.jpg/600x600bb.jpg",
+        "hook": "Faith empieza casi desnuda: guitarra, pulso y la voz de George Michael. Con muy poco construye una identidad propia; escucha cómo cada silencio hace más fuerte el siguiente acento.",
+        "durationSeconds": 20,
+        "formats": [
+          "16:9",
+          "9:16"
+        ],
+        "stockId": "1790428202615-fm56i9",
+        "stockUrl": "https://www.pixeria.com/stock?highlight=1790428202615-fm56i9"
+      }
+    ]
   }
 }
