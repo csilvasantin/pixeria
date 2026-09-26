@@ -3,6 +3,7 @@ import {createLifeScene} from './engine/life-scene.mjs?v=px-1';
 import {GLTFLoader} from './engine/vendor/GLTFLoader.mjs';
 import * as T from './engine/premium-three.mjs';
 import {bindInventory,mountInventory} from './inventory.mjs?v=vinilos-4419';
+import {bindChrome,cafeTitle,viewerShell} from './chrome.mjs?v=ui-4448';
 import {mergeGeometries} from './engine/vendor/BufferGeometryUtils.mjs';
 
 function release(root) {
@@ -36,8 +37,12 @@ export function batchStatic(root) {
 
 export async function mountXpace(host, item, {signal,furniture=false,onModel}={}) {
   const en=document.documentElement.lang==='en';
-  host.innerHTML=`<div class="xpace-stage"><canvas tabindex="0" aria-label="${en?'Interactive 3D space':'Espacio 3D interactivo'}"></canvas><p class="xpace-loading" role="status">${en?'Loading space…':'Cargando el espacio…'}</p></div>
-    <div class="xpace-tools"><div role="group" aria-label="${en?'Views':'Vistas'}"><button data-preset="home">${en?'Isometric':'Isométrica'}</button><button data-preset="floor">${en?'Floor plan':'Planta'}</button><button data-preset="front">${en?'Front':'Frontal'}</button></div><div role="group" aria-label="Zoom"><button data-zoom="0.8" aria-label="${en?'Zoom out':'Alejar'}">−</button><button data-zoom="1.25" aria-label="${en?'Zoom in':'Acercar'}">+</button><button data-pan aria-pressed="false">${en?'Pan':'Desplazar'}</button></div><div role="group" aria-label="${en?'Lighting':'Iluminación'}"><button data-light="day" aria-pressed="true">☀ ${en?'Day':'Día'}</button><button data-light="sunset" aria-pressed="false">◒ ${en?'Sunset':'Atardecer'}</button><button data-light="night" aria-pressed="false">☾ ${en?'Night':'Noche'}</button></div></div><p class="xpace-help">${en?'Drag to orbit · wheel or pinch to zoom · Pan + drag to move':'Arrastra para orbitar · rueda o pellizco para zoom · Desplazar + arrastrar para mover'}</p>`;
+  const stamp=document.querySelector('meta[name="admiranext-version"]')?.content||'';
+  host.innerHTML=furniture
+    ?`<div class="xpace-stage"><canvas tabindex="0" aria-label="${en?'Interactive 3D space':'Espacio 3D interactivo'}"></canvas><p class="xpace-loading" role="status">${en?'Loading space…':'Cargando el espacio…'}</p></div>
+    <div class="xpace-tools"><div role="group" aria-label="${en?'Views':'Vistas'}"><button data-preset="home">${en?'Isometric':'Isométrica'}</button><button data-preset="floor">${en?'Floor plan':'Planta'}</button><button data-preset="front">${en?'Front':'Frontal'}</button></div><div role="group" aria-label="Zoom"><button data-zoom="0.8" aria-label="${en?'Zoom out':'Alejar'}">−</button><button data-zoom="1.25" aria-label="${en?'Zoom in':'Acercar'}">+</button><button data-pan aria-pressed="false">${en?'Pan':'Desplazar'}</button></div><div role="group" aria-label="${en?'Lighting':'Iluminación'}"><button data-light="day" aria-pressed="true">☀ ${en?'Day':'Día'}</button><button data-light="sunset" aria-pressed="false">◒ ${en?'Sunset':'Atardecer'}</button><button data-light="night" aria-pressed="false">☾ ${en?'Night':'Noche'}</button></div></div><p class="xpace-help">${en?'Drag to orbit · wheel or pinch to zoom · Pan + drag to move':'Arrastra para orbitar · rueda o pellizco para zoom · Desplazar + arrastrar para mover'}</p>`
+    :viewerShell({en,title:cafeTitle(item),stamp});
+  const chrome=furniture?null:bindChrome(host,{en});
   const stage=host.querySelector('.xpace-stage'),canvas=host.querySelector('canvas'),status=host.querySelector('[role=status]');
   let viewer,root,inventory,frame=0,observer,disposed=false,pan=false;
   const listeners=[];
@@ -67,6 +72,7 @@ export async function mountXpace(host, item, {signal,furniture=false,onModel}={}
     viewer.preset('home');
     bound?.capsulas?.setViewer(viewer);bound?.capsulas?.attachUI?.({stage,canvas,on});
     if(bound)inventory=mountInventory(host,item,bound,viewer,on,signal);
+    chrome?.attach({inventory});
     // Let Better's existing Shift-drag handler work with an explicit touch-friendly Pan toggle.
     on(canvas,'pointerdown',event=>{if(pan)Object.defineProperty(event,'shiftKey',{value:true});},true);
     for(const button of host.querySelectorAll('[data-preset]'))on(button,'click',()=>{viewer.preset(button.dataset.preset);for(const b of host.querySelectorAll('[data-preset]'))b.setAttribute('aria-pressed',String(b===button));});
