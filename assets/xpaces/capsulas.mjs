@@ -8,7 +8,7 @@ import {buildVinyls,drawDiscScreen,playCapsule,safeDisc} from './vinilos.mjs';
 
 export const STOCK_INDEX='https://stock.admira.store/stock/index.json';
 // Identidad exclusiva de esta tele: /canal reproduce el Stock vivo filtrado por ambas etiquetas.
-export const SABIAS_QUE_CANAL='https://admira.tv/canal?embed=mupi&clean=1&fit=screen&playerType=virtual&screen=virtual-pixeria-alsea-sabiasque&circuit=pixeria-alsea&mode=local&modeLock=1&medio=video&tag=sabias-que%2Chorizontal&refresh=30&muted=1';
+export const SABIAS_QUE_CANAL='https://admira.tv/canal?embed=mupi&clean=1&fit=screen&playerType=virtual&screen=virtual-pixeria-alsea-sabiasque&circuit=pixeria-alsea&mode=local&modeLock=1&medio=video&tag=sabias-que%2Chorizontal&refresh=30&muted=0';
 // Ficha de la estantería (#4397/#4399): portadas reales de Blinkist en espejo, ISBN, medidas y formato de modelos.
 export const SHELF_META=new URL('./libros/estanteria-libros.json?v=vinilos-4419',import.meta.url).href;
 // Portadas de verdad (Carlos, 26-sep 01:26): la imagen de la ficha de Casa del Libro, copiada al despliegue (CORS).

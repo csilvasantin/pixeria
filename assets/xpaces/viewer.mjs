@@ -2,7 +2,7 @@ import {createLifeRenderer} from './engine/life-renderer.mjs?v=ver-libro';
 import {createLifeScene} from './engine/life-scene.mjs?v=px-1';
 import {GLTFLoader} from './engine/vendor/GLTFLoader.mjs';
 import * as T from './engine/premium-three.mjs';
-import {bindInventory,mountInventory} from './inventory.mjs?v=tele-admira-4438';
+import {bindInventory,mountInventory} from './inventory.mjs?v=tele-admira-4438-audio';
 import {bindChrome,cafeTitle,viewerShell} from './chrome.mjs?v=ui-4448';
 import {mergeGeometries} from './engine/vendor/BufferGeometryUtils.mjs';
 
