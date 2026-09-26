@@ -58,7 +58,7 @@ export async function mountXpace(host, item, {signal,furniture=false,onModel}={}
     const bound=furniture?null:await bindInventory(gltf,item,bytes,signal);
     if(disposed)return dispose;
     // Batch inside each inventory element, never across independently visible items.
-    if(bound&&!gltf.animations.length)for(const entry of bound.entries)batchStatic(entry.object);
+    if(bound&&!gltf.animations.length)for(const entry of bound.entries)if(entry.object)batchStatic(entry.object);
     const snapshot={cols:size.x,rows:size.z,wallHeight:size.y,layout:[],actors:[],moving:true};
     viewer=createLifeRenderer({canvas,snapshot,stockCamera:furniture?'furniture':true,onSelect:data=>inventory?.select(data?.item?.id),sceneFactory:(input,options)=>{
       // Better's exact scene owns the lights and their day/sunset/night settings.

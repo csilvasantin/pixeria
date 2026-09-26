@@ -34,7 +34,7 @@ export async function bindInventory(gltf,item,bytes,signal){
  const entries=manifest.items.map(row=>{
   const object=row.object||(row.runtime?runtimeObject(row):row.sinGeometria?null:nodes.get(row.node));
   if(!object&&!row.sinGeometria)throw Error('Elemento sin geometría: '+row.id);
-  if(object&&row.orientacion==='vertical'&&!object.userData.ciVertical){object.rotateZ(Math.PI/2);object.userData.ciVertical=true;}
+  if(object&&row.id==='pizarra-2')componerPizarraVertical(object);
   const e={...row,object,visible:true,ficha:fichaDe(row)};
   if(!e.medidas&&object){const size=new T.Box3().setFromObject(object).getSize(new T.Vector3());e.medidas={ancho:+size.x.toFixed(4),fondo:+size.z.toFixed(4),alto:+size.y.toFixed(4),unidad:'m'};e.medidasFuente='envolvente-glb';}
   if(!e.medidas)e.medidas={ancho:'pendiente',fondo:'pendiente',alto:'pendiente',unidad:'m'};
@@ -42,6 +42,28 @@ export async function bindInventory(gltf,item,bytes,signal){
  });
  const capsulas=capsulasModule&&!signal?.aborted?capsulasModule.mountCapsulas({scene:gltf.scene,entries,signal}):null;
  return {manifest,entries,capsulas};
+}
+// La pizarra de bollería pasa a vertical sin girar la textura horizontal: el marco
+// cambia de proporción y el menú se vuelve a componer, con todas las líneas.
+function componerPizarraVertical(object){
+ object.updateMatrixWorld(true);
+ const box=new T.Box3().setFromObject(object),size=box.getSize(new T.Vector3());
+ if(size.x>size.y&&size.y>0){object.scale.x*=size.y/size.x;object.scale.y*=size.x/size.y;object.updateMatrixWorld(true);}
+ const canvas=document.createElement('canvas');canvas.width=720;canvas.height=1280;
+ const g=canvas.getContext('2d');
+ g.fillStyle='#1c2a24';g.fillRect(0,0,720,1280);
+ g.fillStyle='#d6b15a';g.font='bold 88px Georgia, serif';g.fillText('Horno',56,150);
+ g.fillRect(56,180,608,6);
+ const lineas=[['Croissant','1,90'],['Napolitana','2,20'],['Cookie','2,10'],['Banana bread','2,80'],['Tostada','3,50']];
+ lineas.forEach(([nombre,precio],i)=>{
+  const y=340+i*170;
+  g.fillStyle=i%2?'#1c2a24':'#24332c';g.fillRect(0,y-70,720,150);
+  g.font='46px Georgia, serif';g.fillStyle='#f3efe2';g.textAlign='left';g.fillText(nombre,56,y);
+  g.fillStyle='#d6b15a';g.textAlign='right';g.fillText(precio,664,y);
+ });
+ const tex=new T.CanvasTexture(canvas);if('colorSpace' in tex && T.SRGBColorSpace)tex.colorSpace=T.SRGBColorSpace;
+ tex.needsUpdate=true;
+ object.traverse(node=>{for(const material of [node.material].flat())if(material?.name==='PANTALLA_pizarra-2'){material.map=tex;material.emissiveMap=tex;material.needsUpdate=true;}});
 }
 const labels={Iluminacion:'Iluminación',Vegetacion:'Vegetación'};
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -57,12 +79,18 @@ function fichaMarkup(e){
 export function mountInventory(host,item,{manifest,entries,capsulas},viewer,on,signal){
  const en=document.documentElement.lang==='en',hidden=readHidden(location.href,item.id);let selected=null,outline,viewed,flash=null;// viewed: undefined = no tocar &ver del enlace; null = quitarlo
  const panel=document.createElement('section');panel.className='xpace-inventory';panel.setAttribute('aria-label',en?'Inventory':'Inventario');
- panel.innerHTML=`<header><h3>${en?'Inventory':'Inventario'}</h3><span class="xpace-count" aria-live="polite"></span></header><p>${manifest.measuredCount} ${en?'items from measurement JSON':'elementos del JSON de medidas'} · ${entries.length-manifest.measuredCount} ${en?'additional model objects':'objetos adicionales del modelo'}. ${en?'Dimensions: width × depth × height (m). One unit per ID.':'Medidas: ancho × fondo × alto (m). Una unidad por ID.'}</p><div class="xpace-inventory-actions"><button data-all="yes">${en?'All':'Todo'}</button><button data-all="no">${en?'None':'Nada'}</button><button data-export="json">↓ JSON</button><button data-export="csv">↓ CSV</button><button data-save>${en?'Save JSON + CSV to Stock':'Guardar JSON + CSV en Stock'}</button><button data-share>${en?'Copy view link':'Copiar enlace de la vista'}</button></div><p class="xpace-inventory-message" role="status"></p><div class="xpace-inventory-list"></div>`;
+ const sinModelo=entries.filter(e=>e.sinGeometria).length,delModelo=entries.filter(e=>!e.sinGeometria&&e.origen!=='json-medidas').length;
+ panel.innerHTML=`<header><h3>${en?'Inventory':'Inventario'}</h3><span class="xpace-count" aria-live="polite"></span></header><p>${manifest.measuredCount} ${en?'items from measurement JSON':'elementos del JSON de medidas'} · ${delModelo} ${en?'additional model objects':'objetos adicionales del modelo'} · ${sinModelo} ${en?'without a 3D model':'sin modelo 3D'}. ${en?'Dimensions: width × depth × height (m). One unit per ID.':'Medidas: ancho × fondo × alto (m). Una unidad por ID.'}</p><div class="xpace-inventory-actions"><button data-all="yes">${en?'All':'Todo'}</button><button data-all="no">${en?'None':'Nada'}</button><button data-export="json">↓ JSON</button><button data-export="csv">↓ CSV</button><button data-save>${en?'Save JSON + CSV to Stock':'Guardar JSON + CSV en Stock'}</button><button data-share>${en?'Copy view link':'Copiar enlace de la vista'}</button></div><p class="xpace-inventory-message" role="status"></p><div class="xpace-inventory-list"></div>`;
  host.append(panel);const ficha=document.createElement('aside');ficha.className='xpace-ci';ficha.hidden=true;ficha.setAttribute('aria-label','Ficha del elemento');host.append(ficha);const list=panel.querySelector('.xpace-inventory-list'),message=panel.querySelector('[role=status]'),groups=new Map();
- for(const core of [true,false]){
-  const section=document.createElement('details');section.open=core;section.innerHTML=`<summary>${core?(en?'Measurement inventory':'Inventario de medidas'):(en?'Additional model objects · GLB dimensions':'Objetos adicionales · medidas del GLB')}</summary>`;list.append(section);
-  for(const category of [...new Set(entries.filter(e=>(e.origen==='json-medidas')===core).map(e=>e.categoria))]){
-   const rows=entries.filter(e=>e.categoria===category&&(e.origen==='json-medidas')===core),group=document.createElement('div');group.className='xpace-inventory-group';
+ const bloques=[
+  {titulo:en?'Measurement inventory':'Inventario de medidas',filtro:e=>e.origen==='json-medidas',abierto:true},
+  {titulo:en?'Additional model objects · GLB dimensions':'Objetos adicionales · medidas del GLB',filtro:e=>!e.sinGeometria&&e.origen!=='json-medidas',abierto:false},
+  {titulo:en?'No 3D model':'Sin modelo 3D',filtro:e=>!!e.sinGeometria,abierto:true},
+ ];
+ for(const bloque of bloques){
+  const section=document.createElement('details');section.open=bloque.abierto;section.innerHTML=`<summary>${bloque.titulo}</summary>`;list.append(section);
+  for(const category of [...new Set(entries.filter(bloque.filtro).map(e=>e.categoria))]){
+   const rows=entries.filter(e=>e.categoria===category&&bloque.filtro(e)),group=document.createElement('div');group.className='xpace-inventory-group';
    group.innerHTML=`<label class="xpace-category"><input type="checkbox" data-category="${escape(category)}"> ${escape(labels[category]||category)} <small>(${rows.length})</small></label>`;section.append(group);
    groups.set(group.querySelector('input'),rows);
    for(const e of rows){const row=document.createElement('div');row.className='xpace-inventory-row';row.dataset.id=e.id;row.innerHTML=rowMarkup(e,en);group.append(row);e.row=row;e.checkbox=row.querySelector('input');e.button=row.querySelector('.xpace-item');e.ver=row.querySelector('.xpace-ver');on(e.checkbox,'change',()=>{e.visible=e.checkbox.checked;apply();});on(e.button,'click',()=>focus(e));on(e.ver,'click',event=>{event.preventDefault();event.stopPropagation();view(e);});}
@@ -93,5 +121,5 @@ export function mountInventory(host,item,{manifest,entries,capsulas},viewer,on,s
  const ready=mountReplacements({item,bound:{manifest,entries},viewer,on,signal,host:panel,refresh:()=>{if(selected)focus(selected);}}).catch(e=>{if(!signal?.aborted)message.textContent='No se pudieron cargar las variantes: '+e.message;});
  const openFromURL=()=>{const id=readView(location.href),e=id&&entries.find(x=>x.id===id);if(e)view(e);else if(id){viewed=null;writeURL();}};
  const dispose=()=>{stopFlash();clearOutline();if(viewed){try{const u=new URL(location.href);u.searchParams.delete('ver');history.replaceState(history.state,'',u);}catch{}}};
- return {ready,select:id=>{if(capsulas?.state.detail)return;focus(entries.find(e=>e.id===id)||null,true);},view:id=>view(entries.find(e=>e.id===id)||null),openFromURL,dispose,state:()=>({selected:selected?.id||null,viewed:viewed||null,flashing:flash?.id||null,items:entries.map(e=>({id:e.id,visible:e.visible,objectVisible:e.object.visible,bounds:new T.Box3().setFromObject(e.object).min.toArray().concat(new T.Box3().setFromObject(e.object).max.toArray()),variant:e.variant||null,core:e.origen==='json-medidas'}))}),export:documentData};
+ return {ready,select:id=>{if(capsulas?.state.detail)return;focus(entries.find(e=>e.id===id)||null,true);},view:id=>view(entries.find(e=>e.id===id)||null),openFromURL,dispose,state:()=>({selected:selected?.id||null,viewed:viewed||null,flashing:flash?.id||null,items:entries.map(e=>{const box=e.object?new T.Box3().setFromObject(e.object):null;return {id:e.id,visible:e.visible,objectVisible:!!e.object?.visible,bounds:box?box.min.toArray().concat(box.max.toArray()):null,variant:e.variant||null,core:e.origen==='json-medidas'};})}),export:documentData};
 }

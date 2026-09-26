@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ficha de la Cafebrería · Pixeria</title>
 <meta name="robots" content="noindex">
-<meta name="admiranext-version" content="Pixeria v.26.09.2026.r10.15:25">
+<meta name="admiranext-version" content="Pixeria v.26.09.2026.r11.16:59">
 <style>
 body{margin:0;background:#142522;color:#f3f5e7;font:18px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 main{max-width:640px;margin:0 auto;padding:24px 16px 64px}
@@ -23,12 +23,16 @@ dt{color:#c6d3cb}dd{margin:0}
 <main id="ficha"><p>Cargando la ficha…</p></main>
 <script type="module">
 import {fichaDe, accion, semaforoEstado, semaforoGarantia, urlUnidad} from '/assets/xpaces/ci.mjs';
-const unidad = new URL(location.href).searchParams.get('u') || '';
+const params = new URL(location.href).searchParams;
+const unidad = params.get('u') || '';
 const root = document.getElementById('ficha');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const manifest = await fetch('/assets/xpaces/inventory/alsea-4380.json?v=ci-4441').then(r => r.json());
+const manifest = await fetch('/assets/xpaces/inventory/alsea-4380.json?v=ci-4442').then(r => r.json());
 const row = manifest.items.find(item => item.id === unidad);
-if (!row) {
+if (row && params.get('accion') === 'portal-iot') {
+  const f = fichaDe(row);
+  root.innerHTML = `<p><a href="${esc(urlUnidad(f.unidad))}">Volver a la ficha</a></p><h1>Portal IoT</h1><p>Destino provisional. ${esc(f.nombre)} todavía no tiene un portal conectado.</p><p class="luz ambar"><span>Estado del portal</span><b>Provisional</b></p>`;
+} else if (!row) {
   root.innerHTML = '<h1>Sin esa unidad</h1><p>La dirección no corresponde a un elemento de la Cafebrería.</p>';
 } else {
   const f = fichaDe(row), boton = accion(f), luz = (nombre, tono) => `<p class="luz ${tono}"><span>${nombre}</span><b>${tono === 'verde' ? 'En regla' : tono === 'rojo' ? 'Atención' : 'Pendiente'}</b></p>`;

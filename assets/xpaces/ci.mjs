@@ -66,7 +66,7 @@ export function accion(ficha, ahora = Date.now()) {
     return { tipo: 'garantia', etiqueta: 'Reclamar al fabricante', provisional: true, href: base + '&accion=garantia' };
   }
   if (ficha.red) {
-    return { tipo: 'iot', etiqueta: 'Portal IoT', provisional: true, href: base + '&accion=iot' };
+    return { tipo: 'iot', etiqueta: 'Portal IoT', provisional: true, href: base + '&accion=portal-iot' };
   }
   return {
     tipo: 'incidencia',

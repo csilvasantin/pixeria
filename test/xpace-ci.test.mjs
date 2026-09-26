@@ -25,8 +25,11 @@ test('el botón cambia: garantía, equipo conectado o incidencia', () => {
   const base = fichaDe(manifest.items[0]);
   assert.equal(accion(base, ahora).etiqueta, 'Incidencia en Yokup');
   const iot = fichaDe(manifest.items.find(e => e.categoria === 'IoT'));
-  assert.equal(accion(iot, ahora).etiqueta, 'Portal IoT');
-  assert.equal(accion(iot, ahora).provisional, true);
+  const portal = accion(iot, ahora);
+  assert.equal(portal.etiqueta, 'Portal IoT');
+  assert.equal(portal.provisional, true);
+  assert.match(portal.href, /accion=portal-iot/);
+  assert.notEqual(portal.href, 'https://www.pixeria.com/xpacios/cafebreria/ci/?u=' + iot.unidad);
   const cubierta = fichaDe({ id: 'demo', nombre: 'x', categoria: 'Mobiliario', garantiaFin: '2027-01-01' });
   assert.equal(accion(cubierta, ahora).etiqueta, 'Reclamar al fabricante');
 });
@@ -44,6 +47,15 @@ test('una pizarra del mostrador es vertical y siguen la de recogida y las otras 
     assert.equal(row.sinGeometria, true);
     assert.equal(row.node, undefined);
   }
+});
+
+test('el visor no llama a batchStatic con un objeto nulo ni gira la pizarra', () => {
+  const viewer = fs.readFileSync(new URL('../assets/xpaces/viewer.mjs', import.meta.url), 'utf8');
+  const inventory = fs.readFileSync(new URL('../assets/xpaces/inventory.mjs', import.meta.url), 'utf8');
+  assert.match(viewer, /if\(entry\.object\)batchStatic\(entry\.object\)/);
+  assert.equal(inventory.includes('rotateZ'), false);
+  assert.match(inventory, /sin modelo 3D/);
+  assert.match(inventory, /componerPizarraVertical/);
 });
 
 test('el inventario apunta al modelo de los seis libros y a la estantería', () => {
