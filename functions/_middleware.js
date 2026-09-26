@@ -17,6 +17,8 @@ export async function onRequest(context) {
     (request.headers.get('Accept') || '').includes('text/html')
   );
   if (!wantsDocument) return context.next();
+  // La ficha de cada aparato de la Cafebrería se pega con un QR. Tiene que abrir sin sesión.
+  if (request.method === 'GET' && (url.pathname === '/xpacios/cafebreria/ci' || url.pathname === '/xpacios/cafebreria/ci/')) return context.next();
   if (await hasSession(request, env)) return context.next();
 
   const returnTo = safeReturnTo(url.pathname + url.search);
