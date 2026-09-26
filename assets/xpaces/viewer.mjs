@@ -2,7 +2,7 @@ import {createLifeRenderer} from './engine/life-renderer.mjs?v=ver-libro';
 import {createLifeScene} from './engine/life-scene.mjs?v=px-1';
 import {GLTFLoader} from './engine/vendor/GLTFLoader.mjs';
 import * as T from './engine/premium-three.mjs';
-import {bindInventory,mountInventory} from './inventory.mjs?v=ver-libro3';
+import {bindInventory,mountInventory} from './inventory.mjs?v=libros-4418';
 import {mergeGeometries} from './engine/vendor/BufferGeometryUtils.mjs';
 
 function release(root) {

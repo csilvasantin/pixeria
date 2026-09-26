@@ -20,7 +20,7 @@ export async function bindInventory(gltf,item,bytes,signal){
  }else manifest={slug:'xpace',measuredCount:0,items:gltf.scene.children.map((n,i)=>({id:n.userData.admira_id||`glb:${n.name||i}`,nombre:n.userData.admira_nombre||n.name||`Objeto ${i+1}`,tipo:n.userData.admira_tipo||'objeto-3d',categoria:n.userData.categoria||'Sin categoría',cantidad:1,origen:'glb',object:n}))};
  const nodes=new Map();gltf.scene.traverse(n=>{const index=gltf.parser.associations.get(n)?.nodes;if(index!==undefined)nodes.set(index,n);});
  // Muebles añadidos en el visor (#4397): se construyen en tiempo de ejecución junto a un elemento medido.
- const hasRuntime=manifest.items.some(r=>r.runtime||r.contenido);const capsulasModule=hasRuntime?await import('./capsulas.mjs?v=ver-libro3'):null;
+ const hasRuntime=manifest.items.some(r=>r.runtime||r.contenido);const capsulasModule=hasRuntime?await import('./capsulas.mjs?v=libros-4418'):null;
  function runtimeObject(row){
   if(row.runtime.builder!=='estanteria-libros'||!capsulasModule)return null;
   const material=name=>{let found;gltf.scene.traverse(o=>{for(const m of [o.material].flat())if(!found&&m?.name===name)found=m;});return found;};

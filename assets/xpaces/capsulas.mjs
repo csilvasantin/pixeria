@@ -7,7 +7,7 @@ import {GLTFLoader} from './engine/vendor/GLTFLoader.mjs';
 
 export const STOCK_INDEX='https://stock.admira.store/stock/index.json';
 // Ficha de la estantería (#4397/#4399): portadas reales de Blinkist en espejo, ISBN, medidas y formato de modelos.
-export const SHELF_META=new URL('./libros/estanteria-libros.json?v=libros-cdl',import.meta.url).href;
+export const SHELF_META=new URL('./libros/estanteria-libros.json?v=libros-4418',import.meta.url).href;
 // Portadas de verdad (Carlos, 26-sep 01:26): la imagen de la ficha de Casa del Libro, copiada al despliegue (CORS).
 // La de Blinkist queda como respaldo si falta la de Casa del Libro.
 export function coverPath(m){if(!m)return null;if(m.portada_local)return m.portada_local;if(m.portada_espejo)return `portadas/${m.slug}.jpg`;return null;}
@@ -89,6 +89,8 @@ export async function loadBooks(signal){
  const index=await r.json(),items=Array.isArray(index)?index:index.items||[],books=selectBooks(items),meta=await loadMeta(signal);
  await Promise.all(books.map(async b=>{
   const m=(meta.libros||[]).find(x=>x.slug===b.slug);b.meta=m||null;b.media=mediaFor(b,items);
+  b.resumenAudio=m?.audio_resumen?.url?new URL(m.audio_resumen.url,SHELF_META).href:b.media.audio?.url||null;
+  b.authorPhoto=await loadImage(m?.foto_autor?.url?new URL(m.foto_autor.url,SHELF_META).href:null);
   if(m?.medidas_cm?.alto)b.medidas={L:m.medidas_cm.alto/100,D:(m.medidas_cm.ancho||15)/100,th:(m.medidas_cm.grueso||0)/100||null};
   b.cover=await loadImage(coverURL(m));
   if(b.cover){const [c,t]=sampleColor(b.cover);b.color=c;b.tinta=t;}
@@ -226,6 +228,20 @@ export function drawScreen(canvas,b,page=0,total=0){
  ctx.font=`500 ${Math.round(W*.0125)}px "Helvetica Neue", Arial, sans-serif`;ctx.fillStyle='rgba(243,234,211,.7)';ctx.fillText(`Pixeria Stock · cápsulas Blinkist de AdmiraNeXT · ${total} libros en la estantería · se actualiza con cada cápsula nueva`,x,H-pad*.95);
  for(let i=0;i<b.secciones.length;i++){ctx.fillStyle=i===page%b.secciones.length?'#d9b25a':'rgba(243,234,211,.3)';ctx.beginPath();ctx.arc(W-pad-(b.secciones.length-1-i)*26,H-pad*.95+9,7,0,Math.PI*2);ctx.fill();}
 }
+export function drawPlayingScreen(canvas,b){
+ const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,pad=W*.045;
+ ctx.fillStyle='#0d3b2c';ctx.fillRect(0,0,W,H);
+ ctx.fillStyle='#d9b25a';ctx.font=`800 ${Math.round(W*.021)}px Arial,sans-serif`;ctx.fillText('▶  RESUMEN EN REPRODUCCIÓN',pad,pad*1.2);
+ const ar=coverAspect(b)||1.5,ch=H*.66,cw=ch/ar,cy=H*.16;drawCover(ctx,b,pad,cy,cw,ch);
+ const x=pad*2+cw,w=W-x-pad;let y=H*.18;
+ ctx.fillStyle='#f6efdc';ctx.textBaseline='top';const title=fitLines(ctx,b.libro,'700 % Georgia,serif',W*.044,w*.72,2,W*.025);for(const line of title.lines){ctx.fillText(line,x,y);y+=title.size*1.1;}
+ ctx.font=`400 ${Math.round(W*.022)}px Georgia,serif`;ctx.fillStyle='#e6d9b8';ctx.fillText(b.autor||'',x,y+8);y+=W*.065;
+ if(b.authorPhoto){const pw=w*.22,ph=Math.min(H*.34,pw*1.1);ctx.drawImage(b.authorPhoto,W-pad-pw,H*.15,pw,ph);}
+ ctx.font=`italic 400 ${Math.round(W*.024)}px Georgia,serif`;ctx.fillStyle='#f6efdc';for(const line of wrap(ctx,b.capsula,w*.85).slice(0,3)){ctx.fillText(line,x,y);y+=W*.033;}
+ const body=b.secciones?.[0]?.[1]||'';ctx.font=`400 ${Math.round(W*.018)}px Georgia,serif`;y+=W*.01;for(const line of wrap(ctx,body,w).slice(0,5)){ctx.fillText(line,x,y);y+=W*.025;}
+ const by=H-pad-W*.055;ctx.fillStyle='#d9b25a';ctx.fillRect(x,by,w*.68,W*.048);ctx.fillStyle='#142522';ctx.font=`800 ${Math.round(W*.019)}px Arial,sans-serif`;ctx.textBaseline='middle';ctx.fillText('Comprar en Casa del Libro ↗',x+W*.012,by+W*.024);
+ if(b.meta?.foto_autor){ctx.fillStyle='#d9e6d8';ctx.font=`400 ${Math.round(W*.011)}px Arial,sans-serif`;ctx.textBaseline='top';ctx.fillText(`Foto: ${b.meta.foto_autor.autor_foto} · ${b.meta.foto_autor.licencia} · Wikimedia Commons`,x,by+W*.054);}
+}
 export function screenOverlay(screenObject){
  screenObject.updateWorldMatrix(true,true);let panel=null;screenObject.traverse(n=>{if(!panel&&n.isMesh&&[n.material].flat().some(m=>/^PANTALLA_/.test(m?.name||'')))panel=n;});
  const box=new T.Box3().setFromObject(panel||screenObject),size=box.getSize(new T.Vector3()),center=box.getCenter(new T.Vector3());
@@ -243,42 +259,43 @@ export function mountCapsulas({scene,entries,signal}){
  const forced=new URL(location.href).searchParams.get('libro');
  const state={books:[],libroDelDia:null,updatedAt:null,error:null,detail:false,libroAbierto:null,medio:null};
  // ---------- modo detalle de la estantería (#ver-mueble) ----------
- let ui=null,chosen=null,panel=null,bar=null,down=null;
+ let ui=null,chosen=null,panel=null,bar=null,down=null,playing=null;
  const en=document.documentElement.lang==='en',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function attachUI({stage,canvas,on}){
   if(!shelfEntry)return;ui={stage,canvas,on};
   bar=document.createElement('div');bar.className='xpace-detalle-bar';bar.hidden=true;bar.innerHTML=`<span>${en?'Detail · tap a book':'Modo detalle · toca un libro'}</span><button type="button" data-salir>${en?'Exit detail':'Salir del modo detalle'}</button>`;stage.append(bar);
   on(bar.querySelector('[data-salir]'),'click',()=>exitDetail());
   on(canvas,'pointerdown',e=>{down={x:e.clientX,y:e.clientY};});
-  on(canvas,'pointerup',e=>{if(!state.detail||!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>8)return;down=null;const hit=viewer.pick(e.clientX,e.clientY,[shelfEntry.object.userData.shelf.books])[0];let node=hit?.object;while(node&&!node.userData.capsula)node=node.parent;const b=node&&books.find(x=>x.id===node.userData.capsula);if(b)openBook(b,node);});
+  on(canvas,'pointerup',e=>{if(!down||Math.hypot(e.clientX-down.x,e.clientY-down.y)>8)return;down=null;if(playing&&screenEntry&&viewer.pick(e.clientX,e.clientY,[screenEntry.object]).length){window.open(compraURL(playing),'_blank','noopener');return;}if(!state.detail)return;const hit=viewer.pick(e.clientX,e.clientY,[shelfEntry.object.userData.shelf.books])[0];let node=hit?.object;while(node&&!node.userData.capsula)node=node.parent;const b=node&&books.find(x=>x.id===node.userData.capsula);if(b)openBook(b,node);});
  }
  function enterDetail(){if(!shelfEntry||!viewer||!ui)return false;state.detail=true;if(bar)bar.hidden=false;viewer.frameObject(shelfEntry.object,{angle:Math.PI/2,elevation:.04,margin:1.08,clip:true});return true;}
  function exitDetail({reset=true}={}){closeBook();const was=state.detail;state.detail=false;if(bar)bar.hidden=true;viewer?.clearClip();if(was&&reset)viewer.preset('home');return was;}
  function restoreBook(){if(!chosen)return;chosen.node.position.z=chosen.z;chosen.helper.removeFromParent();chosen.helper.geometry.dispose();chosen.helper.material.dispose();chosen=null;viewer?.invalidateShadows();}
- function closeBook(){if(panel){panel.querySelector('video,audio')?.pause();panel.remove();panel=null;}try{globalThis.speechSynthesis?.cancel();}catch{}restoreBook();state.libroAbierto=null;state.medio=null;}
+ function closeBook(){if(panel){panel.querySelector('video,audio')?.pause();panel.remove();panel=null;}try{globalThis.speechSynthesis?.cancel();}catch{}playing=null;restoreBook();state.libroAbierto=null;state.medio=null;paint();}
  function speak(b,status){const synth=globalThis.speechSynthesis;if(!synth||typeof SpeechSynthesisUtterance==='undefined'){status.textContent=en?'This browser cannot read aloud.':'Este navegador no puede leer en voz alta.';return false;}synth.cancel();const u=new SpeechSynthesisUtterance(speechText(b));u.lang='es-ES';const voice=synth.getVoices().find(v=>/^es(-|_)ES/i.test(v.lang))||synth.getVoices().find(v=>/^es/i.test(v.lang));if(voice)u.voice=voice;u.rate=1;synth.speak(u);return true;}
  function openBook(b,node){
   closeBook();
   // Resalte: el libro sale 4 cm de la balda y lleva un contorno amarillo.
   let scene=node;while(scene.parent)scene=scene.parent;const helper=new T.BoxHelper(node,0xffd766);helper.material.depthTest=false;helper.renderOrder=1001;chosen={node,z:node.position.z,helper,id:b.id};node.position.z+=.04;node.updateMatrixWorld(true);helper.update();scene.add(helper);viewer?.invalidateShadows();
-  const m=b.media||{},cover=b.cover?.src||coverURL(b.meta)||'';
-  const portrait=globalThis.matchMedia?.('(orientation: portrait)').matches&&innerWidth<700,video=pickVideo(m,portrait);const kind=video?'video':m.audio?'audio':'voz';state.libroAbierto=b.id;state.medio=kind;state.video=video?{id:video.id,orientacion:video.orientacion}:null;
+  const cover=b.cover?.src||coverURL(b.meta)||'';
+  const kind=b.resumenAudio?'audio':'voz';state.libroAbierto=b.id;state.medio=kind;state.video=null;
   panel=document.createElement('div');panel.className='xpace-libro';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',(en?'Capsule: ':'Cápsula: ')+b.libro);panel.dataset.medio=kind;
-  const media=kind==='video'?`<video src="${esc(video.url)}" data-orient="${video.orientacion||'vertical'}" controls playsinline preload="auto"${cover?` poster="${esc(cover)}"`:''}></video>`:(cover?`<img src="${esc(cover)}" alt="${esc(b.libro)}">`:'')+(kind==='audio'?`<audio src="${esc(m.audio.url)}" controls preload="auto"></audio>`:'');
-  const nota=kind==='video'?(en?'Capsule video from Pixeria Stock, with its soundtrack.':'Vídeo de la cápsula en el Stock de Pixeria, con su sonido.'):kind==='audio'?(en?'Recorded voice-over from Stock.':'Locución grabada del Stock.'):(en?'This capsule has no video or recorded voice-over in Stock: the summary is read by the browser voice (es-ES).':'Esta cápsula no tiene vídeo ni locución en el Stock: el resumen lo lee la voz del navegador (es-ES).');
-  panel.innerHTML=`<div class="xpace-libro-top"><button type="button" data-cerrar>← ${en?'Back to shelf':'Volver a la estantería'}</button><button type="button" data-salir>${en?'Exit detail':'Salir del modo detalle'}</button></div><div class="xpace-libro-media">${media}</div><div class="xpace-libro-texto"><div class="xpace-libro-compra"><a data-comprar href="${esc(compraURL(b))}" target="_blank" rel="noopener">${en?'Buy':'Comprar'}</a><a data-vender href="${WALLAPOP_UPLOAD}" target="_blank" rel="noopener">${en?'Sell':'Vender'}</a></div><p class="xpace-libro-kicker">${en?'Blinkist capsule':'Cápsula Blinkist'} · ${esc(b.consejero)}</p><h4>${esc(b.libro)}</h4>${b.autor?`<p class="xpace-libro-autor">${en?'by':'de'} ${esc(b.autor)}</p>`:''}<p class="xpace-libro-capsula">«${esc(b.capsula)}»</p><p class="xpace-libro-nota" data-kind="${kind}">${nota}</p><p class="xpace-libro-estado" role="status"></p><div class="xpace-libro-acciones"><button type="button" data-leer>🔊 ${kind==='voz'?(en?'Read again':'Volver a leer'):(en?'Read full summary (browser voice)':'Leer el resumen completo (voz del navegador)')}</button></div>${b.secciones.map(([name,body])=>`<section><h5>${esc(name)}</h5><p>${esc(body)}</p></section>`).join('')}</div>`;
+  const media=(cover?`<img src="${esc(cover)}" alt="${esc(b.libro)}">`:'')+(kind==='audio'?`<audio src="${esc(b.resumenAudio)}" preload="auto"></audio>`:'');
+  const nota=kind==='audio'?(en?'Pixeria voice-over in Spanish.':'Locución propia de Pixeria en español.'):(en?'This capsule is read by the browser voice (es-ES).':'Esta cápsula la lee la voz del navegador (es-ES).');
+  panel.innerHTML=`<div class="xpace-libro-top"><button type="button" data-cerrar>← ${en?'Back to shelf':'Volver a la estantería'}</button><button type="button" data-salir>${en?'Exit detail':'Salir del modo detalle'}</button></div><div class="xpace-libro-media">${media}</div><div class="xpace-libro-texto"><div class="xpace-libro-compra"><a data-comprar href="${esc(compraURL(b))}" target="_blank" rel="noopener">${en?'Buy at Casa del Libro':'Comprar en Casa del Libro'}</a><a data-vender href="${WALLAPOP_UPLOAD}" target="_blank" rel="noopener">${en?'Sell':'Vender'}</a></div><p class="xpace-libro-kicker">${en?'Pixeria capsule':'Cápsula Pixeria'} · ${esc(b.consejero)}</p><h4>${esc(b.libro)}</h4>${b.autor?`<p class="xpace-libro-autor">${en?'by':'de'} ${esc(b.autor)}</p>`:''}<p class="xpace-libro-capsula">«${esc(b.capsula)}»</p><p class="xpace-libro-nota" data-kind="${kind}">${nota}</p><p class="xpace-libro-estado" role="status"></p><div class="xpace-libro-acciones"><button type="button" data-leer>🔊 ${en?'Play summary':'Escuchar resumen'}</button><button type="button" data-parar>${en?'Stop':'Parar'}</button></div>${b.secciones.map(([name,body])=>`<section><h5>${esc(name)}</h5><p>${esc(body)}</p></section>`).join('')}</div>`;
   ui.stage.append(panel);const status=panel.querySelector('[role=status]');
   ui.on(panel.querySelector('[data-cerrar]'),'click',()=>closeBook());ui.on(panel.querySelector('[data-salir]'),'click',()=>exitDetail());
   ui.on(panel.querySelector('[data-vender]'),'click',e=>{e.stopPropagation();try{navigator.clipboard?.writeText(anuncioTexto(b)).then(()=>{status.textContent=en?'Listing text copied':'Texto del anuncio copiado';},()=>{});}catch{}});
   ui.on(panel.querySelector('[data-comprar]'),'click',e=>e.stopPropagation());
-  ui.on(panel.querySelector('[data-leer]'),'click',()=>{panel.querySelector('video,audio')?.pause();speak(b,status);});
-  // El toque sobre el libro es el gesto del usuario: permite reproducir con sonido.
-  const player=panel.querySelector('video,audio');
-  if(player){player.muted=false;player.play().catch(()=>{status.textContent=en?'Press ▶ to play with sound.':'Pulsa ▶ para reproducir con sonido.';});}
-  else speak(b,status);
+  const player=panel.querySelector('audio');
+  function start(){try{globalThis.speechSynthesis?.cancel();}catch{}if(player){player.currentTime=0;player.play().catch(()=>{status.textContent=en?'Press play to listen.':'Pulsa Escuchar resumen para reproducir.';});}else speak(b,status);playing=b;paint();}
+  ui.on(panel.querySelector('[data-leer]'),'click',start);
+  ui.on(panel.querySelector('[data-parar]'),'click',()=>closeBook());
+  if(player){ui.on(player,'ended',()=>{playing=null;paint();status.textContent=en?'Summary finished.':'Resumen terminado.';});ui.on(player,'error',()=>{playing=null;paint();status.textContent=en?'Audio unavailable.':'Audio no disponible.';});}
+  start();
   panel.querySelector('[data-cerrar]').focus({preventScroll:true});
  }
- function paint(){if(!screen)return;const f=books.find(b=>b.id===forced)||books[0];drawScreen(screen.canvas,f,page,books.length);screen.tex.needsUpdate=true;}
+ function paint(){if(!screen)return;const f=books.find(b=>b.id===forced)||books[0];if(playing)drawPlayingScreen(screen.canvas,playing);else drawScreen(screen.canvas,f,page,books.length);screen.tex.needsUpdate=true;}
  async function refresh(){
   try{const next=await loadBooks(signal);if(signal?.aborted)return;const sig=next.map(b=>b.id).join();const full=sig+'|'+next.map(b=>b.glb||'').join();if(full!==state.sig){books=next;if(shelfEntry)await fillShelf(shelfEntry.object,books,forced);state.sig=full;page=0;paint();viewer?.invalidateShadows();}
    state.books=books.map(b=>({id:b.id,libro:b.libro,autor:b.autor,consejero:b.consejero,createdAt:b.createdAt,portada:!!b.cover,glb:b.glb,isbn:b.meta?.isbn||null,video:b.media?.video?.id||null,videos:{vertical:b.media?.videos?.vertical?.id||null,horizontal:b.media?.videos?.horizontal?.id||null},audio:b.media?.audio?.id||null}));const f=books.find(b=>b.id===forced)||books[0];state.libroDelDia=f?{id:f.id,libro:f.libro,autor:f.autor,consejero:f.consejero,capsula:f.capsula}:null;state.updatedAt=new Date().toISOString();state.error=null;
@@ -286,7 +303,7 @@ export function mountCapsulas({scene,entries,signal}){
   }catch(e){if(!signal?.aborted){state.error=e.message;if(!books.length)paint();}}
  }
  paint();const ready=refresh();
- timer=setInterval(refresh,REFRESH_MS);pager=setInterval(()=>{if(books.length&&!document.hidden){page++;paint();}},PAGE_MS);
+ timer=setInterval(refresh,REFRESH_MS);pager=setInterval(()=>{if(books.length&&!document.hidden&&!playing){page++;paint();}},PAGE_MS);
  const vis=()=>{if(!document.hidden)refresh();};document.addEventListener('visibilitychange',vis);
  signal?.addEventListener('abort',()=>{clearInterval(timer);clearInterval(pager);document.removeEventListener('visibilitychange',vis);closeBook();bar?.remove();},{once:true});
  const bookScreen=id=>{const b=books.find(x=>x.id===id);let node=null;shelfEntry?.object.userData.shelf.books.traverse(n=>{if(!node&&n.userData.capsula===id)node=n;});if(b&&node)openBook(b,node);return !!(b&&node);};

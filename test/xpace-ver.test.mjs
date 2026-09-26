@@ -40,7 +40,7 @@ test('visor: el renderer expone frameObject y el inventario lo usa con resalte y
  const r=fs.readFileSync(new URL('../assets/xpaces/engine/life-renderer.mjs',import.meta.url),'utf8'),inv=fs.readFileSync(new URL('../assets/xpaces/inventory.mjs',import.meta.url),'utf8'),v=fs.readFileSync(new URL('../assets/xpaces/viewer.mjs',import.meta.url),'utf8');
  assert.match(r,/needsUpdate=true;\},frameObject,pick,clearClip,/);assert.match(inv,/viewer\.frameObject\?\.\(e\.object,fromDetail\?\{angle:Math\.PI\/4\}:\{\}\);pulse\(e\);/);assert.match(inv,/e\.id===capsulas\.shelfId&&capsulas\.enterDetail\(\)/);assert.match(inv,/select:id=>\{if\(capsulas\?\.state\.detail\)return;/);assert.match(inv,/if\(!e\.visible\)\{e\.visible=true;apply\(\);\}/);assert.match(v,/inventory\?\.openFromURL\(\)/);
  const css=fs.readFileSync(new URL('../assets/xpaces/viewer.css',import.meta.url),'utf8');assert.match(css,/\.xpace-ver\{flex:none/);
- for(const page of ['../stock.html','../en/stock.html'])assert.match(fs.readFileSync(new URL(page,import.meta.url),'utf8'),/viewer\.mjs\?v=ver-libro/);
+ for(const page of ['../stock.html','../en/stock.html'])assert.match(fs.readFileSync(new URL(page,import.meta.url),'utf8'),/viewer\.mjs\?v=libros-4418/);
 });
 
 test('modo detalle: medios de cada cápsula sin inventar (vínculo explícito, luego título exacto)',async()=>{
@@ -60,9 +60,23 @@ test('modo detalle: zoom frontal con recorte, libros seleccionables y panel con 
  const c=fs.readFileSync(new URL('../assets/xpaces/capsulas.mjs',import.meta.url),'utf8'),r=fs.readFileSync(new URL('../assets/xpaces/engine/life-renderer.mjs',import.meta.url),'utf8');
  assert.match(c,/frameObject\(shelfEntry\.object,\{angle:Math\.PI\/2,elevation:\.04,margin:1\.08,clip:true\}\)/);
  assert.match(c,/viewer\.pick\(e\.clientX,e\.clientY,\[shelfEntry\.object\.userData\.shelf\.books\]\)/);
- for(const k of ['data-cerrar','data-salir','data-leer','playsinline',"u.lang='es-ES'",'player.muted=false;player.play()'])assert.ok(c.includes(k),k);
+ for(const k of ['data-cerrar','data-salir','data-leer','data-parar',"u.lang='es-ES'",'player.play().catch','drawPlayingScreen(screen.canvas,playing)'])assert.ok(c.includes(k),k);
  assert.match(r,/near=Math\.max\(\.1,d-\.06\)/);assert.match(r,/clipBox=clip\?box\.clone\(\)/);
  assert.ok(!/drawScreen|screenOverlay/.test(c.slice(c.indexOf('modo detalle de la estantería'),c.indexOf('function openBook'))),'pizarra-3 no se toca');
+});
+
+test('seis resúmenes usan locución propia y terminan devolviendo la pizarra al libro del día',()=>{
+ const shelf=JSON.parse(fs.readFileSync(new URL('../assets/xpaces/libros/estanteria-libros.json',import.meta.url)));
+ for(const b of shelf.libros){
+  assert.match(b.audio_resumen.origen,/Pixeria Stock/);
+  assert.match(b.audio_resumen.stock_video_id,/^[\w-]+$/);
+  const audio=fs.readFileSync(new URL('../assets/xpaces/libros/'+b.audio_resumen.url,import.meta.url));
+  assert.ok(audio.length>50000,`${b.slug}: audio real`);
+  assert.ok(audio.subarray(0,3).toString()==='ID3'||audio[0]===0xff,`${b.slug}: MP3`);
+ }
+ const src=fs.readFileSync(new URL('../assets/xpaces/capsulas.mjs',import.meta.url),'utf8');
+ assert.match(src,/ui\.on\(player,'ended',\(\)=>\{playing=null;paint\(\)/);
+ assert.match(src,/function closeBook\(\).*playing=null/);
 });
 
 test('norma 16:9 / 9:16: vertical en móvil en vertical, horizontal en escritorio, y la que haya si solo existe una',async()=>{

@@ -88,6 +88,17 @@
         "url": "https://api.admira.store/stock/asset/1790374898228-sylcvc",
         "id": "1790374898228-sylcvc",
         "archivo": "modelos/the-hero-with-a-thousand-faces-en.glb"
+      },
+      "audio_resumen": {
+        "url": "audio/the-hero-with-a-thousand-faces-en.mp3",
+        "origen": "Pixeria Stock · pista de voz de vídeo de cápsula",
+        "stock_video_id": "1790388670350-vqn2l2"
+      },
+      "foto_autor": {
+        "url": "autores/the-hero-with-a-thousand-faces-en.jpg",
+        "autor_foto": "Folkstory",
+        "licencia": "Dominio público",
+        "fuente": "https://commons.wikimedia.org/wiki/File:JosephCampbell_JonathanYoung.jpg"
       }
     },
     {
@@ -127,6 +138,17 @@
         "url": "https://api.admira.store/stock/asset/1790374957269-cqttzk",
         "id": "1790374957269-cqttzk",
         "archivo": "modelos/sapiens-en.glb"
+      },
+      "audio_resumen": {
+        "url": "audio/sapiens-en.mp3",
+        "origen": "Pixeria Stock · pista de voz de vídeo de cápsula",
+        "stock_video_id": "1790388483681-iz12mn"
+      },
+      "foto_autor": {
+        "url": "autores/sapiens-en.jpg",
+        "autor_foto": "Yuval Noah Harari",
+        "licencia": "CC BY 3.0",
+        "fuente": "https://commons.wikimedia.org/wiki/File:Yuval_Noah_Harari_October_2011_small.jpg"
       }
     },
     {
@@ -168,6 +190,17 @@
         "url": "https://api.admira.store/stock/asset/1790375013351-f6ip4j",
         "id": "1790375013351-f6ip4j",
         "archivo": "modelos/creatividad-sa-es.glb"
+      },
+      "audio_resumen": {
+        "url": "audio/creatividad-sa-es.mp3",
+        "origen": "Pixeria Stock · pista de voz de vídeo de cápsula",
+        "stock_video_id": "1790381303568-a5ddg0"
+      },
+      "foto_autor": {
+        "url": "autores/creatividad-sa-es.jpg",
+        "autor_foto": "Web Summit",
+        "licencia": "CC BY 2.0",
+        "fuente": "https://commons.wikimedia.org/wiki/File:Ed_Catmull_at_Web_Summit_2015_(cropped).jpg"
       }
     },
     {
@@ -204,7 +237,12 @@
         "id": "1790375069695-idmmd3",
         "archivo": "modelos/the-impossible-factory-en.glb"
       },
-      "isbn_ebook": "9781524745523"
+      "isbn_ebook": "9781524745523",
+      "audio_resumen": {
+        "url": "audio/the-impossible-factory-en.mp3",
+        "origen": "Pixeria Stock · pista de voz de vídeo de cápsula",
+        "stock_video_id": "1790381512526-e2fgiy"
+      }
     },
     {
       "slug": "co-intelligence-en",
@@ -243,6 +281,11 @@
         "url": "https://api.admira.store/stock/asset/1790375124838-wgsi5x",
         "id": "1790375124838-wgsi5x",
         "archivo": "modelos/co-intelligence-en.glb"
+      },
+      "audio_resumen": {
+        "url": "audio/co-intelligence-en.mp3",
+        "origen": "Pixeria Stock · pista de voz de vídeo de cápsula",
+        "stock_video_id": "1790381114920-6ovpds"
       }
     },
     {
@@ -278,6 +321,17 @@
         "url": "https://api.admira.store/stock/asset/1790375180840-lnodeq",
         "id": "1790375180840-lnodeq",
         "archivo": "modelos/creative-confidence-en.glb"
+      },
+      "audio_resumen": {
+        "url": "audio/creative-confidence-en.mp3",
+        "origen": "Pixeria Stock · pista de voz de vídeo de cápsula",
+        "stock_video_id": "auto-3910e930b0a79ff8384f"
+      },
+      "foto_autor": {
+        "url": "autores/creative-confidence-en.jpg",
+        "autor_foto": "Jonathan Chen",
+        "licencia": "CC BY 2.0",
+        "fuente": "https://commons.wikimedia.org/wiki/File:David_M_Kelley_(9375796736)_(cropped).jpg"
       }
     }
   ],
