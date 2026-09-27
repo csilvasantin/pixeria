@@ -9,10 +9,10 @@
 <meta name="robots" content="noindex">
 <style>
   body{margin:0;background:#10211b;color:#f3f5e7;font:18px/1.45 system-ui,sans-serif}
-  main{max-width:880px;margin:0 auto;padding:28px 16px 72px}
+  main{max-width:880px;margin:0 auto;padding:28px 16px 72px;overflow-wrap:anywhere}
   h1{font-size:clamp(32px,6vw,48px);line-height:1.05;margin:0 0 8px}
   .count{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
-  .count b{background:#203c31;border:1px solid #628372;border-radius:8px;padding:8px 12px}
+  .count b{max-width:100%;box-sizing:border-box;background:#203c31;border:1px solid #628372;border-radius:8px;padding:8px 12px}
   .sala{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 28px}
   .zona,.piso{border:1px solid #628372;border-radius:12px;padding:14px;background:#142522}
   .zona strong,.piso strong{display:block}
@@ -26,7 +26,7 @@
 </head>
 <body>
 <main>
-  <p class="rail-ver">Pixeria v.26.09.2026.r13.19:21</p>
+  <span class="rail-ver">Pixeria v.27.09.2026.r15.09:02</span>
   <h1>Aulestia i Pijoan 4-6</h1>
   <p id="lugar">Gràcia · Barcelona</p>
   <p class="count" id="cuentas">Cargando el mapa…</p>
