@@ -3,23 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aulestia i Pijoan 4-6 · planta baja · Pixeria</title>
-<meta name="description" content="Mapa de zonas de Aulestia i Pijoan 4-6, en Gràcia. La sala de hoy es la planta baja: cuatro locales comerciales.">
+<title>Aulestia i Pijoan 4-6 · Pixeria</title>
+<meta name="description" content="Espacio privado friends and family. Plantas y salas de Aulestia i Pijoan 4-6, cada una con su película.">
 <meta name="admiranext-version" content="Pixeria v.27.09.2026.r16.09:06">
 <meta name="robots" content="noindex">
 <style>
   body{margin:0;background:#10211b;color:#f3f5e7;font:18px/1.45 system-ui,sans-serif}
   main{max-width:880px;margin:0 auto;padding:28px 16px 72px;overflow-wrap:anywhere}
   h1{font-size:clamp(32px,6vw,48px);line-height:1.05;margin:0 0 8px}
+  h2{margin:28px 0 8px}
+  .privado{display:inline-block;margin:0 0 12px;padding:6px 10px;border:1px solid #ffd766;border-radius:8px;color:#ffd766}
   .count{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
   .count b{max-width:100%;box-sizing:border-box;background:#203c31;border:1px solid #628372;border-radius:8px;padding:8px 12px}
-  .sala{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 28px}
-  .zona,.piso{border:1px solid #628372;border-radius:12px;padding:14px;background:#142522}
-  .zona strong,.piso strong{display:block}
+  .sala{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .zona{border:1px solid #628372;border-radius:12px;padding:14px;background:#142522}
+  .zona strong{display:block}
+  .pelicula{color:#ffd766}
   small{color:#c6d3cb}
-  .edificio{display:flex;flex-direction:column;gap:8px}
-  .piso.abierta{border-color:#ffd766}
-  a{color:#bdf7d5}
   .rail-ver{color:#9fb0a6;font-size:13px}
   @media(max-width:600px){
     .sala{grid-template-columns:1fr}
@@ -32,25 +32,23 @@
 <main>
   <span class="rail-ver">Pixeria v.27.09.2026.r16.09:06</span>
   <h1>Aulestia i Pijoan 4-6</h1>
+  <p class="privado" id="acceso">Espacio privado · friends and family</p>
   <p id="lugar">Gràcia · Barcelona</p>
   <p class="count" id="cuentas">Cargando el mapa…</p>
-  <h2>Planta baja · la sala</h2>
-  <div class="sala" id="sala"></div>
-  <h2>Edificio</h2>
-  <div class="edificio" id="edificio"></div>
-  <p id="fuente"></p>
+  <div id="plantas"></div>
 </main>
 <script type="module">
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const data = await fetch('/assets/xpaces/aulestia/zonas.json?v=4457').then(r => r.json());
+const data = await fetch('/assets/xpaces/aulestia/zonas.json?v=4471').then(r => r.json());
+const zonas = data.plantas.reduce((n, p) => n + p.zonas.length, 0);
+document.getElementById('acceso').textContent = 'Espacio privado · ' + data.acceso;
 document.getElementById('lugar').textContent = data.direccion + ' · ' + data.barrio;
-document.getElementById('cuentas').innerHTML =
-  `<b>${data.salaZonas.length} zonas en la sala</b><b>${data.zonas.length} zonas en el edificio</b><b>${data.edificio.viviendas} viviendas · pendiente el reparto</b>`;
-document.getElementById('sala').innerHTML = data.salaZonas.map(z =>
-  `<article class="zona"><strong>${esc(z.nombre)}</strong><span>${esc(z.uso)}</span><br><small>Titular ${esc(z.titular)} · pantallas ${esc(z.pantallas)}</small></article>`).join('');
-document.getElementById('edificio').innerHTML = data.zonas.map(z =>
-  `<article class="piso${z.sala ? ' abierta' : ''}"><strong>${esc(z.nombre)}</strong><span>${esc(z.uso)}</span><br><small>Titular ${esc(z.titular)}</small></article>`).join('');
-document.getElementById('fuente').innerHTML = `Fuente: <a href="${esc(data.fuente)}">informe público de valoración</a>. ${esc(data.fuenteNota)}`;
+document.getElementById('cuentas').innerHTML = `<b>${data.plantas.length} plantas</b><b>${zonas} zonas</b>`;
+document.getElementById('plantas').innerHTML = data.plantas.map(p => `
+  <section>
+    <h2>${esc(p.nombre)}${p.pelicula ? ` · ${esc(p.pelicula)}` : ''}</h2>
+    <div class="sala">${p.zonas.map(z => `<article class="zona"><strong>${esc(z.nombre)}</strong><span class="pelicula">${esc(z.pelicula)}</span>${z.etiqueta ? `<br><small>${esc(z.etiqueta)}</small>` : ''}</article>`).join('')}</div>
+  </section>`).join('');
 </script>
 </body>
 </html>

@@ -4,30 +4,35 @@
   "nombre": "Aulestia i Pijoan 4-6",
   "direccion": "Carrer d'Aulèstia i Pijoan 4-6, 08012 Barcelona",
   "barrio": "Gràcia",
-  "sala": "planta-baja",
-  "fuente": "https://www.galilcapital.es/admin/documentos/99/2.%20Aulestia%20i%20Pijoan,%204-6.pdf",
-  "fuenteNota": "Informe público de valoración, 31 dic 2019. Lo que ese informe no detalla queda en pendiente.",
-  "edificio": {
-    "anio": 1932,
-    "superficieConstruidaM2": 1281,
-    "viviendas": 11,
-    "localesPlantaBaja": 4,
-    "plantasSobreRasante": 5,
-    "entresuelo": true
-  },
-  "zonas": [
-    {"id": "planta-baja", "nombre": "Planta baja", "sala": true, "uso": "4 locales comerciales", "titular": "pendiente"},
-    {"id": "entresuelo", "nombre": "Entresuelo", "sala": false, "uso": "pendiente", "titular": "pendiente"},
-    {"id": "planta-1", "nombre": "Planta 1", "sala": false, "uso": "viviendas", "titular": "pendiente"},
-    {"id": "planta-2", "nombre": "Planta 2", "sala": false, "uso": "viviendas", "titular": "pendiente"},
-    {"id": "planta-3", "nombre": "Planta 3", "sala": false, "uso": "viviendas", "titular": "pendiente"},
-    {"id": "planta-4", "nombre": "Planta 4", "sala": false, "uso": "viviendas", "titular": "pendiente"},
-    {"id": "planta-5", "nombre": "Planta 5", "sala": false, "uso": "viviendas", "titular": "pendiente"}
-  ],
-  "salaZonas": [
-    {"id": "local-1", "nombre": "Local 1", "uso": "comercial", "titular": "pendiente", "pantallas": "pendiente"},
-    {"id": "local-2", "nombre": "Local 2", "uso": "comercial", "titular": "pendiente", "pantallas": "pendiente"},
-    {"id": "local-3", "nombre": "Local 3", "uso": "comercial", "titular": "pendiente", "pantallas": "pendiente"},
-    {"id": "local-4", "nombre": "Local 4", "uso": "comercial", "titular": "pendiente", "pantallas": "pendiente"}
+  "acceso": "friends and family",
+  "plantas": [
+    {
+      "id": "planta-baja",
+      "nombre": "Planta baja",
+      "zonas": [
+        {"id": "entrada", "nombre": "Entrada", "pelicula": "Toy Story", "etiqueta": "Habitación de Andy"},
+        {"id": "monstruos", "nombre": "Monstruos, S.A.", "pelicula": "Monstruos, S.A."},
+        {"id": "cocina", "nombre": "Cocina", "pelicula": "Ratatouille"}
+      ]
+    },
+    {
+      "id": "planta-arriba",
+      "nombre": "Planta de arriba",
+      "pelicula": "Up",
+      "zonas": [
+        {"id": "sala-grande", "nombre": "Sala grande", "pelicula": "Up"},
+        {"id": "despacho-1", "nombre": "Despacho", "pelicula": "por asignar", "etiqueta": "La elige Disney"},
+        {"id": "despacho-2", "nombre": "Despacho", "pelicula": "por asignar", "etiqueta": "La elige Disney"}
+      ]
+    },
+    {
+      "id": "planta-abajo",
+      "nombre": "Planta de abajo",
+      "zonas": [
+        {"id": "walle", "nombre": "WALL·E", "pelicula": "WALL·E"},
+        {"id": "soul", "nombre": "Soul", "pelicula": "Soul", "etiqueta": "Estudio de música con IA"},
+        {"id": "reuniones", "nombre": "Sala de reuniones", "pelicula": "Los Increíbles", "etiqueta": "8 sillas, una por película Pixar"}
+      ]
+    }
   ]
 }
