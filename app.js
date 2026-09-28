@@ -169,7 +169,7 @@
     musica: [
       { id: 'pixer-loop',           nombre: 'Pixer Loop (Web Audio)', tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',  desc: 'preview rápido para probar intención', use: 'Borrador' },
       { id: 'lyria-3-pro-preview',  nombre: 'Gemini (Google)',        tipo: 'pro',  badge: 'Better', coste: 'paid tier Gemini',    desc: '~2min con voz cantando la letra', use: 'Alternativa' },
-      { id: 'suno-local-v5',        nombre: 'Suno v5 (local)',        tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción · cuenta loguead.', desc: 'calidad final vía proxy suno-local', use: 'Master' },
+      { id: 'suno-local-v5',        nombre: 'Motor musical',          tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción', desc: 'calidad final del motor musical', use: 'Master' },
     ],
     imagenes: [
       { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Good',   coste: 'gratis (free tier)',   desc: 'generación + edición · Gemini 2.5 Flash Image' },
@@ -302,7 +302,7 @@
         const keyLabel = motor.id.startsWith('elevenlabs-') ? 'WORKER pixer-eleven'
                        : motor.id === 'grok-imagine-image-pro' ? 'WORKER pixer-eleven'
                        : motor.id === 'grok-imagine-video' ? 'WORKER pixer-eleven (xAI)'
-                       : motor.id.startsWith('suno-local-') ? 'PROXY suno-local:3777'
+                       : motor.id.startsWith('suno-local-') ? 'Motor musical'
                        : motor.id === 'lyria-3-pro-preview' ? 'WORKER pixer-eleven (GCP)'
                        : motor.id === 'nano-banana' ? 'WORKER pixer-eleven (Gemini)'
                        : (motor.id.startsWith('imagen-') || motor.id.startsWith('veo-')) ? 'WORKER pixer-eleven (Gemini)'
@@ -609,7 +609,7 @@
     updateProLockBadge();
   }
   async function unlockPro() {
-    const pw = prompt('🔒 Modelos PRO bloqueados.\n\nIntroduce el password para desbloquear los modelos de pago (Better + Best · ElevenLabs · Suno · Lyria · Veo · Grok · Runway · Imagen Ultra). Se queda desbloqueado en este navegador hasta que pulses "Bloquear".');
+    const pw = prompt('🔒 Modelos PRO bloqueados.\n\nIntroduce el password para desbloquear los modelos de pago (Better + Best · ElevenLabs · motor musical · Lyria · Veo · Grok · Runway · Imagen Ultra). Se queda desbloqueado en este navegador hasta que pulses "Bloquear".');
     if (pw == null) return false;
     const h = await _sha256(pw);
     if (h === PRO_PASSWORD_HASH) {
@@ -630,7 +630,7 @@
     let pw = '';
     try { pw = localStorage.getItem('pixer_pro_pw') || ''; } catch (e) {}
     if (pw) return pw;
-    const entered = prompt('🔒 Password PRO (necesario para generar con Suno):');
+    const entered = prompt('🔒 Password PRO (necesario para generar con el motor musical):');
     if (entered == null) return '';
     if ((await _sha256(entered)) === PRO_PASSWORD_HASH) {
       try { localStorage.setItem('pixer_pro_pw', entered); localStorage.setItem(PRO_LOCK_KEY, '1'); } catch (e) {}
@@ -835,7 +835,7 @@
       if (!r.ok) return { ok: false, error: 'http ' + r.status };
       return await r.json();
     } catch (e) {
-      return { ok: false, error: 'unreachable: arranca suno-local en el Mac Mini (./suno-local/start-suno-local.sh)' };
+      return { ok: false, error: 'unreachable: el motor musical no responde en este Mac Mini' };
     }
   }
 
@@ -865,7 +865,7 @@
       state.textContent = 'Conectado';
       const left = health.total_credits_left ?? health.credits_left ?? health.monthly_limit ?? '--';
       credits.textContent = String(left);
-      if (showOkToast) showToast('Suno conectado');
+      if (showOkToast) showToast('Motor musical conectado');
     } else {
       panel.classList.add('is-warn');
       state.textContent = 'No responde';
@@ -986,7 +986,7 @@
   function setMusicCover(url) {
     const fig = document.getElementById('m-cover'); if (!fig) return;
     const img = fig.querySelector('img');
-    if (url && img) { img.onerror = null; img.src = url; fig.hidden = false; setCoverCaption('Portada · Suno'); }
+    if (url && img) { img.onerror = null; img.src = url; fig.hidden = false; setCoverCaption('Portada'); }
     else setDefaultMatrixCover();   // sin carátula real → vuelve al Matrix por defecto
   }
 
@@ -1008,24 +1008,30 @@
     // antepone para que Suno la cante como toca. El título lo fija s.titulo.
     const voice = (s.singer || '').trim();
     const styleText = (s.style || '').trim() || 'blues';
+    const clientName = (s.cliente || '').trim();
     const prompt = [voice, styleText, durHint].filter(Boolean).join(', ');
-    const titleHint = (s.titulo || s.cliente || styleText || '').slice(0, 60);
+    const titleHint = [clientName, (s.titulo || '').trim() || styleText].filter(Boolean).join(' · ').slice(0, 80);
+    const titleInput = document.getElementById('m-titulo');
+    if (titleInput && !titleInput.value.trim() && titleHint) {
+      titleInput.value = titleHint;
+      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
 
     const health = await refreshMusicHealth(false) || await sunoLocalAlive();
     if (!health.ok) {
       updateMusicStage('engine');
-      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · proxy NO responde (${SUNO_LOCAL_URL})</div><pre class="player-body">${health.error}\n\nArranca en el Mac Mini:\n  cd ~/GitHub/01.-AdmiraXperience-Game/suno-local\n  ./start-suno-local.sh</pre></div>`);
+      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Motor musical · no responde</div><pre class="player-body">${health.error}</pre></div>`);
       return;
     }
-    if (!(await confirmPro('Suno (local)', `~2 canciones · créditos restantes: ${health.total_credits_left}`))) return;
+    if (!(await confirmPro('Motor musical', `~2 canciones · créditos restantes: ${health.total_credits_left}`))) return;
 
     const proToken = await ensureProToken();
-    if (!proToken) { showPlayer('<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · falta password PRO</div></div>'); return; }
+    if (!proToken) { showPlayer('<div class="player-card"><div class="player-head">▶ MÚSICA · Motor musical · falta password PRO</div></div>'); return; }
 
     showPlayer(`
       <div class="player-card">
-        <div class="player-head">▶ MÚSICA · Suno ${model.replace('chirp-','')} · ${prompt.slice(0,60)}</div>
-        ${progressHtml('Enviando prompt a Suno...', 'suno', 60000)}
+        <div class="player-head">▶ MÚSICA · Motor musical · ${prompt.slice(0,60)}</div>
+        ${progressHtml('Enviando la pieza al motor musical...', 'suno', 60000)}
       </div>`);
     const stop = startProgress('suno');
     try {
@@ -1037,14 +1043,14 @@
       if (!r.ok) {
         stop(false);
         const err = await r.text();
-        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · ERROR ${r.status}</div><pre class="player-body">${err.slice(0,500)}</pre></div>`);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Motor musical · ERROR ${r.status}</div><pre class="player-body">${err.slice(0,500)}</pre></div>`);
         return;
       }
       const data = await r.json();
       const clipIds = (data.clips || []).map(c => c.id).filter(Boolean);
       if (!clipIds.length) {
         stop(false);
-        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · sin clips</div><pre class="player-body">${JSON.stringify(data).slice(0,400)}</pre></div>`);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Motor musical · sin piezas</div><pre class="player-body">${JSON.stringify(data).slice(0,400)}</pre></div>`);
         return;
       }
       setProgressLabel('suno', `Generando · clips ${clipIds.map(id=>id.slice(0,6)).join(', ')}`);
@@ -1056,48 +1062,31 @@
         const pollR = await fetch(`${SUNO_LOCAL_URL}/status?ids=${clipIds.join(',')}`);
         const clips = await pollR.json();
         const ready = clips.filter(c => (c.audio_url || c.video_url) && (c.status === 'streaming' || c.status === 'complete'));
-        setProgressLabel('suno', `Suno · intento ${attempt} · ${ready.length}/${clips.length} listos`);
+        setProgressLabel('suno', `Motor musical · intento ${attempt} · ${ready.length}/${clips.length} listos`);
         if (ready.length >= 1) {
           stop(true);
           updateMusicStage('review');
-          // Portada que devuelve Suno → a la derecha de la Letra cuando termina.
-          setMusicCover(ready.map(c => c.image_large_url || c.image_url).find(Boolean) || '');
-          const briefTitle = deriveAssetTitle('musica', loadStore());
-          const modelLabel = model.replace('chirp-', '');
+          setMusicCover('');
+          const briefTitle = titleHint || deriveAssetTitle('musica', loadStore());
           showPlayer(`
             <div class="player-card music-result-card">
               <div class="player-head music-result-head">
-                <span>▶ HILO MUSICAL · Suno ${modelLabel}</span>
+                <span>▶ HILO MUSICAL · Motor musical</span>
                 <span>${ready.length}/${clips.length} versiones listas</span>
               </div>
               <div class="music-result-grid">
               ${ready.map((c, i) => {
-                const cTitle = (c.title && c.title.trim()) || briefTitle || `Suno ${i + 1}`;
-                const cover = c.image_large_url || c.image_url || '';
+                const cTitle = (c.title && c.title.trim()) || briefTitle || `Pieza ${i + 1}`;
                 const dur = (c.metadata && (c.metadata.duration_formatted || c.metadata.duration)) || '';
-                const pickedUrl = c.video_url || c.audio_url;
-                const pickedMime = c.video_url ? 'video/mp4' : 'audio/mpeg';
-                const pubMeta = {
-                  type: 'music',
-                  motor: `suno-local-${model.replace('chirp-v','v')}`,
-                  prompt: `${cTitle} · ${prompt}`.slice(0,200),
+                const audioSrc = c.video_url || c.audio_url;
+                const publishPayload = JSON.stringify({
                   title: cTitle,
-                  comment: `Hilo musical Admira TV · ${ver || 'pieza musical'} · ${voice || 'voz no especificada'}`,
-                  tags: ['admira-tv', 'hilo-musical', 'suno'],
-                  costEst: '~10 cred',
-                  url: pickedUrl,
-                  mime: pickedMime,
-                  thumbnail: cover || null,
-                  clipId: c.id,
-                  quality: 'best',
-                };
-                // Suno devuelve video_url (mp4 con cover estatico + audio embebido):
-                // lo preferimos porque al enviarlo a Pixer Feed lleva caratula sin
-                // depender del worker. Si solo hay audio_url, fallback a audio + img.
-                const media = c.video_url
-                  ? `<video controls src="${c.video_url}"${cover ? ` poster="${escAttr(cover)}"` : ''} data-pixer-title="${escAttr(cTitle)}"${cover ? ` data-pixer-cover="${escAttr(cover)}"` : ''}${c.audio_url ? ` data-pixer-audio="${escAttr(c.audio_url)}"` : ''}></video>`
-                  : `${cover ? `<img src="${escAttr(cover)}" alt="" class="music-result-cover">` : ''}
-                     <audio controls src="${c.audio_url}" data-pixer-title="${escAttr(cTitle)}"${cover ? ` data-pixer-cover="${escAttr(cover)}"` : ''}></audio>`;
+                  prompt: `${cTitle} · ${prompt}`.slice(0, 200),
+                  comment: `Hilo musical Admira TV · ${ver || 'pieza musical'} · ${voice || 'voz no especificada'} · ${clientName}`,
+                  videoUrl: c.video_url || '',
+                  audioUrl: c.audio_url || '',
+                  clipId: c.id || '',
+                }).replace(/'/g, '&#39;');
                 return `
                 <article class="music-result-item">
                   <header>
@@ -1105,31 +1094,34 @@
                     <strong>${escAttr(cTitle)}</strong>
                     ${dur ? `<small>${escAttr(String(dur))}</small>` : ''}
                   </header>
-                  <div class="music-result-media">${media}</div>
+                  <div class="music-result-media"><audio controls src="${escAttr(audioSrc)}" data-pixer-title="${escAttr(cTitle)}"></audio></div>
                   <div class="music-result-actions">
-                    ${publishBtnHTML(pubMeta)}
-                    ${downloadBtnHTML({ ...pubMeta, url: pickedUrl }, 'Descargar')}
+                    <button type="button" class="btn music-publish-pixeria" data-autopublish="${i === 0 ? '1' : '0'}" data-music-publish='${publishPayload}'>Publicar en Pixeria</button>
+                    ${downloadBtnHTML({ type: 'music', title: cTitle, mime: c.video_url ? 'video/mp4' : 'audio/mpeg', url: audioSrc }, 'Descargar')}
                     <button type="button" class="btn" data-act="feed-latest" title="Usa esta versión para enviarla al Xpacio elegido">🎧 Preparar escucha</button>
                   </div>
+                  <div class="music-publish-links" hidden></div>
                 </article>`;
               }).join('')}
               </div>
               ${lyrics ? `<details open class="music-result-lyrics"><summary>Letra de producción</summary><pre class="brief">${escAttr(lyrics)}</pre></details>` : ''}
-              <small class="player-foot">// Admira TV · ${prompt.slice(0,80)} · revisa una versión y publícala en Stock</small>
+              <small class="player-foot">// Admira TV · ${prompt.slice(0,80)} · el reproductor usa solo el audio</small>
             </div>`);
+          const autoPublish = document.querySelector('.music-publish-pixeria[data-autopublish="1"]');
+          if (autoPublish) autoPublish.click();
           return;
         }
         if (attempt > 60) { // 5 min cap
           stop(false);
           updateMusicStage('engine');
-          showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · TIMEOUT</div><pre class="player-body">clips: ${clipIds.join(', ')}</pre></div>`);
+          showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Motor musical · TIMEOUT</div><pre class="player-body">piezas: ${clipIds.join(', ')}</pre></div>`);
           return;
         }
       }
     } catch (e) {
       stop(false);
       updateMusicStage('engine');
-      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);
+      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Motor musical · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);
     }
   }
 
@@ -1223,7 +1215,8 @@
   }
 
   function playMusica() {
-    const s = loadStore().musica || {};
+    const store = loadStore();
+    const s = Object.assign({}, store.musica || {}, { cliente: store.cliente || '' });
     const motor = s.motor || 'pixer-loop';
     // Carlos 2026-06-12 (cuenta Pro csilva@admira.com, sin cambiar los textos de las tarjetas):
     //   Good (Pixer Loop)  → Suno v4.5
@@ -2713,7 +2706,13 @@
     if (!btn || !ta) return;
     btn.addEventListener('click', async () => {
       const store = loadStore();
-      const brief = { ...(store.musica || {}), cliente: store.cliente };
+      const clientName = String(store.cliente || '').trim();
+      const musica = Object.assign({}, store.musica || {});
+      if (clientName) {
+        const song = String(musica.titulo || musica.style || '').trim();
+        musica.titulo = song && !song.includes(clientName) ? `${clientName} · ${song}` : (song || clientName);
+      }
+      const brief = Object.assign({}, musica, { cliente: clientName });
       const idioma = (store.audio && store.audio.idioma) ? (LANG_MAP[store.audio.idioma] || 'es-ES').split('-')[0] : 'es';
       const oldLabel = btn.textContent;
       btn.textContent = '⏳ generando...';
@@ -2838,14 +2837,17 @@
       // Música Suno: la URL del botón puede ser la de streaming (audiopipe, NO
       // descargable por el worker). Re-resolvemos a la URL final (cdn) por el id
       // del clip, esperando a que esté "complete" si hace falta.
-      if (meta.type === 'music' && meta.clipId && (!meta.url || /audiopipe\.suno/.test(meta.url) || /streaming/.test(meta.url))) {
+      if ((meta.type === 'music' || meta.type === 'video') && meta.clipId && (!meta.url || /audiopipe/.test(meta.url) || /streaming/.test(meta.url))) {
         for (let i = 0; i < 12; i++) {
           try {
             const sr = await fetch(SUNO_LOCAL_URL + '/status?ids=' + encodeURIComponent(meta.clipId));
             const arr = await sr.json();
             const c = Array.isArray(arr) ? arr.find(x => x.id === meta.clipId) : null;
-            const fin = c && (c.video_url || (c.audio_url && /cdn\d?\.suno|\.mp3/.test(c.audio_url)));
-            if (fin) { meta = Object.assign({}, meta, { url: c.video_url || c.audio_url, mime: c.video_url ? 'video/mp4' : 'audio/mpeg' }); break; }
+            const nextUrl = c && (meta.type === 'video' ? c.video_url : c.audio_url);
+            if (nextUrl && !/audiopipe|streaming/.test(nextUrl)) {
+              meta = Object.assign({}, meta, { url: nextUrl, mime: meta.type === 'video' ? 'video/mp4' : 'audio/mpeg' });
+              break;
+            }
           } catch (_) {}
           if (btn) btn.textContent = '⏳ esperando render… ' + (i + 1);
           await new Promise(r => setTimeout(r, 4000));
@@ -2908,6 +2910,68 @@
     try { meta = JSON.parse(b.dataset.publishMeta); }
     catch { showToast('❌ meta inválida'); return; }
     publishToStock(meta, b);
+  });
+
+  document.addEventListener('click', async (e) => {
+    const b = e.target.closest('.music-publish-pixeria');
+    if (!b || b.classList.contains('done') || b.dataset.publishing === '1') return;
+    e.preventDefault();
+    let clip;
+    try { clip = JSON.parse(b.dataset.musicPublish || '{}'); }
+    catch { showToast('❌ meta inválida'); return; }
+    b.dataset.publishing = '1';
+    b.disabled = true;
+    b.textContent = 'Publicando…';
+    const { musicPublishPlan, stockLinks } = await import('/assets/musica-publicar.mjs');
+    const plan = musicPublishPlan(clip);
+    if (!plan.length) {
+      b.disabled = false;
+      b.dataset.publishing = '0';
+      b.textContent = 'Publicar en Pixeria';
+      showToast('No hay pieza que publicar');
+      return;
+    }
+    const base = {
+      motor: 'pixeria-music',
+      prompt: clip.prompt || '',
+      title: clip.title || '',
+      comment: clip.comment || '',
+      tags: ['admira-tv', 'hilo-musical'],
+      costEst: '~10 cred',
+      quality: 'best',
+      clipId: clip.clipId || '',
+    };
+    let primaryId = '';
+    for (const piece of plan) {
+      const result = await publishToStock(Object.assign({}, base, {
+        type: piece.type,
+        mime: piece.mime,
+        url: piece.url,
+        title: piece.role === 'secondary' ? `${base.title} · audio` : base.title,
+      }), piece.role === 'primary' ? b : null);
+      if (piece.role === 'primary' && result && result.ok) primaryId = result.id || '';
+    }
+    const box = b.closest('.music-result-item')?.querySelector('.music-publish-links');
+    if (primaryId && box) {
+      const links = stockLinks(primaryId);
+      box.hidden = false;
+      box.innerHTML = `<p><a href="${escAttr(links.page)}" target="_blank" rel="noopener">${escAttr(links.page)}</a></p><p><a href="${escAttr(links.asset)}" target="_blank" rel="noopener">${escAttr(links.asset)}</a></p><button type="button" class="btn" data-copy-link="${escAttr(links.page)}">Copiar enlace para Telegram</button>`;
+    }
+    b.dataset.publishing = '0';
+    if (primaryId) { b.classList.add('done'); b.textContent = 'Publicado en Pixeria'; }
+    else { b.disabled = false; b.textContent = 'Publicar en Pixeria'; }
+  });
+
+  document.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-copy-link]');
+    if (!b) return;
+    e.preventDefault();
+    try {
+      await navigator.clipboard.writeText(b.dataset.copyLink || '');
+      showToast('Enlace copiado');
+    } catch {
+      showToast(b.dataset.copyLink || '');
+    }
   });
 
   // ─── Enviar al feed de Admira XP (KV vía worker) ────────────────
