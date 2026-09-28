@@ -277,7 +277,7 @@ function secureHeaders(contentType = 'text/html; charset=utf-8') {
     'cache-control':'no-store',
     'x-robots-tag':'noindex, nofollow',
     'referrer-policy':'no-referrer',
-    'content-security-policy':"default-src 'none'; script-src https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; style-src 'unsafe-inline'; img-src data: https://*.googleusercontent.com; connect-src https://accounts.google.com/gsi/; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; base-uri 'none'"
+    'content-security-policy':"default-src 'none'; script-src https://accounts.google.com/gsi/client; frame-src https://accounts.google.com/gsi/; style-src 'unsafe-inline' https://accounts.google.com/gsi/style; img-src data: https://*.googleusercontent.com; connect-src https://accounts.google.com/gsi/; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; base-uri 'none'"
   };
 }
 
@@ -288,7 +288,7 @@ function loginPage(nonce, error = '') {
 
 async function loginResponse(env, returnTo = '/', error = '', status = 401) {
   const challenge = await createChallenge(env, returnTo);
-  const response = new Response(loginPage(challenge.nonce, error), {status, headers:secureHeaders()});
+  const response = new Response(loginPage(challenge.nonce, error), {status, headers:{...secureHeaders(), 'referrer-policy':'strict-origin-when-cross-origin'}});
   response.headers.append('Set-Cookie', `${CHALLENGE_COOKIE}=${challenge.nonce}; Path=/; Max-Age=600; HttpOnly; Secure; SameSite=None`);
   return response;
 }
@@ -304,6 +304,15 @@ function continuationResponse(returnTo) {
 export async function handleAuth(request, env) {
   const url = new URL(request.url);
   if (url.pathname === '/auth/login' && request.method === 'GET') {
+    // The __Host- nonce must be issued on the host receiving Google's POST.
+    // Canonicalize the public alias before creating a challenge or setting cookies.
+    const canonical = new URL(CALLBACK_URI);
+    if (url.hostname.replace(/^www\./, '') === canonical.hostname.replace(/^www\./, '') && url.origin !== canonical.origin) {
+      return new Response(null, {status:302, headers:{
+        location:canonical.origin + url.pathname + url.search,
+        'cache-control':'no-store', 'referrer-policy':'no-referrer'
+      }});
+    }
     return loginResponse(env, url.searchParams.get('return_to') || '/');
   }
   if (url.pathname === '/auth/callback' && request.method === 'POST') {

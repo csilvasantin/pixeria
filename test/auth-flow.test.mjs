@@ -119,3 +119,20 @@ test('los clientes ya no usan popup, FedCM, JWT ni almacenamiento local', async 
     assert.match(source, /\/auth\/session/);
   }
 });
+
+
+test('Google login exposes only the origin and allows the GIS stylesheet', async () => {
+  const response = await handleAuth(new Request('https://www.pixeria.com/auth/login'),
+    {AUTH_DB:fakeDatabase(), PIXERIA_SIGNING_KEY:'test-signing-key'});
+  assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+  assert.match(response.headers.get('content-security-policy'), /style-src 'unsafe-inline' https:\/\/accounts\.google\.com\/gsi\/style;/);
+  assert.match(response.headers.get('set-cookie'), /HttpOnly; Secure; SameSite=None/);
+});
+
+test('canonical login host is selected before issuing a host-only nonce', async () => {
+  // No DB bindings: issuing a challenge here would throw and fail the test.
+  const response = await handleAuth(new Request('https://pixeria.com/auth/login?return_to=%2Fbackoffice%2F'), {});
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get('location'), 'https://www.pixeria.com/auth/login?return_to=%2Fbackoffice%2F');
+  assert.equal(response.headers.get('set-cookie'), null);
+});
