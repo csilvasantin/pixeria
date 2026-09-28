@@ -241,7 +241,7 @@
 
   function ensureHomeRails() {
     if (isHome() || document.querySelector('.rail-left')) return;
-    document.querySelectorAll('.quad-left,.quad-right,.quad-bottom').forEach(function (rail) { rail.remove(); });
+    document.querySelectorAll('.quad-left,.quad-right').forEach(function (rail) { rail.remove(); });
     var here = norm(location.pathname);
     var left = document.createElement('aside');
     var version = (document.querySelector('meta[name="admiranext-version"]') || {}).content || 'Pixeria';
@@ -456,7 +456,16 @@
     syncRailVersion();
     // cuadratura.js crea la barra de la home de forma diferida; esta segunda
     // pasada normaliza tambien esa barra cuando se reutiliza en una interior.
-    setTimeout(function () { normalizeInternalNav(); syncRailVersion(); }, 0);
+    setTimeout(function () {
+      normalizeInternalNav(); syncRailVersion();
+      if (!document.querySelector('.rail-bottom,.quad-bottom,#pixNavExpertLayer')) return;
+      var css = document.createElement('link');
+      css.rel = 'stylesheet'; css.href = '/assets/expert-cli.css?v=20260928-cli-demo';
+      document.head.appendChild(css);
+      var cli = document.createElement('script');
+      cli.src = '/assets/expert-cli.js?v=20260928-cli-demo';
+      document.body.appendChild(cli);
+    }, 0);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

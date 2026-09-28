@@ -485,3 +485,14 @@ body.pf-bottom-off .rail-bottom {display:none}
 /* Sección ACTUAL en el raíl OPCIONES (auto-cuadratura marca la página activa) */
 .rail-nav a.rail-cur{border-color:var(--cyan, #68dce9);background:rgba(104,220,233,0.10)}
 .rail-nav a.rail-cur b{color:var(--cyan, #68dce9)}
+
+/* Canonical quadratura: advanced on the left, options on the right. */
+.cuad .rail-left { left:auto; right:0; }
+.cuad .rail-right { right:auto; left:0; }
+.cuad .rail-left .pf-resize-left { right:auto; left:-9px; }
+.cuad .rail-right .pf-resize-right { left:auto; right:-9px; }
+@media (min-width:981px) {
+  body.pf-has-frame .cuad-center { margin-left:0; margin-right:0; }
+  body.pf-has-frame:not(.pf-left-off) .cuad-center { margin-right:var(--pf-left-w); }
+  body.pf-has-frame:not(.pf-right-off) .cuad-center { margin-left:var(--pf-right-w); }
+}

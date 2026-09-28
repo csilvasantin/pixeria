@@ -1,9 +1,9 @@
 /* ══════════════════════════════════════════════════════════════════════════
    Cuadratura AdmiraNeXT · Pixeria — toggles + AUTO-CUADRATURA (autónoma)
    Patrón de 4 zonas en TODAS las páginas con chrome estándar (Carlos 2026-07-11):
-     · OPCIONES  → raíl IZQUIERDO  (.rail-left)   navegación de secciones
+     · OPCIONES  → raíl DERECHO  (.rail-left)   navegación de secciones
      · CENTRO    → lo importante   (.cuad-center)
-     · AVANZADO  → raíl DERECHO    (.rail-right)   detalle/documentación
+     · AVANZADO  → raíl IZQUIERDO  (.rail-right)   detalle/documentación
      · EXPERTO   → franja INFERIOR (.rail-bottom)  meta + versión + estado
    Dos modos:
      1) La página trae su .cuad ARTESANAL (index, en/) → aquí solo se montan
@@ -39,10 +39,10 @@
 
   var PANELS = [
     { sel: '.rail-left', cls: 'pf-left-off', ls: 'pixeria_pf_left',
-      title: 'Opciones · panel izquierdo',
+      title: 'Opciones · panel derecho',
       svg: '<rect class="frame" x="1" y="1" width="14" height="12" rx="1.5"/><rect class="panel" x="1.6" y="1.6" width="4.4" height="10.8" rx="1"/>' },
     { sel: '.rail-right', cls: 'pf-right-off', ls: 'pixeria_pf_right',
-      title: 'Avanzado · panel derecho',
+      title: 'Avanzado · panel izquierdo',
       svg: '<rect class="frame" x="1" y="1" width="14" height="12" rx="1.5"/><rect class="panel" x="10" y="1.6" width="4.4" height="10.8" rx="1"/>' },
     { sel: '.rail-bottom', cls: 'pf-bottom-off', ls: 'pixeria_pf_bottom',
       title: 'Experto · panel inferior',
@@ -144,11 +144,11 @@
       var move = function (e) {
         var root = document.documentElement;
         if (kind === 'left') {
-          var lw = clamp(e.clientX, 220, Math.min(560, window.innerWidth - 260));
+          var lw = clamp(window.innerWidth - e.clientX, 220, Math.min(560, window.innerWidth - 260));
           root.style.setProperty('--pf-left-w', lw + 'px');
           try { localStorage.setItem('pixeria_pf_left_w', String(Math.round(lw))); } catch (err) {}
         } else if (kind === 'right') {
-          var rw = clamp(window.innerWidth - e.clientX, 240, Math.min(600, window.innerWidth - 260));
+          var rw = clamp(e.clientX, 240, Math.min(600, window.innerWidth - 260));
           root.style.setProperty('--pf-right-w', rw + 'px');
           try { localStorage.setItem('pixeria_pf_right_w', String(Math.round(rw))); } catch (err2) {}
         } else {
@@ -162,6 +162,8 @@
         window.removeEventListener('pointermove', move);
         window.removeEventListener('pointerup', up);
         window.removeEventListener('pointercancel', up);
+        window.removeEventListener('mousemove', move);
+        window.removeEventListener('mouseup', up);
       };
       window.addEventListener('pointermove', move);
       window.addEventListener('pointerup', up);
@@ -180,13 +182,13 @@
       if (kind === 'left' && (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight')) {
         ev.preventDefault();
         current = parseInt(getComputedStyle(root).getPropertyValue('--pf-left-w'), 10) || 300;
-        current = clamp(current + (ev.key === 'ArrowRight' ? delta : -delta), 220, 520);
+        current = clamp(current + (ev.key === 'ArrowLeft' ? delta : -delta), 220, 520);
         root.style.setProperty('--pf-left-w', current + 'px');
         try { localStorage.setItem('pixeria_pf_left_w', String(current)); } catch (e) {}
       } else if (kind === 'right' && (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight')) {
         ev.preventDefault();
         current = parseInt(getComputedStyle(root).getPropertyValue('--pf-right-w'), 10) || 330;
-        current = clamp(current + (ev.key === 'ArrowLeft' ? delta : -delta), 240, 560);
+        current = clamp(current + (ev.key === 'ArrowRight' ? delta : -delta), 240, 560);
         root.style.setProperty('--pf-right-w', current + 'px');
         try { localStorage.setItem('pixeria_pf_right_w', String(current)); } catch (e2) {}
       } else if (kind === 'bottom' && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) {
@@ -204,11 +206,12 @@
     applyPanelSizes();
     addResizeHandle(document.querySelector('.rail-left'), 'left');
     addResizeHandle(document.querySelector('.rail-right'), 'right');
-    addResizeHandle(document.querySelector('.rail-bottom'), 'bottom');
+    // The browser CLI owns the bottom panel's resize and collapse controls.
   }
 
   // ── Toggles (look SCUMM, tematizados en cuadratura.css) ───────────────────
   function makeToggle(p) {
+    if (document.documentElement.lang.indexOf('en') === 0) p.title = p.ls === 'pixeria_pf_left' ? 'Options · right panel' : p.ls === 'pixeria_pf_right' ? 'Advanced · left panel' : 'Expert · web console';
     if (!document.querySelector(p.sel)) return null;
     var on = !document.body.classList.contains(p.cls);
     var b = document.createElement('button');
@@ -267,7 +270,7 @@
 
     var left = document.createElement('div');
     left.className = 'pf-topbar-left';
-    left.appendChild(leftToggle);
+    left.appendChild(rightToggle);
 
     var brand = document.createElement('a');
     brand.className = 'pf-topbar-brand';
@@ -304,7 +307,7 @@
     contact.textContent = 'Contacto';
     contact.setAttribute('data-admira-contact', '');
     right.appendChild(contact);
-    right.appendChild(rightToggle);
+    right.appendChild(leftToggle);
     right.appendChild(bottomToggle);
 
     bar.appendChild(left);
@@ -319,6 +322,7 @@
     if (!document.querySelector('.cuad')) return;      // sin cuadratura → sin toggles
     buildTopbar();
     initResizablePanels();
+
   }
 
   if (document.readyState === 'loading') {
