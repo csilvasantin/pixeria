@@ -1,0 +1,53 @@
+/* The document scrolls above the CLI: no covered content, even with a keyboard. */
+.pf-cli-viewport { display: contents; }
+body.pf-cli-open { overflow: hidden; }
+body.pf-cli-open .pf-cli-viewport {
+  display: block;
+  height: calc(var(--pf-cli-viewport, 100dvh) - var(--pf-cli-height, 48px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  scroll-padding-bottom: 16px;
+}
+body.pf-cli-open .cuad-center { margin-bottom: 0 !important; }
+body.pf-cli-open .rail { bottom: calc(var(--pf-cli-height, 48px) + var(--pf-cli-keyboard, 0px)); }
+body .pf-cli.pf-cli {
+  box-sizing: border-box;
+  position: fixed;
+  inset: auto 0 var(--pf-cli-keyboard, 0px);
+  z-index: 190;
+  height: var(--pf-cli-height, 48px);
+  max-height: none;
+  padding: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  background: #030c06;
+  color: #c8ffd0;
+  border: 0;
+  border-top: 1px solid #48b06a;
+  font: 13px/1.5 'IBM Plex Mono', monospace;
+}
+body .pf-cli[data-cli-open="false"] { display: none !important; }
+.pf-cli-grip { position: absolute; inset: 0 0 auto; height: 8px; cursor: ns-resize; touch-action: none; }
+.pf-cli-grip::after { content: ''; display: block; width: 44px; height: 2px; margin: 2px auto; background: #80c694; }
+.pf-cli-grip:focus-visible { outline: 2px solid #00ff41; outline-offset: -2px; }
+.pf-cli-output { flex: 1; min-height: 0; overflow: auto; padding: 8px 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pf-cli-output[hidden] { display: none; }
+.pf-cli-output > div { margin-bottom: 6px; }
+.pf-cli-form { display: flex; align-items: center; gap: 8px; min-height: 39px; flex: 0 0 39px; margin: 0; padding: 0 12px; }
+.pf-cli-form label { flex-shrink: 0; color: #7dff9a; font-weight: 700; font-size: 11px; }
+.pf-cli-form input { box-sizing: border-box; flex: 1; min-width: 0; width: 0; border: 0; border-radius: 0; background: transparent; color: #e8f2ec; font: inherit; padding: 6px; }
+.pf-cli-form input:focus-visible { outline: 1px solid #48b06a; }
+.pf-cli-form button { color: #7dff9a; background: #102117; border: 1px solid #375843; border-radius: 0; cursor: pointer; min-width: 32px; height: 32px; padding: 0; font: inherit; }
+@media (max-width: 600px) {
+  .pf-cli-form { gap: 4px; padding: 0 6px; }
+  .pf-cli-form input { font-size: 16px; }
+  .pf-cli-form label { font-size: 10px; }
+}
+/* Consent remains reachable without obscuring the input. */
+body.pf-cli-open #cookie-consent,
+body.pf-cli-open .consent-banner { bottom: calc(var(--pf-cli-height, 48px) + 12px); }
+
+body .pf-cli.pf-cli { width:auto; transform:none; justify-content:initial; align-items:stretch; gap:0; border-radius:0; }
+body .pf-cli .pf-cli-form button { writing-mode:horizontal-tb; min-height:32px; }
+body .pf-cli .pf-cli-form { width:100%; box-sizing:border-box; }

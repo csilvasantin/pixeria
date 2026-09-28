@@ -1,11 +1,9 @@
 {
-  "version": "v.07.08.2026.r3.18:37",
-  "deployedAt": "2026-08-03T10:59:00Z",
-  "deployer": "OraculoMBAPlata",
-  "machine": "MacBookAirPlata",
-  "signature": "OraculoMBAPlata · MacBookAirPlata",
-  "git": "788b65c21deff8a03b641a813ccdaf2efb239a10",
-  "gitShort": "788b65c",
-  "gitFull": "788b65c21deff8a03b641a813ccdaf2efb239a10",
-  "dirty": false
+  "version": "v.28.09.2026.r2.13:07",
+  "deployer": "OraculoGrokBotBox",
+  "machine": "GrokBotBox",
+  "signature": "OraculoGrokBotBox · GrokBotBox",
+  "deployedAt": "2026-09-28T13:07:13.539520+00:00",
+  "mission": "FLT-101203",
+  "encargo": 4663
 }
