@@ -10,13 +10,13 @@ function peliculas(id) {
   return data.plantas.find(p => p.id === id).zonas.map(z => z.pelicula);
 }
 
-test('cada planta lleva solo las películas que fijó Carlos', () => {
+test('el mapa conserva las salas ya fijadas y asigna los dos despachos de arriba', () => {
   assert.equal(data.acceso, 'friends and family');
   assert.deepEqual(data.plantas.map(p => p.id), ['planta-baja', 'planta-arriba', 'planta-abajo']);
   assert.deepEqual(peliculas('planta-baja'), ['Toy Story', 'Monstruos, S.A.', 'Ratatouille']);
   assert.equal(data.plantas[0].zonas[0].etiqueta, 'Habitación de Andy');
   assert.equal(data.plantas[1].pelicula, 'Up');
-  assert.deepEqual(peliculas('planta-arriba'), ['Up', 'por asignar', 'por asignar']);
+  assert.deepEqual(peliculas('planta-arriba'), ['Up', 'Coco', 'Del revés']);
   assert.deepEqual(peliculas('planta-abajo'), ['WALL·E', 'Soul', 'Los Increíbles']);
   assert.equal(data.plantas[2].zonas[1].etiqueta, 'Estudio de música con IA');
   assert.match(data.plantas[2].zonas[2].etiqueta, /8 sillas/);
@@ -27,7 +27,7 @@ test('cada planta lleva solo las películas que fijó Carlos', () => {
 });
 
 test('la página pinta las plantas desde el JSON y sigue abriendo sin sesión', () => {
-  assert.match(page, /zonas\.json\?v=4471/);
+  assert.match(page, /zonas\.json\?v=4609/);
   assert.match(page, /data\.plantas/);
   assert.match(page, /friends and family/);
   assert.match(gate, /\/xpacios\/aulestia-i-pijoan/);

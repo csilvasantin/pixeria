@@ -21,8 +21,8 @@
       "pelicula": "Up",
       "zonas": [
         {"id": "sala-grande", "nombre": "Sala grande", "pelicula": "Up"},
-        {"id": "despacho-1", "nombre": "Despacho", "pelicula": "por asignar", "etiqueta": "La elige Disney"},
-        {"id": "despacho-2", "nombre": "Despacho", "pelicula": "por asignar", "etiqueta": "La elige Disney"}
+        {"id": "despacho-1", "nombre": "Despacho", "pelicula": "Coco"},
+        {"id": "despacho-2", "nombre": "Despacho", "pelicula": "Del revés"}
       ]
     },
     {

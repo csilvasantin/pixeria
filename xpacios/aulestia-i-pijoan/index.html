@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aulestia i Pijoan 4-6 · Pixeria</title>
 <meta name="description" content="Espacio privado friends and family. Plantas y salas de Aulestia i Pijoan 4-6, cada una con su película.">
-<meta name="admiranext-version" content="Pixeria v.27.09.2026.r18.20:34">
+<meta name="admiranext-version" content="Pixeria v.28.09.2026.r1.09:02">
 <meta name="robots" content="noindex">
 <style>
   body{margin:0;background:#10211b;color:#f3f5e7;font:18px/1.45 system-ui,sans-serif}
@@ -30,7 +30,7 @@
 </head>
 <body>
 <main>
-  <span class="rail-ver">Pixeria v.27.09.2026.r18.20:34</span>
+  <span class="rail-ver">Pixeria v.28.09.2026.r1.09:02</span>
   <h1>Aulestia i Pijoan 4-6</h1>
   <p class="privado" id="acceso">Espacio privado · friends and family</p>
   <p id="lugar">Gràcia · Barcelona</p>
@@ -39,7 +39,7 @@
 </main>
 <script type="module">
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const data = await fetch('/assets/xpaces/aulestia/zonas.json?v=4471').then(r => r.json());
+const data = await fetch('/assets/xpaces/aulestia/zonas.json?v=4609').then(r => r.json());
 const zonas = data.plantas.reduce((n, p) => n + p.zonas.length, 0);
 document.getElementById('acceso').textContent = 'Espacio privado · ' + data.acceso;
 document.getElementById('lugar').textContent = data.direccion + ' · ' + data.barrio;
