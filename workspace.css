@@ -1028,6 +1028,48 @@ body[data-page="admira-xp"] .primary-nav a[data-nav="admira-xp"] {
 .pixer-progress-status .left::before { content: "▶ "; }
 .pixer-progress-status .right { color: var(--ink); opacity: .8; }
 
+/* Música: la barra no inventa un porcentaje. Solo se rellena si el motor manda 0–100. */
+.music-progress { display: grid; gap: 6px; margin: 8px 0 4px; }
+.music-progress-bar {
+  position: relative;
+  height: 8px;
+  background: rgba(0,255,65,.08);
+  border: 1px solid var(--line-bright);
+  overflow: hidden;
+}
+.music-progress-bar i {
+  display: none;
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 0;
+  background: var(--matrix);
+  box-shadow: 0 0 12px var(--matrix);
+}
+.music-progress-bar.is-measured i,
+.music-progress-bar.is-done i { display: block; }
+.music-progress-bar.is-done i { width: 100%; }
+.music-progress-bar:not(.is-measured):not(.is-done)::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: -40%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, var(--matrix), transparent);
+  animation: pixer-slide 1.6s ease-in-out infinite;
+}
+.music-progress.is-fail .music-progress-bar { border-color: #ff5a6a; }
+.music-progress.is-fail .music-progress-status { color: #ff8d98; text-shadow: none; }
+.music-progress-status {
+  font-size: 11px;
+  letter-spacing: .06em;
+  color: var(--matrix);
+  text-shadow: 0 0 4px rgba(0,255,65,.6);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.music-progress-status .right { color: var(--ink); opacity: .85; white-space: nowrap; }
+
 main, header.page-head, footer { width: min(1180px, calc(100% - 40px)); margin: 0 auto; position: relative; }
 
 /* El titular tiene que HACER CAJA con el contenido de su página.

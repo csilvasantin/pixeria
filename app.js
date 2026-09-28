@@ -573,6 +573,64 @@
     if (el) el.textContent = text;
   }
 
+  // Barra de la canción: fase real y tiempo. El relleno numérico solo entra si
+  // el motor manda un porcentaje. El resto de secciones sigue con progressHtml.
+  let _musicProgMod;
+  function musicProgMod() {
+    if (!_musicProgMod) _musicProgMod = import('/assets/musica-progreso.mjs');
+    return _musicProgMod;
+  }
+  function musicProgressHtml() {
+    return `<div class="music-progress" data-music-progress>
+      <div class="music-progress-bar" data-music-bar><i data-music-fill></i></div>
+      <div class="music-progress-status"><span class="left" data-music-label></span><span class="right" data-music-time></span></div>
+    </div>`;
+  }
+  function bindMusicProgress(root, initialPhase) {
+    if (!root) return { set() {}, stop() {} };
+    const en = document.documentElement.lang.indexOf('en') === 0;
+    const state = { phase: initialPhase || 'cola', percent: null, error: '', t0: Date.now(), timer: null };
+    async function paint() {
+      const { progressView } = await musicProgMod();
+      const view = progressView({
+        phase: state.phase,
+        elapsedSec: (Date.now() - state.t0) / 1000,
+        percent: state.percent,
+        error: state.error,
+        en,
+      });
+      const label = root.querySelector('[data-music-label]');
+      const time = root.querySelector('[data-music-time]');
+      const bar = root.querySelector('[data-music-bar]');
+      const fill = root.querySelector('[data-music-fill]');
+      if (label) label.textContent = view.label;
+      if (time) time.textContent = view.time;
+      if (bar) {
+        bar.classList.toggle('is-measured', view.percent != null && state.phase !== 'listo');
+        bar.classList.toggle('is-done', state.phase === 'listo');
+      }
+      root.classList.toggle('is-fail', state.phase === 'fallo');
+      if (fill) fill.style.width = view.percent != null ? view.percent + '%' : '0%';
+    }
+    state.timer = setInterval(paint, 1000);
+    paint();
+    const api = {
+      set(next) {
+        if (next.phase) state.phase = next.phase;
+        if (Object.prototype.hasOwnProperty.call(next, 'percent')) state.percent = next.percent;
+        if (Object.prototype.hasOwnProperty.call(next, 'error')) state.error = next.error || '';
+        paint();
+      },
+      stop() { clearInterval(state.timer); },
+    };
+    root._pixMusicProg = api;
+    return api;
+  }
+  async function musicFailText(text) {
+    const { hideMotorName } = await musicProgMod();
+    return hideMotorName(text);
+  }
+
   const LANG_MAP = {
     'Espanol (ES)': 'es-ES',
     'Espanol (LATAM)': 'es-MX',
@@ -1029,11 +1087,13 @@
     if (!proToken) { showPlayer('<div class="player-card"><div class="player-head">▶ MÚSICA · Motor musical · falta password PRO</div></div>'); return; }
 
     showPlayer(`
-      <div class="player-card">
+      <div class="player-card" id="music-run">
         <div class="player-head">▶ MÚSICA · Motor musical · ${prompt.slice(0,60)}</div>
-        ${progressHtml('Enviando la pieza al motor musical...', 'suno', 60000)}
+        ${musicProgressHtml()}
+        <div data-music-body></div>
       </div>`);
-    const stop = startProgress('suno');
+    const prog = bindMusicProgress(document.querySelector('#music-run [data-music-progress]'), 'cola');
+    prog.set({ phase: 'audio', percent: null });
     try {
       const r = await fetch(SUNO_LOCAL_URL + '/generate', {
         method: 'POST',
@@ -1041,20 +1101,21 @@
         body: JSON.stringify({ prompt, lyrics, title: titleHint, instrumental: isInstrumental, model, token: proToken }),
       });
       if (!r.ok) {
-        stop(false);
-        const err = await r.text();
-        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Motor musical · ERROR ${r.status}</div><pre class="player-body">${err.slice(0,500)}</pre></div>`);
+        const err = await musicFailText(await r.text());
+        prog.set({ phase: 'fallo', error: 'HTTP ' + r.status + ' ' + err });
+        prog.stop();
+        updateMusicStage('engine');
         return;
       }
       const data = await r.json();
       const clipIds = (data.clips || []).map(c => c.id).filter(Boolean);
       if (!clipIds.length) {
-        stop(false);
-        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Motor musical · sin piezas</div><pre class="player-body">${JSON.stringify(data).slice(0,400)}</pre></div>`);
+        prog.set({ phase: 'fallo', error: 'el motor no devolvió ninguna pieza' });
+        prog.stop();
+        updateMusicStage('engine');
         return;
       }
-      setProgressLabel('suno', `Generando · clips ${clipIds.map(id=>id.slice(0,6)).join(', ')}`);
-      // Polling
+      const { phaseFromClip, realPercent } = await musicProgMod();
       let attempt = 0;
       while (true) {
         await new Promise(r => setTimeout(r, 5000));
@@ -1062,14 +1123,16 @@
         const pollR = await fetch(`${SUNO_LOCAL_URL}/status?ids=${clipIds.join(',')}`);
         const clips = await pollR.json();
         const ready = clips.filter(c => (c.audio_url || c.video_url) && (c.status === 'streaming' || c.status === 'complete'));
-        setProgressLabel('suno', `Motor musical · intento ${attempt} · ${ready.length}/${clips.length} listos`);
+        const lead = ready[0] || clips[0];
+        if (lead) prog.set({ phase: phaseFromClip(lead), percent: realPercent(lead.progress ?? lead.percent) });
         if (ready.length >= 1) {
-          stop(true);
+          prog.set({ phase: 'listo', percent: null });
           updateMusicStage('review');
           setMusicCover('');
           const briefTitle = titleHint || deriveAssetTitle('musica', loadStore());
-          showPlayer(`
-            <div class="player-card music-result-card">
+          const body = document.querySelector('#music-run [data-music-body]');
+          if (body) body.innerHTML = `
+            <div class="music-result-card">
               <div class="player-head music-result-head">
                 <span>▶ HILO MUSICAL · Motor musical</span>
                 <span>${ready.length}/${clips.length} versiones listas</span>
@@ -1106,22 +1169,22 @@
               </div>
               ${lyrics ? `<details open class="music-result-lyrics"><summary>Letra de producción</summary><pre class="brief">${escAttr(lyrics)}</pre></details>` : ''}
               <small class="player-foot">// Admira TV · ${prompt.slice(0,80)} · el reproductor usa solo el audio</small>
-            </div>`);
+            </div>`;
           const autoPublish = document.querySelector('.music-publish-pixeria[data-autopublish="1"]');
           if (autoPublish) autoPublish.click();
           return;
         }
-        if (attempt > 60) { // 5 min cap
-          stop(false);
+        if (attempt > 60) {
+          prog.set({ phase: 'fallo', error: 'la pieza no llegó a tiempo' });
+          prog.stop();
           updateMusicStage('engine');
-          showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Motor musical · TIMEOUT</div><pre class="player-body">piezas: ${clipIds.join(', ')}</pre></div>`);
           return;
         }
       }
     } catch (e) {
-      stop(false);
+      prog.set({ phase: 'fallo', error: await musicFailText(e) });
+      prog.stop();
       updateMusicStage('engine');
-      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Motor musical · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);
     }
   }
 
@@ -2715,9 +2778,10 @@
       const brief = Object.assign({}, musica, { cliente: clientName });
       const idioma = (store.audio && store.audio.idioma) ? (LANG_MAP[store.audio.idioma] || 'es-ES').split('-')[0] : 'es';
       const oldLabel = btn.textContent;
-      btn.textContent = '⏳ generando...';
+      btn.textContent = 'Generando letra';
       btn.disabled = true;
-      ta.value = '// generando letra con Gemini 2.5 Flash...';
+      showPlayer(`<div class="player-card" id="music-run"><div class="player-head">▶ MÚSICA · Letra</div>${musicProgressHtml()}<div data-music-body></div></div>`);
+      const prog = bindMusicProgress(document.querySelector('#music-run [data-music-progress]'), 'letra');
       try {
         const r = await paidFetch(ELEVEN_WORKER_URL + '/llm/lyrics', {
           method: 'POST',
@@ -2726,9 +2790,14 @@
         });
         const data = await r.json();
         if (!r.ok || !data.text) {
-          ta.value = '// ERROR: ' + JSON.stringify(data).slice(0, 400);
+          const detail = await musicFailText(JSON.stringify(data).slice(0, 180));
+          ta.value = '// ERROR: ' + detail;
+          prog.set({ phase: 'fallo', error: detail || 'sin letra' });
+          prog.stop();
         } else {
           ta.value = data.text;
+          prog.set({ phase: 'listo', percent: null });
+          prog.stop();
           // Persistir
           const s = loadStore();
           setNested(s, 'musica.letra', data.text);
@@ -2736,7 +2805,10 @@
           showToast('Letra generada');
         }
       } catch (e) {
-        ta.value = '// ERROR: ' + String(e);
+        const detail = await musicFailText(e);
+        ta.value = '// ERROR: ' + detail;
+        prog.set({ phase: 'fallo', error: detail });
+        prog.stop();
       } finally {
         btn.textContent = oldLabel;
         btn.disabled = false;
@@ -2922,12 +2994,15 @@
     b.dataset.publishing = '1';
     b.disabled = true;
     b.textContent = 'Publicando…';
+    const bar = b.closest('#player')?.querySelector('[data-music-progress]');
+    if (bar && bar._pixMusicProg) bar._pixMusicProg.set({ phase: 'publicar', percent: null, error: '' });
     const { musicPublishPlan, stockLinks } = await import('/assets/musica-publicar.mjs');
     const plan = musicPublishPlan(clip);
     if (!plan.length) {
       b.disabled = false;
       b.dataset.publishing = '0';
       b.textContent = 'Publicar en Pixeria';
+      if (bar && bar._pixMusicProg) bar._pixMusicProg.set({ phase: 'fallo', error: 'no hay pieza que publicar' });
       showToast('No hay pieza que publicar');
       return;
     }
@@ -2958,8 +3033,15 @@
       box.innerHTML = `<p><a href="${escAttr(links.page)}" target="_blank" rel="noopener">${escAttr(links.page)}</a></p><p><a href="${escAttr(links.asset)}" target="_blank" rel="noopener">${escAttr(links.asset)}</a></p><button type="button" class="btn" data-copy-link="${escAttr(links.page)}">Copiar enlace para Telegram</button>`;
     }
     b.dataset.publishing = '0';
-    if (primaryId) { b.classList.add('done'); b.textContent = 'Publicado en Pixeria'; }
-    else { b.disabled = false; b.textContent = 'Publicar en Pixeria'; }
+    if (primaryId) {
+      b.classList.add('done');
+      b.textContent = 'Publicado en Pixeria';
+      if (bar && bar._pixMusicProg) bar._pixMusicProg.set({ phase: 'listo', percent: null });
+    } else {
+      b.disabled = false;
+      b.textContent = 'Publicar en Pixeria';
+      if (bar && bar._pixMusicProg) bar._pixMusicProg.set({ phase: 'fallo', error: 'no se pudo publicar' });
+    }
   });
 
   document.addEventListener('click', async (e) => {
@@ -4033,6 +4115,9 @@
       bindPlay(page);
       if (page === 'musica') setDefaultMatrixCover();   // portada Matrix por defecto
       bindGenLyrics();
+      if (page === 'musica' && new URLSearchParams(location.search).get('ensayo-progreso') === '1') {
+        showEnsayoProgreso();
+      }
       bindSegmentedAds();
       bindSendToAdmiraXP();
       bindConsejoHandoff();
@@ -4043,6 +4128,28 @@
       }
     }
   });
+
+  async function showEnsayoProgreso() {
+    const { progressView } = await musicProgMod();
+    const en = document.documentElement.lang.indexOf('en') === 0;
+    const shots = [
+      { phase: 'audio', elapsedSec: 42 },
+      { phase: 'video', elapsedSec: 8 },
+      { phase: 'fallo', elapsedSec: 12, error: 'la pieza no llegó a tiempo' },
+    ];
+    const html = shots.map((shot) => {
+      const view = progressView(Object.assign({ en }, shot));
+      const fail = shot.phase === 'fallo' ? ' is-fail' : '';
+      const measured = view.percent != null ? ' is-measured' : '';
+      return `<div class="music-progress${fail}">
+        <div class="music-progress-bar${measured}"><i data-music-fill style="${view.percent != null ? 'width:' + view.percent + '%' : ''}"></i></div>
+        <div class="music-progress-status"><span class="left">${view.label}</span><span class="right">${view.time}</span></div>
+      </div>`;
+    }).join('');
+    showPlayer(`<div class="player-card" id="music-ensayo"><div class="player-head">▶ MÚSICA · ensayo de la barra</div>${html}</div>`);
+    const player = document.getElementById('player');
+    if (player) player.scrollIntoView({ block: 'center' });
+  }
 
   window.PIXER = { loadStore, saveStore, buildBrief, showToast, MOTORES };
 })();
