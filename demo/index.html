@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+       GATE-INICIO … GATE-FIN) de cada .html, restaurar robots.public.txt → robots.txt y
+  <!-- GATE-INICIO -->
+  <meta name="robots" content="noindex, nofollow">
+  <script>
+  (function(){
+    var GATE_DEFAULT = 'on';                       // verja activa — sitio cerrado
+    var on = GATE_DEFAULT;
+    try{
+      var q = new URLSearchParams(location.search).get('gate');
+      if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
+    }catch(e){}
+    if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=20260813-auth-redirect';
+    (document.head||document.documentElement).appendChild(s);
+    // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
+    // origen aún no esté autorizado en Google → mensaje claro en pantalla.
+    setTimeout(function(){
+      if(!document.documentElement.classList.contains('gate-locked')) return;
+      var el=document.getElementById('admira-err');
+      if(el && !el.textContent) el.textContent='\u2716 SI EL LOGIN NO ABRE: ORIGEN www.pixeria.com PENDIENTE DE AUTORIZAR EN GOOGLE CLOUD';
+    }, 10000);
+  })();
+  </script>
+  <!-- GATE-FIN -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="admiranext-version" content="Pixeria v.28.09.2026.r2.13:07">
+  <title>Pixeria · Demo — guion del autopiloto /demo</title>
+  <meta name="description" content="Guion editable de la demo de Pixeria: cada punto numerado es una funcionalidad que /demo recorre en autopiloto desde el modo experto.">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <style>
+    :root{--bg:#0a0710;--panel:#16101f;--panel2:#1d1529;--line:#2b2138;--line2:#3b2c4d;--txt:#f1ecf7;--mut:#a293b5;--dim:#6f6182;--acc:#ff6fb3;--pur:#b98cff;--good:#3ddc84;--mono:ui-monospace,SFMono-Regular,Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}
+    .wrap{width:min(100% - 36px,900px);margin:0 auto;padding:26px 0 70px}
+    a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+    .kicker{margin:0;color:var(--pur);font:10px var(--mono);letter-spacing:.18em;text-transform:uppercase}
+    h1{font-size:clamp(25px,4vw,36px);letter-spacing:-.02em;margin:14px 0 10px}
+    .lede{color:var(--mut);font-size:16.5px;max-width:70ch}
+    .puertas{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:22px 0}
+    .puerta{padding:14px 16px;border:1px solid var(--line);border-radius:13px;background:var(--panel)}
+    .puerta b{display:block;font:10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin-bottom:4px}
+    .puerta.silicio b{color:var(--pur)}
+    .puerta span{color:var(--mut);font-size:13.5px}
+    h2{font-size:21px;margin:34px 0 10px}
+    p{color:var(--mut);max-width:72ch;margin:0 0 11px}b{color:var(--txt)}
+    ol,ul{margin:0 0 12px 22px;color:var(--mut)}li{margin-bottom:8px}
+    code{font:12.5px var(--mono);color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+    .nota{margin:16px 0;padding:14px 16px;border:1px solid var(--line2);border-radius:12px;background:var(--panel2)}
+    .nota b{color:var(--pur)}
+    footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--dim);font:11px var(--mono)}
+
+    .demo-puntos{list-style:none;margin:22px 0;padding:0;counter-reset:punto}
+    .demo-puntos>li{counter-increment:punto;position:relative;margin:0 0 14px;padding:16px 18px 14px 58px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+    .demo-puntos>li::before{content:counter(punto);position:absolute;left:16px;top:14px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--acc);color:#1a0b14;font:700 14px var(--mono)}
+    .demo-puntos h2{margin:0 0 4px;font-size:19px}
+    .demo-meta{font:11px var(--mono);color:var(--dim);margin:0 0 8px}
+    .demo-meta code{font-size:11px}
+    .pasos{margin:8px 0 0 18px;font-size:13.5px}
+    .pasos li{margin-bottom:4px}
+    .pasos li::before{content:attr(data-accion) " " attr(data-en) " · ";font:11px var(--mono);color:var(--pur)}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">● Pixeria · demo</p>
+  <h1>Guion de la demo en autopiloto</h1>
+  <p class="lede">Escribe <code>/demo</code> en la barra del <b>modo experto</b> y Pixeria se enseña
+  sola: un cursor coge el ratón, rellena la interfaz real y pasa al siguiente punto. Esta página
+  <b>es</b> el guion. Añade, quita o reordena puntos aquí y la siguiente <code>/demo</code> ya los
+  recorre.</p>
+
+  <div class="puertas">
+    <div class="puerta"><b>Comandos</b><span><code>/demo</code> todo ·
+      <code>/demo list</code> la lista · <code>/demo 2</code> solo el punto 2 ·
+      <code>/demo stop</code></span></div>
+    <div class="puerta silicio"><b>Durante la demo</b><span><code>Esc</code> para ·
+      <code>→</code> siguiente punto · <code>←</code> punto anterior</span></div>
+  </div>
+
+  <!-- CÓMO SE EDITA
+       Cada <li> de .demo-puntos es un punto de la demo, en el orden en que se ve.
+         data-pagina   la página donde ocurre (se abre sola).
+         data-duracion segundos del punto (si falta, data-duracion-defecto de la lista: 60).
+       Dentro, <h2> es el rótulo que se ve en pantalla y .pasos la coreografía:
+         data-accion="di"       muestra el texto como subtítulo.
+         data-accion="escribe"  teclea el texto en el campo data-en (selector CSS).
+         data-accion="elige"    elige en el desplegable data-en la opción con ese texto.
+         data-accion="clic"     mueve el ratón a data-en y hace clic DE VERDAD.
+         data-accion="señala"   mueve el ratón y marca el clic SIN pulsar: para botones que
+                                generan con IA y gastan crédito. Cámbialo a "clic" si quieres
+                                que la demo genere de verdad.
+         data-accion="espera"   espera los segundos que diga el texto.
+       Lo que sobre de la duración se queda en pantalla mostrando el resultado. -->
+  <ol class="demo-puntos" data-demo data-duracion-defecto="60">
+    <li data-pagina="/audio.html" data-duracion="60">
+      <h2>Creación de locución</h2>
+      <p class="demo-meta">audio.html · 60 s · <a href="/help/">Help</a> · <a href="/mcp/">MCP</a></p>
+      <ol class="pasos">
+        <li data-accion="di">Una locución para la tienda: guion, voz y tono, y ElevenLabs la pone en voz.</li>
+        <li data-accion="escribe" data-en="#proj-cliente">Xtanco Valencia · campaña de otoño</li>
+        <li data-accion="escribe" data-en="#a-personaje">Voz adulta cálida y cercana</li>
+        <li data-accion="elige" data-en="#a-idioma">Espanol (ES)</li>
+        <li data-accion="elige" data-en="#a-tono">Cercano</li>
+        <li data-accion="escribe" data-en="#a-ritmo">20 s, ritmo medio</li>
+        <li data-accion="escribe" data-en="#a-guion">Bienvenidos a Xtanco Valencia. Esta semana, los clásicos del otoño vuelven a nuestras estanterías.</li>
+        <li data-accion="escribe" data-en="#a-cta">Pregunta en caja por la promoción.</li>
+        <li data-accion="señala" data-en="#playOutput">Con un clic aquí se genera la megafonía (en la demo no se gasta crédito).</li>
+      </ol>
+    </li>
+    <li data-pagina="/musica.html" data-duracion="60">
+      <h2>Creación de canción</h2>
+      <p class="demo-meta">musica.html · 60 s · <a href="/help/">Help</a> · <a href="/mcp/">MCP</a></p>
+      <ol class="pasos">
+        <li data-accion="di">Una canción original para el hilo musical: formato, voz, estilo y letra.</li>
+        <li data-accion="elige" data-en="#m-versiones">Canción ~1 min</li>
+        <li data-accion="elige" data-en="#m-singer">Mujer</li>
+        <li data-accion="elige" data-en="#m-style">Flamenco</li>
+        <li data-accion="escribe" data-en="#m-titulo">Otoño en Valencia</li>
+        <li data-accion="señala" data-en="#genLyrics">La letra puede escribirla la IA; aquí la tecleamos.</li>
+        <li data-accion="escribe" data-en="#m-letra">[Verse 1]
+Hojas de oro en la plaza,
+Valencia huele a café.
+[Chorus]
+Otoño, quédate un rato,
+que la tarde es para ti.</li>
+        <li data-accion="señala" data-en="#playOutput">Con un clic aquí Suno compone la canción (en la demo no se gasta crédito).</li>
+      </ol>
+    </li>
+    <li data-pagina="/anonimizador.html" data-duracion="60">
+      <h2>Creación de gemelo digital anónimo</h2>
+      <p class="demo-meta">anonimizador.html · 60 s · <a href="/help/">Help</a> · <a href="/mcp/">MCP</a></p>
+      <ol class="pasos">
+        <li data-accion="di">Una persona real pasa a NPC del gemelo digital y vuelve como alguien que no existe.</li>
+        <li data-accion="elige" data-en="#optStrength">Persona completamente nueva</li>
+        <li data-accion="elige" data-en="#optSex">Cualquiera</li>
+        <li data-accion="elige" data-en="#optAge">Adulto (26-40)</li>
+        <li data-accion="escribe" data-en="#optDesc">con gorra y mochila</li>
+        <li data-accion="señala" data-en="#btnInvent">Sin cámara, se crea una audiencia inventada con esa segmentación.</li>
+        <li data-accion="señala" data-en="#frame2">Primero sale el NPC 8-bit, el que pasea por el gemelo…</li>
+        <li data-accion="señala" data-en="#frame4">…y al final una persona realista distinta: lo guardado ya no es nadie.</li>
+        <li data-accion="señala" data-en="#btnSendStore">Y el gemelo anónimo se envía a la tienda.</li>
+      </ol>
+    </li>
+  </ol>
+
+  <div class="nota"><b>Nada se genera de verdad por defecto.</b> Los pasos <code>señala</code> mueven el
+  ratón y marcan el clic sin pulsar, para que ensayar la demo no gaste crédito de IA.</div>
+
+  <footer>
+    pixeria.com/demo · el guion de <code>/demo</code> ·
+    <a href="/help/">cómo funciona Pixeria</a> ·
+    <a href="/mcp/" style="color:var(--pur)">pixeria.com/mcp</a>
+  </footer>
+</div>
+</body>
+</html>

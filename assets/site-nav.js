@@ -451,7 +451,18 @@
     });
   }
 
+  // /demo en marcha (motor de assets/demo-motor.js): al cambiar de página sigue sola.
+  function resumeDemo() {
+    var running = false;
+    try { running = !!sessionStorage.getItem('pf_demo_run'); } catch (_) {}
+    if (!running || window.PFDemo) return;
+    var motor = document.createElement('script');
+    motor.src = '/assets/demo-motor.js?v=4685';
+    document.body.appendChild(motor);
+  }
+
   function start() {
+    resumeDemo();
     normalizeInternalNav();
     syncRailVersion();
     // cuadratura.js crea la barra de la home de forma diferida; esta segunda
@@ -460,10 +471,10 @@
       normalizeInternalNav(); syncRailVersion();
       if (!document.querySelector('.rail-bottom,.quad-bottom,#pixNavExpertLayer')) return;
       var css = document.createElement('link');
-      css.rel = 'stylesheet'; css.href = '/assets/expert-cli.css?v=4663';
+      css.rel = 'stylesheet'; css.href = '/assets/expert-cli.css?v=4685';
       document.head.appendChild(css);
       var cli = document.createElement('script');
-      cli.src = '/assets/expert-cli.js?v=4663';
+      cli.src = '/assets/expert-cli.js?v=4685';
       document.body.appendChild(cli);
     }, 0);
   }

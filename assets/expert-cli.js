@@ -137,10 +137,10 @@
     log.scrollTop = log.scrollHeight;
   }
   function execute(command) {
-    var words = command.trim().split(/\s+/), name = words.shift().toLowerCase(), arg = words.join(' ');
+    var words = command.trim().split(/\s+/), name = words.shift().toLowerCase().replace(/^\//, ''), arg = words.join(' ');
     switch (name) {
       case 'help': case 'ayuda':
-        write(t('Comandos en este navegador:', 'Commands in this browser:') + '\nhelp · clear · echo <text> · date · status · version · history\nopen <home|audio|music|images|video|stock|assets|docs|radar>\n' + t('↑/↓ historial · arrastra el borde superior · doble clic para plegar/desplegar', '↑/↓ history · drag the top edge · double-click to collapse/expand'));
+        write(t('Comandos en este navegador:', 'Commands in this browser:') + '\nhelp · clear · echo <text> · date · status · version · history\nopen <home|audio|music|images|video|stock|assets|docs|radar>\n/demo · /demo list · /demo N · /demo stop\n' + t('↑/↓ historial · arrastra el borde superior · doble clic para plegar/desplegar', '↑/↓ history · drag the top edge · double-click to collapse/expand'));
         break;
       case 'clear': case 'limpiar': log.replaceChildren(); break;
       case 'echo': write(arg); break;
@@ -152,6 +152,14 @@
         var path = Object.prototype.hasOwnProperty.call(sections, arg.toLowerCase()) && sections[arg.toLowerCase()];
         if (!path) { write(t('Usa open seguido de una sección de help.', 'Use open followed by a section from help.')); break; }
         location.assign(path[0] === '/' ? path : (en ? '/en/' : '/') + path); break;
+      case 'demo':
+        if (window.PFDemo) { window.PFDemo.comando(arg, write); break; }
+        var motor = document.createElement('script');
+        motor.src = '/assets/demo-motor.js?v=4685';
+        motor.onload = function () { window.PFDemo.comando(arg, write); };
+        motor.onerror = function () { write(t('No pude cargar el motor de demo.', 'Could not load the demo engine.')); };
+        document.body.appendChild(motor);
+        break;
       default: write(t('Comando desconocido. Escribe help.', 'Unknown command. Type help.'));
     }
   }
