@@ -457,7 +457,7 @@
     try { running = !!sessionStorage.getItem('pf_demo_run'); } catch (_) {}
     if (!running || window.PFDemo) return;
     var motor = document.createElement('script');
-    motor.src = '/assets/demo-motor.js?v=4685';
+    motor.src = '/assets/demo-motor.js?v=4762';
     document.body.appendChild(motor);
   }
 

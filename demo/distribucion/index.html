@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="admiranext-version" content="Pixeria v.29.09.2026 · visita distribución #4762">
+  <meta name="pf-demo-guion" content="/demo/distribucion/">
+  <title>Pixeria · Visita guiada · Distribución de contenidos</title>
+  <meta name="description" content="Visita guiada en autopiloto de la demo de distribución Alsea / JTI: pieza, players y resultado.">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <style>
+    :root{--bg:#0a0710;--panel:#16101f;--panel2:#1d1529;--line:#2b2138;--line2:#3b2c4d;--txt:#f1ecf7;--mut:#a293b5;--dim:#6f6182;--acc:#ff6fb3;--pur:#b98cff;--good:#3ddc84;--mono:ui-monospace,SFMono-Regular,Menlo,monospace;--sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased}
+    .wrap{width:min(100% - 36px,900px);margin:0 auto;padding:26px 0 70px}
+    a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+    .kicker{margin:0;color:var(--pur);font:10px var(--mono);letter-spacing:.18em;text-transform:uppercase}
+    h1{font-size:clamp(25px,4vw,36px);letter-spacing:-.02em;margin:14px 0 10px}
+    .lede{color:var(--mut);font-size:16.5px;max-width:70ch}
+    .puertas{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:22px 0}
+    .puerta{padding:14px 16px;border:1px solid var(--line);border-radius:13px;background:var(--panel)}
+    .puerta b{display:block;font:10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin-bottom:4px}
+    .puerta.silicio b{color:var(--pur)}
+    .puerta span{color:var(--mut);font-size:13.5px}
+    h2{font-size:21px;margin:34px 0 10px}
+    p{color:var(--mut);max-width:72ch;margin:0 0 11px}b{color:var(--txt)}
+    ol,ul{margin:0 0 12px 22px;color:var(--mut)}li{margin-bottom:8px}
+    code{font:12.5px var(--mono);color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+    .nota{margin:16px 0;padding:14px 16px;border:1px solid var(--line2);border-radius:12px;background:var(--panel2)}
+    .nota b{color:var(--pur)}
+    footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--dim);font:11px var(--mono)}
+
+    .demo-puntos{list-style:none;margin:22px 0;padding:0;counter-reset:punto}
+    .demo-puntos>li{counter-increment:punto;position:relative;margin:0 0 14px;padding:16px 18px 14px 58px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+    .demo-puntos>li::before{content:counter(punto);position:absolute;left:16px;top:14px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--acc);color:#1a0b14;font:700 14px var(--mono)}
+    .demo-puntos h2{margin:0 0 4px;font-size:19px}
+    .demo-meta{font:11px var(--mono);color:var(--dim);margin:0 0 8px}
+    .demo-meta code{font-size:11px}
+    .pasos{margin:8px 0 0 18px;font-size:13.5px}
+    .pasos li{margin-bottom:4px}
+    .pasos li::before{content:attr(data-accion) " " attr(data-en) " · ";font:11px var(--mono);color:var(--pur)}
+    .lanzar{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 6px}
+    .lanzar button{font:600 14px var(--sans);padding:11px 18px;border-radius:11px;border:1px solid var(--acc);background:var(--acc);color:#1a0b14;cursor:pointer}
+    .lanzar button.sec{background:transparent;color:var(--acc)}
+    .ej{display:inline-block;font:700 10px var(--mono);letter-spacing:.12em;color:#1a0b14;background:#ffd166;border-radius:4px;padding:1px 6px;vertical-align:2px}
+    #estado-demo{font:12px var(--mono);color:var(--good);white-space:pre-wrap;min-height:1.2em}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">● Pixeria × admira.app · demo 30-sep · Alsea y JTI</p>
+  <h1>Visita guiada · Distribución de contenidos</h1>
+  <p class="lede">Una pieza de la biblioteca de <b>Pixeria</b> sale a los players de un circuito de
+  <b>admira.app</b> en tres pasos: <b>1</b> la pieza, <b>2</b> circuito y players, <b>3</b> publicar y
+  ver el resultado. Pulsa un botón y la visita se hace sola, con la interfaz real.</p>
+
+  <div class="lanzar">
+    <button type="button" data-rango="1-3">▶ Visita Alsea</button>
+    <button type="button" data-rango="4-6">▶ Visita JTI</button>
+    <button type="button" class="sec" data-rango="1-6">▶ Las dos seguidas</button>
+    <a class="sec" href="/demo/ruta/distribucion/sala.html" target="_blank" rel="noopener" style="align-self:center;margin-left:6px">Abrir la pantalla de sala ↗</a>
+  </div>
+  <p id="estado-demo" role="status"></p>
+
+  <div class="puertas">
+    <div class="puerta"><b>Durante la visita</b><span><code>Esc</code> para ·
+      <code>→</code> siguiente paso · <code>←</code> paso anterior</span></div>
+    <div class="puerta silicio"><b>Datos</b><span><span class="ej">EJEMPLO</span> circuitos y players de
+      demostración; las piezas son las de Stock. Sin IA de pago: guion estático.</span></div>
+  </div>
+
+  <!-- CÓMO SE EDITA: igual que /demo/ (ver el comentario de esa página).
+       Paso 1: data-pagina de los puntos 1 y 4 es la biblioteca. Hoy es la de Oráculo
+       (/demo/biblioteca/); si esa biblioteca no existe en otra rama, cámbiala por la URL
+       que toque o por el placeholder /demo/biblioteca/ rotulado EJEMPLO.
+       Pasos 2 y 3: la ruta /distribucion de Smith (clearchannel-tv) servida en este mismo
+       origen bajo /demo/ruta/ (functions/_demo-ruta.js; el origen se cambia con la
+       variable DEMO_RUTA_ORIGIN) para que el motor pueda hacer clics reales en ella.
+       «Publicar» es un clic real: envía la pieza a la pantalla de sala de la demo
+       (el puente de Smith fija ese destino). Cámbialo a «señala» para ensayar sin enviar. -->
+  <ol class="demo-puntos" data-demo data-duracion-defecto="40">
+    <li data-pagina="/demo/biblioteca/" data-duracion="30">
+      <h2>Alsea · 1 · La pieza</h2>
+      <p class="demo-meta">biblioteca Pixeria (Oráculo) · 30 s · <code>/demo/biblioteca/</code></p>
+      <ol class="pasos">
+        <li data-accion="di">Paso 1 · la pieza. La biblioteca de Pixeria / admira.studio guarda las piezas listas para salir a pantalla.</li>
+        <li data-accion="elige" data-en="#circuito">Alsea</li>
+        <li data-accion="señala" data-en="#piezas .card[data-circuito=&quot;alsea&quot;] video">«Tu pausa»: el vídeo principal de Alsea, con su hilo musical aparte.</li>
+        <li data-accion="señala" data-en="#piezas .card[data-circuito=&quot;alsea&quot;] .distribute">«Distribuir» lleva la pieza a admira.app, al circuito de Alsea.</li>
+      </ol>
+    </li>
+    <li data-pagina="/demo/ruta/distribucion/?pieza=1790609061411-86drpb" data-duracion="45">
+      <h2>Alsea · 2 · Circuito y players</h2>
+      <p class="demo-meta">ruta de Smith · 45 s · <code>/demo/ruta/distribucion/?pieza=1790609061411-86drpb</code></p>
+      <ol class="pasos">
+        <li data-accion="di">Paso 2 · dónde y cuándo. Ya estamos en admira.app con «Tu pausa» cargada.</li>
+        <li data-accion="clic" data-en="#btn-alsea">Circuito Alsea: 10 cafeterías de EJEMPLO.</li>
+        <li data-accion="señala" data-en="#lista">Cada punto es un player: se eligen sueltos…</li>
+        <li data-accion="señala" data-en="#mapa">…en la lista o en el mapa.</li>
+        <li data-accion="clic" data-en="#modo-todo">Hoy va a todo el circuito de un golpe.</li>
+        <li data-accion="señala" data-en="#cuando-franja">También se puede programar una franja horaria…</li>
+        <li data-accion="clic" data-en="#cuando-ahora">…pero lo publicamos ahora.</li>
+      </ol>
+    </li>
+    <li data-pagina="/demo/ruta/distribucion/?pieza=1790609061411-86drpb" data-duracion="40">
+      <h2>Alsea · 3 · Publicar y resultado</h2>
+      <p class="demo-meta">ruta de Smith · 40 s · pantalla de sala + registro</p>
+      <ol class="pasos">
+        <li data-accion="di">Paso 3 · el resultado. Un clic en Publicar.</li>
+        <li data-accion="clic" data-en="#publicar">Publicar: la pantalla de sala cambia a «Tu pausa».</li>
+        <li data-accion="señala" data-en="#estados">Estado por player: enviado, descargando, reproduciendo.</li>
+        <li data-accion="espera">3</li>
+        <li data-accion="señala" data-en="#registro">Y el registro: qué pieza, en qué players y cuándo.</li>
+      </ol>
+    </li>
+    <li data-pagina="/demo/biblioteca/" data-duracion="30">
+      <h2>JTI · 1 · La pieza</h2>
+      <p class="demo-meta">biblioteca Pixeria (Oráculo) · 30 s · <code>/demo/biblioteca/</code></p>
+      <ol class="pasos">
+        <li data-accion="di">Paso 1 · la pieza. La biblioteca de Pixeria / admira.studio guarda las piezas listas para salir a pantalla.</li>
+        <li data-accion="elige" data-en="#circuito">JTI</li>
+        <li data-accion="señala" data-en="#piezas .card[data-circuito=&quot;jti&quot;] video">«Tu sitio de siempre»: el vídeo principal de JTI, con su hilo musical aparte.</li>
+        <li data-accion="señala" data-en="#piezas .card[data-circuito=&quot;jti&quot;] .distribute">«Distribuir» lleva la pieza a admira.app, al circuito de JTI.</li>
+      </ol>
+    </li>
+    <li data-pagina="/demo/ruta/distribucion/?pieza=1790608980217-vni6ai" data-duracion="45">
+      <h2>JTI · 2 · Circuito y players</h2>
+      <p class="demo-meta">ruta de Smith · 45 s · <code>/demo/ruta/distribucion/?pieza=1790608980217-vni6ai</code></p>
+      <ol class="pasos">
+        <li data-accion="di">Paso 2 · dónde y cuándo. Ya estamos en admira.app con «Tu sitio de siempre» cargada.</li>
+        <li data-accion="clic" data-en="#btn-jti">Circuito JTI: 10 comercios de proximidad de EJEMPLO.</li>
+        <li data-accion="señala" data-en="#lista">Cada punto es un player: se eligen sueltos…</li>
+        <li data-accion="señala" data-en="#mapa">…en la lista o en el mapa.</li>
+        <li data-accion="clic" data-en="#modo-todo">Hoy va a todo el circuito de un golpe.</li>
+        <li data-accion="señala" data-en="#cuando-franja">También se puede programar una franja horaria…</li>
+        <li data-accion="clic" data-en="#cuando-ahora">…pero lo publicamos ahora.</li>
+      </ol>
+    </li>
+    <li data-pagina="/demo/ruta/distribucion/?pieza=1790608980217-vni6ai" data-duracion="40">
+      <h2>JTI · 3 · Publicar y resultado</h2>
+      <p class="demo-meta">ruta de Smith · 40 s · pantalla de sala + registro</p>
+      <ol class="pasos">
+        <li data-accion="di">Paso 3 · el resultado. Un clic en Publicar.</li>
+        <li data-accion="clic" data-en="#publicar">Publicar: la pantalla de sala cambia a «Tu sitio de siempre».</li>
+        <li data-accion="señala" data-en="#estados">Estado por player: enviado, descargando, reproduciendo.</li>
+        <li data-accion="espera">3</li>
+        <li data-accion="señala" data-en="#registro">Y el registro: qué pieza, en qué players y cuándo.</li>
+      </ol>
+    </li>
+  </ol>
+
+  <div class="nota"><b>Desde el modo experto</b> también vale: en esta página, <code>/demo 1-3</code> (Alsea),
+  <code>/demo 4-6</code> (JTI), <code>/demo list</code>.</div>
+
+  <footer>
+    pixeria.com/demo/distribucion · visita guiada #4762 ·
+    <a href="/demo/biblioteca/">biblioteca</a> ·
+    <a href="/demo/ruta/distribucion/">ruta de distribución</a> ·
+    <a href="/demo/">otras demos</a>
+  </footer>
+</div>
+<script src="/assets/demo-motor.js?v=4762"></script>
+<script>
+  (function () {
+    var out = document.getElementById('estado-demo');
+    function escribir(msg) { out.textContent = msg; }
+    document.querySelectorAll('[data-rango]').forEach(function (b) {
+      b.addEventListener('click', function () { window.PFDemo.comando(b.getAttribute('data-rango'), escribir); });
+    });
+    // ?visita=alsea|jti|todo arranca sola (para enlazar la visita directamente).
+    var v = new URLSearchParams(location.search).get('visita');
+    var r = { alsea: '1-3', jti: '4-6', todo: '1-6' }[v];
+    if (r) addEventListener('load', function () { window.PFDemo.comando(r, escribir); });
+  })();
+</script>
+</body>
+</html>

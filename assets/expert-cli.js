@@ -155,7 +155,7 @@
       case 'demo':
         if (window.PFDemo) { window.PFDemo.comando(arg, write); break; }
         var motor = document.createElement('script');
-        motor.src = '/assets/demo-motor.js?v=4685';
+        motor.src = '/assets/demo-motor.js?v=4762';
         motor.onload = function () { window.PFDemo.comando(arg, write); };
         motor.onerror = function () { write(t('No pude cargar el motor de demo.', 'Could not load the demo engine.')); };
         document.body.appendChild(motor);

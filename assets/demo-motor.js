@@ -138,16 +138,19 @@
       if (!vivo(mio)) return;
       if (p.accion === 'escribe') return clic().then(function () { return teclear(el, p.texto, mio); });
       if (p.accion === 'elige') return clic().then(function () { elegir(el, p.texto); return espera(700); });
-      if (p.accion === 'clic') return clic().then(function () { el.click(); return espera(900); });
+      if (p.accion === 'clic') { if (p.texto) escena.sub.textContent = p.texto; return clic().then(function () { el.click(); return espera(Math.min(4000, 900 + p.texto.length * 30)); }); }
       // «señala» y cualquier acción desconocida: el ratón marca el clic pero no pulsa.
       if (p.texto) escena.sub.textContent = p.texto;
       return clic().then(function () { return espera(Math.min(5000, 1500 + p.texto.length * 40)); });
     });
   }
 
+  // Si el guion pone query (…/distribucion/?pieza=X), la query también cuenta:
+  // así la visita pasa de la pieza de Alsea a la de JTI en la misma ruta.
   function mismaPagina(ruta) {
     var a = new URL(ruta, location.href), actual = location.pathname.replace(/index\.html$/, '');
-    return a.pathname.replace(/index\.html$/, '') === actual;
+    if (a.pathname.replace(/index\.html$/, '') !== actual) return false;
+    return !a.search || a.search === location.search;
   }
 
   function correr() {
@@ -199,6 +202,7 @@
     guardar(null);
     desmontar();
     if (msg && window.PFDemo.escribir) window.PFDemo.escribir(msg);
+    else if (msg) console.info('[demo] ' + msg);
   }
 
   document.addEventListener('keydown', function (ev) {
@@ -223,9 +227,9 @@
       }
       var desde = 0, hasta = puntos.length - 1;
       if (arg) {
-        var n = parseInt(arg, 10);
-        if (!(n >= 1 && n <= puntos.length)) { escribir(t('Usa /demo, /demo list o /demo N (1-', 'Use /demo, /demo list or /demo N (1-') + puntos.length + ').'); return; }
-        desde = hasta = n - 1;
+        var m = /^(\d+)(?:\s*-\s*(\d+))?$/.exec(arg), n = m ? +m[1] : 0, n2 = m && m[2] ? +m[2] : n;
+        if (!(n >= 1 && n2 >= n && n2 <= puntos.length)) { escribir(t('Usa /demo, /demo list, /demo N o /demo N-M (1-', 'Use /demo, /demo list, /demo N or /demo N-M (1-') + puntos.length + ').'); return; }
+        desde = n - 1; hasta = n2 - 1;
       }
       var seg = puntos.slice(desde, hasta + 1).reduce(function (a, p) { return a + p.duracion; }, 0);
       escribir(t('Autopiloto: ', 'Autopilot: ') + (hasta - desde + 1) + t(' punto(s), ~', ' point(s), ~') + Math.round(seg / 60 * 10) / 10 + ' min. Esc ' + t('para', 'stops') + '.');
