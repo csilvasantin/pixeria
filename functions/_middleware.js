@@ -21,6 +21,9 @@ export async function onRequest(context) {
   if (request.method === 'GET' && (url.pathname === '/xpacios/cafebreria/ci' || url.pathname === '/xpacios/cafebreria/ci/')) return context.next();
   // Mapa de zonas de Aulestia i Pijoan: entregable público, una sola ruta.
   if (request.method === 'GET' && (url.pathname === '/xpacios/aulestia-i-pijoan' || url.pathname === '/xpacios/aulestia-i-pijoan/')) return context.next();
+  // Public demo library on preview hosts only; production keeps its session gate.
+  if (request.method === 'GET' && url.hostname.endsWith('.pixeria.pages.dev') &&
+      ['/demo/biblioteca', '/demo/biblioteca/', '/demo/biblioteca/index.html'].includes(url.pathname)) return context.next();
   if (await hasSession(request, env)) return context.next();
 
   const returnTo = safeReturnTo(url.pathname + url.search);

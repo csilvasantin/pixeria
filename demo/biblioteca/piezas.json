@@ -1,0 +1,33 @@
+{
+  "ejemplo": true,
+  "items": [
+    {
+      "id": "1790609061411-86drpb",
+      "titulo": "Tu pausa",
+      "marca": "Alsea",
+      "circuito": "alsea",
+      "videoId": "1790609061411-86drpb",
+      "audioId": "1790608402098-xubtdh",
+      "url": "https://api.admira.store/stock/asset/1790609061411-86drpb",
+      "audioUrl": "https://api.admira.store/stock/asset/1790608402098-xubtdh",
+      "miniatura": "./posters/1790609061411-86drpb.jpg",
+      "duration": 45.205,
+      "duracion": 45.205,
+      "ejemplo": true
+    },
+    {
+      "id": "1790608980217-vni6ai",
+      "titulo": "Tu sitio de siempre",
+      "marca": "JTI",
+      "circuito": "jti",
+      "videoId": "1790608980217-vni6ai",
+      "audioId": "1790608329621-mhuvq3",
+      "url": "https://api.admira.store/stock/asset/1790608980217-vni6ai",
+      "audioUrl": "https://api.admira.store/stock/asset/1790608329621-mhuvq3",
+      "miniatura": "./posters/1790608980217-vni6ai.jpg",
+      "duration": 59.6,
+      "duracion": 59.6,
+      "ejemplo": true
+    }
+  ]
+}
