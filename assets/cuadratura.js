@@ -270,13 +270,16 @@
 
     var left = document.createElement('div');
     left.className = 'pf-topbar-left';
-    left.appendChild(rightToggle);
+    // Barra de 4 bandas (Carlos 29-sep-2026): Opciones a la izquierda y, al
+    // fondo a la derecha, Avanzado justo antes de Experto. Sin la «P» de logo
+    // y sin Contacto en la barra (el contacto sigue en el pie de la página).
+    left.appendChild(leftToggle);
 
     var brand = document.createElement('a');
     brand.className = 'pf-topbar-brand';
     brand.href = '/';
     brand.setAttribute('aria-label', 'Pixeria inicio');
-    brand.innerHTML = '<span class="pf-brand-mark">P</span><span class="pf-brand-name">Pixeria</span>';
+    brand.innerHTML = '<span class="pf-brand-name">Pixeria</span>';
     left.appendChild(brand);
 
     var nav = document.createElement('nav');
@@ -301,13 +304,7 @@
       langLink.setAttribute('aria-label', lang.getAttribute('aria-label') || 'Cambiar idioma');
       right.appendChild(langLink);
     }
-    var contact = document.createElement('a');
-    contact.className = 'pf-topbar-contact';
-    contact.href = '#contact';
-    contact.textContent = 'Contacto';
-    contact.setAttribute('data-admira-contact', '');
-    right.appendChild(contact);
-    right.appendChild(leftToggle);
+    right.appendChild(rightToggle);
     right.appendChild(bottomToggle);
 
     bar.appendChild(left);

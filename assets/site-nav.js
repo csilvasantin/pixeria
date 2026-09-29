@@ -168,9 +168,11 @@
       brand.parentNode.replaceChild(link, brand);
     }
     link.className = 'pf-topbar-brand';
-    var mark = link.querySelector('.brand-mark, span');
-    var name = link.querySelector('.brand-name, b, span:not(:first-child)');
-    if (mark) mark.className = 'pf-brand-mark';
+    // Sin «P» de logo: la marca es solo el nombre (Carlos 29-sep-2026).
+    link.querySelectorAll('.brand-mark, .pf-brand-mark, span').forEach(function (mark) {
+      if (mark.matches('.brand-mark, .pf-brand-mark') || mark.textContent.trim() === 'P') mark.remove();
+    });
+    var name = link.querySelector('.brand-name, b, span');
     if (name) name.className = 'pf-brand-name';
     return link;
   }
