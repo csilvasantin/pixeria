@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Cafebrería · emisión</title>
+  <link rel="stylesheet" href="/assets/xpaces/viewer.css?v=emision-4742">
+  <link rel="stylesheet" href="/xpacios/cafebreria/demo/demo.css?v=emision-4742">
+</head>
+<body>
+  <div id="split">
+    <section id="mando" aria-label="Envío a las pantallas">
+      <p class="kicker">Preview · Cafebrería 3D · pixeria</p>
+      <h1>Emisión</h1>
+      <p class="lead">Lo que envíes aquí entra por el canal y se pinta en el visor de la derecha. Pieza publicada: <strong>Tu pausa</strong>.</p>
+      <div id="pantallas" role="radiogroup" aria-label="Pantalla"></div>
+      <button type="button" id="poner">Poner Tu pausa en antena</button>
+      <div id="niveles" role="group" aria-label="Nivel del mismo modelo">
+        <button type="button" data-tier="good">Good</button>
+        <button type="button" data-tier="better" aria-pressed="true">Better</button>
+        <button type="button" data-tier="best">Best</button>
+      </div>
+      <p id="estado" role="status">Cargando el modelo…</p>
+      <p id="censo"></p>
+    </section>
+    <div id="visor" class="xpace-viewer"></div>
+  </div>
+  <script type="module" src="/xpacios/cafebreria/demo/demo.js?v=emision-4742"></script>
+</body>
+</html>

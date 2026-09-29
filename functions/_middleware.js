@@ -1,8 +1,10 @@
 import {handleAuth, hasSession, safeReturnTo} from './_auth.js';
+import {proxyDemoSignage} from './demo-signage.js';
 
 export async function onRequest(context) {
   const {request, env} = context;
   const url = new URL(request.url);
+  if (url.pathname.startsWith('/api/demo-signage/')) return proxyDemoSignage(request, url);
   const authResponse = await handleAuth(request, env);
   if (authResponse) return authResponse;
 
@@ -19,6 +21,8 @@ export async function onRequest(context) {
   if (!wantsDocument) return context.next();
   // La ficha de cada aparato de la Cafebrería se pega con un QR. Tiene que abrir sin sesión.
   if (request.method === 'GET' && (url.pathname === '/xpacios/cafebreria/ci' || url.pathname === '/xpacios/cafebreria/ci/')) return context.next();
+  // Demo de emisión (preview). Misma verja abierta que la ficha con QR: si no, el visor redirige a login.
+  if (request.method === 'GET' && (url.pathname === '/xpacios/cafebreria/demo' || url.pathname === '/xpacios/cafebreria/demo/' || url.pathname === '/xpacios/cafebreria/demo/index.html')) return context.next();
   // Mapa de zonas de Aulestia i Pijoan: entregable público, una sola ruta.
   if (request.method === 'GET' && (url.pathname === '/xpacios/aulestia-i-pijoan' || url.pathname === '/xpacios/aulestia-i-pijoan/')) return context.next();
   if (await hasSession(request, env)) return context.next();

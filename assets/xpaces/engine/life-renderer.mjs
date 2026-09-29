@@ -17,7 +17,7 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
   });}catch(error){renderer.dispose();renderer.forceContextLoss();throw error;}
   const camera=new T.OrthographicCamera(-15,15,10,-10,.1,200);
   const target=new T.Vector3(),raycaster=new T.Raycaster(),pointers=new Map();
-  let width=1,height=1,lastMedia=-Infinity,disposed=false,gesture=null,selected=null,clipBox=null;
+  let width=1,height=1,lastMedia=-Infinity,disposed=false,gesture=null,selected=null,clipBox=null,detail='better';
   const initial=mappedCameraFrame(model.snapshot);
   const current={zoom:1,angle:initial.angle,elevation:initial.elevation,panX:0,panY:0};let desired={...current},mode='mapped',framing='mapped';
   const angleLimit=value=>stockCamera?value:clamp(value,.10,Math.PI/2-.10);
@@ -73,7 +73,9 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
   }
   function clearClip(){clipBox=null;}
   function project(v){const p=new T.Vector3(v.x,v.y,v.z).project(camera),b=canvas.getBoundingClientRect();return {x:b.left+(p.x+1)/2*b.width,y:b.top+(1-p.y)/2*b.height};}
-  function resize(w,h,dpr=globalThis.devicePixelRatio||1){if(disposed)return;width=Math.max(1,w);height=Math.max(1,h);renderer.setPixelRatio(clamp(dpr,1,1.75));renderer.setSize(width,height,false);frameCamera();}
+  function pixelRatio(dpr=globalThis.devicePixelRatio||1){if(detail==='good')return 0.42;if(detail==='best')return 1.75;return clamp(dpr,1,1.75);}
+  function resize(w,h,dpr=globalThis.devicePixelRatio||1){if(disposed)return;width=Math.max(1,w);height=Math.max(1,h);renderer.setPixelRatio(pixelRatio(dpr));renderer.setSize(width,height,false);canvas.style.imageRendering=detail==='good'?'pixelated':'auto';frameCamera();}
+  function setDetail(next){if(next!=='good'&&next!=='better'&&next!=='best')return detail;detail=next;resize(width,height);return detail;}
   function update(next){if(disposed)return;model.update(next);if(mode==='mapped'){const mapped=mappedCameraFrame(model.snapshot);desired.angle=current.angle=mapped.angle;desired.elevation=current.elevation=mapped.elevation;}}
   function selectAt(x,y){
     const bounds=canvas.getBoundingClientRect();raycaster.setFromCamera(new T.Vector2((x-bounds.left)/bounds.width*2-1,-(y-bounds.top)/bounds.height*2+1),camera);
@@ -137,5 +139,5 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
   function dispose(){if(disposed)return;disposed=true;for(const [event,handler]of Object.entries(handlers))canvas.removeEventListener(event,handler);pointers.clear();haloGeometry.dispose();haloMaterial.dispose();halo.removeFromParent();model.dispose();renderer.dispose();renderer.forceContextLoss();}
   resize(canvas.clientWidth||1000,canvas.clientHeight||700);
   onCameraChange(cameraState());
-  return {invalidateShadows:()=>{renderer.shadowMap.needsUpdate=true;},frameObject,pick,clearClip,project,get clipping(){return !!clipBox;},resize,update,render,preset,rotate,zoomBy,setLighting,clearSelection,dispose,get bestPeopleCount(){return peopleStatus().ready;},get bestPeopleStatus(){return peopleStatus();},get blenderAssets(){return model.world.children.filter(o=>o.userData.assetStatus==='ready').length;},get blenderCounters(){return model.world.children.filter(o=>o.userData.type==='counter'&&o.userData.assetStatus==='ready').length;},get snapshot(){return model.snapshot;},get cameraState(){return cameraState();}};
+  return {invalidateShadows:()=>{renderer.shadowMap.needsUpdate=true;},frameObject,pick,clearClip,project,get clipping(){return !!clipBox;},resize,update,render,preset,rotate,zoomBy,setLighting,setDetail,clearSelection,dispose,get bestPeopleCount(){return peopleStatus().ready;},get bestPeopleStatus(){return peopleStatus();},get blenderAssets(){return model.world.children.filter(o=>o.userData.assetStatus==='ready').length;},get blenderCounters(){return model.world.children.filter(o=>o.userData.type==='counter'&&o.userData.assetStatus==='ready').length;},get snapshot(){return model.snapshot;},get cameraState(){return cameraState();}};
 }

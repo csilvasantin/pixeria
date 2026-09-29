@@ -44,7 +44,7 @@ export async function mountXpace(host, item, {signal,furniture=false,onModel}={}
     :viewerShell({en,title:cafeTitle(item),stamp});
   const chrome=furniture?null:bindChrome(host,{en});
   const stage=host.querySelector('.xpace-stage'),canvas=host.querySelector('canvas'),status=host.querySelector('[role=status]');
-  let viewer,root,inventory,frame=0,observer,disposed=false,pan=false;
+  let viewer,root,inventory,frame=0,observer,disposed=false,pan=false,emision=null;
   const listeners=[];
   const on=(el,event,handler,opts)=>{el.addEventListener(event,handler,opts);listeners.push(()=>el.removeEventListener(event,handler,opts));};
   function dispose(){if(disposed)return;disposed=true;cancelAnimationFrame(frame);observer?.disconnect();for(const off of listeners)off();inventory?.dispose();viewer?.dispose();if(root)release(root);signal?.removeEventListener('abort',dispose);}
@@ -89,13 +89,24 @@ export async function mountXpace(host, item, {signal,furniture=false,onModel}={}
     if(inventory)await inventory.ready;
     if(disposed)return dispose;
     if(onModel)await onModel({root,viewer,size,canvas,on,resizeModel:next=>{snapshot.cols=next[0]/100;snapshot.rows=next[1]/100;snapshot.wallHeight=next[2]/100;}});
+    if(!disposed && !furniture){
+      try{
+        const mod=await import('./emision.mjs?v=emision-4742');
+        if(mod.serves(item.id)){
+          emision=mod.mountEmision({host,root,stage,signal});
+          listeners.push(()=>emision.dispose());
+          host.xpaceRefresh=()=>emision.refresh();
+          host.xpaceSetTier=tier=>emision.setTier(viewer,tier);
+          host.xpaceArm=()=>emision.arm();
+        }
+      }catch(error){console.warn('[emision]',error);}
+    }
     status.hidden=true;host.dataset.ready='true';
     // Enlace de vista con &ver=<id>: encuadra y resalta ese objeto al abrir.
     inventory?.openFromURL();
     function tick(now){if(disposed)return;if(!document.hidden)viewer.render(now);frame=requestAnimationFrame(tick);}frame=requestAnimationFrame(tick);
-    // Read-only diagnostics make camera motion and resource cleanup testable.
     host.xpaceBookPoint=id=>{const c=bound?.capsulas?.bookCenter?.(id);return c?viewer.project(c):null;};
-    host.xpaceState=()=>({camera:viewer.cameraState,disposed,inventory:inventory?.state(),capsulas:bound?.capsulas?.state||null,itil:itil?.state?.()||null});
+    host.xpaceState=()=>({camera:viewer.cameraState,disposed,inventory:inventory?.state(),capsulas:bound?.capsulas?.state||null,itil:itil?.state?.()||null,emision:emision?.state()||null});
     return dispose;
   } catch(error) {
     dispose();if(signal?.aborted)return dispose;
