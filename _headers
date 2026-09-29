@@ -11,3 +11,12 @@
 /auth/*
   Cache-Control: no-store
   X-Robots-Tag: noindex, nofollow
+
+/demo/biblioteca/*
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, HEAD, OPTIONS
+  X-Robots-Tag: noindex, nofollow
+
+/demo/biblioteca/piezas.json
+  Content-Type: application/json; charset=utf-8
+  Cache-Control: no-cache
