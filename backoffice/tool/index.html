@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=20260813-auth-redirect';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=29.09.2026.r3.1913';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="admiranext-version" content="Pixeria v.29.09.2026.r2.18:57">
+  <meta name="admiranext-version" content="Pixeria v.29.09.2026.r3.19:13">
   <title>Labs · Lanetro | Pixeria</title>
   <link rel="canonical" href="https://www.pixeria.com/god/tool/">
   <style>
@@ -571,9 +571,9 @@
       }
     }
   </style>
-  <script defer src="/assets/analytics.js?v=29.09.2026.r2.1857"></script>
-  <script defer src="/assets/consent.js?v=29.09.2026.r2.1857"></script>
-  <script defer src="/assets/site-nav.js?v=29.09.2026.r2.1857"></script>
+  <script defer src="/assets/analytics.js?v=29.09.2026.r3.1913"></script>
+  <script defer src="/assets/consent.js?v=29.09.2026.r3.1913"></script>
+  <script defer src="/assets/site-nav.js?v=29.09.2026.r3.1913"></script>
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->
@@ -1028,7 +1028,7 @@
     healthCheck();
     loadYarig();
   </script>
-  <script src="../backoffice-auth.js?v=20260813-auth-redirect"></script>
+  <script src="../backoffice-auth.js?v=29.09.2026.r3.1913"></script>
   <script src="../backoffice-mode.js"></script>
 </body>
 </html>

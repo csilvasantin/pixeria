@@ -28,9 +28,9 @@ VIEWPORT_RE = re.compile(r'<meta\s+name="viewport"[^>]*>')
 HEAD_RE = re.compile(r'<head[^>]*>')
 # El ?v= de los assets propios sale del sello (Carlos, 29-sep-2026): /assets se
 # sirve con max-age=14400, así que un release que cambia cuadratura.js pero deja
-# el ?v= de ayer se ve en local y NO en la web hasta 4 h después. Cada sello
+# el ?v= de ayer (y lo mismo workspace.css, app.js…) se ve en local y NO en la web hasta 4 h después. Cada sello
 # nuevo cambia todas las URLs de /assets y el navegador baja lo publicado.
-ASSET_RE = re.compile(r'''(["'](?:\.\./|\./|/)*assets/[\w./-]+\.(?:js|css))\?v=[^"'\s>]*''')
+ASSET_RE = re.compile(r'''(["'](?!https?:|//)[\w./-]+\.(?:js|css))\?v=[^"'\s>]*''')
 
 
 def pages():

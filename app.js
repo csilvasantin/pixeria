@@ -609,7 +609,7 @@
     updateProLockBadge();
   }
   async function unlockPro() {
-    const pw = prompt('🔒 Modelos PRO bloqueados.\n\nIntroduce el password para desbloquear los modelos de pago (Better + Best · ElevenLabs · Suno · Lyria · Veo · Grok · Runway · Imagen Ultra). Se queda desbloqueado en este navegador hasta que pulses "Bloquear".');
+    const pw = prompt('🔒 Modelos PRO bloqueados.\n\nIntroduce el password para desbloquear los modelos de pago (Better + Best · ElevenLabs · Suno · Lyria · Veo · Grok · Runway · Imagen Ultra). Se queda desbloqueado en este navegador.');
     if (pw == null) return false;
     const h = await _sha256(pw);
     if (h === PRO_PASSWORD_HASH) {
@@ -639,45 +639,11 @@
     alert('Password PRO incorrecto.');
     return '';
   }
-  // Badge insertado en .topnav-actions (al lado del estado XTORE) para no
-  // solaparse con la banda superior Admira·Xperience. Cae a position:fixed
-  // si no encuentra el contenedor.
+  // Sin candado visible (Carlos, 29-sep-2026): ensuciaba la interfaz. El gate
+  // PRO sigue igual: el popup de password salta al usar un modelo de pago.
   function updateProLockBadge() {
-    let el = document.getElementById('proLockBadge');
-    if (!el) {
-      el = document.createElement('button');
-      el.id = 'proLockBadge';
-      el.type = 'button';
-      el.title = 'Estado de modelos PRO (Better+Best). Click para alternar.';
-      el.style.cssText = 'border:1px solid rgba(120,243,255,.35);background:rgba(5,19,28,.78);color:#cceef5;font:600 11px/1 ui-monospace,monospace;letter-spacing:.04em;padding:6px 9px;border-radius:8px;cursor:pointer';
-      el.addEventListener('click', async () => {
-        if (isProUnlocked()) {
-          if (confirm('¿Bloquear de nuevo los modelos PRO? Tendrás que reintroducir el password.')) {
-            setProUnlocked(false);
-          }
-        } else {
-          await unlockPro();
-        }
-      });
-      const host = document.querySelector('.topnav-actions');
-      if (host) {
-        host.appendChild(el);
-      } else {
-        el.style.cssText += ';position:fixed;top:64px;right:14px;z-index:9999';
-        document.body.appendChild(el);
-      }
-    }
-    const on = isProUnlocked();
-    el.textContent = on ? '🔓 PRO' : '🔒 PRO';
-    el.style.color = on ? '#a7f0a8' : '#ffd86b';
-    el.style.borderColor = on ? 'rgba(167,240,168,.4)' : 'rgba(255,216,107,.4)';
-  }
-  if (typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', updateProLockBadge);
-    } else {
-      updateProLockBadge();
-    }
+    const el = document.getElementById('proLockBadge');
+    if (el) el.remove();
   }
   function confirmPro(motor, coste) {
     return (async () => {
