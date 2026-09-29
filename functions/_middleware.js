@@ -27,7 +27,7 @@ export async function onRequest(context) {
   // Visita guiada de distribución (#4762): su guion y la ruta de Smith servida aquí, solo en previews.
   if (request.method === 'GET' && url.hostname.endsWith('.pixeria.pages.dev') &&
       (url.pathname === '/demo/distribucion/' || url.pathname === '/demo/distribucion/index.html' ||
-       url.pathname.startsWith('/demo/ruta/'))) return context.next();
+       url.pathname.startsWith('/demo/ruta/') || url.pathname.startsWith('/api/demo-signage/'))) return context.next();
   if (await hasSession(request, env)) return context.next();
 
   const returnTo = safeReturnTo(url.pathname + url.search);
