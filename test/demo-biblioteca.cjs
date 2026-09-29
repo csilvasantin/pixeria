@@ -14,7 +14,7 @@ const fs = require('node:fs');
  for (const item of catalog.items) {
    const poster = await page.request.get(new URL(item.miniatura,catalogURL).href); assert.equal(poster.status(),200);
    const card = page.locator(`[data-circuito="${item.circuito}"]`);
-   const measured = await card.locator('video').evaluate(v=>new Promise((resolve,reject)=>{v.onloadedmetadata=()=>resolve(v.duration);v.onerror=()=>reject(new Error('Video failed'));v.load();}));
+   const measured = await card.locator('video').evaluate(v=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Video metadata timeout')),20000);v.onloadedmetadata=()=>{clearTimeout(timer);resolve(v.duration);};v.onerror=()=>{clearTimeout(timer);reject(new Error('Video failed'));};v.preload='metadata';v.load();}));
    assert.ok(Math.abs(measured-item.duration)<0.1, `${item.marca} duration`);
    const target = new URL(await card.locator('.distribute').getAttribute('href'));
    assert.equal(target.searchParams.get('pieza'),item.videoId); assert.equal(target.searchParams.get('piezas'),catalogURL);
