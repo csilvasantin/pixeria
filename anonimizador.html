@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=30.09.2026.r1.1403';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=30.09.2026.r2.1455';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.30.09.2026.r1.14:03">
+  <meta name="admiranext-version" content="Pixeria v.30.09.2026.r2.14:55">
   <link rel="canonical" href="https://www.pixeria.com/anonimizador.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/anonimizador.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/anonimizador.html">
@@ -49,10 +49,10 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=30.09.2026.r1.1403">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=30.09.2026.r1.1403">
-  <script defer src="/assets/analytics.js?v=30.09.2026.r1.1403"></script>
-  <script defer src="/assets/consent.js?v=30.09.2026.r1.1403"></script>
+  <link rel="stylesheet" href="workspace.css?v=30.09.2026.r2.1455">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=30.09.2026.r2.1455">
+  <script defer src="/assets/analytics.js?v=30.09.2026.r2.1455"></script>
+  <script defer src="/assets/consent.js?v=30.09.2026.r2.1455"></script>
   <style>
     .anon-main{max-width:1080px;margin:0 auto;padding:0 20px 64px;display:flex;flex-direction:column;gap:22px}
     .anon-stage-wrap{display:flex;flex-direction:column;gap:16px}
@@ -114,8 +114,16 @@
     .anon-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(18px);z-index:9998;background:rgba(2,18,6,.96);border:1px solid var(--accent,#39d353);border-radius:12px;padding:12px 18px;color:var(--fg,#dffbe6);font-size:14px;box-shadow:0 10px 34px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;max-width:92vw;text-align:center}
     .anon-toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
     .anon-toast a{color:var(--accent,#39d353);font-weight:700;text-decoration:underline}
-  </style>
-  <script defer src="/assets/site-nav.js?v=30.09.2026.r1.1403"></script>
+
+    .anon-demo-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 20px}.anon-demo-tools p{flex:1 1 240px;margin:0;color:var(--muted,#a2b4ac)}
+    body.anon-demo .anon-source,body.anon-demo .anon-go,body.anon-demo #btnPublish,body.anon-demo #btnDownload{display:none}
+    body.anon-demo .anon-frame{height:clamp(210px,30vw,370px);aspect-ratio:auto}
+    body.anon-demo .anon-frame img{object-fit:contain;width:100%;height:100%}
+    body.anon-demo .anon-card{background:#0e2221;border-color:#438675}
+    body.anon-demo .anon-pipeline{display:none}
+    .anon-demo-download{display:block;padding:10px;text-align:center;color:#8af0bf}
+</style>
+  <script defer src="/assets/site-nav.js?v=30.09.2026.r2.1455"></script>
 </head>
 <body data-page="anonimizador">
   <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
@@ -168,11 +176,12 @@
   <header class="page-head">
     <p class="eyebrow image">Privacidad por diseño · Anonimizador</p>
     <h1>De persona real a alguien que no existe.</h1>
-    <p class="lead">Te saco una foto, se convierte en un NPC como los que pasean por el gemelo digital y vuelve a salir como una persona realista <strong>parecida pero distinta</strong>. El paso por píxel borra la cara real: lo que guardas ya no es nadie. Pensado para usar audiencias y viandantes en signage y Pixer Feed sin exponer identidades.</p>
+    <p class="lead">Empieza con una persona ficticia ya preparada: compara 8, 16 y 32 bits y envíala al Xpacio. También puedes transformar tu propia foto.</p>
   </header>
 
   <main class="anon-main">
     <section class="anon-stage-wrap">
+      <div class="anon-demo-tools"><p>Prueba sin cámara: una persona ficticia en tres estilos, lista para tu Xpacio.</p><button class="btn" type="button" id="btnDemo">Usar ejemplo</button><button class="btn" type="button" id="btnOwn">Usar mi foto</button></div>
       <div class="anon-source">
         <div class="anon-cam" id="camWrap">
           <div class="anon-cam-hint" id="camHint">
@@ -253,22 +262,23 @@
       <p class="anon-status" id="status" aria-live="polite">Captura, sube o arrastra una foto y empiezo a anonimizar solo.</p>
 
       <div class="anon-result-actions">
+        <a class="btn" href="https://www.xpaceos.com/admira-xp/" target="_blank" rel="noopener">Abrir Xpacio ↗</a>
         <button type="button" class="btn" id="btnDownload" disabled>⬇ Descargar anónimo</button>
         <button type="button" class="btn" id="btnPublish" disabled>📤 Publicar en Stock</button>
-        <button type="button" class="btn primary" id="btnSendStore" disabled>🏪 Enviar a la tienda</button>
+        <button type="button" class="btn primary" id="btnSendStore" disabled>🏪 Enviar al Xpacio</button>
       </div>
       <div class="anon-prog" id="anonProg"><div class="anon-prog-track"><div class="anon-prog-fill" id="anonProgFill"></div></div><div class="anon-prog-label" id="anonProgLabel"></div></div>
 
       <div class="anon-privacy">
         <span aria-hidden="true">🔒</span>
-        <div><b>Privacidad por diseño.</b> La foto original viaja al motor de imagen solo para transformarla y no se guarda en Pixeria. El resultado que conservas es una persona sintética que no se corresponde con nadie real: úsalo en pantallas, campañas y Pixer Feed sin tratar datos biométricos de personas identificables.</div>
+        <div><b>Ejemplo ficticio.</b> La demo no usa cámara ni envía fotos a un motor de generación. Al usar una foto propia, esta se envía al proveedor para transformarla; cambiar el estilo no garantiza eliminar todos los rasgos identificables. El envío al Xpacio es explícito.</div>
       </div>
     </section>
   </main>
 
   <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — el gemelo digital">Pixeria AI Workspace · Anonimizador · v.2026.06.19h-anon</a></footer>
 
-  <script defer src="/matrix-rain.js?v=30.09.2026.r1.1403"></script>
+  <script defer src="/matrix-rain.js?v=30.09.2026.r2.1455"></script>
   <script>
   (function () {
     const $ = (s) => document.querySelector(s);
@@ -295,6 +305,8 @@
     let npc16 = null;      // dataURL NPC 16-bit
     let anon = null;       // dataURL persona anónima final
     let busy = false;
+    let demoActive = false;
+    let sendInFlight = false;
     let segment = null;    // {sex, age} elegido al inventar → viaja a la publi (tags Stock)
     let enginesUsed = new Set();   // modelos que generaron los NPCs/persona (para el tooltip de "Listo")
     let originalSource = 'foto';   // de dónde salió el original (cámara / subida / Grok)
@@ -389,6 +401,7 @@
     }
 
     function showOriginal(dataURL) {
+      leaveDemo();
       original = dataURL; npc8 = null; npc16 = null; anon = null;
       frameFillFinish(els.frame1, dataURL);
       els.frame2.innerHTML = '<div class="ph">NPC 8-bit<br>(NES)</div>';
@@ -730,7 +743,8 @@
     // Enviar el NPC 8-bit al gemelo (cola /twin/spawn) y ESPERAR el ACK REAL del
     // gemelo (cuando lo spawnea andando) antes de decir "en la tienda".
     async function sendStore() {
-      if (!npc8) return;
+      if (!npc8 || sendInFlight) return;
+      sendInFlight = true;
       const btn = els.sendStore, label = btn.dataset.label || btn.textContent;
       btn.dataset.label = label;
       btn.disabled = true; btn.classList.remove('ok'); els.status.classList.remove('err');
@@ -751,7 +765,7 @@
         const npc16Small = npc16 ? await downscale(npc16, 256, 'image/png') : null;
         const r = await fetch(WORKER + '/twin/spawn', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(Object.assign({ image: sprite, name: npcName }, persona ? { persona } : {}, npc16Small ? { npc16: npc16Small } : {}))
+          body: JSON.stringify(Object.assign({ image: sprite, name: npcName }, demoActive ? { demo_id: 'visitor-green-v1', npc32: await downscale(demoAssets.npc32, 512, 'image/png') } : {}, persona ? { persona } : {}, npc16Small ? { npc16: npc16Small } : {}))
         });
         const d = await r.json().catch(() => ({}));
         if (!r.ok || !d.ok) throw new Error((d && (d.error || d.detail)) || ('HTTP ' + r.status));
@@ -765,6 +779,7 @@
           btn.textContent = '✓ En la tienda'; btn.classList.add('ok');
           els.status.innerHTML = '🏪 <b>Ya en la tienda.</b> Tu NPC 8-bit está paseando por el gemelo — <a href="' + STORE_URL + '" target="_blank" rel="noopener" style="color:var(--accent,#39d353);font-weight:700;text-decoration:underline">ábrela para verlo ↗</a>';
           storeToast('✅ ¡NPC ya en la tienda! <a href="' + STORE_URL + '" target="_blank" rel="noopener">Abrir la tienda ↗</a>', true);
+          if(demoActive) setStatus('Recibido por el Xpacio. Activa /clientes on y cambia entre Good, Better y Best.');
           setTimeout(() => progShow(false), 900);
         } else {
           // Sin ack en 30s: no hay ninguna tienda abierta recogiendo la cola. Honesto.
@@ -774,8 +789,9 @@
           storeToast('🕓 NPC en cola — <a href="' + STORE_URL + '" target="_blank" rel="noopener">abre la tienda para que entre ↗</a>', true);
           setTimeout(() => progShow(false), 1200);
         }
-        setTimeout(() => { btn.textContent = label; btn.classList.remove('ok'); btn.disabled = false; }, 3600);
+        setTimeout(() => { btn.textContent = label; btn.classList.remove('ok'); btn.disabled = !npc8; }, 3600);
       } catch (e) { progShow(false); setStatus('No se pudo enviar a la tienda: ' + e.message, true); btn.disabled = false; }
+      sendInFlight = false;
     }
     // Sondea /twin/spawn/status?id= hasta que el gemelo confirme el spawn (ACK) o se
     // agote el tiempo. La barra avanza asintóticamente hacia ~88% mientras espera.
@@ -866,7 +882,7 @@
         els.btnCam.disabled = true; els.btnCam.classList.remove('primary');
         els.btnCam.textContent = '📷 Sin cámara';
         els.invent.classList.add('primary');
-        setStatus('No detecto cámara: pulsa “Crear audiencia”, sube una foto o arrástrala.');
+        if (!demoActive) setStatus('No detecto cámara: pulsa “Crear audiencia”, sube una foto o arrástrala.');
       }
     })();
     function loadDataURL(url) {
@@ -919,10 +935,41 @@
     els.download.addEventListener('click', download);
     els.publish.addEventListener('click', publish);
     els.sendStore.addEventListener('click', sendStore);
+
+
+    const demoAssets = {original:'/assets/anonymizer-demo/original.jpg', npc8:'/assets/anonymizer-demo/8-bit.png', npc16:'/assets/anonymizer-demo/16-bit.png', npc32:'/assets/anonymizer-demo/32-bit.png'};
+    const originalHeading = document.querySelector('h1').textContent;
+    const originalFirstHead = els.card1.querySelector('.step').textContent;
+    const originalCardHead = els.card4.querySelector('.anon-card-head').innerHTML;
+    function leaveDemo() {
+      demoActive = false; document.body.classList.remove('anon-demo');
+      document.querySelector('h1').textContent=originalHeading;els.card1.querySelector('.step').textContent=originalFirstHead;
+      els.card4.querySelector('.anon-card-head').innerHTML = originalCardHead;
+      document.querySelectorAll('.anon-demo-download').forEach(a=>a.remove());
+    }
+    function loadDemo() {
+      if (busy || sendInFlight) return;
+      stopCam(); leaveDemo(); demoActive = true; document.body.classList.add('anon-demo');
+      document.querySelector('h1').textContent='Una persona. Tres estilos.';els.card1.querySelector('.step').textContent='01 · demo';
+      original = demoAssets.original; npc8 = demoAssets.npc8; npc16 = demoAssets.npc16; anon = demoAssets.original;
+      segment = {sex:'hombre',age:'adulto',desc:'Demo · fictional green cardigan visitor'};
+      originalSource = 'Pixeria demo · imagegen';
+      [original,npc8,npc16,demoAssets.npc32].forEach((src,i)=>{
+        const card=document.getElementById('card'+(i+1));frameFillFinish(document.getElementById('frame'+(i+1)),src);
+        const a=document.createElement('a');a.className='anon-demo-download';a.href=src;a.download='pixeria-demo-'+['original.jpg','8-bit.png','16-bit.png','32-bit.png'][i];a.textContent="Descargar";card.appendChild(a);
+      });
+      els.card4.querySelector('.anon-card-head').innerHTML='<span>NPC 32-bit</span><span class="step">04 · 3D</span>';
+      els.go.disabled=false;els.sendStore.disabled=false;els.download.disabled=true;els.publish.disabled=true;
+      activeCard(null);progShow(false);
+      setStatus('Demo lista · 8, 16 y 32 bits. Enviar al Xpacio añade un visitante; activa /clientes on para verlo.');
+    }
+    $('#btnDemo').addEventListener('click',loadDemo);
+    $('#btnOwn').addEventListener('click',()=>{if(busy || sendInFlight)return;leaveDemo();original=null;npc8=null;npc16=null;anon=null;els.sendStore.disabled=true;els.go.disabled=true;els.download.disabled=true;els.publish.disabled=true;setStatus('Activa la cámara o sube tu foto para crear otro personaje.');els.btnUpload.focus();});
+    loadDemo();
     window.addEventListener('beforeunload', stopCam);
   })();
   </script>
-  <script defer src="/assets/cuadratura.js?v=30.09.2026.r1.1403"></script>
+  <script defer src="/assets/cuadratura.js?v=30.09.2026.r2.1455"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
