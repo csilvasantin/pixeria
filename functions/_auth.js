@@ -4,7 +4,7 @@ const CALLBACK_URI = 'https://www.pixeria.com/auth/callback';
 const WHITELIST_URL = 'https://whitelist.admira.store/list';
 const SESSION_COOKIE = '__Host-pixeria_session';
 const CHALLENGE_COOKIE = '__Host-pixeria_login_nonce';
-const SESSION_TTL_SECONDS = 12 * 60 * 60;
+const SESSION_TTL_SECONDS = 24 * 60 * 60;
 const API_TOKEN_TTL_SECONDS = 15 * 60;
 const CHALLENGE_TTL_MS = 10 * 60 * 1000;
 const OWNER_FALLBACK = new Set(['csilva@admira.com', 'csilvasantin@gmail.com']);
@@ -87,7 +87,7 @@ function normalEmail(value) {
 
 export function safeReturnTo(value) {
   const candidate = String(value || '/');
-  if (!candidate.startsWith('/') || candidate.startsWith('//') || candidate.length > 1024) return '/';
+  if (!candidate.startsWith('/') || candidate.startsWith('//') || candidate.length > 1024 || /[\\\u0000-\u001f\u007f]/.test(candidate)) return '/';
   if (candidate.startsWith('/auth/')) return '/';
   return candidate;
 }
@@ -257,10 +257,24 @@ async function readSession(request, env) {
     await ensureSchema(env);
     const user = await env.AUTH_DB.prepare('SELECT * FROM pixeria_users WHERE email=? AND google_sub=?').bind(email, String(payload.sub || '')).first();
     if (!user || user.status !== 'active' || Number(user.session_version) !== Number(payload.sv)) return null;
-    return {email:user.email};
+    return {email:user.email, payload};
   } catch (_) {
     return null;
   }
+}
+
+// Upgrade a still-valid 12 h session once, without making the expiry slide on
+// every visit. Signature, allowlist, suspension and session version were checked
+// by readSession; the new deadline remains 24 h after the original Google login.
+async function withSessionRenewal(response, session, env) {
+  const expiresAt = Number(session.payload.iat) + SESSION_TTL_SECONDS;
+  if (Number(session.payload.exp) < expiresAt) {
+    const payload = base64url(encoder.encode(JSON.stringify({...session.payload, exp:expiresAt})));
+    const token = `${payload}.${await hmac(env.PIXERIA_SIGNING_KEY, `px:${payload}`)}`;
+    const maxAge = expiresAt - Math.floor(Date.now() / 1000);
+    response.headers.append('Set-Cookie', `${SESSION_COOKIE}=${token}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Lax`);
+  }
+  return response;
 }
 
 function loginCsrfValid(request, formToken) {
@@ -283,7 +297,7 @@ function secureHeaders(contentType = 'text/html; charset=utf-8') {
 
 function loginPage(nonce, error = '') {
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pixeria · Acceso</title><style>
-  :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 35%,#18240e,#070a04 68%);color:#f4e2b0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.box{width:100%;max-width:430px;min-width:0;padding:36px 30px;border:1px solid #b5651d;border-radius:16px;background:#120d06;box-shadow:0 25px 80px #000b;text-align:center}.mark{color:#e8c25a;font:700 12px ui-monospace,monospace;letter-spacing:.24em;text-transform:uppercase}h1{margin:16px 0 8px;font-size:28px}p{margin:0 0 24px;color:#baaa86;line-height:1.55}.picker{display:flex;justify-content:center;min-height:44px;max-width:100%;overflow:hidden}@media (max-width:430px){body{padding:14px}.box{padding:28px 18px}}.error{margin-top:18px;color:#ff8f7a;font:600 13px ui-monospace,monospace}.foot{margin-top:24px;color:#74684f;font:11px ui-monospace,monospace}</style></head><body><main class="box"><div class="mark">Pixeria · Google</div><h1>Acceso con Google</h1><p>El mismo acceso de Google funciona en cualquier navegador. Pixeria comprueba que la cuenta esté autorizada y crea una sesión segura en este dispositivo.</p><div id="g_id_onload" data-client_id="${CLIENT_ID}" data-login_uri="${CALLBACK_URI}" data-nonce="${escapeHtml(nonce)}" data-ux_mode="redirect" data-auto_prompt="false"></div><div class="picker"><div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="continue_with" data-size="large" data-ux_mode="redirect"></div></div>${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}<div class="foot">csilva@admira.com · csilvasantin@gmail.com</div></main><script src="https://accounts.google.com/gsi/client" async defer></script></body></html>`;
+  :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 35%,#18240e,#070a04 68%);color:#f4e2b0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.box{width:100%;max-width:430px;min-width:0;padding:36px 30px;border:1px solid #b5651d;border-radius:16px;background:#120d06;box-shadow:0 25px 80px #000b;text-align:center}.mark{color:#e8c25a;font:700 12px ui-monospace,monospace;letter-spacing:.24em;text-transform:uppercase}h1{margin:16px 0 8px;font-size:28px}p{margin:0 0 24px;color:#baaa86;line-height:1.55}.picker{display:flex;justify-content:center;min-height:44px;max-width:100%;overflow:hidden}@media (max-width:430px){body{padding:14px}.box{padding:28px 18px}}.error{margin-top:18px;color:#ff8f7a;font:600 13px ui-monospace,monospace}.foot{margin-top:24px;color:#74684f;font:11px ui-monospace,monospace}</style></head><body><main class="box"><div class="mark">Pixeria · Google</div><h1>Acceso con Google</h1><p>Entra una vez con tu cuenta autorizada de Google. Tu sesión se conserva durante 24 horas en las pestañas y ventanas de este navegador y perfil.</p><div id="g_id_onload" data-client_id="${CLIENT_ID}" data-login_uri="${CALLBACK_URI}" data-nonce="${escapeHtml(nonce)}" data-ux_mode="redirect" data-auto_prompt="false"></div><div class="picker"><div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="continue_with" data-size="large" data-ux_mode="redirect"></div></div>${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}<div class="foot">csilva@admira.com · csilvasantin@gmail.com</div></main><script src="https://accounts.google.com/gsi/client" async defer></script></body></html>`;
 }
 
 async function loginResponse(env, returnTo = '/', error = '', status = 401) {
@@ -313,7 +327,14 @@ export async function handleAuth(request, env) {
         'cache-control':'no-store', 'referrer-policy':'no-referrer'
       }});
     }
-    return loginResponse(env, url.searchParams.get('return_to') || '/');
+    const returnTo = safeReturnTo(url.searchParams.get('return_to') || '/');
+    const session = await readSession(request, env);
+    if (session) {
+      return withSessionRenewal(new Response(null, {status:302, headers:{
+        location:returnTo, 'cache-control':'no-store', 'referrer-policy':'no-referrer'
+      }}), session, env);
+    }
+    return loginResponse(env, returnTo);
   }
   if (url.pathname === '/auth/callback' && request.method === 'POST') {
     const form = await request.formData();
@@ -339,9 +360,9 @@ export async function handleAuth(request, env) {
     const session = await readSession(request, env);
     if (!session) return Response.json({ok:false}, {status:401, headers:{'cache-control':'no-store'}});
     const minted = await createApiToken(env, session.email);
-    return Response.json({ok:true, token:minted.token, exp:minted.exp, email:session.email}, {
+    return withSessionRenewal(Response.json({ok:true, token:minted.token, exp:minted.exp, email:session.email}, {
       headers:{'cache-control':'no-store', 'referrer-policy':'no-referrer'}
-    });
+    }), session, env);
   }
   if (url.pathname === '/auth/verify' && request.method === 'POST') {
     let body = {};
@@ -354,10 +375,11 @@ export async function handleAuth(request, env) {
   }
   if (url.pathname === '/auth/session' && request.method === 'GET') {
     const session = await readSession(request, env);
-    return Response.json(session ? {ok:true, email:session.email} : {ok:false}, {
+    const response = Response.json(session ? {ok:true, email:session.email} : {ok:false}, {
       status:session ? 200 : 401,
       headers:{'cache-control':'no-store', 'referrer-policy':'no-referrer'}
     });
+    return session ? withSessionRenewal(response, session, env) : response;
   }
   if (url.pathname === '/auth/logout' && (request.method === 'GET' || request.method === 'POST')) {
     const response = new Response(null, {status:303, headers:{location:'/auth/login', 'cache-control':'no-store'}});
