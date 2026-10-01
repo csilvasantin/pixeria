@@ -2523,6 +2523,9 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
   align-items: center;
   gap: 6px;
 }
+/* El display:flex de arriba pisaba el [hidden] del navegador: las flechas del
+   paginador superior seguían visibles al filtrar a una sola página. */
+.stock-pager-controls[hidden] { display: none; }
 .stock-pager-btn {
   appearance: none;
   min-width: 36px;

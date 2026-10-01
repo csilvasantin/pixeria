@@ -1,8 +1,7 @@
 {
-  "version": "v.01.10.2026.r1.05:25",
+  "version": "v.01.10.2026.r2.05:29",
   "deployer": "NeoMBP14",
   "machine": "MacBookProNegro14",
   "signature": "NeoMBP14 · MacBookProNegro14",
-  "mission": "DCL-84b9833ab8ae4d9f00b4a18b",
-  "encargo": 2940
+  "mission": "DCL-03b2acd5c4870ba220bf9e4f"
 }

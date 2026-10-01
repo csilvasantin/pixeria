@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r1.0525';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r2.0529';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r1.05:25">
+  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r2.05:29">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -50,8 +50,8 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=01.10.2026.r1.0525">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=01.10.2026.r1.0525">
+  <link rel="stylesheet" href="workspace.css?v=01.10.2026.r2.0529">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=01.10.2026.r2.0529">
   <style>
     /* Contador de elementos en stock (en el título), con flash al crecer */
     .stock-count{ font-variant-numeric:tabular-nums; display:inline-block; }
@@ -112,6 +112,17 @@
       background:var(--bg); border:1px solid var(--line-bright); color:var(--matrix); border-radius:6px; padding:6px 8px; font-family:inherit; font-size:12px; }
     .dist-sched-row input[type="number"]{ width:64px; }
     .dist-sched-note{ font-size:11px; color:var(--muted); opacity:.85; }
+    /* Aviso de programación: prominente (no letra pequeña). Deja claro que las
+       tareas server-side sobreviven al cierre, y que el fallback local NO. */
+    .dist-sched-warn{ border:1px solid var(--line-bright); border-left:3px solid var(--matrix);
+      border-radius:8px; padding:10px 12px; background:rgba(0,255,65,.06); display:flex; flex-direction:column; gap:6px; }
+    .dist-sched-warn-main{ margin:0; font-size:13px; line-height:1.4; color:var(--ink); }
+    .dist-sched-warn-fallback{ margin:0; font-size:12.5px; line-height:1.45; color:#ffb454;
+      border-top:1px dashed var(--line); padding-top:6px; }
+    .dist-sched-warn b{ color:var(--matrix); }
+    .dist-sched-warn-fallback b{ color:#ffb454; }
+    .distq-tag-local{ color:#020602; background:#ffb454; padding:1px 6px; border-radius:4px; font-weight:600; }
+    .distq-tag-server{ color:var(--matrix); border:1px solid var(--line-bright); padding:1px 6px; border-radius:4px; }
 
     .dist-screens-head{ display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--muted); }
     .dist-screens-head a{ color:var(--matrix); cursor:pointer; text-decoration:underline; }
@@ -299,11 +310,11 @@
     .cat-result.sum{ color:var(--muted); border-style:dashed; }
     .cat-result a{ color:var(--matrix); }
   </style>
-  <script defer src="/assets/analytics.js?v=01.10.2026.r1.0525"></script>
-  <script defer src="/assets/consent.js?v=01.10.2026.r1.0525"></script>
-  <script defer src="/assets/site-nav.js?v=01.10.2026.r1.0525"></script>
-  <script defer src="/assets/descarga-local.js?v=01.10.2026.r1.0525"></script>
-  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=01.10.2026.r1.0525">
+  <script defer src="/assets/analytics.js?v=01.10.2026.r2.0529"></script>
+  <script defer src="/assets/consent.js?v=01.10.2026.r2.0529"></script>
+  <script defer src="/assets/site-nav.js?v=01.10.2026.r2.0529"></script>
+  <script defer src="/assets/descarga-local.js?v=01.10.2026.r2.0529"></script>
+  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=01.10.2026.r2.0529">
 <link rel="stylesheet" href="/assets/furniture/editor.css">
 </head>
 <body data-page="stock">
@@ -546,7 +557,10 @@
             <label>Nº de pases <input type="number" id="distPasses" min="1" max="50" value="1"></label>
             <label>cada <input type="number" id="distEvery" min="1" max="240" value="5"> min</label>
           </div>
-          <p class="dist-sched-note">La programación es local: corre mientras esta pestaña esté abierta. La cola sobrevive a recargas.</p>
+          <div class="dist-sched-warn" role="note">
+            <p class="dist-sched-warn-main">⏰ Lo programado se guarda en el <b>servidor</b> y se emite aunque cierres esta pestaña o el navegador.</p>
+            <p class="dist-sched-warn-fallback">⚠️ <b>Solo si el servidor no responde</b>, la tarea queda <b>📍 local</b>: en ese caso <b>únicamente se emite mientras esta pestaña siga abierta</b> — si la cierras, se detiene. El estado real (servidor o 📍 local) aparece en cada tarea de la cola ⏰.</p>
+          </div>
         </div>
 
         <div class="dist-screens-head">
@@ -647,8 +661,8 @@
     </form>
   </dialog>
 
-  <script defer src="/matrix-rain.js?v=01.10.2026.r1.0525"></script>
-  <script src="app.js?v=01.10.2026.r1.0525"></script>
+  <script defer src="/matrix-rain.js?v=01.10.2026.r2.0529"></script>
+  <script src="app.js?v=01.10.2026.r2.0529"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "./assets/xpaces/catalog.mjs";
   import {isFurniture3D} from "./assets/furniture/catalog.mjs";
@@ -2341,7 +2355,9 @@
         box.innerHTML = pend.map(t => {
           const when = new Date(t.fireAt).toLocaleString('es', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
           const passes = t.total > 1 ? ` · pase ${t.total - t.passesLeft + 1}/${t.total} (cada ${t.everyMin}m)` : '';
-          const tag = t._local ? ' · 📍 local (esta pestaña)' : '';
+          const tag = t._local
+            ? ` · <span class="distq-tag-local" title="Esta tarea NO está en el servidor: solo se emite mientras esta pestaña siga abierta">📍 local · requiere esta pestaña abierta</span>`
+            : ` · <span class="distq-tag-server" title="Programada en el servidor: se emite aunque cierres el navegador">☁ servidor</span>`;
           return `<div class="distq-row" data-qid="${escAttr(t.qid)}" data-local="${t._local ? '1' : '0'}">
             <span class="ql"><b>${escAttr(t.label)}</b><span class="qmeta">⏰ ${when} → ${escAttr(fmtTargets(t.targets))}${passes}${tag}</span></span>
             <span class="qact">
@@ -3194,7 +3210,7 @@
       .catch(()=>{});
   })();
   </script>
-  <script defer src="/assets/cuadratura.js?v=01.10.2026.r1.0525"></script>
+  <script defer src="/assets/cuadratura.js?v=01.10.2026.r2.0529"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
