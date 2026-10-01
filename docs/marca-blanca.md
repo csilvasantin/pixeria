@@ -18,7 +18,7 @@ La marca se mantiene al navegar entre páginas de la misma pestaña. Una pestañ
 
 ## Cómo se carga (un solo enganche)
 
-- **`assets/site-nav.js`** (el shell común: lo cargan 52 de las 73 páginas) es el único punto de entrada. Si la pestaña pide marca (`?marca=` en la URL o `mb:marca` recordada) inserta `assets/marca-blanca.js` con **su mismo sello** (`?v=`). Si no, no carga nada: una visita normal no descarga ni un byte nuevo. La consola experta lo carga al usar `/marca` (`window.PixeriaMarca.cargar()`). Ninguna página lo enlaza a mano.
+- **`assets/site-nav.js`** (el shell común: lo cargan 57 de las 73 páginas, ver `docs/shell-cuadratico.md`) es el único punto de entrada. Si la pestaña pide marca (`?marca=` en la URL o `mb:marca` recordada) inserta `assets/marca-blanca.js` con **su mismo sello** (`?v=`). Si no, no carga nada: una visita normal no descarga ni un byte nuevo. La consola experta lo carga al usar `/marca` (`window.PixeriaMarca.cargar()`). Ninguna página lo enlaza a mano.
 - `assets/marca-blanca.js`, con marca:
   1. **Comprueba primero** que existe: `GET https://www.admiranext.com/marcablanca/api/marcas/<id>` (CORS `*`, 8 s como mucho). 404 → no existe. Si la API no responde, prueba el JSON estático `clientes/<id>.json`, como el cargador común.
   2. Solo entonces carga `marcablanca.css` y `marcablanca.js` de admiranext.com (`data-mb-plataforma="studio"`, `data-mb-auto="false"`) y `assets/marca-blanca.css` (los ajustes de Pixeria, con el mismo sello), y llama a `MarcaBlanca.aplicar(id, {plataforma: 'studio'})`.
@@ -43,11 +43,11 @@ La marca se mantiene al navegar entre páginas de la misma pestaña. Una pestañ
 
 ## Páginas
 
-**Con marca (52, las que cargan `assets/site-nav.js`)**, comprobadas una a una con `?marca=starbucks` en Chrome:
-`index.html`, `_cuadopen.html`, `404.html`, `admira-xp.html`, `anonimizador.html`, `audio.html`, `avatar.html`, `concepto.html`, `director.html`, `ideas.html`, `imagenes.html`, `musica.html`, `plataforma.html`, `privacidad.html`, `publicidad.html`, `stock.html`, `video.html`, `backoffice/` (+ `crear/`, `labs/`, `tool/`), `calendario/`, `campanas/`, `clearchannel/`, `crear/`, `crear-campana/`, `documentacion/`, `hilomusical/`, `labs/`, `mcp/`, `megafonia/`, `radar/`, `segmentado/`, `tester/`, `tool/` y en inglés `en/` (`index`, `_cuadopen`, `admira-xp`, `anonimizador`, `audio`, `avatar`, `concepto`, `crear-campana/`, `director`, `imagenes`, `musica`, `plataforma`, `privacy`, `publicidad`, `radar/`, `stock`, `video`).
-`404.html` y `tester/` no tienen barra de 4 bandas: toman colores, tipografía, favicon, título y «Volver a Admira», pero no hay logo en barra (y `tester/` no tiene consola experta).
+**Con marca (57, las que cargan `assets/site-nav.js`)**. Las 52 primeras se comprobaron una a una con `?marca=starbucks` en Chrome (FLT-101333); `help/`, `hilomusical.html`, `megafonia.html`, `segmentado.html` y `flags/australia/` la heredan desde que llevan el shell (FLT-101334):
+`index.html`, `_cuadopen.html`, `404.html`, `admira-xp.html`, `anonimizador.html`, `audio.html`, `avatar.html`, `concepto.html`, `director.html`, `ideas.html`, `imagenes.html`, `musica.html`, `plataforma.html`, `privacidad.html`, `publicidad.html`, `stock.html`, `video.html`, `backoffice/` (+ `crear/`, `labs/`, `tool/`), `calendario/`, `campanas/`, `clearchannel/`, `crear/`, `crear-campana/`, `documentacion/`, `hilomusical/`, `labs/`, `mcp/`, `megafonia/`, `radar/`, `segmentado/`, `tester/`, `tool/`, `help/`, `hilomusical.html`, `megafonia.html`, `segmentado.html`, `flags/australia/` y en inglés `en/` (`index`, `_cuadopen`, `admira-xp`, `anonimizador`, `audio`, `avatar`, `concepto`, `crear-campana/`, `director`, `imagenes`, `musica`, `plataforma`, `privacy`, `publicidad`, `radar/`, `stock`, `video`).
+Desde FLT-101334 `404.html` y `tester/` también tienen la barra de 4 bandas, con el logo de la marca y la consola experta.
 
-**Sin marca (21, no cargan el shell)**: `help/`, `idea.html`, `hilomusical.html`, `megafonia.html`, `segmentado.html`, `signage.html`, `xtore.html`, `en/crear/`, `en/signage.html`, `en/xtore.html`, `campanas/sabiasque-tabaco/bucle.html` y `slide.html`, `flags/australia/`, y `xpacios/` (`index`, `aulestia-i-pijoan/`, `cafebreria/ci/`, `crear/`, `crear/phone.html`, `grok/`, `xtanco-barcelona/`, `xtanco-valencia/`). Adoptar el shell en ellas es otra decisión; el día que carguen `site-nav.js` heredan la marca sin más cambios.
+**Sin marca (16, las excepciones del shell)**: `idea.html`, `signage.html`, `xtore.html`, `en/crear/`, `en/signage.html`, `en/xtore.html`, `campanas/sabiasque-tabaco/bucle.html` y `slide.html`, y `xpacios/` (`index`, `aulestia-i-pijoan/`, `cafebreria/ci/`, `crear/`, `crear/phone.html`, `grok/`, `xtanco-barcelona/`, `xtanco-valencia/`). Motivos en `docs/shell-cuadratico.md`.
 
 ## Ficheros
 
