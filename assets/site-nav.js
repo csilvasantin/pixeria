@@ -28,9 +28,11 @@
   }
   window.PixeriaMarca = { cargar: loadMarca };
   (function () {
-    var pedida = false;
-    try { pedida = new URLSearchParams(location.search).has('marca') || !!sessionStorage.getItem('mb:marca'); } catch (_) {}
-    if (!pedida) return;
+    var q = null, stored = null;
+    try { q = new URLSearchParams(location.search).get('marca'); stored = sessionStorage.getItem('mb:marca'); } catch (_) {}
+    if (q == null && !stored) return;
+    // ?marca=admira/off solo olvida la marca recordada: se carga para eso, sin velo.
+    if (q != null && /^\s*(off|admira|ninguna|ninguno|none|default|apagar|quitar|reset)?\s*$/i.test(q)) { loadMarca().catch(function () {}); return; }
     // Con marca pedida, la página espera un instante en blanco en vez de enseñar el verde
     // de Pixeria y cambiar de golpe: como mucho 1,5 s, y antes si la marca ya está puesta
     // o no se pudo cargar. Sin marca este velo no existe.

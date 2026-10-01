@@ -88,7 +88,8 @@ test('site-nav.js is the single hook: ?marca= or a remembered brand loads marca-
     assert.equal(scripts.length, 1, `${search}: one script`);
     assert.equal(scripts[0].src, '/assets/marca-blanca.js' + STAMP);
     const veil = r.created.find(n => n.tagName === 'STYLE');
-    assert.ok(veil && /html:not\(\[data-mb-marca\]\) body\{opacity:0/.test(veil.textContent), 'a short veil hides the Matrix look while the brand loads');
+    if (search === '?marca=admira') assert.equal(veil, undefined, 'turning the brand off never blanks the page');
+    else assert.ok(veil && /html:not\(\[data-mb-marca\]\) body\{opacity:0/.test(veil.textContent), 'a short veil hides the Matrix look while the brand loads');
     assert.deepEqual(r.fetched, [], 'site-nav.js itself never talks to admiranext.com');
   }
   const nav = read('assets/site-nav.js');
