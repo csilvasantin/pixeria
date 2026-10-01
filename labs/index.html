@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=30.09.2026.r2.1455';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r1.0525';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,14 +35,14 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.30.09.2026.r2.14:55">
+  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r1.05:25">
   <title>Labs · Pixeria</title>
   <meta name="description" content="Laboratorios y herramientas en producción de Pixeria: Lanetro, Pixer Feed, integraciones físicas y sistemas de signage IA.">
   <meta name="theme-color" content="#0b1117">
   <link rel="canonical" href="https://www.pixeria.com/labs/">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="../assets/styles.css?v=30.09.2026.r2.1455">
+  <link rel="stylesheet" href="../assets/styles.css?v=01.10.2026.r1.0525">
   <style>
     .labs-hero {
       padding-top: 120px;
@@ -104,9 +104,9 @@
       color: var(--muted);
     }
   </style>
-  <script defer src="/assets/analytics.js?v=30.09.2026.r2.1455"></script>
-  <script defer src="/assets/consent.js?v=30.09.2026.r2.1455"></script>
-  <script defer src="/assets/site-nav.js?v=30.09.2026.r2.1455"></script>
+  <script defer src="/assets/analytics.js?v=01.10.2026.r1.0525"></script>
+  <script defer src="/assets/consent.js?v=01.10.2026.r1.0525"></script>
+  <script defer src="/assets/site-nav.js?v=01.10.2026.r1.0525"></script>
 </head>
 <body>
   <!-- Google Tag Manager (noscript) -->
@@ -237,6 +237,6 @@
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
     })();
   </script>
-  <script defer src="/assets/matrix-rain.js?v=30.09.2026.r2.1455"></script>
+  <script defer src="/assets/matrix-rain.js?v=01.10.2026.r1.0525"></script>
 </body>
 </html>
