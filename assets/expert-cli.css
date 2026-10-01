@@ -44,10 +44,6 @@ body .pf-cli[data-cli-open="false"] { display: none !important; }
   .pf-cli-form input { font-size: 16px; }
   .pf-cli-form label { font-size: 10px; }
 }
-/* Consent remains reachable without obscuring the input. */
-body.pf-cli-open #cookie-consent,
-body.pf-cli-open .consent-banner { bottom: calc(var(--pf-cli-height, 48px) + 12px); }
-
 body .pf-cli.pf-cli { width:auto; transform:none; justify-content:initial; align-items:stretch; gap:0; border-radius:0; }
 body .pf-cli .pf-cli-form button { writing-mode:horizontal-tb; min-height:32px; }
 body .pf-cli .pf-cli-form { width:100%; box-sizing:border-box; }

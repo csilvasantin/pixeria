@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r2.0529';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r3.1156';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,9 +35,9 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r2.05:29">
-  <title>Privacidad y cookies — Pixeria</title>
-  <meta name="description" content="Politica de privacidad y de cookies de Pixeria: que datos se recogen (newsletter y analitica), con que base legal y como ejercer tus derechos RGPD.">
+  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r3.11:56">
+  <title>Privacidad — Pixeria</title>
+  <meta name="description" content="Politica de privacidad de Pixeria: que datos se recogen (newsletter y analitica web sin cookies), con que base legal y como ejercer tus derechos RGPD.">
   <meta name="theme-color" content="#020602">
   <link rel="canonical" href="https://www.pixeria.com/privacidad.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/privacidad.html">
@@ -49,7 +49,7 @@
   <link rel="preconnect" href="https://www.carlossilva.info" crossorigin>
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
-  <link rel="stylesheet" href="/assets/styles.css?v=01.10.2026.r2.0529">
+  <link rel="stylesheet" href="/assets/styles.css?v=01.10.2026.r3.1156">
   <style>
     .legal { max-width: 760px; margin: 0 auto; padding: 40px 20px 64px; position: relative; z-index: 1; }
     .legal h1 { color: var(--matrix); text-shadow: var(--glow); font-size: clamp(26px, 4vw, 40px); }
@@ -63,9 +63,7 @@
     .legal th { color: var(--matrix); }
     .legal .note { border: 1px solid var(--line); background: var(--panel); padding: 12px 14px; font-size: 13px; color: var(--muted); }
   </style>
-  <script defer src="/assets/analytics.js?v=01.10.2026.r2.0529"></script>
-  <script defer src="/assets/consent.js?v=01.10.2026.r2.0529"></script>
-  <script defer src="/assets/site-nav.js?v=01.10.2026.r2.0529"></script>
+  <script defer src="/assets/site-nav.js?v=01.10.2026.r3.1156"></script>
 </head>
 <body>
   <canvas id="matrix-rain" aria-hidden="true"></canvas>
@@ -93,8 +91,8 @@
 
   <main class="legal">
     <p class="eyebrow">Pixeria · Legal</p>
-    <h1>Privacidad y cookies</h1>
-    <p class="updated">Ultima actualizacion: 17 de junio de 2026</p>
+    <h1>Privacidad</h1>
+    <p class="updated">Ultima actualizacion: 1 de octubre de 2026</p>
 
     <p>Esta pagina explica que datos personales trata Pixeria, con que finalidad y base legal, y como puedes ejercer tus derechos. Pixeria es un proyecto de creacion de contenidos con IA operado por su responsable; el contacto para cualquier asunto de privacidad es <a href="mailto:hola@admiranext.com">hola@admiranext.com</a>.</p>
 
@@ -106,7 +104,7 @@
       <thead><tr><th>Dato</th><th>Finalidad</th><th>Base legal</th></tr></thead>
       <tbody>
         <tr><td>Email (suscripcion al radar)</td><td>Enviarte el radar mensual de modelos y novedades de Pixeria</td><td>Tu consentimiento</td></tr>
-        <tr><td>Datos de navegacion (Google Analytics)</td><td>Medir el uso del sitio de forma agregada para mejorarlo</td><td>Tu consentimiento (cookies)</td></tr>
+        <tr><td>Datos de navegacion anonimos (Cloudflare Web Analytics)</td><td>Medir el uso del sitio de forma agregada para mejorarlo</td><td>Interes legitimo (sin cookies ni identificadores personales)</td></tr>
         <tr><td>Mensajes que nos envies (email)</td><td>Atender tu solicitud o propuesta</td><td>Interes legitimo / consentimiento</td></tr>
       </tbody>
     </table>
@@ -115,25 +113,25 @@
     <p>Si te suscribes al radar, guardamos tu correo para enviarte la newsletter. Puedes darte de baja en cualquier momento respondiendo a cualquier envio o escribiendo a <a href="mailto:hola@admiranext.com">hola@admiranext.com</a>. No cedemos tu correo a terceros con fines comerciales.</p>
 
     <h2>Cookies y analitica</h2>
-    <p>Usamos <strong>Google Analytics</strong> para entender como se usa el sitio. Estas cookies <strong>no se activan hasta que las aceptas</strong> en el banner de consentimiento (Consent Mode v2: por defecto la analitica esta desactivada). Tambien usamos almacenamiento tecnico propio (localStorage) para recordar tu decision sobre las cookies; esto es necesario para el funcionamiento del aviso y no requiere consentimiento.</p>
+    <p><strong>No usamos cookies de analitica, publicidad ni seguimiento</strong>, y por eso no mostramos ningun banner de cookies. Para entender como se usa el sitio usamos <strong>Cloudflare Web Analytics</strong>, una analitica <strong>sin cookies</strong>: no guarda nada en tu navegador (ni cookies ni localStorage), no usa huellas digitales (fingerprinting) ni identificadores personales, y solo nos ofrece metricas agregadas (paginas vistas, visitas, pais, navegador y rendimiento).</p>
     <table>
       <thead><tr><th>Cookie / almacenamiento</th><th>Tipo</th><th>Finalidad</th></tr></thead>
       <tbody>
-        <tr><td>pixeria_consent (localStorage)</td><td>Tecnica</td><td>Recordar si aceptaste o rechazaste las cookies</td></tr>
-        <tr><td>_ga, _ga_* (Google)</td><td>Analitica (previa aceptacion)</td><td>Medicion de audiencia agregada</td></tr>
+        <tr><td>Cookie de sesion de acceso</td><td>Tecnica (necesaria)</td><td>Mantener tu sesion tras entrar con Google en las zonas de acceso restringido</td></tr>
+        <tr><td>Preferencias de interfaz (localStorage)</td><td>Tecnica</td><td>Recordar ajustes de la pagina, como los paneles visibles</td></tr>
       </tbody>
     </table>
-    <p>Puedes cambiar tu decision borrando los datos del sitio en tu navegador, lo que volvera a mostrar el banner.</p>
+    <p>Este almacenamiento es estrictamente necesario para que el sitio funcione y no requiere consentimiento. Al entrar con Google, Google puede establecer sus propias cookies tecnicas de inicio de sesion. Si algun dia usaramos cookies no necesarias, te pediriamos permiso antes.</p>
 
     <h2>Quien procesa tus datos</h2>
     <ul>
-      <li><strong>Google (Analytics)</strong> — medicion de audiencia, solo tras tu consentimiento.</li>
-      <li><strong>Cloudflare</strong> — infraestructura donde se almacena de forma segura la lista de suscriptores.</li>
+      <li><strong>Google</strong> — inicio de sesion con tu cuenta de Google en las zonas de acceso restringido.</li>
+      <li><strong>Cloudflare</strong> — infraestructura del sitio, almacenamiento seguro de la lista de suscriptores y analitica web sin cookies (Cloudflare Web Analytics).</li>
       <li><strong>GitHub Pages</strong> — alojamiento del sitio web.</li>
     </ul>
 
     <h2>Conservacion</h2>
-    <p>Conservamos tu correo mientras sigas suscrito o hasta que solicites la baja. Los datos de analitica se conservan de forma agregada segun la configuracion de Google Analytics.</p>
+    <p>Conservamos tu correo mientras sigas suscrito o hasta que solicites la baja. Las metricas de Cloudflare Web Analytics son agregadas y no permiten identificarte.</p>
 
     <h2>Tus derechos</h2>
     <p>Puedes ejercer tus derechos de acceso, rectificacion, supresion, oposicion, limitacion y portabilidad escribiendo a <a href="mailto:hola@admiranext.com">hola@admiranext.com</a>. Si lo consideras necesario, tienes derecho a reclamar ante la Agencia Espanola de Proteccion de Datos (<a href="https://www.aepd.es" rel="noopener">aepd.es</a>).</p>
@@ -147,7 +145,7 @@
     <a href="mailto:hola@admiranext.com">hola@admiranext.com</a>
   </footer>
 
-  <script defer src="/assets/matrix-rain.js?v=01.10.2026.r2.0529"></script>
+  <script defer src="/assets/matrix-rain.js?v=01.10.2026.r3.1156"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>

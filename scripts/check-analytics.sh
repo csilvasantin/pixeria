@@ -1,22 +1,16 @@
 #!/usr/bin/env bash
+# Comprueba que ningún HTML vuelve a cargar Google Analytics / Tag Manager ni el
+# banner de cookies. Desde el 1-oct-2026 la analítica es Cloudflare Web Analytics
+# (sin cookies), inyectada automáticamente por Cloudflare en el borde: no hay
+# snippet en el código ni hace falta consentimiento.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-missing=0
-while IFS= read -r file; do
-  if grep -qi '<meta[^>]*http-equiv=["'\'' ]*refresh' "$file"; then
-    continue
-  fi
-
-  if ! grep -q '/assets/analytics.js' "$file"; then
-    printf 'Falta Analytics: %s\n' "$file" >&2
-    missing=1
-  fi
-done < <(find . -type f -name '*.html' -not -path './.git/*' | sort)
-
-if (( missing )); then
+if grep -rIlE 'googletagmanager|gtag\(|/assets/analytics\.js|/assets/consent\.js|cookie-consent' \
+     --include='*.html' --include='*.js' --include='*.css' --exclude-dir=.git --exclude-dir=node_modules . ; then
+  printf 'Hay restos de Google Analytics o del banner de cookies en los ficheros de arriba.\n' >&2
   exit 1
 fi
 
-printf 'OK: Analytics presente en todos los HTML de contenido (redirecciones excluidas).\n'
+printf 'OK: sin Google Analytics ni banner de cookies (analítica: Cloudflare Web Analytics, sin cookies).\n'

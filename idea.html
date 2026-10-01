@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r2.0529';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r3.1156';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,18 +35,13 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r2.05:29">
+  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r3.11:56">
   <title>Pixeria · Concepto</title>
   <link rel="canonical" href="https://www.pixeria.com/concepto.html">
   <meta http-equiv="refresh" content="0; url=/concepto.html">
   <meta name="robots" content="noindex">
-  <script defer src="/assets/analytics.js?v=01.10.2026.r2.0529"></script>
-  <script defer src="/assets/consent.js?v=01.10.2026.r2.0529"></script>
 </head>
 <body>
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KD696XW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
   <p>Esta página se ha movido a <a href="/concepto.html">/concepto.html</a>.</p>
   <script>location.replace('/concepto.html' + location.hash);</script>
   <script src="/assets/admira-version-watch.js" defer></script>
