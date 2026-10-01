@@ -22,9 +22,8 @@
   <link rel="canonical" href="https://www.pixeria.com/hilomusical/">
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
   <link rel="stylesheet" href="/assets/styles.css?v=01.10.2026.r4.1852">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=01.10.2026.r4.1852">
   <style>
-    .flow-page{min-height:100vh;padding:108px clamp(20px,6vw,76px) 64px;background:linear-gradient(90deg,rgba(8,13,19,.97),rgba(8,13,19,.78)),url("/assets/hero-pixeria.jpg") center/cover;color:var(--ink)}
+    .flow-page{min-height:calc(100vh - var(--pf-topbar-h, 70px));padding:108px clamp(20px,6vw,76px) 64px;background:linear-gradient(90deg,rgba(8,13,19,.97),rgba(8,13,19,.78)),url("/assets/hero-pixeria.jpg") center/cover;color:var(--ink)}
     .flow-shell{width:min(100%,980px);display:grid;gap:22px}
     .flow-kicker{width:max-content;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:6px 12px;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
     h1{font-size:clamp(42px,7vw,88px);line-height:.94;margin:0}
@@ -37,9 +36,15 @@
     .actions a{border:1px solid var(--line);border-radius:8px;padding:11px 16px;font-weight:700}
     .actions a.primary{background:var(--gold);border-color:var(--gold);color:#111}
   </style>
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=01.10.2026.r4.1852">
   <script defer src="/assets/site-nav.js?v=01.10.2026.r4.1852"></script>
 </head>
 <body>
+  <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
+  <script>
+  (function(){var b=document.body,m={pixeria_pf_left:'pf-left-off',pixeria_pf_right:'pf-right-off',pixeria_pf_bottom:'pf-bottom-off'};
+  try{for(var k in m){if(localStorage.getItem(k)!=='1')b.classList.add(m[k]);}}catch(e){for(var j in m){b.classList.add(m[j]);}}})();
+  </script>
   <header class="site-header">
     <a class="brand" href="/" aria-label="Pixeria inicio">
       <span>Pixeria</span>
@@ -73,5 +78,6 @@
       </div>
     </section>
   </main>
+  <script defer src="/assets/cuadratura.js?v=01.10.2026.r4.1852"></script>
 </body>
 </html>

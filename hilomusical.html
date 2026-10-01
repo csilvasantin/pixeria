@@ -41,7 +41,8 @@
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
       background-image:radial-gradient(1100px 560px at 50% -10%,rgba(80,200,255,.10),transparent 60%);
-      min-height:100vh;padding:26px 18px 60px}
+      min-height:100vh}
+    .tool-main{display:block;padding:26px 18px 60px}
     .wrap{max-width:640px;margin:0 auto}
     .kick{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan)}
     h1{font-size:clamp(24px,4vw,34px);margin:.15em 0 .1em}
@@ -71,8 +72,32 @@
     .foot{max-width:640px;margin:22px auto 0;font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center}
     .foot a{color:var(--violet);text-decoration:none}
   </style>
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=01.10.2026.r4.1852">
+  <script defer src="/assets/site-nav.js?v=01.10.2026.r4.1852"></script>
 </head>
 <body>
+  <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
+  <script>
+  (function(){var b=document.body,m={pixeria_pf_left:'pf-left-off',pixeria_pf_right:'pf-right-off',pixeria_pf_bottom:'pf-bottom-off'};
+  try{for(var k in m){if(localStorage.getItem(k)!=='1')b.classList.add(m[k]);}}catch(e){for(var j in m){b.classList.add(m[j]);}}})();
+  </script>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Pixeria inicio">
+      <span>Pixeria</span>
+    </a>
+    <nav class="nav" aria-label="Secciones de Pixeria">
+      <a href="/audio.html">Audio</a>
+      <a href="/musica.html">Música</a>
+      <a href="/imagenes.html">Imágenes</a>
+      <a href="/video.html">Video</a>
+      <a href="/tiktok">TikTok</a>
+      <a href="/publicidad.html">Publicidad</a>
+      <a href="/anonimizador.html">Anonimizador</a>
+      <a href="/crear/">Assets</a>
+      <a href="/stock.html">Stock</a>
+    </nav>
+  </header>
+  <main class="tool-main">
   <div class="wrap">
     <div class="kick">Instore Media · pixeria → tienda</div>
     <h1>🎵 Hilo musical del Xpacio</h1>
@@ -111,6 +136,7 @@
     </div>
     <p class="foot"><a href="musica.html">← Música</a> · <a href="megafonia.html">Megafonía</a> · <a href="https://www.xpaceos.com/admira-xp/?loc=xtanco-valencia" target="_blank">Abrir el gemelo (Xtanco) ↗</a></p>
   </div>
+  </main>
 
   <script>
     var API='https://api.admira.store';
@@ -152,5 +178,6 @@
     $('store').addEventListener('change', loadPlaylist);
     loadPlaylist();
   </script>
+  <script defer src="/assets/cuadratura.js?v=01.10.2026.r4.1852"></script>
 </body>
 </html>

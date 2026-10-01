@@ -496,3 +496,40 @@ body.pf-bottom-off .rail-bottom {display:none}
   body.pf-has-frame:not(.pf-left-off) .cuad-center { margin-right:var(--pf-left-w); }
   body.pf-has-frame:not(.pf-right-off) .cuad-center { margin-left:var(--pf-right-w); }
 }
+
+/* ══ Shell universal (FLT-101334) ═══════════════════════════════════════════
+   La barra de 4 bandas es la MISMA en todas las páginas, traigan la tipografía o
+   la paleta que traigan (Space Grotesk en tool/, violeta en help/ y mcp/…). Se
+   fija aquí lo que en la portada llega heredado de styles.css/workspace.css
+   (familia, cuerpo, color de la marca) y se aísla de los selectores de elemento
+   de cada página (header, a, button[aria-pressed]…). Con marca blanca activa
+   manda marca-blanca.css: por eso todo va bajo :root:not([data-mb-marca]).
+   --pf-topbar-h es la altura real de la barra (site-nav.js la mide; 70px de
+   partida): úsala en vez de «100vh - Npx» o «top:88px». ═══════════════════ */
+:root{--pf-topbar-h:70px}
+:root:not([data-mb-marca]) body .pf-topbar{
+  margin:0;
+  font-family:"JetBrains Mono","IBM Plex Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:15px;
+  font-weight:400;
+  line-height:1.55;
+  letter-spacing:normal;
+  text-transform:none;
+  text-align:left;
+  color:#c8ffd0;
+}
+:root:not([data-mb-marca]) body .pf-topbar .pf-topbar-brand{color:#c8ffd0;font-size:15px;text-decoration:none}
+:root:not([data-mb-marca]) body .pf-topbar .pf-brand-name{color:#c8ffd0;font-size:15px;font-weight:800;letter-spacing:.08em}
+body .pf-topbar .pix-nav-icon{
+  margin:0;
+  padding:0;
+  min-width:0;
+  min-height:0;
+  font:inherit;
+  line-height:1;
+  letter-spacing:normal;
+  text-transform:none;
+  text-shadow:none;
+}
+:root:not([data-mb-marca]) body .pf-topbar .pix-nav-icon[aria-pressed]{background:rgba(0,255,65,.04);color:#00ff41;font-weight:inherit}
+:root:not([data-mb-marca]) body .pf-topbar .pix-nav-icon[aria-pressed]:hover{background:rgba(0,255,65,.12)}

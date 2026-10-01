@@ -23,11 +23,34 @@
     .parts h2 { margin: 0 0 6px; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
     .parts p { margin: 0; color: var(--mut); font-size: 14px; }
     a { color: #8ec8ff; }
-    footer { margin-top: 28px; color: var(--mut); font-size: 12px; }
+    main > footer { margin-top: 28px; color: var(--mut); font-size: 12px; }
     @media (max-width: 720px) { .parts { grid-template-columns: 1fr; } }
   </style>
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=01.10.2026.r4.1852">
+  <script defer src="/assets/site-nav.js?v=01.10.2026.r4.1852"></script>
 </head>
 <body>
+  <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
+  <script>
+  (function(){var b=document.body,m={pixeria_pf_left:'pf-left-off',pixeria_pf_right:'pf-right-off',pixeria_pf_bottom:'pf-bottom-off'};
+  try{for(var k in m){if(localStorage.getItem(k)!=='1')b.classList.add(m[k]);}}catch(e){for(var j in m){b.classList.add(m[j]);}}})();
+  </script>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Pixeria inicio">
+      <span>Pixeria</span>
+    </a>
+    <nav class="nav" aria-label="Secciones de Pixeria">
+      <a href="/audio.html">Audio</a>
+      <a href="/musica.html">Música</a>
+      <a href="/imagenes.html">Imágenes</a>
+      <a href="/video.html">Video</a>
+      <a href="/tiktok">TikTok</a>
+      <a href="/publicidad.html">Publicidad</a>
+      <a href="/anonimizador.html">Anonimizador</a>
+      <a href="/crear/">Assets</a>
+      <a href="/stock.html">Stock</a>
+    </nav>
+  </header>
   <main>
     <h1>Bandera de Australia</h1>
     <p class="lead">Arte ASCII monoespaciado publicado por SmithMBP16. La imagen SVG/PNG conserva la cuadrícula carácter a carácter: Union Jack en el cantón, Commonwealth Star de siete puntas y Southern Cross en el vuelo.</p>
@@ -59,5 +82,6 @@
       <a href="https://www.pixeria.com/">www.pixeria.com</a>
     </footer>
   </main>
+  <script defer src="/assets/cuadratura.js?v=01.10.2026.r4.1852"></script>
 </body>
 </html>
