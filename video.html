@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r4.1852';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r5.1923';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r4.18:52">
+  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r5.19:23">
   <link rel="canonical" href="https://www.pixeria.com/video.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/video.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/video.html">
@@ -50,11 +50,17 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=01.10.2026.r4.1852">
-  <script defer src="/assets/site-nav.js?v=01.10.2026.r4.1852"></script>
-  <script defer src="/assets/descarga-local.js?v=01.10.2026.r4.1852"></script>
+  <link rel="stylesheet" href="workspace.css?v=01.10.2026.r5.1923">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=01.10.2026.r5.1923">
+  <script defer src="/assets/site-nav.js?v=01.10.2026.r5.1923"></script>
+  <script defer src="/assets/descarga-local.js?v=01.10.2026.r5.1923"></script>
 </head>
 <body data-page="video" class="quad-ui">
+  <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
+  <script>
+  (function(){var b=document.body,m={pixeria_pf_left:'pf-left-off',pixeria_pf_right:'pf-right-off',pixeria_pf_bottom:'pf-bottom-off'};
+  try{for(var k in m){if(localStorage.getItem(k)!=='1')b.classList.add(m[k]);}}catch(e){for(var j in m){b.classList.add(m[j]);}}})();
+  </script>
   <canvas id="matrix-rain" aria-hidden="true"></canvas>
   <!-- Marco cuadrático (quad-ui): navegación en los 4 bordes, estilo Admira.tv -->
   <nav class="quad-menu quad-top" aria-label="Navegación superior Pixeria">
@@ -214,9 +220,10 @@
       </div>
     </form>
   </dialog>
-  <script defer src="/matrix-rain.js?v=01.10.2026.r4.1852"></script>
-  <script src="app.js?v=01.10.2026.r4.1852"></script>
-  <script src="/assets/clip-desde-imagen.js?v=01.10.2026.r4.1852"></script>
+  <script defer src="/matrix-rain.js?v=01.10.2026.r5.1923"></script>
+  <script src="app.js?v=01.10.2026.r5.1923"></script>
+  <script src="/assets/clip-desde-imagen.js?v=01.10.2026.r5.1923"></script>
+  <script defer src="/assets/cuadratura.js?v=01.10.2026.r5.1923"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
