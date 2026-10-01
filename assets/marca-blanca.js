@@ -420,6 +420,8 @@
     const modo = opts.modo || decideMode(location.search, session);
     const previous = current;
     return comprobar(id)
+      // Existe: se recuerda ya en la pestaña (como el cargador común), aunque se navegue antes de pintarla.
+      .then(m => { store.set(SESSION_KEY, id); return m; })
       .then(m => Promise.all([loadLoader(modo), loadCss()]).then(([MB]) => ({MB, m}),
         () => { throw Object.assign(new Error('network'), {reason: 'network'}); }))
       .then(({MB, m}) => {
