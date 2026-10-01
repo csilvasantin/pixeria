@@ -1,7 +1,6 @@
 {
-  "version": "v.01.10.2026.r2.05:29",
-  "deployer": "NeoMBP14",
-  "machine": "MacBookProNegro14",
-  "signature": "NeoMBP14 · MacBookProNegro14",
-  "mission": "DCL-03b2acd5c4870ba220bf9e4f"
+  "version": "v.01.10.2026.r3.11:56",
+  "deployer": "OraculoGrokBotBox",
+  "machine": "MacMini",
+  "signature": "OraculoGrokBotBox · MacMini"
 }
