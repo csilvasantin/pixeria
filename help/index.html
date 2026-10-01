@@ -13,7 +13,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r3.1156';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r4.1852';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -27,7 +27,7 @@
   <!-- GATE-FIN -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r3.11:56">
+  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r4.18:52">
   <title>Pixeria · Ayuda — qué es y cómo se usa</title>
   <meta name="description" content="Pixeria explicado para personas: qué guarda, cómo se etiqueta, para qué lo usa el resto de la suite y a quién se avisa.">
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -109,6 +109,7 @@
     <a href="https://www.admiranext.com/normativa">normativa</a>
   </footer>
 </div>
+<section id="marca-blanca"><h2>Marca blanca · White label</h2><p>ES: Pixeria se viste con una marca del catálogo único de https://www.admiranext.com/marcablanca con <code>?marca=&lt;id&gt;</code> en la URL o, en la consola Experto, con <code>/marca &lt;id&gt;</code> (alias <code>/brand</code>; Tab completa los ids). <code>/marca off</code>, <code>?marca=admira</code> o «Volver a Admira» en Opciones la quitan sin recargar; <code>/marca</code> sola dice cuál está activa; <code>/marca &lt;web&gt;</code> abre el analizador en otra pestaña. La marca se comprueba en el catálogo antes de cargar nada y se recuerda en la pestaña. Sin marca, Pixeria no cambia ni contacta con admiranext.com. Las previsualizaciones de vídeo e imagen no se recolorean.</p><p>EN: <code>?marca=&lt;id&gt;</code> or <code>/marca &lt;id&gt;</code> in the Expert console dresses Pixeria in a catalogue brand; <code>/marca off</code> or “Back to Admira” removes it in place.</p></section>
 <section id="anonymizer-demo"><h2>Anonimizador demo · Anonymizer demo</h2><p>ES: Abre https://www.pixeria.com/anonimizador. Se carga por defecto visitor-green-v1, una persona ficticia con original y ejemplos 8, 16 y 32 bits. No necesita cámara, subida, generación ni publicación en Stock. Descargar guarda cada variante. Usar mi foto abre el flujo anterior; Usar ejemplo recupera la demo. La transformación de una foto real no garantiza anonimización irreversible.</p><p>EN: Open https://www.pixeria.com/en/anonimizador.html. visitor-green-v1 loads by default: a fictional person with an original and 8, 16 and 32-bit examples. No camera, upload, generation or Stock publication is required. Download saves each variant. Use my photo opens the existing workflow; Use example restores the demo. Transforming a real photo does not guarantee irreversible anonymization.</p><p>Tutorial ES: 1. Compara las cuatro tarjetas. 2. Pulsa Enviar al Xpacio. 3. Abre https://www.xpaceos.com/admira-xp/ y entra en una tienda. 4. Activa /clientes on y elige Good, Better o Best. Se añade UN visitante: Good usa su sprite 8-bit; Better y Best interpretan su ficha de ropa, pelo y colores con sus modelos, no muestran una foto plana idéntica. Las imágenes 16/32 también viajan como recursos del personaje. La demo no incluye caminata Matrix/64-bit. La visibilidad inicial de la tienda sigue en OFF.</p><p>Tutorial EN: 1. Compare the four cards. 2. Click Send to Xpace. 3. Open https://www.xpaceos.com/admira-xp/ and enter a store. 4. Enable /customers on and choose Good, Better or Best. ONE visitor is added: Good uses its 8-bit sprite; Better and Best interpret its outfit/hair/palette profile using their models, rather than displaying an identical flat photo. The 16/32 images also travel as character assets. This demo does not include Matrix/64-bit walking. Store visibility still starts OFF.</p><p>MCP: https://mcp-pixeria.admira.store/mcp → anonymizer_demo {action:&quot;info&quot;} returns assets and instructions. {action:&quot;send&quot;,screen:&quot;optional-target&quot;} requires the existing authenticated fleet key and queues the prepared visitor. {action:&quot;status&quot;,id:&quot;npc_...&quot;} checks receipt. ES: No confundir queued con entrega. EN: queued is not delivery. consumed:true is the Xpace software acknowledgement, not proof of physical screen playback. Without a target the existing visitor queue is shared by open twins; provide screen when targeting one. Never announce arrival merely because send returned ok.</p></section>
 </body>
 </html>

@@ -3,6 +3,50 @@
  * mismas diez secciones, en el mismo orden, sin esos dos controles.
  */
 (function () {
+  // Sello de este fichero (?v=…): marca-blanca.js y la consola experta viajan con el mismo,
+  // así que cada release de sellar.py refresca también los scripts que carga site-nav.js.
+  var SELF = document.currentScript;
+  var STAMP = (function () { try { return new URL(SELF.src).search; } catch (_) { return ''; } })();
+
+  // Marca blanca del catálogo de admiranext.com (FLT-101333). Solo se carga si esta pestaña
+  // la pide (?marca= en la URL o una marca recordada) o si se usa /marca en la consola
+  // experta: en una visita normal Pixeria no descarga nada nuevo. Ver docs/marca-blanca.md.
+  var marcaPromise = null;
+  function loadMarca() {
+    if (window.AdmiraMarca) return Promise.resolve(window.AdmiraMarca);
+    if (!marcaPromise) {
+      marcaPromise = new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = '/assets/marca-blanca.js' + STAMP;
+        s.setAttribute('data-pixeria-marca', '');
+        s.onload = function () { window.AdmiraMarca ? resolve(window.AdmiraMarca) : reject(new Error('marca-blanca.js')); };
+        s.onerror = function () { s.remove(); marcaPromise = null; reject(new Error('marca-blanca.js')); };
+        (document.head || document.documentElement).appendChild(s);
+      });
+    }
+    return marcaPromise;
+  }
+  window.PixeriaMarca = { cargar: loadMarca };
+  (function () {
+    var q = null, stored = null;
+    try { q = new URLSearchParams(location.search).get('marca'); stored = sessionStorage.getItem('mb:marca'); } catch (_) {}
+    if (q == null && !stored) return;
+    // ?marca=admira/off solo olvida la marca recordada: se carga para eso, sin velo.
+    if (q != null && /^\s*(off|admira|ninguna|ninguno|none|default|apagar|quitar|reset)?\s*$/i.test(q)) { loadMarca().catch(function () {}); return; }
+    // Con marca pedida, la página espera un instante en blanco en vez de enseñar el verde
+    // de Pixeria y cambiar de golpe: como mucho 1,5 s, y antes si la marca ya está puesta
+    // o no se pudo cargar. Sin marca este velo no existe.
+    var veil = document.createElement('style');
+    veil.id = 'pixeria-marca-velo';
+    veil.textContent = 'html:not([data-mb-marca]) body{opacity:0!important}';
+    (document.head || document.documentElement).appendChild(veil);
+    var lift = function () { if (veil.parentNode) veil.parentNode.removeChild(veil); };
+    document.addEventListener('admira:marca', lift);
+    document.addEventListener('admira:marca-error', lift);
+    setTimeout(lift, 1500);
+    loadMarca().catch(lift);
+  })();
+
   var ES = [
     ['/audio.html', 'Audio'],
     ['/musica.html', 'Música'],
@@ -462,10 +506,10 @@
       normalizeInternalNav(); syncRailVersion();
       if (!document.querySelector('.rail-bottom,.quad-bottom,#pixNavExpertLayer')) return;
       var css = document.createElement('link');
-      css.rel = 'stylesheet'; css.href = '/assets/expert-cli.css?v=4663';
+      css.rel = 'stylesheet'; css.href = '/assets/expert-cli.css' + (STAMP || '?v=4663');
       document.head.appendChild(css);
       var cli = document.createElement('script');
-      cli.src = '/assets/expert-cli.js?v=4663';
+      cli.src = '/assets/expert-cli.js' + (STAMP || '?v=4663');
       document.body.appendChild(cli);
     }, 0);
   }
