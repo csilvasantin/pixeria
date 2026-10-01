@@ -199,7 +199,7 @@
       '.pix-nav-expert-layer{left:18px;right:18px;bottom:18px;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap}' +
       '.pix-nav-layer a{color:#caffd7;text-decoration:none;border:1px solid rgba(0,255,65,.22);padding:9px 11px}' +
       '.pix-nav-meta{box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:6px 18px;width:100%;max-width:none;margin:28px 0 8px;padding:12px 0 0;border-top:1px solid rgba(140,160,150,.30);font:400 12px/1.5 "JetBrains Mono","IBM Plex Mono","Fira Code",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.04em;text-transform:none;text-align:left}' +
-      '.pix-nav-meta a{text-decoration:none;border:0;padding:0;background:none}' +
+      '.pix-nav-meta a{color:var(--mbx-brand,inherit);text-decoration:none;border:0;padding:0;background:none}' +
       ':root:not([data-mb-marca]) .pix-nav-meta{color:#7fae8c}:root:not([data-mb-marca]) .pix-nav-meta a{color:#c8ffd0}:root:not([data-mb-marca]) .pix-nav-meta a:hover{color:#00ff41}' +
       '.pix-nav-layer a:hover{color:#00ff41;border-color:#00ff41}' +
       '.quad-right a{min-height:86px;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;text-orientation:mixed;padding:8px 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase}' +
