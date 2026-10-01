@@ -1,6 +1,89 @@
 /* Browser-only expert console, shared by Pixeria and Admira Studio. */
 (function () {
   'use strict';
+  // ─── Piezas puras (también se prueban en node: test/marca-blanca.test.cjs) ───
+  var COMMANDS = ['help', 'clear', 'echo', 'date', 'status', 'version', 'history', 'open', 'marca'];
+  var MARCA_VERB = /^\/?(?:marca|brand|marcablanca)$/i;
+  // Semilla del catálogo de admiranext.com/marcablanca: vale para el Tab sin red. Con la
+  // marca blanca cargada se usa la lista real (AdmiraMarca.conocidas()).
+  var BRAND_SEED = ['admira', 'lumbre', 'brumelle', 'frescaria'];
+  function commonPrefix(list) {
+    return list.reduce(function (a, b) { var i = 0; while (i < a.length && a[i] === b[i]) i++; return a.slice(0, i); }, list[0] || '');
+  }
+  // Tab: completa el nombre del comando y, tras /marca, los ids del catálogo (más off);
+  // tras open, las secciones. → {value, options}
+  function complete(value, brandIds, sections) {
+    var text = String(value == null ? '' : value);
+    var m = text.match(/^(\s*)(\/?)(\S*)$/);
+    if (m) {
+      var typed = m[3].toLowerCase();
+      var names = COMMANDS.filter(function (c) { return c.indexOf(typed) === 0; });
+      if (!names.length) return {value: text, options: []};
+      var slash = m[2] || (names.length === 1 && names[0] === 'marca' ? '/' : '');
+      if (names.length === 1) return {value: m[1] + slash + names[0] + ' ', options: names};
+      return {value: m[1] + m[2] + commonPrefix(names), options: names};
+    }
+    var a = text.match(/^(\s*\/?(\S+)\s+)(\S*)$/);
+    if (!a) return {value: text, options: []};
+    var verb = a[2].toLowerCase(), part = a[3].toLowerCase();
+    var pool = MARCA_VERB.test(verb) ? (brandIds && brandIds.length ? brandIds : BRAND_SEED).concat(['off'])
+      : (verb === 'open' || verb === 'abrir') ? (sections || []) : [];
+    var options = pool.filter(function (o, i) { return o.indexOf(part) === 0 && pool.indexOf(o) === i; });
+    if (!options.length) return {value: text, options: []};
+    if (options.length === 1) return {value: a[1] + options[0], options: options};
+    return {value: a[1] + commonPrefix(options), options: options};
+  }
+  // /marca <id|off|web> (alias /brand). M es window.AdmiraMarca (assets/marca-blanca.js);
+  // write pinta una línea en la consola. → Promise<{ok}>
+  function runMarca(arg, M, en, write) {
+    function t(es, english) { return en ? english : es; }
+    function tag(b) { return b && b.propuesta ? t(' · propuesta automática, no es la marca oficial', ' · automatic proposal, not the official brand') : b && b.ejemplo ? t(' · marca ficticia de ejemplo', ' · fictional sample brand') : ''; }
+    function list(items) { return items.map(function (b) { return b.id + (b.propuesta ? t(' (propuesta)', ' (proposal)') : b.ejemplo ? t(' (ejemplo)', ' (sample)') : ''); }).join(', '); }
+    if (!M) { write(t('La marca blanca aún no está lista en esta página. Vuelve a intentarlo en un momento.', 'White label is not ready on this page yet. Try again in a moment.')); return Promise.resolve({ok: false}); }
+    var p = M.parseArg(arg);
+    if (p.kind === 'invalid') {
+      write(t('Marca no válida: «' + p.input + '».', 'Invalid brand: “' + p.input + '”.') + '\n' +
+        t('Usa un id del catálogo (' + M.conocidas().map(function (b) { return b.id; }).join(', ') + '), off para volver a Admira o una web (starbucks.es) para analizarla.',
+          'Use a catalogue id (' + M.conocidas().map(function (b) { return b.id; }).join(', ') + '), off to return to Admira or a website (starbucks.es) to analyse it.'));
+      return Promise.resolve({ok: false});
+    }
+    if (p.kind === 'status') {
+      var now = M.actual();
+      write(now
+        ? t('Marca activa: ' + now.nombre + ' (' + now.id + ')' + tag(now) + '. /marca off vuelve a Admira.', 'Active brand: ' + now.nombre + ' (' + now.id + ')' + tag(now) + '. /marca off returns to Admira.')
+        : t('Sin marca blanca: ves el aspecto de Admira.', 'No white label: you see the Admira look.'));
+      return M.listar().then(function (items) { write(t('Disponibles: ', 'Available: ') + list(items) + '.'); return {ok: true}; },
+        function () { write(t('No se pudo leer el catálogo de admiranext.com. Conocidas: ', 'Could not read the admiranext.com catalogue. Known: ') + list(M.conocidas()) + '.'); return {ok: false}; });
+    }
+    if (p.kind === 'off') {
+      var r = M.desactivar();
+      write(r.changed && r.previous
+        ? t('Marca ' + r.previous.nombre + ' desactivada: vuelve Admira.', r.previous.nombre + ' brand turned off: back to Admira.')
+        : t('No había ninguna marca blanca activa: ya ves Admira.', 'No white label was active: you already see Admira.'));
+      return Promise.resolve({ok: true});
+    }
+    if (p.kind === 'web') {
+      var w = M.analizar(p.url);
+      write(t('Abriendo el analizador de marca blanca en otra pestaña: ' + w.href, 'Opening the white-label analyser in a new tab: ' + w.href) + '\n' +
+        t('Allí se analiza la web y se guarda en el catálogo; después actívala aquí con /marca <id>.', 'There the site is analysed and saved to the catalogue; then turn it on here with /marca <id>.'));
+      return Promise.resolve({ok: !!w.ok});
+    }
+    write(t('Aplicando la marca ' + p.id + '…', 'Applying the ' + p.id + ' brand…'));
+    return M.activar(p.id).then(function (res) {
+      if (res.ok) { write(t('Marca ' + res.nombre + ' (' + res.id + ') activa' + tag(res) + '. Se mantiene al navegar en esta pestaña; /marca off vuelve a Admira.', res.nombre + ' (' + res.id + ') brand on' + tag(res) + '. It stays while you browse in this tab; /marca off returns to Admira.')); return {ok: true}; }
+      if (res.reason === 'unknown') {
+        write(t('La marca «' + p.id + '» no está en el catálogo de admiranext.com. No se ha aplicado nada.', 'The brand “' + p.id + '” is not in the admiranext.com catalogue. Nothing was applied.') + '\n' +
+          t('Disponibles: ', 'Available: ') + list(M.conocidas()) + t('. Para crearla: /marca <web de la marca>.', '. To create it: /marca <brand website>.'));
+        return {ok: false};
+      }
+      write(t('No se pudo contactar con admiranext.com. No se ha aplicado nada; vuelve a intentarlo.', 'Could not reach admiranext.com. Nothing was applied; try again.'));
+      return {ok: false};
+    });
+  }
+  var pure = {COMMANDS: COMMANDS, BRAND_SEED: BRAND_SEED, MARCA_VERB: MARCA_VERB, complete: complete, runMarca: runMarca};
+  if (typeof module !== 'undefined' && module.exports) module.exports = pure;
+  if (typeof document === 'undefined') return;
+
   var panel = document.querySelector('.rail-bottom,.quad-bottom,#pixNavExpertLayer');
   if (!panel || panel.classList.contains('pf-cli')) return;
   var mode = panel.matches('.rail-bottom') ? 'rail' : panel.matches('.quad-bottom') ? 'quad' : 'layer';
@@ -136,11 +219,24 @@
     while (log.childElementCount > 200) log.firstChild.remove();
     log.scrollTop = log.scrollHeight;
   }
+  // La marca blanca se carga al usarla (site-nav.js la expone en PixeriaMarca.cargar).
+  function marca() {
+    if (window.AdmiraMarca) return Promise.resolve(window.AdmiraMarca);
+    return window.PixeriaMarca && window.PixeriaMarca.cargar ? window.PixeriaMarca.cargar().catch(function () { return null; }) : Promise.resolve(null);
+  }
   function execute(command) {
-    var words = command.trim().split(/\s+/), name = words.shift().toLowerCase(), arg = words.join(' ');
+    var words = command.trim().split(/\s+/), name = words.shift().toLowerCase().replace(/^\//, ''), arg = words.join(' ');
+    if (MARCA_VERB.test(name)) {
+      marca().then(function (M) { return runMarca(arg, M, en, write); });
+      return;
+    }
     switch (name) {
       case 'help': case 'ayuda':
-        write(t('Comandos en este navegador:', 'Commands in this browser:') + '\nhelp · clear · echo <text> · date · status · version · history\nopen <home|audio|music|images|video|stock|assets|docs|radar>\n' + t('↑/↓ historial · arrastra el borde superior · doble clic para plegar/desplegar', '↑/↓ history · drag the top edge · double-click to collapse/expand'));
+        write(t('Comandos en este navegador:', 'Commands in this browser:') + '\nhelp · clear · echo <text> · date · status · version · history\nopen <home|audio|music|images|video|stock|assets|docs|radar>\n' +
+          t('/marca [marca] — Marca blanca del catálogo de admiranext.com/marcablanca: /marca <id> viste la web con esa marca, /marca off vuelve a Admira, /marca sola dice cuál está activa y lista las disponibles, /marca <web> abre el analizador en otra pestaña. Alias: /brand.',
+            '/marca [brand] — White label from the admiranext.com/marcablanca catalogue: /marca <id> dresses the site in that brand, /marca off returns to Admira, /marca alone shows the active one and lists them, /marca <website> opens the analyser in a new tab. Alias: /brand.') + '\n' +
+          t('marca: off (Admira), ', 'brand: off (Admira), ') + brandIds().join(', ') + t(' · o una web para analizarla (starbucks.es)', ' · or a website to analyse (starbucks.es)') + '\n' +
+          t('↑/↓ historial · Tab completa comandos, marcas y secciones · arrastra el borde superior · doble clic para plegar/desplegar', '↑/↓ history · Tab completes commands, brands and sections · drag the top edge · double-click to collapse/expand'));
         break;
       case 'clear': case 'limpiar': log.replaceChildren(); break;
       case 'echo': write(arg); break;
@@ -166,7 +262,21 @@
     write('› ' + command);
     execute(command);
   });
+  function brandIds() {
+    try { if (window.AdmiraMarca) return window.AdmiraMarca.conocidas().map(function (b) { return b.id; }); } catch (_) {}
+    return BRAND_SEED.slice();
+  }
   input.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Tab' && !ev.shiftKey && !ev.altKey && !ev.ctrlKey && !ev.metaKey && input.value.trim()) {
+      var c = complete(input.value, brandIds(), Object.keys(sections));
+      if (!c.options.length) return;
+      ev.preventDefault();
+      input.value = c.value;
+      if (c.options.length > 1) { if (height === MIN) resize(expanded, false); write(c.options.join('  ')); }
+      // Con /marca se trae el catálogo real para el siguiente Tab (solo al usar /marca).
+      if (/^\s*\/?(?:marca|brand|marcablanca)\s/i.test(input.value)) marca().then(function (M) { if (M) M.listar().catch(function () {}); });
+      return;
+    }
     if (ev.key !== 'ArrowUp' && ev.key !== 'ArrowDown') return;
     ev.preventDefault();
     if (cursor === history.length) draft = input.value;

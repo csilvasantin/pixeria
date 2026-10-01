@@ -10,7 +10,9 @@ El botón Experto abre una entrada de 48 px dentro de la web. No necesita aplica
 
 Comandos: `help`, `clear`, `echo <texto>`, `date`, `status`, `version`, `history` y `open <sección>`. `help` enumera las secciones admitidas; las respuestas usan el idioma de la página. Son comandos de navegación e inspección de la web, no una shell del sistema operativo. No se ejecuta JavaScript introducido por el usuario.
 
-`assets/site-nav.js` carga el mismo componente en las tres familias de panel experto. Los contenidos anteriores se conservan en la página. Admira Studio genera los mismos assets aplicando las sustituciones de su `marca.json`.
+`/marca <id|off|web>` (alias `/brand`; también sin barra) viste Pixeria con una marca blanca del catálogo de admiranext.com/marcablanca: `/marca lumbre` la aplica tras comprobarla en el catálogo, `/marca off` vuelve a Admira, `/marca` sola dice cuál está activa y lista las disponibles, y `/marca starbucks.es` abre el analizador (`https://www.admiranext.com/marcablanca/?web=<url>`) en otra pestaña. Los comandos admiten la barra inicial (`/help`). **Tab** completa el comando, los ids del catálogo (y `off`) tras `/marca` y las secciones tras `open`; con varias opciones las enseña en la consola. Ver `docs/marca-blanca.md`.
+
+`assets/site-nav.js` carga el mismo componente en las tres familias de panel experto, con el mismo sello (`?v=`) que el propio `site-nav.js`. Los contenidos anteriores se conservan en la página. Admira Studio genera los mismos assets aplicando las sustituciones de su `marca.json`.
 
 Prueba de navegador (servidor estático LOCAL):
 
