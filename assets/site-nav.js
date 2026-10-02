@@ -273,6 +273,7 @@
     ['/audio.html', 'Audio · Megafonía', 'Voces, locución y megafonía de marca'],
     ['/video.html', 'Vídeo', 'Storyboards, generación, edición y loops'],
     ['/tiktok', 'TikTok · Vertical', 'Anuncios 9:16 de 25s, listos para el mupi vertical'],
+    ['/adaptaciones/', 'Adaptaciones', 'Un vídeo, todas las pantallas: 9:16, 16:9, 1:1 y 4:5'],
     ['/imagenes.html', 'Imágenes', 'Dirección de arte, producto y estilo'],
     ['/avatar.html', 'Avatar 3D', 'Presentadores y avatares generativos'],
     ['/anonimizador.html', 'Anonimizador', 'Privacidad en imagen y vídeo'],
