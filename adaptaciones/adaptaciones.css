@@ -50,3 +50,4 @@
 .profile-label select{background:#0f1219;color:var(--tx);border:1px solid var(--ln);padding:8px}.profile-label{display:block;margin:12px 0}
 .adapt-main .ctl input,.adapt-main .ctl select{min-width:0}.adapt-main .grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))}
 @media(max-width:900px){.adapt-main .altadis,.adapt-main .twin-wrap{grid-template-columns:1fr}.adapt-main .tour-bar{grid-column:auto}.adapt-main .scene{height:320px}}
+.adapt-main .input-row label{min-width:0;max-width:100%}.adapt-main .input-row label:first-child{flex:1 1 280px}.adapt-main .input-row select{max-width:100%;width:100%;box-sizing:border-box}.adapt-main .upload input{max-width:100%}
