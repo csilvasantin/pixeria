@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   // ─── Piezas puras (también se prueban en node: test/marca-blanca.test.cjs) ───
-  var COMMANDS = ['help', 'clear', 'echo', 'date', 'status', 'version', 'history', 'open', 'marca'];
+  var COMMANDS = ['help', 'clear', 'echo', 'date', 'status', 'version', 'history', 'open', 'marca', 'avatardigital', 'digitalavatar'];
   var MARCA_VERB = /^\/?(?:marca|brand|marcablanca)$/i;
   // Semilla del catálogo de admiranext.com/marcablanca: vale para el Tab sin red. Con la
   // marca blanca cargada se usa la lista real (AdmiraMarca.conocidas()).
@@ -224,6 +224,20 @@
     if (window.AdmiraMarca) return Promise.resolve(window.AdmiraMarca);
     return window.PixeriaMarca && window.PixeriaMarca.cargar ? window.PixeriaMarca.cargar().catch(function () { return null; }) : Promise.resolve(null);
   }
+  function cargarAvatar() {
+    if (window.AvatarDigital) return Promise.resolve(window.AvatarDigital);
+    return new Promise(function (resolve) {
+      var s = document.createElement('script');
+      s.src = '/assets/avatar-digital.js';
+      s.async = true;
+      s.onload = function () { resolve(window.AvatarDigital || null); };
+      s.onerror = function () { resolve(null); };
+      document.head.appendChild(s);
+    });
+  }
+  try {
+    if (localStorage.getItem('da-avatar:' + location.host) === '1') cargarAvatar();
+  } catch (_) {}
   function execute(command) {
     var words = command.trim().split(/\s+/), name = words.shift().toLowerCase().replace(/^\//, ''), arg = words.join(' ');
     if (MARCA_VERB.test(name)) {
@@ -236,7 +250,19 @@
           t('/marca [marca] — Marca blanca del catálogo de admiranext.com/marcablanca: /marca <id> viste la web con esa marca, /marca off vuelve a Admira, /marca sola dice cuál está activa y lista las disponibles, /marca <web> abre el analizador en otra pestaña. Alias: /brand.',
             '/marca [brand] — White label from the admiranext.com/marcablanca catalogue: /marca <id> dresses the site in that brand, /marca off returns to Admira, /marca alone shows the active one and lists them, /marca <website> opens the analyser in a new tab. Alias: /brand.') + '\n' +
           t('marca: off (Admira), ', 'brand: off (Admira), ') + brandIds().join(', ') + t(' · o una web para analizarla (starbucks.es)', ' · or a website to analyse (starbucks.es)') + '\n' +
+          t('/avatarDigital [on|off] — avatar digital (alias /digitalAvatar, /cli ayudante, /cli helper). Sin argumento alterna.',
+            '/avatarDigital [on|off] — digital avatar (alias /digitalAvatar, /cli ayudante, /cli helper). No argument toggles.') + '\n' +
           t('↑/↓ historial · Tab completa comandos, marcas y secciones · arrastra el borde superior · doble clic para plegar/desplegar', '↑/↓ history · Tab completes commands, brands and sections · drag the top edge · double-click to collapse/expand'));
+        break;
+      case 'avatardigital': case 'digitalavatar':
+      case 'cli':
+        if (name !== 'cli' || /^(ayudante|helper)(?:\s|$)/i.test(arg)) {
+          cargarAvatar().then(function (A) {
+            return A ? A.handle(command) : t('Avatar digital no disponible', 'Digital avatar unavailable');
+          }).then(write);
+          break;
+        }
+        write(t('Comando desconocido. Escribe help.', 'Unknown command. Type help.'));
         break;
       case 'clear': case 'limpiar': log.replaceChildren(); break;
       case 'echo': write(arg); break;
