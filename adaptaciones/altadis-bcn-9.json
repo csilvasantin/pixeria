@@ -1,0 +1,119 @@
+{
+ "origen": {
+  "query": "Carrer del Planeta 7, 08012 Barcelona",
+  "lat": 41.4013338,
+  "lon": 2.1558441,
+  "fuente": "Nominatim search (OSM node 10788870066)"
+ },
+ "metodo": "Overpass API no respondió (overpass-api.de / kumi / mail.ru / private.coffee: timeout/504). Candidatos shop=tobacco del extracto Geofabrik spain-latest (24-sep-2026, /workspace/jti-alsea/osm_tobacco_es.json), 9 más cercanos a Planeta 7 (haversine), cada nodo VERIFICADO en vivo contra api.openstreetmap.org/api/0.6 (2-oct-2026: existe y shop=tobacco). Dirección sin addr:* → calle por Nominatim reverse. Orden = ruta vecino-más-cercano desde el más cercano.",
+ "estancos": [
+  {
+   "orden": 1,
+   "id": "altadis-bcn-001",
+   "name": "Estanco · sin rótulo en OSM",
+   "addr": "Carrer Gran de Gràcia s/n · 08012 Barcelona",
+   "lat": 41.3996304,
+   "lon": 2.155556,
+   "dist_planeta7_m": 191,
+   "tramo_desde_anterior_m": 0,
+   "opening_hours": null,
+   "osm": "node/12875861930"
+  },
+  {
+   "orden": 2,
+   "id": "altadis-bcn-002",
+   "name": "Moe's Expenedoria",
+   "addr": "Plaça de la Vila de Gràcia s/n · 08012 Barcelona",
+   "lat": 41.3999081,
+   "lon": 2.1577654,
+   "dist_planeta7_m": 225,
+   "tramo_desde_anterior_m": 187,
+   "opening_hours": "Mo-Sa 08:30-20:30",
+   "osm": "node/6777658347"
+  },
+  {
+   "orden": 3,
+   "id": "altadis-bcn-003",
+   "name": "Estanco · sin rótulo en OSM",
+   "addr": "Carrer del Torrent de l'Olla s/n · 08008 Barcelona",
+   "lat": 41.3991169,
+   "lon": 2.1607485,
+   "dist_planeta7_m": 478,
+   "tramo_desde_anterior_m": 264,
+   "opening_hours": null,
+   "osm": "node/10761696806"
+  },
+  {
+   "orden": 4,
+   "id": "altadis-bcn-004",
+   "name": "Estanco · sin rótulo en OSM",
+   "addr": "Carrer de Santa Teresa s/n · 08008 Barcelona",
+   "lat": 41.3973394,
+   "lon": 2.1602111,
+   "dist_planeta7_m": 574,
+   "tramo_desde_anterior_m": 203,
+   "opening_hours": null,
+   "osm": "node/10769626613"
+  },
+  {
+   "orden": 5,
+   "id": "altadis-bcn-005",
+   "name": "Estanco · sin rótulo en OSM",
+   "addr": "Via Augusta s/n · 08012 Barcelona",
+   "lat": 41.3967736,
+   "lon": 2.1551713,
+   "dist_planeta7_m": 510,
+   "tramo_desde_anterior_m": 425,
+   "opening_hours": null,
+   "osm": "node/11554659567"
+  },
+  {
+   "orden": 6,
+   "id": "altadis-bcn-006",
+   "name": "Estanco nº 003",
+   "addr": "Plaça de Gal·la Placídia 26 · 08006 Barcelona",
+   "lat": 41.3997778,
+   "lon": 2.1526809,
+   "dist_planeta7_m": 316,
+   "tramo_desde_anterior_m": 393,
+   "opening_hours": null,
+   "osm": "node/4755079723"
+  },
+  {
+   "orden": 7,
+   "id": "altadis-bcn-007",
+   "name": "Estanco · sin rótulo en OSM",
+   "addr": "Carrer de Terol s/n · 08012 Barcelona",
+   "lat": 41.403443,
+   "lon": 2.1587066,
+   "dist_planeta7_m": 335,
+   "tramo_desde_anterior_m": 647,
+   "opening_hours": null,
+   "osm": "node/11741880447"
+  },
+  {
+   "orden": 8,
+   "id": "altadis-bcn-008",
+   "name": "Estanco · sin rótulo en OSM",
+   "addr": "Travessera de Gràcia 194 · 08012 Barcelona",
+   "lat": 41.4027259,
+   "lon": 2.1602077,
+   "dist_planeta7_m": 396,
+   "tramo_desde_anterior_m": 148,
+   "opening_hours": null,
+   "osm": "node/11339652076"
+  },
+  {
+   "orden": 9,
+   "id": "altadis-bcn-009",
+   "name": "Estanco · sin rótulo en OSM",
+   "addr": "Carrer de Torrijos s/n · 08012 Barcelona",
+   "lat": 41.4024557,
+   "lon": 2.1599081,
+   "dist_planeta7_m": 361,
+   "tramo_desde_anterior_m": 39,
+   "opening_hours": null,
+   "osm": "node/10772906416"
+  }
+ ]
+}
