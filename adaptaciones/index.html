@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=01.10.2026.r5.1923';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=02.10.2026.r1.1127';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,15 +35,15 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.01.10.2026.r5.19:23">
+  <meta name="admiranext-version" content="Pixeria v.02.10.2026.r1.11:27">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Adaptaciones · Un vídeo, todas las pantallas | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=01.10.2026.r5.1923">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=01.10.2026.r5.1923">
-  <script defer src="/assets/site-nav.js?v=01.10.2026.r5.1923"></script>
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=02.10.2026.r1.1127">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=02.10.2026.r1.1127">
+  <script defer src="/assets/site-nav.js?v=02.10.2026.r1.1127"></script>
 </head>
 <body class="adapt-page">
   <script>(function(){var b=document.body,m={pixeria_pf_left:'pf-left-off',pixeria_pf_right:'pf-right-off',pixeria_pf_bottom:'pf-bottom-off'};try{for(var k in m){if(localStorage.getItem(k)!=='1')b.classList.add(m[k]);}}catch(e){for(var j in m){b.classList.add(m[j]);}}})();</script>
@@ -119,8 +119,8 @@
       </div>
     </section>
   </main>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=01.10.2026.r5.1923"></script>
-  <script defer src="/assets/cuadratura.js?v=01.10.2026.r5.1923"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=02.10.2026.r1.1127"></script>
+  <script defer src="/assets/cuadratura.js?v=02.10.2026.r1.1127"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
