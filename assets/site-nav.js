@@ -3,6 +3,15 @@
  * mismas diez secciones, en el mismo orden, sin esos dos controles.
  */
 (function () {
+  // Pixeria is English; Admira Studio keeps the Spanish source routes.
+  // Explicit language routes remain available for review in this shared preview.
+  var englishHost = /(^|\.)pixeria\.com$/.test(location.hostname) || location.hostname.endsWith('.pages.dev');
+  var localePath = location.pathname;
+  var translatedPages = ['/', '/index.html', '/audio.html', '/musica.html', '/imagenes.html', '/video.html', '/anonimizador.html', '/publicidad.html', '/stock.html', '/crear/'];
+  if (englishHost && !localePath.startsWith('/en/') && translatedPages.indexOf(localePath) >= 0 && new URLSearchParams(location.search).get('lang') !== 'es') {
+    location.replace('/en' + (localePath === '/index.html' ? '/' : localePath) + location.search + location.hash);
+    return;
+  }
   // Sello de este fichero (?v=…): marca-blanca.js y la consola experta viajan con el mismo,
   // así que cada release de sellar.py refresca también los scripts que carga site-nav.js.
   var SELF = document.currentScript;

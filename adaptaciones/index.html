@@ -34,7 +34,7 @@
   <!-- GATE-FIN -->
 
 <meta charset="utf-8">
-<script>if ((location.hostname.endsWith('pixeria.com') || location.hostname.endsWith('pages.dev')) && !location.pathname.startsWith('/en/')) location.replace('/en/adaptaciones/' + location.search);</script>
+<script>if ((location.hostname.endsWith('pixeria.com') || location.hostname.endsWith('pages.dev')) && !location.pathname.startsWith('/en/') && new URLSearchParams(location.search).get('lang') !== 'es') location.replace('/en/adaptaciones/' + location.search);</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="admiranext-version" content="Pixeria v.02.10.2026.r1.11:27">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">

@@ -162,7 +162,7 @@ let ESTANCOS = [], ORIGEN = null, cur = 0, tour = null;
 async function loadEstancos() {
   const d = await (await fetch('/adaptaciones/altadis-bcn-9.json')).json();
   ESTANCOS = d.estancos; ORIGEN = d.origen;
-  $('#lista-estancos').innerHTML = ESTANCOS.map((e, i) => `<li data-i="${i}"><b>${e.orden}. ${e.name}</b><small>${e.addr}<br>${e.dist_planeta7_m} m de Planeta 7 · OSM ${e.osm}</small></li>`).join('');
+  $('#lista-estancos').innerHTML = ESTANCOS.map((e, i) => `<li data-i="${i}"><b>${e.orden}. ${e.name}</b><small>${e.addr}<br>${e.dist_planeta7_m} m ${t('de','from')} Planeta 7 · OSM ${e.osm}</small></li>`).join('');
   $('#lista-estancos').querySelectorAll('li').forEach((li) => (li.onclick = () => { stopTour(); go(+li.dataset.i); }));
   drawMap(); go(0);
 }
@@ -175,7 +175,7 @@ function proj(lat, lon) {
 }
 function drawMap() {
   const svg = $('#minimap'); const P = ESTANCOS.map((e) => proj(e.lat, e.lon)); const o = proj(ORIGEN.lat, ORIGEN.lon);
-  svg.innerHTML = `<text x="10" y="16" fill="#8a93a6" font-size="11">Circuito Altadis · Gràcia (ruta ${'≈'}${(ESTANCOS.reduce((a, e) => a + e.tramo_desde_anterior_m, 0) / 1000).toFixed(1)} km)</text>
+  svg.innerHTML = `<text x="10" y="16" fill="#8a93a6" font-size="11">${t('Circuito Altadis','Altadis circuit')} · Gràcia (${t('ruta','route')} ${'≈'}${(ESTANCOS.reduce((a, e) => a + e.tramo_desde_anterior_m, 0) / 1000).toFixed(1)} km)</text>
     <polyline points="${P.map((p) => p.join(',')).join(' ')}" fill="none" stroke="#ff6a3d" stroke-width="2" stroke-dasharray="4 3"/>
     <rect x="${o[0] - 5}" y="${o[1] - 5}" width="10" height="10" fill="#3ddc97"/><text x="${o[0] + 8}" y="${o[1] + 4}" fill="#3ddc97" font-size="10">Planeta 7</text>
     ${P.map((p, i) => `<g data-i="${i}" style="cursor:pointer"><circle cx="${p[0]}" cy="${p[1]}" r="9" fill="#1b2030" stroke="#ff6a3d"/><text x="${p[0]}" y="${p[1] + 4}" text-anchor="middle" fill="#fff" font-size="10">${i + 1}</text></g>`).join('')}
@@ -186,16 +186,16 @@ function go(i) {
   cur = (i + ESTANCOS.length) % ESTANCOS.length; const e = ESTANCOS[cur];
   document.querySelectorAll('#lista-estancos li').forEach((li) => li.classList.toggle('on', +li.dataset.i === cur));
   document.querySelector('#lista-estancos li.on')?.scrollIntoView({ block: 'nearest' });
-  $('#twin-name').textContent = `Gemelo ${e.orden}/9 · ${e.name}`;
+  $('#twin-name').textContent = `${t('Gemelo','Twin')} ${e.orden}/9 · ${e.name}`;
   $('#twin-addr').textContent = e.addr;
-  $('#twin-ft').innerHTML = `Disposición: <b>P1 vertical 1080×1920</b> (escaparate) + <b>P2 horizontal 1920×1080</b> (sobre mostrador) · ${e.dist_planeta7_m} m de Planeta 7 · <a href="https://www.openstreetmap.org/${e.osm}" target="_blank" rel="noopener">OSM ${e.osm}</a>${e.opening_hours ? ' · ' + e.opening_hours : ''}${cur === 0 ? ' · <b style="color:#3ddc97">el más cercano a Planeta 7</b>' : ''}`;
+  $('#twin-ft').innerHTML = `${t('Disposición','Layout')}: <b>P1 ${t('vertical','portrait')} 1080×1920</b> (${t('escaparate','shop window')}) + <b>P2 ${t('horizontal','landscape')} 1920×1080</b> (${t('sobre mostrador','above counter')}) · ${e.dist_planeta7_m} m ${t('de','from')} Planeta 7 · <a href="https://www.openstreetmap.org/${e.osm}" target="_blank" rel="noopener">OSM ${e.osm}</a>${e.opening_hours ? ' · ' + e.opening_hours : ''}${cur === 0 ? ' · <b style="color:#3ddc97">${t('el más cercano a Planeta 7','nearest to Planeta 7')}</b>' : ''}`;
   $('#link-gemelo').href = `https://www.xpaceos.com/admira-xp/?autostart=xtanco&loc=${e.id}`;
   const p = proj(e.lat, e.lon); const mk = $('#mk'); if (mk) { mk.setAttribute('cx', p[0]); mk.setAttribute('cy', p[1]); }
   const tw = $('#twin'); tw.animate([{ opacity: 0.25, transform: 'translateX(18px)' }, { opacity: 1, transform: 'none' }], { duration: 500, easing: 'ease-out' });
-  $('#tour-status').textContent = tour ? `Recorrido · parada ${cur + 1}/${ESTANCOS.length} · ${e.name}` : `Parada ${cur + 1}/${ESTANCOS.length}`;
+  $('#tour-status').textContent = tour ? `${t('Recorrido · parada','Tour · stop')} ${cur + 1}/${ESTANCOS.length} · ${e.name}` : `${t('Parada','Stop')} ${cur + 1}/${ESTANCOS.length}`;
 }
-function startTour() { stopTour(); tour = { i: cur }; $('#tour').textContent = '■ Parar recorrido'; go(cur); tour.timer = setInterval(() => { if (cur === ESTANCOS.length - 1) { stopTour(); $('#tour-status').textContent = `Recorrido completado · ${ESTANCOS.length} estancos`; return; } go(cur + 1); }, TOUR_DWELL_MS); }
-function stopTour() { if (tour) clearInterval(tour.timer); tour = null; $('#tour').textContent = '▶ Recorrido del circuito'; }
+function startTour() { stopTour(); tour = { i: cur }; $('#tour').textContent = t('■ Parar recorrido', '■ Stop tour'); go(cur); tour.timer = setInterval(() => { if (cur === ESTANCOS.length - 1) { stopTour(); $('#tour-status').textContent = `${t('Recorrido completado','Tour completed')} · ${ESTANCOS.length} ${t('estancos','stores')}`; return; } go(cur + 1); }, TOUR_DWELL_MS); }
+function stopTour() { if (tour) clearInterval(tour.timer); tour = null; $('#tour').textContent = t('▶ Recorrido del circuito', '▶ Circuit tour'); }
 $('#prev').onclick = () => { stopTour(); go(cur - 1); };
 $('#next').onclick = () => { stopTour(); go(cur + 1); };
 $('#tour').onclick = () => (tour ? stopTour() : startTour());
