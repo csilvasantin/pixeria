@@ -6,6 +6,10 @@ export async function onRequest(context) {
   const authResponse = await handleAuth(request, env);
   if (authResponse) return authResponse;
 
+  // Pregunta del avatar (FLT-101350). Solo llega a la función /avatar-ask, que
+  // devuelve JSON. No abre ninguna página del estudio.
+  if (url.pathname === '/avatar-ask') return context.next();
+
   // La verja NO puede depender de lo que diga el cliente. Hasta el 1-sep-2026
   // bastaba `curl https://www.pixeria.com/` (Accept: */*) para llevarse la página
   // entera sin sesión: el Accept lo elige quien llama, así que cualquier bot o
