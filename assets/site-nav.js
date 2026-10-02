@@ -97,7 +97,9 @@
     nav.replaceChildren();
     items.forEach(function (item) {
       var link = document.createElement('a');
-      link.href = item[0];
+      var previewRoot = document.body.dataset.previewRoot;
+      link.href = previewRoot && /\/(?:en\/)?video\.html$/.test(item[0]) ? previewRoot + 'video.html'
+        : previewRoot && /\/(?:en\/)?adaptaciones\/$/.test(item[0]) ? previewRoot + 'adaptaciones/' : item[0];
       link.textContent = item[1];
       if (norm(item[0]) === here) {
         link.classList.add('active');
