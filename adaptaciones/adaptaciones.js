@@ -188,7 +188,7 @@ function go(i) {
   document.querySelector('#lista-estancos li.on')?.scrollIntoView({ block: 'nearest' });
   $('#twin-name').textContent = `${t('Gemelo','Twin')} ${e.orden}/9 · ${e.name}`;
   $('#twin-addr').textContent = e.addr;
-  $('#twin-ft').innerHTML = `${t('Disposición','Layout')}: <b>P1 ${t('vertical','portrait')} 1080×1920</b> (${t('escaparate','shop window')}) + <b>P2 ${t('horizontal','landscape')} 1920×1080</b> (${t('sobre mostrador','above counter')}) · ${e.dist_planeta7_m} m ${t('de','from')} Planeta 7 · <a href="https://www.openstreetmap.org/${e.osm}" target="_blank" rel="noopener">OSM ${e.osm}</a>${e.opening_hours ? ' · ' + e.opening_hours : ''}${cur === 0 ? ' · <b style="color:#3ddc97">${t('el más cercano a Planeta 7','nearest to Planeta 7')}</b>' : ''}`;
+  $('#twin-ft').innerHTML = `${t('Disposición','Layout')}: <b>P1 ${t('vertical','portrait')} 1080×1920</b> (${t('escaparate','shop window')}) + <b>P2 ${t('horizontal','landscape')} 1920×1080</b> (${t('sobre mostrador','above counter')}) · ${e.dist_planeta7_m} m ${t('de','from')} Planeta 7 · <a href="https://www.openstreetmap.org/${e.osm}" target="_blank" rel="noopener">OSM ${e.osm}</a>${e.opening_hours ? ' · ' + e.opening_hours : ''}${cur === 0 ? ` · <b style="color:#3ddc97">${t('el más cercano a Planeta 7','nearest to Planeta 7')}</b>` : ''}`;
   $('#link-gemelo').href = `https://www.xpaceos.com/admira-xp/?autostart=xtanco&loc=${e.id}`;
   const p = proj(e.lat, e.lon); const mk = $('#mk'); if (mk) { mk.setAttribute('cx', p[0]); mk.setAttribute('cy', p[1]); }
   const tw = $('#twin'); tw.animate([{ opacity: 0.25, transform: 'translateX(18px)' }, { opacity: 1, transform: 'none' }], { duration: 500, easing: 'ease-out' });
