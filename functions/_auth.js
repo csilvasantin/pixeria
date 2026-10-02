@@ -2,6 +2,17 @@ const CLIENT_ID = '861856772040-e1ri6kpu6maagtb6crdfbb923hsaalgb.apps.googleuser
 const CALLBACK_URI = 'https://www.pixeria.com/auth/callback';
 // dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
 const WHITELIST_URL = 'https://whitelist.admira.store/list';
+// Desde FLT-100603 el GET anónimo a /list devuelve 401: sin token la verja caía
+// siempre en OWNER_FALLBACK y solo entraban los dos owners. Ahora se pregunta
+// como los perímetros de xpaceos.com/admira.store: /access?site=pixeria con
+// WHITELIST_SITE_TOKEN (solo lectura). Entra quien tenga la casilla «pixeria»
+// en admira-whitelist o sea superuser de AdmiraNeXT. admira.studio es el gemelo
+// generado por sync.sh y comparte la misma casilla (el slug en minúscula no se
+// sustituye).
+const WHITELIST_ACCESS_URL = 'https://whitelist.admira.store/access';
+const WHITELIST_SITE = 'pixeria';
+const ACCESS_CACHE_MS = 60 * 1000;
+const ACCESS_CACHE = new Map();
 const SESSION_COOKIE = '__Host-pixeria_session';
 const CHALLENGE_COOKIE = '__Host-pixeria_login_nonce';
 const SESSION_TTL_SECONDS = 24 * 60 * 60;
@@ -130,12 +141,30 @@ async function consumeChallenge(env, nonce, now = Date.now()) {
   return row ? safeReturnTo(row.return_to) : null;
 }
 
-async function emailAllowed(email, fetchImpl = fetch) {
+async function emailAllowed(email, env = {}, fetchImpl = fetch) {
   const normalized = normalEmail(email);
   if (!normalized) return false;
+  const siteToken = String((env && env.WHITELIST_SITE_TOKEN) || '').trim();
+  const machineToken = String((env && env.WHITELIST_MACHINE_TOKEN) || '').trim();
   try {
-    const response = await fetchImpl(WHITELIST_URL, {
-      headers:{Accept:'application/json'},
+    if (siteToken) {
+      const cached = ACCESS_CACHE.get(normalized);
+      if (cached && cached.until > Date.now()) return cached.allowed;
+      const query = `?site=${encodeURIComponent(WHITELIST_SITE)}&email=${encodeURIComponent(normalized)}`;
+      const response = await fetchImpl(WHITELIST_ACCESS_URL + query, {
+        headers:{Accept:'application/json', 'X-Whitelist-Token':siteToken},
+        cache:'no-store'
+      });
+      if (!response.ok) throw new Error('whitelist_unavailable');
+      const payload = await response.json();
+      const allowed = payload.ok === true && (payload.allowed === true || payload.superuser === true);
+      ACCESS_CACHE.set(normalized, {allowed, until:Date.now() + ACCESS_CACHE_MS});
+      return allowed;
+    }
+    const headers = {Accept:'application/json'};
+    if (machineToken) headers['X-Whitelist-Token'] = machineToken;
+    const response = await fetchImpl(WHITELIST_URL, machineToken ? {headers, cache:'no-store'} : {
+      headers,
       cf:{cacheTtl:60, cacheEverything:true}
     });
     if (!response.ok) throw new Error('whitelist_unavailable');
@@ -253,7 +282,7 @@ async function readSession(request, env) {
     const now = Math.floor(Date.now() / 1000);
     if (payload.aud !== 'pixeria.com' || Number(payload.exp) <= now || Number(payload.iat) > now + 60) return null;
     const email = normalEmail(payload.email);
-    if (!email || !(await emailAllowed(email))) return null;
+    if (!email || !(await emailAllowed(email, env))) return null;
     await ensureSchema(env);
     const user = await env.AUTH_DB.prepare('SELECT * FROM pixeria_users WHERE email=? AND google_sub=?').bind(email, String(payload.sub || '')).first();
     if (!user || user.status !== 'active' || Number(user.session_version) !== Number(payload.sv)) return null;
@@ -344,7 +373,7 @@ export async function handleAuth(request, env) {
       return loginResponse(env, '/', 'No se pudo verificar el acceso.', 401);
     }
     const returnTo = await consumeChallenge(env, identity.nonce);
-    if (!returnTo || !(await emailAllowed(identity.email))) {
+    if (!returnTo || !(await emailAllowed(identity.email, env))) {
       return loginResponse(env, '/', 'Cuenta no autorizada para Pixeria.', 403);
     }
     const user = await upsertUser(env, identity);
