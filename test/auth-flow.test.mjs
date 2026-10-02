@@ -270,3 +270,36 @@ test('canonical login host is selected before issuing a host-only nonce', async 
   assert.equal(response.headers.get('location'), 'https://www.pixeria.com/auth/login?return_to=%2Fbackoffice%2F');
   assert.equal(response.headers.get('set-cookie'), null);
 });
+
+test('con WHITELIST_SITE_TOKEN la verja pregunta /access?site=pixeria y deja entrar a casilla o superuser', async t => {
+  const calls = [];
+  const verdicts = {
+    'agonzalez@admira.com':{ok:true, allowed:true, superuser:false},
+    'jsedano@admira.com':{ok:true, allowed:false, superuser:true},
+    'nadie@admira.com':{ok:true, allowed:false, superuser:false},
+  };
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    calls.push({url:String(url), token:init?.headers?.['X-Whitelist-Token']});
+    const email = new URL(String(url)).searchParams.get('email');
+    return Response.json(verdicts[email] || {ok:true, allowed:false, superuser:false});
+  });
+  for (const [email, expected] of [['agonzalez@admira.com', true], ['jsedano@admira.com', true], ['nadie@admira.com', false]]) {
+    const user = testUser(email);
+    const bindings = {...env(), AUTH_DB:fakeDatabase([user]), WHITELIST_SITE_TOKEN:'site-token-test'};
+    const cookie = await signedSession(bindings, user);
+    assert.equal(await hasSession(new Request('https://www.pixeria.com/audio', {headers:{Cookie:cookie}}), bindings), expected, email);
+  }
+  assert.ok(calls.every(call => call.url.startsWith('https://whitelist.admira.store/access?site=pixeria&email=')));
+  assert.ok(calls.every(call => call.token === 'site-token-test'));
+});
+
+test('sin token y con /list en 401 solo entran los owners (comportamiento previo)', async t => {
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ok:false, error:'auth required'}, {status:401}));
+  const owner = testUser(owners[0]);
+  const other = testUser('jsedano@admira.com');
+  for (const [user, expected] of [[owner, true], [other, false]]) {
+    const bindings = {...env(), AUTH_DB:fakeDatabase([user])};
+    const cookie = await signedSession(bindings, user);
+    assert.equal(await hasSession(new Request('https://www.pixeria.com/audio', {headers:{Cookie:cookie}}), bindings), expected);
+  }
+});
