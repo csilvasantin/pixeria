@@ -1,8 +1,4 @@
-// Interruptor del avatar digital (FLT-101350). Un módulo por sitio en esta preview.
-// La cara es https://digitalavatar.ai/embed.js (no se redespliega). El cerebro es
-// POST mismo-origen /avatar-ask: el servidor habla con brain.digitalavatar.ai y
-// no devuelve audio ni claves. Sin argumento alterna; on/off lo fija. El estado
-// queda en localStorage por host.
+// Pixie: free local SVG helper, invoked explicitly from Expert. Every page starts hidden.
 (function (root) {
   'use strict';
 
@@ -57,16 +53,11 @@
   if (typeof document === 'undefined') return;
 
   const doc = document;
-  const local = (() => { try { return root.localStorage; } catch (_) { return null; } })();
+  let active = false;
   let face = null;
-  let mounting = null;
 
-  function storedOn() {
-    try { return !!(local && local.getItem(storageKey()) === '1'); } catch (_) { return false; }
-  }
-  function store(on) {
-    try { if (local) local.setItem(storageKey(), on ? '1' : '0'); } catch (_) {}
-  }
+  function storedOn() { return active; }
+  function store(on) { active = on; }
 
   function ensureLift() {
     if (doc.getElementById('da-avatar-lift')) return;
@@ -75,7 +66,7 @@
     // El embed fija bottom:20px y un z-index por encima de todo. Aquí se levanta
     // por encima de la barra Experto y se queda por debajo de las barras (z 40
     // pierde contra el shell en 9000 y contra el dock del gemelo en 30).
-    style.textContent = '#da-av{right:16px !important;bottom:var(--da-lift,96px) !important;top:auto !important;z-index:25 !important}';
+    style.textContent = '@keyframes pixie-bob{50%{transform:translateY(-5px) rotate(2deg)}}@media(prefers-reduced-motion:reduce){#da-av img{animation:none!important}}#da-av{right:16px !important;bottom:var(--da-lift,96px) !important;top:auto !important;z-index:25 !important}';
     doc.head.append(style);
   }
 
@@ -107,45 +98,33 @@
     root.addEventListener('resize', applyLift);
   }
 
-  function fallbackFace() {
-    let wrap = doc.getElementById('da-av');
-    if (wrap) return wrap;
-    wrap = doc.createElement('div');
-    wrap.id = 'da-av';
-    wrap.className = 'open';
-    const en = pageLang() === 'en';
-    wrap.innerHTML = '<div style="width:220px;padding:14px 16px;border-radius:16px;background:#02080d;border:1px solid rgba(120,243,255,.45);color:#eef7ff;font:13px/1.4 system-ui,sans-serif;box-shadow:0 16px 40px rgba(0,0,0,.45)">'
-      + '<div style="font:700 11px/1.2 ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#78f3ff;margin-bottom:8px">'
-      + (en ? 'Digital avatar' : 'Avatar digital') + '</div>'
-      + '<div style="font-size:42px;line-height:1;text-align:center">🤖</div>'
-      + '<div id="da-cap" style="margin-top:8px">' + (en ? '2D face. The 3D model did not load.' : 'Cara 2D. El modelo 3D no cargó.') + '</div></div>';
-    doc.body.append(wrap);
-    return wrap;
-  }
-
   async function ensureFace() {
     if (face) return face;
-    if (mounting) return mounting;
-    mounting = (async () => {
-      const lang = pageLang();
-      try {
-        const mod = await import('https://digitalavatar.ai/embed.js?v=9675f09');
-        face = await mod.mount({
-          brainUrl: (root.location && root.location.origin ? root.location.origin : '') + '/avatar-ask',
-          lang: lang === 'en' ? 'en-US' : 'es-ES',
-          title: lang === 'en' ? 'Digital avatar' : 'Avatar digital',
-          greeting: lang === 'en' ? 'Hello. What do you need?' : 'Hola. ¿En qué te ayudo?',
-          placeholder: lang === 'en' ? 'Ask about this project…' : 'Pregunta sobre este proyecto…',
-        });
-      } catch (_) {
-        fallbackFace();
-        face = {open() {}, close() {}};
-      }
-      if (!doc.getElementById('da-av')) fallbackFace();
-      applyLift();
-      return face;
-    })();
-    try { return await mounting; } finally { mounting = null; }
+    const en = pageLang() === 'en';
+    const wrap = doc.createElement('aside');
+    wrap.id = 'da-av';
+    wrap.setAttribute('aria-label', en ? 'Pixie · digital helper' : 'Pixie · ayudante digital');
+    wrap.style.cssText = 'position:fixed;width:228px;padding:16px;border-radius:22px;background:#071c21;border:1px solid #71f4dc;color:#edfdf7;font:14px/1.5 system-ui;box-shadow:0 16px 40px #0008';
+    const close = doc.createElement('button');
+    close.textContent = '×';
+    close.setAttribute('aria-label', en ? 'Hide helper' : 'Ocultar ayudante');
+    close.style.cssText = 'float:right;color:inherit;background:transparent;border:0;font-size:24px;cursor:pointer';
+    close.onclick = hide;
+    const mascot = doc.createElement('img');
+    mascot.src = '/assets/pixie.svg';
+    mascot.alt = en ? 'Pixie, a smiling mint-green pixel creature' : 'Pixie, una criatura píxel verde menta sonriente';
+    mascot.width = 150; mascot.height = 150;
+    mascot.style.cssText = 'display:block;margin:auto;animation:pixie-bob 3s ease-in-out infinite';
+    const title = doc.createElement('strong'); title.textContent = 'Pixie';
+    const caption = doc.createElement('p');
+    caption.textContent = en ? 'Hello! Choose your video in Adapter, select a format, then adjust its framing. The H.264 plan shows encoding settings.' : '¡Hola! Elige tu vídeo en Adaptador, selecciona un formato y ajusta su encuadre. El plan H.264 muestra la codificación.';
+    const note = doc.createElement('small');
+    note.textContent = en ? 'Local guide · no AI model or paid service.' : 'Guía local · sin modelo IA ni servicio de pago.';
+    wrap.append(close, mascot, title, caption, note);
+    doc.body.append(wrap);
+    face = {open() {}, close() {}};
+    applyLift();
+    return face;
   }
 
   async function show() {
@@ -175,5 +154,5 @@
 
   root.AvatarDigital = {handle, show, hide, decide, storedOn};
   watchLift();
-  if (storedOn()) show();
+  // Every page starts hidden, regardless of previous preferences.
 })(typeof window === 'undefined' ? globalThis : window);

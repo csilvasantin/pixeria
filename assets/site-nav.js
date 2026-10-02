@@ -52,7 +52,7 @@
     ['/musica.html', 'Música'],
     ['/imagenes.html', 'Imágenes'],
     ['/video.html', 'Video'],
-    ['/tiktok', 'TikTok'],
+    ['/adaptaciones/', 'Adaptador'],
     ['/publicidad.html', 'Publicidad'],
     ['/anonimizador.html', 'Anonimizador'],
     ['/ideas.html', 'Ideas'],
@@ -64,7 +64,7 @@
     ['/en/musica.html', 'Music'],
     ['/en/imagenes.html', 'Images'],
     ['/en/video.html', 'Video'],
-    ['/tiktok', 'TikTok'],
+    ['/en/adaptaciones/', 'Adapter'],
     ['/en/publicidad.html', 'Advertising'],
     ['/en/anonimizador.html', 'Anonymizer'],
     // Ideas todavía no tiene versión inglesa: se apunta a la española antes que
@@ -272,8 +272,7 @@
     ['/musica.html', 'Música', 'Bandas sonoras, jingles y marca sonora'],
     ['/audio.html', 'Audio · Megafonía', 'Voces, locución y megafonía de marca'],
     ['/video.html', 'Vídeo', 'Storyboards, generación, edición y loops'],
-    ['/tiktok', 'TikTok · Vertical', 'Anuncios 9:16 de 25s, listos para el mupi vertical'],
-    ['/adaptaciones/', 'Adaptaciones', 'Un vídeo, todas las pantallas: 9:16, 16:9, 1:1 y 4:5'],
+    ['/adaptaciones/', 'Adaptador', 'Un vídeo, todas las pantallas: 9:16, 16:9, 1:1 y 4:5'],
     ['/imagenes.html', 'Imágenes', 'Dirección de arte, producto y estilo'],
     ['/avatar.html', 'Avatar 3D', 'Presentadores y avatares generativos'],
     ['/anonimizador.html', 'Anonimizador', 'Privacidad en imagen y vídeo'],
@@ -483,6 +482,13 @@
     upgradeFrameControls();
     ensureHomeRails();
     bindRailToggles();
+    if (english) {
+      var translatedLabels = {'Mostrar u ocultar menú':'Options', 'Abrir panel avanzado':'Advanced', 'Abrir panel experto':'Expert', 'Desplegar flujo de producción':'Options', 'Desplegar acciones rápidas':'Expert'};
+      document.querySelectorAll('.pf-topbar button').forEach(function (button) {
+        var label = translatedLabels[button.getAttribute('aria-label')];
+        if (label) { button.setAttribute('aria-label',label); button.title = label; }
+      });
+    }
 
     // Si cuadratura.js ya creó la barra canónica, sus tres SVG son los buenos.
     // En las demás familias se montan los mismos controles alrededor del menú.
