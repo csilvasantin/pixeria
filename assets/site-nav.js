@@ -5,7 +5,7 @@
 (function () {
   // Pixeria is English; Admira Studio keeps the Spanish source routes.
   // Explicit language routes remain available for review in this shared preview.
-  var englishHost = /(^|\.)pixeria\.com$/.test(location.hostname) || String(location.hostname || '').endsWith('.pages.dev');
+  var englishHost = /(^|\.)pixeria\.(com|pages\.dev)$/.test(location.hostname);
   var localePath = location.pathname;
   var translatedPages = ['/', '/index.html', '/audio.html', '/musica.html', '/imagenes.html', '/video.html', '/anonimizador.html', '/publicidad.html', '/stock.html', '/crear/'];
   if (englishHost && !localePath.startsWith('/en/') && translatedPages.indexOf(localePath) >= 0 && new URLSearchParams(location.search).get('lang') !== 'es') {

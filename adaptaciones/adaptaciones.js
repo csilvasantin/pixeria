@@ -210,12 +210,23 @@ if (altadisResponse.ok) {
 buildGrid(); setSource('/adaptaciones/media/jti-tu-sitio-de-siempre-fuente.mp4', 'JTI «Tu sitio de siempre»', true); loadEstancos(); loop();
 window.__pixAdapt = { go, startTour };
 
+// Índice del Stock: primero el proxy comprimido del propio dominio y, si no responde
+// JSON (sin sesión la verja redirige a /auth/login, y en admira.studio ese salto
+// cambia de host y el fetch revienta por CORS), el bucket público con CORS abierto.
+async function fetchStockIndex() {
+  for (const url of ['/stock-index', 'https://stock.admira.store/stock/index.json']) {
+    try {
+      const response = await fetch(url, url.startsWith('/') ? { redirect: 'manual', credentials: 'same-origin' } : { credentials: 'omit' });
+      if (!response.ok || !/json/i.test(response.headers.get('content-type') || '')) continue;
+      return await response.json();
+    } catch (_) { /* siguiente origen */ }
+  }
+  throw new Error('stock unavailable');
+}
+
 async function loadStock() {
   try {
-    let response = await fetch('/stock-index');
-    if (!response.ok) response = await fetch('https://stock.admira.store/stock/index.json');
-    if (!response.ok) throw new Error('stock unavailable');
-    const data = await response.json();
+    const data = await fetchStockIndex();
     const videos = (data.items || []).filter(item => item.type === 'video' && (item.url || item.mediaUrl));
     for (const item of videos) {
       const url = item.url || item.mediaUrl;
