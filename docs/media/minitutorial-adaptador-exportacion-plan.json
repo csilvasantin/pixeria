@@ -1,0 +1,65 @@
+{
+  "version": "admiranext-tiktok-plan-v1",
+  "generatedAt": "2026-10-03T20:18:00.765Z",
+  "duration": 15,
+  "format": {
+    "width": 1080,
+    "height": 1920,
+    "aspectRatio": "9:16",
+    "fps": 30
+  },
+  "estilo": null,
+  "variation": 0,
+  "presenter": {
+    "key": "fusion",
+    "name": "Pix Fusion",
+    "direction": "Pix combina el gancho de Chispa con el rigor de Nexo."
+  },
+  "brief": {
+    "task": "Pixeria → Adaptador (en revisión).",
+    "solution": "Elige vídeo; ajusta foco y zoom; pulsa Exportar MP4.",
+    "result": "MP4 por formato. Ajustes guardados en tu navegador.",
+    "audience": "Guía animada · máximo 100 MB de origen · sin expansión IA.",
+    "cta": "Vuelve a elegir tu archivo al regresar",
+    "tone": "expert"
+  },
+  "source": null,
+  "script": "Atajo detectado: pixeria → Adaptador (en revisión). Elige vídeo; ajusta foco y zoom; pulsa Exportar MP4. MP4 por formato. Ajustes guardados en tu navegador. Vuelve a elegir tu archivo al regresar. Menos clics. Más hecho.",
+  "pace": {
+    "label": "Óptimo",
+    "level": "good",
+    "words": 35
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "from": 0,
+      "to": 3,
+      "label": "ATAJO DETECTADO",
+      "headline": "Pixeria → Adaptador (en revisión).",
+      "body": "Guía animada · máximo 100 MB de origen · sin expansión IA.",
+      "direction": "Entrada inmediata. Problema cotidiano, texto grande y personaje en silueta."
+    },
+    {
+      "id": "action",
+      "from": 3,
+      "to": 11,
+      "label": "DOS PASOS · MÁXIMO",
+      "headline": "Elige vídeo; ajusta foco y zoom; pulsa Exportar MP4.",
+      "body": "Captura o demostración centrada en una única acción verificable.",
+      "direction": "Mostrar la herramienta, resaltar el gesto y mantener máximo tres capas visuales."
+    },
+    {
+      "id": "result",
+      "from": 11,
+      "to": 15,
+      "label": "PROBADO · 15S",
+      "headline": "MP4 por formato. Ajustes guardados en tu navegador.",
+      "body": "Vuelve a elegir tu archivo al regresar. Menos clics. Más hecho.",
+      "direction": "Resultado visible, sello de prueba y cierre de marca sin añadir una idea nueva."
+    }
+  ],
+  "productionPrompt": "Vídeo vertical 9:16 de 15 segundos para Guía animada · máximo 100 MB de origen · sin expansión IA.. Presentador Pix Fusion. Tono expert. Pix combina el gancho de Chispa con el rigor de Nexo. Tres escenas exactas: problema de 0 a 3 segundos; demostración de 3 a 11; resultado y llamada a la acción de 11 a 15. Estética ADmiraNeXT: fondo oscuro cuadrático, señal cian, tipografía monoespaciada, alto contraste, subtítulos grandes, zonas seguras y movimiento preciso. Sin logos ajenos inventados, sin afirmaciones no verificadas.",
+  "grokPrompt": "Create one original, cinematic vertical social video in a 9:16 aspect ratio, exactly 15 seconds long. The visual story begins with the problem: Pixeria → Adaptador (en revisión).. It then reveals the solution through clear physical action: Elige vídeo; ajusta foco y zoom; pulsa Exportar MP4.. Finish with the visible result: MP4 por formato. Ajustes guardados en tu navegador.. The intended audience is Guía animada · máximo 100 MB de origen · sin expansión IA.. Use Pix Fusion as a friendly compact geometric robot guide, expressive through motion and staging rather than dialogue or typography. Make it one coherent continuous sequence with confident camera movement, premium futuristic production design, strong depth, and a precise dark technical palette with cyan light and one warm orange accent. PURE VIDEO CONTRACT: no visible text, no captions, no subtitles, no letters, no numbers, no logos, no watermarks, no social-network interface, and no trademarked products. Do not imitate a named artist, film, studio, campaign, character, or existing artwork. Avoid identifiable real people. Keep the action legible without words and suitable for commercial human review.",
+  "voiceDirection": "Voz cercana, clara y energética. Entre 145 y 165 palabras por minuto. Pausa breve tras el gancho y antes del resultado."
+}

@@ -1,0 +1,7 @@
+@ffmpeg/ffmpeg 0.12.15 ESM files, unmodified. MIT license in LICENSE.
+Source: https://github.com/ffmpegwasm/ffmpeg.wasm
+The encoder downloads @ffmpeg/core 0.12.10 ESM from jsDelivr on demand.
+ffmpeg-core contains FFmpeg and libx264, distributed under GPL; sources and
+build recipes: https://github.com/ffmpegwasm/ffmpeg.wasm/tree/main/packages/core
+https://github.com/ffmpegwasm/ffmpeg.wasm/tree/main/build
+See https://ffmpegwasm.netlify.app/docs/overview/ for licensing details.

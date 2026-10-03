@@ -2,6 +2,8 @@
 // Render en vivo en canvas; las reglas son las del motor de signage de Pixeria.
 // Reutiliza el motor de reglas real de Pixeria: assets/signage-perfiles.js
 import { perfilDeSalida, planificar } from '/assets/signage-perfiles.js';
+import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob } from './adapter-core.mjs';
+import { createExporter, MAX_SOURCE_BYTES } from './adapter-export.js';
 
 const EN = document.documentElement.lang === 'en';
 const t = (es, en) => EN ? en : es;
@@ -22,7 +24,66 @@ const state = { profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {},
 FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoom: 1 }));
 
 const video = $('#src');
-const cli = { log(t) { try { console.debug('[adaptaciones]', t); } catch (e) {} } };
+let initialized = false, activeExport = null;
+const downloads = [];
+const selectedFormats = () => FORMATOS.filter(f => f.on && (state.profile === 'altadis' ? f.altadis : !f.altadis));
+function saveSettings() {
+  if (!initialized) return;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot(state, FORMATOS))); $('#settings-status').textContent = t('Ajustes guardados en este navegador. Al volver, elige de nuevo tu archivo local.', 'Settings saved in this browser. Select your local file again when returning.'); }
+  catch (_) { $('#settings-status').textContent = t('Este navegador no permite guardar los ajustes.', 'This browser does not allow saving settings.'); }
+}
+function restoreSettings() {
+  try {
+    const saved = restore(JSON.parse(localStorage.getItem(STORAGE_KEY)), FORMATOS);
+    if (saved) { Object.assign(state, {profile:saved.profile,compat:saved.compat,modoGlobal:saved.modoGlobal,fmt:saved.fmt}); FORMATOS.forEach(f=>f.on=saved.selected.includes(f.id)); }
+  } catch (_) { /* corrupt or unavailable storage: keep safe defaults */ }
+  $('#format-profile').value=state.profile; $('#compat').value=state.compat; $('#modo-global').value=state.modoGlobal;
+  $('#compat').disabled=state.profile==='altadis';initialized=true;
+}
+function clearDownloads() { downloads.splice(0).forEach(URL.revokeObjectURL); $('#export-results').replaceChildren(); }
+function lockEditor(locked) {
+  document.querySelectorAll('#sec-adapt input, #sec-adapt select, #sec-adapt button').forEach(el=>el.disabled=locked);
+  $('#cancel-export').disabled=false;$('#cancel-export').hidden=!locked;
+  if(!locked) {$('#compat').disabled=state.profile==='altadis';refreshInfo();}
+}
+async function exportFormats(formats) {
+  if(activeExport || !state.src.ancho || !formats.length) return;
+  const jobs=formats.map(f=>({...exportJob(state.src,perfil(f),plan(f),modoEfectivo(f),state.fmt[f.id],state.srcName,f.id),label:f.nombre}));
+  const budget=exportBudget(video.duration,jobs);
+  if(budget) {$('#export-status').textContent=budget==='batch-size'
+    ?t('El lote supera el presupuesto local de memoria. Selecciona menos formatos y expórtalos por separado.','This batch exceeds the local memory budget. Select fewer formats and export them separately.')
+    :t('Este vídeo es demasiado largo para exportarlo con este perfil en el navegador. Usa un clip más corto o un perfil de menor resolución.','This video is too long to export with this profile in the browser. Use a shorter clip or a lower resolution profile.');return;}
+  const exporter=createExporter(); activeExport=exporter;
+  clearDownloads(); lockEditor(true);video.pause();
+  const status=$('#export-status'), progress=$('#export-progress');progress.hidden=false;progress.removeAttribute('value');
+  let completed=0;
+  try {
+    await exporter.run(video.src,jobs,event=>{
+      if(event.phase==='loading') status.textContent=t('Cargando motor de vídeo (unos 32 MB)…','Loading video engine (about 32 MB)…');
+      else if(event.phase==='source') status.textContent=t('Leyendo vídeo de origen…','Reading source video…');
+      else { progress.value=(event.index+event.progress)/event.total;status.textContent=`${t('Exportando','Exporting')} ${event.index+1}/${event.total} · ${event.job.label} · ${Math.floor(event.progress*100)}%`; }
+    },(job,blob)=>{
+      completed++;const url=URL.createObjectURL(blob);downloads.push(url);
+      const link=document.createElement('a');link.href=url;link.download=job.filename;link.className='pill';link.textContent=`${t('Descargar','Download')} ${job.label} · ${job.W}×${job.H} · ${(blob.size/1048576).toFixed(1)} MB`;
+      $('#export-results').append(link);
+    });
+    progress.value=1;status.textContent=t(`${completed} MP4 listos. Descárgalos antes de salir de esta página.`,`${completed} MP4 files ready. Download them before leaving this page.`);
+  } catch(error) {
+    const reason=String(error?.message||error);
+    status.textContent=reason==='cancelled'?t('Exportación cancelada. Puedes conservar los archivos ya terminados.','Export cancelled. You can keep files already completed.')
+      :reason==='output-size'?t('La salida alcanzó el límite de memoria. Usa un clip más corto. El archivo incompleto no se ofrece para descarga.','The output reached the memory limit. Use a shorter clip. Incomplete files are not offered for download.')
+      :reason==='source-size'?t('El vídeo supera el límite local de 100 MB. Usa un archivo más pequeño.','The video exceeds the local 100 MB limit. Use a smaller file.')
+      :t('No se pudo completar la exportación. Comprueba la conexión y usa un MP4 local de menos de 100 MB; algunas fuentes Stock no permiten su descarga. Los archivos terminados siguen disponibles.','Export could not complete. Check your connection and try a local MP4 under 100 MB; some Stock sources block downloading. Completed files remain available.');
+    progress.hidden=true;
+  } finally {activeExport=null;lockEditor(false);}
+}
+$('#export-all').onclick=()=>exportFormats(selectedFormats());
+$('#cancel-export').onclick=()=>activeExport?.cancel();
+$('#reset-settings').onclick=()=>{
+  Object.assign(state,{profile:'standard',compat:'fhd',modoGlobal:'auto'});FORMATOS.forEach(f=>{f.on=!f.altadis;state.fmt[f.id]=defaults();});
+  $('#format-profile').value='standard';$('#compat').value='fhd';$('#compat').disabled=false;$('#modo-global').value='auto';buildGrid();
+};
+window.addEventListener('pagehide',event=>{activeExport?.cancel();if(!event.persisted) {clearDownloads();if(sourceObjectURL)URL.revokeObjectURL(sourceObjectURL);}});
 
 // ── Perfil + plan (motor Pixeria) ───────────────────────────────────────────
 function perfil(f) {
@@ -47,7 +108,7 @@ function modoEfectivo(f) {
 function buildGrid() {
   const g = $('#grid'); g.innerHTML = '';
   $('#fmt-checks').innerHTML = FORMATOS.filter(f => state.profile === 'altadis' ? f.altadis : !f.altadis).map((f) => `<label style="display:block"><input type="checkbox" data-f="${f.id}" ${f.on ? 'checked' : ''}> ${f.nombre}</label>`).join('');
-  FORMATOS.filter((f) => f.on).forEach((f) => {
+  selectedFormats().forEach((f) => {
     const p = perfil(f); const cw = p.ancho >= p.alto ? 384 : Math.round(384 * p.ancho / p.alto); const ch = Math.round(cw * p.alto / p.ancho);
     const el = document.createElement('div'); el.className = 'fmt'; el.dataset.f = f.id;
     el.innerHTML = `<h3>${f.nombre}</h3><div class="dims">${p.ancho}×${p.alto} · ${f.uso}</div>
@@ -56,14 +117,18 @@ function buildGrid() {
       <span>${t('Foco X','Focus X')}</span><input type="range" data-k="fx" min="0" max="1" step="0.01" value="0.5">
       <span>${t('Foco Y','Focus Y')}</span><input type="range" data-k="fy" min="0" max="1" step="0.01" value="0.5">
       <span>Zoom</span><input type="range" data-k="zoom" min="1" max="2" step="0.01" value="1"></div>
-      <div class="aviso"></div><details class="card-plan"><summary>${t("Plan técnico H.264", "H.264 encoding plan")}</summary><pre></pre></details>`;
-    el.querySelectorAll('[data-k]').forEach((inp) => { inp.value = state.fmt[f.id][inp.dataset.k]; inp.oninput = () => { const k = inp.dataset.k; state.fmt[f.id][k] = k === 'modo' ? inp.value : +inp.value; refreshInfo(); }; });
+      <div class="aviso"></div><button class="pill accent export-one" type="button"></button><details class="card-plan"><summary>${t("Plan técnico H.264", "H.264 encoding plan")}</summary><pre></pre></details>`;
+    el.querySelectorAll('[data-k]').forEach((inp) => { inp.value = state.fmt[f.id][inp.dataset.k]; inp.setAttribute('aria-label', `${t('Ajuste','Setting')} ${inp.dataset.k} · ${f.nombre}`); inp.oninput = () => { const k = inp.dataset.k; state.fmt[f.id][k] = k === 'modo' ? inp.value : +inp.value; refreshInfo(); }; });
+    el.querySelector('.export-one').textContent=t('Exportar MP4','Export MP4'); el.querySelector('.export-one').onclick=()=>exportFormats([f]);
     g.appendChild(el);
   });
   $('#fmt-checks').querySelectorAll('input').forEach((c) => (c.onchange = () => { FORMATOS.find((f) => f.id === c.dataset.f).on = c.checked; buildGrid(); }));
   refreshInfo();
 }
 function refreshInfo() {
+  saveSettings();
+  $('#export-all').disabled=!!activeExport || !state.src.ancho || !selectedFormats().length;
+  document.querySelectorAll('.export-one').forEach(el=>el.disabled=!!activeExport || !state.src.ancho);
   document.querySelectorAll('#grid .fmt[data-f]').forEach((el) => {
     const f = FORMATOS.find((x) => x.id === el.dataset.f); const p = plan(f); const m = modoEfectivo(f);
     const settings = state.fmt[f.id];
@@ -84,26 +149,19 @@ function refreshInfo() {
       ? `${p.ancho}×${p.alto} · H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps · ${p.fps} fps · GOP ${p.gopSegundos}s\n${ffmpegCmd(f)}`
       : t('Sin vídeo', 'No video');
   });
-  const rows = FORMATOS.filter((f) => f.on).map((f) => {
+  const rows = selectedFormats().map((f) => {
     const p = plan(f); if (!p || p.error) return `<p>${f.nombre}: ${p ? p.error : 'sin vídeo'}</p>`;
     return `<div class="fmt" style="margin-bottom:8px"><h3>${f.nombre} · ${p.ancho}×${p.alto}</h3>
       <div class="dims">encaje <b>${p.encaje}</b> · adaptación <b>${p.adaptacion}</b> · recorte ${Math.round(p.recortePerdido * 100)}%<br>
       H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps (${p.bitrateMotivo}) · ${p.fps} fps · GOP ${p.gopSegundos}s</div>
-      <div class="aviso">${(p.avisos || []).join(' · ')}</div><pre style="white-space:pre-wrap;font-size:11px;color:#9fc3ff">${ffmpegCmd(f)}</pre></div>`;
+      <div class="aviso">${(p.avisos || []).map(a=>/generativ|imagina/i.test(a)?t('Fondo desenfocado derivado del original; sin expansión IA.','Blurred background derived from the original; no AI expansion.'):a).join(' · ')}</div><pre style="white-space:pre-wrap;font-size:11px;color:#9fc3ff">${ffmpegCmd(f)}</pre></div>`;
   });
   $('#plan-tecnico').innerHTML = rows.join('');
 }
 function ffmpegCmd(f) {
-  const p = perfil(f), W = p.ancho, H = p.alto, m = modoEfectivo(f), s = state.fmt[f.id];
-  const technical = plan(f) || {};
-  const enc = `-c:v libx264 -profile:v ${technical.h264Perfil || p.h264.split('@')[0]} -level ${technical.h264Nivel || p.h264.split('@')[1]} -pix_fmt yuv420p -r ${technical.fps || 25} -b:v ${technical.bitrateKbps || p.techoKbps}k -g ${Math.round((technical.fps || 25) * (technical.gopSegundos || 2))} -c:a aac -b:a 128k -movflags +faststart`;
-  const name = `out/${(state.srcName || 'video').replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '-')}-${f.id.replace(':', 'x')}-${W}x${H}.mp4`;
-  if (m === 'cover') {
-    const z = s.zoom.toFixed(2);
-    return `ffmpeg -i INPUT -vf "scale=${W}*${z}:${H}*${z}:force_original_aspect_ratio=increase,crop=${W}:${H}:(iw-${W})*${s.fx.toFixed(2)}:(ih-${H})*${s.fy.toFixed(2)},setsar=1" ${enc} ${name}`;
-  }
-  const bg = m === 'blur' ? `scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},boxblur=30:3,eq=brightness=-0.08` : `scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},drawbox=c=black:t=fill`;
-  return `ffmpeg -i INPUT -filter_complex "[0:v]split[a][b];[a]${bg}[bg];[b]scale=${W}*${s.zoom.toFixed(2)}:${H}*${s.zoom.toFixed(2)}:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)*${s.fx.toFixed(2)}:(H-h)*${s.fy.toFixed(2)},setsar=1" ${enc} ${name}`;
+  if(!state.src.ancho) return '';
+  const job=exportJob(state.src,perfil(f),plan(f)||{},modoEfectivo(f),state.fmt[f.id],state.srcName,f.id);
+  return 'ffmpeg ' + job.args.map(arg=>JSON.stringify(arg==='output.mp4'?job.filename:arg)).join(' ');
 }
 
 // ── Render en vivo (canvas) ─────────────────────────────────────────────────
@@ -111,12 +169,13 @@ function drawInto(cv, f) {
   const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, vw = video.videoWidth, vh = video.videoHeight;
   if (!vw) return;
   const m = modoEfectivo(f), s = state.fmt[f.id];
-  const coverRect = (z = 1, fx = 0.5, fy = 0.5) => { const k = Math.max(W / vw, H / vh) * z, w = vw * k, h = vh * k; return [(W - w) * fx, (H - h) * fy, w, h]; };
+  const output=perfil(f), ratio=W/output.ancho;
+  const drawRect=(mode,settings)=>{const r=rect(state.src,output.ancho,output.alto,mode,settings);return [r.x*ratio,r.y*ratio,r.w*ratio,r.h*ratio];};
   ctx.filter = 'none'; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-  if (m === 'cover') { ctx.drawImage(video, ...coverRect(s.zoom, s.fx, s.fy)); return; }
-  if (m === 'blur') { ctx.filter = 'blur(14px) brightness(0.85)'; ctx.drawImage(video, ...coverRect(1.1)); ctx.filter = 'none'; }
-  const k = Math.min(W / vw, H / vh) * s.zoom, w = vw * k, h = vh * k;
-  ctx.drawImage(video, (W - w) * s.fx, (H - h) * s.fy, w, h);
+  const drawCrop=settings=>{const c=cropWindow(state.src,output.ancho,output.alto,settings);ctx.drawImage(video,c.x,c.y,c.w,c.h,0,0,W,H);};
+  if (m === 'cover') { drawCrop(s); return; }
+  if (m === 'blur') { ctx.filter = `blur(${14*Math.max(output.ancho,output.alto)/384*ratio}px) brightness(0.85)`; drawCrop({zoom:1.1,fx:.5,fy:.5}); ctx.filter = 'none'; }
+  ctx.drawImage(video, ...drawRect('contain',s));
 }
 function loop() {
   document.querySelectorAll('.fmt[data-f]').forEach((el) => { const c = el.querySelector('canvas'); if (c) drawInto(c, FORMATOS.find((f) => f.id === el.dataset.f)); });
@@ -129,9 +188,10 @@ let sourceObjectURL = null;
 function setSource(url, name, isJti) {
   if (sourceObjectURL && sourceObjectURL !== url) URL.revokeObjectURL(sourceObjectURL);
   sourceObjectURL = url.startsWith('blob:') ? url : null;
+  clearDownloads();$('#export-status').textContent='';
   state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0};
   $('#src-info').textContent = t('Cargando vídeo…','Loading video…');
-  state.srcName = name; state.isJti = isJti; video.src = url; video.play().catch(() => {});
+  state.srcName = name; state.isJti = isJti; refreshInfo(); video.src = url; video.play().catch(() => {});
   document.querySelectorAll('#twin video').forEach((v) => (v.style.display = isJti ? '' : 'none'));
   document.querySelectorAll('#twin canvas').forEach((v) => (v.hidden = isJti));
 }
@@ -142,12 +202,12 @@ video.addEventListener('loadedmetadata', () => {
   refreshInfo();
 });
 $('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; setSource(o.value, o.textContent.replace(/^Stock · /, ''), /jti-/.test(o.value)); };
-$('#src-file').onchange = (e) => { const f = e.target.files[0]; if (f) setSource(URL.createObjectURL(f), f.name, false); };
+$('#src-file').onchange = (e) => { const f = e.target.files[0]; if(f && f.size>MAX_SOURCE_BYTES) {$('#export-status').textContent=t('El límite local es 100 MB. Elige un vídeo más pequeño.','The local limit is 100 MB. Choose a smaller video.');e.target.value='';return;} if (f) setSource(URL.createObjectURL(f), f.name, false); };
 $('#btn-play').onclick = () => (video.paused ? video.play() : video.pause());
 $('#modo-global').onchange = (e) => { state.modoGlobal = e.target.value; refreshInfo(); };
 $('#format-profile').onchange = (e) => {
   state.profile = e.target.value;
-  FORMATOS.forEach(f => { f.on = state.profile === 'altadis' ? !!f.altadis : !f.altadis; });
+  // Preserve selections and settings in both format families.
   $('#compat').disabled = state.profile === 'altadis';
   buildGrid();
 };
@@ -204,10 +264,10 @@ document.addEventListener('keydown', (ev) => { if (ev.target.tagName === 'INPUT'
 const altadisResponse = await fetch('/adaptaciones/altadis-18.json');
 if (altadisResponse.ok) {
  const data = await altadisResponse.json();
- for (const f of data.formats) { if (EN) f.uso = f.useEn; FORMATOS.push(f); state.fmt[f.id] = {modo:'auto',fx:0.5,fy:0.5,zoom:1}; }
+ for (const f of data.formats) { f.on=true; if (EN) f.uso = f.useEn; FORMATOS.push(f); state.fmt[f.id] = {modo:'auto',fx:0.5,fy:0.5,zoom:1}; }
  $('#format-profile').querySelector('[value=altadis]').disabled = false;
 }
-buildGrid(); setSource('/adaptaciones/media/jti-tu-sitio-de-siempre-fuente.mp4', 'JTI «Tu sitio de siempre»', true); loadEstancos(); loop();
+restoreSettings(); buildGrid(); setSource('/adaptaciones/media/jti-tu-sitio-de-siempre-fuente.mp4', 'JTI «Tu sitio de siempre»', true); loadEstancos(); loop();
 window.__pixAdapt = { go, startTour };
 
 // Índice del Stock: primero el proxy comprimido del propio dominio y, si no responde
