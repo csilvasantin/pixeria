@@ -353,7 +353,7 @@
       h.className = 'pix-rail-resize pix-rail-resize-' + c[1];
       h.setAttribute('role', 'separator');
       h.setAttribute('aria-orientation', 'vertical');
-      h.setAttribute('aria-label', english
+      h.setAttribute('aria-label', (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0
         ? (c[1] === 'left' ? 'Resize options panel' : 'Resize advanced panel')
         : (c[1] === 'left' ? 'Redimensionar panel de opciones' : 'Redimensionar panel avanzado'));
       h.title = h.getAttribute('aria-label');
