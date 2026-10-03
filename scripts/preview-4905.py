@@ -13,7 +13,7 @@ for lang in ['es','en']:
     for source,destination in [(('en/' if lang=='en' else '')+'video.html','video.html'),(('en/' if lang=='en' else '')+'adaptaciones/index.html','adaptaciones/index.html')]:
         content=(root/source).read_text()
         content=re.sub(r'<!-- GATE-INICIO -->.*?<!-- GATE-FIN -->','',content,flags=re.S)
-        content=re.sub(r'<script>if \(\(location.hostname.*?</script>','',content)
+        content=re.sub(r'<script>if \((?:\(location\.hostname|/\(\^).*?</script>','',content)
         content=content.replace('<head>','<head><base href="'+('/en/' if lang=='en' else '/')+'">',1)
         content=re.sub(r'<body([^>]*)>',lambda m:'<body'+m[1]+' data-preview-root="'+prefix+'">',content,count=1)
         content=content.replace('href="/en/video.html"','href="'+prefix+'video.html"').replace('href="/video.html"','href="'+prefix+'video.html"')
