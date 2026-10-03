@@ -56,10 +56,9 @@
   <script defer src="/assets/descarga-local.js?v=02.10.2026.r1.1127"></script>
 </head>
 <body data-page="plataforma">
-  <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
+  <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
   <script>
-  (function(){var b=document.body,m={pixeria_pf_left:'pf-left-off',pixeria_pf_right:'pf-right-off',pixeria_pf_bottom:'pf-bottom-off'};
-  try{for(var k in m){if(localStorage.getItem(k)!=='1')b.classList.add(m[k]);}}catch(e){for(var j in m){b.classList.add(m[j]);}}})();
+  document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');
   </script>
   <!-- Banda superior del grupo Admira · Xperience -->
   <nav class="admira-nav admira-nav-static" aria-label="Admira · Xperience">

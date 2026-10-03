@@ -5,8 +5,14 @@
      · CENTRO    → lo importante   (.cuad-center)  hero + radar + formatos
      · AVANZADO  → raíl DERECHO    (.rail-right)   método/pipeline + detalle
      · EXPERTO   → franja INFERIOR (.rail-bottom)  biblioteca + estado + versión
-   Los raíles están OCULTOS por defecto (body.pf-*-off) y se revelan con los
-   iconos toggle de la barra superior. Persistencia en localStorage pixeria_pf_*.
+   Los raíles entran CERRADOS en cada carga (body.pf-*-off) y se revelan con los
+   iconos toggle de la barra superior. El estado abierto NO se recuerda; el tamaño
+   redimensionado sí (pixeria_pf_*_w / _h).
+   PRINCIPIO (Carlos, 3-oct-2026): los paneles se SUPERPONEN. Abrir ☰, ▤ o ⌘ no
+   mueve el contenido (.cuad-center, .page-head, main, body): ni posición, ni
+   ancho, ni alto, ni recolocación. Ninguna regla de este fichero puede cambiar
+   margin/padding/width/height/grid del contenido según pf-*-off. Guardián:
+   test/paneles-superpuestos.test.cjs · docs/shell-cuadratico.md.
    Estética cuadrática: esquinas RECTAS y marcos planos. La IDENTIDAD de Pixeria
    (tokens de styles.css: colores, tipos) se respeta — la cuadratura no cambia la
    marca, solo redistribuye la pantalla.
@@ -20,10 +26,8 @@
   --pf-right-w:330px;
   --pf-bottom-h:260px;
 }
-.cuad-center,
-body.pf-has-frame .page-head{
+.cuad-center{
   min-width:0;
-  transition:margin .16s ease, max-width .16s ease;
 }
 
 /* ── Raíles: paneles laterales pegados al borde real de pantalla ─────────── */
@@ -37,7 +41,7 @@ body.pf-has-frame .page-head{
   overflow:auto;
   border:1px solid var(--line, rgba(140,160,150,.30));
   border-radius:0;
-  background:rgba(2, 10, 5, .90);
+  background:rgba(2, 10, 5, .96);
   box-shadow:0 0 34px rgba(0,255,65,.10);
   backdrop-filter:blur(8px);
 }
@@ -132,59 +136,8 @@ body.pf-has-frame .page-head{
 /* La franja EXPERTO (inferior) sí es ancha: mantiene 2 columnas donde encaja. */
 .rail-bottom .band{padding:20px clamp(16px,4vw,40px)}
 
-/* El contenido principal responde al tamano de los paneles abiertos. */
-body.pf-has-frame:not(.pf-left-off) .cuad-center{
-  margin-left:var(--pf-left-w);
-}
-body.pf-has-frame:not(.pf-left-off) .page-head{
-  margin-left:calc(var(--pf-left-w) + 46px);
-  max-width:calc(100vw - var(--pf-left-w) - 92px);
-  width:auto;
-}
-body.pf-has-frame:not(.pf-right-off) .cuad-center{
-  margin-right:var(--pf-right-w);
-}
-body.pf-has-frame:not(.pf-right-off) .page-head{
-  margin-right:calc(var(--pf-right-w) + 46px);
-  max-width:calc(100vw - var(--pf-right-w) - 92px);
-  width:auto;
-}
-body.pf-has-frame:not(.pf-bottom-off) .cuad-center{
-  margin-bottom:var(--pf-bottom-h);
-}
-body.pf-has-frame:not(.pf-left-off) .page-head h1,
-body.pf-has-frame:not(.pf-right-off) .page-head h1,
-body.pf-has-frame:not(.pf-left-off) .cuad-center h1,
-body.pf-has-frame:not(.pf-right-off) .cuad-center h1{
-  font-size:clamp(38px, 6vw, 72px);
-  overflow-wrap:anywhere;
-}
-body.pf-has-frame:not(.pf-left-off):not(.pf-right-off) .page-head h1,
-body.pf-has-frame:not(.pf-left-off):not(.pf-right-off) .cuad-center h1{
-  font-size:clamp(32px, 5vw, 58px);
-}
-body.pf-has-frame:not(.pf-left-off):not(.pf-right-off) .page-head{
-  max-width:calc(100vw - var(--pf-left-w) - var(--pf-right-w) - 92px);
-}
-body.pf-has-frame:not(.pf-left-off):not(.pf-right-off) .page-head .lead,
-body.pf-has-frame:not(.pf-left-off):not(.pf-right-off) .cuad-center .lead{
-  max-width:min(100%, 680px);
-}
-body.pf-has-frame:not(.pf-left-off) .cuad-center .stock-toolbar,
-body.pf-has-frame:not(.pf-right-off) .cuad-center .stock-toolbar{
-  max-width:100%;
-}
-body.pf-has-frame:not(.pf-left-off) .cuad-center .stock-pager,
-body.pf-has-frame:not(.pf-right-off) .cuad-center .stock-pager{
-  grid-template-columns:auto minmax(220px,1fr);
-  align-items:start;
-}
-body.pf-has-frame:not(.pf-left-off) .cuad-center .stock-pager-filters,
-body.pf-has-frame:not(.pf-right-off) .cuad-center .stock-pager-filters,
-body.pf-has-frame:not(.pf-left-off) .cuad-center .stock-pager-sort,
-body.pf-has-frame:not(.pf-right-off) .cuad-center .stock-pager-sort{
-  flex-wrap:wrap;
-}
+/* Los paneles abiertos NO empujan el contenido: ☰, ▤ y ⌘ son capas fijas con
+   fondo y sombra por encima del centro (principio de Carlos, 3-oct-2026). */
 
 /* Tiradores de redimension: invisibles hasta hover, pero grandes para acertar. */
 .pf-resize-handle{
@@ -442,7 +395,7 @@ body.pf-left-off   .rail-left   {display:none}
 body.pf-right-off  .rail-right  {display:none}
 body.pf-bottom-off .rail-bottom {display:none}
 
-/* ── Responsive: 1 columna, raíles en flujo normal ──────────────────────── */
+/* ── Responsive: barra en dos filas; los raíles siguen fijos y superpuestos ── */
 @media(max-width:980px){
   .pf-topbar{
     grid-template-columns:1fr auto;
@@ -471,15 +424,6 @@ body.pf-bottom-off .rail-bottom {display:none}
     width:min(86vw, 320px);
   }
   .cuad .rail-right{width:min(86vw, 330px)}
-  body.pf-has-frame:not(.pf-left-off) .cuad-center,
-  body.pf-has-frame:not(.pf-right-off) .cuad-center,
-  body.pf-has-frame:not(.pf-bottom-off) .cuad-center,
-  body.pf-has-frame:not(.pf-left-off) .page-head,
-  body.pf-has-frame:not(.pf-right-off) .page-head{
-    margin-left:0;
-    margin-right:0;
-    margin-bottom:0;
-  }
 }
 
 /* Sección ACTUAL en el raíl OPCIONES (auto-cuadratura marca la página activa) */
@@ -491,11 +435,6 @@ body.pf-bottom-off .rail-bottom {display:none}
 .cuad .rail-right { right:auto; left:0; }
 .cuad .rail-left .pf-resize-left { right:auto; left:-9px; }
 .cuad .rail-right .pf-resize-right { left:auto; right:-9px; }
-@media (min-width:981px) {
-  body.pf-has-frame .cuad-center { margin-left:0; margin-right:0; }
-  body.pf-has-frame:not(.pf-left-off) .cuad-center { margin-right:var(--pf-left-w); }
-  body.pf-has-frame:not(.pf-right-off) .cuad-center { margin-left:var(--pf-right-w); }
-}
 
 /* ══ Shell universal (FLT-101334) ═══════════════════════════════════════════
    La barra de 4 bandas es la MISMA en todas las páginas, traigan la tipografía o
