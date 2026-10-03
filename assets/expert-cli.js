@@ -204,7 +204,7 @@
   var sections = {
     home: en ? '/en/' : '/', audio: 'audio.html', music: 'musica.html', musica: 'musica.html',
     images: 'imagenes.html', imagenes: 'imagenes.html', video: 'video.html',
-    stock: 'stock.html', assets: 'crear/', docs: 'documentacion/', radar: 'radar/'
+    adapter: en ? '/en/adaptaciones/' : '/adaptaciones/', adaptador: '/adaptaciones/', stock: 'stock.html', assets: 'crear/', docs: 'documentacion/', radar: 'radar/'
   };
   function write(text) {
     var line = document.createElement('div');
@@ -229,9 +229,6 @@
       document.head.appendChild(s);
     });
   }
-  try {
-    if (localStorage.getItem('da-avatar:' + location.host) === '1') cargarAvatar();
-  } catch (_) {}
   function execute(command) {
     var words = command.trim().split(/\s+/), name = words.shift().toLowerCase().replace(/^\//, ''), arg = words.join(' ');
     if (MARCA_VERB.test(name)) {

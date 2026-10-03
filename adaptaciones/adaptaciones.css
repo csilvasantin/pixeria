@@ -41,3 +41,13 @@
 .adapt-main .counter{position:absolute;bottom:22px;left:8%;right:8%;height:60px;background:#5a4130;border-top:8px solid #3a2a1f;color:#e9d6b9;font-size:11px;letter-spacing:.2em;display:flex;align-items:center;justify-content:center}
 .adapt-main .shelf{position:absolute;right:4%;top:20px;width:12%;height:52%;background:repeating-linear-gradient(#6d5340 0 6px,#a88b6c 6px 34px)}
 .adapt-main .minimap{background:#0f1219;border:1px solid var(--ln);border-radius:10px;width:100%;height:auto;align-self:start}
+/* Adaptador: technical cards, stable preview area and responsive controls. */
+.adapt-page{--ac:#71f4dc;--ln:#25404d;--pn:#101b24;--bg:#060d14;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.adapt-main .fmt{border-radius:4px;background:linear-gradient(140deg,#122532,#0b141c);border-top:2px solid var(--ac);box-shadow:0 8px 24px #0003}
+.adapt-main .fmt .stage{height:240px;background-image:linear-gradient(#71f4dc09 1px,transparent 1px),linear-gradient(90deg,#71f4dc09 1px,transparent 1px);background-size:20px 20px;overflow:hidden}
+.adapt-main .fmt canvas{max-height:236px;max-width:100%;width:auto;height:auto}
+.card-plan{margin-top:10px;border-top:1px solid var(--ln);padding-top:8px;font-size:11px}.card-plan summary{cursor:pointer;color:var(--ac)}.card-plan pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#afd5e6}
+.profile-label select{background:#0f1219;color:var(--tx);border:1px solid var(--ln);padding:8px}.profile-label{display:block;margin:12px 0}
+.adapt-main .ctl input,.adapt-main .ctl select{min-width:0}.adapt-main .grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))}
+@media(max-width:900px){.adapt-main .altadis,.adapt-main .twin-wrap{grid-template-columns:1fr}.adapt-main .tour-bar{grid-column:auto}.adapt-main .scene{height:320px}}
+.adapt-main .input-row label{min-width:0;max-width:100%}.adapt-main .input-row label:first-child{flex:1 1 280px}.adapt-main .input-row select{max-width:100%;width:100%;box-sizing:border-box}.adapt-main .upload input{max-width:100%}

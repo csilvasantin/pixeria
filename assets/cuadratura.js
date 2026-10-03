@@ -24,6 +24,7 @@
     { href: '/musica.html',       t: 'Música',            d: 'Bandas sonoras, jingles y marca sonora' },
     { href: '/audio.html',        t: 'Audio · Megafonía', d: 'Voces, locución y megafonía de marca' },
     { href: '/video.html',        t: 'Vídeo',             d: 'Storyboards, generación, edición y loops' },
+    { href: '/adaptaciones/', t: 'Adaptador', d: 'Un contenido, todos los formatos de pantalla' },
     { href: '/imagenes.html',     t: 'Imágenes',          d: 'Dirección de arte, producto y estilo' },
     { href: '/avatar.html',       t: 'Avatar 3D',         d: 'Presentadores y avatares generativos' },
     { href: '/anonimizador.html', t: 'Anonimizador',      d: 'Privacidad en imagen y vídeo' },
