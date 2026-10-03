@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=03.10.2026.r4.1602';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=03.10.2026.r5.2223';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -36,15 +36,15 @@
 <meta charset="utf-8">
 <script>if (/(^|\.)pixeria\.(com|pages\.dev)$/.test(location.hostname) && !location.pathname.startsWith('/en/') && new URLSearchParams(location.search).get('lang') !== 'es') location.replace('/en/adaptaciones/' + location.search);</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.03.10.2026.r4.16:02">
+  <meta name="admiranext-version" content="Pixeria v.03.10.2026.r5.22:23">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Adaptador · Un contenido, todos los formatos | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=03.10.2026.r4.1602">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=03.10.2026.r4.1602">
-  <script defer src="/assets/site-nav.js?v=03.10.2026.r4.1602"></script>
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=03.10.2026.r5.2223">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=03.10.2026.r5.2223">
+  <script defer src="/assets/site-nav.js?v=03.10.2026.r5.2223"></script>
 </head>
 <body class="adapt-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
@@ -76,7 +76,16 @@
       </div>
       <p id="stock-status" class="muted" role="status"></p>
       <label class="profile-label">Perfil de formatos <select id="format-profile"><option value="standard">Estándar · 9:16, 16:9, 1:1 y 4:5</option><option value="altadis" disabled>Altadis · 18 formatos estándar</option></select></label>
-      <p class="muted">Vista previa local; no exporta los ajustes a MP4. Expandir usa fondo desenfocado del vídeo, sin generar contenido. El plan H.264 es una receta técnica. FPS y bitrate de entrada estimados.</p>
+      <p class="muted">Exporta MP4 con tus ajustes y el audio original, si existe. Procesamiento en este navegador: máximo 100 MB de origen, una variante cada vez; 4K puede tardar varios minutos. Los lotes grandes se deben dividir para limitar la memoria. La primera exportación descarga el motor (unos 32 MB). Expandir usa fondo desenfocado, sin IA; su desenfoque puede variar ligeramente respecto al previo. FPS y bitrate de entrada estimados.</p>
+      <div class="export-toolbar">
+        <button id="export-all" class="pill accent" type="button" disabled>Exportar formatos seleccionados</button>
+        <button id="cancel-export" class="pill" type="button" hidden>Cancelar exportación</button>
+        <button id="reset-settings" class="pill" type="button">Restablecer ajustes</button>
+      </div>
+      <p id="settings-status" class="muted"></p>
+      <progress id="export-progress" max="1" hidden aria-label="Progreso de exportación"></progress>
+      <p id="export-status" role="status" aria-live="polite"></p>
+      <div id="export-results" class="export-results"></div>
       <p class="muted">Altadis: resolución nativa, MP4 H.264, 25 fps. Sincro VW y LOGO necesitan igual duración; esta vista no sincroniza reproductores.</p>
       <div id="fmt-checks" class="fmt-checks"></div>
       <div id="src-info" class="muted">cargando…</div>
@@ -127,8 +136,8 @@
       </div>
     </details>
   </main>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=03.10.2026.r4.1602"></script>
-  <script defer src="/assets/cuadratura.js?v=03.10.2026.r4.1602"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=03.10.2026.r5.2223"></script>
+  <script defer src="/assets/cuadratura.js?v=03.10.2026.r5.2223"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
