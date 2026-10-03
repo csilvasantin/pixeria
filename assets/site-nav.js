@@ -452,6 +452,9 @@
     });
     function bindLayer(button, id) {
       button.addEventListener('click', function () {
+        // Con los raíles superpuestos, ▤ ya abre .rail-right (bindRailToggles):
+        // la capa flotante de respaldo duplicaba el panel encima del raíl (#4905).
+        if (id === 'pixNavAdvancedLayer' && document.body.classList.contains('pix-nav-home-rails') && document.querySelector('.rail-right')) return;
         var layer = document.getElementById(id);
         var open = layer.hidden;
         document.querySelectorAll('.pix-nav-layer').forEach(function (other) { other.hidden = true; });
