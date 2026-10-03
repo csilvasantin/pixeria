@@ -841,8 +841,9 @@
   }
 
   // Marco cuadrático (quad-ui): cableado GENÉRICO para cualquier página de medios.
-  // - Toggles left/right/bottom: despliegan/colapsan su panel y ajustan el padding
-  //   del body vía la clase quad-<lado>-open.
+  // - Toggles left/right/bottom: despliegan/colapsan su panel y marcan el estado en
+  //   body.quad-<lado>-open. Solo es un marcador: el panel se superpone y el
+  //   contenido no se mueve (docs/shell-cuadratico.md).
   // - data-quad-click="idBoton": el botón del marco dispara el clic de un control
   //   REAL de la página (Generar/Enviar/Publicar), sin duplicar lógica.
   // - data-quad-scroll="#sección": lleva suave a un hito del flujo (pasos 01–05).

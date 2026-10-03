@@ -1,14 +1,6 @@
-/* The document scrolls above the CLI: no covered content, even with a keyboard. */
-.pf-cli-viewport { display: contents; }
-body.pf-cli-open { overflow: hidden; }
-body.pf-cli-open .pf-cli-viewport {
-  display: block;
-  height: calc(var(--pf-cli-viewport, 100dvh) - var(--pf-cli-height, 48px));
-  overflow: auto;
-  overscroll-behavior: contain;
-  scroll-padding-bottom: 16px;
-}
-body.pf-cli-open .cuad-center { margin-bottom: 0 !important; }
+/* La consola ⌘ se SUPERPONE al contenido (Carlos, 3-oct-2026): fija abajo, con fondo
+   y sombra, sin envolver el <body> ni cambiar su altura, margen o scroll. Solo los
+   raíles laterales se apoyan encima de ella. Ver docs/shell-cuadratico.md. */
 body.pf-cli-open .rail { bottom: calc(var(--pf-cli-height, 48px) + var(--pf-cli-keyboard, 0px)); }
 body .pf-cli.pf-cli {
   box-sizing: border-box;
@@ -25,6 +17,7 @@ body .pf-cli.pf-cli {
   color: #c8ffd0;
   border: 0;
   border-top: 1px solid #48b06a;
+  box-shadow: 0 -12px 28px rgba(0, 0, 0, .45), 0 -1px 18px rgba(0, 255, 65, .10);
   font: 13px/1.5 'IBM Plex Mono', monospace;
 }
 body .pf-cli[data-cli-open="false"] { display: none !important; }

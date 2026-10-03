@@ -5,7 +5,7 @@ El botón Experto abre una entrada de 48 px dentro de la web. No necesita aplica
 - Arrastra el borde superior para ajustar la altura (máximo: la mitad del área visible).
 - Doble clic en el borde o el botón ▴/▾ pliega y despliega. El borde también admite flechas, Inicio, Fin y Enter.
 - Cada entrada al modo experto comienza plegada. Al desplegar recupera la última altura arrastrada, guardada en `localStorage` (`pixeria_cli_height`; la réplica adapta el prefijo según marca.json). La preferencia es por navegador y dominio.
-- El documento tiene su propia zona de desplazamiento por encima de la consola, también en móvil y cuando cambia el área visible por el teclado.
+- La consola se superpone al contenido (Carlos, 3-oct-2026): es una franja fija abajo, con fondo y sombra, que no envuelve el documento ni le cambia altura, márgenes ni desplazamiento. Sube con el teclado del móvil (`--pf-cli-keyboard`). Cada página entra con ⌘ cerrado. Ver `docs/shell-cuadratico.md`, «Paneles superpuestos».
 - Una orden muestra su resultado desplegando la consola. ↑/↓ recorre el historial de esta página.
 
 Comandos: `help`, `clear`, `echo <texto>`, `date`, `status`, `version`, `history` y `open <sección>`. `help` enumera las secciones admitidas; las respuestas usan el idioma de la página. Son comandos de navegación e inspección de la web, no una shell del sistema operativo. No se ejecuta JavaScript introducido por el usuario.

@@ -101,13 +101,8 @@
   panel.classList.add('pf-cli');
   panel.setAttribute('aria-label', t('Consola web experta', 'Expert web console'));
   document.body.appendChild(panel);
-  // A scroll viewport reserves the console's real height, including on mobile.
-  var viewport = document.createElement('div');
-  viewport.className = 'pf-cli-viewport';
-  Array.from(document.body.children).forEach(function (child) {
-    if (child !== panel && !child.matches('script,style,link')) viewport.appendChild(child);
-  });
-  document.body.insertBefore(viewport, panel);
+  // La consola se SUPERPONE (Carlos, 3-oct-2026): no envuelve el <body> ni le recorta
+  // la altura; el contenido no se mueve al abrir ⌘. Ver docs/shell-cuadratico.md.
   var grip = document.createElement('div');
   grip.className = 'pf-cli-grip';
   grip.tabIndex = 0;
@@ -171,7 +166,6 @@
     wasOpen = open;
     if (document.body.classList.contains('pf-cli-open') !== open) document.body.classList.toggle('pf-cli-open', open);
     var vv = window.visualViewport;
-    document.documentElement.style.setProperty('--pf-cli-viewport', (vv ? vv.height : innerHeight) + 'px');
     document.documentElement.style.setProperty('--pf-cli-keyboard', (vv ? Math.max(0, innerHeight - vv.height - vv.offsetTop) : 0) + 'px');
     resize(height, false);
   }
