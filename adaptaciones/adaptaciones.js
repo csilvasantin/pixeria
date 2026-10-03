@@ -18,7 +18,7 @@ if (EN) {
  const uses = ['totem / shop window','counter / LED','square screen / social','feed / small display'];
  FORMATOS.forEach((f,i)=>{f.nombre=names[i];f.uso=uses[i];});
 }
-const state = { profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '', isJti: true };
+const state = { profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '', preRendered: false };
 FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoom: 1 }));
 
 const video = $('#src');
@@ -109,7 +109,7 @@ function ffmpegCmd(f) {
 // ── Render en vivo (canvas) ─────────────────────────────────────────────────
 function drawInto(cv, f) {
   const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, vw = video.videoWidth, vh = video.videoHeight;
-  if (!vw) return;
+  if (!vw) { ctx.fillStyle='#70757b';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font=Math.max(10,W/18)+'px sans-serif';ctx.fillText('contenido Altadis',W/2,H/2);return; }
   const m = modoEfectivo(f), s = state.fmt[f.id];
   const coverRect = (z = 1, fx = 0.5, fy = 0.5) => { const k = Math.max(W / vw, H / vh) * z, w = vw * k, h = vh * k; return [(W - w) * fx, (H - h) * fy, w, h]; };
   ctx.filter = 'none'; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
@@ -120,20 +120,21 @@ function drawInto(cv, f) {
 }
 function loop() {
   document.querySelectorAll('.fmt[data-f]').forEach((el) => { const c = el.querySelector('canvas'); if (c) drawInto(c, FORMATOS.find((f) => f.id === el.dataset.f)); });
-  if (!state.isJti) { drawInto($('#tw-cv-v'), FORMATOS[0]); drawInto($('#tw-cv-h'), FORMATOS[1]); }
+  if (!state.preRendered) { drawInto($('#tw-cv-v'), FORMATOS[0]); drawInto($('#tw-cv-h'), FORMATOS[1]); }
   requestAnimationFrame(loop);
 }
 
 // ── Fuente ──────────────────────────────────────────────────────────────────
 let sourceObjectURL = null;
-function setSource(url, name, isJti) {
+function setSource(url, name, preRendered) {
+  if (!url) { video.pause();video.removeAttribute('src');video.load();state.src={ancho:0,alto:0,fps:25,bitrateKbps:0};state.preRendered=false;$('#src-info').textContent=t('Contenido Altadis pendiente','Altadis content pending');return; }
   if (sourceObjectURL && sourceObjectURL !== url) URL.revokeObjectURL(sourceObjectURL);
   sourceObjectURL = url.startsWith('blob:') ? url : null;
   state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0};
   $('#src-info').textContent = t('Cargando vídeo…','Loading video…');
-  state.srcName = name; state.isJti = isJti; video.src = url; video.play().catch(() => {});
-  document.querySelectorAll('#twin video').forEach((v) => (v.style.display = isJti ? '' : 'none'));
-  document.querySelectorAll('#twin canvas').forEach((v) => (v.hidden = isJti));
+  state.srcName = name; state.preRendered = preRendered; video.src = url; video.play().catch(() => {});
+  document.querySelectorAll('#twin video').forEach((v) => (v.style.display = preRendered ? '' : 'none'));
+  document.querySelectorAll('#twin canvas').forEach((v) => (v.hidden = preRendered));
 }
 video.addEventListener('error', () => { $('#src-info').textContent = t('No se pudo reproducir este vídeo. Elige otro archivo o una fuente Stock disponible.', 'Unable to play this video. Choose another file or an available Stock source.'); });
 video.addEventListener('loadedmetadata', () => {
@@ -141,7 +142,7 @@ video.addEventListener('loadedmetadata', () => {
   $('#src-info').textContent = `${state.srcName} · ${video.videoWidth}×${video.videoHeight} · ${video.duration.toFixed(1)} s`;
   refreshInfo();
 });
-$('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; setSource(o.value, o.textContent.replace(/^Stock · /, ''), /jti-/.test(o.value)); };
+$('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; setSource(o.value, o.textContent.replace(/^Stock · /, ''), false); };
 $('#src-file').onchange = (e) => { const f = e.target.files[0]; if (f) setSource(URL.createObjectURL(f), f.name, false); };
 $('#btn-play').onclick = () => (video.paused ? video.play() : video.pause());
 $('#modo-global').onchange = (e) => { state.modoGlobal = e.target.value; refreshInfo(); };
@@ -189,7 +190,7 @@ function go(i) {
   $('#twin-name').textContent = `${t('Gemelo','Twin')} ${e.orden}/9 · ${e.name}`;
   $('#twin-addr').textContent = e.addr;
   $('#twin-ft').innerHTML = `${t('Disposición','Layout')}: <b>P1 ${t('vertical','portrait')} 1080×1920</b> (${t('escaparate','shop window')}) + <b>P2 ${t('horizontal','landscape')} 1920×1080</b> (${t('sobre mostrador','above counter')}) · ${e.dist_planeta7_m} m ${t('de','from')} Planeta 7 · <a href="https://www.openstreetmap.org/${e.osm}" target="_blank" rel="noopener">OSM ${e.osm}</a>${e.opening_hours ? ' · ' + e.opening_hours : ''}${cur === 0 ? ` · <b style="color:#3ddc97">${t('el más cercano a Planeta 7','nearest to Planeta 7')}</b>` : ''}`;
-  $('#link-gemelo').href = `https://www.xpaceos.com/admira-xp/?autostart=xtanco&loc=${e.id}`;
+  $('#link-gemelo').href = `${location.hostname==='127.0.0.1'?'http://127.0.0.1:9171':'https://www.xpaceos.com'}/admira-xp/?autostart=xtanco&loc=${e.id}&adaptado=1&quality=good&lang=${EN?'en':'es'}`;
   const p = proj(e.lat, e.lon); const mk = $('#mk'); if (mk) { mk.setAttribute('cx', p[0]); mk.setAttribute('cy', p[1]); }
   const tw = $('#twin'); tw.animate([{ opacity: 0.25, transform: 'translateX(18px)' }, { opacity: 1, transform: 'none' }], { duration: 500, easing: 'ease-out' });
   $('#tour-status').textContent = tour ? `${t('Recorrido · parada','Tour · stop')} ${cur + 1}/${ESTANCOS.length} · ${e.name}` : `${t('Parada','Stop')} ${cur + 1}/${ESTANCOS.length}`;
@@ -207,7 +208,11 @@ if (altadisResponse.ok) {
  for (const f of data.formats) { if (EN) f.uso = f.useEn; FORMATOS.push(f); state.fmt[f.id] = {modo:'auto',fx:0.5,fy:0.5,zoom:1}; }
  $('#format-profile').querySelector('[value=altadis]').disabled = false;
 }
-buildGrid(); setSource('/adaptaciones/media/jti-tu-sitio-de-siempre-fuente.mp4', 'JTI «Tu sitio de siempre»', true); loadEstancos(); loop();
+buildGrid();
+$('#src-info').textContent=t('Contenido Altadis pendiente de entrega: marcadores, sin vídeo generado.','Official Altadis content pending: placeholders, no generated video.');
+document.querySelectorAll('#twin video').forEach(v=>{v.removeAttribute('src');v.removeAttribute('poster');v.style.display='none';});
+document.querySelectorAll('#twin canvas').forEach(v=>v.hidden=false);
+loadEstancos(); loop();
 window.__pixAdapt = { go, startTour };
 
 // Índice del Stock: primero el proxy comprimido del propio dominio y, si no responde
@@ -225,9 +230,10 @@ async function fetchStockIndex() {
 }
 
 async function loadStock() {
+  if (new URLSearchParams(location.search).get('demo') === 'altadis') { $('#src-file').disabled=true;$('#src-select').disabled=true;$('#btn-play').disabled=true;$('#stock-status').textContent=t('Demo: esperando el vídeo oficial de Altadis.','Demo: waiting for the official Altadis video.'); return; }
   try {
     const data = await fetchStockIndex();
-    const videos = (data.items || []).filter(item => item.type === 'video' && (item.url || item.mediaUrl));
+    const videos = (data.items || []).filter(item => item.type === 'video' && (item.url || item.mediaUrl) && !/\bjti\b|tu sitio de siempre/i.test(JSON.stringify(item)));
     for (const item of videos) {
       const url = item.url || item.mediaUrl;
       if (!/^https:\/\//.test(url)) continue;

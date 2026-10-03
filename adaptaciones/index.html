@@ -61,7 +61,7 @@
       <div class="input-row">
         <label>Elige un vídeo · Stock
           <select id="src-select">
-            <option value="/adaptaciones/media/jti-tu-sitio-de-siempre-fuente.mp4">Stock · JTI «Tu sitio de siempre»</option>
+            <option value="">contenido Altadis · pendiente</option>
           </select>
         </label>
         <a class="pill" href="/video.html">o créalo · creador de vídeos</a>
@@ -77,18 +77,14 @@
       <p id="stock-status" class="muted" role="status"></p>
       <label class="profile-label">Perfil de formatos <select id="format-profile"><option value="standard">Estándar · 9:16, 16:9, 1:1 y 4:5</option><option value="altadis" disabled>Altadis · 18 formatos estándar</option></select></label>
       <p class="muted">Vista previa local; no exporta los ajustes a MP4. Expandir usa fondo desenfocado del vídeo, sin generar contenido. El plan H.264 es una receta técnica. FPS y bitrate de entrada estimados.</p>
-      <p class="muted">Altadis: resolución nativa, MP4 H.264, 25 fps. Sincro VW y LOGO necesitan igual duración; esta vista no sincroniza reproductores.</p>
+      <p class="muted">Circuito preparado: P1 1080×1920 y P2 1920×1080. Los archivos oficiales están pendientes; estos marcadores no son vídeos adaptados.</p>
       <div id="fmt-checks" class="fmt-checks"></div>
       <div id="src-info" class="muted">cargando…</div>
       <video id="src" muted loop playsinline preload="auto" crossorigin="anonymous"></video>
       <div id="grid" class="grid"></div>
       <details class="plan"><summary>Plan técnico por formato (resolución, H.264, bitrate y orden ffmpeg)</summary><div id="plan-tecnico"></div></details>
-      <div class="renders"><b>Renders listos:</b>
-        <a href="/adaptaciones/media/jti-9x16-1080x1920.mp4" target="_blank" rel="noopener">JTI · 9:16 · 1080×1920</a>
-        <a href="/adaptaciones/media/jti-16x9-1920x1080.mp4" target="_blank" rel="noopener">JTI · 16:9 · 1920×1080</a>
-      <a href="https://stock.admira.store/stock/1790932802558-6pdss9/asset.mp4" target="_blank" rel="noopener">JTI · 1:1 · 1080×1080</a>
-<a href="https://stock.admira.store/stock/1790932896582-vc9x7t/asset.mp4" target="_blank" rel="noopener">JTI · 4:5 · 1080×1350</a>
-</div>
+      <p class="muted">Preview: contenido Altadis pendiente. Marcadores sin vídeo. <a id="altadis-demo-entry" href="http://127.0.0.1:9171/admira-xp/?autostart=xtanco&amp;loc=altadis-bcn-001&amp;adaptado=1&amp;quality=good&amp;lang=es">Abrir preview en XpaceOS →</a></p>
+      <div class="renders"><b>Contenido Altadis pendiente</b> · lista de archivos por estanco y pantalla preparada en el gemelo. No hay renders conectados.</div>
     </section>
 
     <details id="sec-altadis" class="card"><summary>Ejemplo de aplicación · circuito Altadis</summary>
@@ -109,12 +105,12 @@
               <div class="facade">
                 <div class="sign"><span class="t">T</span> TABACS · ESTANC</div>
                 <div class="window">
-                  <div class="screen vertical"><video id="tw-v" muted loop playsinline autoplay poster="/adaptaciones/media/jti-9x16-poster.jpg" src="/adaptaciones/media/jti-9x16-1080x1920.mp4"></video><canvas id="tw-cv-v" width="270" height="480" hidden></canvas><span class="lbl">P1 · Vertical 9:16 · escaparate</span></div>
+                  <div class="screen vertical"><video id="tw-v" muted loop playsinline autoplay></video><canvas id="tw-cv-v" width="270" height="480" hidden></canvas><span class="lbl">P1 · Vertical 9:16 · escaparate</span></div>
                   <div class="door"></div>
                 </div>
               </div>
               <div class="interior">
-                <div class="screen horizontal"><video id="tw-h" muted loop playsinline autoplay poster="/adaptaciones/media/jti-16x9-poster.jpg" src="/adaptaciones/media/jti-16x9-1920x1080.mp4"></video><canvas id="tw-cv-h" width="480" height="270" hidden></canvas><span class="lbl">P2 · Horizontal 16:9 · mostrador</span></div>
+                <div class="screen horizontal"><video id="tw-h" muted loop playsinline autoplay></video><canvas id="tw-cv-h" width="480" height="270" hidden></canvas><span class="lbl">P2 · Horizontal 16:9 · mostrador</span></div>
                 <div class="counter">MOSTRADOR</div>
                 <div class="shelf"></div>
               </div>
