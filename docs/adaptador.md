@@ -1,6 +1,6 @@
 # Adaptador y Pixie
 
-Base #4905 · FLT-101368. Mejora de exportación y persistencia: misión Yokup #223. Cambio para revisión; pendiente de aprobación para producción.
+Base #4905 · FLT-101368. Mejora de exportación y persistencia: misión Yokup #223. Publicación autorizada por Carlos el 3-oct-2026; release v.03.10.2026.r5.22:23.
 
 Vídeo incluye el compositor de TikToks. Adaptador ocupa su anterior entrada de navegación. La ruta `/adaptaciones/` se conserva para enlaces existentes. `/en/adaptaciones/` contiene la interfaz inglesa; la ruta raíz usa español en admira.studio y dirige a inglés en pixeria.com y previews de Pages.
 
@@ -26,4 +26,4 @@ Durante el trabajo se congelan fuente y controles; Cancelar interrumpe descarga/
 
 Validación: cuatro pruebas Node, incluida FFmpeg nativa para cover/contain/blur con y sin audio; prueba IAB de los cuatro formatos estándar con fuente de 2 s, descarga y ffprobe (resolución, H.264/AAC, 25 fps y duración); persistencia tras recarga y cancelación verificadas en la interfaz. La batería signage tiene una aserción previa obsoleta de cache-busting (`20260902-r3`) frente a la versión sellada actual; no se modifica el Tester en esta entrega. Revisión cruzada aprobada para PR.
 
-Minitutorial oficial: `docs/media/minitutorial-adaptador-exportacion.mp4`, plan en el JSON contiguo. ADmira Motion, 1080×1920, unos 15 segundos: es una guía animada de la versión en revisión, no una grabación de pantalla. Incluye ubicación, ajuste, exportación, guardado y límites. Audio de base, sin locución humana. Se verifican los tres momentos del vídeo y su contenedor antes de vincularlo a Yokup.
+Minitutorial oficial: `docs/media/minitutorial-adaptador-exportacion.mp4`, plan en el JSON contiguo. ADmira Motion, 1080×1920, unos 15 segundos: es una guía animada del Adaptador, no una grabación de pantalla. Incluye ubicación, ajuste, exportación, guardado y límites. Audio de base, sin locución humana. Se verifican los tres momentos del vídeo y su contenedor antes de vincularlo a Yokup.
