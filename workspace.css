@@ -2751,9 +2751,9 @@ body.quad-ui {
   --quad-side: 18px;
   padding: var(--quad-top) var(--quad-side) var(--quad-bottom);
 }
-body.quad-ui.quad-left-open { --quad-side: 74px; }
-body.quad-ui.quad-right-open { --quad-side: 74px; }
-body.quad-ui.quad-bottom-open { --quad-bottom: 58px; }
+/* El relleno del marco es FIJO: abrir un panel (quad-<lado>-open) no lo cambia.
+   Los paneles se superponen al contenido (principio de Carlos, 3-oct-2026;
+   guardián test/paneles-superpuestos.test.cjs). */
 body.quad-ui .admira-nav,
 body.quad-ui > .topnav {
   display: none;

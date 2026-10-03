@@ -11,8 +11,11 @@
      2) La página NO trae .cuad → AUTO-CUADRATURA: se envuelve el <main> y se
         inyectan los tres raíles estándar. El raíl AVANZADO admite contenido
         propio de la página vía <template id="cuad-avanzado">.
-   Persistencia en localStorage pixeria_pf_left/right/bottom (abierto === "1");
-   el estado inicial sin parpadeo lo aplica un script inline al abrir <body>.
+   Los paneles entran CERRADOS en cada carga: el script inline al abrir <body>
+   pone pf-left-off/pf-right-off/pf-bottom-off sin parpadeo y el estado abierto
+   NO se guarda. Sí se recuerda el tamaño redimensionado (pixeria_pf_*_w / _h).
+   Los paneles se SUPERPONEN: abrirlos no mueve ni redimensiona el contenido
+   (Carlos, 3-oct-2026 · docs/shell-cuadratico.md).
    ══════════════════════════════════════════════════════════════════════════ */
 (function () {
   // ── Fuente ÚNICA de las secciones del raíl OPCIONES (mismo orden que la home) ──
@@ -39,13 +42,13 @@
   ];
 
   var PANELS = [
-    { sel: '.rail-left', cls: 'pf-left-off', ls: 'pixeria_pf_left',
+    { sel: '.rail-left', cls: 'pf-left-off', id: 'left',
       title: 'Opciones · panel derecho',
       svg: '<rect class="frame" x="1" y="1" width="14" height="12" rx="1.5"/><rect class="panel" x="1.6" y="1.6" width="4.4" height="10.8" rx="1"/>' },
-    { sel: '.rail-right', cls: 'pf-right-off', ls: 'pixeria_pf_right',
+    { sel: '.rail-right', cls: 'pf-right-off', id: 'right',
       title: 'Avanzado · panel izquierdo',
       svg: '<rect class="frame" x="1" y="1" width="14" height="12" rx="1.5"/><rect class="panel" x="10" y="1.6" width="4.4" height="10.8" rx="1"/>' },
-    { sel: '.rail-bottom', cls: 'pf-bottom-off', ls: 'pixeria_pf_bottom',
+    { sel: '.rail-bottom', cls: 'pf-bottom-off', id: 'bottom',
       title: 'Experto · panel inferior',
       svg: '<rect class="frame" x="1" y="1" width="14" height="12" rx="1.5"/><rect class="panel" x="1.6" y="8.4" width="12.8" height="4" rx="1"/>' }
   ];
@@ -212,7 +215,7 @@
 
   // ── Toggles (look SCUMM, tematizados en cuadratura.css) ───────────────────
   function makeToggle(p) {
-    if (document.documentElement.lang.indexOf('en') === 0) p.title = p.ls === 'pixeria_pf_left' ? 'Options · right panel' : p.ls === 'pixeria_pf_right' ? 'Advanced · left panel' : 'Expert · web console';
+    if (document.documentElement.lang.indexOf('en') === 0) p.title = p.id === 'left' ? 'Options · right panel' : p.id === 'right' ? 'Advanced · left panel' : 'Expert · web console';
     if (!document.querySelector(p.sel)) return null;
     var on = !document.body.classList.contains(p.cls);
     var b = document.createElement('button');
@@ -223,8 +226,7 @@
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
     b.innerHTML = '<svg viewBox="0 0 16 14" aria-hidden="true">' + p.svg + '</svg>';
     b.onclick = function () {
-      var off = document.body.classList.toggle(p.cls);
-      try { localStorage.setItem(p.ls, off ? '0' : '1'); } catch (e) {}
+      var off = document.body.classList.toggle(p.cls);   // sin persistir: cada carga entra cerrada
       b.classList.toggle('on', !off);
       b.setAttribute('aria-pressed', off ? 'false' : 'true');
     };

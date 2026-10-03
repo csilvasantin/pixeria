@@ -22,7 +22,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.02.10.2026.r1.11:27">
+  <meta name="admiranext-version" content="Pixeria v.03.10.2026.r1.02:43">
   <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
   <title>Pixeria · Hilo musical</title>
   <meta name="description" content="Hilo musical del Xpacio: envía una canción al hilo del gemelo (Instore Media) y al Stock a la vez.">
@@ -72,14 +72,13 @@
     .foot{max-width:640px;margin:22px auto 0;font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center}
     .foot a{color:var(--violet);text-decoration:none}
   </style>
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=02.10.2026.r1.1127">
-  <script defer src="/assets/site-nav.js?v=02.10.2026.r1.1127"></script>
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=03.10.2026.r1.0243">
+  <script defer src="/assets/site-nav.js?v=03.10.2026.r1.0243"></script>
 </head>
 <body>
-  <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
+  <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
   <script>
-  (function(){var b=document.body,m={pixeria_pf_left:'pf-left-off',pixeria_pf_right:'pf-right-off',pixeria_pf_bottom:'pf-bottom-off'};
-  try{for(var k in m){if(localStorage.getItem(k)!=='1')b.classList.add(m[k]);}}catch(e){for(var j in m){b.classList.add(m[j]);}}})();
+  document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');
   </script>
   <header class="site-header">
     <a class="brand" href="/" aria-label="Pixeria inicio">
@@ -178,6 +177,6 @@
     $('store').addEventListener('change', loadPlaylist);
     loadPlaylist();
   </script>
-  <script defer src="/assets/cuadratura.js?v=02.10.2026.r1.1127"></script>
+  <script defer src="/assets/cuadratura.js?v=03.10.2026.r1.0243"></script>
 </body>
 </html>

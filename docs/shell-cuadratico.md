@@ -13,6 +13,17 @@ La interfaz cuadrática de la portada (`index.html`) en cuatro bandas:
 
 En las páginas interiores no hay idioma ni Contacto en la barra (decisión de producto: el contacto sigue en el pie). La portada y `en/` conservan los suyos.
 
+## Paneles superpuestos (Carlos, 3-oct-2026)
+
+> «El cuerpo central del sitio (contenido) no se desplaza al abrir las barras opcionales, ni verticales ni la horizontal inferior.»
+
+- **Se superponen.** ☰ (raíl izquierdo), ▤ (raíl derecho) y ⌘ (consola Experto, abajo) son capas `position:fixed` con fondo y sombra por encima del contenido, en todos los anchos. Abrirlas no cambia la posición, el ancho ni el alto del contenido (`main`, `.cuad-center`, `.page-head`, `body`), ni lo recoloca (tamaño del titular, ancho del `.lead`, columnas del paginador de `stock`…). Lo que queda debajo de un panel abierto se lee al cerrarlo o desplazando la página. Así lo hace ya Yokup.
+- **Entran cerrados en cada página.** El script en línea al abrir `<body>` es el mismo en las 58 páginas que lo llevan (las 57 del shell y `adaptaciones/`): `document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');`. No lee nada, así que es inocuo si una página no tiene alguno de los paneles. El estado abierto no se guarda (`cuadratura.js` y `site-nav.js` ya no escriben `pixeria_pf_left/right/bottom`, y `site-nav.js` borra esas claves si quedaron de antes). Sí se recuerda el tamaño redimensionado: `pixeria_pf_left_w`, `pixeria_pf_right_w`, `pixeria_pf_bottom_h` y la altura de la consola `pixeria_cli_height`.
+- **Única excepción: `_cuadopen.html` y `en/_cuadopen.html`.** Son la ficha de QA de la cuadratura (noindex y sin enlaces): enseñan los tres paneles abiertos, superpuestos, para revisarlos. No guardan nada; el resto del sitio entra cerrado igualmente.
+- **La consola ⌘** (`assets/expert-cli.js`) ya no envuelve el `<body>` en `.pf-cli-viewport` ni le recorta la altura: es una franja fija abajo. Siguen igual la entrada, el historial (↑/↓), Tab, los verbos y `/marca`. Los raíles laterales se apoyan encima de ella (`body.pf-cli-open .rail{bottom:…}`): eso sí está permitido, porque solo cambia un panel.
+- **`quad-ui`** (`audio`, `musica`, `imagenes`, `video`): el relleno del marco de `workspace.css` es fijo; `body.quad-<lado>-open` queda como marcador de estado sin efecto en el contenido.
+- **Qué está prohibido**: cualquier regla de CSS (hojas, `<style>` de las páginas o CSS inyectado desde JS) que, según `pf-*-off`, `pf-cli-open`, `quad-*-open` o un `:has()` de un panel, cambie `margin`, `padding`, `width`, `height`, `grid-template-columns`, posición, tamaño de letra o variables del contenido; medir el contenido con `--pf-left-w`, `--pf-right-w`, `--pf-bottom-h` o `--pf-cli-height`; envolver el contenido en un contenedor que cambie con los paneles; y guardar o restaurar el estado abierto. Lo vigila `test/paneles-superpuestos.test.cjs`.
+
 ### Quién monta qué
 
 | Pieza | Papel |
@@ -32,8 +43,8 @@ Patrón de `admira-xp.html`:
   <script defer src="/assets/site-nav.js?v=<sello>"></script>
 </head>
 <body>
-  <!-- Cuadratura: ocultar los raíles al abrir <body> (sin parpadeo) según localStorage -->
-  <script>(function(){var b=document.body,m={pixeria_pf_left:'pf-left-off',pixeria_pf_right:'pf-right-off',pixeria_pf_bottom:'pf-bottom-off'};try{for(var k in m){if(localStorage.getItem(k)!=='1')b.classList.add(m[k]);}}catch(e){for(var j in m){b.classList.add(m[j]);}}})();</script>
+  <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
+  <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
   <header class="site-header">                       <!-- o class="topnav" -->
     <a class="brand" href="/" aria-label="Pixeria inicio"><span>Pixeria</span></a>   <!-- .brand, hijo DIRECTO -->
     <nav class="nav" aria-label="Secciones de Pixeria">…</nav>                         <!-- o .primary-nav -->
@@ -44,7 +55,7 @@ Patrón de `admira-xp.html`:
 ```
 
 - La cabecera **tiene** que llevar la marca como hijo directo (`.brand`, o `<div class="brand"><a class="brand-link">`) y un `<nav class="nav">` o `.primary-nav`: sin ellos `canonicalHeader` no convierte la barra (le pasaba a `404.html`). Los enlaces del `<nav>` los reescribe `site-nav.js`; los de la página son el respaldo sin JavaScript.
-- El `<main>` envuelve el contenido: ahí llegan los enlaces de la franja Experto y lo que respetan los raíles.
+- El `<main>` envuelve el contenido: ahí llegan los enlaces de la franja Experto. Los raíles y la consola se le superponen; no le cambian los márgenes.
 - Las páginas `quad-ui` (`audio.html`, `musica.html`, `imagenes.html`, `video.html`) usan `nav.quad-top` con `data-quad-toggle`, `.quad-brand` y `.quad-links`: `site-nav.js` convierte `.quad-top` en la misma `.pf-topbar`.
 - `?v=` lo pone `scripts/sellar.py`: no a mano.
 
@@ -60,6 +71,8 @@ Patrón de `admira-xp.html`:
 ## Guardián
 
 `test/shell-cuadratico.test.cjs` recorre todos los `.html` del repo. Cada uno carga `site-nav.js` (defer, en el `<head>`), `cuadratura.css` (después del CSS propio) y `cuadratura.js`, los tres con el sello vigente de `index.html`, tiene `<main>` y una barra montable (cabecera canónica o `quad-ui`); o figura en `SHELL_EXCEPTIONS` con su motivo. Una página nueva sin shell hace fallar el test, y también una excepción que ya no existe o que sí carga el shell. Además vigila que ninguna página adoptada vuelva a `calc(100vh - Npx)`.
+
+`test/paneles-superpuestos.test.cjs` vigila el principio de los paneles superpuestos: recorre todas las hojas `.css`, los `<style>` de cada página y el CSS que inyectan `site-nav.js`, `cuadratura.js`, `expert-cli.js` y `app.js`, y falla si una regla dependiente del estado de un panel toca el contenido, si el contenido se mide con el tamaño de un panel, si vuelve `.pf-cli-viewport`, si algo lee o guarda `pixeria_pf_left/right/bottom` o si el primer `<script>` del `<body>` de una página con shell no es el cierre uniforme. Lleva las reglas antiguas como casos que deben fallar.
 
 ## Páginas
 
@@ -85,7 +98,7 @@ Qué cambió al adoptarlas:
 | `documentacion/` | Índice pegajoso `top: calc(var(--pf-topbar-h) + 18px)` y anclas `scroll-margin-top: calc(var(--pf-topbar-h) + 22px)`. |
 | `crear-campana/`, `en/crear-campana/`, `hilomusical/`, `megafonia/`, `segmentado/` | Héroe a pantalla completa `calc(100vh - var(--pf-topbar-h))`. |
 | `stock.html` | `cuadratura.css` pasa detrás de `viewer.css` y `editor.css`. |
-| Resto | `cuadratura.css`, script sin parpadeo y `cuadratura.js` (la barra ya se montaba). |
+| Resto | `cuadratura.css`, script en línea de cierre y `cuadratura.js` (la barra ya se montaba). |
 
 ### Excepciones (16)
 
@@ -118,4 +131,4 @@ Qué cambió al adoptarlas:
 
 ---
 
-**Rule: every new Pixeria page uses the shell.** Load `/assets/cuadratura.css` after the page CSS, `/assets/site-nav.js` (defer) and `/assets/cuadratura.js`, give the page a `header.site-header` (or `.topnav`) with a direct `.brand` child and a `nav.nav`, and wrap the content in `<main>`. Use `var(--pf-topbar-h)` for heights and keep own modals above z-index 1300. 57 of the 73 pages carry the shell; the 16 exceptions (redirects, full-screen players, an iframe fragment and the two public no-session routes) are listed above and in `SHELL_EXCEPTIONS` of `test/shell-cuadratico.test.cjs`, which fails when a page skips the shell.
+**Rule: every new Pixeria page uses the shell.** Load `/assets/cuadratura.css` after the page CSS, `/assets/site-nav.js` (defer) and `/assets/cuadratura.js`, give the page a `header.site-header` (or `.topnav`) with a direct `.brand` child and a `nav.nav`, and wrap the content in `<main>`. Use `var(--pf-topbar-h)` for heights and keep own modals above z-index 1300. Panels overlay the content (Carlos, 3 Oct 2026): opening ☰, ▤ or ⌘ never moves or resizes `main`, `.cuad-center`, `.page-head` or `body`, and every page loads with the three panels closed (only their resized size is remembered); `test/paneles-superpuestos.test.cjs` enforces it. 57 of the 73 pages carry the shell; the 16 exceptions (redirects, full-screen players, an iframe fragment and the two public no-session routes) are listed above and in `SHELL_EXCEPTIONS` of `test/shell-cuadratico.test.cjs`, which fails when a page skips the shell.
