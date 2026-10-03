@@ -17,6 +17,7 @@ export function restore(raw, formats) {
 }
 export function snapshot(state,formats) {
   return {version:1,profile:state.profile,compat:state.compat,modoGlobal:state.modoGlobal,
+    custom:formats.filter(f=>f.user).map(f=>f.custom),
     selected:formats.filter(f=>f.on).map(f=>f.id),fmt:Object.fromEntries(formats.map(f=>[f.id,settings(state.fmt[f.id])]))};
 }
 const even = v => Math.max(2,Math.ceil(v/2)*2);
