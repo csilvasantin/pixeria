@@ -1,6 +1,7 @@
 {
-  "version": "v.03.10.2026.r3.07:36",
-  "deployer": "OraculoGrokBotBox",
-  "machine": "GrokBotBox",
-  "signature": "OraculoGrokBotBox · GrokBotBox"
+  "version": "v.03.10.2026.r4.16:02",
+  "deployer": "NeoMacMini",
+  "machine": "MacMini",
+  "signature": "NeoMacMini · MacMini",
+  "agent": "NeoMacMini"
 }

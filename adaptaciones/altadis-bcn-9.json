@@ -10,14 +10,15 @@
   {
    "orden": 1,
    "id": "altadis-bcn-001",
-   "name": "Estanco · sin rótulo en OSM",
-   "addr": "Carrer Gran de Gràcia s/n · 08012 Barcelona",
+   "name": "Estanc Gran de Gràcia 61",
+   "addr": "Carrer Gran de Gràcia 61 · 08012 Barcelona",
    "lat": 41.3996304,
    "lon": 2.155556,
    "dist_planeta7_m": 191,
    "tramo_desde_anterior_m": 0,
    "opening_hours": null,
-   "osm": "node/12875861930"
+   "osm": "node/12875861930",
+   "nameSource": "descriptivo: estanco documentado en Gran de Gràcia 61 (antigua expendeduría nº 302, hoy trasladada según el CMT); sin número vigente"
   },
   {
    "orden": 2,
@@ -34,38 +35,41 @@
   {
    "orden": 3,
    "id": "altadis-bcn-003",
-   "name": "Estanco · sin rótulo en OSM",
-   "addr": "Carrer del Torrent de l'Olla s/n · 08008 Barcelona",
+   "name": "Estanc nº 275 · Torrent de l'Olla",
+   "addr": "Carrer del Torrent de l'Olla 24 · 08012 Barcelona",
    "lat": 41.3991169,
    "lon": 2.1607485,
    "dist_planeta7_m": 478,
    "tramo_desde_anterior_m": 264,
    "opening_hours": null,
-   "osm": "node/10761696806"
+   "osm": "node/10761696806",
+   "nameSource": "CMT expendedurías activas 03-10-2026: 080275 Torrent de la Olla 24"
   },
   {
    "orden": 4,
    "id": "altadis-bcn-004",
-   "name": "Estanco · sin rótulo en OSM",
-   "addr": "Carrer de Santa Teresa s/n · 08008 Barcelona",
+   "name": "L'Estanc de Còrsega · nº 124",
+   "addr": "Carrer de Còrsega 329 (esq. Santa Teresa) · Barcelona",
    "lat": 41.3973394,
    "lon": 2.1602111,
    "dist_planeta7_m": 574,
    "tramo_desde_anterior_m": 203,
    "opening_hours": null,
-   "osm": "node/10769626613"
+   "osm": "node/10769626613",
+   "nameSource": "CMT expendedurías activas 03-10-2026: 080124 Calle Còrsega 329"
   },
   {
    "orden": 5,
    "id": "altadis-bcn-005",
-   "name": "Estanco · sin rótulo en OSM",
-   "addr": "Via Augusta s/n · 08012 Barcelona",
+   "name": "Estanc nº 419 · Via Augusta",
+   "addr": "Via Augusta 12 · 08006 Barcelona",
    "lat": 41.3967736,
    "lon": 2.1551713,
    "dist_planeta7_m": 510,
    "tramo_desde_anterior_m": 425,
    "opening_hours": null,
-   "osm": "node/11554659567"
+   "osm": "node/11554659567",
+   "nameSource": "CMT expendedurías activas 03-10-2026: 080419 Via Augusta 12"
   },
   {
    "orden": 6,
@@ -82,38 +86,41 @@
   {
    "orden": 7,
    "id": "altadis-bcn-007",
-   "name": "Estanco · sin rótulo en OSM",
-   "addr": "Carrer de Terol s/n · 08012 Barcelona",
+   "name": "Tabacs M. Àngels · nº 359",
+   "addr": "Carrer de Terol 41-43 · 08012 Barcelona",
    "lat": 41.403443,
    "lon": 2.1587066,
    "dist_planeta7_m": 335,
    "tramo_desde_anterior_m": 647,
    "opening_hours": null,
-   "osm": "node/11741880447"
+   "osm": "node/11741880447",
+   "nameSource": "CMT expendedurías activas 03-10-2026: 080359 Calle Terol 41"
   },
   {
    "orden": 8,
    "id": "altadis-bcn-008",
-   "name": "Estanco · sin rótulo en OSM",
+   "name": "Estanc de Gràcia · nº 393",
    "addr": "Travessera de Gràcia 194 · 08012 Barcelona",
    "lat": 41.4027259,
    "lon": 2.1602077,
    "dist_planeta7_m": 396,
    "tramo_desde_anterior_m": 148,
    "opening_hours": null,
-   "osm": "node/11339652076"
+   "osm": "node/11339652076",
+   "nameSource": "CMT expendedurías activas 03-10-2026: 080393 Travessera de Gràcia 194"
   },
   {
    "orden": 9,
    "id": "altadis-bcn-009",
-   "name": "Estanco · sin rótulo en OSM",
-   "addr": "Carrer de Torrijos s/n · 08012 Barcelona",
+   "name": "Estanc Torrijos 8",
+   "addr": "Carrer de Torrijos 8 · 08012 Barcelona",
    "lat": 41.4024557,
    "lon": 2.1599081,
    "dist_planeta7_m": 361,
    "tramo_desde_anterior_m": 39,
    "opening_hours": null,
-   "osm": "node/10772906416"
+   "osm": "node/10772906416",
+   "nameSource": "descriptivo: estanco en directorios en Torrijos 8; sin número en el listado CMT vigente"
   }
  ]
 }
