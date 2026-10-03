@@ -1,7 +1,7 @@
 {
-  "version": "v.03.10.2026.r5.22:23",
-  "deployer": "Trinity",
-  "machine": "MacBookProNegro14",
-  "signature": "Trinity · MacBookProNegro14",
-  "agent": "Trinity"
+  "version": "v.04.10.2026.r1.01:02",
+  "deployer": "MorfeoMacMini",
+  "machine": "MacMini",
+  "signature": "MorfeoMacMini · MacMini",
+  "agent": "MorfeoMacMini"
 }
