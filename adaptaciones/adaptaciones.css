@@ -144,7 +144,7 @@ body[data-paso="1"] #cuad-experto-live{display:none}
 .export-queue button:focus-visible,.export-queue a:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 
 /* Botón de sonido de la vista previa (4-oct-2026) */
-.adapt-main .sound-toggle[aria-pressed="true"]{border-color:var(--ok);color:var(--ok)}.adapt-main .sound-toggle.no-audio{opacity:.65;cursor:default}.adapt-main .sound-toggle:focus-visible,.adapt-main #btn-play:focus-visible{outline:2px solid var(--ok);outline-offset:2px}.adapt-main .sound-toggle .snd-ico{display:inline-block;min-width:1.2em;text-align:center}
+.adapt-main .sound-toggle[aria-pressed="true"]{border-color:var(--ok);color:var(--ok)}.adapt-main .sound-toggle.no-audio{color:var(--mu);border-style:dashed;cursor:default}.adapt-main .sound-toggle:focus-visible,.adapt-main #btn-play:focus-visible{outline:2px solid var(--ok);outline-offset:2px}.adapt-main .sound-toggle .snd-ico{display:inline-block;min-width:1.2em;text-align:center}
 
 /* Tarjeta Stock: selector propio contenido en la tarjeta + combo de hashtags (Carlos, 4-oct-2026, 21:49) */
 .adapt-main .src-opt{min-width:0}
