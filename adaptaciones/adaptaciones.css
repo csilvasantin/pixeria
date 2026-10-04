@@ -118,10 +118,11 @@
 .adapt-main .src-opt .pill{margin-top:auto;align-self:flex-start}
 .adapt-main #src-msg:empty{display:none}
 .adapt-main .src-preview{margin-top:18px;display:flex;flex-direction:column;gap:10px;align-items:center}
-.adapt-main .src-preview #src{display:block;max-width:100%;max-height:52vh;border-radius:10px;background:#000;border:1px solid var(--ln)}
+.adapt-main .src-preview #src{display:block;max-width:100%;max-height:42vh;border-radius:10px;background:#000;border:1px solid var(--ln)}
 .adapt-main .preview-bar,.adapt-main .paso2-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .adapt-main .preview-bar #src-info{flex:1 1 auto;font-size:12px}
 .adapt-main #btn-adaptar{font-size:15px;padding:9px 22px}
 .adapt-main .paso2-bar{margin-bottom:10px}
 .adapt-main .paso2-bar #src-info-2{flex:1 1 auto;font-size:12px}
 @media(max-width:800px){.adapt-main .src-options{grid-template-columns:1fr}}
+body[data-paso="1"] #cuad-experto-live{display:none}
