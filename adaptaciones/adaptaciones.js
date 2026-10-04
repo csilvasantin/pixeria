@@ -479,17 +479,22 @@ async function fetchStockIndex() {
 async function loadStock() {
   try {
     const data = await fetchStockIndex();
-    // Solo los vídeos del cliente activo (selector de la barra superior) más lo genérico de Admira:
-    // las marcas competidoras nunca se mezclan. Se repinta al cambiar de cliente.
+    // Admira (por defecto) ve todos los vídeos. Con otro cliente (/marca <cliente>), solo los suyos
+    // más lo genérico de Admira: las marcas competidoras nunca se mezclan. Se repinta al cambiar.
     stockVideos = (data.items || []).filter(item => item.type === 'video' && (item.url || item.mediaUrl));
     paintStockOptions();
   } catch (_) { $('#stock-status').textContent = t('Stock remoto no disponible. Puedes subir un vídeo.', 'Remote Stock unavailable. You can upload a video.'); }
 }
 let stockVideos = null, clienteEsperaAgotada = false;
 setTimeout(() => { clienteEsperaAgotada = true; paintStockOptions(); }, 4000); // sin selector: se lista todo
+// ¿Se pidió un cliente que no es Admira? Admira lo ve todo, así que con Admira no se espera a nada.
+function clientePendiente() {
+  try { const q = new URLSearchParams(location.search).get('cliente'); const g = JSON.parse(localStorage.getItem('pixeria:cliente:v2') || 'null');
+    const id = String(q != null ? q : (g && g.id) || '').toLowerCase(); return !!id && !/^(admira|todos|todas|all|off|ninguno)$/.test(id); } catch (_) { return false; }
+}
 function paintStockOptions() {
-  const PC = window.PixeriaCliente, listo = !!(PC && PC.listo());
-  if (!stockVideos || (!listo && !clienteEsperaAgotada)) return;
+  const PC = window.PixeriaCliente, listo = !!(PC && PC.listo && PC.listo());
+  if (!stockVideos || (!listo && clientePendiente() && !clienteEsperaAgotada)) return;
   const select = $('#src-select'), current = select.value;
   select.querySelectorAll('option[data-id]').forEach(o => o.remove());
   const videos = listo ? stockVideos.filter(item => PC.visible(item)) : stockVideos;
@@ -500,7 +505,7 @@ function paintStockOptions() {
     option.textContent = 'Stock · ' + (item.title || item.name || item.id);
     select.append(option);
   }
-  const activo = listo && PC.actual();
+  const activo = listo && !PC.esDefecto() && PC.actual();
   $('#stock-status').textContent = t('Vídeos Stock disponibles: ', 'Stock videos available: ') + videos.length + (activo ? ` · ${activo.nombre}` : '');
   if ([...select.options].some(o => o.value === current)) select.value = current;
 }

@@ -1,11 +1,13 @@
-/* Cliente activo de Pixeria: selector «Cliente» en la barra superior, junto al logo.
- * Estado de sesión compartido por todas las páginas: localStorage + ?cliente=<id> y evento
- * `pixeria:cliente`. Filtra el Stock y la elección de vídeo del Adaptador: se ve lo de ese
- * cliente más lo genérico de Admira (PixeriaCliente.visible(item)).
- * Lista global de admiranext.com (CLIENTES_URL; respaldo local si falla), solo clientes con la
- * pata «studio» (o «todas»): primero los globales y luego el resto. Sin nada guardado, el
- * cliente es el que trae por_defecto (Admira). «Todos» solo lo ve el superusuario (rol admin).
- * Qué cliente es cada asset: campo explícito, etiquetas o nombres según /data/clientes-mapeo.json.
+/* Cliente activo de Pixeria (Carlos, 4-oct-2026, 20:32).
+ * Por defecto el cliente es Admira y Admira lo ve TODO (Stock, vídeos del Adaptador): no se filtra.
+ * El selector «Cliente» junto al logo NO se muestra por defecto: solo con `/marca todas` en la CLI
+ * Experto (superusuario); `/marca <cliente>` filtra por ese cliente y `/marca off` oculta el
+ * selector y vuelve a Admira (assets/expert-cli.js).
+ * Con otro cliente activo se ve lo suyo más lo genérico de Admira (PixeriaCliente.visible(item)).
+ * Estado de sesión: localStorage pixeria:cliente:v2 + ?cliente=<id> y evento `pixeria:cliente`.
+ * Lista de admiranext.com (CLIENTES_URL; respaldo local), solo clientes con la pata «studio» (o
+ * «todas»): primero los globales y luego el resto. Qué cliente es cada asset: campo explícito,
+ * etiquetas o nombres según /data/clientes-mapeo.json.
  */
 (function () {
   if (window.PixeriaCliente) return;
@@ -13,59 +15,64 @@
   var CLIENTES_RESPALDO = '/data/clientes.json';
   var MAPEO_URL = '/data/clientes-mapeo.json';
   var PATA = 'studio';
-  var KEY = 'pixeria:cliente';
+  var KEY = 'pixeria:cliente:v2'; // v2: lo guardado con el selector antiguo ya no filtra en silencio
+  var SEL_KEY = 'pixeria:cliente-selector'; // '1' = selector visible (/marca todas)
   // Rol admin: Pixeria no tiene roles en servidor todavía; es un flag de este navegador
-  // (localStorage pixeria:admin = 1). No es una barrera de seguridad: solo muestra «Todos» y la CLI.
+  // (localStorage pixeria:admin = 1). No es una barrera de seguridad: solo habilita /marca todas|<cliente>.
   var ADMIN_KEY = 'pixeria:admin';
   var EN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
   var lista = [], porDefecto = null, actual = null, mapeo = null, listo = false;
 
   var slug = function (v) { return String(v == null ? '' : v).toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64); };
   var plano = function (v) { return String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ''); };
-  var TODOS = /^(todos|todas|all|ninguno|off)$/;
+  var TODOS = /^(todos|todas|all|ninguno|off|admira)$/; // = cliente por defecto (Admira, todo)
   function esAdmin() { try { return localStorage.getItem(ADMIN_KEY) === '1'; } catch (_) { return false; } }
 
   var guardado = null, q = null;
   try { guardado = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (_) {}
   try { q = new URLSearchParams(location.search).get('cliente'); } catch (_) {}
-  // pedido: id, '' (Todos) o null (nada pedido → por defecto).
-  var pedido = q != null ? (TODOS.test(slug(q)) || !slug(q) ? '' : slug(q)) : guardado && guardado.todos ? '' : guardado && slug(guardado.id) ? slug(guardado.id) : null;
+  // pedido: id de un cliente que no es el por defecto, o null (Admira, todo).
+  var pedido = q != null ? (TODOS.test(slug(q)) ? null : slug(q) || null) : guardado && slug(guardado.id) && !TODOS.test(slug(guardado.id)) ? slug(guardado.id) : null;
+  function esDefecto(c) { return !c || (porDefecto ? c.id === porDefecto.id : c.id === 'admira'); }
+  function selectorVisible() { try { return localStorage.getItem(SEL_KEY) === '1'; } catch (_) { return false; } }
 
   function guardar() {
-    try { localStorage.setItem(KEY, JSON.stringify(actual ? actual : {todos: true})); } catch (_) {}
+    var defecto = esDefecto(actual);
+    try { if (defecto) localStorage.removeItem(KEY); else localStorage.setItem(KEY, JSON.stringify(actual)); } catch (_) {}
     try {
       var u = new URL(location.href);
-      if (actual) u.searchParams.set('cliente', actual.id); else u.searchParams.set('cliente', 'todos');
+      if (defecto) u.searchParams.delete('cliente'); else u.searchParams.set('cliente', actual.id);
       if (u.href !== location.href) history.replaceState(history.state, '', u.href);
     } catch (_) {}
   }
   function avisar() { document.dispatchEvent(new CustomEvent('pixeria:cliente', {detail: actual})); }
   function porId(id) { return lista.filter(function (c) { return c.id === id; })[0] || null; }
-  // «/starbucks», «proyectoStarbucks», «Starbucks», «starbucks-mexico»… → cliente | 'todos' | null
+  // «starbucks», «proyectoStarbucks», «Starbucks», «starbucks-mexico»… → cliente | null
   function resolver(texto) {
     var t = plano(String(texto || '').trim().replace(/^\//, '').replace(/^proyecto/i, ''));
     if (!t) return null;
-    if (TODOS.test(t)) return 'todos';
     return lista.filter(function (c) { return plano(c.id) === t || plano(c.nombre) === t; })[0] || null;
   }
   function aplicar(c) {
-    if (c === 'todos' || c === '' || c == null) {
-      if (!esAdmin()) c = porDefecto; else c = null;
-    }
+    c = c || porDefecto;
     actual = c ? {id: c.id, nombre: c.nombre} : null;
     guardar(); pintar(); avisar();
     return actual;
   }
+  // id o nombre de cliente; '' / admira / todos / off = Admira (todo).
   function fijar(id) {
-    var c = TODOS.test(slug(id)) || !slug(id) ? 'todos' : porId(slug(id)) || resolver(id);
+    var c = TODOS.test(slug(id)) || !slug(id) ? porDefecto : porId(slug(id)) || resolver(id);
     if (!c) return false;
     aplicar(c);
     return true;
   }
+  function selector(on) {
+    try { if (on) localStorage.setItem(SEL_KEY, '1'); else localStorage.removeItem(SEL_KEY); } catch (_) {}
+    if (on) colocar(); else if (label.isConnected) label.remove();
+  }
 
-  // Qué cliente es un asset (o null = genérico de Admira).
   // Todos los clientes que se deducen de un asset (ver data/clientes-mapeo.json). Si casan varios
-  // (p. ej. #jti y #altadis), el asset es ambiguo y solo lo ve «Todos»: deducción conservadora.
+  // (p. ej. #jti y #altadis), el asset es ambiguo y solo lo ve Admira: deducción conservadora.
   function clientesDe(it) {
     if (!it || !mapeo) return [];
     var C = mapeo.clientes || {}, ids = Object.keys(C);
@@ -90,7 +97,7 @@
   }
   function clienteDe(it) { var l = clientesDe(it); return l.length === 1 ? l[0] : null; }
   function visible(it) {
-    if (!actual) return true; // «Todos» (superusuario)
+    if (!listo || esDefecto(actual)) return true; // Admira lo ve todo
     var gen = mapeo.genericos || [];
     return clientesDe(it).every(function (c) { return c === actual.id || gen.indexOf(c) >= 0; });
   }
@@ -107,22 +114,21 @@
   label.innerHTML = '<span>' + (EN ? 'Client:' : 'Cliente:') + '</span><select id="pix-cliente"></select>';
   var select = label.querySelector('select');
   select.setAttribute('aria-label', EN ? 'Active client' : 'Cliente activo');
-  select.addEventListener('change', function () { fijar(select.value || 'todos'); });
+  select.addEventListener('change', function () { fijar(select.value); });
 
   function opcion(parent, c) { var o = document.createElement('option'); o.value = c.id; o.textContent = c.nombre; parent.appendChild(o); }
   function pintar() {
     select.innerHTML = '';
-    if (esAdmin()) { var todos = document.createElement('option'); todos.value = ''; todos.textContent = EN ? 'All' : 'Todos'; select.appendChild(todos); }
     var globales = lista.filter(function (c) { return c.global; }), resto = lista.filter(function (c) { return !c.global; });
     if (globales.length && resto.length) {
       var g1 = document.createElement('optgroup'); g1.label = EN ? 'Global' : 'Globales'; globales.forEach(function (c) { opcion(g1, c); }); select.appendChild(g1);
       var g2 = document.createElement('optgroup'); g2.label = EN ? 'Others' : 'Resto'; resto.forEach(function (c) { opcion(g2, c); }); select.appendChild(g2);
     } else lista.forEach(function (c) { opcion(select, c); });
     if (actual && !porId(actual.id)) opcion(select, actual);
-    select.value = actual ? actual.id : '';
+    if (actual) select.value = actual.id;
   }
   function colocar() {
-    if (label.isConnected) return true;
+    if (label.isConnected || !selectorVisible()) return true;
     var brand = document.querySelector('.pf-topbar-left .pf-topbar-brand, .pf-topbar .pf-topbar-brand, .quad-top .quad-brand, .site-header .brand');
     if (!brand) return false;
     brand.insertAdjacentElement('afterend', label);
@@ -150,13 +156,13 @@
     mapeo = r[1] || {clientes: {}};
     porDefecto = lista.filter(function (c) { return c.porDefecto; })[0] || porId('admira') || null;
     listo = true;
-    aplicar(pedido === '' ? 'todos' : pedido ? porId(pedido) || porDefecto : porDefecto);
+    aplicar(pedido ? porId(pedido) || porDefecto : porDefecto);
   });
 
   // Los enlaces a las otras patas (store, tv, app, biz, admiranext) llevan el cliente activo.
   var PATAS = /(^|\.)(admiranext\.com|admira\.(store|tv|app|biz))$/i;
   document.addEventListener('click', function (e) {
-    var a = actual && e.target.closest && e.target.closest('a[href]');
+    var a = !esDefecto(actual) && e.target.closest && e.target.closest('a[href]');
     if (!a) return;
     try { var u = new URL(a.href, location.href); if (!PATAS.test(u.hostname) || u.searchParams.has('cliente')) return; u.searchParams.set('cliente', actual.id); a.href = u.href; } catch (_) {}
   }, true);
@@ -166,6 +172,10 @@
     actual: function () { return actual ? {id: actual.id, nombre: actual.nombre} : null; },
     lista: function () { return lista.slice(); },
     esAdmin: esAdmin,
+    porDefecto: function () { return porDefecto ? {id: porDefecto.id, nombre: porDefecto.nombre} : null; },
+    esDefecto: function () { return esDefecto(actual); },
+    selector: selector,
+    selectorVisible: selectorVisible,
     resolver: resolver,
     fijar: fijar,
     clienteDe: clienteDe, clientesDe: clientesDe,
