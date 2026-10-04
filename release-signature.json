@@ -1,8 +1,8 @@
 {
-  "version": "v.04.10.2026.r17.21:44",
+  "version": "v.04.10.2026.r18.21:50",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "Adaptaciones: contador de vídeos del Stock en la tarjeta (Admira = todo; /marca <cliente> = filtrado), desplegable en script aparte con mensajes de carga y error; version.json del repo sellado."
+  "evidence": "Adaptaciones: selector propio del Stock contenido en la tarjeta (títulos decodificados con elipsis, miniatura, teclado) y combo de hashtags por frecuencia que filtra lista y contador."
 }
