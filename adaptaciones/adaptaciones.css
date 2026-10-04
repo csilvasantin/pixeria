@@ -142,3 +142,6 @@ body[data-paso="1"] #cuad-experto-live{display:none}
 .eq-dl{color:var(--ok)!important;text-decoration:none;border:1px solid #3ddc9755;border-radius:99px;padding:1px 8px}.eq-dl:hover{background:#3ddc9718}
 .eq-cancel{background:none;border:0;color:var(--mu);font-size:16px;line-height:1;cursor:pointer;padding:0 2px}.eq-cancel:hover{color:var(--ac)}
 .export-queue button:focus-visible,.export-queue a:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+
+/* Botón de sonido de la vista previa (4-oct-2026) */
+.adapt-main .sound-toggle[aria-pressed="true"]{border-color:var(--ok);color:var(--ok)}.adapt-main .sound-toggle.no-audio{opacity:.65;cursor:default}.adapt-main .sound-toggle:focus-visible,.adapt-main #btn-play:focus-visible{outline:2px solid var(--ok);outline-offset:2px}.adapt-main .sound-toggle .snd-ico{display:inline-block;min-width:1.2em;text-align:center}
