@@ -127,11 +127,17 @@
   // Vídeo aún sin miniatura en el índice (recién subido): el fotograma lo saca el navegador al hacerse
   // visible, con un <video preload=metadata> en el segundo 1 (#t=1), en vez de dejar el recuadro vacío.
   var io = null;
+  // Si ni la miniatura ni el vídeo se pueden decodificar, un icono neutro con aviso (no una imagen inventada).
+  function sinVista() {
+    var s = document.createElement('span'); s.className = 'stk-ph stk-sin';
+    s.title = EN ? 'No preview available' : 'Sin vista previa'; s.setAttribute('aria-label', s.title);
+    return s;
+  }
   function fotogramaEnCliente(ph) {
     var v = document.createElement('video');
     v.className = 'stk-ph stk-vid'; v.muted = true; v.playsInline = true; v.preload = 'metadata';
     v.setAttribute('aria-hidden', 'true'); v.tabIndex = -1;
-    v.onerror = function () { v.replaceWith(Object.assign(document.createElement('span'), {className: 'stk-ph'})); };
+    v.onerror = function () { v.replaceWith(sinVista()); };
     v.src = ph.dataset.video + (ph.dataset.video.indexOf('#') < 0 ? '#t=1' : '');
     ph.replaceWith(v);
   }
@@ -149,7 +155,7 @@
       li.setAttribute('role', 'option'); li.tabIndex = -1; li.id = 'stk-o' + i;
       li.dataset.url = url; li.dataset.title = tit; li.title = tit;
       li.setAttribute('aria-selected', url === actual ? 'true' : 'false');
-      if (img && /^https:\/\//.test(img)) { var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = img; im.onerror = function () { this.replaceWith(Object.assign(document.createElement('span'), {className: 'stk-ph'})); }; li.appendChild(im); }
+      if (img && /^https:\/\//.test(img)) { var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = img; im.onerror = function () { var ph = document.createElement('span'); ph.className = 'stk-ph'; ph.dataset.video = url; this.replaceWith(ph); observarSinMiniatura(ph); }; li.appendChild(im); }
       else { var ph = document.createElement('span'); ph.className = 'stk-ph'; ph.dataset.video = url; li.appendChild(ph); observarSinMiniatura(ph); }
       var sp = document.createElement('span'); sp.className = 'stk-t'; sp.textContent = tit; li.appendChild(sp);
       fragL.appendChild(li);
