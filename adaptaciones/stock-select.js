@@ -8,7 +8,10 @@
  * - Combo de hashtags (#stock-tag + datalist): tags del índice (campo `tags`) y #hashtags de title,
  *   prompt y comment, del Stock del cliente activo, por frecuencia y con el número. Vacío = todos.
  * - Contador «Ready-made N videos…» / «N vídeos listos…» = cliente activo (Admira = todo;
- *   /marca <cliente> = filtrado) ∩ hashtag, en directo. Cargando «…»; Stock caído «—» y aviso.
+ *   /marca <cliente> = filtrado) ∩ hashtag, en directo, en singular con 1. Cargando «…»; Stock caído «—».
+ * - Al aplicar un hashtag (elegido del datalist, Enter o PixeriaStock.tag) la caja muestra ya la
+ *   coincidencia más reciente (createdAt del índice) y carga su vista previa; las demás siguen debajo en
+ *   el mismo orden. Enter en el campo o en la caja = «Adaptar →». Sin coincidencias: sin preselección y aviso.
  */
 (function () {
   var EN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
@@ -16,7 +19,7 @@
   var $ = function (s) { return document.querySelector(s); };
   var ORIGENES = ['/stock-index', 'https://stock.admira.store/stock/index.json'];
   var ESPERA_MS = 20000, ESPERA_CLIENTE_MS = 4000;
-  var videos = null, error = false, esperaAgotada = false, tagActivo = '', mostrados = [];
+  var videos = null, error = false, esperaAgotada = false, tagActivo = '', tagAplicado = null, mostrados = [];
 
   var dec = document.createElement('textarea');
   function decodificar(s) { dec.innerHTML = String(s == null ? '' : s); return dec.value; }
@@ -34,7 +37,10 @@
     return (it._tags = Object.keys(s));
   }
 
-  function contador(texto) { var n = $('#stock-count'); if (n) n.textContent = texto; }
+  function contador(texto) {
+    var n = $('#stock-count'); if (n) n.textContent = texto;
+    var w = $('#stock-nombre'); if (w) w.textContent = texto === '1' ? t('vídeo listo', 'video') : t('vídeos listos', 'videos');
+  }
   function aviso(texto) { var s = $('#stock-status'); if (s) s.textContent = texto || ''; }
   function boton(texto, full) { var b = $('#stock-pick .stk-btn-txt'); if (b) { b.textContent = texto; b.parentNode.title = full || ''; } }
 
@@ -96,8 +102,33 @@
   function leerTag() {
     var inp = $('#stock-tag'), v = inp ? norm(inp.value) : '';
     tagActivo = v;
+    if (v !== tagAplicado) tagAplicado = null;
     var clr = $('#stock-tag-clear'); if (clr) clr.hidden = !inp || !inp.value;
     pintar();
+  }
+  // Coincidencia más reciente del filtro: mayor createdAt del índice (o el sello del id); empate = la primera.
+  function fecha(it) { var d = Date.parse(it.createdAt || ''); if (!isNaN(d)) return d; var m = /^(\d{12,})-/.exec(it.id || ''); return m ? +m[1] : 0; }
+  function masReciente(lista) { var r = null; lista.forEach(function (it) { if (!r || fecha(it) > fecha(r)) r = it; }); return r; }
+  // Aplica el hashtag del campo: filtra y preselecciona la coincidencia más reciente (vista previa incluida).
+  function aplicarTag() {
+    var inp = $('#stock-tag'); tagAplicado = inp ? norm(inp.value) || null : null;
+    leerTag();
+    if (!tagActivo || !videos) return;
+    var it = masReciente(mostrados);
+    if (!it) return; // pintar() ya muestra el aviso de «sin coincidencias»
+    var url = it.url || it.mediaUrl, li = Array.prototype.slice.call($('#stock-list').querySelectorAll('li[role=option]')).filter(function (x) { return x.dataset.url === url; })[0];
+    if (li) elegir(li, {sinFoco: true});
+  }
+  // Enter = «Adaptar →» con el vídeo de la caja; si aún carga, en cuanto el botón se habilite.
+  var esperaAdaptar = null;
+  function adaptar() {
+    var btn = $('#btn-adaptar'), select = $('#src-select'); if (!btn || !select || !select.value) return false;
+    if (!btn.disabled) { btn.click(); return true; }
+    if (esperaAdaptar) esperaAdaptar.disconnect();
+    var obs = esperaAdaptar = new MutationObserver(function () { if (!btn.disabled) { obs.disconnect(); esperaAdaptar = null; btn.click(); } });
+    obs.observe(btn, {attributes: true, attributeFilter: ['disabled']});
+    setTimeout(function () { obs.disconnect(); if (esperaAdaptar === obs) esperaAdaptar = null; }, 20000);
+    return true;
   }
 
   // ─── Lista propia ───
@@ -115,13 +146,13 @@
     ul.hidden = true; abierta = false; if (b) b.setAttribute('aria-expanded', 'false');
     if (devolverFoco && b) b.focus();
   }
-  function elegir(li) {
+  function elegir(li, op) {
     var select = $('#src-select'); if (!select || !li) return;
     select.value = li.dataset.url;
     $('#stock-list').querySelectorAll('li[aria-selected=true]').forEach(function (x) { x.setAttribute('aria-selected', 'false'); });
     li.setAttribute('aria-selected', 'true');
     boton(li.dataset.title, li.dataset.title);
-    cerrar(true);
+    cerrar(!(op && op.sinFoco));
     select.dispatchEvent(new Event('change', {bubbles: true}));
   }
   // Vídeo aún sin miniatura en el índice (recién subido): el fotograma lo saca el navegador al hacerse
@@ -192,6 +223,7 @@
     contador(String(lista.length));
     var cli = $('#stock-cliente'); if (cli) cli.textContent = c.activo ? ' · ' + c.activo.nombre : ''; // el tag ya se ve en su combo
     if (!c.lista.length) aviso(t('Este cliente no tiene vídeos en el Stock. /marca off vuelve a Admira, que lo ve todo.', 'This client has no Stock videos. /marca off returns to Admira, which sees everything.'));
+    else if (tagAplicado && !lista.length) aviso(t('Ningún vídeo del Stock con #' + tagAplicado + '. Prueba otro hashtag o bórralo para ver todos.', 'No Stock videos with #' + tagAplicado + '. Try another hashtag or clear it to see them all.'));
     else aviso('');
   }
 
@@ -199,7 +231,10 @@
     var b = $('#stock-pick'), ul = $('#stock-list'), inp = $('#stock-tag'), clr = $('#stock-tag-clear');
     if (b) {
       b.addEventListener('click', function () { if (abierta) cerrar(); else abrir(); });
-      b.addEventListener('keydown', function (e) { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); abrir(); } });
+      b.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); abrir(); }
+        else if (e.key === 'Enter' && !abierta && $('#src-select') && $('#src-select').value) { e.preventDefault(); adaptar(); }
+      });
     }
     if (ul) {
       ul.addEventListener('click', function (e) { var li = e.target.closest('li[role=option]'); if (li) elegir(li); });
@@ -219,9 +254,18 @@
     }
     document.addEventListener('click', function (e) { if (abierta && !e.target.closest('.stk-pick')) cerrar(); });
     if (inp) {
-      inp.addEventListener('input', leerTag);
-      inp.addEventListener('change', leerTag);
-      inp.addEventListener('keydown', function (e) { if (e.key === 'Escape' && inp.value) { e.preventDefault(); inp.value = ''; leerTag(); } });
+      // Escribir filtra en directo; elegir del datalist (input sin inputType de tecleo) aplica el hashtag.
+      inp.addEventListener('input', function (e) { if (!e.inputType || e.inputType === 'insertReplacementText') aplicarTag(); else leerTag(); });
+      inp.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && inp.value) { e.preventDefault(); inp.value = ''; leerTag(); }
+        else if (e.key === 'ArrowDown' && mostrados.length && tagAplicado !== null) { e.preventDefault(); abrir(); }
+        else if (e.key === 'Enter') {
+          e.preventDefault();
+          var v = norm(inp.value);
+          if (v && v !== tagAplicado) aplicarTag();          // escrito a mano: 1.º Enter aplica y preselecciona
+          else if (!v || mostrados.length) adaptar();         // ya aplicado (o sin filtro): Enter = Adaptar →
+        }
+      });
     }
     if (clr) clr.addEventListener('click', function () { if (inp) { inp.value = ''; inp.focus(); } leerTag(); });
   }
@@ -237,7 +281,7 @@
     total: function () { return videos ? videos.length : null; },
     visibles: function () { return videos ? mostrados.length : null; },
     tags: function () { return (window.PixeriaStock._tags || []).slice(); },
-    tag: function (g) { var inp = $('#stock-tag'); if (inp) { inp.value = g ? '#' + norm(g) : ''; leerTag(); } }
+    tag: function (g) { var inp = $('#stock-tag'); if (inp) { inp.value = g ? '#' + norm(g) : ''; if (g) aplicarTag(); else leerTag(); } }
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();

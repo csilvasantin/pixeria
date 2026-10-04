@@ -1,8 +1,8 @@
 {
-  "version": "v.04.10.2026.r20.23:41",
+  "version": "v.04.10.2026.r21.23:50",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "Stock: 773/774 vídeos con miniatura real; las subidas mandan póster y el selector saca el fotograma si falta (icono neutro si no se puede)."
+  "evidence": "Stock: al aplicar un hashtag la caja preselecciona la coincidencia más reciente; Enter = Adaptar →; contador en singular con 1."
 }
