@@ -1,8 +1,8 @@
 {
-  "version": "v.04.10.2026.r18.21:50",
+  "version": "v.04.10.2026.r19.23:22",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "Adaptaciones: selector propio del Stock contenido en la tarjeta (títulos decodificados con elipsis, miniatura, teclado) y combo de hashtags por frecuencia que filtra lista y contador."
+  "evidence": "Adaptaciones: al salir del paso 1 se pausan y silencian sus medios; superficies y textos por componente con marca blanca (test WCAG); tarjeta Original primera en el paso 2."
 }

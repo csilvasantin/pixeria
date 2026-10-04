@@ -209,8 +209,25 @@ function buildGrid() {
     selectable(el, f);
     g.appendChild(el);
   });
+  refreshOriginal();
   if (!selected.some(f=>f.id===state.sel)) state.sel = selected[0]?.id || '';
   markSelected(); buildCardSettings(); refreshInfo();
+}
+// Tarjeta del vídeo ORIGINAL (Carlos, 4-oct-2026, 23:19): siempre la primera, en su formato y
+// resolución nativos, sin relleno. No es un tamaño: no se quita, no cuenta en «N tamaños» y no
+// tiene ajustes (sin data-f, así loop/markSelected/Avanzado no la tratan como formato).
+const escHTML = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+function refreshOriginal() {
+  const g = $('#grid'); if (!g) return;
+  const prev = g.querySelector('.fmt-original'); if (prev) prev.remove();
+  const W = state.src.ancho, H = state.src.alto; if (!W || !H) return;
+  const cw = W >= H ? 384 : Math.round(384 * W / H), ch = Math.round(cw * H / W);
+  const el = document.createElement('div'); el.className = 'fmt fmt-original'; el.dataset.original = '1';
+  const url = video.currentSrc || video.getAttribute('src') || '';
+  el.innerHTML = `<div class="fmt-title"><h3>${t('Vídeo original','Original video')}<span class="orig-tag">${t('Original','Original')}</span></h3></div><div class="dims">${W}×${H} · ${t('nativo, sin relleno','native, no padding')}</div>
+      <div class="stage"><canvas width="${cw}" height="${ch}" aria-label="${escHTML(state.origin.title || state.srcName)}"></canvas></div>
+      ${url ? `<a class="pill export-one" href="${escHTML(url)}" download target="_blank" rel="noopener">${t('Descargar original','Download original')}</a>` : ''}`;
+  g.prepend(el); drawDirty = true;
 }
 const controlsHTML = () => `<div class="ctl"><span>${t('Método','Method')}</span><select data-k="modo">${Object.entries(MODOS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
       <span>${t('Foco X','Focus X')}</span><input type="range" data-k="fx" min="0" max="1" step="0.01" value="0.5">
@@ -300,12 +317,12 @@ function refreshInfo() {
   const selF = FORMATOS.find((x) => x.id === state.sel && x.on), selAviso = $('#card-settings .aviso');
   if (selF && selAviso) selAviso.textContent = cardAviso(selF);
   const rows = selectedFormats().map((f) => {
-    if (f.especial) return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${f.layout.entrega[0]}×${f.layout.entrega[1]}</h3><pre style="white-space:pre-wrap;font-size:11px;color:#9fc3ff">${especialInfo(f).plan.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])}</pre></div>`;
+    if (f.especial) return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${f.layout.entrega[0]}×${f.layout.entrega[1]}</h3><pre style="white-space:pre-wrap;font-size:11px;color:var(--link)">${especialInfo(f).plan.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])}</pre></div>`;
     const p = plan(f); if(f.output==='png')return `<p>${f.nombre} · ${perfil(f).ancho}×${perfil(f).alto} · PNG${f.print?' · 150 ppp':''}</p>`; if (!p || p.error) return `<p>${f.nombre}: ${p ? p.error : 'sin vídeo'}</p>`;
     return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${p.ancho}×${p.alto}</h3>
       <div class="dims">encaje <b>${p.encaje}</b> · adaptación <b>${p.adaptacion}</b> · recorte ${Math.round(p.recortePerdido * 100)}%<br>
       H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps (${p.bitrateMotivo}) · ${p.fps} fps · GOP ${p.gopSegundos}s</div>
-      <div class="aviso">${(p.avisos || []).map(a=>/generativ|imagina/i.test(a)?t('Fondo desenfocado derivado del original; sin expansión IA.','Blurred background derived from the original; no AI expansion.'):a).join(' · ')}</div><pre style="white-space:pre-wrap;font-size:11px;color:#9fc3ff">${ffmpegCmd(f)}</pre></div>`;
+      <div class="aviso">${(p.avisos || []).map(a=>/generativ|imagina/i.test(a)?t('Fondo desenfocado derivado del original; sin expansión IA.','Blurred background derived from the original; no AI expansion.'):a).join(' · ')}</div><pre style="white-space:pre-wrap;font-size:11px;color:var(--link)">${ffmpegCmd(f)}</pre></div>`;
   });
   $('#plan-tecnico').innerHTML = rows.join('');
 }
@@ -348,6 +365,7 @@ let drawDirty=true,lastFrame=-1;
 function loop() {
   if(drawDirty||video.currentTime!==lastFrame){
   document.querySelectorAll('.fmt[data-f]').forEach((el) => { const f = FORMATOS.find((x) => x.id === el.dataset.f); if (f.especial) { drawEspecial(el, f); return; } const c = el.querySelector('canvas'); if (c) drawInto(c, f); });
+  const oc = document.querySelector('#grid .fmt-original canvas'); if (oc && video.readyState >= 2) oc.getContext('2d').drawImage(video, 0, 0, oc.width, oc.height);
   drawDirty=false;lastFrame=video.currentTime;
   }
   requestAnimationFrame(loop);
@@ -371,7 +389,7 @@ video.addEventListener('loadedmetadata', () => {
   $('#src-info').textContent = `${state.srcName} · ${video.videoWidth}×${video.videoHeight} · ${video.duration.toFixed(1)} s`;
   $('#src-info-2').textContent = state.srcName; $('#src-msg').textContent = '';
   $('#src-preview').hidden = false; $('#btn-adaptar').disabled = false; $('.step[data-go="2"]').disabled = false;
-  refreshInfo();
+  refreshOriginal(); refreshInfo();
 });
 $('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; if (!o.value) { emptySource(); return; } setSource(o.value, o.textContent.replace(/^Stock · /, ''), {id:o.dataset.id,title:o.dataset.title}); };
 // Sin vídeo por defecto (ninguna marca): estado vacío hasta que el usuario elige uno.
@@ -427,8 +445,17 @@ if (soundBtn) {
   renderSound();
 }
 // Flujo en dos pasos: 1 Vídeo (Stock, subir o crear + vista previa) · 2 Adaptar (formatos, vistas previas y Exportar).
+// Al salir del paso 1 por cualquier vía (paso 2, «Adaptar», cambiar de página) se pausan y silencian
+// todos los medios de la sección 1 (vista previa / reproductor del Stock). No vuelven a sonar solos:
+// solo reanuda el usuario (⏯ o elegir otro vídeo). Las vistas del paso 2 muestran el fotograma.
+function pausePaso1() {
+  document.querySelectorAll('#paso-1 video, #paso-1 audio').forEach((m) => { try { m.pause(); m.muted = true; } catch (_) {} });
+  renderSound();
+}
+window.addEventListener('pagehide', pausePaso1);
 function goStep(n) {
   if (n === 2 && !state.src.ancho) return;
+  if (n !== 1) pausePaso1();
   $('#paso-1').hidden = n !== 1; $('#paso-2').hidden = n !== 2; document.body.dataset.paso = String(n);
   document.querySelectorAll('.steps .step').forEach(b => { if (+b.dataset.go === n) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
   if (n === 2) { drawDirty = true; buildCardSettings(); refreshInfo(); }
