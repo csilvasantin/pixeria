@@ -655,10 +655,10 @@
       // ⌘ EXPERTO · CLI con el look de digitalavatar.ai (Carlos, 4-oct-2026): piel compartida de la
       // suite (www.admiranext.com/suite) sobre la consola de expert-cli.js; los comandos no cambian.
       var axCss = document.createElement('link');
-      axCss.rel = 'stylesheet'; axCss.href = 'https://www.admiranext.com/suite/experto.css?v=20261004-experto-min-1';
+      axCss.rel = 'stylesheet'; axCss.href = 'https://www.admiranext.com/suite/experto.css?v=20261004-experto-min-2';
       document.head.appendChild(axCss);
       var ax = document.createElement('script');
-      ax.src = 'https://www.admiranext.com/suite/experto.js?v=20261004-experto-min-1';
+      ax.src = 'https://www.admiranext.com/suite/experto.js?v=20261004-experto-min-2';
       ax.setAttribute('data-panel', '.pf-cli');
       ax.setAttribute('data-body', '');
       ax.setAttribute('data-form', '.pf-cli-form');
