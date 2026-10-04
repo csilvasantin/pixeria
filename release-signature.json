@@ -1,8 +1,8 @@
 {
-  "version": "v.04.10.2026.r16.21:10",
+  "version": "v.04.10.2026.r17.21:44",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "/es/… lleva a la ruta en español de la raíz con ?lang=es (antes caía en /en/); Admira ve todo y el combo de cliente solo con /marca todas."
+  "evidence": "Adaptaciones: contador de vídeos del Stock en la tarjeta (Admira = todo; /marca <cliente> = filtrado), desplegable en script aparte con mensajes de carga y error; version.json del repo sellado."
 }
