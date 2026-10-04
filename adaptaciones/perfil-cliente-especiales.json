@@ -1,20 +1,20 @@
 {
   "source": {
-    "title": "ALTADIS Resoluciones y formatos",
+    "title": "Perfil de cliente · Resoluciones y formatos",
     "file": "Resoluciones y formatos especiales .pdf",
     "page": 3,
     "structurePages": [5, 6],
     "examplePages": [2, 7],
     "sha256": "16a17b2f81c5713d5d0fc676a02d2192fb95ad07ecb13e29dbec1b09da5239f7",
-    "scope": "5 filas marcadas ESPECIAL de la página 3 (filas 18 a 22 de 23), excluidas de altadis-18.json",
+    "scope": "5 filas marcadas ESPECIAL de la página 3 (filas 18 a 22 de 23), excluidas de perfil-cliente-18.json",
     "reading": "PDFKit de macOS ejecutado con swift: texto de cada página con PDFPage.string y render PNG a 3x de las 8 páginas; las cuadrículas de las páginas 5 y 6 se comprobaron visualmente y ampliadas.",
     "specifications": {"tipoDeArchivo": "MP4", "velocidadDeFotograma": "25fps", "codec": "H264"},
     "rule": "Página 5: «Los formatos especiales se segmentan de forma que cada espacio representa una pantalla y cada fila sea una continuidad de la siguiente.»",
-    "requirements": "La entrega es un único MP4 a la resolución de la tabla, con una celda por pantalla en orden de lectura. «Mismo tiempo de resolución para la correcta sincronización» se aplica en la página 3 a Sincro VW y Sincro LOGO, que están en altadis-18.json y no son especiales. Esta página no sincroniza players."
+    "requirements": "La entrega es un único MP4 a la resolución de la tabla, con una celda por pantalla en orden de lectura. «Mismo tiempo de resolución para la correcta sincronización» se aplica en la página 3 a Sincro VW y Sincro LOGO, que están en perfil-cliente-18.json y no son especiales. Esta página no sincroniza players."
   },
   "layouts": [
     {
-      "id": "altadis-esp-1",
+      "id": "cliente-esp-1",
       "row": 18,
       "tabla": "VIDEOWALL 5x1 H (1280 X 1080) - ESPECIAL",
       "nombre": "VIDEOWALL 5x1 H",
@@ -34,7 +34,7 @@
       "ambiguedades": ["La imagen de ejemplo de la página 5 rotula su primera celda «640x540»; la cuadrícula rotula «640x360px» y 3 × 360 = 1080 px. Se usa 640×360."]
     },
     {
-      "id": "altadis-esp-2",
+      "id": "cliente-esp-2",
       "row": 19,
       "tabla": "VIDEOWALL 6x1 H (1280 X 1080) - ESPECIAL",
       "nombre": "VIDEOWALL 6x1 H",
@@ -54,7 +54,7 @@
       "ambiguedades": ["La imagen de ejemplo de la página 5 rotula su primera celda «640x540»; la cuadrícula rotula «640x360px» y 3 × 360 = 1080 px. Se usa 640×360."]
     },
     {
-      "id": "altadis-esp-3",
+      "id": "cliente-esp-3",
       "row": 20,
       "tabla": "VIDEOWALL 9x1 H (2880 X 1620) - ESPECIAL",
       "nombre": "VIDEOWALL 9x1 H",
@@ -71,10 +71,10 @@
       "uso": "videowall de pantallas apaisadas en fila",
       "useEn": "video wall of landscape screens in a row",
       "notas": [],
-      "ambiguedades": ["La tabla de la página 3 lo llama «9x1 H», pero la página 6 lo titula «VIDEOWALL 11x1 H (2880 X 1620)» y su cuadrícula dibuja 12 celdas de 720×540 con una oscura: 11 pantallas. Se modelan las 11 del diagrama. Hay que confirmar con Altadis antes de emitir."]
+      "ambiguedades": ["La tabla de la página 3 lo llama «9x1 H», pero la página 6 lo titula «VIDEOWALL 11x1 H (2880 X 1620)» y su cuadrícula dibuja 12 celdas de 720×540 con una oscura: 11 pantallas. Se modelan las 11 del diagrama. Hay que confirmar con el cliente antes de emitir."]
     },
     {
-      "id": "altadis-esp-4",
+      "id": "cliente-esp-4",
       "row": 21,
       "tabla": "CORDOBA-098 (3840 X 2160) - ESPECIAL",
       "nombre": "CORDOBA-098",
@@ -94,7 +94,7 @@
       "ambiguedades": ["El PDF no indica el número de pantallas ni su disposición física. 15 son las 16 celdas de la página 5 menos la marcada con x. La fila única se deduce de la regla de la página 5 y del ejemplo, donde el texto pasa de una fila a la siguiente. Hay que confirmar antes de emitir."]
     },
     {
-      "id": "altadis-esp-5",
+      "id": "cliente-esp-5",
       "row": 22,
       "tabla": "VIDEOWALL 13x1 V (2160 X 3840) - ESPECIAL",
       "nombre": "VIDEOWALL 13x1 V",

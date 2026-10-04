@@ -8,7 +8,7 @@
 .adapt-main .input-row select{background:#0f1219;color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:6px;display:block;margin-top:4px}
 .adapt-main .upload input{display:block;margin-top:4px;color:var(--mu)}
 .adapt-main .pill{background:#1b2030;color:var(--tx);border:1px solid var(--ln);border-radius:99px;padding:6px 12px;cursor:pointer}.pill.accent{border-color:var(--ac);color:var(--ac)}
-.adapt-main #src{display:none}
+
 .adapt-main .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;align-items:start}
 .adapt-main .fmt{background:#0f1219;border:1px solid var(--ln);border-radius:10px;padding:10px}
 .adapt-main .fmt h3{margin:0 0 2px;font-size:14px}.fmt .dims{color:var(--mu);font-size:12px}
@@ -18,7 +18,6 @@
 .adapt-main .fmt .ctl select,.adapt-main .fmt .ctl input{width:100%}
 .adapt-main .fmt .aviso{font-size:11px;color:#ffcf7a;margin-top:6px;min-height:14px}
 .adapt-main .renders{margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;font-size:13px}
-.adapt-main .altadis{display:grid;grid-template-columns:330px 1fr;gap:14px;margin-top:12px}
 .adapt-main .lista{margin:0;padding:0;list-style:none;max-height:640px;overflow:auto}
 .adapt-main .lista li{padding:8px 10px;border:1px solid var(--ln);border-radius:8px;margin-bottom:6px;cursor:pointer;background:#0f1219}
 .adapt-main .lista li.on{border-color:var(--ac);background:#1f1712}.lista li b{display:block}.lista li small{color:var(--mu)}
@@ -49,7 +48,7 @@
 .card-plan{margin-top:10px;border-top:1px solid var(--ln);padding-top:8px;font-size:11px}.card-plan summary{cursor:pointer;color:var(--ac)}.card-plan pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#afd5e6}
 .profile-label select{background:#0f1219;color:var(--tx);border:1px solid var(--ln);padding:8px}.profile-label{display:block;margin:12px 0}
 .adapt-main .ctl input,.adapt-main .ctl select{min-width:0}.adapt-main .grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))}
-@media(max-width:900px){.adapt-main .altadis,.adapt-main .twin-wrap{grid-template-columns:1fr}.adapt-main .tour-bar{grid-column:auto}.adapt-main .scene{height:320px}}
+@media(max-width:900px){.adapt-main .twin-wrap{grid-template-columns:1fr}.adapt-main .tour-bar{grid-column:auto}.adapt-main .scene{height:320px}}
 .adapt-main .input-row label{min-width:0;max-width:100%}.adapt-main .input-row label:first-child{flex:1 1 280px}.adapt-main .input-row select{max-width:100%;width:100%;box-sizing:border-box}.adapt-main .upload input{max-width:100%}
 
 .export-toolbar,.export-results{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}.export-results a{text-decoration:none}.export-one{margin-top:10px}#export-progress{width:min(100%,420px);accent-color:var(--ac)}#export-status{overflow-wrap:anywhere}.adapt-main button:disabled{opacity:.45;cursor:default}.adapt-main button:focus-visible,.adapt-main a:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
@@ -65,7 +64,7 @@
 @media(max-width:1050px){.adapter-workspace{grid-template-columns:260px minmax(0,1fr);gap:14px}.adapt-main .grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}}
 @media(max-width:760px){.adapter-workspace{grid-template-columns:1fr}.size-library{position:static;max-height:480px}.variants-heading{flex-wrap:wrap}.size-library h3{margin-top:12px}}
 
-/* Especiales Altadis: the physical wall scrolls inside its card, never the page. */
+/* Segmented videowalls: the physical wall scrolls inside its card, never the page. */
 .adapt-main .fmt-especial{grid-column:1/-1;min-width:0}
 .esp-views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto);gap:12px;align-items:start;margin:8px 0}
 .esp-view{margin:0;min-width:0}.esp-view figcaption{font-size:11px;color:var(--mu);margin-bottom:5px}
@@ -88,3 +87,42 @@
 .adv-live.rail-live p,.adv-live.rail-live details{font-size:12px;line-height:1.5;margin:0}
 .exp-live.rail-live{padding:6px 12px 14px;font-size:12px;overflow:auto}
 .exp-live.rail-live details.plan{margin:0}
+/* Tarjetas mínimas (5-oct-2026): vista previa, nombre, tamaño y Export; se ajustan desde Avanzado */
+.adapt-main #grid .fmt{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.adapt-main #grid .fmt.sel{border-color:var(--ac,#5ee6c8);box-shadow:0 0 0 2px color-mix(in srgb,var(--ac,#5ee6c8) 45%,transparent)}
+.adapt-main #grid .fmt .export-one{margin-top:8px}
+.adv-live .card-settings{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--ln);border-radius:8px;background:#0c1823}
+.adv-live .card-settings .card-sel-hd{font-size:12px}
+.adv-live .card-settings .ctl{display:grid;grid-template-columns:70px 1fr;gap:6px 8px;align-items:center;font-size:12px}
+.adv-live .card-settings .ctl select,.adv-live .card-settings .ctl input{width:100%;min-width:0}
+.adv-live .card-settings .aviso{font-size:11px;color:#ffcf7a;min-height:14px}
+.exp-live #plan-tecnico .fmt.sel{outline:1px solid var(--ac,#5ee6c8);border-radius:6px}
+/* Dos pasos (4-oct-2026): 1 Vídeo · 2 Adaptar */
+.adapt-main .steps{display:flex;align-items:center;gap:8px;margin:10px 0 14px}
+.adapt-main .steps .step{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;border:1px solid var(--ln);background:transparent;color:var(--mu);font:600 13px system-ui,sans-serif;cursor:pointer}
+.adapt-main .steps .step b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#1d2330;color:var(--tx);font-size:12px}
+.adapt-main .steps .step[aria-current]{color:var(--tx);border-color:var(--ac)}
+.adapt-main .steps .step[aria-current] b{background:var(--ac);color:#111}
+.adapt-main .steps .step:disabled{opacity:.45;cursor:default}
+.adapt-main .step-sep{color:var(--mu)}
+.adapt-main .paso-hd{font-size:22px;margin:4px 0 14px}
+.adapt-main .src-options{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:14px}
+.adapt-main .src-opt{position:relative;display:flex;flex-direction:column;gap:8px;padding:18px 18px 16px;border:1px solid var(--ln);border-radius:12px;background:#10141c;color:var(--tx);text-decoration:none;cursor:pointer;min-height:150px;box-sizing:border-box}
+.adapt-main .src-opt:hover{border-color:#3a4458}
+.adapt-main .src-opt-main{border-color:var(--ac);background:linear-gradient(180deg,#1b1410,#10141c)}
+.adapt-main .src-opt .n{position:absolute;top:14px;right:16px;color:var(--mu);font:700 12px ui-monospace,monospace}
+.adapt-main .src-opt h3{margin:0;font-size:18px}
+.adapt-main .src-opt p{margin:0;font-size:13px}
+.adapt-main .src-opt select{width:100%;padding:9px;background:#0f1219;color:var(--tx);border:1px solid var(--ln);border-radius:8px;font:inherit;margin-top:auto}
+.adapt-main .src-opt input[type=file]{margin-top:auto;color:var(--mu);max-width:100%}
+.adapt-main .src-opt .pill{margin-top:auto;align-self:flex-start}
+.adapt-main #src-msg:empty{display:none}
+.adapt-main .src-preview{margin-top:18px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.adapt-main .src-preview #src{display:block;max-width:100%;max-height:42vh;border-radius:10px;background:#000;border:1px solid var(--ln)}
+.adapt-main .preview-bar,.adapt-main .paso2-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.adapt-main .preview-bar #src-info{flex:1 1 auto;font-size:12px}
+.adapt-main #btn-adaptar{font-size:15px;padding:9px 22px}
+.adapt-main .paso2-bar{margin-bottom:10px}
+.adapt-main .paso2-bar #src-info-2{flex:1 1 auto;font-size:12px}
+@media(max-width:800px){.adapt-main .src-options{grid-template-columns:1fr}}
+body[data-paso="1"] #cuad-experto-live{display:none}

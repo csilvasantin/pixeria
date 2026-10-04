@@ -1,6 +1,6 @@
 {
   "source": {
-    "title": "ALTADIS Resoluciones y formatos",
+    "title": "Perfil de cliente · Resoluciones y formatos",
     "page": 3,
     "sha256": "16a17b2f81c5713d5d0fc676a02d2192fb95ad07ecb13e29dbec1b09da5239f7",
     "scope": "18 filas estándar: excluye 5 filas marcadas ESPECIAL; incluye SHUTTLE STRETCH (SEDE)",
@@ -8,7 +8,7 @@
   },
   "formats": [
     {
-      "id": "altadis-01",
+      "id": "cliente-01",
       "nombre": "VERTICAL",
       "custom": [
         1080,
@@ -18,10 +18,10 @@
       "useEn": "totem / shop window",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-02",
+      "id": "cliente-02",
       "nombre": "HORIZONTAL",
       "custom": [
         1920,
@@ -31,10 +31,10 @@
       "useEn": "counter",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-03",
+      "id": "cliente-03",
       "nombre": "VIDEOWALL 2X1 H",
       "custom": [
         1920,
@@ -44,10 +44,10 @@
       "useEn": "video wall",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-04",
+      "id": "cliente-04",
       "nombre": "SINCRO LOGO",
       "custom": [
         1920,
@@ -57,10 +57,10 @@
       "useEn": "synchronised logo",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-05",
+      "id": "cliente-05",
       "nombre": "SINCRO VW",
       "custom": [
         1920,
@@ -70,10 +70,10 @@
       "useEn": "synchronised video wall",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-06",
+      "id": "cliente-06",
       "nombre": "SINCRO VW 4X1 H",
       "custom": [
         3840,
@@ -83,10 +83,10 @@
       "useEn": "synchronised video wall",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-07",
+      "id": "cliente-07",
       "nombre": "TABLET",
       "custom": [
         768,
@@ -96,10 +96,10 @@
       "useEn": "tablet",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-08",
+      "id": "cliente-08",
       "nombre": "LED CUBO MADRID-062",
       "custom": [
         1600,
@@ -109,10 +109,10 @@
       "useEn": "LED cube",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-09",
+      "id": "cliente-09",
       "nombre": "LED GRANADA-021",
       "custom": [
         1536,
@@ -122,10 +122,10 @@
       "useEn": "LED strip",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-10",
+      "id": "cliente-10",
       "nombre": "GONDOLA LED LIMITS-006",
       "custom": [
         64,
@@ -135,10 +135,10 @@
       "useEn": "LED gondola",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-11",
+      "id": "cliente-11",
       "nombre": "VIDEOWALL 1X2 H",
       "custom": [
         1920,
@@ -148,10 +148,10 @@
       "useEn": "video wall",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-12",
+      "id": "cliente-12",
       "nombre": "VIDEOWALL 1X2 V",
       "custom": [
         540,
@@ -161,10 +161,10 @@
       "useEn": "portrait video wall",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-13",
+      "id": "cliente-13",
       "nombre": "VIDEOWALL 2X1 V",
       "custom": [
         2160,
@@ -174,10 +174,10 @@
       "useEn": "video wall",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-14",
+      "id": "cliente-14",
       "nombre": "VIDEOWALL 3X1 H",
       "custom": [
         2880,
@@ -187,10 +187,10 @@
       "useEn": "video wall",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-15",
+      "id": "cliente-15",
       "nombre": "VIDEOWALL 4X1 H",
       "custom": [
         3840,
@@ -200,10 +200,10 @@
       "useEn": "video wall",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-16",
+      "id": "cliente-16",
       "nombre": "VIDEOWALL 4X1 V",
       "custom": [
         1920,
@@ -213,10 +213,10 @@
       "useEn": "video wall",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-17",
+      "id": "cliente-17",
       "nombre": "VIDEOWALL 8X1 H",
       "custom": [
         2880,
@@ -226,10 +226,10 @@
       "useEn": "video wall",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     },
     {
-      "id": "altadis-18",
+      "id": "cliente-18",
       "nombre": "SHUTTLE STRETCH",
       "custom": [
         1920,
@@ -239,7 +239,7 @@
       "useEn": "head office / stretch",
       "fps": 25,
       "on": false,
-      "altadis": true
+      "cliente": true
     }
   ]
 }

@@ -9,7 +9,7 @@ import {restore,snapshot,defaults} from '../adaptaciones/adapter-core.mjs';
 import {matchingFormats} from '../adaptaciones/format-catalog.mjs';
 
 const read=file=>JSON.parse(readFileSync(new URL(`../adaptaciones/${file}`,import.meta.url),'utf8'));
-const especiales=read('altadis-especiales.json'),altadis=read('altadis-18.json');
+const especiales=read('perfil-cliente-especiales.json'),cliente=read('perfil-cliente-18.json');
 const PDF='/Users/csilvasantin/Downloads/Telegram Desktop/Resoluciones y formatos especiales .pdf';
 const area=r=>r.w*r.h;
 const overlaps=(a,b)=>a.x<b.x+b.w&&b.x<a.x+a.w&&a.y<b.y+b.h&&b.y<a.y+a.h;
@@ -19,8 +19,8 @@ const tiles=(rects,W,H)=>{
  assert.equal(rects.reduce((n,r)=>n+area(r),0),W*H,'no gaps');
 };
 
-test('the five ESPECIAL rows of page 3 are transcribed from the same PDF as Altadis 18',()=>{
- assert.equal(especiales.source.sha256,altadis.source.sha256);
+test('the five ESPECIAL rows of page 3 are transcribed from the same PDF as the 18-screen client profile',()=>{
+ assert.equal(especiales.source.sha256,cliente.source.sha256);
  assert.equal(especiales.source.sha256,'16a17b2f81c5713d5d0fc676a02d2192fb95ad07ecb13e29dbec1b09da5239f7');
  if(existsSync(PDF))assert.equal(createHash('sha256').update(readFileSync(PDF)).digest('hex'),especiales.source.sha256);
  const L=especiales.layouts;
@@ -29,11 +29,11 @@ test('the five ESPECIAL rows of page 3 are transcribed from the same PDF as Alta
   'VIDEOWALL 9x1 H (2880 X 1620) - ESPECIAL','CORDOBA-098 (3840 X 2160) - ESPECIAL',
   'VIDEOWALL 13x1 V (2160 X 3840) - ESPECIAL']);
  assert.deepEqual(L.map(l=>l.row),[18,19,20,21,22]);
- assert.equal(altadis.formats.length+L.length,23);
+ assert.equal(cliente.formats.length+L.length,23);
  for(const l of L){
   assert.equal(l.observaciones,'Formato especial');
   const [,w,h]=l.tabla.match(/\((\d+) X (\d+)\)/);assert.deepEqual(l.entrega,[+w,+h]);
-  assert(!altadis.formats.some(f=>f.nombre===l.nombre),'not duplicated in Altadis 18');
+  assert(!cliente.formats.some(f=>f.nombre===l.nombre),'not duplicated in the 18-screen profile');
  }
  assert.deepEqual(L.map(l=>l.pantallas),[5,6,11,15,13]);
  // Ambiguities stay documented instead of silently resolved.
@@ -67,16 +67,16 @@ test('file names are explicit and unique per screen',()=>{
 });
 
 test('special family persists its own selection and settings and filters separately',()=>{
- const formats=[{id:'16:9',on:true},{id:'altadis-01',altadis:true,on:true},...especiales.layouts.map((l,i)=>({id:l.id,especial:true,custom:l.entrega,nombre:l.nombre,on:i===0}))];
- const fmt=Object.fromEntries(formats.map(f=>[f.id,defaults()]));fmt['altadis-esp-4']={modo:'blur',fx:.2,fy:.8,zoom:1.5};
+ const formats=[{id:'16:9',on:true},{id:'cliente-01',cliente:true,on:true},...especiales.layouts.map((l,i)=>({id:l.id,especial:true,custom:l.entrega,nombre:l.nombre,on:i===0}))];
+ const fmt=Object.fromEntries(formats.map(f=>[f.id,defaults()]));fmt['cliente-esp-4']={modo:'blur',fx:.2,fy:.8,zoom:1.5};
  const saved=snapshot({profile:'especiales',compat:'fhd',modoGlobal:'auto',fmt},formats);
  const back=restore(JSON.parse(JSON.stringify(saved)),formats);
- assert.equal(back.profile,'especiales');assert.deepEqual(back.fmt['altadis-esp-4'],{modo:'blur',fx:.2,fy:.8,zoom:1.5});
- assert.deepEqual(back.selected,['16:9','altadis-01','altadis-esp-1']);
+ assert.equal(back.profile,'especiales');assert.deepEqual(back.fmt['cliente-esp-4'],{modo:'blur',fx:.2,fy:.8,zoom:1.5});
+ assert.deepEqual(back.selected,['16:9','cliente-01','cliente-esp-1']);
  assert.equal(restore({version:1,profile:'especiales'},formats.filter(f=>!f.especial)).profile,'standard');
  assert.deepEqual(restore({version:1},formats).selected,['16:9']);
  assert.deepEqual(matchingFormats(formats,{profile:'especiales'}).map(f=>f.id),especiales.layouts.map(l=>l.id));
- assert.deepEqual(matchingFormats(formats,{profile:'altadis'}).map(f=>f.id),['altadis-01']);
+ assert.deepEqual(matchingFormats(formats,{profile:'cliente'}).map(f=>f.id),['cliente-01']);
  assert.equal(matchingFormats(formats,{profile:'especiales',query:'2880x1620'}).length,1);
 });
 
