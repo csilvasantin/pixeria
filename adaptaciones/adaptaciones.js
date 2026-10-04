@@ -4,7 +4,8 @@
 import { perfilDeSalida, planificar } from '/assets/signage-perfiles.js';
 import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob } from './adapter-core.mjs';
 import { createExporter, MAX_SOURCE_BYTES } from './adapter-export.js';
-import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats } from './format-catalog.mjs';
+import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily } from './format-catalog.mjs';
+import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
 import { pngDensity } from './png-density.mjs';
 
 const EN = document.documentElement.lang === 'en';
@@ -19,7 +20,9 @@ FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoo
 const video = $('#src');
 let initialized = false, activeExport = null;
 const downloads = [];
-const selectedFormats = () => FORMATOS.filter(f => f.on && (state.profile === 'altadis' ? f.altadis : !f.altadis));
+const selectedFormats = () => FORMATOS.filter(f => f.on && formatFamily(f) === state.profile);
+// Biblioteca uses the compatibility selector; Altadis families keep native resolutions.
+const syncCompat = () => { $('#compat').disabled = state.profile !== 'standard'; };
 function saveSettings() {
   if (!initialized) return;
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot(state, FORMATOS))); $('#settings-status').textContent = t('Ajustes guardados en este navegador. Al volver, elige de nuevo tu archivo local.', 'Settings saved in this browser. Select your local file again when returning.'); }
@@ -33,18 +36,28 @@ function restoreSettings() {
     if (saved) { Object.assign(state, {profile:saved.profile,compat:saved.compat,modoGlobal:saved.modoGlobal,fmt:saved.fmt}); FORMATOS.forEach(f=>f.on=saved.selected.includes(f.id)); }
   } catch (_) { /* corrupt or unavailable storage: keep safe defaults */ }
   $('#format-profile').value=state.profile; $('#compat').value=state.compat; $('#modo-global').value=state.modoGlobal;
-  $('#compat').disabled=state.profile==='altadis';initialized=true;
+  syncCompat();initialized=true;
 }
 function clearDownloads() { downloads.splice(0).forEach(URL.revokeObjectURL); $('#export-results').replaceChildren(); }
 function lockEditor(locked) {
   document.querySelectorAll('#sec-adapt input, #sec-adapt select, #sec-adapt button').forEach(el=>el.disabled=locked);
   $('#cancel-export').disabled=false;$('#cancel-export').hidden=!locked;
-  if(!locked) {$('#compat').disabled=state.profile==='altadis';refreshInfo();}
+  if(!locked) {syncCompat();refreshInfo();}
 }
-async function exportFormats(formats) {
+// kinds applies to special layouts: the Altadis delivery file, one MP4 per screen, or both.
+function especialJobs(f,kinds) {
+  const tech=especialTech(f),mode=modoEfectivo(f),s=state.fmt[f.id],jobs=[];
+  if(kinds!=='segments') jobs.push({...atlasJob(state.src,f.layout,mode,s,tech),label:`${f.nombre} · ${t('entrega','delivery')}`});
+  if(kinds!=='atlas') {
+    const job=segmentsJob(state.src,f.layout,mode,s,tech);job.label=`${f.nombre} · ${job.outputs.length} ${t('pantallas','screens')}`;
+    job.outputs.forEach(o=>o.label=`${f.nombre} · ${t('pantalla','screen')} ${o.n}/${o.N}`);jobs.push(job);
+  }
+  return jobs;
+}
+async function exportFormats(formats,kinds='both') {
   if(activeExport || !state.src.ancho || !formats.length) return;
   const pngFormats=formats.filter(f=>f.output==='png');
-  const jobs=formats.filter(f=>f.output!=='png').map(f=>({...exportJob(state.src,perfil(f),plan(f),modoEfectivo(f),state.fmt[f.id],state.srcName,f.id),label:f.nombre}));
+  const jobs=formats.filter(f=>f.output!=='png').flatMap(f=>f.especial?especialJobs(f,kinds):[{...exportJob(state.src,perfil(f),plan(f),modoEfectivo(f),state.fmt[f.id],state.srcName,f.id),label:f.nombre}]);
   const budget=jobs.length?exportBudget(video.duration,jobs):null;
   if(budget) {$('#export-status').textContent=budget==='batch-size'
     ?t('El lote supera el presupuesto local de memoria. Selecciona menos formatos y expórtalos por separado.','This batch exceeds the local memory budget. Select fewer formats and export them separately.')
@@ -71,12 +84,12 @@ async function exportFormats(formats) {
       if(f.print)blob=new Blob([pngDensity(new Uint8Array(await blob.arrayBuffer()))],{type:'image/png'});
       if(cancelled)throw new Error('cancelled');
       addResult({filename:`${f.id}-${p.ancho}x${p.alto}.png`,label:`${f.nombre} · PNG`,W:p.ancho,H:p.alto,limit:f.category==='display'?150*1024:0},blob);
-      progress.value=completed/formats.length;
+      progress.value=completed/(pngFormats.length+jobs.length);
     }
     if(jobs.length) await exporter.run(video.src,jobs,event=>{
       if(event.phase==='loading') status.textContent=t('Cargando motor de vídeo (unos 32 MB)…','Loading video engine (about 32 MB)…');
       else if(event.phase==='source') status.textContent=t('Leyendo vídeo de origen…','Reading source video…');
-      else { progress.value=(pngFormats.length+event.index+event.progress)/formats.length;status.textContent=`${t('Exportando','Exporting')} ${event.index+1}/${event.total} · ${event.job.label} · ${Math.floor(event.progress*100)}%`; }
+      else { progress.value=(pngFormats.length+event.index+event.progress)/(pngFormats.length+jobs.length);status.textContent=`${t('Exportando','Exporting')} ${event.index+1}/${event.total} · ${event.job.label} · ${Math.floor(event.progress*100)}%`; }
     },addResult);
     progress.value=1;status.textContent=t(`${completed} ${completed===1?'archivo listo':'archivos listos'}. Descárgalos antes de salir de esta página.`,`${completed} ${completed===1?'file':'files'} ready. Download them before leaving this page.`);
   } catch(error) {
@@ -92,7 +105,8 @@ $('#export-all').onclick=()=>exportFormats(selectedFormats());
 $('#cancel-export').onclick=()=>activeExport?.cancel();
 $('#reset-settings').onclick=()=>{
   Object.assign(state,{profile:'standard',compat:'fhd',modoGlobal:'auto'});FORMATOS.forEach(f=>{f.on=['9:16','16:9','1:1','4:5'].includes(f.id);state.fmt[f.id]=defaults();});
-  $('#format-profile').value='standard';$('#compat').value='fhd';$('#compat').disabled=false;$('#modo-global').value='auto';buildGrid();
+  FORMATOS.filter(f=>f.especial).forEach((f,i)=>f.on=i===0);
+  $('#format-profile').value='standard';$('#compat').value='fhd';syncCompat();$('#modo-global').value='auto';buildGrid();
 };
 window.addEventListener('pagehide',event=>{activeExport?.cancel();if(!event.persisted) {clearDownloads();if(sourceObjectURL)URL.revokeObjectURL(sourceObjectURL);}});
 
@@ -100,17 +114,31 @@ window.addEventListener('pagehide',event=>{activeExport?.cancel();if(!event.pers
 function perfil(f) {
   if(f.output==='png')return {ancho:f.custom[0],alto:f.custom[1],orientacion:f.custom[0]>f.custom[1]?'apaisada':f.custom[0]<f.custom[1]?'vertical':'custom',fps:25,techoKbps:8000,sueloKbps:2500,h264:'high@4.0'};
   return f.custom
-    ? perfilDeSalida({ formato: 'custom', ancho: f.custom[0], alto: f.custom[1], compatibilidad: f.altadis ? 'uhd' : f.native ? (Math.max(...f.custom)>1920||f.custom[0]*f.custom[1]>1920*1080?'uhd':'fhd') : state.compat })
+    ? perfilDeSalida({ formato: 'custom', ancho: f.custom[0], alto: f.custom[1], compatibilidad: f.altadis || f.especial ? 'uhd' : f.native ? (Math.max(...f.custom)>1920||f.custom[0]*f.custom[1]>1920*1080?'uhd':'fhd') : state.compat })
     : perfilDeSalida({ formato: f.id, compatibilidad: state.compat });
 }
 function plan(f) {
   if (!state.src.ancho) return null;
-  try { const output = planificar(state.src, perfil(f)); if (f.altadis) output.fps = 25; return output; } catch (e) { return { error: e.message }; }
+  try { const output = planificar(state.src, perfil(f)); if (f.altadis || f.especial) output.fps = 25; return output; } catch (e) { return { error: e.message }; }
+}
+// Special layouts reframe the physical wall (every screen side by side), not the
+// packed delivery file: that is the picture people actually see across screens.
+function wallOutput(f) {
+  const g = geometry(f.layout); return { ...perfil(f), ancho: g.pared.ancho, alto: g.pared.alto, orientacion: g.pared.ancho > g.pared.alto ? 'apaisada' : 'vertical', reducida: false };
+}
+function wallPlan(f) {
+  if (!state.src.ancho) return null;
+  try { return planificar(state.src, wallOutput(f)); } catch (e) { return { error: e.message }; }
+}
+function especialTech(f) {
+  const p = plan(f) || {}, cell = perfilDeSalida({ formato: 'custom', ancho: f.layout.celda[0], alto: f.layout.celda[1], compatibilidad: 'fhd' });
+  const [segmentPerfil, segmentNivel] = cell.h264.split('@');
+  return { bitrateKbps: p.bitrateKbps || perfil(f).techoKbps, h264Perfil: p.h264Perfil || 'high', h264Nivel: p.h264Nivel || '5.1', segmentPerfil, segmentNivel };
 }
 function modoEfectivo(f) {
   const m = state.fmt[f.id].modo !== 'auto' ? state.fmt[f.id].modo : state.modoGlobal;
   if (m !== 'auto') return m;
-  const p = plan(f); if (!p || p.error) return 'blur';
+  const p = f.especial ? wallPlan(f) : plan(f); if (!p || p.error) return 'blur';
   // 'expandir' (laterales generativos con IA) existe en el motor, pero esta página
   // NO se usa IA de pago: se sustituye por fondo desenfocado del propio vídeo.
   return (p.encaje === 'recortar' || p.encaje === 'exacto') ? 'cover' : 'blur';
@@ -122,7 +150,7 @@ function buildPicker() {
   const container=$('#size-categories');container.replaceChildren();
   for(const cat of CATEGORIES){
     const formats=visible.filter(f=>f.category===cat.id);if(!formats.length)continue;
-    const detail=document.createElement('details');detail.className='size-category';detail.open=!!picker.query||picker.open.has(cat.id)||state.profile==='altadis';
+    const detail=document.createElement('details');detail.className='size-category';detail.open=!!picker.query||picker.open.has(cat.id)||state.profile!=='standard';
     const summary=document.createElement('summary');summary.textContent=`${EN?cat.en:cat.es} · ${formats.length}`;detail.append(summary);
     detail.ontoggle=()=>{if(detail.open)picker.open.add(cat.id);else picker.open.delete(cat.id);};
     for(const f of formats){
@@ -130,7 +158,7 @@ function buildPicker() {
       const input=document.createElement('input');input.type='checkbox';input.checked=f.on;input.disabled=!!activeExport;input.setAttribute('aria-label',`${t('Tamaño','Size')} ${f.nombre}`);
       input.onchange=()=>{f.on=input.checked;buildGrid();};
       const text=document.createElement('span');const name=document.createElement('strong');name.textContent=f.nombre;
-      const dims=document.createElement('small');const p=perfil(f);dims.textContent=`${p.ancho} × ${p.alto} px · ${f.output==='png'?'PNG':'MP4'}${f.regional?t(' · Polonia',' · Poland'):''}`;
+      const dims=document.createElement('small');const p=perfil(f);dims.textContent=f.especial?`${p.ancho} × ${p.alto} px · ${f.layout.pantallas} ${t('pantallas','screens')} · MP4`:`${p.ancho} × ${p.alto} px · ${f.output==='png'?'PNG':'MP4'}${f.regional?t(' · Polonia',' · Poland'):''}`;
       text.append(name,dims);label.append(input,text);detail.append(label);
     }
     container.append(detail);
@@ -149,7 +177,7 @@ $('#campaigns').replaceChildren(...CAMPAIGNS.map(c=>{
   const count=document.createElement('span');count.className='campaign-count';
   const description=document.createElement('small');description.textContent=EN?c.descriptionEn:c.descriptionEs;
   b.append(heading,count,description);
-  b.onclick=()=>{state.profile='standard';$('#format-profile').value='standard';$('#compat').disabled=false;FORMATOS.filter(c.matches).forEach(f=>f.on=true);buildGrid();};return b;
+  b.onclick=()=>{state.profile='standard';$('#format-profile').value='standard';syncCompat();FORMATOS.filter(c.matches).forEach(f=>f.on=true);buildGrid();};return b;
 }));
 $('#size-search').oninput=e=>{picker.query=e.target.value;buildPicker();};
 $('#size-orientation').onchange=e=>{picker.orientation=e.target.value;buildPicker();};
@@ -160,7 +188,7 @@ $('#custom-size-form').onsubmit=e=>{
   const existing=FORMATOS.find(x=>x.id===f.id);
   if(!existing&&FORMATOS.filter(x=>x.user).length>=12){$('#custom-status').textContent=t('Máximo 12 tamaños personalizados guardados.','Maximum 12 saved custom sizes.');return;}
   if(existing)existing.on=true;else{f.on=true;FORMATOS.push(f);state.fmt[f.id]=defaults();}
-  state.profile='standard';$('#format-profile').value='standard';$('#compat').disabled=false;
+  state.profile='standard';$('#format-profile').value='standard';syncCompat();
   picker.query='';$('#size-search').value='';picker.orientation='all';$('#size-orientation').value='all';picker.open.add('digital');
   $('#custom-status').textContent=t('Tamaño añadido y guardado.','Size added and saved.');buildGrid();
 };
@@ -173,6 +201,7 @@ function buildGrid() {
   $('#selected-count').textContent=t(`${selected.length} tamaños seleccionados`,`${selected.length} sizes selected`);
   $('#empty-formats').hidden=!!selected.length;
   selectedFormats().forEach((f) => {
+    if (f.especial) { g.appendChild(especialCard(f)); return; }
     const p = perfil(f); const cw = p.ancho >= p.alto ? 384 : Math.round(384 * p.ancho / p.alto); const ch = Math.round(cw * p.alto / p.ancho);
     const el = document.createElement('div'); el.className = 'fmt'; el.dataset.f = f.id;
     el.innerHTML = `<div class="fmt-title"><h3>${f.nombre}</h3><button class="remove-format" type="button" aria-label="${t('Quitar','Remove')} ${f.nombre}">×</button></div><div class="dims">${p.ancho}×${p.alto} · ${f.uso} · ${f.output==='png'?'PNG':'MP4'}</div>
@@ -182,7 +211,7 @@ function buildGrid() {
       <span>${t('Foco Y','Focus Y')}</span><input type="range" data-k="fy" min="0" max="1" step="0.01" value="0.5">
       <span>Zoom</span><input type="range" data-k="zoom" min="1" max="2" step="0.01" value="1"></div>
       <div class="aviso"></div><button class="pill accent export-one" type="button"></button><details class="card-plan"><summary>${t("Plan técnico H.264", "H.264 encoding plan")}</summary><pre></pre></details>`;
-    el.querySelectorAll('[data-k]').forEach((inp) => { inp.value = state.fmt[f.id][inp.dataset.k]; inp.setAttribute('aria-label', `${t('Ajuste','Setting')} ${inp.dataset.k} · ${f.nombre}`); inp.oninput = () => { const k = inp.dataset.k; state.fmt[f.id][k] = k === 'modo' ? inp.value : +inp.value; refreshInfo(); }; });
+    bindControls(el, f);
     el.querySelector('.remove-format').onclick=()=>{f.on=false;buildGrid();};
     el.querySelector('.card-plan').hidden=f.output==='png';
     el.querySelector('.export-one').textContent=f.output==='png'?t('Exportar PNG','Export PNG'):t('Exportar MP4','Export MP4'); el.querySelector('.export-one').onclick=()=>exportFormats([f]);
@@ -190,12 +219,62 @@ function buildGrid() {
   });
   refreshInfo();
 }
+const controlsHTML = () => `<div class="ctl"><span>${t('Método','Method')}</span><select data-k="modo">${Object.entries(MODOS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+      <span>${t('Foco X','Focus X')}</span><input type="range" data-k="fx" min="0" max="1" step="0.01" value="0.5">
+      <span>${t('Foco Y','Focus Y')}</span><input type="range" data-k="fy" min="0" max="1" step="0.01" value="0.5">
+      <span>Zoom</span><input type="range" data-k="zoom" min="1" max="2" step="0.01" value="1"></div>`;
+function bindControls(el, f) {
+  el.querySelectorAll('[data-k]').forEach((inp) => { inp.value = state.fmt[f.id][inp.dataset.k]; inp.setAttribute('aria-label', `${t('Ajuste','Setting')} ${inp.dataset.k} · ${f.nombre}`); inp.oninput = () => { const k = inp.dataset.k; state.fmt[f.id][k] = k === 'modo' ? inp.value : +inp.value; refreshInfo(); }; });
+}
+// ── Especiales Altadis: pared física con cortes + entrega con una celda por pantalla ──
+// The wall fills the card width; long walls keep at least WALL_MIN_H px of height and scroll inside the card.
+const WALL_CSS_H = 96, WALL_MIN_H = 64;
+function especialCard(f) {
+  const L = f.layout, g = geometry(L), [W, H] = L.entrega, [cw, ch] = L.celda;
+  const aspect = g.pared.ancho / g.pared.alto, wallW = Math.round(WALL_CSS_H * aspect);
+  const aw = W >= H ? 480 : Math.round(480 * W / H), ah = Math.round(aw * H / W);
+  const el = document.createElement('div'); el.className = 'fmt fmt-especial'; el.dataset.f = f.id;
+  el.innerHTML = `<div class="fmt-title"><h3>${f.nombre}</h3><button class="remove-format" type="button" aria-label="${t('Quitar','Remove')} ${f.nombre}">×</button></div>
+    <div class="dims">${t('Entrega','Delivery')} ${W}×${H} · ${g.segments.length} ${t('pantallas de','screens of')} ${cw}×${ch} · ${t('pared','wall')} ${g.pared.ancho}×${g.pared.alto} · MP4 H.264 25 fps · ${f.uso}</div>
+    <div class="esp-views">
+      <figure class="esp-view esp-wall"><figcaption>${t('Pared física · el vídeo continúa de una pantalla a la siguiente','Physical wall · the video continues from one screen to the next')}</figcaption>
+        <div class="wall-scroll" tabindex="0" aria-label="${t('Pared física con líneas de corte','Physical wall with cut lines')}"><canvas class="wall" width="${wallW * 2}" height="${WALL_CSS_H * 2}" style="width:max(100%,${Math.round(WALL_MIN_H * aspect)}px);height:auto"></canvas></div></figure>
+      <figure class="esp-view esp-atlas"><figcaption>${t('Entrega Altadis · una celda por pantalla, en orden de lectura','Altadis delivery · one cell per screen, in reading order')}</figcaption>
+        <div class="stage"><canvas class="atlas" width="${aw}" height="${ah}"></canvas></div></figure>
+    </div>
+    ${controlsHTML()}
+    <div class="aviso"></div>
+    ${L.ambiguedades.length ? `<ul class="esp-warn">${L.ambiguedades.map(a => `<li>${t('Ambigüedad en el PDF','PDF ambiguity')}: ${a}</li>`).join('')}</ul>` : ''}
+    <div class="esp-actions"><button class="pill accent export-one export-atlas" type="button">${t('Exportar entrega · 1 MP4','Export delivery · 1 MP4')} ${W}×${H}</button>
+    <button class="pill export-one export-segments" type="button">${t('Exportar por pantalla','Export per screen')} · ${g.segments.length} MP4 ${cw}×${ch}</button></div>
+    <details class="card-plan"><summary>${t('Plan técnico H.264 y archivos','H.264 plan and files')}</summary><pre></pre></details>`;
+  bindControls(el, f);
+  el.querySelector('.remove-format').onclick = () => { f.on = false; buildGrid(); };
+  el.querySelector('.export-atlas').onclick = () => exportFormats([f], 'atlas');
+  el.querySelector('.export-segments').onclick = () => exportFormats([f], 'segments');
+  return el;
+}
+function especialInfo(f) {
+  const L = f.layout, g = geometry(L), tech = especialTech(f), m = modoEfectivo(f), s = state.fmt[f.id];
+  let lost = 0;
+  if (state.src.ancho && m === 'cover') { const a = state.src.ancho / state.src.alto, b = g.pared.ancho / g.pared.alto; lost = 1 - Math.min(a / b, b / a) / s.zoom ** 2; }
+  const aviso = state.src.ancho ? `${MODOS[m]} · ${t('sobre la pared','on the wall')} ${g.pared.ancho}×${g.pared.alto}${m === 'cover' ? ` · ${Math.round(lost * 100)}% ${t('perdido','lost')}` : ''}${m === 'blur' ? t(' · fondo derivado, sin expansión IA', ' · derived background, no AI expansion') : ''}` : t('Elige un vídeo para calcular el recorte.', 'Choose a video to calculate cropping.');
+  const rate = segmentKbps(L, tech.bitrateKbps);
+  const files = [`${t('Entrega','Delivery')}: ${atlasFilename(L)} · H.264 ${tech.h264Perfil}@${tech.h264Nivel} · ${tech.bitrateKbps} kbps · ${t('audio si existe','audio if present')}`,
+    `${t('Por pantalla','Per screen')}: H.264 ${tech.segmentPerfil}@${tech.segmentNivel} · ${rate} kbps · ${t('sin audio','no audio')} · GOP 1 s`,
+    ...g.segments.map(seg => `  ${seg.n}/${seg.N} · ${t('celda','cell')} ${seg.cell} (${seg.atlas.x},${seg.atlas.y}) · ${t('pared','wall')} x=${seg.wall.x} · ${segmentFilename(L, seg.n)}`),
+    ...(g.unused.length ? [`${t('Celdas sin uso (negro)','Unused cells (black)')}: ${g.unused.map(c => c.index).join(', ')}`] : []),
+    t('Esta página no sincroniza players: la continuidad depende de que arranquen a la vez.','This page does not synchronise players: continuity depends on them starting together.')];
+  return { aviso, plan: files.join('\n') + (state.src.ancho ? `\n\nffmpeg ${atlasJob(state.src, L, m, s, tech).args.map(a => JSON.stringify(a)).join(' ')}` : '') };
+}
 function refreshInfo() {
   drawDirty=true;saveSettings();
   $('#export-all').disabled=!!activeExport || !state.src.ancho || !selectedFormats().length;
   document.querySelectorAll('.export-one').forEach(el=>el.disabled=!!activeExport || !state.src.ancho);
   document.querySelectorAll('#grid .fmt[data-f]').forEach((el) => {
-    const f = FORMATOS.find((x) => x.id === el.dataset.f); const p = plan(f); const m = modoEfectivo(f);
+    const f = FORMATOS.find((x) => x.id === el.dataset.f);
+    if (f.especial) { const info = especialInfo(f); el.querySelector('.aviso').textContent = info.aviso; el.querySelector('.card-plan pre').textContent = info.plan; return; }
+    const p = plan(f); const m = modoEfectivo(f);
     const settings = state.fmt[f.id];
     let lost = 0;
     if (state.src.ancho) {
@@ -215,6 +294,7 @@ function refreshInfo() {
       : t('Sin vídeo', 'No video');
   });
   const rows = selectedFormats().map((f) => {
+    if (f.especial) return `<div class="fmt" style="margin-bottom:8px"><h3>${f.nombre} · ${f.layout.entrega[0]}×${f.layout.entrega[1]}</h3><pre style="white-space:pre-wrap;font-size:11px;color:#9fc3ff">${especialInfo(f).plan.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])}</pre></div>`;
     const p = plan(f); if(f.output==='png')return `<p>${f.nombre} · ${perfil(f).ancho}×${perfil(f).alto} · PNG${f.print?' · 150 ppp':''}</p>`; if (!p || p.error) return `<p>${f.nombre}: ${p ? p.error : 'sin vídeo'}</p>`;
     return `<div class="fmt" style="margin-bottom:8px"><h3>${f.nombre} · ${p.ancho}×${p.alto}</h3>
       <div class="dims">encaje <b>${p.encaje}</b> · adaptación <b>${p.adaptacion}</b> · recorte ${Math.round(p.recortePerdido * 100)}%<br>
@@ -230,11 +310,11 @@ function ffmpegCmd(f) {
 }
 
 // ── Render en vivo (canvas) ─────────────────────────────────────────────────
-function drawInto(cv, f) {
-  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, vw = video.videoWidth, vh = video.videoHeight;
+function drawInto(cv, f) { paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id]); }
+function paint(cv, output, m, s) {
+  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, vw = video.videoWidth;
   if (!vw) return;
-  const m = modoEfectivo(f), s = state.fmt[f.id];
-  const output=perfil(f), ratio=W/output.ancho;
+  const ratio=W/output.ancho;
   const drawRect=(mode,settings)=>{const r=rect(state.src,output.ancho,output.alto,mode,settings);return [r.x*ratio,r.y*ratio,r.w*ratio,r.h*ratio];};
   ctx.filter = 'none'; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   const drawCrop=settings=>{const c=cropWindow(state.src,output.ancho,output.alto,settings);ctx.drawImage(video,c.x,c.y,c.w,c.h,0,0,W,H);};
@@ -242,10 +322,26 @@ function drawInto(cv, f) {
   if (m === 'blur') { ctx.filter = `blur(${14*Math.max(output.ancho,output.alto)/384*ratio}px) brightness(0.85)`; drawCrop({zoom:1.1,fx:.5,fy:.5}); ctx.filter = 'none'; }
   ctx.drawImage(video, ...drawRect('contain',s));
 }
+// Preview only: the wall is painted once, then every screen is copied into its
+// delivery cell, exactly as the encoder cuts them. Cut lines and numbers are overlays.
+function drawEspecial(el, f) {
+  const wall = el.querySelector('canvas.wall'), atlas = el.querySelector('canvas.atlas'); if (!wall || !video.videoWidth) return;
+  const g = geometry(f.layout); paint(wall, wallOutput(f), modoEfectivo(f), state.fmt[f.id]);
+  const k = wall.width / g.pared.ancho, a = atlas.width / g.entrega.ancho, ctx = atlas.getContext('2d');
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, atlas.width, atlas.height);
+  for (const seg of g.segments) ctx.drawImage(wall, seg.wall.x * k, seg.wall.y * k, seg.wall.w * k, seg.wall.h * k, seg.atlas.x * a, seg.atlas.y * a, seg.atlas.w * a, seg.atlas.h * a);
+  const label = (c, x, y, text, size) => { c.font = `700 ${size}px ui-monospace,monospace`; const w = c.measureText(text).width + size * .8; c.fillStyle = 'rgba(6,13,20,.82)'; c.fillRect(x + 3, y + 3, w, size * 1.5); c.fillStyle = '#71f4dc'; c.fillText(text, x + 3 + size * .4, y + 3 + size * 1.13); };
+  const wc = wall.getContext('2d'); wc.strokeStyle = '#71f4dc'; wc.lineWidth = 2; wc.setLineDash([8, 6]);
+  for (const seg of g.segments) { if (seg.n > 1) { wc.beginPath(); wc.moveTo(seg.wall.x * k, 0); wc.lineTo(seg.wall.x * k, wall.height); wc.stroke(); } label(wc, seg.wall.x * k, seg.wall.y * k, String(seg.n), Math.round(Math.min(wall.height * .17, seg.wall.w * k / 3))); }
+  ctx.strokeStyle = '#71f4dc'; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+  for (const seg of g.segments) { ctx.strokeRect(seg.atlas.x * a + .5, seg.atlas.y * a + .5, seg.atlas.w * a - 1, seg.atlas.h * a - 1); label(ctx, seg.atlas.x * a, seg.atlas.y * a, String(seg.n), Math.max(10, Math.min(18, seg.atlas.w * a / 6))); }
+  ctx.setLineDash([]); ctx.strokeStyle = '#ff6a3d';
+  for (const c of g.unused) { const [x, y, w, h] = [c.x * a, c.y * a, c.w * a, c.h * a]; ctx.fillStyle = '#111'; ctx.fillRect(x, y, w, h); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y + h); ctx.moveTo(x + w, y); ctx.lineTo(x, y + h); ctx.stroke(); }
+}
 let drawDirty=true,lastFrame=-1;
 function loop() {
   if(drawDirty||video.currentTime!==lastFrame){
-  document.querySelectorAll('.fmt[data-f]').forEach((el) => { const c = el.querySelector('canvas'); if (c) drawInto(c, FORMATOS.find((f) => f.id === el.dataset.f)); });
+  document.querySelectorAll('.fmt[data-f]').forEach((el) => { const f = FORMATOS.find((x) => x.id === el.dataset.f); if (f.especial) { drawEspecial(el, f); return; } const c = el.querySelector('canvas'); if (c) drawInto(c, f); });
   if (!state.isJti) { drawInto($('#tw-cv-v'), FORMATOS[0]); drawInto($('#tw-cv-h'), FORMATOS[1]); }
   drawDirty=false;lastFrame=video.currentTime;
   }
@@ -276,8 +372,8 @@ $('#btn-play').onclick = () => (video.paused ? video.play() : video.pause());
 $('#modo-global').onchange = (e) => { state.modoGlobal = e.target.value; refreshInfo(); };
 $('#format-profile').onchange = (e) => {
   state.profile = e.target.value;
-  // Preserve selections and settings in both format families.
-  $('#compat').disabled = state.profile === 'altadis';
+  // Preserve selections and settings in every format family.
+  syncCompat();
   buildGrid();
 };
 $('#compat').onchange = (e) => { state.compat = e.target.value; buildGrid(); };
@@ -335,6 +431,12 @@ if (altadisResponse.ok) {
  const data = await altadisResponse.json();
  for (const f of data.formats) { f.on=true;f.category='digital'; if (EN) f.uso = f.useEn; FORMATOS.push(f); state.fmt[f.id] = {modo:'auto',fx:0.5,fy:0.5,zoom:1}; }
  $('#format-profile').querySelector('[value=altadis]').disabled = false;
+}
+const especialesResponse = await fetch('/adaptaciones/altadis-especiales.json');
+if (especialesResponse.ok) {
+ const data = await especialesResponse.json();
+ data.layouts.forEach((layout, i) => { FORMATOS.push({ id: layout.id, nombre: layout.nombre, nameEn: layout.nombre, uso: EN ? layout.useEn : layout.uso, custom: layout.entrega, category: 'digital', especial: true, layout, fps: 25, on: i === 0 }); state.fmt[layout.id] = defaults(); });
+ $('#format-profile').querySelector('[value=especiales]').disabled = false;
 }
 restoreSettings(); buildGrid(); setSource('/adaptaciones/media/jti-tu-sitio-de-siempre-fuente.mp4', 'JTI «Tu sitio de siempre»', true); loadEstancos(); loop();
 window.__pixAdapt = { go, startTour };

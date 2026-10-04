@@ -6,14 +6,17 @@ const clamp = (v,lo,hi,fallback) => Number.isFinite(v) ? Math.max(lo,Math.min(hi
 export function settings(raw = {}) {
   return {modo:modes.includes(raw?.modo)?raw.modo:'auto',fx:clamp(raw?.fx,0,1,.5),fy:clamp(raw?.fy,0,1,.5),zoom:clamp(raw?.zoom,1,2,1)};
 }
+// Format families: the standard library, Altadis 18 and Altadis special layouts.
+const FAMILIES = {altadis:f=>f.altadis, especiales:f=>f.especial};
 export function restore(raw, formats) {
   if (!raw || raw.version !== 1) return null;
-  const profile = raw.profile === 'altadis' && formats.some(f=>f.altadis) ? 'altadis':'standard';
+  const family = FAMILIES[raw.profile];
+  const profile = family && formats.some(family) ? raw.profile : 'standard';
   return {profile,compat:['universal','fhd','uhd'].includes(raw.compat)?raw.compat:'fhd',
     modoGlobal:modes.includes(raw.modoGlobal)?raw.modoGlobal:'auto',
     fmt:Object.fromEntries(formats.map(f=>[f.id,settings(raw.fmt?.[f.id])])),
     // Keep the inactive family's selection too; switching profiles never resets edits.
-    selected:formats.filter(f=>Array.isArray(raw.selected)?raw.selected.includes(f.id):!f.altadis).map(f=>f.id)};
+    selected:formats.filter(f=>Array.isArray(raw.selected)?raw.selected.includes(f.id):!f.altadis&&!f.especial).map(f=>f.id)};
 }
 export function snapshot(state,formats) {
   return {version:1,profile:state.profile,compat:state.compat,modoGlobal:state.modoGlobal,
@@ -42,17 +45,19 @@ export function exportBudget(duration,jobs) {
   if(sizes.reduce((a,b)=>a+b,0)>192*1048576) return 'batch-size';
   return null;
 }
+// Filter graph that composes the reframed picture at W×H and labels it [label].
+// The special layouts compose one master wall here and cut every screen from it.
+export function composeFilter(source,W,H,mode,s,label='out',input='0:v') {
+  const r=rect(source,W,H,mode,s);
+  if(mode==='cover') {const c=cropWindow(source,W,H,s);return `[${input}]crop=${c.w}:${c.h}:${c.x}:${c.y},scale=${W}:${H},setsar=1[${label}]`;}
+  const b=cropWindow(source,W,H,{fx:.5,fy:.5,zoom:1.1});
+  const background=mode==='blur'
+    ? `crop=${b.w}:${b.h}:${b.x}:${b.y},scale=${W}:${H},gblur=sigma=${(14*Math.max(W,H)/384).toFixed(3)},lutrgb=r=val*0.85:g=val*0.85:b=val*0.85`
+    : `scale=${W}:${H},drawbox=c=black:t=fill`;
+  return `[${input}]split[a][b];[a]${background},setsar=1[bg];[b]scale=${r.w}:${r.h},setsar=1[fg];[bg][fg]overlay=x=${r.x}:y=${r.y}:format=auto,setsar=1[${label}]`;
+}
 export function exportJob(source,profile,technical,mode,s,name,id) {
-  const W=profile.ancho,H=profile.alto,r=rect(source,W,H,mode,s);
-  let filter;
-  if(mode==='cover') {const c=cropWindow(source,W,H,s);filter=`[0:v]crop=${c.w}:${c.h}:${c.x}:${c.y},scale=${W}:${H},setsar=1[out]`;}
-  else {
-    const b=cropWindow(source,W,H,{fx:.5,fy:.5,zoom:1.1});
-    const background=mode==='blur'
-      ? `crop=${b.w}:${b.h}:${b.x}:${b.y},scale=${W}:${H},gblur=sigma=${(14*Math.max(W,H)/384).toFixed(3)},lutrgb=r=val*0.85:g=val*0.85:b=val*0.85`
-      : `scale=${W}:${H},drawbox=c=black:t=fill`;
-    filter=`[0:v]split[a][b];[a]${background},setsar=1[bg];[b]scale=${r.w}:${r.h},setsar=1[fg];[bg][fg]overlay=x=${r.x}:y=${r.y}:format=auto,setsar=1[out]`;
-  }
+  const W=profile.ancho,H=profile.alto,filter=composeFilter(source,W,H,mode,s);
   const fps=technical.fps||25,rate=technical.bitrateKbps||profile.techoKbps;
   const filename=`${(name||'video').replace(/\.[^.]+$/,'').replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,80)}-${id.replace(/[^a-zA-Z0-9_-]/g,'x')}-${W}x${H}.mp4`;
   return {filename,W,H,bitrateKbps:rate,args:['-i','input','-filter_complex',filter,'-map','[out]','-map','0:a?',

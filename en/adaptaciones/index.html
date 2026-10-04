@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=04.10.2026.r2.1825';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=04.10.2026.r3.1837';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -36,15 +36,15 @@
 <meta charset="utf-8">
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.04.10.2026.r2.18:25">
+  <meta name="admiranext-version" content="Pixeria v.04.10.2026.r3.18:37">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Adapter · One piece of content, every format | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=04.10.2026.r2.1825">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=04.10.2026.r2.1825">
-  <script defer src="/assets/site-nav.js?v=04.10.2026.r2.1825"></script>
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=04.10.2026.r3.1837">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=04.10.2026.r3.1837">
+  <script defer src="/assets/site-nav.js?v=04.10.2026.r3.1837"></script>
 </head>
 <body class="adapt-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
@@ -96,7 +96,7 @@
         </details>
       </aside>
       <div class="adapter-variants">
-      <label class="profile-label">Format profile <select id="format-profile"><option value="standard">Library · social, digital, display and print</option><option value="altadis" disabled>Altadis · 18 standard formats</option></select></label>
+      <label class="profile-label">Format profile <select id="format-profile"><option value="standard">Library · social, digital, display and print</option><option value="altadis" disabled>Altadis · 18 standard formats</option><option value="especiales" disabled>Altadis specials · 5 segmented video walls</option></select></label>
       <details class="export-limits"><summary>Output types and limits</summary><p class="muted">Export MP4 with your settings and the original audio, when present. Processing runs in this browser: source limit 100 MB, one variant at a time; 4K can take several minutes. Large batches must be split to stay within the memory budget. The first export downloads the engine (about 32 MB). Expand uses a blurred background without AI; blur may look slightly different from the preview. Input FPS and bitrate are estimates.</p><p class="muted output-note">Social and digital: MP4. Display and print: PNG of the current frame; pause the video to choose it. Print: RGB at 150 ppi, without bleed or CMYK. Sizes are references: check file weight, safe areas and destination requirements. Compatibility affects the four aspect-ratio formats; sized presets keep their resolution.</p></details>
       <div class="export-toolbar">
         <button id="export-all" class="pill accent" type="button" disabled>Export selected formats</button>
@@ -108,6 +108,7 @@
       <p id="export-status" role="status" aria-live="polite"></p>
       <div id="export-results" class="export-results"></div>
       <p class="muted">Altadis: native resolution, MP4 H.264, 25 fps. Sincro VW and LOGO need matching durations; this view does not synchronise players.</p>
+      <p class="muted especiales-note">Altadis specials: reframing happens on the physical wall and every screen is cut from the same master. The delivery is one MP4 at the Altadis resolution, with one cell per screen. You can also export one silent MP4 per screen, all with the same duration at 25 fps. The picture only flows across screens if the players start together: this page does not synchronise players.</p>
       <div class="variants-heading"><h2 id="selected-count"></h2><button id="clear-formats" class="pill" type="button">Remove all</button></div>
       <p id="empty-formats" class="muted" hidden>Choose sizes in the library to create your adaptations.</p>
       <div id="src-info" class="muted">loading…</div>
@@ -159,8 +160,8 @@
       </div>
     </details>
   </main>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=04.10.2026.r2.1825"></script>
-  <script defer src="/assets/cuadratura.js?v=04.10.2026.r2.1825"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=04.10.2026.r3.1837"></script>
+  <script defer src="/assets/cuadratura.js?v=04.10.2026.r3.1837"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>

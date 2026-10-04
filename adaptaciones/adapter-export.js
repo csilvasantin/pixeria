@@ -40,11 +40,14 @@ export function createExporter() {
           let code;
           try {code=await worker.exec(job.args);} finally {worker.off('progress',progress);}
           if(code!==0) throw new Error('encoding');
-          const data=await worker.readFile('output.mp4');
-          if(data.length>=124*1048576) throw new Error('output-size');
-          if(!data.length) throw new Error('encoding');
-          onResult(job,new Blob([data],{type:'video/mp4'}));
-          await worker.deleteFile('output.mp4');
+          // A special-layout job writes one MP4 per screen in a single pass.
+          for(const output of job.outputs||[{...job,file:'output.mp4'}]) {
+            const data=await worker.readFile(output.file);
+            if(data.length>=124*1048576) throw new Error('output-size');
+            if(!data.length) throw new Error('encoding');
+            onResult(job.outputs?output:job,new Blob([data],{type:'video/mp4'}));
+            await worker.deleteFile(output.file);
+          }
         }
       } catch(error) { if(cancelled) throw new Error('cancelled');throw error; }
       finally {controller.abort();worker?.terminate();urls.forEach(url=>URL.revokeObjectURL(url));}

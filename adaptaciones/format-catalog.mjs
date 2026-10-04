@@ -45,11 +45,12 @@ export const CAMPAIGNS=[
  {id:'display',es:'Anuncios display',en:'Display ads',descriptionEs:'Rectángulos, banners y formatos regionales',descriptionEn:'Rectangles, banners and regional sizes',matches:f=>f.category==='display'},
  {id:'mobile',es:'Anuncios móviles',en:'Mobile ads',descriptionEs:'Tres banners para móvil',descriptionEn:'Three mobile banners',matches:f=>f.mobile},
 ];
+export const formatFamily=f=>f.especial?'especiales':f.altadis?'altadis':'standard';
 export function matchingFormats(formats,{query='',orientation='all',category,profile='standard'}={}) {
  const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[×:]/g,'x').replace(/\s+/g,'');
  const q=norm(query);
  return formats.filter(f=>{
-  if(profile==='altadis'?!f.altadis:f.altadis) return false;
+  if(formatFamily(f)!==profile) return false;
   if(category&&f.category!==category) return false;
   const [w,h]=f.custom||({'9:16':[1080,1920],'16:9':[1920,1080],'1:1':[1080,1080],'4:5':[1080,1350]}[f.id]||[0,0]);
   if(orientation!=='all'&&(orientation==='portrait'?h<=w:orientation==='landscape'?w<=h:w!==h)) return false;
