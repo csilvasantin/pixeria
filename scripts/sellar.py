@@ -85,6 +85,29 @@ def stamp(path, version, dry):
     return changes
 
 
+def version_json(version, dry=False):
+    """version.json del repo = sello actual: el despliegue automático desde git lo publica tal cual."""
+    import json, datetime
+    path = os.path.join(ROOT, 'version.json')
+    try:
+        data = json.load(open(path, encoding='utf-8'))
+    except Exception:
+        data = {}
+    if dry:
+        return data.get('version') == version
+    try:
+        firma = json.load(open(os.path.join(ROOT, 'release-signature.json'), encoding='utf-8'))
+    except Exception:
+        firma = {}
+    data['version'] = version
+    for k in ('deployer', 'machine', 'signature', 'agent'):
+        if firma.get(k):
+            data[k] = firma[k]
+    data['builtAt'] = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    open(path, 'w', encoding='utf-8').write(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
+    return True
+
+
 def main():
     args = [a for a in sys.argv[1:] if a != '--check']
     dry = '--check' in sys.argv
@@ -95,6 +118,7 @@ def main():
 
     if args and not dry:
         stamp(os.path.join(ROOT, 'index.html'), version, dry=False)
+        version_json(version)
 
     touched = 0
     for path in pages():
@@ -104,6 +128,9 @@ def main():
             print('  %-42s %s' % (os.path.relpath(path, ROOT), ' · '.join(changes)))
 
     total = sum(1 for _ in pages())
+    if dry and not version_json(version, dry=True):
+        print('✗ version.json no dice %s (el despliegue automático desde git lo publicaría viejo)' % version)
+        return 1
     if dry:
         if touched:
             print('\n✗ %d de %d páginas NO dicen %s' % (touched, total, version))

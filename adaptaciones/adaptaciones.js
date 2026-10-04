@@ -448,66 +448,19 @@ $('#format-profile').onchange = (e) => {
 $('#compat').onchange = (e) => { state.compat = e.target.value; buildGrid(); };
 
 
-const clienteResponse = await fetch('/adaptaciones/perfil-cliente-18.json');
-if (clienteResponse.ok) {
+const clienteResponse = await fetch('/adaptaciones/perfil-cliente-18.json').catch(() => null);
+if (clienteResponse && clienteResponse.ok) {
  const data = await clienteResponse.json();
  for (const f of data.formats) { f.on=true;f.category='digital'; if (EN) f.uso = f.useEn; FORMATOS.push(f); state.fmt[f.id] = {modo:'auto',fx:0.5,fy:0.5,zoom:1}; }
  $('#format-profile').querySelector('[value=cliente]').disabled = false;
 }
-const especialesResponse = await fetch('/adaptaciones/perfil-cliente-especiales.json');
-if (especialesResponse.ok) {
+const especialesResponse = await fetch('/adaptaciones/perfil-cliente-especiales.json').catch(() => null);
+if (especialesResponse && especialesResponse.ok) {
  const data = await especialesResponse.json();
  data.layouts.forEach((layout, i) => { FORMATOS.push({ id: layout.id, nombre: layout.nombre, nameEn: layout.nombre, uso: EN ? layout.useEn : layout.uso, custom: layout.entrega, category: 'digital', especial: true, layout, fps: 25, on: i === 0 }); state.fmt[layout.id] = defaults(); });
  $('#format-profile').querySelector('[value=especiales]').disabled = false;
 }
 restoreSettings(); buildGrid(); emptySource(); loop();
 
-// Índice del Stock: primero el proxy comprimido del propio dominio y, si no responde
-// JSON (sin sesión la verja redirige a /auth/login, y en admira.studio ese salto
-// cambia de host y el fetch revienta por CORS), el bucket público con CORS abierto.
-async function fetchStockIndex() {
-  for (const url of ['/stock-index', 'https://stock.admira.store/stock/index.json']) {
-    try {
-      const response = await fetch(url, url.startsWith('/') ? { redirect: 'manual', credentials: 'same-origin' } : { credentials: 'omit' });
-      if (!response.ok || !/json/i.test(response.headers.get('content-type') || '')) continue;
-      return await response.json();
-    } catch (_) { /* siguiente origen */ }
-  }
-  throw new Error('stock unavailable');
-}
-
-async function loadStock() {
-  try {
-    const data = await fetchStockIndex();
-    // Admira (por defecto) ve todos los vídeos. Con otro cliente (/marca <cliente>), solo los suyos
-    // más lo genérico de Admira: las marcas competidoras nunca se mezclan. Se repinta al cambiar.
-    stockVideos = (data.items || []).filter(item => item.type === 'video' && (item.url || item.mediaUrl));
-    paintStockOptions();
-  } catch (_) { $('#stock-status').textContent = t('Stock remoto no disponible. Puedes subir un vídeo.', 'Remote Stock unavailable. You can upload a video.'); }
-}
-let stockVideos = null, clienteEsperaAgotada = false;
-setTimeout(() => { clienteEsperaAgotada = true; paintStockOptions(); }, 4000); // sin selector: se lista todo
-// ¿Se pidió un cliente que no es Admira? Admira lo ve todo, así que con Admira no se espera a nada.
-function clientePendiente() {
-  try { const q = new URLSearchParams(location.search).get('cliente'); const g = JSON.parse(localStorage.getItem('pixeria:cliente:v2') || 'null');
-    const id = String(q != null ? q : (g && g.id) || '').toLowerCase(); return !!id && !/^(admira|todos|todas|all|off|ninguno)$/.test(id); } catch (_) { return false; }
-}
-function paintStockOptions() {
-  const PC = window.PixeriaCliente, listo = !!(PC && PC.listo && PC.listo());
-  if (!stockVideos || (!listo && clientePendiente() && !clienteEsperaAgotada)) return;
-  const select = $('#src-select'), current = select.value;
-  select.querySelectorAll('option[data-id]').forEach(o => o.remove());
-  const videos = listo ? stockVideos.filter(item => PC.visible(item)) : stockVideos;
-  for (const item of videos) {
-    const url = item.url || item.mediaUrl;
-    if (!/^https:\/\//.test(url)) continue;
-    const option = document.createElement('option'); option.value = url; option.dataset.id = item.id || ''; option.dataset.title = item.title || item.name || item.id || '';
-    option.textContent = 'Stock · ' + (item.title || item.name || item.id);
-    select.append(option);
-  }
-  const activo = listo && !PC.esDefecto() && PC.actual();
-  $('#stock-status').textContent = t('Vídeos Stock disponibles: ', 'Stock videos available: ') + videos.length + (activo ? ` · ${activo.nombre}` : '');
-  if ([...select.options].some(o => o.value === current)) select.value = current;
-}
-document.addEventListener('pixeria:cliente', paintStockOptions);
-loadStock();
+// El desplegable y el contador del Stock viven en ./stock-select.js (script clásico aparte): si este
+// módulo falla en un navegador, el Stock se lista igual y avisa si no se puede leer.
