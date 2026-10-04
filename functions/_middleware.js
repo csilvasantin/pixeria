@@ -14,10 +14,12 @@ async function guardedRequest(context) {
   if (authResponse) return authResponse;
 
   // El español vive en la raíz (/adaptaciones/) y el inglés en /en/. /es/… no existía y daba 404:
-  // se lleva a la misma ruta sin /es, conservando la query (?cliente=…).
+  // se lleva a la misma ruta sin /es, conservando la query (?cliente=…) y con ?lang=es.
   if ((request.method === 'GET' || request.method === 'HEAD') && /^\/es(\/|$)/.test(url.pathname)) {
-    const destino = url.pathname.replace(/^\/es(?=\/|$)/, '') || '/';
-    return new Response(null, {status:301, headers:{location: destino + url.search, 'cache-control':'no-store'}});
+    // En pixeria.com las páginas pasan a /en/ salvo con ?lang=es: /es/ lo añade para quedarse en español.
+    const destino = new URL(url.pathname.replace(/^\/es(?=\/|$)/, '') || '/', url.origin);
+    destino.search = url.search; destino.searchParams.set('lang', 'es');
+    return new Response(null, {status:301, headers:{location: destino.pathname + destino.search, 'cache-control':'no-store'}});
   }
 
   // Pregunta del avatar (FLT-101350). Solo llega a la función /avatar-ask, que
