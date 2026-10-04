@@ -1,8 +1,8 @@
 {
-  "version": "v.04.10.2026.r20.23:37",
+  "version": "v.04.10.2026.r20.23:41",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "Stock: miniaturas reales para los vídeos sin póster; las subidas mandan póster generado en el navegador y el selector saca el fotograma si aún falta."
+  "evidence": "Stock: 773/774 vídeos con miniatura real; las subidas mandan póster y el selector saca el fotograma si falta (icono neutro si no se puede)."
 }
