@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=04.10.2026.r6.1930';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=04.10.2026.r7.2008';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -36,15 +36,15 @@
 <meta charset="utf-8">
 <script>if (/(^|\.)pixeria\.(com|pages\.dev)$/.test(location.hostname) && !location.pathname.startsWith('/en/') && new URLSearchParams(location.search).get('lang') !== 'es') location.replace('/en/adaptaciones/' + location.search);</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.04.10.2026.r6.19:30">
+  <meta name="admiranext-version" content="Pixeria v.04.10.2026.r7.20:08">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Adaptador · Un contenido, todos los formatos | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=04.10.2026.r6.1930">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=04.10.2026.r6.1930">
-  <script defer src="/assets/site-nav.js?v=04.10.2026.r6.1930"></script>
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=04.10.2026.r7.2008">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=04.10.2026.r7.2008">
+  <script defer src="/assets/site-nav.js?v=04.10.2026.r7.2008"></script>
 </head>
 <body class="adapt-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
@@ -101,11 +101,8 @@
       <div class="adapter-variants">
       <div class="export-toolbar">
         <button id="export-all" class="pill accent" type="button" disabled>Exportar formatos seleccionados</button>
-        <button id="cancel-export" class="pill" type="button" hidden>Cancelar exportación</button>
       </div>
-      <progress id="export-progress" max="1" hidden aria-label="Progreso de exportación"></progress>
       <p id="export-status" role="status" aria-live="polite"></p>
-      <div id="export-results" class="export-results"></div>
       <div class="variants-heading"><h2 id="selected-count"></h2><button id="clear-formats" class="pill" type="button">Quitar todos</button></div>
       <p id="empty-formats" class="muted" hidden>Elige tamaños en el panel de la izquierda para crear tus adaptaciones.</p>
       <div id="grid" class="grid"></div>
@@ -121,7 +118,7 @@
         <label>Compatibilidad
           <select id="compat"><option value="universal">Cualquier equipo</option><option value="fhd" selected>Parque Full HD</option><option value="uhd">Parque 4K</option></select>
         </label>
-      <details class="export-limits"><summary>Tipos de salida y límites</summary><p class="muted">Exporta MP4 con tus ajustes y el audio original, si existe. Procesamiento en este navegador: máximo 100 MB de origen, una variante cada vez; 4K puede tardar varios minutos. Los lotes grandes se deben dividir para limitar la memoria. La primera exportación descarga el motor (unos 32 MB). Expandir usa fondo desenfocado, sin IA; su desenfoque puede variar ligeramente respecto al previo. FPS y bitrate de entrada estimados.</p><p class="muted output-note">Redes y digital: MP4. Display e impresión: PNG del fotograma actual; pausa el vídeo para elegirlo. Impresión: RGB a 150 ppp, sin sangrado ni CMYK. Los tamaños son referencias: revisa peso, zonas seguras y requisitos del destino. La compatibilidad afecta a los cuatro formatos de proporción; los presets con medidas mantienen su resolución.</p></details>
+      <details class="export-limits"><summary>Tipos de salida y límites</summary><p class="muted">Exporta MP4 con tus ajustes y el audio original, si existe. Cada exportación entra en la cola de la esquina inferior derecha y se procesa en segundo plano en este navegador, una variante cada vez: puedes seguir trabajando o cambiar de vídeo. Máximo 100 MB de origen; 4K puede tardar varios minutos. Los lotes grandes se deben dividir para limitar la memoria. La primera exportación descarga el motor (unos 32 MB). Expandir usa fondo desenfocado, sin IA; su desenfoque puede variar ligeramente respecto al previo. FPS y bitrate de entrada estimados.</p><p class="muted output-note">Redes y digital: MP4. Display e impresión: PNG del fotograma actual; pausa el vídeo para elegirlo. Impresión: RGB a 150 ppp, sin sangrado ni CMYK. Los tamaños son referencias: revisa peso, zonas seguras y requisitos del destino. La compatibilidad afecta a los cuatro formatos de proporción; los presets con medidas mantienen su resolución.</p></details>
         <button id="reset-settings" class="pill" type="button">Restablecer ajustes</button>
       <p id="settings-status" class="muted"></p>
       <details class="adv-notes"><summary>Notas de los perfiles de cliente</summary><p class="muted">Perfil de cliente · 18 formatos: resolución nativa, MP4 H.264, 25 fps. Los formatos sincronizados necesitan igual duración; esta vista no sincroniza reproductores.</p><p class="muted especiales-note">Videowalls segmentados: el reencuadre se hace sobre la pared física y cada pantalla se recorta del mismo maestro. La entrega es un MP4 con una celda por pantalla; también puedes exportar un MP4 por pantalla, sin audio, con la misma duración y 25 fps. La imagen solo continúa entre pantallas si los players arrancan a la vez.</p></details>
@@ -130,8 +127,8 @@
       <details class="plan"><summary>Plan técnico por formato (resolución, H.264, bitrate y orden ffmpeg)</summary><div id="plan-tecnico"></div></details>
     </div>
   </main>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=04.10.2026.r6.1930"></script>
-  <script defer src="/assets/cuadratura.js?v=04.10.2026.r6.1930"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=04.10.2026.r7.2008"></script>
+  <script defer src="/assets/cuadratura.js?v=04.10.2026.r7.2008"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
