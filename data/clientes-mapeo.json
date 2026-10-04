@@ -1,0 +1,193 @@
+{
+  "_nota": "Mapeo editable contenido → cliente (Stock, Adaptador). Orden de deducción: 0) «asignaciones» (id del asset → id de cliente), para corregir a mano; 1) campo explícito del asset (cliente o catalogo.cliente); 2) etiquetas iguales al id del cliente o a uno de sus «tags»; 3) sus «patrones» (regex, sin distinguir mayúsculas) en título, prompt o comentario, en orden y consumiendo lo que casa (Starbucks México no cuenta también como Starbucks). Si casan varios clientes, el asset es ambiguo y solo se ve con «Todos». Lo que no casa con nada es genérico de Admira y lo ve cualquier cliente. Los nombres que son palabras corrientes (metro, mango, palacio, liverpool, correos, estancos) solo cuentan por etiqueta o campo, nunca por texto. No se borra ni se reetiqueta nada en el Stock.",
+  "genericos": [
+    "admira"
+  ],
+  "asignaciones": {
+    "1790932896582-vc9x7t": "jti",
+    "1790932802558-6pdss9": "jti",
+    "1790932708532-mq8mlu": "jti"
+  },
+  "clientes": {
+    "admira": {
+      "tags": [
+        "admira"
+      ],
+      "patrones": []
+    },
+    "altadis": {
+      "tags": [
+        "altadis"
+      ],
+      "patrones": [
+        "\\baltadis\\b"
+      ]
+    },
+    "starbucks-mexico": {
+      "tags": [
+        "starbucks-mexico",
+        "starbucksmexico"
+      ],
+      "patrones": [
+        "\\bstarbucks\\s+m[eé]xico\\b"
+      ]
+    },
+    "starbucks": {
+      "tags": [
+        "starbucks"
+      ],
+      "patrones": [
+        "\\bstarbucks\\b"
+      ]
+    },
+    "alsea": {
+      "tags": [
+        "alsea"
+      ],
+      "patrones": [
+        "\\balsea\\b"
+      ]
+    },
+    "jti": {
+      "tags": [
+        "jti"
+      ],
+      "patrones": [
+        "\\bjti\\b",
+        "\\bjapan tobacco\\b"
+      ]
+    },
+    "admira-etiqueta-digital": {
+      "tags": [
+        "admira-etiqueta-digital",
+        "etiqueta-digital"
+      ],
+      "patrones": []
+    },
+    "admiraxperience": {
+      "tags": [
+        "admiraxperience"
+      ],
+      "patrones": [
+        "\\badmiraxperience\\b"
+      ]
+    },
+    "alcampo": {
+      "tags": [
+        "alcampo"
+      ],
+      "patrones": [
+        "\\balcampo\\b"
+      ]
+    },
+    "banorte": {
+      "tags": [
+        "banorte"
+      ],
+      "patrones": [
+        "\\bbanorte\\b"
+      ]
+    },
+    "bbva": {
+      "tags": [
+        "bbva"
+      ],
+      "patrones": [
+        "\\bbbva\\b"
+      ]
+    },
+    "cafebreria": {
+      "tags": [
+        "cafebreria",
+        "cafebrería"
+      ],
+      "patrones": [
+        "\\bcafebrer[ií]a\\b"
+      ]
+    },
+    "caixabank": {
+      "tags": [
+        "caixabank"
+      ],
+      "patrones": [
+        "\\bcaixabank\\b"
+      ]
+    },
+    "canalkiosk": {
+      "tags": [
+        "canalkiosk"
+      ],
+      "patrones": [
+        "\\bcanalkiosk\\b"
+      ]
+    },
+    "correos": {
+      "tags": [
+        "correos"
+      ],
+      "patrones": []
+    },
+    "decathlon": {
+      "tags": [
+        "decathlon"
+      ],
+      "patrones": [
+        "\\bdecathlon\\b"
+      ]
+    },
+    "desigual": {
+      "tags": [
+        "desigual"
+      ],
+      "patrones": []
+    },
+    "elcorteingles": {
+      "tags": [
+        "elcorteingles",
+        "el-corte-ingles"
+      ],
+      "patrones": [
+        "\\bel corte ingl[eé]s\\b"
+      ]
+    },
+    "estancos": {
+      "tags": [
+        "estancos"
+      ],
+      "patrones": []
+    },
+    "liverpool": {
+      "tags": [
+        "liverpool"
+      ],
+      "patrones": []
+    },
+    "mango": {
+      "tags": [
+        "mango"
+      ],
+      "patrones": []
+    },
+    "metro": {
+      "tags": [
+        "metro"
+      ],
+      "patrones": []
+    },
+    "multiopticas": {
+      "tags": [
+        "multiopticas",
+        "multiópticas"
+      ],
+      "patrones": [
+        "\\bmulti[oó]pticas\\b"
+      ]
+    },
+    "palacio": {
+      "tags": [
+        "palacio"
+      ],
+      "patrones": []
+    }
+  }
+}

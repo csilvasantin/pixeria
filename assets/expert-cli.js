@@ -235,6 +235,21 @@
       marca().then(function (M) { return runMarca(arg, M, en, write); });
       return;
     }
+    // Superusuario: «/starbucks», «proyectoStarbucks» o cualquier id o nombre de cliente cambia
+    // el cliente activo de toda la sesión (assets/cliente-activo.js); «/todos» lo quita.
+    var PC = window.PixeriaCliente;
+    var KNOWN = /^(help|ayuda|clear|limpiar|echo|date|fecha|version|status|estado|history|historial|open|abrir|cli|avatardigital|digitalavatar)$/;
+    if (PC && PC.listo() && !KNOWN.test(name)) {
+      var cliente = PC.resolver(command);
+      if (cliente) {
+        if (!PC.esAdmin()) { write(t('Solo el superusuario (rol admin) cambia el cliente de la sesión. Usa el selector «Cliente» de la barra superior.', 'Only the superuser (admin role) can switch the session client. Use the «Client» selector in the top bar.')); return; }
+        PC.fijar(cliente === 'todos' ? 'todos' : cliente.id);
+        var activo = PC.actual();
+        write(activo ? t('Cliente activo: ' + activo.nombre + ' (' + activo.id + ') en toda la sesión. /todos lo quita.', 'Active client: ' + activo.nombre + ' (' + activo.id + ') for the whole session. /todos clears it.')
+          : t('Sin cliente: ves todo (Todos).', 'No client: you see everything (All).'));
+        return;
+      }
+    }
     switch (name) {
       case 'help': case 'ayuda':
         write(t('Comandos en este navegador:', 'Commands in this browser:') + '\nhelp · clear · echo <text> · date · status · version · history\nopen <home|audio|music|images|video|stock|assets|docs|radar>\n' +
@@ -243,6 +258,7 @@
           t('marca: off (Admira), ', 'brand: off (Admira), ') + brandIds().join(', ') + t(' · o una web para analizarla (starbucks.es)', ' · or a website to analyse (starbucks.es)') + '\n' +
           t('/avatarDigital [on|off] — avatar digital (alias /digitalAvatar, /cli ayudante, /cli helper). Sin argumento alterna.',
             '/avatarDigital [on|off] — digital avatar (alias /digitalAvatar, /cli ayudante, /cli helper). No argument toggles.') + '\n' +
+          (window.PixeriaCliente && window.PixeriaCliente.esAdmin() ? t('/<cliente> o proyecto<Cliente> — superusuario: cambia el cliente de la sesión (p. ej. /starbucks); /todos lo quita.', '/<client> or proyecto<Client> — superuser: switches the session client (e.g. /starbucks); /todos clears it.') + '\n' : '') +
           t('↑/↓ historial · Tab completa comandos, marcas y secciones · arrastra el borde superior · doble clic para plegar/desplegar', '↑/↓ history · Tab completes commands, brands and sections · drag the top edge · double-click to collapse/expand'));
         break;
       case 'avatardigital': case 'digitalavatar':
