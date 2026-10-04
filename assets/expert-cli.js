@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   // ─── Piezas puras (también se prueban en node: test/marca-blanca.test.cjs) ───
-  var COMMANDS = ['help', 'clear', 'echo', 'date', 'status', 'version', 'history', 'open', 'marca', 'avatardigital', 'digitalavatar'];
+  var COMMANDS = ['help', 'clear', 'echo', 'date', 'status', 'version', 'history', 'open', 'marca', 'avatar', 'avataron', 'avataroff', 'avatardigital', 'digitalavatar'];
   var MARCA_VERB = /^\/?(?:marca|brand|marcablanca)$/i;
   // Semilla del catálogo de admiranext.com/marcablanca: vale para el Tab sin red. Con la
   // marca blanca cargada se usa la lista real (AdmiraMarca.conocidas()).
@@ -218,7 +218,10 @@
     if (window.AdmiraMarca) return Promise.resolve(window.AdmiraMarca);
     return window.PixeriaMarca && window.PixeriaMarca.cargar ? window.PixeriaMarca.cargar().catch(function () { return null; }) : Promise.resolve(null);
   }
+  // El avatar lo gobierna el cargador único de admiranext.com (assets/avatar.js), que la
+  // verja inyecta en cada página. Si aún no está, la capa fina /assets/avatar-digital.js lo trae.
   function cargarAvatar() {
+    if (window.AdmiraAvatar) return Promise.resolve(window.AdmiraAvatar);
     if (window.AvatarDigital) return Promise.resolve(window.AvatarDigital);
     return new Promise(function (resolve) {
       var s = document.createElement('script');
@@ -278,11 +281,12 @@
           t('/marca [marca] — Marca blanca del catálogo de admiranext.com/marcablanca: /marca <id> viste la web con esa marca, /marca off vuelve a Admira, /marca sola dice cuál está activa y lista las disponibles, /marca <web> abre el analizador en otra pestaña. Alias: /brand.',
             '/marca [brand] — White label from the admiranext.com/marcablanca catalogue: /marca <id> dresses the site in that brand, /marca off returns to Admira, /marca alone shows the active one and lists them, /marca <website> opens the analyser in a new tab. Alias: /brand.') + '\n' +
           t('marca: off (Admira), ', 'brand: off (Admira), ') + brandIds().join(', ') + t(' · o una web para analizarla (starbucks.es)', ' · or a website to analyse (starbucks.es)') + '\n' +
-          t('/avatarDigital [on|off] — avatar digital (alias /digitalAvatar, /cli ayudante, /cli helper). Sin argumento alterna.',
-            '/avatarDigital [on|off] — digital avatar (alias /digitalAvatar, /cli ayudante, /cli helper). No argument toggles.') + '\n' +
+          t('/avatarON enciende y abre el avatar digital · /avatarOFF lo apaga · /avatar alterna · /avatar reset vuelve al interruptor del proyecto (alias /avatarDigital, /digitalAvatar, /cli ayudante). Tu elección se recuerda en este navegador.',
+            '/avatarON turns the digital avatar on and opens it · /avatarOFF turns it off · /avatar toggles · /avatar reset follows the project switch (aliases /avatarDigital, /digitalAvatar, /cli helper). Your choice is remembered in this browser.') + '\n' +
           (window.PixeriaCliente && window.PixeriaCliente.esAdmin() ? t('/marca todas — superusuario: muestra el selector «Cliente» junto al logo; /marca <cliente> (o proyecto<Cliente>) filtra por ese cliente; /marca off lo oculta y vuelve a Admira, que lo ve todo.', '/marca todas — superuser: shows the «Client» selector next to the logo; /marca <client> (or proyecto<Client>) filters by that client; /marca off hides it and returns to Admira, which sees everything.') + '\n' : '') +
           t('↑/↓ historial · Tab completa comandos, marcas y secciones · arrastra el borde superior · doble clic para plegar/desplegar', '↑/↓ history · Tab completes commands, brands and sections · drag the top edge · double-click to collapse/expand'));
         break;
+      case 'avatar': case 'avataron': case 'avataroff':
       case 'avatardigital': case 'digitalavatar':
       case 'cli':
         if (name !== 'cli' || /^(ayudante|helper)(?:\s|$)/i.test(arg)) {

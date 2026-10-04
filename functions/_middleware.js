@@ -1,6 +1,13 @@
 import {handleAuth, hasSession, safeReturnTo} from './_auth.js';
+import {withAvatar} from './_avatar-loader.js';
 
+// El avatar digital se añade a las páginas que ya pasaron la verja (encargo avatar · 4-oct-2026).
 export async function onRequest(context) {
+  const response = await guardedRequest(context);
+  return withAvatar(response, new URL(context.request.url));
+}
+
+async function guardedRequest(context) {
   const {request, env} = context;
   const url = new URL(request.url);
   const authResponse = await handleAuth(request, env, context.waitUntil ? context.waitUntil.bind(context) : null);
