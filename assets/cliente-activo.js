@@ -45,10 +45,10 @@
 
   var style = document.createElement('style');
   // Compacto: la barra ya va justa con las diez secciones; el select mide lo que su opción.
-  style.textContent = '.pix-cliente{display:inline-flex;align-items:center;gap:5px;margin-left:10px;font:11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;color:#8fbf98;letter-spacing:.04em;white-space:nowrap;flex:0 0 auto}' +
+  style.textContent = '.pix-cliente{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;margin-left:10px;font:11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;color:#8fbf98;letter-spacing:.04em;white-space:nowrap;flex:0 0 auto}.pix-cliente>span{font-size:9px;text-transform:uppercase;letter-spacing:.12em}' +
     '.pix-cliente select{field-sizing:content;width:auto;min-width:0;max-width:120px;background:rgba(0,255,65,.06);color:#c8ffd0;border:1px solid rgba(0,255,65,.35);border-radius:0;padding:3px 4px;font:inherit;cursor:pointer;text-overflow:ellipsis}' +
     '.pix-cliente select:focus-visible{outline:2px solid #00ff41;outline-offset:2px}' +
-    '@media(max-width:900px){.pix-cliente>span{display:none}.pix-cliente{margin-left:8px}}';
+    '@media(max-width:900px){.pix-cliente{margin-left:8px}}';
   (document.head || document.documentElement).appendChild(style);
 
   var label = document.createElement('label');

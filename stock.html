@@ -1180,10 +1180,10 @@
               <button type="button" class="stock-card-btn danger" data-act="del" title="Eliminar" aria-label="Eliminar asset"><span aria-hidden="true">🗑</span></button>
             </div>
             ${titleInline}
-            ${adaptChip(it)}
             <span class="stock-head-meta">${headMeta}</span>
           </header>
           ${tagsBlock}
+          ${adaptChip(it)}
           <p class="stock-prompt">${renderPromptHtml(it.prompt)}</p>
           ${commentBlock}
         </div>
@@ -1317,7 +1317,7 @@
     let ADAPT = new Map();
     (function () {
       const st = document.createElement('style');
-      st.textContent = '.stock-adapt-chip{display:inline-block;margin:4px 0 0;padding:2px 9px;border:1px solid var(--line-bright,#1f7a34);border-radius:99px;background:rgba(0,255,65,.06);color:var(--matrix,#00ff41);font:inherit;font-size:11px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}.stock-adapt-chip:hover{background:rgba(0,255,65,.14)}' +
+      st.textContent = '.stock-adapt-chip{display:inline-block;margin:6px 0 2px;padding:2px 9px;border:1px solid var(--line-bright,#1f7a34);border-radius:99px;background:rgba(0,255,65,.06);color:var(--matrix,#00ff41);font:inherit;font-size:11px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}.stock-adapt-chip:hover{background:rgba(0,255,65,.14)}' +
         '.stock-origen-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:8px 12px;border:1px solid var(--line-bright,#1f7a34);border-radius:8px;background:rgba(0,255,65,.05);font-size:13px}.stock-origen-bar button{background:none;border:1px solid var(--line-bright,#1f7a34);border-radius:99px;color:inherit;font:inherit;font-size:12px;padding:2px 10px;cursor:pointer}';
       document.head.appendChild(st);
     })();
@@ -1336,7 +1336,7 @@
       }
       const n = ADAPT.get(it.id) || 0;
       if (!n || filters.origen === it.id) return '';
-      return `<button type="button" class="stock-adapt-chip" data-act="origen" data-origen="${escTxt(it.id)}" title="Ver el original y sus adaptaciones">⧉ ${n} ${n === 1 ? 'adaptación' : 'adaptaciones'}</button>`;
+      return `<button type="button" class="stock-adapt-chip" data-act="origen" data-origen="${escTxt(it.id)}" title="Ver el original y sus adaptaciones">▸ ${n} ${n === 1 ? 'adaptación' : 'adaptaciones'}</button>`;
     }
     function renderOrigenBar() {
       const bar = document.getElementById('stockOrigenBar');
@@ -1345,7 +1345,7 @@
       if (!filters.origen) { bar.innerHTML = ''; return; }
       const orig = allItems.find(x => x.id === filters.origen);
       const n = ADAPT.get(filters.origen) || 0;
-      bar.innerHTML = `<span>⧉ Original «${escTxt(orig ? (orig.title || orig.id) : filters.origen)}» · ${n} ${n === 1 ? 'adaptación' : 'adaptaciones'}</span><button type="button" data-act="origen" data-origen="">✕ Ver todo el Stock</button>`;
+      bar.innerHTML = `<span>Original «${escTxt(orig ? (orig.title || orig.id) : filters.origen)}» · ${n} ${n === 1 ? 'adaptación' : 'adaptaciones'}</span><button type="button" data-act="origen" data-origen="">✕ Ver todo el Stock</button>`;
     }
     document.addEventListener('click', e => {
       const b = e.target.closest && e.target.closest('[data-act="origen"]');
