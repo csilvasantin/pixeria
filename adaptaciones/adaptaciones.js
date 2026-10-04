@@ -30,9 +30,10 @@ function perfil(f) {
     ? perfilDeSalida({ formato: 'custom', ancho: f.custom[0], alto: f.custom[1], compatibilidad: f.altadis ? 'uhd' : state.compat })
     : perfilDeSalida({ formato: f.id, compatibilidad: state.compat });
 }
+function modoEfectivoSinPlan(f) { return state.fmt[f.id].modo !== 'auto' ? state.fmt[f.id].modo : state.modoGlobal; }
 function plan(f) {
   if (!state.src.ancho) return null;
-  try { const output = planificar(state.src, perfil(f)); if (f.altadis) output.fps = 25; return output; } catch (e) { return { error: e.message }; }
+  try { const output = planificar(state.src, perfil(f), {fondoDesenfocado: modoEfectivoSinPlan(f)==='blur'}); if (f.altadis) output.fps = 25; return output; } catch (e) { return { error: e.message }; }
 }
 function modoEfectivo(f) {
   const m = state.fmt[f.id].modo !== 'auto' ? state.fmt[f.id].modo : state.modoGlobal;
@@ -230,7 +231,7 @@ async function fetchStockIndex() {
 }
 
 async function loadStock() {
-  if (new URLSearchParams(location.search).get('demo') === 'altadis') { $('#src-file').disabled=true;$('#src-select').disabled=true;$('#btn-play').disabled=true;$('#stock-status').textContent=t('Demo: esperando el vídeo oficial de Altadis.','Demo: waiting for the official Altadis video.'); return; }
+  if (new URLSearchParams(location.search).get('demo') === 'altadis') { const url='https://altadis-adaptador.xpaceos.pages.dev/admira-xp/altadis/media/neutro-original.mp4'; const o=document.createElement('option');o.value=url;o.textContent=t('Reserva neutra · naturaleza','Neutral reserve · nature');$('#src-select').append(o);$('#src-select').value=url;$('#src-file').disabled=true;$('#src-select').disabled=true;$('#stock-status').textContent=t('Reserva neutra de Pixeria · vídeo oficial Altadis pendiente.','Neutral Pixeria reserve · official Altadis video pending.');setSource(url,t('Naturaleza · reserva neutra','Nature · neutral reserve'),false);return; }
   try {
     const data = await fetchStockIndex();
     const videos = (data.items || []).filter(item => item.type === 'video' && (item.url || item.mediaUrl) && !/\bjti\b|tu sitio de siempre/i.test(JSON.stringify(item)));

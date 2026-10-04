@@ -9,6 +9,7 @@
 //   --perfiles a,b,c    solo estos perfiles          (por defecto, el censo entero)
 //   --formato <16:9|4:3|1:1|9:16|3:4|32:9|ANCHOxALTO> crea una única salida con ese encuadre
 //   --compatibilidad <universal|fhd|uhd> fija bitrate, H.264, fps y techo de resolución
+//   --fondo-desenfocado  encaja completo sobre fondo del mismo vídeo, sin IA ni coste
 //   --ia-laterales      genera contexto al pasar de vertical a horizontal
 //   --limpiar           borra las variantes previas antes de empezar
 //
@@ -111,7 +112,8 @@ function argumentosVideo(origen, plan, entrada, salida) {
   const gop = Math.max(1, Math.round(plan.fps * plan.gopSegundos));
   return [
     '-y', '-i', entrada,
-    '-vf', filtro(plan),
+    ...(plan.encaje === 'fondo-desenfocado' ? ['-filter_complex',
+      `[0:v]split=2[bg][fg];[bg]scale=${plan.ancho}:${plan.alto}:force_original_aspect_ratio=increase,crop=${plan.ancho}:${plan.alto},boxblur=30:3,eq=brightness=-0.08[b];[fg]scale=${plan.ancho}:${plan.alto}:force_original_aspect_ratio=decrease[f];[b][f]overlay=(W-w)/2:(H-h)/2,setsar=1[v]`, '-map', '[v]', '-map', '0:a?'] : ['-vf', filtro(plan)]),
     '-r', String(plan.fps),
     '-c:v', 'libx264',
     '-profile:v', plan.h264Perfil,
@@ -200,7 +202,7 @@ async function expandirLaterales(origen, entrada, token) {
 
 function parsear(argv) {
   const o = {origen: '', salida: 'signage/variantes', informe: 'signage/bateria-informe.json', perfiles: null,
-    formato: '', compatibilidad: 'universal', compatibilidadIndicada: false, limpiar: false, iaLaterales: false};
+    formato: '', compatibilidad: 'universal', compatibilidadIndicada: false, limpiar: false, iaLaterales: false, fondoDesenfocado: false};
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--salida') o.salida = argv[++i];
@@ -211,6 +213,7 @@ function parsear(argv) {
       o.compatibilidad = String(argv[++i] || '').toLowerCase();
       o.compatibilidadIndicada = true;
     }
+    else if (a === '--fondo-desenfocado') o.fondoDesenfocado = true;
     else if (a === '--ia-laterales') o.iaLaterales = true;
     else if (a === '--limpiar') o.limpiar = true;
     else if (!a.startsWith('--') && !o.origen) o.origen = a;
@@ -253,6 +256,7 @@ async function main() {
     : PERFILES;
 
   const esImagen = IMAGENES.has(path.extname(op.origen).toLowerCase());
+  if (op.fondoDesenfocado && (op.iaLaterales || esImagen)) throw new Error('--fondo-desenfocado admite vídeo y excluye --ia-laterales');
   const origen = await sondar(op.origen);
   origen.fichero = path.basename(op.origen);
   origen.tipo = esImagen ? 'imagen' : 'video';
@@ -266,7 +270,7 @@ async function main() {
   const pruebas = [];
   let adaptacionIA = null;
   for (const perfil of perfiles) {
-    const plan = planificar(origen, perfil);
+    const plan = planificar(origen, perfil, {fondoDesenfocado: op.fondoDesenfocado});
     const ext = esImagen ? '.jpg' : '.mp4';
     const nombre = `${path.parse(origen.fichero).name}--${perfil.id}${ext}`;
     const destino = path.join(op.salida, nombre);

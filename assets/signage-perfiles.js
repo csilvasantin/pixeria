@@ -275,7 +275,7 @@ export function bitrateObjetivo(origen, perfil) {
 // El plan de una prueba: qué hay que hacerle a ESTE original para que ESTA
 // pantalla lo reproduzca. Es lo único que el motor traduce a ffmpeg, y lo único
 // que la página necesita para explicar por qué una prueba salió "ajustada".
-export function planificar(origen, perfil) {
+export function planificar(origen, perfil, opciones = {}) {
   const perdido = recortePerdido(origen, perfil);
   const mismoEncuadre = Math.abs(aspecto(origen.ancho, origen.alto) - aspecto(perfil.ancho, perfil.alto)) <= TOLERANCIA_ASPECTO;
 
@@ -301,9 +301,10 @@ export function planificar(origen, perfil) {
   // grande, salvo en la adaptación apaisado→vertical descrita arriba.
   const encaje = mismoEncuadre
     ? 'exacto'
-    : (adaptacionVertical ? 'recortar'
+    : (opciones.fondoDesenfocado ? 'fondo-desenfocado'
+      : (adaptacionVertical ? 'recortar'
       : (adaptacionHorizontal ? 'expandir'
-        : (perdido > RECORTE_MAXIMO_ACEPTABLE ? 'contener' : 'recortar')));
+        : (perdido > RECORTE_MAXIMO_ACEPTABLE ? 'contener' : 'recortar'))));
 
   const bitrate = bitrateObjetivo(origen, perfil);
   const [h264Perfil, h264Nivel] = String(perfil.h264).split('@');
@@ -312,10 +313,10 @@ export function planificar(origen, perfil) {
   if (encaje === 'contener') {
     avisos.push(`reencuadre humano recomendado: recortar perdería el ${Math.round(perdido * 100)}% de la imagen`);
   }
-  if (adaptacionVertical) {
+  if (adaptacionVertical && encaje === 'recortar') {
     avisos.push(`adaptación vertical automática tipo TikTok: centro prioritario y recorte del ${Math.round(perdido * 100)}% de los laterales`);
   }
-  if (adaptacionHorizontal) {
+  if (adaptacionHorizontal && encaje === 'expandir') {
     avisos.push('expansión generativa horizontal: conserva el vídeo vertical centrado e imagina únicamente los laterales');
   }
   if (perfil.ancho > origen.ancho || perfil.alto > origen.alto) {
@@ -333,8 +334,8 @@ export function planificar(origen, perfil) {
     ancho: perfil.ancho,
     alto: perfil.alto,
     encaje,
-    adaptacion: adaptacionVertical ? 'centro-tiktok' : (adaptacionHorizontal ? 'laterales-generativos' : 'estandar'),
-    requiereIA: adaptacionHorizontal,
+    adaptacion: encaje === 'fondo-desenfocado' ? 'fondo-derivado' : (adaptacionVertical ? 'centro-tiktok' : (adaptacionHorizontal ? 'laterales-generativos' : 'estandar')),
+    requiereIA: encaje === 'expandir',
     preservarCentro: adaptacionVertical || adaptacionHorizontal,
     recortePerdido: Number(perdido.toFixed(4)),
     bitrateKbps: bitrate.kbps,
@@ -437,6 +438,7 @@ export function verificar(plan, sonda, origen = {}) {
   for (const aviso of plan.avisos || []) notas.push(aviso);
   if (plan.encaje === 'contener') notas.push('sale con bandas negras: la imagen entera cabe, pero no llena');
   if (plan.encaje === 'recortar') notas.push(`llena la pantalla recortando el ${Math.round(plan.recortePerdido * 100)}% de los bordes`);
+  if (plan.encaje === 'fondo-desenfocado') notas.push('llena con fondo desenfocado derivado del vídeo y mantiene el original completo; no genera contexto nuevo con IA');
   if (plan.encaje === 'expandir') notas.push('llena la pantalla con laterales generados por IA y conserva intacto el centro original');
 
   const veredicto = fallos.length ? 'fallo' : (notas.length ? 'ajustado' : 'ok');

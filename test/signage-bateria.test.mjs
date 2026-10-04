@@ -46,7 +46,7 @@ test('el tester separa formato de salida y bitrate/códec en dos zonas', () => {
   assert.match(pagina, /cuadrado · 1:1/);
   assert.match(pagina, /vertical · 3:4/);
   assert.match(pagina, /barra · 32:9/);
-  assert.match(pagina, /signage-perfiles\.js\?v=20260902-r3/,
+  assert.match(pagina, /signage-perfiles\.js\?v=20261003-neutral/,
     'los presets nuevos deben invalidar el catálogo anterior del navegador');
   assert.match(pagina, /id="salida-custom"/);
   assert.match(pagina, /02<\/b> Bitrate y códec/);
@@ -323,3 +323,14 @@ test('todos los perfiles del censo producen un plan válido desde un mismo origi
     assert.ok(['exacto', 'contener', 'recortar', 'expandir'].includes(plan.encaje), `${p.id}: encaje raro`);
   }
 });
+
+ test('el fondo derivado preserva el centro sin pedir expansión generativa', () => {
+ const origen={ancho:360,alto:640,bitrateKbps:236,fps:30,duracion:10};
+ const p=planificar(origen,FHD,{fondoDesenfocado:true});
+ assert.equal(p.encaje,'fondo-desenfocado');
+ assert.equal(p.requiereIA,false);
+ assert.equal(p.adaptacion,'fondo-derivado');
+ assert.equal(planificar(origen,VERTICAL,{fondoDesenfocado:true}).encaje,'exacto');
+ assert.equal(planificar(origen,FHD).encaje,'expandir');
+ assert.ok(verificar(p,{ancho:1920,alto:1080,codec:'h264'},origen).notas.some(n=>n.includes('no genera contexto nuevo')));
+ });
