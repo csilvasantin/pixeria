@@ -303,3 +303,41 @@ test('sin token y con /list en 401 solo entran los owners (comportamiento previo
     assert.equal(await hasSession(new Request('https://www.pixeria.com/audio', {headers:{Cookie:cookie}}), bindings), expected);
   }
 });
+
+test('auth/agente: el formulario se pinta y un token malo no abre sesión', async () => {
+  const token = 't'.repeat(64);
+  const bindings = {...env(), ADMIRA_AGENT_LOGIN_TOKEN:token};
+  const page = await handleAuth(new Request('https://www.pixeria.com/auth/agente'), bindings);
+  assert.equal(page.status, 200);
+  assert.match(await page.text(), /Entrada de agentes/);
+  const bad = await handleAuth(new Request('https://www.pixeria.com/auth/agente', {
+    method:'POST', headers:{Authorization:'Bearer token-malo-de-prueba-123456789012345678901234', 'X-Agente':'SmithMacMini'}
+  }), bindings);
+  assert.equal(bad.status, 401);
+  assert.equal((await bad.json()).ok, false);
+  const absent = await handleAuth(new Request('https://www.pixeria.com/auth/agente'), env());
+  assert.equal(absent.status, 404);
+});
+
+test('auth/agente: el token bueno devuelve 200 y la cookie abre la verja', async () => {
+  const token = 't'.repeat(64);
+  const bindings = {...env(), ADMIRA_AGENT_LOGIN_TOKEN:token};
+  const good = await handleAuth(new Request('https://www.pixeria.com/auth/agente', {
+    method:'POST', headers:{Authorization:`Bearer ${token}`, 'X-Agente':'SmithMacMini'}
+  }), bindings);
+  assert.equal(good.status, 200);
+  const body = await good.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.agent, true);
+  assert.equal(body.email, 'agentes@silicio.admiranext.com');
+  const setCookie = good.headers.get('set-cookie') || '';
+  assert.match(setCookie, /__Host-pixeria_session=/);
+  const cookie = setCookie.split(';', 1)[0];
+  assert.equal(await hasSession(new Request('https://www.pixeria.com/', {headers:{Cookie:cookie}}), bindings), true);
+  const home = await onRequest({
+    request:new Request('https://www.pixeria.com/', {headers:{Cookie:cookie, Accept:'text/html'}}),
+    env:bindings,
+    next:async () => new Response('dentro')
+  });
+  assert.equal(await home.text(), 'dentro');
+});

@@ -16,6 +16,12 @@ const ACCESS_CACHE = new Map();
 const SESSION_COOKIE = '__Host-pixeria_session';
 const CHALLENGE_COOKIE = '__Host-pixeria_login_nonce';
 const SESSION_TTL_SECONDS = 24 * 60 * 60;
+// Entrada de servicio para los agentes de silicio (Carlos, 3-oct-2026). No tienen
+// cuenta de Google: entran en /auth/agente con ADMIRA_AGENT_LOGIN_TOKEN, el mismo
+// secret que admira.store, xpaceos y admira.biz. La cookie lleva la huella del
+// token, así que cambiar el secret corta también las sesiones ya abiertas.
+const AGENT_EMAIL = 'agentes@silicio.admiranext.com';
+const AGENT_TOKEN_MIN = 32;
 const API_TOKEN_TTL_SECONDS = 15 * 60;
 const CHALLENGE_TTL_MS = 10 * 60 * 1000;
 const OWNER_FALLBACK = new Set(['csilva@admira.com', 'csilvasantin@gmail.com']);
@@ -282,6 +288,13 @@ async function readSession(request, env) {
     const now = Math.floor(Date.now() / 1000);
     if (payload.aud !== 'pixeria.com' || Number(payload.exp) <= now || Number(payload.iat) > now + 60) return null;
     const email = normalEmail(payload.email);
+    // Sesión de agente: no pasa por la lista ni por la tabla de usuarios de Google.
+    // Vale mientras el token con el que se abrió siga siendo el vigente.
+    if (payload.agent || email === AGENT_EMAIL) {
+      const fingerprint = await agentFingerprint(env);
+      return email === AGENT_EMAIL && fingerprint && sameValue(String(payload.agent || ''), fingerprint)
+        ? {email, agent:true, payload} : null;
+    }
     if (!email || !(await emailAllowed(email, env))) return null;
     await ensureSchema(env);
     const user = await env.AUTH_DB.prepare('SELECT * FROM pixeria_users WHERE email=? AND google_sub=?').bind(email, String(payload.sub || '')).first();
@@ -344,8 +357,133 @@ function continuationResponse(returnTo) {
   });
 }
 
-export async function handleAuth(request, env) {
+function agentToken(env) {
+  const token = String(env.ADMIRA_AGENT_LOGIN_TOKEN || '');
+  return token.length >= AGENT_TOKEN_MIN ? token : '';
+}
+
+async function agentFingerprint(env) {
+  const token = agentToken(env);
+  return token && env.PIXERIA_SIGNING_KEY
+    ? (await hmac(env.PIXERIA_SIGNING_KEY, `agente:${token}`)).slice(0, 22) : '';
+}
+
+async function createAgentSessionToken(env, who) {
+  const now = Math.floor(Date.now() / 1000);
+  const payload = base64url(encoder.encode(JSON.stringify({
+    v:1, aud:'pixeria.com', email:AGENT_EMAIL, sub:`agente:${who}`,
+    sv:1, iat:now, exp:now + SESSION_TTL_SECONDS, sid:randomId(),
+    agent:await agentFingerprint(env)
+  })));
+  return `${payload}.${await hmac(env.PIXERIA_SIGNING_KEY, `px:${payload}`)}`;
+}
+
+function agentSessionCookie(token) {
+  return `${SESSION_COOKIE}=${token}; Path=/; Max-Age=${SESSION_TTL_SECONDS}; HttpOnly; Secure; SameSite=Lax`;
+}
+
+function logAgentUse(env, entry, waitUntil) {
+  console.log(JSON.stringify({evento:'perimetro_agente', ...entry}));
+  if (!env.WHITELIST_SITE_TOKEN || !waitUntil) return;
+  const sent = Promise.resolve().then(() => fetch('https://whitelist.admira.store/agent-log', {
+    method:'POST',
+    headers:{'X-Whitelist-Token':env.WHITELIST_SITE_TOKEN, 'Content-Type':'application/json'},
+    body:JSON.stringify(entry)
+  })).catch(() => null);
+  try { waitUntil(sent); } catch (_) {}
+}
+
+function agentPage(returnTo, error) {
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Pixeria · Entrada de agentes</title><style>
+  :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#070a04;color:#f4e2b0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.box{width:100%;max-width:430px;padding:32px 26px;border:1px solid #b5651d;border-radius:16px;background:#120d06}.mark{color:#e8c25a;font:700 12px ui-monospace,monospace;letter-spacing:.2em;text-transform:uppercase}h1{margin:14px 0 8px;font-size:22px}p{margin:0 0 18px;color:#baaa86;line-height:1.5;font-size:14px}a{color:#e8c25a}label{display:block;margin:0 0 6px;font:600 12px ui-monospace,monospace;color:#baaa86}input{width:100%;padding:10px;border-radius:8px;border:1px solid #ffffff2a;background:#0008;color:#fff;font-size:14px;margin-bottom:14px}button{width:100%;padding:11px;border-radius:8px;border:1px solid #e8c25a;background:transparent;color:#e8c25a;font:700 13px ui-monospace,monospace;cursor:pointer}.error{margin-top:14px;color:#ff8f7a;font:600 13px ui-monospace,monospace}</style></head><body><main class="box"><div class="mark">Pixeria · perímetro de seguridad</div><h1>Entrada de agentes</h1><p>Para los agentes de silicio de AdmiraNeXT. El token está en la bóveda (ADMIRA_AGENT_LOGIN_TOKEN) y cada entrada queda registrada. Las personas entran con Google en <a href="/auth/login">/auth/login</a>.</p><form method="post" action="/auth/agente" autocomplete="off"><input type="hidden" name="return_to" value="${escapeHtml(returnTo)}"><label for="agente">Agente y máquina</label><input id="agente" name="agente" maxlength="80" placeholder="NeoMBP14" required><label for="token">Token</label><input id="token" name="token" type="password" required><button>Entrar</button></form>${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}</main></body></html>`;
+}
+
+function agentHeaders() {
+  return {
+    'content-type':'text/html; charset=utf-8',
+    'cache-control':'no-store',
+    'x-robots-tag':'noindex, nofollow',
+    'referrer-policy':'no-referrer',
+    'content-security-policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"
+  };
+}
+
+// /auth/agente: GET pinta el formulario. POST comprueba el token (Authorization:
+// Bearer o campo del formulario — nunca en la URL). Bearer bueno → 200 JSON y
+// cookie. Formulario bueno → 303 con la misma cookie. Token malo → 401.
+async function agente(request, env, waitUntil) {
   const url = new URL(request.url);
+  if (!agentToken(env) || !env.PIXERIA_SIGNING_KEY) {
+    return new Response('Not found', {status:404, headers:{'cache-control':'no-store'}});
+  }
+  if (request.method === 'GET') {
+    const canonical = new URL(CALLBACK_URI);
+    if (url.hostname.replace(/^www\./, '') === canonical.hostname.replace(/^www\./, '') && url.origin !== canonical.origin) {
+      return new Response(null, {status:302, headers:{
+        location:canonical.origin + url.pathname + url.search,
+        'cache-control':'no-store', 'referrer-policy':'no-referrer'
+      }});
+    }
+    return new Response(agentPage(safeReturnTo(url.searchParams.get('return_to') || '/'), ''), {status:200, headers:agentHeaders()});
+  }
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', {status:405, headers:{'cache-control':'no-store', allow:'GET, POST'}});
+  }
+  const origin = request.headers.get('Origin');
+  if (origin && origin !== 'null' && origin !== url.origin) {
+    return new Response('Origen no válido', {status:403, headers:{'cache-control':'no-store'}});
+  }
+  const bearer = (request.headers.get('Authorization') || '').match(/^Bearer\s+(\S+)$/i);
+  let formToken = '';
+  let formAgent = '';
+  let formReturn = '';
+  if (!bearer) {
+    const type = String(request.headers.get('content-type') || '').split(';', 1)[0].trim().toLowerCase();
+    if (type === 'application/json') {
+      let body = {};
+      try { body = await request.json(); } catch (_) {}
+      formToken = String(body.token || '');
+      formAgent = String(body.agente || '');
+      formReturn = String(body.return_to || '');
+    } else {
+      let form = new FormData();
+      try { form = await request.formData(); } catch (_) {}
+      formToken = String(form.get('token') || '');
+      formAgent = String(form.get('agente') || '');
+      formReturn = String(form.get('return_to') || '');
+    }
+  }
+  const given = bearer ? bearer[1] : formToken;
+  const who = String(request.headers.get('X-Agente') || formAgent || '').replace(/[^\p{L}\p{N} ._·@-]/gu, '').slice(0, 80) || 'sin nombre';
+  const returnTo = safeReturnTo(request.headers.get('X-Return-To') || formReturn || '/');
+  const key = env.PIXERIA_SIGNING_KEY;
+  const ok = given.length > 0 && given.length <= 512 &&
+    sameValue(await hmac(key, `agente-login:${given}`), await hmac(key, `agente-login:${agentToken(env)}`));
+  logAgentUse(env, {
+    site:'pixeria', host:url.hostname, agente:who, ok, at:new Date().toISOString(),
+    ip:request.headers.get('CF-Connecting-IP') || '', ua:(request.headers.get('User-Agent') || '').slice(0, 160)
+  }, waitUntil);
+  if (!ok) {
+    return bearer
+      ? Response.json({ok:false, error:'token no válido'}, {status:401, headers:{'cache-control':'no-store'}})
+      : new Response(agentPage(returnTo, 'Token no válido.'), {status:401, headers:agentHeaders()});
+  }
+  const token = await createAgentSessionToken(env, who);
+  if (bearer) {
+    return Response.json({ok:true, email:AGENT_EMAIL, name:who, agent:true}, {
+      status:200,
+      headers:{'cache-control':'no-store', 'referrer-policy':'no-referrer', 'set-cookie':agentSessionCookie(token)}
+    });
+  }
+  return new Response(null, {status:303, headers:{
+    location:returnTo, 'cache-control':'no-store', 'referrer-policy':'no-referrer',
+    'set-cookie':agentSessionCookie(token)
+  }});
+}
+
+export async function handleAuth(request, env, waitUntil = null) {
+  const url = new URL(request.url);
+  if (url.pathname === '/auth/agente') return agente(request, env, waitUntil);
   if (url.pathname === '/auth/login' && request.method === 'GET') {
     // The __Host- nonce must be issued on the host receiving Google's POST.
     // Canonicalize the public alias before creating a challenge or setting cookies.

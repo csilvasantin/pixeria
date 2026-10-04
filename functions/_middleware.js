@@ -3,7 +3,7 @@ import {handleAuth, hasSession, safeReturnTo} from './_auth.js';
 export async function onRequest(context) {
   const {request, env} = context;
   const url = new URL(request.url);
-  const authResponse = await handleAuth(request, env);
+  const authResponse = await handleAuth(request, env, context.waitUntil ? context.waitUntil.bind(context) : null);
   if (authResponse) return authResponse;
 
   // Pregunta del avatar (FLT-101350). Solo llega a la función /avatar-ask, que
