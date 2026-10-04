@@ -378,6 +378,54 @@ $('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; if (
 function emptySource() { video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
 $('#src-file').onchange = (e) => { const f = e.target.files[0]; if(f && f.size>MAX_SOURCE_BYTES) {$('#src-msg').textContent=t('El límite local es 100 MB. Elige un vídeo más pequeño.','The local limit is 100 MB. Choose a smaller video.');e.target.value='';return;} if (f) setSource(URL.createObjectURL(f), f.name, {id:null,title:f.name.replace(/\.[^.]+$/,'')}); };
 $('#btn-play').onclick = $('#btn-play-2').onclick = () => (video.paused ? video.play() : video.pause());
+// ── Sonido de la vista previa (Carlos, 4-oct-2026) ─────────────────────────
+// Arranca silenciado para que el autoplay siga funcionando; el botón activa y
+// desactiva el audio (aria-pressed = sonido activado). Si el vídeo no trae pista
+// de audio se muestra «Sin audio» en vez de fingir que suena.
+const soundBtn = $('#btn-sound');
+let soundNoTrack = false;
+function hasAudioTrack(v) {
+  if (typeof v.mozHasAudio === 'boolean') return v.readyState >= 1 ? v.mozHasAudio : null;
+  if (v.audioTracks && typeof v.audioTracks.length === 'number' && v.readyState >= 1) return v.audioTracks.length > 0;
+  if (typeof v.webkitAudioDecodedByteCount === 'number') {
+    if (v.webkitAudioDecodedByteCount > 0) return true;
+    if (v.currentTime > 1.2 && v.readyState >= 2) return false;
+  }
+  return null; // todavía no se sabe
+}
+function renderSound() {
+  if (!soundBtn) return;
+  const on = !video.muted && video.volume > 0 && !soundNoTrack;
+  soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  soundBtn.classList.toggle('no-audio', soundNoTrack);
+  soundBtn.querySelector('.snd-ico').textContent = soundNoTrack ? '🔇' : on ? '🔊' : '🔇';
+  soundBtn.querySelector('.snd-lbl').textContent = soundNoTrack ? t('Sin audio', 'No audio') : on ? t('Con sonido', 'Sound on') : t('Sin sonido', 'Sound off');
+  soundBtn.title = soundNoTrack ? t('Este vídeo no tiene pista de audio', 'This video has no audio track') : on ? t('Silenciar', 'Mute') : t('Activar sonido', 'Turn sound on');
+}
+function checkAudioTrack() {
+  const has = hasAudioTrack(video);
+  if (has === false && !soundNoTrack) { soundNoTrack = true; video.muted = true; renderSound(); }
+  else if (has === true && soundNoTrack) { soundNoTrack = false; renderSound(); }
+}
+if (soundBtn) {
+  soundBtn.onclick = () => {
+    checkAudioTrack();
+    if (soundNoTrack) { renderSound(); return; }
+    if (video.muted || video.volume === 0) {
+      video.muted = false;
+      if (video.volume === 0) video.volume = 1;
+      if (video.paused) video.play().catch(() => { video.muted = true; renderSound(); video.play().catch(() => {}); });
+    } else {
+      video.muted = true;
+    }
+    renderSound();
+  };
+  video.addEventListener('volumechange', renderSound);
+  video.addEventListener('timeupdate', () => { if (video.currentTime > 1.2 && hasAudioTrack(video) !== null) checkAudioTrack(); });
+  video.addEventListener('loadstart', () => { soundNoTrack = false; renderSound(); });
+  video.addEventListener('loadedmetadata', checkAudioTrack);
+  renderSound();
+}
 // Flujo en dos pasos: 1 Vídeo (Stock, subir o crear + vista previa) · 2 Adaptar (formatos, vistas previas y Exportar).
 function goStep(n) {
   if (n === 2 && !state.src.ancho) return;
