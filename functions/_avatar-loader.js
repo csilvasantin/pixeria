@@ -4,7 +4,7 @@
 // (elección del usuario > interruptor del proyecto en admiranext.com > apagado).
 // data-brain="/avatar-ask": las preguntas van al relé de este mismo origen.
 export const AVATAR_LOADER = 'https://www.admiranext.com/assets/avatar.js';
-const TAG = '<script defer src="' + AVATAR_LOADER + '?v=20261004-avatar-2" data-brain="/avatar-ask" data-admira-avatar></script>';
+const TAG = '<script defer src="' + AVATAR_LOADER + '?v=20261004-avatar-3" data-brain="/avatar-ask" data-admira-avatar></script>';
 const ORIGINS = 'https://www.admiranext.com https://digitalavatar.ai https://cdn.jsdelivr.net';
 
 export function wantsAvatar(response, url) {
