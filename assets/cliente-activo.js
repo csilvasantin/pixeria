@@ -4,7 +4,8 @@
  * Experto (superusuario); `/marca <cliente>` filtra por ese cliente y `/marca off` oculta el
  * selector y vuelve a Admira (assets/expert-cli.js).
  * Con otro cliente activo se ve lo suyo más lo genérico de Admira (PixeriaCliente.visible(item)).
- * Estado de sesión: localStorage pixeria:cliente:v2 + ?cliente=<id> y evento `pixeria:cliente`.
+ * Estado de sesión: localStorage pixeria:cliente:v2 + ?cliente=<id> y evento `pixeria:cliente`; el
+ * selector visible, solo en sessionStorage (pixeria:cliente-selector:v2).
  * Lista de admiranext.com (CLIENTES_URL; respaldo local), solo clientes con la pata «studio» (o
  * «todas»): primero los globales y luego el resto. Qué cliente es cada asset: campo explícito,
  * etiquetas o nombres según /data/clientes-mapeo.json.
@@ -16,7 +17,10 @@
   var MAPEO_URL = '/data/clientes-mapeo.json';
   var PATA = 'studio';
   var KEY = 'pixeria:cliente:v2'; // v2: lo guardado con el selector antiguo ya no filtra en silencio
-  var SEL_KEY = 'pixeria:cliente-selector'; // '1' = selector visible (/marca todas)
+  // '1' = selector visible (/marca todas). Solo dura la sesión de la pestaña (sessionStorage): antes
+  // vivía en localStorage y, quien escribía /marca todas una vez, veía el combo para siempre.
+  var SEL_KEY = 'pixeria:cliente-selector:v2';
+  try { localStorage.removeItem('pixeria:cliente-selector'); } catch (_) {}
   // Respaldo del rol admin: flag de este navegador (localStorage pixeria:admin = 1).
   // Habilita /marca todas|<cliente>; filtrar es una vista, no una barrera de seguridad.
   var ADMIN_KEY = 'pixeria:admin';
@@ -43,7 +47,7 @@
   // pedido: id de un cliente que no es el por defecto, o null (Admira, todo).
   var pedido = q != null ? (TODOS.test(slug(q)) ? null : slug(q) || null) : guardado && slug(guardado.id) && !TODOS.test(slug(guardado.id)) ? slug(guardado.id) : null;
   function esDefecto(c) { return !c || (porDefecto ? c.id === porDefecto.id : c.id === 'admira'); }
-  function selectorVisible() { try { return localStorage.getItem(SEL_KEY) === '1'; } catch (_) { return false; } }
+  function selectorVisible() { try { return sessionStorage.getItem(SEL_KEY) === '1'; } catch (_) { return false; } }
 
   function guardar() {
     var defecto = esDefecto(actual);
@@ -76,7 +80,7 @@
     return true;
   }
   function selector(on) {
-    try { if (on) localStorage.setItem(SEL_KEY, '1'); else localStorage.removeItem(SEL_KEY); } catch (_) {}
+    try { if (on) sessionStorage.setItem(SEL_KEY, '1'); else sessionStorage.removeItem(SEL_KEY); } catch (_) {}
     if (on) colocar(); else if (label.isConnected) label.remove();
   }
 
