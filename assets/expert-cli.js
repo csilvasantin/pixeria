@@ -239,7 +239,7 @@
     if (!PC || !PC.listo || !PC.listo()) return false;
     var def = PC.porDefecto(), defNombre = def ? def.nombre : 'Admira';
     if (/^(todas|todos|all)$/i.test(a)) {
-      if (!PC.esAdmin()) { write(t('Solo el superusuario (rol admin) puede mostrar el selector de cliente.', 'Only the superuser (admin role) can show the client selector.')); return true; }
+      if (!PC.esAdmin()) { write(t('Solo el superusuario (cuentas de Carlos o sesión de agente) puede mostrar el selector de cliente.', 'Only the superuser (Carlos\'s accounts or an agent session) can show the client selector.')); return true; }
       PC.selector(true);
       write(t('Selector «Cliente» visible junto al logo. /marca <cliente> filtra; /marca off lo oculta y vuelve a ' + defNombre + '.', '«Client» selector shown next to the logo. /marca <client> filters; /marca off hides it and returns to ' + defNombre + '.'));
       return true;

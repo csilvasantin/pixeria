@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createApiToken, handleAuth, hasSession, safeReturnTo, verifyApiToken} from '../functions/_auth.js';
+import {createApiToken, esSuperusuario, handleAuth, hasSession, safeReturnTo, verifyApiToken} from '../functions/_auth.js';
 import {onRequest} from '../functions/_middleware.js';
 import {readFile} from 'node:fs/promises';
 
@@ -114,7 +114,7 @@ test('una sesión anterior de 12 h se amplía una sola vez desde el acceso origi
       {headers:{Cookie:cookie}}), bindings);
     assert.equal(revisit.status, 200);
     assert.equal(revisit.headers.get('set-cookie'), null, 'la actividad no prolonga el plazo');
-    assert.deepEqual(await revisit.json(), {ok:true, email:user.email}, 'no expone claims internos');
+    assert.deepEqual(await revisit.json(), {ok:true, email:user.email, superusuario:esSuperusuario({email:user.email})}, 'no expone claims internos');
   }
 });
 
@@ -340,4 +340,12 @@ test('auth/agente: el token bueno devuelve 200 y la cookie abre la verja', async
     next:async () => new Response('dentro')
   });
   assert.equal(await home.text(), 'dentro');
+});
+
+test('superusuario: las cuentas de Carlos y la sesión de agente; nadie más', () => {
+  assert.equal(esSuperusuario({email:'csilvasantin@gmail.com'}), true);
+  assert.equal(esSuperusuario({email:'CSilva@Admira.com'}), true);
+  assert.equal(esSuperusuario({email:'agentes@silicio.admiranext.com', agent:true}), true);
+  assert.equal(esSuperusuario({email:'otra@admira.com'}), false);
+  assert.equal(esSuperusuario(null), false);
 });

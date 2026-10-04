@@ -17,8 +17,8 @@
   var PATA = 'studio';
   var KEY = 'pixeria:cliente:v2'; // v2: lo guardado con el selector antiguo ya no filtra en silencio
   var SEL_KEY = 'pixeria:cliente-selector'; // '1' = selector visible (/marca todas)
-  // Rol admin: Pixeria no tiene roles en servidor todavía; es un flag de este navegador
-  // (localStorage pixeria:admin = 1). No es una barrera de seguridad: solo habilita /marca todas|<cliente>.
+  // Respaldo del rol admin: flag de este navegador (localStorage pixeria:admin = 1).
+  // Habilita /marca todas|<cliente>; filtrar es una vista, no una barrera de seguridad.
   var ADMIN_KEY = 'pixeria:admin';
   var EN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
   var lista = [], porDefecto = null, actual = null, mapeo = null, listo = false;
@@ -26,7 +26,16 @@
   var slug = function (v) { return String(v == null ? '' : v).toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64); };
   var plano = function (v) { return String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ''); };
   var TODOS = /^(todos|todas|all|ninguno|off|admira)$/; // = cliente por defecto (Admira, todo)
-  function esAdmin() { try { return localStorage.getItem(ADMIN_KEY) === '1'; } catch (_) { return false; } }
+  // Superusuario: lo dice el servidor (/auth/session → superusuario, para las cuentas de Carlos y
+  // la sesión de agente). El flag local pixeria:admin = 1 queda como respaldo.
+  var superSesion = false;
+  function esAdmin() { if (superSesion) return true; try { return localStorage.getItem(ADMIN_KEY) === '1'; } catch (_) { return false; } }
+  try {
+    fetch('/auth/session', {credentials: 'include', cache: 'no-store', headers: {Accept: 'application/json'}})
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { superSesion = !!(j && j.ok && j.superusuario === true); })
+      .catch(function () {});
+  } catch (_) {}
 
   var guardado = null, q = null;
   try { guardado = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (_) {}
