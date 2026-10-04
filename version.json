@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r1.00:05",
-  "deployer": "LucasGrokBotBox",
-  "machine": "GrokBotBox",
-  "signature": "LucasGrokBotBox · GrokBotBox",
-  "agent": "LucasGrokBotBox",
-  "builtAt": "2026-10-04T22:05:36Z"
+  "version": "v.05.10.2026.r2.00:42",
+  "deployer": "SmithMacMini",
+  "machine": "MacMini",
+  "signature": "SmithMacMini · MacMini",
+  "agent": "SmithMacMini",
+  "builtAt": "2026-10-04T22:42:23Z"
 }

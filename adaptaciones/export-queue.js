@@ -3,7 +3,7 @@
 // own copy of the job and the source URL: changing video, sizes or step never touches it.
 const ACTIVE=new Set(['queued','running']);
 const size=bytes=>bytes<1048576?`${Math.ceil(bytes/1024)} KB`:`${(bytes/1048576).toFixed(1)} MB`;
-export function createExportQueue({engine,t,onComplete=()=>{},onRelease=()=>{}}) {
+export function createExportQueue({engine,t,onComplete=()=>{},onRelease=()=>{},onChange=()=>{},onCreate=()=>{}}) {
   const items=[];let seq=0,running=null,collapsed=false;
   const reasons={
     'output-size':t('Supera el límite de memoria; usa un clip más corto.','Over the memory limit; use a shorter clip.'),
@@ -19,8 +19,8 @@ export function createExportQueue({engine,t,onComplete=()=>{},onRelease=()=>{}})
   clearBtn.onclick=()=>clear();
   document.body.append(el);
   function summary() {
-    const done=items.filter(i=>i.state==='done').length,active=items.filter(i=>ACTIVE.has(i.state)).length;
-    return active?`${done}/${done+active}`:`${done} ${done===1?t('lista','ready'):t('listas','ready')}`;
+    const done=items.filter(i=>i.state==='done').length;
+    return `${done}/${items.length}`;
   }
   function rowStatus(item) {
     if(item.state==='queued') return t('En cola','Queued');
@@ -51,6 +51,7 @@ export function createExportQueue({engine,t,onComplete=()=>{},onRelease=()=>{}})
     el.querySelector('.eq-count').textContent=summary();
     clearBtn.hidden=!items.some(i=>!ACTIVE.has(i.state));
     list.replaceChildren(...items.map(row));
+    onChange(items.map(item => ({ id: item.id, state: item.state })));
   }
   // Progress ticks only touch the % of their own line.
   function tick(item) {
@@ -89,11 +90,11 @@ export function createExportQueue({engine,t,onComplete=()=>{},onRelease=()=>{}})
     el,uses,
     busy:()=>items.some(i=>ACTIVE.has(i.state)),
     // entry: {label, sub, sourceURL, job, meta}
-    add(entry) {const item={...entry,id:++seq,state:'queued',progress:0,files:[]};items.push(item);collapsed=false;render();pump();return item;},
+    add(entry) {const item={...entry,id:++seq,state:'queued',progress:0,files:[]};items.push(item);onCreate(item);collapsed=false;render();pump();return item;},
     // Files produced on the spot (PNG of the current frame) enter the queue already done.
     addReady(entry,files) {
       const item={...entry,id:++seq,state:'done',progress:1,files:files.map(f=>({...f,url:URL.createObjectURL(f.blob),size:f.blob.size,short:''}))};
-      items.push(item);collapsed=false;render();item.files.forEach(f=>Promise.resolve().then(()=>onComplete(item,f)).catch(()=>{}));return item;
+      items.push(item);onCreate(item);collapsed=false;render();item.files.forEach(f=>Promise.resolve().then(()=>onComplete(item,f)).catch(()=>{}));return item;
     },
     note(item,text) {item.note=text;render();},
     cancelAll() {items.filter(i=>ACTIVE.has(i.state)).forEach(i=>{i.state='cancelled';});running=null;engine.cancel();render();},

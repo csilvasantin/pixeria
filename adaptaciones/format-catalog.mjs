@@ -69,3 +69,41 @@ export function restoreCustomFormats(raw,en=false) {
   if(!f||seen.has(f.id))return [];seen.add(f.id);return [f];
  });
 }
+// The size library is the 42 presets (social 8, digital 6, display 23, print 5).
+// Client profiles and sizes the user typed are other families.
+export const LIBRARY_SIZE_COUNT = 42;
+export const isLibrarySize = f => !f.cliente && !f.especial && !f.user;
+export function applyCampaign(formats, campaignId) {
+ const campaign = CAMPAIGNS.find(c => c.id === campaignId);
+ if (!campaign) return 0;
+ let n = 0;
+ for (const f of formats) {
+  if (!isLibrarySize(f)) continue;
+  f.on = !!campaign.matches(f);
+  if (f.on) n++;
+ }
+ return n;
+}
+export function setGroupSelected(formats, categoryId, on) {
+ let n = 0;
+ for (const f of formats) {
+  if (!isLibrarySize(f) || f.category !== categoryId) continue;
+  f.on = !!on;
+  if (f.on) n++;
+ }
+ return n;
+}
+export function groupSelection(formats, categoryId) {
+ const group = formats.filter(f => isLibrarySize(f) && f.category === categoryId);
+ const on = group.filter(f => f.on).length;
+ return { total: group.length, on, all: group.length > 0 && on === group.length, none: on === 0 };
+}
+export function selectAllSizes(formats) {
+ let n = 0;
+ for (const f of formats) {
+  if (!isLibrarySize(f)) continue;
+  f.on = true;
+  n++;
+ }
+ return n;
+}

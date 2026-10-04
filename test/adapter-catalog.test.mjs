@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createCatalog,CAMPAIGNS,matchingFormats,customFormat,restoreCustomFormats} from '../adaptaciones/format-catalog.mjs';
+import {createCatalog,CAMPAIGNS,matchingFormats,customFormat,restoreCustomFormats,LIBRARY_SIZE_COUNT,isLibrarySize,applyCampaign,setGroupSelected,groupSelection,selectAllSizes} from '../adaptaciones/format-catalog.mjs';
 import {restore,snapshot,defaults} from '../adaptaciones/adapter-core.mjs';
 import {pngDensity} from '../adaptaciones/png-density.mjs';
 test('campaigns have unique dimensions/IDs and correct PNG/mobile membership',()=>{
@@ -25,6 +25,28 @@ test('custom storage validates size, caps count, removes duplicates and preserve
  assert.ok(restore(saved,f).selected.includes('custom-500x500'));
  assert.equal(restoreCustomFormats(Array.from({length:20},(_,i)=>[100+i*2,100])).length,12);
 });
+test('campaigns replace the library selection, groups toggle, and all sizes marks 42',()=>{
+ const f=createCatalog();
+ assert.equal(f.filter(isLibrarySize).length,LIBRARY_SIZE_COUNT);
+ assert.deepEqual(CATEGORIES_OK(f),[8,6,23,5]);
+ assert.equal(applyCampaign(f,'mobile'),3);
+ assert.deepEqual(f.filter(x=>x.on).map(x=>[x.custom[0],x.custom[1]]),[[300,50],[320,50],[320,100]]);
+ assert.equal(applyCampaign(f,'social'),8);
+ assert.equal(f.filter(x=>x.on&&x.category==='social').length,8);
+ assert.equal(f.filter(x=>x.on&&x.category!=='social').length,0);
+ assert.equal(applyCampaign(f,'display'),23);
+ assert.equal(selectAllSizes(f),42);
+ assert.equal(f.filter(x=>isLibrarySize(x)&&x.on).length,42);
+ assert.equal(groupSelection(f,'digital').total,6);
+ setGroupSelected(f,'social',false);
+ assert.deepEqual(groupSelection(f,'social'),{total:8,on:0,all:false,none:true});
+ assert.equal(f.filter(x=>x.on).length,34);
+ f.find(x=>x.id==='social-story').on=true;
+ const partial=groupSelection(f,'social');
+ assert.equal(partial.on,1);assert.equal(partial.all,false);assert.equal(partial.none,false);
+ assert.equal(groupSelection(f,'print').on,5);
+});
+function CATEGORIES_OK(f){return ['social','digital','display','print'].map(id=>f.filter(x=>isLibrarySize(x)&&x.category===id).length);}
 test('print PNG density retains pixels and inserts valid pHYs CRC at 150 ppi',()=>{
  const original=Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9JkAAAAASUVORK5CYII=','base64'));
  const output=pngDensity(original),view=new DataView(output.buffer);

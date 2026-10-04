@@ -6,7 +6,7 @@ import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudge
 import { createEngine, MAX_SOURCE_BYTES } from './adapter-export.js';
 import { createExportQueue } from './export-queue.js';
 import { publishAdaptation, shortFormat, adaptationTitle } from './stock-publish.mjs';
-import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily } from './format-catalog.mjs';
+import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily, isLibrarySize, applyCampaign, setGroupSelected, groupSelection, selectAllSizes } from './format-catalog.mjs';
 import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
 import { pngDensity } from './png-density.mjs';
 
@@ -73,7 +73,19 @@ async function saveOne(item,file) {
     :`${t('En el Stock','In Stock')} ${item.stock.ids.join(' ')}`.trim());
   item.stockTitle=title;
 }
-const queue = createExportQueue({engine:createEngine(),t,onComplete:saveToStock,onRelease:url=>{if(url!==sourceObjectURL&&url.startsWith('blob:'))URL.revokeObjectURL(url);}});
+let batchIds = null, batchTotal = 0;
+function paintBatch(rows) {
+  if (!batchIds || !batchTotal) return;
+  const finished = rows.filter(row => batchIds.has(row.id) && (row.state === 'done' || row.state === 'error' || row.state === 'cancelled')).length;
+  const status = $('#export-status');
+  if (status) status.textContent = `${finished}/${batchTotal}`;
+}
+const queue = createExportQueue({
+  engine:createEngine(),t,onChange:paintBatch,
+  onCreate(item){ if (batchIds) batchIds.add(item.id); },
+  onComplete:saveToStock,
+  onRelease:url=>{if(url!==sourceObjectURL&&url.startsWith('blob:'))URL.revokeObjectURL(url);}
+});
 async function exportFormats(formats,kinds='both') {
   if(!state.src.ancho || !formats.length) return;
   const status=$('#export-status');status.textContent='';
@@ -86,6 +98,9 @@ async function exportFormats(formats,kinds='both') {
   const sourceURL=video.currentSrc||video.src,sub=state.srcName;
   // Frozen at click time: original video, active client (top bar selector) and duration.
   const ctx={origin:{...state.origin},client:window.PixeriaCliente?.actual?.()||null,duration:video.duration};
+  batchIds = new Set();
+  batchTotal = pngFormats.length + jobs.length;
+  status.textContent = `0/${batchTotal}`;
   for(const f of pngFormats){
     const p=perfil(f),canvas=document.createElement('canvas');canvas.width=p.ancho;canvas.height=p.alto;
     drawInto(canvas,f);
@@ -148,7 +163,17 @@ function buildPicker() {
   for(const cat of CATEGORIES){
     const formats=visible.filter(f=>f.category===cat.id);if(!formats.length)continue;
     const detail=document.createElement('details');detail.className='size-category';detail.open=!!picker.query||picker.open.has(cat.id)||state.profile!=='standard';
-    const summary=document.createElement('summary');summary.textContent=`${EN?cat.en:cat.es} · ${formats.length}`;detail.append(summary);
+    const group=groupSelection(FORMATOS,cat.id);
+    const summary=document.createElement('summary');
+    const title=document.createElement('span');title.textContent=`${EN?cat.en:cat.es} · ${group.total}`;
+    const groupLabel=document.createElement('label');groupLabel.className='group-toggle';
+    const groupBox=document.createElement('input');groupBox.type='checkbox';groupBox.checked=group.all;groupBox.indeterminate=!group.all&&!group.none;
+    groupBox.setAttribute('aria-label',t('Seleccionar todo el grupo','Select the whole group'));
+    groupLabel.addEventListener('click',event=>event.stopPropagation());
+    groupBox.addEventListener('click',event=>event.stopPropagation());
+    groupBox.onchange=()=>{setGroupSelected(FORMATOS,cat.id,groupBox.checked);buildGrid();};
+    const groupText=document.createElement('span');groupText.textContent=t('Seleccionar todo el grupo','Select the whole group');
+    groupLabel.append(groupBox,groupText);summary.append(title,groupLabel);detail.append(summary);
     detail.ontoggle=()=>{if(detail.open)picker.open.add(cat.id);else picker.open.delete(cat.id);};
     for(const f of formats){
       const label=document.createElement('label');label.className='size-option';
@@ -165,7 +190,7 @@ function buildPicker() {
   $('#campaigns').querySelectorAll('[data-campaign]').forEach(button=>{
     const campaign=CAMPAIGNS.find(c=>c.id===button.dataset.campaign),formats=FORMATOS.filter(campaign.matches);
     button.querySelector('.campaign-count').textContent=t(`${formats.length} tamaños`,`${formats.length} sizes`);
-    button.setAttribute('aria-label',`${t('Añadir','Add')} ${EN?campaign.en:campaign.es}`);
+    button.setAttribute('aria-label',`${t('Seleccionar','Select')} ${EN?campaign.en:campaign.es}`);
   });
 }
 $('#campaigns').replaceChildren(...CAMPAIGNS.map(c=>{
@@ -174,8 +199,9 @@ $('#campaigns').replaceChildren(...CAMPAIGNS.map(c=>{
   const count=document.createElement('span');count.className='campaign-count';
   const description=document.createElement('small');description.textContent=EN?c.descriptionEn:c.descriptionEs;
   b.append(heading,count,description);
-  b.onclick=()=>{state.profile='standard';$('#format-profile').value='standard';syncCompat();FORMATOS.filter(c.matches).forEach(f=>f.on=true);buildGrid();};return b;
+  b.onclick=()=>{state.profile='standard';$('#format-profile').value='standard';syncCompat();applyCampaign(FORMATOS,c.id);buildGrid();};return b;
 }));
+$('#all-sizes').onclick=()=>{state.profile='standard';$('#format-profile').value='standard';syncCompat();selectAllSizes(FORMATOS);buildGrid();};
 $('#size-search').oninput=e=>{picker.query=e.target.value;buildPicker();};
 $('#size-orientation').onchange=e=>{picker.orientation=e.target.value;buildPicker();};
 $('#clear-formats').onclick=()=>{selectedFormats().forEach(f=>f.on=false);buildGrid();};
@@ -312,7 +338,11 @@ function cardAviso(f) {
 }
 function refreshInfo() {
   drawDirty=true;saveSettings();
-  $('#export-all').disabled=!state.src.ancho || !selectedFormats().length;
+  const chosen=selectedFormats().length;
+  $('#export-all').textContent=t(`Adaptar · ${chosen}`,`Adapt · ${chosen}`);
+  $('#export-all').disabled=!state.src.ancho || !chosen;
+  const allCount=FORMATOS.filter(isLibrarySize).length;
+  const allLabel=$('#all-sizes .all-sizes-count');if(allLabel)allLabel.textContent=String(allCount);
   document.querySelectorAll('.export-one').forEach(el=>el.disabled=!state.src.ancho);
   const selF = FORMATOS.find((x) => x.id === state.sel && x.on), selAviso = $('#card-settings .aviso');
   if (selF && selAviso) selAviso.textContent = cardAviso(selF);
