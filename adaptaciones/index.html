@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=03.10.2026.r4.1602';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=04.10.2026.r1.0105';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -36,15 +36,15 @@
 <meta charset="utf-8">
 <script>if (/(^|\.)pixeria\.(com|pages\.dev)$/.test(location.hostname) && !location.pathname.startsWith('/en/') && new URLSearchParams(location.search).get('lang') !== 'es') location.replace('/en/adaptaciones/' + location.search);</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.03.10.2026.r4.16:02">
+  <meta name="admiranext-version" content="Pixeria v.04.10.2026.r1.01:05">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Adaptador · Un contenido, todos los formatos | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=03.10.2026.r4.1602">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=03.10.2026.r4.1602">
-  <script defer src="/assets/site-nav.js?v=03.10.2026.r4.1602"></script>
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=04.10.2026.r1.0105">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=04.10.2026.r1.0105">
+  <script defer src="/assets/site-nav.js?v=04.10.2026.r1.0105"></script>
 </head>
 <body class="adapt-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
@@ -61,7 +61,7 @@
       <div class="input-row">
         <label>Elige un vídeo · Stock
           <select id="src-select">
-            <option value="">contenido Altadis · pendiente</option>
+            <option value="/adaptaciones/media/neutro-original.mp4">Stock · Naturaleza sin marca</option>
           </select>
         </label>
         <a class="pill" href="/video.html">o créalo · creador de vídeos</a>
@@ -75,16 +75,47 @@
         <button id="btn-play" class="pill" type="button">⏯ Reproducir / pausa</button>
       </div>
       <p id="stock-status" class="muted" role="status"></p>
-      <label class="profile-label">Perfil de formatos <select id="format-profile"><option value="standard">Estándar · 9:16, 16:9, 1:1 y 4:5</option><option value="altadis" disabled>Altadis · 18 formatos estándar</option></select></label>
-      <p class="muted">Vista previa local; no exporta los ajustes a MP4. Expandir usa fondo desenfocado del vídeo, sin generar contenido. El plan H.264 es una receta técnica. FPS y bitrate de entrada estimados.</p>
-      <p class="muted">Reserva neutra de Pixeria: MP4 vertical 1080×1920 y horizontal 1920×1080, generados con el Adaptador. La campaña oficial de Altadis sigue pendiente.</p>
-      <div id="fmt-checks" class="fmt-checks"></div>
+      <div class="adapter-workspace">
+      <aside class="size-library" aria-label="Biblioteca de tamaños">
+        <h2>Tamaños</h2>
+        <p class="muted">Añade una campaña completa o elige y quita tamaños uno a uno.</p>
+        <label class="size-search-label">Buscar formatos o tamaños<input id="size-search" type="search" placeholder="Nombre o 300 × 250…"></label>
+        <label class="orientation-label">Filtrar por orientación<select id="size-orientation"><option value="all">Todas</option><option value="portrait">Vertical</option><option value="landscape">Horizontal</option><option value="square">Cuadrado</option></select></label>
+        <h3>Campañas completas</h3>
+        <div id="campaigns"></div>
+        <h3>Todos los tamaños</h3>
+        <p id="search-status" class="muted" role="status"></p>
+        <div id="size-categories"></div>
+        <p id="size-no-results" class="muted" hidden>Sin coincidencias. Prueba otro nombre, medida u orientación.</p>
+        <details class="custom-size"><summary>Añadir tamaño personalizado</summary>
+          <form id="custom-size-form"><div class="custom-dimensions">
+            <label>Ancho (px)<input id="custom-width" type="number" min="64" max="3840" step="2" required></label>
+            <label>Alto (px)<input id="custom-height" type="number" min="64" max="3840" step="2" required></label>
+          </div><button class="pill" type="submit">Añadir tamaño</button></form>
+          <p id="custom-status" class="muted" role="status"></p>
+        </details>
+      </aside>
+      <div class="adapter-variants">
+      <label class="profile-label">Perfil de formatos <select id="format-profile"><option value="standard">Biblioteca · redes, digital, display e impresión</option><option value="altadis" disabled>Altadis · 18 formatos estándar</option></select></label>
+      <details class="export-limits"><summary>Tipos de salida y límites</summary><p class="muted">Exporta MP4 con tus ajustes y el audio original, si existe. Procesamiento en este navegador: máximo 100 MB de origen, una variante cada vez; 4K puede tardar varios minutos. Los lotes grandes se deben dividir para limitar la memoria. La primera exportación descarga el motor (unos 32 MB). Expandir usa fondo desenfocado, sin IA; su desenfoque puede variar ligeramente respecto al previo. FPS y bitrate de entrada estimados.</p><p class="muted output-note">Redes y digital: MP4. Display e impresión: PNG del fotograma actual; pausa el vídeo para elegirlo. Impresión: RGB a 150 ppp, sin sangrado ni CMYK. Los tamaños son referencias: revisa peso, zonas seguras y requisitos del destino. La compatibilidad afecta a los cuatro formatos de proporción; los presets con medidas mantienen su resolución.</p></details>
+      <div class="export-toolbar">
+        <button id="export-all" class="pill accent" type="button" disabled>Exportar formatos seleccionados</button>
+        <button id="cancel-export" class="pill" type="button" hidden>Cancelar exportación</button>
+        <button id="reset-settings" class="pill" type="button">Restablecer ajustes</button>
+      </div>
+      <p id="settings-status" class="muted"></p>
+      <progress id="export-progress" max="1" hidden aria-label="Progreso de exportación"></progress>
+      <p id="export-status" role="status" aria-live="polite"></p>
+      <div id="export-results" class="export-results"></div>
+      <p class="muted">Altadis: resolución nativa, MP4 H.264, 25 fps. Sincro VW y LOGO necesitan igual duración; esta vista no sincroniza reproductores.</p>
+      <div class="variants-heading"><h2 id="selected-count"></h2><button id="clear-formats" class="pill" type="button">Quitar todos</button></div>
+      <p id="empty-formats" class="muted" hidden>Elige tamaños en el panel de la izquierda para crear tus adaptaciones.</p>
       <div id="src-info" class="muted">cargando…</div>
       <video id="src" muted loop playsinline preload="auto" crossorigin="anonymous"></video>
       <div id="grid" class="grid"></div>
       <details class="plan"><summary>Plan técnico por formato (resolución, H.264, bitrate y orden ffmpeg)</summary><div id="plan-tecnico"></div></details>
-      <p class="muted">Demo con reserva neutra de naturaleza, sin audio y sin marca. <a id="altadis-demo-entry" href="https://altadis-adaptador.xpaceos.pages.dev/admira-xp/?autostart=xtanco&amp;loc=altadis-bcn-001&amp;adaptado=1&amp;quality=good&amp;lang=es">Abrir preview en XpaceOS →</a></p>
-      <div class="renders"><b>18 pantallas conectadas en 9 estancos</b> · Sin adaptar / Adaptado con Pixeria. El horizontal usa fondo desenfocado derivado, sin IA; la fuente pequeña se escala, sin añadir detalle. Reproducción en gemelo, sin envío a pantallas físicas.</div>
+      <div class="renders"><b>Reserva neutra Pixeria</b> · Campaña oficial Altadis pendiente. MP4 silenciosos; el horizontal usa fondo desenfocado derivado, sin IA ni entrega física. <a id="altadis-demo-entry" href="https://altadis-adaptador.xpaceos.pages.dev/admira-xp/?autostart=xtanco&amp;loc=altadis-bcn-001&amp;adaptado=1&amp;quality=good&amp;lang=es">Abrir demo de nueve estancos</a></div>
+      </div></div>
     </section>
 
     <details id="sec-altadis" class="card"><summary>Ejemplo de aplicación · circuito Altadis</summary>
@@ -105,12 +136,12 @@
               <div class="facade">
                 <div class="sign"><span class="t">T</span> TABACS · ESTANC</div>
                 <div class="window">
-                  <div class="screen vertical"><video id="tw-v" muted loop playsinline autoplay></video><canvas id="tw-cv-v" width="270" height="480" hidden></canvas><span class="lbl">P1 · Vertical 9:16 · escaparate</span></div>
+                  <div class="screen vertical"><video id="tw-v" muted loop playsinline autoplay></video><canvas id="tw-cv-v" width="270" height="480"></canvas><span class="lbl">P1 · Vertical 9:16 · escaparate</span></div>
                   <div class="door"></div>
                 </div>
               </div>
               <div class="interior">
-                <div class="screen horizontal"><video id="tw-h" muted loop playsinline autoplay></video><canvas id="tw-cv-h" width="480" height="270" hidden></canvas><span class="lbl">P2 · Horizontal 16:9 · mostrador</span></div>
+                <div class="screen horizontal"><video id="tw-h" muted loop playsinline autoplay></video><canvas id="tw-cv-h" width="480" height="270"></canvas><span class="lbl">P2 · Horizontal 16:9 · mostrador</span></div>
                 <div class="counter">MOSTRADOR</div>
                 <div class="shelf"></div>
               </div>
@@ -123,8 +154,8 @@
       </div>
     </details>
   </main>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=03.10.2026.r4.1602"></script>
-  <script defer src="/assets/cuadratura.js?v=03.10.2026.r4.1602"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=04.10.2026.r1.0105"></script>
+  <script defer src="/assets/cuadratura.js?v=04.10.2026.r1.0105"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>

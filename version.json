@@ -1,9 +1,9 @@
 {
-  "version": "v.03.10.2026.r3.07:36",
-  "deployer": "OraculoGrokBotBox",
-  "machine": "GrokBotBox",
-  "signature": "OraculoGrokBotBox · GrokBotBox",
-  "deployedAt": "2026-10-03T05:36:16Z",
-  "mission": "FLT-101368",
-  "encargo": 4905
+  "version": "v.04.10.2026.r1.01:05",
+  "deployer": "Trinity",
+  "machine": "MacBookProNegro14",
+  "signature": "Trinity · MacBookProNegro14",
+  "agent": "Trinity",
+  "mission": "DCL-73e5db8716d77b4bf1442a75",
+  "builtAt": "2026-10-03T23:05:06Z"
 }
