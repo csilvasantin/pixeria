@@ -21,6 +21,13 @@ const SESSION_TTL_SECONDS = 24 * 60 * 60;
 // secret que admira.store, xpaceos y admira.biz. La cookie lleva la huella del
 // token, así que cambiar el secret corta también las sesiones ya abiertas.
 const AGENT_EMAIL = 'agentes@silicio.admiranext.com';
+// Superusuario de Pixeria (Carlos, 4-oct-2026): sus cuentas de Google y la sesión de agente
+// (token de la bóveda). Lo decide el servidor y lo cuenta /auth/session (superusuario:true);
+// lo usa la CLI Experto para /marca todas y /marca <cliente> (assets/cliente-activo.js).
+export const SUPERUSUARIOS = ['csilvasantin@gmail.com', 'csilva@admira.com'];
+export function esSuperusuario(session) {
+  return Boolean(session && (session.agent || SUPERUSUARIOS.includes(normalEmail(session.email))));
+}
 const AGENT_TOKEN_MIN = 32;
 const API_TOKEN_TTL_SECONDS = 15 * 60;
 const CHALLENGE_TTL_MS = 10 * 60 * 1000;
@@ -544,7 +551,7 @@ export async function handleAuth(request, env, waitUntil = null) {
   }
   if (url.pathname === '/auth/session' && request.method === 'GET') {
     const session = await readSession(request, env);
-    const response = Response.json(session ? {ok:true, email:session.email} : {ok:false}, {
+    const response = Response.json(session ? {ok:true, email:session.email, superusuario:esSuperusuario(session)} : {ok:false}, {
       status:session ? 200 : 401,
       headers:{'cache-control':'no-store', 'referrer-policy':'no-referrer'}
     });
