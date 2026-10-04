@@ -162,7 +162,7 @@ body[data-paso="1"] #cuad-experto-live{display:none}
 .adapt-main .stk-list li{display:flex;align-items:center;gap:8px;min-width:0;padding:5px 6px;border-radius:6px;cursor:pointer;font-size:13px}
 .adapt-main .stk-list li[aria-selected=true],.adapt-main .stk-list li:hover,.adapt-main .stk-list li:focus{background:color-mix(in srgb,var(--tx) 8%,transparent)}
 .adapt-main .stk-list li.stk-vacio{cursor:default;color:var(--mu)}
-.adapt-main .stk-list img,.adapt-main .stk-list .stk-ph{flex:0 0 48px;width:48px;height:27px;object-fit:cover;border-radius:3px;background:#1a2030}
+.adapt-main .stk-list img,.adapt-main .stk-list .stk-ph,.adapt-main .stk-list video.stk-vid{flex:0 0 48px;width:48px;height:27px;object-fit:cover;border-radius:3px;background:#1a2030}
 .adapt-main .stk-list .stk-t{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Superficies y textos por componente (Carlos, 4-oct-2026, 23:19): cada tarjeta, campo y botón lee

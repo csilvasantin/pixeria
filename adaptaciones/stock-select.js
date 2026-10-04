@@ -124,6 +124,22 @@
     cerrar(true);
     select.dispatchEvent(new Event('change', {bubbles: true}));
   }
+  // Vídeo aún sin miniatura en el índice (recién subido): el fotograma lo saca el navegador al hacerse
+  // visible, con un <video preload=metadata> en el segundo 1 (#t=1), en vez de dejar el recuadro vacío.
+  var io = null;
+  function fotogramaEnCliente(ph) {
+    var v = document.createElement('video');
+    v.className = 'stk-ph stk-vid'; v.muted = true; v.playsInline = true; v.preload = 'metadata';
+    v.setAttribute('aria-hidden', 'true'); v.tabIndex = -1;
+    v.onerror = function () { v.replaceWith(Object.assign(document.createElement('span'), {className: 'stk-ph'})); };
+    v.src = ph.dataset.video + (ph.dataset.video.indexOf('#') < 0 ? '#t=1' : '');
+    ph.replaceWith(v);
+  }
+  function observarSinMiniatura(ph) {
+    if (!('IntersectionObserver' in window)) return fotogramaEnCliente(ph);
+    if (!io) io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { io.unobserve(e.target); fotogramaEnCliente(e.target); } }); }, {root: $('#stock-list'), rootMargin: '200px'});
+    io.observe(ph);
+  }
   function pintarLista(lista) {
     var ul = $('#stock-list'), select = $('#src-select'); if (!ul || !select) return;
     var actual = select.value, fragL = document.createDocumentFragment(), fragS = document.createDocumentFragment();
@@ -134,7 +150,7 @@
       li.dataset.url = url; li.dataset.title = tit; li.title = tit;
       li.setAttribute('aria-selected', url === actual ? 'true' : 'false');
       if (img && /^https:\/\//.test(img)) { var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = img; im.onerror = function () { this.replaceWith(Object.assign(document.createElement('span'), {className: 'stk-ph'})); }; li.appendChild(im); }
-      else { var ph = document.createElement('span'); ph.className = 'stk-ph'; li.appendChild(ph); }
+      else { var ph = document.createElement('span'); ph.className = 'stk-ph'; ph.dataset.video = url; li.appendChild(ph); observarSinMiniatura(ph); }
       var sp = document.createElement('span'); sp.className = 'stk-t'; sp.textContent = tit; li.appendChild(sp);
       fragL.appendChild(li);
       var o = document.createElement('option'); o.value = url; o.dataset.id = it.id || ''; o.dataset.title = tit; o.textContent = tit; fragS.appendChild(o);

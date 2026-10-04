@@ -1,8 +1,8 @@
 {
-  "version": "v.04.10.2026.r19.23:22",
+  "version": "v.04.10.2026.r20.23:37",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "Adaptaciones: al salir del paso 1 se pausan y silencian sus medios; superficies y textos por componente con marca blanca (test WCAG); tarjeta Original primera en el paso 2."
+  "evidence": "Stock: miniaturas reales para los vídeos sin póster; las subidas mandan póster generado en el navegador y el selector saca el fotograma si aún falta."
 }

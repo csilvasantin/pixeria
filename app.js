@@ -2844,6 +2844,10 @@
       } else {
         throw new Error('asset sin url');
       }
+      // Vídeos: miniatura real generada aquí (assets/poster-frame.mjs) para que nada llegue sin imagen.
+      if (meta.type === 'video' && !payload.thumbnail && meta.url) {
+        try { const { posterFromVideo } = await import('/assets/poster-frame.mjs'); const poster = await posterFromVideo(meta.url); if (poster) payload.poster = poster; } catch (_) {}
+      }
       const r = await fetch(STOCK_PUBLISH_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
