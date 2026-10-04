@@ -1,4 +1,4 @@
-// Altadis special layouts (PDF page 3, structure on pages 5–6). The delivery is
+// Client-profile segmented videowall layouts (PDF page 3, structure on pages 5–6). The delivery is
 // ONE file at the table resolution: a grid of cells, one per screen, read left
 // to right and top to bottom, where each row continues the next. The continuous
 // picture is the physical wall: every screen side by side. We compose that wall

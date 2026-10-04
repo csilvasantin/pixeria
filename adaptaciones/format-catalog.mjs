@@ -45,7 +45,7 @@ export const CAMPAIGNS=[
  {id:'display',es:'Anuncios display',en:'Display ads',descriptionEs:'Rectángulos, banners y formatos regionales',descriptionEn:'Rectangles, banners and regional sizes',matches:f=>f.category==='display'},
  {id:'mobile',es:'Anuncios móviles',en:'Mobile ads',descriptionEs:'Tres banners para móvil',descriptionEn:'Three mobile banners',matches:f=>f.mobile},
 ];
-export const formatFamily=f=>f.especial?'especiales':f.altadis?'altadis':'standard';
+export const formatFamily=f=>f.especial?'especiales':f.cliente?'cliente':'standard';
 export function matchingFormats(formats,{query='',orientation='all',category,profile='standard'}={}) {
  const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[×:]/g,'x').replace(/\s+/g,'');
  const q=norm(query);

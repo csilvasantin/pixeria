@@ -14,14 +14,14 @@ const $ = (s) => document.querySelector(s);
 const FORMATOS = createCatalog(EN);
 const MODOS = { auto: t('Auto (regla Pixeria)', 'Auto (Pixeria rule)'), cover: t('Recorte', 'Crop'), blur: t('Expandir · fondo desenfocado', 'Expand · blurred background'), contain: t('Contener · negro', 'Contain · black') };
 const picker = {query:'',orientation:'all',open:new Set()};
-const state = { profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '' };
+const state = { sel: '', profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '' };
 FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoom: 1 }));
 
 const video = $('#src');
 let initialized = false, activeExport = null;
 const downloads = [];
 const selectedFormats = () => FORMATOS.filter(f => f.on && formatFamily(f) === state.profile);
-// Biblioteca uses the compatibility selector; Altadis families keep native resolutions.
+// Biblioteca uses the compatibility selector; client profiles keep native resolutions.
 const syncCompat = () => { $('#compat').disabled = state.profile !== 'standard'; };
 function saveSettings() {
   if (!initialized) return;
@@ -40,11 +40,11 @@ function restoreSettings() {
 }
 function clearDownloads() { downloads.splice(0).forEach(URL.revokeObjectURL); $('#export-results').replaceChildren(); }
 function lockEditor(locked) {
-  document.querySelectorAll('#sec-adapt input, #sec-adapt select, #sec-adapt button').forEach(el=>el.disabled=locked);
+  document.querySelectorAll('#sec-adapt input, #sec-adapt select, #sec-adapt button, #cuad-avanzado-live input, #cuad-avanzado-live select, #cuad-avanzado-live button').forEach(el=>el.disabled=locked);
   $('#cancel-export').disabled=false;$('#cancel-export').hidden=!locked;
   if(!locked) {syncCompat();refreshInfo();}
 }
-// kinds applies to special layouts: the Altadis delivery file, one MP4 per screen, or both.
+// kinds applies to special layouts: the client delivery file, one MP4 per screen, or both.
 function especialJobs(f,kinds) {
   const tech=especialTech(f),mode=modoEfectivo(f),s=state.fmt[f.id],jobs=[];
   if(kinds!=='segments') jobs.push({...atlasJob(state.src,f.layout,mode,s,tech),label:`${f.nombre} · ${t('entrega','delivery')}`});
@@ -114,12 +114,12 @@ window.addEventListener('pagehide',event=>{activeExport?.cancel();if(!event.pers
 function perfil(f) {
   if(f.output==='png')return {ancho:f.custom[0],alto:f.custom[1],orientacion:f.custom[0]>f.custom[1]?'apaisada':f.custom[0]<f.custom[1]?'vertical':'custom',fps:25,techoKbps:8000,sueloKbps:2500,h264:'high@4.0'};
   return f.custom
-    ? perfilDeSalida({ formato: 'custom', ancho: f.custom[0], alto: f.custom[1], compatibilidad: f.altadis || f.especial ? 'uhd' : f.native ? (Math.max(...f.custom)>1920||f.custom[0]*f.custom[1]>1920*1080?'uhd':'fhd') : state.compat })
+    ? perfilDeSalida({ formato: 'custom', ancho: f.custom[0], alto: f.custom[1], compatibilidad: f.cliente || f.especial ? 'uhd' : f.native ? (Math.max(...f.custom)>1920||f.custom[0]*f.custom[1]>1920*1080?'uhd':'fhd') : state.compat })
     : perfilDeSalida({ formato: f.id, compatibilidad: state.compat });
 }
 function plan(f) {
   if (!state.src.ancho) return null;
-  try { const output = planificar(state.src, perfil(f)); if (f.altadis || f.especial) output.fps = 25; return output; } catch (e) { return { error: e.message }; }
+  try { const output = planificar(state.src, perfil(f)); if (f.cliente || f.especial) output.fps = 25; return output; } catch (e) { return { error: e.message }; }
 }
 // Special layouts reframe the physical wall (every screen side by side), not the
 // packed delivery file: that is the picture people actually see across screens.
@@ -204,29 +204,44 @@ function buildGrid() {
     if (f.especial) { g.appendChild(especialCard(f)); return; }
     const p = perfil(f); const cw = p.ancho >= p.alto ? 384 : Math.round(384 * p.ancho / p.alto); const ch = Math.round(cw * p.alto / p.ancho);
     const el = document.createElement('div'); el.className = 'fmt'; el.dataset.f = f.id;
-    el.innerHTML = `<div class="fmt-title"><h3>${f.nombre}</h3><button class="remove-format" type="button" aria-label="${t('Quitar','Remove')} ${f.nombre}">×</button></div><div class="dims">${p.ancho}×${p.alto} · ${f.uso} · ${f.output==='png'?'PNG':'MP4'}</div>
+    el.innerHTML = `<div class="fmt-title"><h3>${f.nombre}</h3><button class="remove-format" type="button" aria-label="${t('Quitar','Remove')} ${f.nombre}">×</button></div><div class="dims">${p.ancho}×${p.alto}</div>
       <div class="stage"><canvas width="${cw}" height="${ch}"></canvas></div>
-      <div class="ctl"><span>${t('Método','Method')}</span><select data-k="modo">${Object.entries(MODOS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
-      <span>${t('Foco X','Focus X')}</span><input type="range" data-k="fx" min="0" max="1" step="0.01" value="0.5">
-      <span>${t('Foco Y','Focus Y')}</span><input type="range" data-k="fy" min="0" max="1" step="0.01" value="0.5">
-      <span>Zoom</span><input type="range" data-k="zoom" min="1" max="2" step="0.01" value="1"></div>
-      <div class="aviso"></div><button class="pill accent export-one" type="button"></button><details class="card-plan"><summary>${t("Plan técnico H.264", "H.264 encoding plan")}</summary><pre></pre></details>`;
-    bindControls(el, f);
-    el.querySelector('.remove-format').onclick=()=>{f.on=false;buildGrid();};
-    el.querySelector('.card-plan').hidden=f.output==='png';
-    el.querySelector('.export-one').textContent=f.output==='png'?t('Exportar PNG','Export PNG'):t('Exportar MP4','Export MP4'); el.querySelector('.export-one').onclick=()=>exportFormats([f]);
+      <button class="pill accent export-one" type="button"></button>`;
+    el.querySelector('.remove-format').onclick=(e)=>{e.stopPropagation();f.on=false;buildGrid();};
+    el.querySelector('.export-one').textContent=f.output==='png'?t('Exportar PNG','Export PNG'):t('Exportar MP4','Export MP4'); el.querySelector('.export-one').onclick=(e)=>{e.stopPropagation();exportFormats([f]);};
+    selectable(el, f);
     g.appendChild(el);
   });
-  refreshInfo();
+  if (!selected.some(f=>f.id===state.sel)) state.sel = selected[0]?.id || '';
+  markSelected(); buildCardSettings(); refreshInfo();
 }
 const controlsHTML = () => `<div class="ctl"><span>${t('Método','Method')}</span><select data-k="modo">${Object.entries(MODOS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
       <span>${t('Foco X','Focus X')}</span><input type="range" data-k="fx" min="0" max="1" step="0.01" value="0.5">
       <span>${t('Foco Y','Focus Y')}</span><input type="range" data-k="fy" min="0" max="1" step="0.01" value="0.5">
       <span>Zoom</span><input type="range" data-k="zoom" min="1" max="2" step="0.01" value="1"></div>`;
+// Avanzado actúa sobre la tarjeta seleccionada: método, foco y zoom, aviso de recorte y dudas del PDF.
+function selectable(el, f) {
+  el.tabIndex = 0; el.setAttribute('role', 'button'); el.setAttribute('aria-pressed', 'false');
+  const pick = () => { if (state.sel === f.id) return; state.sel = f.id; markSelected(); buildCardSettings(); refreshInfo(); };
+  el.addEventListener('click', pick);
+  el.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === el) { e.preventDefault(); pick(); } });
+}
+function markSelected() {
+  document.querySelectorAll('#grid .fmt[data-f]').forEach(el => { const on = el.dataset.f === state.sel; el.classList.toggle('sel', on); el.setAttribute('aria-pressed', String(on)); });
+}
+function buildCardSettings() {
+  const box = $('#card-settings'); if (!box) return;
+  const f = FORMATOS.find(x => x.id === state.sel && x.on);
+  if (!f) { box.innerHTML = `<p class="muted">${t('Elige una tarjeta para ajustar su método, foco y zoom.','Select a card to adjust its method, focus and zoom.')}</p>`; return; }
+  const L = f.layout, size = f.especial ? `${L.entrega[0]}×${L.entrega[1]}` : `${perfil(f).ancho}×${perfil(f).alto}`;
+  box.innerHTML = `<div class="card-sel-hd">${t('Tarjeta seleccionada','Selected card')}: <b>${f.nombre}</b> · ${size}</div>${f.output==='png'?'':controlsHTML()}<div class="aviso"></div>`
+    + (f.especial && L.ambiguedades.length ? `<ul class="esp-warn">${L.ambiguedades.map(a => `<li>${t('Ambigüedad en el PDF','PDF ambiguity')}: ${a}</li>`).join('')}</ul>` : '');
+  bindControls(box, f);
+}
 function bindControls(el, f) {
   el.querySelectorAll('[data-k]').forEach((inp) => { inp.value = state.fmt[f.id][inp.dataset.k]; inp.setAttribute('aria-label', `${t('Ajuste','Setting')} ${inp.dataset.k} · ${f.nombre}`); inp.oninput = () => { const k = inp.dataset.k; state.fmt[f.id][k] = k === 'modo' ? inp.value : +inp.value; refreshInfo(); }; });
 }
-// ── Especiales Altadis: pared física con cortes + entrega con una celda por pantalla ──
+// ── Videowalls segmentados (perfil de cliente): pared física con cortes + entrega con una celda por pantalla ──
 // The wall fills the card width; long walls keep at least WALL_MIN_H px of height and scroll inside the card.
 const WALL_CSS_H = 96, WALL_MIN_H = 64;
 function especialCard(f) {
@@ -235,23 +250,20 @@ function especialCard(f) {
   const aw = W >= H ? 480 : Math.round(480 * W / H), ah = Math.round(aw * H / W);
   const el = document.createElement('div'); el.className = 'fmt fmt-especial'; el.dataset.f = f.id;
   el.innerHTML = `<div class="fmt-title"><h3>${f.nombre}</h3><button class="remove-format" type="button" aria-label="${t('Quitar','Remove')} ${f.nombre}">×</button></div>
-    <div class="dims">${t('Entrega','Delivery')} ${W}×${H} · ${g.segments.length} ${t('pantallas de','screens of')} ${cw}×${ch} · ${t('pared','wall')} ${g.pared.ancho}×${g.pared.alto} · MP4 H.264 25 fps · ${f.uso}</div>
+    <div class="dims">${W}×${H} · ${g.segments.length} ${t('pantallas','screens')}</div>
     <div class="esp-views">
       <figure class="esp-view esp-wall"><figcaption>${t('Pared física · el vídeo continúa de una pantalla a la siguiente','Physical wall · the video continues from one screen to the next')}</figcaption>
         <div class="wall-scroll" tabindex="0" aria-label="${t('Pared física con líneas de corte','Physical wall with cut lines')}"><canvas class="wall" width="${wallW * 2}" height="${WALL_CSS_H * 2}" style="width:max(100%,${Math.round(WALL_MIN_H * aspect)}px);height:auto"></canvas></div></figure>
       <figure class="esp-view esp-atlas"><figcaption>${t('Entrega · una celda por pantalla, en orden de lectura','Delivery · one cell per screen, in reading order')}</figcaption>
         <div class="stage"><canvas class="atlas" width="${aw}" height="${ah}"></canvas></div></figure>
     </div>
-    ${controlsHTML()}
-    <div class="aviso"></div>
-    ${L.ambiguedades.length ? `<ul class="esp-warn">${L.ambiguedades.map(a => `<li>${t('Ambigüedad en el PDF','PDF ambiguity')}: ${a}</li>`).join('')}</ul>` : ''}
     <div class="esp-actions"><button class="pill accent export-one export-atlas" type="button">${t('Exportar entrega · 1 MP4','Export delivery · 1 MP4')} ${W}×${H}</button>
     <button class="pill export-one export-segments" type="button">${t('Exportar por pantalla','Export per screen')} · ${g.segments.length} MP4 ${cw}×${ch}</button></div>
-    <details class="card-plan"><summary>${t('Plan técnico H.264 y archivos','H.264 plan and files')}</summary><pre></pre></details>`;
-  bindControls(el, f);
-  el.querySelector('.remove-format').onclick = () => { f.on = false; buildGrid(); };
-  el.querySelector('.export-atlas').onclick = () => exportFormats([f], 'atlas');
-  el.querySelector('.export-segments').onclick = () => exportFormats([f], 'segments');
+`;
+  el.querySelector('.remove-format').onclick = (e) => { e.stopPropagation(); f.on = false; buildGrid(); };
+  el.querySelector('.export-atlas').onclick = (e) => { e.stopPropagation(); exportFormats([f], 'atlas'); };
+  el.querySelector('.export-segments').onclick = (e) => { e.stopPropagation(); exportFormats([f], 'segments'); };
+  selectable(el, f);
   return el;
 }
 function especialInfo(f) {
@@ -267,36 +279,33 @@ function especialInfo(f) {
     t('Esta página no sincroniza players: la continuidad depende de que arranquen a la vez.','This page does not synchronise players: continuity depends on them starting together.')];
   return { aviso, plan: files.join('\n') + (state.src.ancho ? `\n\nffmpeg ${atlasJob(state.src, L, m, s, tech).args.map(a => JSON.stringify(a)).join(' ')}` : '') };
 }
+function cardAviso(f) {
+  if (f.especial) return especialInfo(f).aviso;
+  if (f.output === 'png') return t('Fotograma actual en PNG.','Current frame as PNG.');
+  const p = plan(f), m = modoEfectivo(f), settings = state.fmt[f.id];
+  let lost = 0;
+  if (state.src.ancho) {
+    const sourceRatio = state.src.ancho / state.src.alto, targetRatio = perfil(f).ancho / perfil(f).alto;
+    if (m === 'cover') lost = 1 - Math.min(sourceRatio / targetRatio, targetRatio / sourceRatio) / settings.zoom ** 2;
+    else if (settings.zoom > 1) {
+      const k = Math.min(perfil(f).ancho / state.src.ancho, perfil(f).alto / state.src.alto) * settings.zoom;
+      lost = 1 - Math.min(1, perfil(f).ancho / (state.src.ancho * k)) * Math.min(1, perfil(f).alto / (state.src.alto * k));
+    }
+  }
+  return p && !p.error
+    ? `${MODOS[m]} · ${Math.round(lost * 100)}% ${t('perdido', 'lost')}${m === 'blur' ? t(' · fondo derivado, sin expansión IA', ' · derived background, no AI expansion') : ''}`
+    : t('Elige un vídeo para calcular el recorte.', 'Choose a video to calculate cropping.');
+}
 function refreshInfo() {
   drawDirty=true;saveSettings();
   $('#export-all').disabled=!!activeExport || !state.src.ancho || !selectedFormats().length;
   document.querySelectorAll('.export-one').forEach(el=>el.disabled=!!activeExport || !state.src.ancho);
-  document.querySelectorAll('#grid .fmt[data-f]').forEach((el) => {
-    const f = FORMATOS.find((x) => x.id === el.dataset.f);
-    if (f.especial) { const info = especialInfo(f); el.querySelector('.aviso').textContent = info.aviso; el.querySelector('.card-plan pre').textContent = info.plan; return; }
-    const p = plan(f); const m = modoEfectivo(f);
-    const settings = state.fmt[f.id];
-    let lost = 0;
-    if (state.src.ancho) {
-      const sourceRatio = state.src.ancho / state.src.alto;
-      const targetRatio = perfil(f).ancho / perfil(f).alto;
-      if (m === 'cover') lost = 1 - Math.min(sourceRatio / targetRatio, targetRatio / sourceRatio) / settings.zoom ** 2;
-      else if (settings.zoom > 1) {
-        const k = Math.min(perfil(f).ancho / state.src.ancho, perfil(f).alto / state.src.alto) * settings.zoom;
-        lost = 1 - Math.min(1, perfil(f).ancho / (state.src.ancho * k)) * Math.min(1, perfil(f).alto / (state.src.alto * k));
-      }
-    }
-    el.querySelector('.aviso').textContent = p && !p.error
-      ? `${MODOS[m]} · ${Math.round(lost * 100)}% ${t('perdido', 'lost')}${m === 'blur' ? t(' · fondo derivado, sin expansión IA', ' · derived background, no AI expansion') : ''}`
-      : t('Elige un vídeo para calcular el recorte.', 'Choose a video to calculate cropping.');
-    el.querySelector('.card-plan pre').textContent = f.output==='png' ? t('Fotograma actual en PNG.','Current frame as PNG.') : p && !p.error
-      ? `${p.ancho}×${p.alto} · H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps · ${p.fps} fps · GOP ${p.gopSegundos}s\n${ffmpegCmd(f)}`
-      : t('Sin vídeo', 'No video');
-  });
+  const selF = FORMATOS.find((x) => x.id === state.sel && x.on), selAviso = $('#card-settings .aviso');
+  if (selF && selAviso) selAviso.textContent = cardAviso(selF);
   const rows = selectedFormats().map((f) => {
-    if (f.especial) return `<div class="fmt" style="margin-bottom:8px"><h3>${f.nombre} · ${f.layout.entrega[0]}×${f.layout.entrega[1]}</h3><pre style="white-space:pre-wrap;font-size:11px;color:#9fc3ff">${especialInfo(f).plan.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])}</pre></div>`;
+    if (f.especial) return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${f.layout.entrega[0]}×${f.layout.entrega[1]}</h3><pre style="white-space:pre-wrap;font-size:11px;color:#9fc3ff">${especialInfo(f).plan.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])}</pre></div>`;
     const p = plan(f); if(f.output==='png')return `<p>${f.nombre} · ${perfil(f).ancho}×${perfil(f).alto} · PNG${f.print?' · 150 ppp':''}</p>`; if (!p || p.error) return `<p>${f.nombre}: ${p ? p.error : 'sin vídeo'}</p>`;
-    return `<div class="fmt" style="margin-bottom:8px"><h3>${f.nombre} · ${p.ancho}×${p.alto}</h3>
+    return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${p.ancho}×${p.alto}</h3>
       <div class="dims">encaje <b>${p.encaje}</b> · adaptación <b>${p.adaptacion}</b> · recorte ${Math.round(p.recortePerdido * 100)}%<br>
       H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps (${p.bitrateMotivo}) · ${p.fps} fps · GOP ${p.gopSegundos}s</div>
       <div class="aviso">${(p.avisos || []).map(a=>/generativ|imagina/i.test(a)?t('Fondo desenfocado derivado del original; sin expansión IA.','Blurred background derived from the original; no AI expansion.'):a).join(' · ')}</div><pre style="white-space:pre-wrap;font-size:11px;color:#9fc3ff">${ffmpegCmd(f)}</pre></div>`;
@@ -354,20 +363,34 @@ function setSource(url, name) {
   sourceObjectURL = url.startsWith('blob:') ? url : null;
   clearDownloads();$('#export-status').textContent='';
   state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0};
-  $('#src-info').textContent = t('Cargando vídeo…','Loading video…');
+  $('#src-info').textContent = t('Cargando vídeo…','Loading video…'); $('#src-msg').textContent = t('Cargando vídeo…','Loading video…');
   state.srcName = name; refreshInfo(); video.src = url; video.play().catch(() => {});
 }
-video.addEventListener('error', () => { $('#src-info').textContent = t('No se pudo reproducir este vídeo. Elige otro archivo o una fuente Stock disponible.', 'Unable to play this video. Choose another file or an available Stock source.'); });
+video.addEventListener('error', () => { if (!video.getAttribute('src')) return; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; $('#src-msg').textContent = $('#src-info').textContent = t('No se pudo reproducir este vídeo. Elige otro archivo o una fuente Stock disponible.', 'Unable to play this video. Choose another file or an available Stock source.'); });
 video.addEventListener('loadedmetadata', () => {
   state.src = { ancho: video.videoWidth, alto: video.videoHeight, fps: 25, bitrateKbps: 0 };
   $('#src-info').textContent = `${state.srcName} · ${video.videoWidth}×${video.videoHeight} · ${video.duration.toFixed(1)} s`;
+  $('#src-info-2').textContent = state.srcName; $('#src-msg').textContent = '';
+  $('#src-preview').hidden = false; $('#btn-adaptar').disabled = false; $('.step[data-go="2"]').disabled = false;
   refreshInfo();
 });
 $('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; if (!o.value) { emptySource(); return; } setSource(o.value, o.textContent.replace(/^Stock · /, '')); };
 // Sin vídeo por defecto (ninguna marca): estado vacío hasta que el usuario elige uno.
-function emptySource() { video.removeAttribute('src'); video.load(); state.srcName = ''; $('#src-info').textContent = t('Elige un vídeo: del Stock, súbelo o créalo.', 'Choose a video: from Stock, upload one or create it.'); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
-$('#src-file').onchange = (e) => { const f = e.target.files[0]; if(f && f.size>MAX_SOURCE_BYTES) {$('#export-status').textContent=t('El límite local es 100 MB. Elige un vídeo más pequeño.','The local limit is 100 MB. Choose a smaller video.');e.target.value='';return;} if (f) setSource(URL.createObjectURL(f), f.name, false); };
-$('#btn-play').onclick = () => (video.paused ? video.play() : video.pause());
+function emptySource() { video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
+$('#src-file').onchange = (e) => { const f = e.target.files[0]; if(f && f.size>MAX_SOURCE_BYTES) {$('#src-msg').textContent=t('El límite local es 100 MB. Elige un vídeo más pequeño.','The local limit is 100 MB. Choose a smaller video.');e.target.value='';return;} if (f) setSource(URL.createObjectURL(f), f.name, false); };
+$('#btn-play').onclick = $('#btn-play-2').onclick = () => (video.paused ? video.play() : video.pause());
+// Flujo en dos pasos: 1 Vídeo (Stock, subir o crear + vista previa) · 2 Adaptar (formatos, vistas previas y Exportar).
+function goStep(n) {
+  if (n === 2 && !state.src.ancho) return;
+  $('#paso-1').hidden = n !== 1; $('#paso-2').hidden = n !== 2; document.body.dataset.paso = String(n);
+  document.querySelectorAll('.steps .step').forEach(b => { if (+b.dataset.go === n) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
+  if (n === 2) { drawDirty = true; buildCardSettings(); refreshInfo(); }
+  window.scrollTo({top: 0});
+}
+document.querySelectorAll('.steps .step').forEach(b => b.onclick = () => goStep(+b.dataset.go));
+$('#btn-adaptar').onclick = () => goStep(2);
+$('#btn-volver').onclick = () => goStep(1);
+$('#btn-sizes').onclick = () => { const m = document.querySelector('.pix-nav-icon-menu'); if (m && document.body.classList.contains('pf-left-off')) m.click(); else document.body.classList.remove('pf-left-off'); };
 $('#modo-global').onchange = (e) => { state.modoGlobal = e.target.value; refreshInfo(); };
 $('#format-profile').onchange = (e) => {
   state.profile = e.target.value;
@@ -378,13 +401,13 @@ $('#format-profile').onchange = (e) => {
 $('#compat').onchange = (e) => { state.compat = e.target.value; buildGrid(); };
 
 
-const altadisResponse = await fetch('/adaptaciones/altadis-18.json');
-if (altadisResponse.ok) {
- const data = await altadisResponse.json();
+const clienteResponse = await fetch('/adaptaciones/perfil-cliente-18.json');
+if (clienteResponse.ok) {
+ const data = await clienteResponse.json();
  for (const f of data.formats) { f.on=true;f.category='digital'; if (EN) f.uso = f.useEn; FORMATOS.push(f); state.fmt[f.id] = {modo:'auto',fx:0.5,fy:0.5,zoom:1}; }
- $('#format-profile').querySelector('[value=altadis]').disabled = false;
+ $('#format-profile').querySelector('[value=cliente]').disabled = false;
 }
-const especialesResponse = await fetch('/adaptaciones/altadis-especiales.json');
+const especialesResponse = await fetch('/adaptaciones/perfil-cliente-especiales.json');
 if (especialesResponse.ok) {
  const data = await especialesResponse.json();
  data.layouts.forEach((layout, i) => { FORMATOS.push({ id: layout.id, nombre: layout.nombre, nameEn: layout.nombre, uso: EN ? layout.useEn : layout.uso, custom: layout.entrega, category: 'digital', especial: true, layout, fps: 25, on: i === 0 }); state.fmt[layout.id] = defaults(); });
