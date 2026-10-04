@@ -479,19 +479,30 @@ async function fetchStockIndex() {
 async function loadStock() {
   try {
     const data = await fetchStockIndex();
-    // Página genérica del Adaptador: no lista piezas de marcas de cliente (las marcas competidoras
-    // nunca se mezclan). Se queda con el Stock sin marca; los vídeos de cliente se suben o se eligen en su espacio.
-    const CLIENTE = /\b(jti|altadis|philip morris|pmi|bat|imperial)\b|tu sitio de siempre/i;
-    const videos = (data.items || []).filter(item => item.type === 'video' && (item.url || item.mediaUrl)
-      && !CLIENTE.test([item.title, item.name, item.prompt, item.comment, (item.tags || []).join(' ')].join(' ')));
-    for (const item of videos) {
-      const url = item.url || item.mediaUrl;
-      if (!/^https:\/\//.test(url)) continue;
-      const option = document.createElement('option'); option.value = url; option.dataset.id = item.id || ''; option.dataset.title = item.title || item.name || item.id || '';
-      option.textContent = 'Stock · ' + (item.title || item.name || item.id);
-      $('#src-select').append(option);
-    }
-    $('#stock-status').textContent = t('Vídeos Stock disponibles: ', 'Stock videos available: ') + videos.length;
+    // Solo los vídeos del cliente activo (selector de la barra superior) más lo genérico de Admira:
+    // las marcas competidoras nunca se mezclan. Se repinta al cambiar de cliente.
+    stockVideos = (data.items || []).filter(item => item.type === 'video' && (item.url || item.mediaUrl));
+    paintStockOptions();
   } catch (_) { $('#stock-status').textContent = t('Stock remoto no disponible. Puedes subir un vídeo.', 'Remote Stock unavailable. You can upload a video.'); }
 }
+let stockVideos = null, clienteEsperaAgotada = false;
+setTimeout(() => { clienteEsperaAgotada = true; paintStockOptions(); }, 4000); // sin selector: se lista todo
+function paintStockOptions() {
+  const PC = window.PixeriaCliente, listo = !!(PC && PC.listo());
+  if (!stockVideos || (!listo && !clienteEsperaAgotada)) return;
+  const select = $('#src-select'), current = select.value;
+  select.querySelectorAll('option[data-id]').forEach(o => o.remove());
+  const videos = listo ? stockVideos.filter(item => PC.visible(item)) : stockVideos;
+  for (const item of videos) {
+    const url = item.url || item.mediaUrl;
+    if (!/^https:\/\//.test(url)) continue;
+    const option = document.createElement('option'); option.value = url; option.dataset.id = item.id || ''; option.dataset.title = item.title || item.name || item.id || '';
+    option.textContent = 'Stock · ' + (item.title || item.name || item.id);
+    select.append(option);
+  }
+  const activo = listo && PC.actual();
+  $('#stock-status').textContent = t('Vídeos Stock disponibles: ', 'Stock videos available: ') + videos.length + (activo ? ` · ${activo.nombre}` : '');
+  if ([...select.options].some(o => o.value === current)) select.value = current;
+}
+document.addEventListener('pixeria:cliente', paintStockOptions);
 loadStock();
