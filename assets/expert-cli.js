@@ -162,7 +162,8 @@
   function sync() {
     var open = mode === 'rail' ? !document.body.classList.contains('pf-bottom-off') : mode === 'quad' ? !panel.classList.contains('is-collapsed') : !panel.hidden;
     if (panel.dataset.cliOpen !== String(open)) panel.dataset.cliOpen = String(open);
-    if (open && !wasOpen) resize(MIN, false);
+    // Con la piel ⌘ EXPERTO · CLI de la suite (look digitalavatar.ai) se abre desplegada: ficha + registro + orden.
+    if (open && !wasOpen) resize(document.documentElement.hasAttribute('data-ax-experto') ? Math.max(expanded, 300) : MIN, false);
     wasOpen = open;
     if (document.body.classList.contains('pf-cli-open') !== open) document.body.classList.toggle('pf-cli-open', open);
     var vv = window.visualViewport;

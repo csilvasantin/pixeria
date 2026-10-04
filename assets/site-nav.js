@@ -652,6 +652,22 @@
       var cli = document.createElement('script');
       cli.src = '/assets/expert-cli.js' + (STAMP || '?v=4663');
       document.body.appendChild(cli);
+      // ⌘ EXPERTO · CLI con el look de digitalavatar.ai (Carlos, 4-oct-2026): piel compartida de la
+      // suite (www.admiranext.com/suite) sobre la consola de expert-cli.js; los comandos no cambian.
+      var axCss = document.createElement('link');
+      axCss.rel = 'stylesheet'; axCss.href = 'https://www.admiranext.com/suite/experto.css?v=20261004-experto-studio-1';
+      document.head.appendChild(axCss);
+      var ax = document.createElement('script');
+      ax.src = 'https://www.admiranext.com/suite/experto.js?v=20261004-experto-studio-1';
+      ax.setAttribute('data-panel', '.pf-cli');
+      ax.setAttribute('data-body', '');
+      ax.setAttribute('data-form', '.pf-cli-form');
+      ax.setAttribute('data-input', '#pf-cli-input');
+      ax.setAttribute('data-log', '#pf-cli-output');
+      ax.setAttribute('data-extras', '');
+      ax.setAttribute('data-chrome', '');
+      ax.setAttribute('data-engine', 'PIXERIA ENGINE');
+      document.body.appendChild(ax);
     }, 0);
   }
 
