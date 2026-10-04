@@ -1,8 +1,8 @@
 {
-  "version": "v.04.10.2026.r22.23:56",
+  "version": "v.05.10.2026.r1.00:05",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "Adaptaciones: ficha técnica real junto a la vista previa (moov leído en el cliente, Range, índice del Stock)."
+  "evidence": "Avatar: mascota nube de Admira (admira-next-web #57); caché del cargador avatar.js?v=20261005-nube-1."
 }
