@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=04.10.2026.r17.2144';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=04.10.2026.r18.2150';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -36,15 +36,15 @@
 <meta charset="utf-8">
 <script>if (/(^|\.)pixeria\.(com|pages\.dev)$/.test(location.hostname) && !location.pathname.startsWith('/en/') && new URLSearchParams(location.search).get('lang') !== 'es') location.replace('/en/adaptaciones/' + location.search);</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.04.10.2026.r17.21:44">
+  <meta name="admiranext-version" content="Pixeria v.04.10.2026.r18.21:50">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Adaptador · Un contenido, todos los formatos | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=04.10.2026.r17.2144">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=04.10.2026.r17.2144">
-  <script defer src="/assets/site-nav.js?v=04.10.2026.r17.2144"></script>
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=04.10.2026.r18.2150">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=04.10.2026.r18.2150">
+  <script defer src="/assets/site-nav.js?v=04.10.2026.r18.2150"></script>
 </head>
 <body class="adapt-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
@@ -64,8 +64,9 @@
       <div id="paso-1" class="paso">
         <h2 class="paso-hd">Elige tu vídeo</h2>
         <div class="src-options">
-          <div class="src-opt src-opt-main"><span class="n">1</span><h3>Stock</h3><p class="muted"><b id="stock-count">…</b> vídeos listos de la biblioteca de Pixeria<span id="stock-cliente"></span>.</p>
-            <select id="src-select" aria-label="Stock"><option value="">Cargando el Stock…</option></select>
+          <div class="src-opt src-opt-main"><span class="n">1</span><h3>Stock</h3><div class="stk-tag"><input id="stock-tag" type="search" list="stock-tags" autocomplete="off" spellcheck="false" placeholder="#hashtag · todos" aria-label="Filtrar el Stock por hashtag"><button type="button" id="stock-tag-clear" class="stk-tag-clear" aria-label="Quitar el hashtag" title="Quitar el hashtag" hidden>×</button><datalist id="stock-tags"></datalist></div><p class="muted"><b id="stock-count">…</b> vídeos listos de la biblioteca de Pixeria<span id="stock-cliente"></span>.</p>
+            <div class="stk-pick"><button type="button" id="stock-pick" class="stk-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="stock-list"><span class="stk-btn-txt">Cargando el Stock…</span></button><ul id="stock-list" class="stk-list" role="listbox" aria-label="Stock" tabindex="-1" hidden></ul></div>
+            <select id="src-select" aria-label="Stock" hidden tabindex="-1"><option value="">Cargando el Stock…</option></select>
             <p id="stock-status" class="muted" role="status"></p></div>
           <label class="src-opt upload"><span class="n">2</span><h3>Subirlo</h3><p class="muted">Un vídeo de tu equipo (máximo 100 MB).</p><input type="file" id="src-file" accept="video/*"></label>
           <a class="src-opt" href="/video.html"><span class="n">3</span><h3>Crearlo</h3><p class="muted">Con el creador de vídeos de Pixeria.</p><span class="pill">Abrir el video creator →</span></a>
@@ -127,9 +128,9 @@
       <details class="plan"><summary>Plan técnico por formato (resolución, H.264, bitrate y orden ffmpeg)</summary><div id="plan-tecnico"></div></details>
     </div>
   </main>
-  <script defer src="/adaptaciones/stock-select.js?v=04.10.2026.r17.2144"></script>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=04.10.2026.r17.2144"></script>
-  <script defer src="/assets/cuadratura.js?v=04.10.2026.r17.2144"></script>
+  <script defer src="/adaptaciones/stock-select.js?v=04.10.2026.r18.2150"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=04.10.2026.r18.2150"></script>
+  <script defer src="/assets/cuadratura.js?v=04.10.2026.r18.2150"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
