@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=04.10.2026.r7.2008';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=04.10.2026.r8.2014';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.04.10.2026.r7.20:08">
+  <meta name="admiranext-version" content="Pixeria v.04.10.2026.r8.20:14">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -50,7 +50,7 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=04.10.2026.r7.2008">
+  <link rel="stylesheet" href="workspace.css?v=04.10.2026.r8.2014">
   <style>
     /* Contador de elementos en stock (en el título), con flash al crecer */
     .stock-count{ font-variant-numeric:tabular-nums; display:inline-block; }
@@ -309,11 +309,11 @@
     .cat-result.sum{ color:var(--muted); border-style:dashed; }
     .cat-result a{ color:var(--matrix); }
   </style>
-  <script defer src="/assets/site-nav.js?v=04.10.2026.r7.2008"></script>
-  <script defer src="/assets/descarga-local.js?v=04.10.2026.r7.2008"></script>
-  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=04.10.2026.r7.2008">
+  <script defer src="/assets/site-nav.js?v=04.10.2026.r8.2014"></script>
+  <script defer src="/assets/descarga-local.js?v=04.10.2026.r8.2014"></script>
+  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=04.10.2026.r8.2014">
 <link rel="stylesheet" href="/assets/furniture/editor.css">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=04.10.2026.r7.2008">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=04.10.2026.r8.2014">
 </head>
 <body data-page="stock">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -424,6 +424,7 @@
         <div id="catList" class="cat-list"></div>
         <div id="catHead" class="cat-head" hidden></div>
       </section>
+      <div id="stockOrigenBar" class="stock-origen-bar" hidden></div>
       <div id="stockGrid" class="stock-grid"></div>
       <div id="stockEmpty" class="stock-empty" hidden>
         <p>// Stock vacío.</p>
@@ -655,8 +656,8 @@
     </form>
   </dialog>
 
-  <script defer src="/matrix-rain.js?v=04.10.2026.r7.2008"></script>
-  <script src="app.js?v=04.10.2026.r7.2008"></script>
+  <script defer src="/matrix-rain.js?v=04.10.2026.r8.2014"></script>
+  <script src="app.js?v=04.10.2026.r8.2014"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "./assets/xpaces/catalog.mjs";
   import {isFurniture3D} from "./assets/furniture/catalog.mjs";
@@ -699,7 +700,7 @@
     const CONSUMPTION_SESSION_KEY = 'pixeria-stock-consumption-session-v1';
     let allItems = [];
     let currentView = []; // lista filtrada+ordenada actual (para navegar el lightbox)
-    let filters = { type: 'video', motor: '', q: '', tags: [], tagMode: 'or', dateQuick: '', dateFrom: '', dateTo: '' };
+    let filters = { origen: (new URLSearchParams(location.search).get('origen') || '').replace(/[^A-Za-z0-9-]/g, ''), type: 'video', motor: '', q: '', tags: [], tagMode: 'or', dateQuick: '', dateFrom: '', dateTo: '' };
     let sortMode = 'date-desc';
     let pageSize = 10; // 0 = mostrar todos
     let currentPage = 1;
@@ -1179,6 +1180,7 @@
               <button type="button" class="stock-card-btn danger" data-act="del" title="Eliminar" aria-label="Eliminar asset"><span aria-hidden="true">🗑</span></button>
             </div>
             ${titleInline}
+            ${adaptChip(it)}
             <span class="stock-head-meta">${headMeta}</span>
           </header>
           ${tagsBlock}
@@ -1308,10 +1310,58 @@
       if (playable > prev && prev > 0) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
     }
 
+    // Adaptaciones del Adaptador de Pixeria: vídeos nuevos con motor «adaptador» y
+    // externalRef = id del vídeo original. Se agrupan bajo su original con el filtro
+    // «origen» (?origen=<id>): el original primero y detrás sus adaptaciones.
+    const isAdaptacion = it => !!(it && it.motor === 'adaptador' && it.externalRef);
+    let ADAPT = new Map();
+    (function () {
+      const st = document.createElement('style');
+      st.textContent = '.stock-adapt-chip{display:inline-block;margin:4px 0 0;padding:2px 9px;border:1px solid var(--line-bright,#1f7a34);border-radius:99px;background:rgba(0,255,65,.06);color:var(--matrix,#00ff41);font:inherit;font-size:11px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}.stock-adapt-chip:hover{background:rgba(0,255,65,.14)}' +
+        '.stock-origen-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:8px 12px;border:1px solid var(--line-bright,#1f7a34);border-radius:8px;background:rgba(0,255,65,.05);font-size:13px}.stock-origen-bar button{background:none;border:1px solid var(--line-bright,#1f7a34);border-radius:99px;color:inherit;font:inherit;font-size:12px;padding:2px 10px;cursor:pointer}';
+      document.head.appendChild(st);
+    })();
+    function setOrigen(id) {
+      filters.origen = String(id || '').replace(/[^A-Za-z0-9-]/g, '');
+      try { const u = new URL(location.href); if (filters.origen) u.searchParams.set('origen', filters.origen); else u.searchParams.delete('origen'); history.replaceState(history.state, '', u.href); } catch (_) {}
+      applyFilters(true);
+      window.scrollTo({ top: 0 });
+    }
+    const escTxt = v => String(v || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    function adaptChip(it) {
+      if (isAdaptacion(it)) {
+        const orig = allItems.find(x => x.id === it.externalRef);
+        const label = orig ? `↳ adaptación de «${escTxt((orig.title || orig.id).slice(0, 60))}»` : '↳ adaptación';
+        return `<button type="button" class="stock-adapt-chip" data-act="origen" data-origen="${escTxt(it.externalRef)}" title="Ver el original y sus adaptaciones">${label}</button>`;
+      }
+      const n = ADAPT.get(it.id) || 0;
+      if (!n || filters.origen === it.id) return '';
+      return `<button type="button" class="stock-adapt-chip" data-act="origen" data-origen="${escTxt(it.id)}" title="Ver el original y sus adaptaciones">⧉ ${n} ${n === 1 ? 'adaptación' : 'adaptaciones'}</button>`;
+    }
+    function renderOrigenBar() {
+      const bar = document.getElementById('stockOrigenBar');
+      if (!bar) return;
+      bar.hidden = !filters.origen;
+      if (!filters.origen) { bar.innerHTML = ''; return; }
+      const orig = allItems.find(x => x.id === filters.origen);
+      const n = ADAPT.get(filters.origen) || 0;
+      bar.innerHTML = `<span>⧉ Original «${escTxt(orig ? (orig.title || orig.id) : filters.origen)}» · ${n} ${n === 1 ? 'adaptación' : 'adaptaciones'}</span><button type="button" data-act="origen" data-origen="">✕ Ver todo el Stock</button>`;
+    }
+    document.addEventListener('click', e => {
+      const b = e.target.closest && e.target.closest('[data-act="origen"]');
+      if (!b || !b.closest('#stockGrid, #stockOrigenBar')) return;
+      e.preventDefault(); e.stopPropagation();
+      setOrigen(b.dataset.origen);
+    }, true);
+
     function applyFilters(resetPage) {
       // Vista Catálogos: la rejilla la pinta CATALOGO (piezas del catálogo elegido).
       if (filters.type === 'catalogo') { if (window.CATALOGO) window.CATALOGO.repaint(); return; }
+      ADAPT = new Map();
+      for (const it of allItems) if (isAdaptacion(it)) ADAPT.set(it.externalRef, (ADAPT.get(it.externalRef) || 0) + 1);
+      renderOrigenBar();
       const items = allItems.filter(it => {
+        if (filters.origen) return it.id === filters.origen || (isAdaptacion(it) && it.externalRef === filters.origen);
         if (!matchesType(it, filters.type)) return false;
         if (filters.motor && it.motor !== filters.motor) return false;
         if (filters.tags && filters.tags.length) {
@@ -1333,6 +1383,7 @@
         return true;
       });
       const sorted = sortItems(items, sortMode);
+      if (filters.origen) sorted.sort((a, b) => (b.id === filters.origen) - (a.id === filters.origen));
       currentView = sorted; // las flechas del lightbox recorren esta lista (cruza páginas)
 
       // Paginación (0 = todos)
@@ -3204,7 +3255,7 @@
       .catch(()=>{});
   })();
   </script>
-  <script defer src="/assets/cuadratura.js?v=04.10.2026.r7.2008"></script>
+  <script defer src="/assets/cuadratura.js?v=04.10.2026.r8.2014"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>

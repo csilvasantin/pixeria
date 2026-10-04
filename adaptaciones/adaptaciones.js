@@ -5,6 +5,7 @@ import { perfilDeSalida, planificar } from '/assets/signage-perfiles.js';
 import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob } from './adapter-core.mjs';
 import { createEngine, MAX_SOURCE_BYTES } from './adapter-export.js';
 import { createExportQueue } from './export-queue.js';
+import { publishAdaptation, shortFormat, adaptationTitle } from './stock-publish.mjs';
 import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily } from './format-catalog.mjs';
 import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
 import { pngDensity } from './png-density.mjs';
@@ -15,7 +16,7 @@ const $ = (s) => document.querySelector(s);
 const FORMATOS = createCatalog(EN);
 const MODOS = { auto: t('Auto (regla Pixeria)', 'Auto (Pixeria rule)'), cover: t('Recorte', 'Crop'), blur: t('Expandir · fondo desenfocado', 'Expand · blurred background'), contain: t('Contener · negro', 'Contain · black') };
 const picker = {query:'',orientation:'all',open:new Set()};
-const state = { sel: '', profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '' };
+const state = { sel: '', profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '', origin: { id: null, title: '' } };
 FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoom: 1 }));
 
 const video = $('#src');
@@ -50,7 +51,29 @@ function especialJobs(f,kinds) {
 }
 // Exports go to the background queue: each line freezes its job (settings, size and
 // source) at click time, so the user can keep editing, switch video or go back to step 1.
-const queue = createExportQueue({engine:createEngine(),t,onRelease:url=>{if(url!==sourceObjectURL&&url.startsWith('blob:'))URL.revokeObjectURL(url);}});
+// Every finished MP4 is also saved to the Stock as a new video: «<title> · <client> · <format>».
+let savingToStock=0;
+async function saveToStock(item,file) {
+  if(file.blob.type!=='video/mp4') return;
+  savingToStock++;try {await saveOne(item,file);} finally {savingToStock--;}
+}
+async function saveOne(item,file) {
+  const total=item.files.length,format=shortFormat(item.format,file.output);
+  const title=adaptationTitle(item.origin.title,item.client,format);
+  item.stock=item.stock||{ok:0,fail:0,ids:[]};
+  queue.note(item,t('Guardando en el Stock…','Saving to Stock…'));
+  let result;
+  try {result=await publishAdaptation(file.blob,{title,originId:item.origin.id,client:item.client,format,width:file.output.W,height:file.output.H,duration:item.duration});}
+  catch(_) {result={ok:false,error:'network'};}
+  if(result.ok){item.stock.ok++;item.stock.ids.push(result.num?`#${result.num}`:result.id);}else item.stock.fail++;
+  const done=item.stock.ok+item.stock.fail;
+  if(done<total){queue.note(item,`${t('Guardando en el Stock…','Saving to Stock…')} ${done}/${total}`);return;}
+  queue.note(item,item.stock.fail
+    ?(result.error==='too-big'?t('Supera 70 MB: no se guardó en el Stock; descárgalo.','Over 70 MB: not saved to Stock; download it.'):t('No se pudo guardar en el Stock; descárgalo.','Could not save to Stock; download it.'))
+    :`${t('En el Stock','In Stock')} ${item.stock.ids.join(' ')}`.trim());
+  item.stockTitle=title;
+}
+const queue = createExportQueue({engine:createEngine(),t,onComplete:saveToStock,onRelease:url=>{if(url!==sourceObjectURL&&url.startsWith('blob:'))URL.revokeObjectURL(url);}});
 async function exportFormats(formats,kinds='both') {
   if(!state.src.ancho || !formats.length) return;
   const status=$('#export-status');status.textContent='';
@@ -61,6 +84,8 @@ async function exportFormats(formats,kinds='both') {
     ?t('El lote supera el presupuesto local de memoria. Selecciona menos formatos y expórtalos por separado.','This batch exceeds the local memory budget. Select fewer formats and export them separately.')
     :t('Este vídeo es demasiado largo para exportarlo con este perfil en el navegador. Usa un clip más corto o un perfil de menor resolución.','This video is too long to export with this profile in the browser. Use a shorter clip or a lower resolution profile.');return;}
   const sourceURL=video.currentSrc||video.src,sub=state.srcName;
+  // Frozen at click time: original video, active client (top bar selector) and duration.
+  const ctx={origin:{...state.origin},client:window.PixeriaCliente?.actual?.()||null,duration:video.duration};
   for(const f of pngFormats){
     const p=perfil(f),canvas=document.createElement('canvas');canvas.width=p.ancho;canvas.height=p.alto;
     drawInto(canvas,f);
@@ -68,9 +93,9 @@ async function exportFormats(formats,kinds='both') {
     canvas.width=canvas.height=0;
     if(!blob)continue;
     if(f.print)blob=new Blob([pngDensity(new Uint8Array(await blob.arrayBuffer()))],{type:'image/png'});
-    queue.addReady({label:`${f.nombre} · PNG`,sub,sourceURL:null,format:f},[{blob,filename:`${f.id}-${p.ancho}x${p.alto}.png`}]);
+    queue.addReady({label:`${f.nombre} · PNG`,sub,sourceURL:null,format:f,...ctx},[{blob,filename:`${f.id}-${p.ancho}x${p.alto}.png`}]);
   }
-  for(const {job,f} of jobs) queue.add({label:job.label,sub,sourceURL,job,format:f});
+  for(const {job,f} of jobs) queue.add({label:job.label,sub,sourceURL,job,format:f,...ctx});
 }
 $('#export-all').onclick=()=>exportFormats(selectedFormats());
 $('#reset-settings').onclick=()=>{
@@ -79,7 +104,7 @@ $('#reset-settings').onclick=()=>{
   $('#format-profile').value='standard';$('#compat').value='fhd';syncCompat();$('#modo-global').value='auto';buildGrid();
 };
 // Closing the tab mid-export loses the work: the browser asks first.
-window.addEventListener('beforeunload',event=>{if(!queue.busy())return;event.preventDefault();event.returnValue=t('Hay exportaciones en curso','Exports are in progress');return event.returnValue;});
+window.addEventListener('beforeunload',event=>{if(!queue.busy()&&!savingToStock)return;event.preventDefault();event.returnValue=t('Hay exportaciones en curso','Exports are in progress');return event.returnValue;});
 window.addEventListener('pagehide',event=>{if(event.persisted)return;queue.cancelAll();queue.clear();if(sourceObjectURL)URL.revokeObjectURL(sourceObjectURL);});
 
 // ── Perfil + plan (motor Pixeria) ───────────────────────────────────────────
@@ -330,7 +355,8 @@ function loop() {
 
 // ── Fuente ──────────────────────────────────────────────────────────────────
 let sourceObjectURL = null;
-function setSource(url, name) {
+function setSource(url, name, origin = {id:null,title:name}) {
+  state.origin = {id:origin.id||null,title:origin.title||name};
   // A local file still being exported keeps its blob URL until its last queue line ends.
   if (sourceObjectURL && sourceObjectURL !== url && !queue.uses(sourceObjectURL)) URL.revokeObjectURL(sourceObjectURL);
   sourceObjectURL = url.startsWith('blob:') ? url : null;
@@ -347,10 +373,10 @@ video.addEventListener('loadedmetadata', () => {
   $('#src-preview').hidden = false; $('#btn-adaptar').disabled = false; $('.step[data-go="2"]').disabled = false;
   refreshInfo();
 });
-$('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; if (!o.value) { emptySource(); return; } setSource(o.value, o.textContent.replace(/^Stock · /, '')); };
+$('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; if (!o.value) { emptySource(); return; } setSource(o.value, o.textContent.replace(/^Stock · /, ''), {id:o.dataset.id,title:o.dataset.title}); };
 // Sin vídeo por defecto (ninguna marca): estado vacío hasta que el usuario elige uno.
 function emptySource() { video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
-$('#src-file').onchange = (e) => { const f = e.target.files[0]; if(f && f.size>MAX_SOURCE_BYTES) {$('#src-msg').textContent=t('El límite local es 100 MB. Elige un vídeo más pequeño.','The local limit is 100 MB. Choose a smaller video.');e.target.value='';return;} if (f) setSource(URL.createObjectURL(f), f.name, false); };
+$('#src-file').onchange = (e) => { const f = e.target.files[0]; if(f && f.size>MAX_SOURCE_BYTES) {$('#src-msg').textContent=t('El límite local es 100 MB. Elige un vídeo más pequeño.','The local limit is 100 MB. Choose a smaller video.');e.target.value='';return;} if (f) setSource(URL.createObjectURL(f), f.name, {id:null,title:f.name.replace(/\.[^.]+$/,'')}); };
 $('#btn-play').onclick = $('#btn-play-2').onclick = () => (video.paused ? video.play() : video.pause());
 // Flujo en dos pasos: 1 Vídeo (Stock, subir o crear + vista previa) · 2 Adaptar (formatos, vistas previas y Exportar).
 function goStep(n) {
@@ -413,7 +439,7 @@ async function loadStock() {
     for (const item of videos) {
       const url = item.url || item.mediaUrl;
       if (!/^https:\/\//.test(url)) continue;
-      const option = document.createElement('option'); option.value = url;
+      const option = document.createElement('option'); option.value = url; option.dataset.id = item.id || ''; option.dataset.title = item.title || item.name || item.id || '';
       option.textContent = 'Stock · ' + (item.title || item.name || item.id);
       $('#src-select').append(option);
     }

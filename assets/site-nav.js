@@ -641,6 +641,10 @@
     // pasada normaliza tambien esa barra cuando se reutiliza en una interior.
     setTimeout(function () {
       normalizeInternalNav(); syncRailVersion(); trackTopbarHeight();
+      // Cliente activo (selector global junto al logo): assets/cliente-activo.js.
+      var cliente = document.createElement('script');
+      cliente.src = '/assets/cliente-activo.js' + (STAMP || '');
+      document.body.appendChild(cliente);
       if (!document.querySelector('.rail-bottom,.quad-bottom,#pixNavExpertLayer')) return;
       var css = document.createElement('link');
       css.rel = 'stylesheet'; css.href = '/assets/expert-cli.css' + (STAMP || '?v=4663');
