@@ -3,7 +3,11 @@
   "genericos": [
     "admira"
   ],
-  "asignaciones": {},
+  "asignaciones": {
+    "1790932896582-vc9x7t": "jti",
+    "1790932802558-6pdss9": "jti",
+    "1790932708532-mq8mlu": "jti"
+  },
   "clientes": {
     "admira": {
       "tags": [
