@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=04.10.2026.r1.0105';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=04.10.2026.r2.1825';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,14 +35,14 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.04.10.2026.r1.01:05">
+  <meta name="admiranext-version" content="Pixeria v.04.10.2026.r2.18:25">
   <title>Calendario de emisión · Pixeria</title>
   <meta name="description" content="Parrilla diaria del circuito de pantallas: qué se emite hoy y qué huecos quedan disponibles para campañas creadas en Pixeria.">
   <meta name="theme-color" content="#0b1117">
   <link rel="canonical" href="https://www.pixeria.com/calendario/">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="../assets/styles.css?v=04.10.2026.r1.0105">
+  <link rel="stylesheet" href="../assets/styles.css?v=04.10.2026.r2.1825">
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/emission-calendar.css">
   <style>
     .calendar-hero {
@@ -183,8 +183,8 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=04.10.2026.r1.0105">
-  <script defer src="/assets/site-nav.js?v=04.10.2026.r1.0105"></script>
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=04.10.2026.r2.1825">
+  <script defer src="/assets/site-nav.js?v=04.10.2026.r2.1825"></script>
 </head>
 <body>
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -532,7 +532,7 @@
       else document.addEventListener('DOMContentLoaded', init);
     })();
   </script>
-  <script defer src="/assets/matrix-rain.js?v=04.10.2026.r1.0105"></script>
-  <script defer src="/assets/cuadratura.js?v=04.10.2026.r1.0105"></script>
+  <script defer src="/assets/matrix-rain.js?v=04.10.2026.r2.1825"></script>
+  <script defer src="/assets/cuadratura.js?v=04.10.2026.r2.1825"></script>
 </body>
 </html>
