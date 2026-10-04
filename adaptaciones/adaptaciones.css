@@ -64,3 +64,15 @@
 .custom-size{margin-top:15px;border-top:1px solid var(--ln)}.custom-dimensions{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;margin-bottom:12px}.adapter-variants{min-width:0}.variants-heading,.fmt-title{display:flex;align-items:center;justify-content:space-between;gap:8px}.variants-heading h2{font-size:15px;margin:12px 0}.remove-format{background:none;color:var(--mu);border:0;cursor:pointer;font-size:22px;padding:0 4px;line-height:1}.remove-format:hover{color:var(--ac)}.output-note{font-size:12px;line-height:1.5}.size-library input:focus-visible,.size-library select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 @media(max-width:1050px){.adapter-workspace{grid-template-columns:260px minmax(0,1fr);gap:14px}.adapt-main .grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}}
 @media(max-width:760px){.adapter-workspace{grid-template-columns:1fr}.size-library{position:static;max-height:480px}.variants-heading{flex-wrap:wrap}.size-library h3{margin-top:12px}}
+
+/* Especiales Altadis: the physical wall scrolls inside its card, never the page. */
+.adapt-main .fmt-especial{grid-column:1/-1;min-width:0}
+.esp-views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto);gap:12px;align-items:start;margin:8px 0}
+.esp-view{margin:0;min-width:0}.esp-view figcaption{font-size:11px;color:var(--mu);margin-bottom:5px}
+.wall-scroll{overflow-x:auto;max-width:100%;background:#000;border:1px solid #333;scrollbar-width:thin}
+.adapt-main .fmt .wall-scroll canvas{max-width:none;max-height:none;border:0}
+.adapt-main .fmt-especial .esp-atlas .stage{margin:0;height:auto;min-height:120px;padding:6px}
+.adapt-main .fmt-especial .esp-atlas canvas{max-height:300px}
+.esp-warn{margin:8px 0 0;padding:8px 10px 8px 24px;font-size:11px;color:#ffcf7a;border:1px solid #5a4a26;border-radius:4px;background:#1d1a10}
+.esp-actions{display:flex;flex-wrap:wrap;gap:8px}.esp-actions .export-one{margin-top:10px}
+@media(max-width:1050px){.esp-views{grid-template-columns:minmax(0,1fr)}}

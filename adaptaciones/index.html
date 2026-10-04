@@ -96,7 +96,7 @@
         </details>
       </aside>
       <div class="adapter-variants">
-      <label class="profile-label">Perfil de formatos <select id="format-profile"><option value="standard">Biblioteca · redes, digital, display e impresión</option><option value="altadis" disabled>Altadis · 18 formatos estándar</option></select></label>
+      <label class="profile-label">Perfil de formatos <select id="format-profile"><option value="standard">Biblioteca · redes, digital, display e impresión</option><option value="altadis" disabled>Altadis · 18 formatos estándar</option><option value="especiales" disabled>Especiales Altadis · 5 videowalls segmentados</option></select></label>
       <details class="export-limits"><summary>Tipos de salida y límites</summary><p class="muted">Exporta MP4 con tus ajustes y el audio original, si existe. Procesamiento en este navegador: máximo 100 MB de origen, una variante cada vez; 4K puede tardar varios minutos. Los lotes grandes se deben dividir para limitar la memoria. La primera exportación descarga el motor (unos 32 MB). Expandir usa fondo desenfocado, sin IA; su desenfoque puede variar ligeramente respecto al previo. FPS y bitrate de entrada estimados.</p><p class="muted output-note">Redes y digital: MP4. Display e impresión: PNG del fotograma actual; pausa el vídeo para elegirlo. Impresión: RGB a 150 ppp, sin sangrado ni CMYK. Los tamaños son referencias: revisa peso, zonas seguras y requisitos del destino. La compatibilidad afecta a los cuatro formatos de proporción; los presets con medidas mantienen su resolución.</p></details>
       <div class="export-toolbar">
         <button id="export-all" class="pill accent" type="button" disabled>Exportar formatos seleccionados</button>
@@ -108,6 +108,7 @@
       <p id="export-status" role="status" aria-live="polite"></p>
       <div id="export-results" class="export-results"></div>
       <p class="muted">Altadis: resolución nativa, MP4 H.264, 25 fps. Sincro VW y LOGO necesitan igual duración; esta vista no sincroniza reproductores.</p>
+      <p class="muted especiales-note">Especiales Altadis: el reencuadre se hace sobre la pared física y cada pantalla se recorta del mismo maestro. La entrega es un MP4 a la resolución de Altadis, con una celda por pantalla. También puedes exportar un MP4 por pantalla, sin audio, con la misma duración y 25 fps. La imagen solo continúa entre pantallas si los players arrancan a la vez: esta página no sincroniza players.</p>
       <div class="variants-heading"><h2 id="selected-count"></h2><button id="clear-formats" class="pill" type="button">Quitar todos</button></div>
       <p id="empty-formats" class="muted" hidden>Elige tamaños en el panel de la izquierda para crear tus adaptaciones.</p>
       <div id="src-info" class="muted">cargando…</div>

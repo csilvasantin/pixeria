@@ -6,7 +6,7 @@ Vídeo incluye el compositor de TikToks. Adaptador ocupa su anterior entrada de 
 
 Elige un vídeo del índice Stock o súbelo desde tu equipo. También puedes abrir el creador de Vídeo. Selecciona formatos estándar (9:16, 16:9, 1:1, 4:5) o el perfil Altadis. Ajusta recorte, contener o expansión con fondo desenfocado, foco y zoom. Cada tarjeta muestra resolución, uso, pérdida efectiva del encuadre y una receta H.264 plegable.
 
-El perfil Altadis contiene las 18 filas no marcadas ESPECIAL de la página 3 de «ALTADIS Resoluciones y formatos», incluyendo Shuttle Stretch (SEDE). Fuente recuperada del archivo «Resoluciones y formatos especiales .pdf» aportado por Carlos en Telegram Desktop del MacMini. SHA-256 y filas transcritas: `adaptaciones/altadis-18.json`. Mantiene las resoluciones nativas, H.264/MP4 y 25 fps. Los cinco layouts especiales segmentados requieren un adaptador distinto; no se presentan como formatos estándar. Sincro VW y LOGO requieren duración coincidente; no se sincronizan players desde esta página.
+El perfil Altadis contiene las 18 filas no marcadas ESPECIAL de la página 3 de «ALTADIS Resoluciones y formatos», incluyendo Shuttle Stretch (SEDE). Fuente recuperada del archivo «Resoluciones y formatos especiales .pdf» aportado por Carlos en Telegram Desktop del MacMini. SHA-256 y filas transcritas: `adaptaciones/altadis-18.json`. Mantiene las resoluciones nativas, H.264/MP4 y 25 fps. Los cinco layouts especiales segmentados no se presentan como formatos estándar: tienen su propia familia, descrita en «Especiales Altadis». Sincro VW y LOGO requieren duración coincidente; no se sincronizan players desde esta página.
 
 La cuadrícula previsualiza los ajustes con canvas. “Exportar MP4” en una tarjeta genera esa variante; “Exportar formatos seleccionados” las procesa secuencialmente. Al acabar aparecen enlaces de descarga individuales. Los MP4 se codifican en el navegador con FFmpeg WASM, H.264 y audio AAC cuando el origen tiene audio. La expansión repite y desenfoca el propio vídeo, sin IA generativa. Foco, zoom y recorte se calculan en el mismo módulo que el encoder; puede haber pequeñas diferencias de desenfoque. El plan muestra la orden usada; bitrate y FPS de entrada son estimaciones. Los renders JTI listos son archivos reales previamente publicados en Stock, incluyendo 1:1 H.264 1080×1080 y 4:5 H.264 1080×1350, contrastados con ffprobe. No se regeneran al mover los controles. Vídeos remotos pueden fallar por CORS, retirada del asset o incompatibilidad del navegador; la subida local sigue disponible.
 
@@ -41,3 +41,33 @@ Redes y digital exportan MP4. Display e impresión exportan PNG del fotograma ac
 Verificación: ocho pruebas con FFmpeg real, catálogo, búsqueda, validación de preferencias/custom y pHYs/CRC de PNG a150ppp. En el navegador se verificaron campañas, filtro sin perder selección, PNG300×250 y A41240×1754 generados, custom500×500 persistente y MP4 generado, cambio Altadis18↔Biblioteca3. La automatización del navegador integrado no permitió recuperar nuevas descargas; no se afirma haber inspeccionado nuevos archivos PNG/MP4 del navegador. Las pruebas del encoder y la metadata PNG se verificaron por separado.
 
 Minitutorial creado en el generador oficial de [ADmiraNeXT](https://www.admiranext.com/tiktok/). Es una guía animada, no una grabación de pantalla. El MP4 exportado fue recuperado y verificado con ffprobe (H264/AAC, 1080×1920, 15.139s) y tres fotogramas a2,6,12segundos. Vídeo: [minitutorial-adaptador-tamanos.mp4](media/minitutorial-adaptador-tamanos.mp4). SHA256 8ca9f62050fba84bf9bd545542f5f0fcd6eeff4d3ecb9cd6f7c167976dfa935e. Guion y parámetros conservados en [minitutorial-adaptador-tamanos-plan.json](media/minitutorial-adaptador-tamanos-plan.json), con ubicación, uso, resultado y límites. El tutorial anterior corresponde a exportación MP4, no documenta la nueva biblioteca.
+
+## Especiales Altadis
+
+Tercera familia del selector «Perfil de formatos», junto a Biblioteca y Altadis 18, en español y en inglés. Contiene las 5 filas marcadas ESPECIAL en la página 3 del mismo PDF (SHA-256 `16a17b2f…5239f7`). Están transcritas en `adaptaciones/altadis-especiales.json`. La geometría y los trabajos FFmpeg están en `adaptaciones/especiales-core.mjs`.
+
+Lectura de la fuente: PDFKit de macOS ejecutado con `swift`, con el texto de las 8 páginas y un render PNG a 3×. Las cuadrículas de las páginas 5 y 6 se comprobaron visualmente y ampliadas. La página 5 fija la regla: cada espacio es una pantalla y cada fila continúa la siguiente. Por eso la resolución de la tabla no es un mosaico rectangular. Es **un único archivo de entrega** con una celda por pantalla, en orden de lectura; las celdas sobrantes van marcadas.
+
+| Fila de la tabla | Entrega | Celda | Pantallas | Rejilla | Celdas sin uso | Pared física |
+|---|---|---|---|---|---|---|
+| VIDEOWALL 5x1 H (1280 X 1080) | 1280×1080 | 640×360 | 5 | 2×3 | 6 | 3200×360 |
+| VIDEOWALL 6x1 H (1280 X 1080) | 1280×1080 | 640×360 | 6 | 2×3 | — | 3840×360 |
+| VIDEOWALL 9x1 H (2880 X 1620) | 2880×1620 | 720×540 | 11 | 4×3 | 12 | 7920×540 |
+| CORDOBA-098 (3840 X 2160) | 3840×2160 | 960×540 | 15 | 4×4 | 16 | 14400×540 |
+| VIDEOWALL 13x1 V (2160 X 3840) | 2160×3840 | 540×960 | 13 | 4×4 | 14, 15, 16 | 7020×960 |
+
+Ambigüedades del PDF. No se resuelven en silencio: la tarjeta de cada layout las muestra.
+- 9x1 H: la página 6 lo titula «11x1 H» y dibuja 11 celdas activas más una oscura. Se modelan 11 pantallas. Hay que confirmarlo antes de emitir.
+- 5x1 H y 6x1 H: la imagen de ejemplo rotula «640x540», pero la cuadrícula dice 640x360px y 3 × 360 = 1080. Se usa 640×360, que encaja con las pantallas 16:9 de la foto «VW 5x1 H» de la página 2.
+- CORDOBA-098: el PDF no indica pantallas ni disposición. 15 sale de la cuadrícula; la fila única sale de la regla de continuidad.
+- «Mismo tiempo de resolución para la correcta sincronización» se refiere a Sincro VW y Sincro LOGO, que siguen en Altadis 18. Ningún especial es un LOGO con pieza independiente.
+
+Funcionamiento: el reencuadre existente (recorte, contener, expandir con fondo desenfocado, foco y zoom) se aplica a la **pared física**, es decir, a todas las pantallas una al lado de otra. La previsualización muestra la pared con líneas de corte y números, y la entrega con cada celda numerada y las sobrantes tachadas. FFmpeg remuestrea a 25 fps con `fps=25`, compone la pared una sola vez, la divide y recorta cada pantalla del mismo maestro:
+- **Exportar entrega**: 1 MP4 a la resolución de la tabla, como pide el PDF. Usa H.264 del perfil 4K de Altadis, GOP de 1 s, celdas sobrantes en negro y audio AAC si el origen lo tiene. Nombre: `<layout>-entrega-<ancho>x<alto>.mp4`.
+- **Exportar por pantalla**: N MP4 en una sola pasada, sin audio, a 25 fps y con el mismo número de fotogramas. Usa H.264 nivel 4.0 y la parte proporcional, por píxeles, del bitrate de la entrega. Nombre: `<layout>-<n>de<N>-<ancho>x<alto>.mp4`.
+
+Se reutilizan el exportador WASM y los límites existentes: 100 MiB de origen, presupuesto de 96/192 MiB, tope de 128 MiB por salida y rechazo a partir de 124 MiB. Los ajustes se guardan por id de layout, como en las otras familias, y alternar familias conserva sus selecciones.
+
+Límites: esta página no sincroniza players. La imagen solo continúa entre pantallas si arrancan a la vez y en bucle juntos. Las paredes largas (CORDOBA-098, 14400 px) componen un fotograma intermedio grande y pueden tardar en navegadores modestos. Con `-preset ultrafast`, ffprobe identifica el H.264 como «Constrained Baseline», igual que en el resto del Adaptador. No hay biseles ni huecos entre pantallas, porque el PDF no los da.
+
+Verificación: `test/adapter-especiales.test.mjs` cubre el catálogo y el SHA (también contra el PDF local si existe); la geometría (las celdas cubren la entrega y las pantallas cubren la pared sin solapes ni huecos); los nombres; la persistencia y el filtro por familia; y los trabajos. Con `ADAPTER_FFMPEG_TEST=1`, FFmpeg nativo convierte un maestro de 2 s en N pantallas: ffprobe confirma resolución, H.264, 25/1, 50 fotogramas y duración idéntica, además de la entrega con AAC. En Chrome se exportaron 5 MP4 de 640×360 y la entrega de 1280×1080 de VW 5x1 H con FFmpeg WASM. ffprobe dio 50 fotogramas y 2,000 s en cada pantalla, y apilar las 5 pantallas reconstruye la pared continua.
