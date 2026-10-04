@@ -229,26 +229,48 @@
       document.head.appendChild(s);
     });
   }
+  // /marca y el cliente activo (assets/cliente-activo.js · Carlos, 4-oct-2026, 20:32): el selector
+  // «Cliente» está oculto y Admira lo ve todo. Superusuario: /marca todas lo enseña junto al logo,
+  // /marca <cliente> filtra por ese cliente (y si además es una marca del catálogo, la viste) y
+  // /marca off oculta el selector y vuelve a Admira (además de apagar la marca blanca, como siempre).
+  // → true si ya está resuelto aquí; false para seguir con la marca blanca (runMarca).
+  function marcaCliente(arg) {
+    var PC = window.PixeriaCliente, a = String(arg || '').trim();
+    if (!PC || !PC.listo || !PC.listo()) return false;
+    var def = PC.porDefecto(), defNombre = def ? def.nombre : 'Admira';
+    if (/^(todas|todos|all)$/i.test(a)) {
+      if (!PC.esAdmin()) { write(t('Solo el superusuario (rol admin) puede mostrar el selector de cliente.', 'Only the superuser (admin role) can show the client selector.')); return true; }
+      PC.selector(true);
+      write(t('Selector «Cliente» visible junto al logo. /marca <cliente> filtra; /marca off lo oculta y vuelve a ' + defNombre + '.', '«Client» selector shown next to the logo. /marca <client> filters; /marca off hides it and returns to ' + defNombre + '.'));
+      return true;
+    }
+    if (/^off$/i.test(a)) {
+      var habia = PC.selectorVisible() || !PC.esDefecto();
+      PC.selector(false); PC.fijar('');
+      if (habia) write(t('Selector de cliente oculto: ' + defNombre + ', con todo el contenido.', 'Client selector hidden: ' + defNombre + ', with all content.'));
+      return false;
+    }
+    if (!a) { if (!PC.esDefecto()) write(t('Cliente activo: ' + PC.actual().nombre + '.', 'Active client: ' + PC.actual().nombre + '.')); return false; }
+    var c = PC.resolver(a);
+    if (!c || !PC.esAdmin()) return false;
+    PC.fijar(c.id);
+    write(PC.esDefecto() ? t('Cliente ' + c.nombre + ': ves todo el contenido.', c.nombre + ' client: you see all content.')
+      : t('Cliente activo: ' + c.nombre + ' (' + c.id + ') en toda la sesión; solo su contenido y el genérico de ' + defNombre + '. /marca off vuelve a ' + defNombre + '.',
+        'Active client: ' + c.nombre + ' (' + c.id + ') for the whole session; only its content plus ' + defNombre + ' generic content. /marca off returns to ' + defNombre + '.'));
+    // Si también es una marca del catálogo de marca blanca, se aplica como antes (/marca starbucks).
+    marca().then(function (M) {
+      if (!M) return;
+      return M.listar().catch(function () { return M.conocidas(); }).then(function (items) {
+        if ((items || []).some(function (b) { return b.id === c.id || b.id === a.toLowerCase(); })) return runMarca(a, M, en, write);
+      });
+    });
+    return true;
+  }
   function execute(command) {
     var words = command.trim().split(/\s+/), name = words.shift().toLowerCase().replace(/^\//, ''), arg = words.join(' ');
     if (MARCA_VERB.test(name)) {
-      marca().then(function (M) { return runMarca(arg, M, en, write); });
+      if (!marcaCliente(arg)) marca().then(function (M) { return runMarca(arg, M, en, write); });
       return;
-    }
-    // Superusuario: «/starbucks», «proyectoStarbucks» o cualquier id o nombre de cliente cambia
-    // el cliente activo de toda la sesión (assets/cliente-activo.js); «/todos» lo quita.
-    var PC = window.PixeriaCliente;
-    var KNOWN = /^(help|ayuda|clear|limpiar|echo|date|fecha|version|status|estado|history|historial|open|abrir|cli|avatardigital|digitalavatar)$/;
-    if (PC && PC.listo() && !KNOWN.test(name)) {
-      var cliente = PC.resolver(command);
-      if (cliente) {
-        if (!PC.esAdmin()) { write(t('Solo el superusuario (rol admin) cambia el cliente de la sesión. Usa el selector «Cliente» de la barra superior.', 'Only the superuser (admin role) can switch the session client. Use the «Client» selector in the top bar.')); return; }
-        PC.fijar(cliente === 'todos' ? 'todos' : cliente.id);
-        var activo = PC.actual();
-        write(activo ? t('Cliente activo: ' + activo.nombre + ' (' + activo.id + ') en toda la sesión. /todos lo quita.', 'Active client: ' + activo.nombre + ' (' + activo.id + ') for the whole session. /todos clears it.')
-          : t('Sin cliente: ves todo (Todos).', 'No client: you see everything (All).'));
-        return;
-      }
     }
     switch (name) {
       case 'help': case 'ayuda':
@@ -258,7 +280,7 @@
           t('marca: off (Admira), ', 'brand: off (Admira), ') + brandIds().join(', ') + t(' · o una web para analizarla (starbucks.es)', ' · or a website to analyse (starbucks.es)') + '\n' +
           t('/avatarDigital [on|off] — avatar digital (alias /digitalAvatar, /cli ayudante, /cli helper). Sin argumento alterna.',
             '/avatarDigital [on|off] — digital avatar (alias /digitalAvatar, /cli ayudante, /cli helper). No argument toggles.') + '\n' +
-          (window.PixeriaCliente && window.PixeriaCliente.esAdmin() ? t('/<cliente> o proyecto<Cliente> — superusuario: cambia el cliente de la sesión (p. ej. /starbucks); /todos lo quita.', '/<client> or proyecto<Client> — superuser: switches the session client (e.g. /starbucks); /todos clears it.') + '\n' : '') +
+          (window.PixeriaCliente && window.PixeriaCliente.esAdmin() ? t('/marca todas — superusuario: muestra el selector «Cliente» junto al logo; /marca <cliente> (o proyecto<Cliente>) filtra por ese cliente; /marca off lo oculta y vuelve a Admira, que lo ve todo.', '/marca todas — superuser: shows the «Client» selector next to the logo; /marca <client> (or proyecto<Client>) filters by that client; /marca off hides it and returns to Admira, which sees everything.') + '\n' : '') +
           t('↑/↓ historial · Tab completa comandos, marcas y secciones · arrastra el borde superior · doble clic para plegar/desplegar', '↑/↓ history · Tab completes commands, brands and sections · drag the top edge · double-click to collapse/expand'));
         break;
       case 'avatardigital': case 'digitalavatar':
