@@ -280,6 +280,7 @@
   window.PixeriaStock = {
     total: function () { return videos ? videos.length : null; },
     visibles: function () { return videos ? mostrados.length : null; },
+    item: function (url) { return (videos || []).filter(function (it) { return (it.url || it.mediaUrl) === url; })[0] || null; },
     tags: function () { return (window.PixeriaStock._tags || []).slice(); },
     tag: function (g) { var inp = $('#stock-tag'); if (inp) { inp.value = g ? '#' + norm(g) : ''; if (g) aplicarTag(); else leerTag(); } }
   };

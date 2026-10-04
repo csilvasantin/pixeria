@@ -59,9 +59,13 @@ const medir = () => {
     const paso1 = await p.evaluate(medir);
     await p.click('#stock-pick'); await p.click('#stock-list li[role=option]:nth-child(3)');
     await p.waitForFunction(() => !document.querySelector('#btn-adaptar').disabled, null, { timeout: 30000 });
+    // Paso 1 con vista previa y ficha técnica visibles (Carlos, 23:52)
+    await p.waitForFunction(() => { const f = document.querySelector('#src-ficha'); return !f || (!f.hidden && f.querySelectorAll('dd').length > 0); }, null, { timeout: 15000 }).catch(() => {});
+    await p.waitForTimeout(1500);
+    const paso1b = await p.evaluate(medir);
     await p.click('#btn-adaptar'); await p.waitForTimeout(1500);
     const paso2 = await p.evaluate(medir);
-    const todos = [...paso1.map(x => ({ ...x, paso: 1 })), ...paso2.map(x => ({ ...x, paso: 2 }))];
+    const todos = [...paso1.map(x => ({ ...x, paso: 1 })), ...paso1b.map(x => ({ ...x, paso: '1b' })), ...paso2.map(x => ({ ...x, paso: 2 }))];
     const malos = todos.filter(x => x.k < x.min).sort((a, b) => a.k - b.k);
     const w = todos.slice().sort((a, b) => a.k / a.min - b.k / b.min)[0];
     if (!peor || w.k / w.min < peor.k / peor.min) peor = { ...w, caso };

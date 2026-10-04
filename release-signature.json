@@ -1,8 +1,8 @@
 {
-  "version": "v.04.10.2026.r21.23:50",
+  "version": "v.04.10.2026.r22.23:56",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "Stock: al aplicar un hashtag la caja preselecciona la coincidencia más reciente; Enter = Adaptar →; contador en singular con 1."
+  "evidence": "Adaptaciones: ficha técnica real junto a la vista previa (moov leído en el cliente, Range, índice del Stock)."
 }
