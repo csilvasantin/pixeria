@@ -3,7 +3,8 @@
 // Reutiliza el motor de reglas real de Pixeria: assets/signage-perfiles.js
 import { perfilDeSalida, planificar } from '/assets/signage-perfiles.js';
 import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob } from './adapter-core.mjs';
-import { createExporter, MAX_SOURCE_BYTES } from './adapter-export.js';
+import { createEngine, MAX_SOURCE_BYTES } from './adapter-export.js';
+import { createExportQueue } from './export-queue.js';
 import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily } from './format-catalog.mjs';
 import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
 import { pngDensity } from './png-density.mjs';
@@ -18,8 +19,7 @@ const state = { sel: '', profile: 'standard', compat: 'fhd', modoGlobal: 'auto',
 FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoom: 1 }));
 
 const video = $('#src');
-let initialized = false, activeExport = null;
-const downloads = [];
+let initialized = false;
 const selectedFormats = () => FORMATOS.filter(f => f.on && formatFamily(f) === state.profile);
 // Biblioteca uses the compatibility selector; client profiles keep native resolutions.
 const syncCompat = () => { $('#compat').disabled = state.profile !== 'standard'; };
@@ -38,12 +38,6 @@ function restoreSettings() {
   $('#format-profile').value=state.profile; $('#compat').value=state.compat; $('#modo-global').value=state.modoGlobal;
   syncCompat();initialized=true;
 }
-function clearDownloads() { downloads.splice(0).forEach(URL.revokeObjectURL); $('#export-results').replaceChildren(); }
-function lockEditor(locked) {
-  document.querySelectorAll('#sec-adapt input, #sec-adapt select, #sec-adapt button, #cuad-avanzado-live input, #cuad-avanzado-live select, #cuad-avanzado-live button').forEach(el=>el.disabled=locked);
-  $('#cancel-export').disabled=false;$('#cancel-export').hidden=!locked;
-  if(!locked) {syncCompat();refreshInfo();}
-}
 // kinds applies to special layouts: the client delivery file, one MP4 per screen, or both.
 function especialJobs(f,kinds) {
   const tech=especialTech(f),mode=modoEfectivo(f),s=state.fmt[f.id],jobs=[];
@@ -54,61 +48,39 @@ function especialJobs(f,kinds) {
   }
   return jobs;
 }
+// Exports go to the background queue: each line freezes its job (settings, size and
+// source) at click time, so the user can keep editing, switch video or go back to step 1.
+const queue = createExportQueue({engine:createEngine(),t,onRelease:url=>{if(url!==sourceObjectURL&&url.startsWith('blob:'))URL.revokeObjectURL(url);}});
 async function exportFormats(formats,kinds='both') {
-  if(activeExport || !state.src.ancho || !formats.length) return;
+  if(!state.src.ancho || !formats.length) return;
+  const status=$('#export-status');status.textContent='';
   const pngFormats=formats.filter(f=>f.output==='png');
-  const jobs=formats.filter(f=>f.output!=='png').flatMap(f=>f.especial?especialJobs(f,kinds):[{...exportJob(state.src,perfil(f),plan(f),modoEfectivo(f),state.fmt[f.id],state.srcName,f.id),label:f.nombre}]);
-  const budget=jobs.length?exportBudget(video.duration,jobs):null;
-  if(budget) {$('#export-status').textContent=budget==='batch-size'
+  const jobs=formats.filter(f=>f.output!=='png').flatMap(f=>f.especial?especialJobs(f,kinds).map(job=>({job,f})):[{job:{...exportJob(state.src,perfil(f),plan(f),modoEfectivo(f),state.fmt[f.id],state.srcName,f.id),label:f.nombre},f}]);
+  const budget=jobs.length?exportBudget(video.duration,jobs.map(j=>j.job)):null;
+  if(budget) {status.textContent=budget==='batch-size'
     ?t('El lote supera el presupuesto local de memoria. Selecciona menos formatos y expórtalos por separado.','This batch exceeds the local memory budget. Select fewer formats and export them separately.')
     :t('Este vídeo es demasiado largo para exportarlo con este perfil en el navegador. Usa un clip más corto o un perfil de menor resolución.','This video is too long to export with this profile in the browser. Use a shorter clip or a lower resolution profile.');return;}
-  const exporter=createExporter();let cancelled=false;activeExport={cancel(){cancelled=true;exporter.cancel();}};
-  clearDownloads(); lockEditor(true);video.pause();
-  const status=$('#export-status'), progress=$('#export-progress');progress.hidden=false;progress.removeAttribute('value');
-  let completed=0,totalBytes=0;
-  const addResult=(job,blob)=>{
-    totalBytes+=blob.size;if(totalBytes>192*1048576)throw new Error('output-size');
-    completed++;const url=URL.createObjectURL(blob);downloads.push(url);
-    const link=document.createElement('a');link.href=url;link.download=job.filename;link.className='pill';link.textContent=`${t('Descargar','Download')} ${job.label} · ${job.W}×${job.H} · ${blob.size<1048576?`${Math.ceil(blob.size/1024)} KB`:`${(blob.size/1048576).toFixed(1)} MB`}${job.limit&&blob.size>job.limit?t(' · revisar límite de 150 KB',' · check the 150 KB limit'):''}`;
-    $('#export-results').append(link);
-  };
-  try {
-    for(const f of pngFormats){
-      if(cancelled)throw new Error('cancelled');
-      const p=perfil(f),canvas=document.createElement('canvas');canvas.width=p.ancho;canvas.height=p.alto;
-      status.textContent=`${t('Exportando PNG','Exporting PNG')} · ${f.nombre}`;
-      drawInto(canvas,f);
-      let blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
-      canvas.width=canvas.height=0;
-      if(!blob)throw new Error('encoding');
-      if(f.print)blob=new Blob([pngDensity(new Uint8Array(await blob.arrayBuffer()))],{type:'image/png'});
-      if(cancelled)throw new Error('cancelled');
-      addResult({filename:`${f.id}-${p.ancho}x${p.alto}.png`,label:`${f.nombre} · PNG`,W:p.ancho,H:p.alto,limit:f.category==='display'?150*1024:0},blob);
-      progress.value=completed/(pngFormats.length+jobs.length);
-    }
-    if(jobs.length) await exporter.run(video.src,jobs,event=>{
-      if(event.phase==='loading') status.textContent=t('Cargando motor de vídeo (unos 32 MB)…','Loading video engine (about 32 MB)…');
-      else if(event.phase==='source') status.textContent=t('Leyendo vídeo de origen…','Reading source video…');
-      else { progress.value=(pngFormats.length+event.index+event.progress)/(pngFormats.length+jobs.length);status.textContent=`${t('Exportando','Exporting')} ${event.index+1}/${event.total} · ${event.job.label} · ${Math.floor(event.progress*100)}%`; }
-    },addResult);
-    progress.value=1;status.textContent=t(`${completed} ${completed===1?'archivo listo':'archivos listos'}. Descárgalos antes de salir de esta página.`,`${completed} ${completed===1?'file':'files'} ready. Download them before leaving this page.`);
-  } catch(error) {
-    const reason=String(error?.message||error);
-    status.textContent=reason==='cancelled'?t('Exportación cancelada. Puedes conservar los archivos ya terminados.','Export cancelled. You can keep files already completed.')
-      :reason==='output-size'?t('La salida alcanzó el límite de memoria. Usa un clip más corto. El archivo incompleto no se ofrece para descarga.','The output reached the memory limit. Use a shorter clip. Incomplete files are not offered for download.')
-      :reason==='source-size'?t('El vídeo supera el límite local de 100 MB. Usa un archivo más pequeño.','The video exceeds the local 100 MB limit. Use a smaller file.')
-      :t('No se pudo completar la exportación. Comprueba la conexión y usa un MP4 local de menos de 100 MB; algunas fuentes Stock no permiten su descarga. Los archivos terminados siguen disponibles.','Export could not complete. Check your connection and try a local MP4 under 100 MB; some Stock sources block downloading. Completed files remain available.');
-    progress.hidden=true;
-  } finally {activeExport=null;lockEditor(false);}
+  const sourceURL=video.currentSrc||video.src,sub=state.srcName;
+  for(const f of pngFormats){
+    const p=perfil(f),canvas=document.createElement('canvas');canvas.width=p.ancho;canvas.height=p.alto;
+    drawInto(canvas,f);
+    let blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+    canvas.width=canvas.height=0;
+    if(!blob)continue;
+    if(f.print)blob=new Blob([pngDensity(new Uint8Array(await blob.arrayBuffer()))],{type:'image/png'});
+    queue.addReady({label:`${f.nombre} · PNG`,sub,sourceURL:null,format:f},[{blob,filename:`${f.id}-${p.ancho}x${p.alto}.png`}]);
+  }
+  for(const {job,f} of jobs) queue.add({label:job.label,sub,sourceURL,job,format:f});
 }
 $('#export-all').onclick=()=>exportFormats(selectedFormats());
-$('#cancel-export').onclick=()=>activeExport?.cancel();
 $('#reset-settings').onclick=()=>{
   Object.assign(state,{profile:'standard',compat:'fhd',modoGlobal:'auto'});FORMATOS.forEach(f=>{f.on=['9:16','16:9','1:1','4:5'].includes(f.id);state.fmt[f.id]=defaults();});
   FORMATOS.filter(f=>f.especial).forEach((f,i)=>f.on=i===0);
   $('#format-profile').value='standard';$('#compat').value='fhd';syncCompat();$('#modo-global').value='auto';buildGrid();
 };
-window.addEventListener('pagehide',event=>{activeExport?.cancel();if(!event.persisted) {clearDownloads();if(sourceObjectURL)URL.revokeObjectURL(sourceObjectURL);}});
+// Closing the tab mid-export loses the work: the browser asks first.
+window.addEventListener('beforeunload',event=>{if(!queue.busy())return;event.preventDefault();event.returnValue=t('Hay exportaciones en curso','Exports are in progress');return event.returnValue;});
+window.addEventListener('pagehide',event=>{if(event.persisted)return;queue.cancelAll();queue.clear();if(sourceObjectURL)URL.revokeObjectURL(sourceObjectURL);});
 
 // ── Perfil + plan (motor Pixeria) ───────────────────────────────────────────
 function perfil(f) {
@@ -155,7 +127,7 @@ function buildPicker() {
     detail.ontoggle=()=>{if(detail.open)picker.open.add(cat.id);else picker.open.delete(cat.id);};
     for(const f of formats){
       const label=document.createElement('label');label.className='size-option';
-      const input=document.createElement('input');input.type='checkbox';input.checked=f.on;input.disabled=!!activeExport;input.setAttribute('aria-label',`${t('Tamaño','Size')} ${f.nombre}`);
+      const input=document.createElement('input');input.type='checkbox';input.checked=f.on;input.setAttribute('aria-label',`${t('Tamaño','Size')} ${f.nombre}`);
       input.onchange=()=>{f.on=input.checked;buildGrid();};
       const text=document.createElement('span');const name=document.createElement('strong');name.textContent=f.nombre;
       const dims=document.createElement('small');const p=perfil(f);dims.textContent=f.especial?`${p.ancho} × ${p.alto} px · ${f.layout.pantallas} ${t('pantallas','screens')} · MP4`:`${p.ancho} × ${p.alto} px · ${f.output==='png'?'PNG':'MP4'}${f.regional?t(' · Polonia',' · Poland'):''}`;
@@ -298,8 +270,8 @@ function cardAviso(f) {
 }
 function refreshInfo() {
   drawDirty=true;saveSettings();
-  $('#export-all').disabled=!!activeExport || !state.src.ancho || !selectedFormats().length;
-  document.querySelectorAll('.export-one').forEach(el=>el.disabled=!!activeExport || !state.src.ancho);
+  $('#export-all').disabled=!state.src.ancho || !selectedFormats().length;
+  document.querySelectorAll('.export-one').forEach(el=>el.disabled=!state.src.ancho);
   const selF = FORMATOS.find((x) => x.id === state.sel && x.on), selAviso = $('#card-settings .aviso');
   if (selF && selAviso) selAviso.textContent = cardAviso(selF);
   const rows = selectedFormats().map((f) => {
@@ -359,9 +331,10 @@ function loop() {
 // ── Fuente ──────────────────────────────────────────────────────────────────
 let sourceObjectURL = null;
 function setSource(url, name) {
-  if (sourceObjectURL && sourceObjectURL !== url) URL.revokeObjectURL(sourceObjectURL);
+  // A local file still being exported keeps its blob URL until its last queue line ends.
+  if (sourceObjectURL && sourceObjectURL !== url && !queue.uses(sourceObjectURL)) URL.revokeObjectURL(sourceObjectURL);
   sourceObjectURL = url.startsWith('blob:') ? url : null;
-  clearDownloads();$('#export-status').textContent='';
+  $('#export-status').textContent='';
   state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0};
   $('#src-info').textContent = t('Cargando vídeo…','Loading video…'); $('#src-msg').textContent = t('Cargando vídeo…','Loading video…');
   state.srcName = name; refreshInfo(); video.src = url; video.play().catch(() => {});
