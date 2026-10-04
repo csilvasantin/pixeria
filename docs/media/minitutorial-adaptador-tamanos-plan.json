@@ -1,0 +1,18 @@
+{
+  "official_generator": "https://www.admiranext.com/tiktok/",
+  "task": "Pixeria → Adaptador → Tamaños.",
+  "solution": "Busca un tamaño o añade una campaña; ajusta el foco.",
+  "result": "Redes: MP4. Display e impresión: PNG.",
+  "audience": "Guía animada · impresión RGB a 150 ppp, sin sangrado.",
+  "cta": "Descarga antes de salir; ajustes guardados.",
+  "type": "guía animada, no grabación de pantalla",
+  "duration_seconds": 15.139093,
+  "export_status": "MP4 recuperado y verificado con ffprobe y fotogramas a2,6,12segundos",
+  "limitations": [
+    "origen de vídeo máximo100MiB",
+    "impresión RGB150ppp, sin sangrado ni CMYK",
+    "anuncios requieren comprobar el límite de peso y requisitos del destino"
+  ],
+  "video": "minitutorial-adaptador-tamanos.mp4",
+  "sha256": "8ca9f62050fba84bf9bd545542f5f0fcd6eeff4d3ecb9cd6f7c167976dfa935e"
+}

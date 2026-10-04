@@ -1,8 +1,9 @@
 {
-  "version": "v.04.10.2026.r1.01:02",
-  "deployer": "MorfeoMacMini",
-  "machine": "MacMini",
-  "signature": "MorfeoMacMini · MacMini",
-  "agent": "MorfeoMacMini",
-  "builtAt": "2026-10-03T23:02:11Z"
+  "version": "v.04.10.2026.r1.01:05",
+  "deployer": "Trinity",
+  "machine": "MacBookProNegro14",
+  "signature": "Trinity · MacBookProNegro14",
+  "agent": "Trinity",
+  "mission": "DCL-73e5db8716d77b4bf1442a75",
+  "builtAt": "2026-10-03T23:05:06Z"
 }
