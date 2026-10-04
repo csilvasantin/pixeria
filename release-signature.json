@@ -1,7 +1,9 @@
 {
-  "version": "v.04.10.2026.r1.01:05",
+  "version": "v.04.10.2026.r2.13:56",
   "deployer": "Trinity",
   "machine": "MacBookProNegro14",
   "signature": "Trinity · MacBookProNegro14",
-  "agent": "Trinity"
+  "agent": "Trinity",
+  "evidence": "Reserva neutra Altadis y formatos Pixeria; preview pública.",
+  "builtAt": "2026-10-04T11:58:51.420698+00:00"
 }
