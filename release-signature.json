@@ -1,8 +1,8 @@
 {
-  "version": "v.04.10.2026.r19.23:22",
+  "version": "v.04.10.2026.r20.23:41",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "Adaptaciones: al salir del paso 1 se pausan y silencian sus medios; superficies y textos por componente con marca blanca (test WCAG); tarjeta Original primera en el paso 2."
+  "evidence": "Stock: 773/774 vídeos con miniatura real; las subidas mandan póster y el selector saca el fotograma si falta (icono neutro si no se puede)."
 }

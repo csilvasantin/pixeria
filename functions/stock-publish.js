@@ -24,6 +24,8 @@ export async function onRequestPost({ request }) {
   }
   const limpio = {};
   for (const k of CAMPOS) if (body[k] != null) limpio[k] = body[k];
+  // Miniatura generada en el navegador (assets/poster-frame.mjs): el vídeo llega al Stock con imagen.
+  if (typeof body.poster === 'string' && /^data:image\/(jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(body.poster) && body.poster.length < 400 * 1024) limpio.poster = body.poster;
   let r;
   try {
     r = await fetch(UPSTREAM, {
