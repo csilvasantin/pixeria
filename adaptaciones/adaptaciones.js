@@ -14,7 +14,7 @@ const $ = (s) => document.querySelector(s);
 const FORMATOS = createCatalog(EN);
 const MODOS = { auto: t('Auto (regla Pixeria)', 'Auto (Pixeria rule)'), cover: t('Recorte', 'Crop'), blur: t('Expandir · fondo desenfocado', 'Expand · blurred background'), contain: t('Contener · negro', 'Contain · black') };
 const picker = {query:'',orientation:'all',open:new Set()};
-const state = { profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '', isJti: true };
+const state = { profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '' };
 FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoom: 1 }));
 
 const video = $('#src');
@@ -239,7 +239,7 @@ function especialCard(f) {
     <div class="esp-views">
       <figure class="esp-view esp-wall"><figcaption>${t('Pared física · el vídeo continúa de una pantalla a la siguiente','Physical wall · the video continues from one screen to the next')}</figcaption>
         <div class="wall-scroll" tabindex="0" aria-label="${t('Pared física con líneas de corte','Physical wall with cut lines')}"><canvas class="wall" width="${wallW * 2}" height="${WALL_CSS_H * 2}" style="width:max(100%,${Math.round(WALL_MIN_H * aspect)}px);height:auto"></canvas></div></figure>
-      <figure class="esp-view esp-atlas"><figcaption>${t('Entrega Altadis · una celda por pantalla, en orden de lectura','Altadis delivery · one cell per screen, in reading order')}</figcaption>
+      <figure class="esp-view esp-atlas"><figcaption>${t('Entrega · una celda por pantalla, en orden de lectura','Delivery · one cell per screen, in reading order')}</figcaption>
         <div class="stage"><canvas class="atlas" width="${aw}" height="${ah}"></canvas></div></figure>
     </div>
     ${controlsHTML()}
@@ -342,7 +342,6 @@ let drawDirty=true,lastFrame=-1;
 function loop() {
   if(drawDirty||video.currentTime!==lastFrame){
   document.querySelectorAll('.fmt[data-f]').forEach((el) => { const f = FORMATOS.find((x) => x.id === el.dataset.f); if (f.especial) { drawEspecial(el, f); return; } const c = el.querySelector('canvas'); if (c) drawInto(c, f); });
-  if (!state.isJti) { drawInto($('#tw-cv-v'), FORMATOS[0]); drawInto($('#tw-cv-h'), FORMATOS[1]); }
   drawDirty=false;lastFrame=video.currentTime;
   }
   requestAnimationFrame(loop);
@@ -350,15 +349,13 @@ function loop() {
 
 // ── Fuente ──────────────────────────────────────────────────────────────────
 let sourceObjectURL = null;
-function setSource(url, name, isJti) {
+function setSource(url, name) {
   if (sourceObjectURL && sourceObjectURL !== url) URL.revokeObjectURL(sourceObjectURL);
   sourceObjectURL = url.startsWith('blob:') ? url : null;
   clearDownloads();$('#export-status').textContent='';
   state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0};
   $('#src-info').textContent = t('Cargando vídeo…','Loading video…');
-  state.srcName = name; state.isJti = isJti; refreshInfo(); video.src = url; video.play().catch(() => {});
-  document.querySelectorAll('#twin video').forEach((v) => (v.style.display = isJti ? '' : 'none'));
-  document.querySelectorAll('#twin canvas').forEach((v) => (v.hidden = isJti));
+  state.srcName = name; refreshInfo(); video.src = url; video.play().catch(() => {});
 }
 video.addEventListener('error', () => { $('#src-info').textContent = t('No se pudo reproducir este vídeo. Elige otro archivo o una fuente Stock disponible.', 'Unable to play this video. Choose another file or an available Stock source.'); });
 video.addEventListener('loadedmetadata', () => {
@@ -366,7 +363,9 @@ video.addEventListener('loadedmetadata', () => {
   $('#src-info').textContent = `${state.srcName} · ${video.videoWidth}×${video.videoHeight} · ${video.duration.toFixed(1)} s`;
   refreshInfo();
 });
-$('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; setSource(o.value, o.textContent.replace(/^Stock · /, ''), /jti-/.test(o.value)); };
+$('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; if (!o.value) { emptySource(); return; } setSource(o.value, o.textContent.replace(/^Stock · /, '')); };
+// Sin vídeo por defecto (ninguna marca): estado vacío hasta que el usuario elige uno.
+function emptySource() { video.removeAttribute('src'); video.load(); state.srcName = ''; $('#src-info').textContent = t('Elige un vídeo: del Stock, súbelo o créalo.', 'Choose a video: from Stock, upload one or create it.'); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
 $('#src-file').onchange = (e) => { const f = e.target.files[0]; if(f && f.size>MAX_SOURCE_BYTES) {$('#export-status').textContent=t('El límite local es 100 MB. Elige un vídeo más pequeño.','The local limit is 100 MB. Choose a smaller video.');e.target.value='';return;} if (f) setSource(URL.createObjectURL(f), f.name, false); };
 $('#btn-play').onclick = () => (video.paused ? video.play() : video.pause());
 $('#modo-global').onchange = (e) => { state.modoGlobal = e.target.value; refreshInfo(); };
@@ -378,53 +377,6 @@ $('#format-profile').onchange = (e) => {
 };
 $('#compat').onchange = (e) => { state.compat = e.target.value; buildGrid(); };
 
-// ── Altadis: 9 estancos + gemelo + recorrido estilo CanalKiosk ─────────────
-// Patrón copiado de admira.app (clearchannel-tv/app.js · startCircuitDemo /
-// showCircuitDemoPoint): parada a parada, estado «i/N · nombre», dwell fijo y
-// la siguiente parada precargada; el previo abre la pantalla sobre la fachada.
-const TOUR_DWELL_MS = 8000;
-let ESTANCOS = [], ORIGEN = null, cur = 0, tour = null;
-async function loadEstancos() {
-  const d = await (await fetch('/adaptaciones/altadis-bcn-9.json')).json();
-  ESTANCOS = d.estancos; ORIGEN = d.origen;
-  $('#lista-estancos').innerHTML = ESTANCOS.map((e, i) => `<li data-i="${i}"><b>${e.orden}. ${e.name}</b><small>${e.addr}<br>${e.dist_planeta7_m} m ${t('de','from')} Planeta 7 · OSM ${e.osm}</small></li>`).join('');
-  $('#lista-estancos').querySelectorAll('li').forEach((li) => (li.onclick = () => { stopTour(); go(+li.dataset.i); }));
-  drawMap(); go(0);
-}
-function proj(lat, lon) {
-  const pts = ESTANCOS.map((e) => [e.lat, e.lon]).concat([[ORIGEN.lat, ORIGEN.lon]]);
-  const la = pts.map((p) => p[0]), lo = pts.map((p) => p[1]);
-  const [a0, a1, o0, o1] = [Math.min(...la), Math.max(...la), Math.min(...lo), Math.max(...lo)];
-  const kx = Math.cos((a0 * Math.PI) / 180); const sx = 360 / ((o1 - o0) * kx), sy = 220 / (a1 - a0), s = Math.min(sx, sy);
-  return [20 + (lon - o0) * kx * s, 240 - (lat - a0) * s];
-}
-function drawMap() {
-  const svg = $('#minimap'); const P = ESTANCOS.map((e) => proj(e.lat, e.lon)); const o = proj(ORIGEN.lat, ORIGEN.lon);
-  svg.innerHTML = `<text x="10" y="16" fill="#8a93a6" font-size="11">${t('Circuito Altadis','Altadis circuit')} · Gràcia (${t('ruta','route')} ${'≈'}${(ESTANCOS.reduce((a, e) => a + e.tramo_desde_anterior_m, 0) / 1000).toFixed(1)} km)</text>
-    <polyline points="${P.map((p) => p.join(',')).join(' ')}" fill="none" stroke="#ff6a3d" stroke-width="2" stroke-dasharray="4 3"/>
-    <rect x="${o[0] - 5}" y="${o[1] - 5}" width="10" height="10" fill="#3ddc97"/><text x="${o[0] + 8}" y="${o[1] + 4}" fill="#3ddc97" font-size="10">Planeta 7</text>
-    ${P.map((p, i) => `<g data-i="${i}" style="cursor:pointer"><circle cx="${p[0]}" cy="${p[1]}" r="9" fill="#1b2030" stroke="#ff6a3d"/><text x="${p[0]}" y="${p[1] + 4}" text-anchor="middle" fill="#fff" font-size="10">${i + 1}</text></g>`).join('')}
-    <circle id="mk" r="13" fill="none" stroke="#ffd84a" stroke-width="3" cx="${P[0][0]}" cy="${P[0][1]}" style="transition:cx 1.2s ease,cy 1.2s ease"/>`;
-  svg.querySelectorAll('g[data-i]').forEach((g) => (g.onclick = () => { stopTour(); go(+g.dataset.i); }));
-}
-function go(i) {
-  cur = (i + ESTANCOS.length) % ESTANCOS.length; const e = ESTANCOS[cur];
-  document.querySelectorAll('#lista-estancos li').forEach((li) => li.classList.toggle('on', +li.dataset.i === cur));
-  document.querySelector('#lista-estancos li.on')?.scrollIntoView({ block: 'nearest' });
-  $('#twin-name').textContent = `${t('Gemelo','Twin')} ${e.orden}/9 · ${e.name}`;
-  $('#twin-addr').textContent = e.addr;
-  $('#twin-ft').innerHTML = `${t('Disposición','Layout')}: <b>P1 ${t('vertical','portrait')} 1080×1920</b> (${t('escaparate','shop window')}) + <b>P2 ${t('horizontal','landscape')} 1920×1080</b> (${t('sobre mostrador','above counter')}) · ${e.dist_planeta7_m} m ${t('de','from')} Planeta 7 · <a href="https://www.openstreetmap.org/${e.osm}" target="_blank" rel="noopener">OSM ${e.osm}</a>${e.opening_hours ? ' · ' + e.opening_hours : ''}${cur === 0 ? ` · <b style="color:#3ddc97">${t('el más cercano a Planeta 7','nearest to Planeta 7')}</b>` : ''}`;
-  $('#link-gemelo').href = `https://www.xpaceos.com/admira-xp/?autostart=xtanco&loc=${e.id}`;
-  const p = proj(e.lat, e.lon); const mk = $('#mk'); if (mk) { mk.setAttribute('cx', p[0]); mk.setAttribute('cy', p[1]); }
-  const tw = $('#twin'); tw.animate([{ opacity: 0.25, transform: 'translateX(18px)' }, { opacity: 1, transform: 'none' }], { duration: 500, easing: 'ease-out' });
-  $('#tour-status').textContent = tour ? `${t('Recorrido · parada','Tour · stop')} ${cur + 1}/${ESTANCOS.length} · ${e.name}` : `${t('Parada','Stop')} ${cur + 1}/${ESTANCOS.length}`;
-}
-function startTour() { stopTour(); tour = { i: cur }; $('#tour').textContent = t('■ Parar recorrido', '■ Stop tour'); go(cur); tour.timer = setInterval(() => { if (cur === ESTANCOS.length - 1) { stopTour(); $('#tour-status').textContent = `${t('Recorrido completado','Tour completed')} · ${ESTANCOS.length} ${t('estancos','stores')}`; return; } go(cur + 1); }, TOUR_DWELL_MS); }
-function stopTour() { if (tour) clearInterval(tour.timer); tour = null; $('#tour').textContent = t('▶ Recorrido del circuito', '▶ Circuit tour'); }
-$('#prev').onclick = () => { stopTour(); go(cur - 1); };
-$('#next').onclick = () => { stopTour(); go(cur + 1); };
-$('#tour').onclick = () => (tour ? stopTour() : startTour());
-document.addEventListener('keydown', (ev) => { if (ev.target.tagName === 'INPUT') return; if (ev.key === 'ArrowRight') $('#next').click(); if (ev.key === 'ArrowLeft') $('#prev').click(); });
 
 const altadisResponse = await fetch('/adaptaciones/altadis-18.json');
 if (altadisResponse.ok) {
@@ -438,8 +390,7 @@ if (especialesResponse.ok) {
  data.layouts.forEach((layout, i) => { FORMATOS.push({ id: layout.id, nombre: layout.nombre, nameEn: layout.nombre, uso: EN ? layout.useEn : layout.uso, custom: layout.entrega, category: 'digital', especial: true, layout, fps: 25, on: i === 0 }); state.fmt[layout.id] = defaults(); });
  $('#format-profile').querySelector('[value=especiales]').disabled = false;
 }
-restoreSettings(); buildGrid(); setSource('/adaptaciones/media/jti-tu-sitio-de-siempre-fuente.mp4', 'JTI «Tu sitio de siempre»', true); loadEstancos(); loop();
-window.__pixAdapt = { go, startTour };
+restoreSettings(); buildGrid(); emptySource(); loop();
 
 // Índice del Stock: primero el proxy comprimido del propio dominio y, si no responde
 // JSON (sin sesión la verja redirige a /auth/login, y en admira.studio ese salto
@@ -458,7 +409,11 @@ async function fetchStockIndex() {
 async function loadStock() {
   try {
     const data = await fetchStockIndex();
-    const videos = (data.items || []).filter(item => item.type === 'video' && (item.url || item.mediaUrl));
+    // Página genérica del Adaptador: no lista piezas de marcas de cliente (las marcas competidoras
+    // nunca se mezclan). Se queda con el Stock sin marca; los vídeos de cliente se suben o se eligen en su espacio.
+    const CLIENTE = /\b(jti|altadis|philip morris|pmi|bat|imperial)\b|tu sitio de siempre/i;
+    const videos = (data.items || []).filter(item => item.type === 'video' && (item.url || item.mediaUrl)
+      && !CLIENTE.test([item.title, item.name, item.prompt, item.comment, (item.tags || []).join(' ')].join(' ')));
     for (const item of videos) {
       const url = item.url || item.mediaUrl;
       if (!/^https:\/\//.test(url)) continue;
@@ -466,7 +421,7 @@ async function loadStock() {
       option.textContent = 'Stock · ' + (item.title || item.name || item.id);
       $('#src-select').append(option);
     }
-    $('#stock-status').textContent = t('Vídeos Stock disponibles: ', 'Stock videos available: ') + (videos.length + 1);
-  } catch (_) { $('#stock-status').textContent = t('Stock remoto no disponible. Puedes usar la muestra o subir un vídeo.', 'Remote Stock unavailable. Use the sample or upload a video.'); }
+    $('#stock-status').textContent = t('Vídeos Stock disponibles: ', 'Stock videos available: ') + videos.length;
+  } catch (_) { $('#stock-status').textContent = t('Stock remoto no disponible. Puedes subir un vídeo.', 'Remote Stock unavailable. You can upload a video.'); }
 }
 loadStock();

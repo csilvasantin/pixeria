@@ -279,6 +279,31 @@
       expert.innerHTML = '<p class="pix-nav-meta"><span>Pixeria · sistema creativo</span><a href="/stock.html">Stock</a><a href="/documentacion/">Documentación</a><a href="https://www.xpaceos.com">XpaceOS</a><a href="https://www.admira.app">Admira</a></p>';
       document.body.appendChild(expert);
     }
+    mountLiveRails();
+  }
+
+  // Contenido VIVO de la página (se MUEVE con sus eventos, no se copia), opcional:
+  //   #cuad-opciones → ☰ Opciones · #cuad-avanzado-live → Avanzado · #cuad-experto-live → Experto.
+  // Lo usa el Adaptador: Tamaños en Opciones, ajustes en Avanzado y plan H.264 en Experto.
+  function mountLiveRails() {
+    var pairs = [['cuad-opciones', '.rail-left', '🔍 Opciones'], ['cuad-avanzado-live', '.rail-right', '⚙️ Avanzado'], ['cuad-experto-live', '#pixNavExpertLayer', '']];
+    pairs.forEach(function (p) {
+      var node = document.getElementById(p[0]), host = document.querySelector(p[1]);
+      if (!node || !host || host.contains(node)) return;
+      if (p[0] === 'cuad-opciones') {
+        var meta = host.querySelector('.rail-options-meta');
+        host.innerHTML = '<div class="rail-hd">' + p[2] + '</div>';
+        host.appendChild(node);
+        if (meta) host.appendChild(meta);
+        document.body.classList.add('cuad-live-options');
+      } else if (p[2]) {
+        host.innerHTML = '<div class="rail-hd">' + p[2] + '</div>';
+        host.appendChild(node);
+      } else {
+        host.insertBefore(node, host.firstChild);
+      }
+      node.classList.add('rail-live');
+    });
   }
 
   var HOME_RAIL_SECTIONS = [
@@ -326,6 +351,7 @@
     document.body.appendChild(left);
     document.body.appendChild(right);
     document.body.classList.add('pix-nav-home-rails');
+    mountLiveRails();
     // Los paneles entran CERRADOS en cada carga: el estado abierto no se recuerda.
     document.body.classList.add('pf-left-off', 'pf-right-off');
   }
