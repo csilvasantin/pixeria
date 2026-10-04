@@ -1,8 +1,9 @@
 {
-  "_nota": "Mapeo editable contenido → cliente (Stock, Adaptador). Orden de deducción: 1) campo explícito del asset (cliente o catalogo.cliente); 2) una etiqueta igual al id del cliente o a uno de sus «tags»; 3) uno de sus «patrones» (regex, sin distinguir mayúsculas) en título, prompt o comentario. Lo que no casa con nada es genérico de Admira y lo ve cualquier cliente. Los nombres que son palabras corrientes (metro, mango, palacio, liverpool, correos, estancos) solo cuentan por etiqueta o campo, nunca por texto. Deducción conservadora: no se borra ni se reetiqueta nada en el Stock.",
+  "_nota": "Mapeo editable contenido → cliente (Stock, Adaptador). Orden de deducción: 0) «asignaciones» (id del asset → id de cliente), para corregir a mano; 1) campo explícito del asset (cliente o catalogo.cliente); 2) etiquetas iguales al id del cliente o a uno de sus «tags»; 3) sus «patrones» (regex, sin distinguir mayúsculas) en título, prompt o comentario, en orden y consumiendo lo que casa (Starbucks México no cuenta también como Starbucks). Si casan varios clientes, el asset es ambiguo y solo se ve con «Todos». Lo que no casa con nada es genérico de Admira y lo ve cualquier cliente. Los nombres que son palabras corrientes (metro, mango, palacio, liverpool, correos, estancos) solo cuentan por etiqueta o campo, nunca por texto. No se borra ni se reetiqueta nada en el Stock.",
   "genericos": [
     "admira"
   ],
+  "asignaciones": {},
   "clientes": {
     "admira": {
       "tags": [

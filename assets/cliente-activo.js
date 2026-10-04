@@ -64,28 +64,35 @@
   }
 
   // Qué cliente es un asset (o null = genérico de Admira).
-  function clienteDe(it) {
-    if (!it || !mapeo) return null;
-    var C = mapeo.clientes || {};
-    var explicito = slug(it.cliente || (it.catalogo && it.catalogo.cliente) || '');
-    if (explicito && C[explicito]) return explicito;
+  // Todos los clientes que se deducen de un asset (ver data/clientes-mapeo.json). Si casan varios
+  // (p. ej. #jti y #altadis), el asset es ambiguo y solo lo ve «Todos»: deducción conservadora.
+  function clientesDe(it) {
+    if (!it || !mapeo) return [];
+    var C = mapeo.clientes || {}, ids = Object.keys(C);
+    var fijo = slug((mapeo.asignaciones || {})[it.id] || it.cliente || (it.catalogo && it.catalogo.cliente) || '');
+    if (fijo && (C[fijo] || (mapeo.genericos || []).indexOf(fijo) >= 0)) return [fijo];
+    var out = [];
     var tags = (Array.isArray(it.tags) ? it.tags : []).map(function (x) { return String(x).toLowerCase().trim().replace(/^#/, ''); });
-    var ids = Object.keys(C);
-    for (var i = 0; i < ids.length; i++) {
-      var regla = C[ids[i]], nombres = [ids[i]].concat(regla.tags || []);
-      if (tags.some(function (x) { return nombres.indexOf(x) >= 0; })) return ids[i];
-    }
-    var texto = [it.title, it.name, it.prompt, it.comment].filter(Boolean).join(' ');
-    for (var j = 0; j < ids.length; j++) {
-      var pats = C[ids[j]]._re || (C[ids[j]]._re = (C[ids[j]].patrones || []).map(function (p) { try { return new RegExp(p, 'i'); } catch (_) { return null; } }).filter(Boolean));
-      if (pats.some(function (re) { return re.test(texto); })) return ids[j];
-    }
-    return null;
+    ids.forEach(function (id) {
+      var nombres = [id].concat(C[id].tags || []);
+      if (tags.some(function (x) { return nombres.indexOf(x) >= 0; })) out.push(id);
+    });
+    // Patrones en orden: lo que casa se consume, para que «Starbucks México» no cuente también como «Starbucks».
+    var texto = [it.title, it.name, it.prompt, it.comment].filter(Boolean).join(' \n ');
+    ids.forEach(function (id) {
+      var pats = C[id]._re || (C[id]._re = (C[id].patrones || []).map(function (p) { try { return new RegExp(p, 'gi'); } catch (_) { return null; } }).filter(Boolean));
+      pats.forEach(function (re) {
+        re.lastIndex = 0;
+        if (re.test(texto)) { if (out.indexOf(id) < 0) out.push(id); re.lastIndex = 0; texto = texto.replace(re, ' '); }
+      });
+    });
+    return out;
   }
+  function clienteDe(it) { var l = clientesDe(it); return l.length === 1 ? l[0] : null; }
   function visible(it) {
     if (!actual) return true; // «Todos» (superusuario)
-    var c = clienteDe(it);
-    return !c || c === actual.id || (mapeo.genericos || []).indexOf(c) >= 0;
+    var gen = mapeo.genericos || [];
+    return clientesDe(it).every(function (c) { return c === actual.id || gen.indexOf(c) >= 0; });
   }
 
   var style = document.createElement('style');
@@ -161,7 +168,7 @@
     esAdmin: esAdmin,
     resolver: resolver,
     fijar: fijar,
-    clienteDe: clienteDe,
+    clienteDe: clienteDe, clientesDe: clientesDe,
     visible: visible
   };
 })();
