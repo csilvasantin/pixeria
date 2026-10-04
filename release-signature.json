@@ -1,7 +1,8 @@
 {
-  "version": "v.04.10.2026.r14.20:52",
-  "deployer": "HuangMacMini",
-  "machine": "MacMini",
-  "signature": "HuangMacMini · MacMini",
-  "agent": "HuangMacMini"
+  "version": "v.04.10.2026.r15.21:05",
+  "deployer": "LucasGrokBotBox",
+  "machine": "GrokBotBox",
+  "signature": "LucasGrokBotBox · GrokBotBox",
+  "agent": "LucasGrokBotBox",
+  "evidence": "Admira por defecto lo ve todo; el combo de cliente solo con /marca todas y solo en la sesión de la pestaña; /es/… redirige a la ruta en español de la raíz."
 }

@@ -13,6 +13,13 @@ async function guardedRequest(context) {
   const authResponse = await handleAuth(request, env, context.waitUntil ? context.waitUntil.bind(context) : null);
   if (authResponse) return authResponse;
 
+  // El español vive en la raíz (/adaptaciones/) y el inglés en /en/. /es/… no existía y daba 404:
+  // se lleva a la misma ruta sin /es, conservando la query (?cliente=…).
+  if ((request.method === 'GET' || request.method === 'HEAD') && /^\/es(\/|$)/.test(url.pathname)) {
+    const destino = url.pathname.replace(/^\/es(?=\/|$)/, '') || '/';
+    return new Response(null, {status:301, headers:{location: destino + url.search, 'cache-control':'no-store'}});
+  }
+
   // Pregunta del avatar (FLT-101350). Solo llega a la función /avatar-ask, que
   // devuelve JSON. No abre ninguna página del estudio.
   if (url.pathname === '/avatar-ask') return context.next();

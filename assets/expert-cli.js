@@ -239,6 +239,8 @@
   // → true si ya está resuelto aquí; false para seguir con la marca blanca (runMarca).
   function marcaCliente(arg) {
     var PC = window.PixeriaCliente, a = String(arg || '').trim();
+    // off oculta el selector aunque la lista de clientes aún no haya llegado.
+    if (PC && /^off$/i.test(a) && !(PC.listo && PC.listo())) { PC.selector(false); PC.fijar(''); return false; }
     if (!PC || !PC.listo || !PC.listo()) return false;
     var def = PC.porDefecto(), defNombre = def ? def.nombre : 'Admira';
     if (/^(todas|todos|all)$/i.test(a)) {
