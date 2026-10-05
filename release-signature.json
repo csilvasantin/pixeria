@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r3.08:05",
+  "version": "v.05.10.2026.r4.08:19",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "Adaptaciones caja 2: importar por URL con el importador del Stock (admira-tube/yt-dlp) y pasar solo a Adaptar; subida del equipo con botón propio."
+  "evidence": "Modo Experto: mostrar u ocultar del todo (data-min=hide de la suite, recuerdo por pestaña); /avatarDigital, /avatar Digital y /admirito alternan a Admirito (admira-next-web #59)"
 }
