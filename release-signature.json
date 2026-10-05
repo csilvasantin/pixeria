@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r9.18:59",
+  "version": "v.05.10.2026.r10.20:04",
   "deployer": "HuangMacMini",
   "machine": "MacMini",
   "signature": "HuangMacMini · MacMini",
   "agent": "HuangMacMini",
-  "evidence": "suno-local healthz ok while sleeping + async /generate 202 (fixnel ERR_CONNECTION_CLOSED fix) + client pending poll"
+  "evidence": "Imágenes: prompt protagonista + pantalla #imageStage + galería de sesión (12) con publicar/descargar"
 }

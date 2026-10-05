@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r9.1859';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r10.2004';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r9.18:59">
+  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r10.20:04">
   <link rel="canonical" href="https://www.pixeria.com/imagenes.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/imagenes.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/imagenes.html">
@@ -50,10 +50,10 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=05.10.2026.r9.1859">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r9.1859">
-  <script defer src="/assets/site-nav.js?v=05.10.2026.r9.1859"></script>
-  <script defer src="/assets/descarga-local.js?v=05.10.2026.r9.1859"></script>
+  <link rel="stylesheet" href="workspace.css?v=05.10.2026.r10.2004">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r10.2004">
+  <script defer src="/assets/site-nav.js?v=05.10.2026.r10.2004"></script>
+  <script defer src="/assets/descarga-local.js?v=05.10.2026.r10.2004"></script>
 </head>
 <body data-page="imagenes" class="quad-ui">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -82,17 +82,17 @@
     <a href="stock.html">🗂 Ver Stock</a>
   </nav>
   <nav class="quad-menu quad-left is-collapsed" aria-label="Flujo de producción">
-    <a href="#briefForm" data-quad-scroll="#briefForm"><span>01</span>Brief</a>
+    <a href="#i-prompt" data-quad-scroll="#i-prompt"><span>01</span>Describe</a>
     <a href="#briefForm" data-quad-scroll="[data-motor-section]"><span>02</span>Motor</a>
     <a href="#playOutput" data-quad-scroll="#playOutput"><span>03</span>Generar</a>
-    <a href="#briefOut" data-quad-scroll="#briefOut"><span>04</span>Revisar</a>
+    <a href="#imageStage" data-quad-scroll="#imageStage"><span>04</span>Revisar</a>
     <a href="#sendToStock" data-quad-scroll="#sendToStock"><span>05</span>Publicar</a>
   </nav>
 
   <header class="page-head has-gif"><figure class="page-gif"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Digital_rain_animation_big_letters_green_and_white.gif" alt="Imágenes · letras grandes verdes" loading="lazy"><figcaption>// Imágenes · letras grandes verdes</figcaption></figure>
     <p class="eyebrow image">Tipo de contenido · Imágenes</p>
     <h1>Creación de Imágenes.</h1>
-    <p class="lead">Imágenes para campañas, producto, personajes, fondos, miniaturas y banners. Define paleta, encuadre, luz y prompt para series coherentes listas para publicar o animar.</p>
+    <p class="lead">Escribe qué imagen quieres crear, pulsa ✨ CREAR IMAGEN y la verás aquí mismo, en pantalla. Cada creación se guarda en la galería de la sesión para publicarla en Stock o descargarla.</p>
   </header>
 
   <main>
@@ -106,50 +106,66 @@
         <a class="btn" href="signage.html" target="_blank" rel="noopener" title="Abre la pantalla de signage para ver lo enviado">↗ VER PANTALLA</a>
       </div>
 
-      <article class="module">
-        <div class="module-head"><h3><span class="accent" style="background: var(--image);"></span>Imágenes</h3><small>assets + estilo + consistencia</small></div>
-        <div data-motor-section="imagenes"></div>
-        <div class="row2">
-          <div class="field"><label for="i-paleta">Paleta</label><input id="i-paleta" name="imagenes.paleta" type="text" placeholder="Coral + crema + azul medianoche"></div>
-          <div class="field"><label for="i-encuadre">Encuadre</label>
-            <select id="i-encuadre" name="imagenes.encuadre">
-              <option value="">—</option>
-              <option>Vertical 9:16</option>
-              <option>Cuadrado 1:1</option>
-              <option>Horizontal 16:9</option>
-              <option>Banner 3:1</option>
-              <option>Mixto</option>
-            </select>
+      <article class="module image-create">
+        <div class="module-head"><h3><span class="accent" style="background: var(--image);"></span>Imágenes</h3><small>describe → crea → mira → publica</small></div>
+        <div class="image-create-grid">
+          <div class="image-create-main">
+            <div class="field image-prompt-field">
+              <label for="i-prompt">¿Qué imagen quieres crear?</label>
+              <textarea id="i-prompt" name="imagenes.prompt" rows="9" placeholder="Describe la imagen: qué aparece, dónde, estilo, ambiente…&#10;Ej. Familia disfrutando del aeropuerto de Palma al atardecer, luz dorada, foto editorial, sin texto"></textarea>
+              <small class="image-prompt-hint">Ctrl/⌘ + Enter para crear · paleta, luz y realismo se añaden al prompt</small>
+            </div>
+            <div class="image-create-actions">
+              <button class="btn play" type="button" id="playOutput"><span class="play-label">✨ CREAR IMAGEN</span></button>
+              <button class="btn" type="button" id="sendToStock" title="Publica en Stock la imagen que está en pantalla">📌 Enviar a Stock</button>
+              <button class="btn" type="button" id="clearAll" title="Vacía el prompt y las opciones (la galería se mantiene)">Limpiar</button>
+            </div>
+            <div class="image-options" aria-label="Opciones de imagen">
+              <div class="field"><label for="i-encuadre">Encuadre</label>
+                <select id="i-encuadre" name="imagenes.encuadre">
+                  <option value="">—</option>
+                  <option>Vertical 9:16</option>
+                  <option>Cuadrado 1:1</option>
+                  <option>Horizontal 16:9</option>
+                  <option>Banner 3:1</option>
+                  <option>Mixto</option>
+                </select>
+              </div>
+              <div class="field"><label for="i-realismo">Realismo</label>
+                <select id="i-realismo" name="imagenes.realismo">
+                  <option value="">—</option>
+                  <option>Foto realista</option>
+                  <option>Editorial</option>
+                  <option>Ilustracion</option>
+                  <option>3D estilizado</option>
+                  <option>Pixel art</option>
+                </select>
+              </div>
+              <div class="field"><label for="i-paleta">Paleta</label><input id="i-paleta" name="imagenes.paleta" type="text" placeholder="Coral + crema + azul medianoche"></div>
+              <div class="field"><label for="i-luz">Luz</label><input id="i-luz" name="imagenes.luz" type="text" placeholder="Atardecer suave, contraste medio"></div>
+              <div class="field image-options-wide"><label for="i-assets">Assets a generar</label><input id="i-assets" name="imagenes.assets" type="text" placeholder="3 banners + 5 miniaturas + 2 fondos"></div>
+            </div>
           </div>
+          <section id="imageStage" class="image-stage" aria-live="polite" aria-label="Pantalla de imágenes">
+            <div class="image-stage-empty">
+              <span class="image-stage-icon" aria-hidden="true">🖼️</span>
+              <strong>Aquí aparecerán tus imágenes</strong>
+              <small>Escribe qué quieres crear y pulsa ✨ CREAR IMAGEN. Con varios motores marcados verás la comparativa lado a lado.</small>
+            </div>
+            <div id="player" class="player-area" hidden></div>
+          </section>
         </div>
-        <div class="row2">
-          <div class="field"><label for="i-luz">Luz</label><input id="i-luz" name="imagenes.luz" type="text" placeholder="Atardecer suave, contraste medio"></div>
-          <div class="field"><label for="i-realismo">Nivel de realismo</label>
-            <select id="i-realismo" name="imagenes.realismo">
-              <option value="">—</option>
-              <option>Foto realista</option>
-              <option>Editorial</option>
-              <option>Ilustracion</option>
-              <option>3D estilizado</option>
-              <option>Pixel art</option>
-            </select>
+        <section id="imageGalleryWrap" class="image-gallery" hidden>
+          <div class="image-gallery-head">
+            <strong>Galería de la sesión</strong>
+            <small>últimas 12 creaciones · click para verla en pantalla</small>
+            <button type="button" class="btn" id="clearImageGallery">Vaciar galería</button>
           </div>
-        </div>
-        <div class="field"><label for="i-prompt">Prompt principal</label><textarea id="i-prompt" name="imagenes.prompt" placeholder="Familia disfrutando del aeropuerto, luz dorada..."></textarea></div>
-        <div class="field"><label for="i-assets">Assets a generar</label><input id="i-assets" name="imagenes.assets" type="text" placeholder="3 banners + 5 miniaturas + 2 fondos"></div>
+          <div id="imageGallery" class="image-gallery-grid"></div>
+        </section>
+        <div class="image-motor" data-motor-section="imagenes"></div>
       </article>
-
-      <div class="brief-area">
-        <div class="brief-head">
-          <div class="brief-actions">
-            <button class="btn play" type="button" id="playOutput"><span class="play-label">✨ CREAR IMAGEN</span></button>
-            <button class="btn" type="button" id="clearAll">Limpiar Imágenes</button>
-            <button class="btn" type="button" id="sendToStock" title="Publica en Stock la imagen creada">📌 Enviar a Stock</button>
-          </div>
-        </div>
-        <pre class="brief" id="briefOut" hidden></pre>
-      </div>
-      <div id="player" class="player-area" hidden></div>
+      <pre class="brief" id="briefOut" hidden></pre>
     </form>
   </main>
 
@@ -206,9 +222,9 @@
       </div>
     </form>
   </dialog>
-  <script defer src="/matrix-rain.js?v=05.10.2026.r9.1859"></script>
-  <script src="app.js?v=05.10.2026.r9.1859"></script>
-  <script defer src="/assets/cuadratura.js?v=05.10.2026.r9.1859"></script>
+  <script defer src="/matrix-rain.js?v=05.10.2026.r10.2004"></script>
+  <script src="app.js?v=05.10.2026.r10.2004"></script>
+  <script defer src="/assets/cuadratura.js?v=05.10.2026.r10.2004"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
