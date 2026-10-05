@@ -435,6 +435,13 @@ function loop() {
 
 // ── Fuente ──────────────────────────────────────────────────────────────────
 let sourceObjectURL = null;
+// El <video id="src"> es crossorigin (lo pinta en canvas y lo codifica). Si el mismo MP4 se pidió antes sin
+// CORS (miniatura, Stock, otra pestaña), el navegador puede reutilizar esa copia sin Access-Control-Allow-Origin
+// y el vídeo falla con «No se pudo reproducir». Una URL propia del modo CORS nunca comparte caché con ella.
+function corsURL(url) {
+  if (!/^https?:\/\//.test(url)) return url;
+  try { const u = new URL(url); if (u.origin === location.origin) return url; u.searchParams.set('cors', '1'); return u.href; } catch (_) { return url; }
+}
 function setSource(url, name, origin = {id:null,title:name}) {
   state.origin = {id:origin.id||null,title:origin.title||name};
   // A local file still being exported keeps its blob URL until its last queue line ends.
@@ -443,7 +450,7 @@ function setSource(url, name, origin = {id:null,title:name}) {
   $('#export-status').textContent='';
   state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0};
   $('#src-info').textContent = t('Cargando vídeo…','Loading video…'); $('#src-msg').textContent = t('Cargando vídeo…','Loading video…');
-  state.srcName = name; refreshInfo(); video.src = url; video.play().catch(() => {});
+  state.srcName = name; refreshInfo(); video.src = corsURL(url); video.play().catch(() => {});
 }
 video.addEventListener('error', () => { if (!video.getAttribute('src')) return; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; $('#src-msg').textContent = $('#src-info').textContent = t('No se pudo reproducir este vídeo. Elige otro archivo o una fuente Stock disponible.', 'Unable to play this video. Choose another file or an available Stock source.'); });
 video.addEventListener('loadedmetadata', () => {
