@@ -199,7 +199,7 @@ $('#campaigns').replaceChildren(...CAMPAIGNS.map(c=>{
   const count=document.createElement('span');count.className='campaign-count';
   const description=document.createElement('small');description.textContent=EN?c.descriptionEn:c.descriptionEs;
   b.append(heading,count,description);
-  b.onclick=()=>{state.profile='standard';$('#format-profile').value='standard';syncCompat();applyCampaign(FORMATOS,c.id);buildGrid();};return b;
+  b.onclick=()=>{const profile=c.profile||'standard';state.profile=profile;$('#format-profile').value=profile;syncCompat();applyCampaign(FORMATOS,c.id);buildGrid();};return b;
 }));
 $('#all-sizes').onclick=()=>{state.profile='standard';$('#format-profile').value='standard';syncCompat();selectAllSizes(FORMATOS);buildGrid();};
 $('#size-search').oninput=e=>{picker.query=e.target.value;buildPicker();};

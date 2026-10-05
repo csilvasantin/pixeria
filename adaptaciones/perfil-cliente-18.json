@@ -1,10 +1,12 @@
 {
   "source": {
-    "title": "Perfil de cliente · Resoluciones y formatos",
+    "title": "Altadis · Resoluciones y formatos",
     "page": 3,
     "sha256": "16a17b2f81c5713d5d0fc676a02d2192fb95ad07ecb13e29dbec1b09da5239f7",
     "scope": "18 filas estándar: excluye 5 filas marcadas ESPECIAL; incluye SHUTTLE STRETCH (SEDE)",
-    "requirements": "MP4 / H264 / 25fps. Sincro VW y LOGO requieren igual duración; esta preview no sincroniza players."
+    "requirements": "MP4 / H264 / 25fps. Sincro VW y LOGO requieren igual duración; esta preview no sincroniza players.",
+    "client": "Altadis",
+    "count": 18
   },
   "formats": [
     {

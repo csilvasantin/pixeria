@@ -41,6 +41,7 @@ export function createCatalog(en=false) {
  return formats;
 }
 export const CAMPAIGNS=[
+ {id:'altadis',es:'Altadis',en:'Altadis',descriptionEs:'18 pantallas del circuito · MP4 H.264 · 25 fps',descriptionEn:'18 circuit screens · MP4 H.264 · 25 fps',matches:f=>!!f.cliente,profile:'cliente'},
  {id:'social',es:'Campaña de redes sociales',en:'Social media campaign',descriptionEs:'Publicaciones, stories y portadas',descriptionEn:'Posts, stories and covers',matches:f=>f.category==='social'},
  {id:'display',es:'Anuncios display',en:'Display ads',descriptionEs:'Rectángulos, banners y formatos regionales',descriptionEn:'Rectangles, banners and regional sizes',matches:f=>f.category==='display'},
  {id:'mobile',es:'Anuncios móviles',en:'Mobile ads',descriptionEs:'Tres banners para móvil',descriptionEn:'Three mobile banners',matches:f=>f.mobile},
@@ -77,8 +78,13 @@ export function applyCampaign(formats, campaignId) {
  const campaign = CAMPAIGNS.find(c => c.id === campaignId);
  if (!campaign) return 0;
  let n = 0;
+ const profile = campaign.profile || 'standard';
  for (const f of formats) {
-  if (!isLibrarySize(f)) continue;
+  // Biblioteca: solo presets de redes/digital/display/impresión.
+  // Campañas de cliente (Altadis): activan el perfil cliente y sus formatos.
+  if (profile === 'standard') {
+   if (!isLibrarySize(f)) continue;
+  } else if (formatFamily(f) !== profile) continue;
   f.on = !!campaign.matches(f);
   if (f.on) n++;
  }
