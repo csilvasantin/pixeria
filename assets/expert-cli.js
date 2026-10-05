@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   // ─── Piezas puras (también se prueban en node: test/marca-blanca.test.cjs) ───
-  var COMMANDS = ['help', 'clear', 'echo', 'date', 'status', 'version', 'history', 'open', 'marca', 'avatar', 'avataron', 'avataroff', 'avatardigital', 'digitalavatar', 'admirito'];
+  var COMMANDS = ['help', 'clear', 'echo', 'date', 'status', 'version', 'history', 'open', 'marca', 'idioma', 'language', 'languague', 'avatar', 'avataron', 'avataroff', 'avatardigital', 'digitalavatar', 'admirito'];
   var MARCA_VERB = /^\/?(?:marca|brand|marcablanca)$/i;
   // Semilla del catálogo de admiranext.com/marcablanca: vale para el Tab sin red. Con la
   // marca blanca cargada se usa la lista real (AdmiraMarca.conocidas()).
@@ -287,7 +287,54 @@
     });
     return true;
   }
+  function normalizeLangToken(s) {
+    var n = String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z]/g, '');
+    if (!n) return '';
+    if (/^(en|eng|english|ingles)$/.test(n)) return 'en';
+    if (/^(es|esp|spa|spanish|espanol|castellano)$/.test(n)) return 'es';
+    return null;
+  }
+  function parseLangCommand(text) {
+    var raw = String(text == null ? '' : text).trim();
+    if (!raw) return null;
+    var body = raw.replace(/^\//, '').trim();
+    var m = body.match(/^(idioma|language|languague)(?:[\s_-]*(.*))?$/i);
+    if (!m) return null;
+    var token = normalizeLangToken(m[2] || '');
+    if (token === null) return {ok: false};
+    var cur = document.documentElement.lang.indexOf('en') === 0 ? 'en' : 'es';
+    return {ok: true, lang: token || (cur === 'en' ? 'es' : 'en')};
+  }
+  function applyExpertLang(next) {
+    var l = next === 'en' ? 'en' : 'es';
+    document.documentElement.lang = l;
+    try { if (typeof window.AdmiraSetLanguage === 'function') window.AdmiraSetLanguage(l); } catch (_) {}
+    try {
+      var link = document.querySelector('link[rel="alternate"][hreflang="' + l + '"]');
+      if (link && link.href) {
+        var target = new URL(link.href, location.href);
+        if (target.origin === location.origin) {
+          var cur = location.pathname.replace(/\/$/, '') || '/';
+          var want = target.pathname.replace(/\/$/, '') || '/';
+          if (cur !== want) { location.assign(target.pathname + target.search + target.hash); return l; }
+        }
+      }
+    } catch (_) {}
+    try { document.dispatchEvent(new CustomEvent('admiranext:lang', {detail: {lang: l}})); } catch (_) {}
+    return l;
+  }
   function execute(command) {
+    var langCmd = parseLangCommand(command);
+    if (langCmd) {
+      if (!langCmd.ok) {
+        write(t('Usa /idioma o /language (toggle), /idioma ESP|ENG. También idiomaESP, languageENG…',
+          'Use /idioma or /language (toggle), /idioma ESP|ENG. Also idiomaESP, languageENG…'));
+        return;
+      }
+      applyExpertLang(langCmd.lang);
+      write(langCmd.lang === 'en' ? 'Language: English' : 'Idioma: español');
+      return;
+    }
     var words = command.trim().split(/\s+/), name = words.shift().toLowerCase().replace(/^\//, ''), arg = words.join(' ');
     if (MARCA_VERB.test(name)) {
       if (!marcaCliente(arg)) marca().then(function (M) { return runMarca(arg, M, en, write); });
@@ -295,7 +342,7 @@
     }
     switch (name) {
       case 'help': case 'ayuda':
-        write(t('Comandos en este navegador:', 'Commands in this browser:') + '\nhelp · clear · echo <text> · date · status · version · history\nopen <home|audio|music|images|video|stock|assets|docs|radar>\n' +
+        write(t('Comandos en este navegador:', 'Commands in this browser:') + '\nhelp · clear · echo <text> · date · status · version · history\nopen <home|audio|music|images|video|stock|assets|docs|radar>\nidioma [/language] [ESP|ENG] — ' + t('alterna o fija el idioma (también idiomaESP)', 'toggle or set language (also idiomaESP)') + '\n' +
           t('/marca [marca] — Marca blanca del catálogo de admiranext.com/marcablanca: /marca <id> viste la web con esa marca, /marca off vuelve a Admira, /marca sola dice cuál está activa y lista las disponibles, /marca <web> abre el analizador en otra pestaña. Alias: /brand.',
             '/marca [brand] — White label from the admiranext.com/marcablanca catalogue: /marca <id> dresses the site in that brand, /marca off returns to Admira, /marca alone shows the active one and lists them, /marca <website> opens the analyser in a new tab. Alias: /brand.') + '\n' +
           t('marca: off (Admira), ', 'brand: off (Admira), ') + brandIds().join(', ') + t(' · o una web para analizarla (starbucks.es)', ' · or a website to analyse (starbucks.es)') + '\n' +
