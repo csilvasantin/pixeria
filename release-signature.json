@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r15.23:45",
-  "deployer": "MorfeoMacMini",
+  "version": "v.06.10.2026.r1.00:08",
+  "deployer": "OraculoMacMini",
   "machine": "MacMini",
-  "signature": "MorfeoMacMini · MacMini",
-  "agent": "MorfeoMacMini",
-  "evidence": "Adaptador: formatos de entrada GIF (animado → MP4 25 fps), SVG rasterizado por formato, HEIC (libheif WASM) y AVIF, y copiar y pegar con ⌘V"
+  "signature": "OraculoMacMini · MacMini",
+  "agent": "OraculoMacMini",
+  "evidence": "Stock ES/EN: locuciones en Megafonía, reproductor MP3 y enlace directo al índice completo; contrato admira.store."
 }

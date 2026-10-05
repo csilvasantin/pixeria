@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r15.23:45",
-  "deployer": "MorfeoMacMini",
+  "version": "v.06.10.2026.r1.00:08",
+  "deployer": "OraculoMacMini",
   "machine": "MacMini",
-  "signature": "MorfeoMacMini · MacMini",
-  "agent": "MorfeoMacMini",
-  "builtAt": "2026-10-05T21:45:35Z"
+  "signature": "OraculoMacMini · MacMini",
+  "agent": "OraculoMacMini",
+  "builtAt": "2026-10-05T22:08:07Z"
 }

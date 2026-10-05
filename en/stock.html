@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r15.2345';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=06.10.2026.r1.0008';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r15.23:45">
+  <meta name="admiranext-version" content="Pixeria v.06.10.2026.r1.00:08">
   <link rel="canonical" href="https://www.pixeria.com/en/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -50,7 +50,7 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="../workspace.css?v=05.10.2026.r15.2345">
+  <link rel="stylesheet" href="../workspace.css?v=06.10.2026.r1.0008">
   <style>
     .stock-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);z-index:30;width:54px;height:84px;display:flex;align-items:center;justify-content:center;
       border:1px solid rgba(118,185,0,.4);border-radius:12px;background:rgba(8,16,8,.72);color:#b8e577;font-size:34px;line-height:1;cursor:pointer;
@@ -103,11 +103,11 @@
     .cat-result.sum{ color:var(--muted); border-style:dashed; }
     .cat-result a{ color:var(--matrix); }
   </style>
-  <script defer src="/assets/site-nav.js?v=05.10.2026.r15.2345"></script>
-  <script defer src="/assets/descarga-local.js?v=05.10.2026.r15.2345"></script>
-  <link rel="stylesheet" href="../assets/xpaces/viewer.css?v=05.10.2026.r15.2345">
+  <script defer src="/assets/site-nav.js?v=06.10.2026.r1.0008"></script>
+  <script defer src="/assets/descarga-local.js?v=06.10.2026.r1.0008"></script>
+  <link rel="stylesheet" href="../assets/xpaces/viewer.css?v=06.10.2026.r1.0008">
 <link rel="stylesheet" href="/assets/furniture/editor.css">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r15.2345">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=06.10.2026.r1.0008">
 </head>
 <body data-page="stock">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -172,6 +172,7 @@
         <div class="stock-pager-filters">
           <select id="stockTypeFilter" title="Filtrar por tipo" aria-label="Filtrar por tipo">
             <option value="">Todos los tipos</option>
+            <option value="locucion">Public announcements</option>
             <option value="audio">Audio</option>
             <option value="music">Música</option>
             <option value="image">Imágenes</option>
@@ -297,8 +298,8 @@
     </form>
   </dialog>
 
-  <script defer src="/matrix-rain.js?v=05.10.2026.r15.2345"></script>
-  <script src="../app.js?v=05.10.2026.r15.2345"></script>
+  <script defer src="/matrix-rain.js?v=06.10.2026.r1.0008"></script>
+  <script src="../app.js?v=06.10.2026.r1.0008"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "../assets/xpaces/catalog.mjs";
   import {isFurniture3D} from "../assets/furniture/catalog.mjs";
@@ -323,7 +324,7 @@
     const STOCK_PUBLIC_R2 = 'https://stock.admira.store';
     const STOCK_LIST_URL = STOCK_PUBLIC_R2 + '/stock/index.json';
     const STOCK_LIST_FALLBACK = STOCK_BASE + '/stock/list?limit=200';
-    const TYPE_ORDER = { xpaces: 4, audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
+    const TYPE_ORDER = { xpaces: 4, locucion: 0, audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
     let allItems = [];
     // Suno es un motor oculto (norma de Carlos): en pantalla se ve como Pixeria Music; los datos no cambian.
     const verMotor = m => /suno/i.test(String(m || '')) ? 'Pixeria Music' : String(m || '');
@@ -374,7 +375,7 @@
         }
         return `<video class="stock-cover stock-video-preview" data-src="${escAttr(it.url)}" preload="metadata" muted playsinline disablepictureinpicture style="background:#0a0f14;object-fit:cover;"></video>`;
       }
-      if (it.type === 'audio' || it.type === 'music') {
+      if (it.type === 'audio' || it.type === 'locucion' || it.type === 'music') {
         const cover = it.thumbnail || '';
         return `${cover ? `<img class="stock-cover" src="${cover}" alt="" loading="lazy">` : '<div class="stock-cover-empty">▶</div>'}
                 <audio src="${it.url}" preload="none" controls></audio>`;
@@ -510,7 +511,7 @@
         </div>
         <div class="stock-card-body">
           <header>
-            <span class="stock-type ${typeLabel}">${typeLabel}</span>
+            <span class="stock-type ${typeLabel}">${typeLabel === 'locucion' ? 'Public announcements' : typeLabel}</span>
             <div class="stock-card-actions">
               <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Open in AINimation" aria-label="Open in AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
               <button type="button" class="stock-card-btn" data-act="feed" title="Send to Pixer Feed (screens / twin)" aria-label="Send to Pixer Feed"><span aria-hidden="true">📺</span></button>
@@ -712,7 +713,7 @@
         media = `<img src="${it.thumbnail || it.url}" alt="">`;
       } else if (it.type === 'video' || it.type === 'animation') {
         media = `<video src="${it.url}" ${(it.poster || it.thumbnail) ? `poster="${escAttr(it.poster || it.thumbnail)}"` : ''} controls autoplay></video>`;
-      } else if (it.type === 'audio' || it.type === 'music') {
+      } else if (it.type === 'audio' || it.type === 'locucion' || it.type === 'music') {
         const cover = it.thumbnail || '';
         media = `${cover ? `<img class="stock-cover" src="${cover}" alt="">` : '<div class="stock-cover-empty">▶</div>'}
                  <audio src="${it.url}" controls autoplay></audio>`;
@@ -730,7 +731,7 @@
       const tagsEditor = renderTagsEditorHtml(it.id, it.tags);
       const typeLabel = displayType(it);
       lightboxMeta.innerHTML = `
-        <div><span class="stock-type ${typeLabel}">${typeLabel}</span> <span class="stock-motor">${verMotor(it.motor)}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span></div>
+        <div><span class="stock-type ${typeLabel}">${typeLabel === 'locucion' ? 'Public announcements' : typeLabel}</span> <span class="stock-motor">${verMotor(it.motor)}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span></div>
         ${titleBlock}
         ${tagsEditor}
         <p class="stock-prompt">${renderPromptHtml(it.prompt)}</p>
@@ -881,7 +882,7 @@
     async function sendToPixerFeed(it, btn) {
       if (!it || !it.url) return;
       const kind = (it.type === 'video' || it.type === 'animation') ? 'video'
-                 : (it.type === 'audio' || it.type === 'music') ? 'audio'
+                 : (it.type === 'audio' || it.type === 'locucion' || it.type === 'music') ? 'audio'
                  : 'image'; // image y furni → image
       const label = (it.title || it.prompt || it.id || '').slice(0, 60);
       status.textContent = `// enviando "${label}" al Pixer Feed…`;
@@ -994,7 +995,7 @@
             if (!r.ok) throw new Error('HTTP ' + r.status);
             const data = await r.json();
             if (!data || !Array.isArray(data.items)) throw new Error('respuesta sin items');
-            return data.items.slice(0, 200);
+            return data.items; // Deep links and public announcements need the complete index.
           } catch (e) {
             lastErr = e;
           }
@@ -1162,6 +1163,7 @@
       if (!safeId || safeId !== id) return;
       const item = allItems.find(it => it && it.id === safeId);
       if (!item) return;
+      if (item.type === 'locucion') { filters.type = 'locucion'; typeFilter.value = 'locucion'; applyFilters(true); }
       const card = grid.querySelector(`.stock-card[data-id="${safeId}"]`);
       if (card) {
         card.classList.add('stock-card-flash');
@@ -1471,6 +1473,6 @@
     })();
   })();
   </script>
-  <script defer src="/assets/cuadratura.js?v=05.10.2026.r15.2345"></script>
+  <script defer src="/assets/cuadratura.js?v=06.10.2026.r1.0008"></script>
 </body>
 </html>

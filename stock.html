@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r15.2345';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=06.10.2026.r1.0008';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r15.23:45">
+  <meta name="admiranext-version" content="Pixeria v.06.10.2026.r1.00:08">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -50,7 +50,7 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=05.10.2026.r15.2345">
+  <link rel="stylesheet" href="workspace.css?v=06.10.2026.r1.0008">
   <style>
     /* Contador de elementos en stock (en el título), con flash al crecer */
     .stock-count{ font-variant-numeric:tabular-nums; display:inline-block; }
@@ -332,11 +332,11 @@
     .cat-result.sum{ color:var(--muted); border-style:dashed; }
     .cat-result a{ color:var(--matrix); }
   </style>
-  <script defer src="/assets/site-nav.js?v=05.10.2026.r15.2345"></script>
-  <script defer src="/assets/descarga-local.js?v=05.10.2026.r15.2345"></script>
-  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=05.10.2026.r15.2345">
+  <script defer src="/assets/site-nav.js?v=06.10.2026.r1.0008"></script>
+  <script defer src="/assets/descarga-local.js?v=06.10.2026.r1.0008"></script>
+  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=06.10.2026.r1.0008">
 <link rel="stylesheet" href="/assets/furniture/editor.css">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r15.2345">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=06.10.2026.r1.0008">
 </head>
 <body data-page="stock">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -732,8 +732,8 @@
     </form>
   </dialog>
 
-  <script defer src="/matrix-rain.js?v=05.10.2026.r15.2345"></script>
-  <script src="app.js?v=05.10.2026.r15.2345"></script>
+  <script defer src="/matrix-rain.js?v=06.10.2026.r1.0008"></script>
+  <script src="app.js?v=06.10.2026.r1.0008"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "./assets/xpaces/catalog.mjs";
   import {isFurniture3D} from "./assets/furniture/catalog.mjs";
@@ -2211,6 +2211,7 @@
       if (!safeId || safeId !== id) return;
       const item = allItems.find(it => it && it.id === safeId);
       if (!item) return;
+      if (item.type === 'locucion') { filters.type = 'locucion'; typeFilter.value = 'locucion'; applyFilters(true); }
       const card = grid.querySelector(`.stock-card[data-id="${safeId}"]`);
       if (card) {
         card.classList.add('stock-card-flash');
@@ -3345,7 +3346,7 @@
       .catch(()=>{});
   })();
   </script>
-  <script defer src="/assets/cuadratura.js?v=05.10.2026.r15.2345"></script>
+  <script defer src="/assets/cuadratura.js?v=06.10.2026.r1.0008"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
