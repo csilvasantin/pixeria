@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r11.20:45",
-  "deployer": "HuangMacMini",
+  "version": "v.05.10.2026.r12.21:48",
+  "deployer": "MorfeoMacMini",
   "machine": "MacMini",
-  "signature": "HuangMacMini · MacMini",
-  "agent": "HuangMacMini",
-  "builtAt": "2026-10-05T18:45:55Z"
+  "signature": "MorfeoMacMini · MacMini",
+  "agent": "MorfeoMacMini",
+  "builtAt": "2026-10-05T19:48:13Z"
 }
