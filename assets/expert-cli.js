@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   // ─── Piezas puras (también se prueban en node: test/marca-blanca.test.cjs) ───
-  var COMMANDS = ['help', 'clear', 'echo', 'date', 'status', 'version', 'history', 'open', 'marca', 'avatar', 'avataron', 'avataroff', 'avatardigital', 'digitalavatar'];
+  var COMMANDS = ['help', 'clear', 'echo', 'date', 'status', 'version', 'history', 'open', 'marca', 'avatar', 'avataron', 'avataroff', 'avatardigital', 'digitalavatar', 'admirito'];
   var MARCA_VERB = /^\/?(?:marca|brand|marcablanca)$/i;
   // Semilla del catálogo de admiranext.com/marcablanca: vale para el Tab sin red. Con la
   // marca blanca cargada se usa la lista real (AdmiraMarca.conocidas()).
@@ -159,11 +159,26 @@
     grip.setAttribute('aria-valuemax', String(maxHeight()));
     grip.setAttribute('aria-valuenow', String(height));
   }
+  // Modo Experto = mostrar el panel completo u ocultarlo del todo (Carlos, 5-oct-2026). Con la piel
+  // anclada de la suite (suite/experto.js, data-min="hide") manda su estado (.ax-min) y el panel nativo
+  // de la página (raíl, cuadrante o capa) lo sigue; sin piel, manda el nativo. Se recuerda en la pestaña.
+  var OPEN_KEY = 'ax-experto-abierto';
+  function nativeOpen() { return mode === 'rail' ? !document.body.classList.contains('pf-bottom-off') : mode === 'quad' ? !panel.classList.contains('is-collapsed') : !panel.hidden; }
+  function setNative(open) {
+    if (mode === 'rail') document.body.classList.toggle('pf-bottom-off', !open);
+    else if (mode === 'quad') panel.classList.toggle('is-collapsed', !open);
+    else panel.hidden = !open;
+  }
+  function docked() { return panel.classList.contains('ax-dock'); }
+  try { if (sessionStorage.getItem(OPEN_KEY) === '1' && !nativeOpen()) setNative(true); } catch (_) {}
   function sync() {
-    var open = mode === 'rail' ? !document.body.classList.contains('pf-bottom-off') : mode === 'quad' ? !panel.classList.contains('is-collapsed') : !panel.hidden;
+    var open = docked() ? !panel.classList.contains('ax-min') : nativeOpen();
+    if (docked() && nativeOpen() !== open) setNative(open);
+    else if (!docked() && open !== wasOpen) { try { sessionStorage.setItem(OPEN_KEY, open ? '1' : '0'); } catch (_) {} }
     if (panel.dataset.cliOpen !== String(open)) panel.dataset.cliOpen = String(open);
-    // Con la piel ⌘ EXPERTO · CLI de la suite (look digitalavatar.ai) se abre desplegada: ficha + registro + orden.
-    if (open && !wasOpen) resize(document.documentElement.hasAttribute('data-ax-experto') ? Math.max(expanded, 300) : MIN, false);
+    document.querySelectorAll('.pix-nav-icon-expert').forEach(function (b) { if (b.getAttribute('aria-expanded') !== String(open)) b.setAttribute('aria-expanded', String(open)); });
+    // Al abrirse, desplegado: ficha + registro + orden (nunca la barra mínima).
+    if (open && !wasOpen) resize(document.documentElement.hasAttribute('data-ax-experto') ? Math.max(expanded, 300) : expanded, false);
     wasOpen = open;
     if (document.body.classList.contains('pf-cli-open') !== open) document.body.classList.toggle('pf-cli-open', open);
     var vv = window.visualViewport;
@@ -284,13 +299,13 @@
           t('/marca [marca] — Marca blanca del catálogo de admiranext.com/marcablanca: /marca <id> viste la web con esa marca, /marca off vuelve a Admira, /marca sola dice cuál está activa y lista las disponibles, /marca <web> abre el analizador en otra pestaña. Alias: /brand.',
             '/marca [brand] — White label from the admiranext.com/marcablanca catalogue: /marca <id> dresses the site in that brand, /marca off returns to Admira, /marca alone shows the active one and lists them, /marca <website> opens the analyser in a new tab. Alias: /brand.') + '\n' +
           t('marca: off (Admira), ', 'brand: off (Admira), ') + brandIds().join(', ') + t(' · o una web para analizarla (starbucks.es)', ' · or a website to analyse (starbucks.es)') + '\n' +
-          t('/avatar good abre el calvo (cara 3D, 52 blendshapes) · /avatar better abre la chica (Ready Player Me, gafas) · /avatar best abre a Neo (MetaHuman; si el host de render está apagado, cae a la chica). /avatar sin nivel dice el estado. /avatarON lo muestra y /avatarOFF lo oculta. /avatar reset vuelve al interruptor del proyecto (alias /avatarDigital, /digitalAvatar, /cli ayudante). Tu elección se recuerda en este navegador.',
-            '/avatar good opens the bald 3D face (facecap, 52 blendshapes) · /avatar better opens the web girl (Ready Player Me, glasses) · /avatar best opens Neo (MetaHuman; if the render host is off, the girl takes over). /avatar alone shows the status. /avatarON shows it and /avatarOFF hides it. /avatar reset follows the project switch (aliases /avatarDigital, /digitalAvatar, /cli helper). Your choice is remembered in this browser.') + '\n' +
+          t('/avatar good abre el calvo (cara 3D, 52 blendshapes) · /avatar better abre la chica (Ready Player Me, gafas) · /avatar best abre a Neo (MetaHuman; si el host de render está apagado, cae a la chica). /avatar sin nivel dice el estado. /avatarON lo muestra y /avatarOFF lo oculta. /avatar reset vuelve al interruptor del proyecto (alias /digitalAvatar, /cli ayudante). /avatarDigital, /avatar Digital o /admirito muestra u oculta a Admirito, la nube. Tu elección se recuerda en este navegador.',
+            '/avatar good opens the bald 3D face (facecap, 52 blendshapes) · /avatar better opens the web girl (Ready Player Me, glasses) · /avatar best opens Neo (MetaHuman; if the render host is off, the girl takes over). /avatar alone shows the status. /avatarON shows it and /avatarOFF hides it. /avatar reset follows the project switch (aliases /digitalAvatar, /cli helper). /avatarDigital, /avatar Digital or /admirito shows or hides Admirito, the cloud. Your choice is remembered in this browser.') + '\n' +
           (window.PixeriaCliente && window.PixeriaCliente.esAdmin() ? t('/marca todas — superusuario: muestra el selector «Cliente» junto al logo; /marca <cliente> (o proyecto<Cliente>) filtra por ese cliente; /marca off lo oculta y vuelve a Admira, que lo ve todo.', '/marca todas — superuser: shows the «Client» selector next to the logo; /marca <client> (or proyecto<Client>) filters by that client; /marca off hides it and returns to Admira, which sees everything.') + '\n' : '') +
           t('↑/↓ historial · Tab completa comandos, marcas y secciones · arrastra el borde superior · doble clic para plegar/desplegar', '↑/↓ history · Tab completes commands, brands and sections · drag the top edge · double-click to collapse/expand'));
         break;
       case 'avatar': case 'avataron': case 'avataroff':
-      case 'avatardigital': case 'digitalavatar':
+      case 'avatardigital': case 'digitalavatar': case 'admirito':
       case 'cli':
         if (name !== 'cli' || /^(ayudante|helper)(?:\s|$)/i.test(arg)) {
           cargarAvatar().then(function (A) {

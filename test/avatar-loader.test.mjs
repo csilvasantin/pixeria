@@ -11,7 +11,7 @@ test('solo páginas HTML servidas, nunca la verja ni el login', () => {
   assert.equal(wantsAvatar(html(), new URL('https://www.pixeria.com/auth/login')), false);
   assert.equal(wantsAvatar(html(302), new URL('https://www.pixeria.com/')), false);
   assert.equal(wantsAvatar(new Response('{}', {headers: {'content-type': 'application/json'}}), new URL('https://www.pixeria.com/avatar-ask')), false);
-  assert.equal(AVATAR_LOADER, 'https://www.admiranext.com/assets/avatar.js?v=20261004-avatar-5');
+  assert.equal(AVATAR_LOADER, 'https://www.admiranext.com/assets/avatar.js?v=20261005-admirito-1');
 });
 
 test('el CLI conoce /avatar, /avatarON, /avatarOFF y los alias antiguos', () => {

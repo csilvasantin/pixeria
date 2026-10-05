@@ -482,6 +482,8 @@
         // la capa flotante de respaldo duplicaba el panel encima del raíl (#4905).
         if (id === 'pixNavAdvancedLayer' && document.body.classList.contains('pix-nav-home-rails') && document.querySelector('.rail-right')) return;
         var layer = document.getElementById(id);
+        // Con la piel ⌘ EXPERTO · CLI anclada, el clic lo gobierna suite/experto.js y expert-cli.js lo sigue.
+        if (id === 'pixNavExpertLayer' && layer && layer.classList.contains('ax-dock')) return;
         var open = layer.hidden;
         document.querySelectorAll('.pix-nav-layer').forEach(function (other) { other.hidden = true; });
         document.querySelectorAll('.pf-topbar-right .pix-nav-icon, .pix-nav-controls .pix-nav-icon').forEach(function (other) { other.setAttribute('aria-expanded', 'false'); });
@@ -655,10 +657,10 @@
       // ⌘ EXPERTO · CLI con el look de digitalavatar.ai (Carlos, 4-oct-2026): piel compartida de la
       // suite (www.admiranext.com/suite) sobre la consola de expert-cli.js; los comandos no cambian.
       var axCss = document.createElement('link');
-      axCss.rel = 'stylesheet'; axCss.href = 'https://www.admiranext.com/suite/experto.css?v=20261004-experto-min-2';
+      axCss.rel = 'stylesheet'; axCss.href = 'https://www.admiranext.com/suite/experto.css?v=20261005-experto-oculto-1';
       document.head.appendChild(axCss);
       var ax = document.createElement('script');
-      ax.src = 'https://www.admiranext.com/suite/experto.js?v=20261004-experto-min-2';
+      ax.src = 'https://www.admiranext.com/suite/experto.js?v=20261005-experto-oculto-1';
       ax.setAttribute('data-panel', '.pf-cli');
       ax.setAttribute('data-body', '');
       ax.setAttribute('data-form', '.pf-cli-form');
@@ -667,6 +669,9 @@
       ax.setAttribute('data-extras', '');
       ax.setAttribute('data-chrome', '');
       ax.setAttribute('data-engine', 'PIXERIA ENGINE');
+      // Modo Experto: el icono lo muestra completo o lo oculta DEL TODO (Carlos, 5-oct-2026), sin la
+      // línea mínima «› /help»; el estado se recuerda en la pestaña.
+      ax.setAttribute('data-min', 'hide');
       document.body.appendChild(ax);
     }, 0);
   }
