@@ -48,6 +48,7 @@
     if (motorId === 'gemini-omni-flash') return false; // API aún no pública (Google I/O 2026) — sin endpoint todavía
     if (motorId === 'suno-local-v45') return true; // depende del proxy local, se chequea aparte
     if (motorId === 'suno-local-v5') return true; // depende del proxy local, se chequea aparte
+    if (motorId === 'suno-web') return true; // cola /api/suno-queue (fase 1 dry-run; agente en fase 2)
     if (motorId === 'lyria-3-pro-preview') return true; // proxied vía worker
     if (motorId === 'runway-gen3' || motorId === 'openai-tts-hd' || motorId === 'openai-sora') return false;
     return true;
@@ -170,6 +171,7 @@
       { id: 'pixer-loop',           nombre: 'Pixer Loop (Web Audio)', tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',  desc: 'preview rápido para probar intención', use: 'Borrador' },
       { id: 'lyria-3-pro-preview',  nombre: 'Gemini (Google)',        tipo: 'pro',  badge: 'Better', coste: 'paid tier Gemini',    desc: '~2min con voz cantando la letra', use: 'Alternativa' },
       { id: 'suno-local-v5',        nombre: 'Pixeria Music',          tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción · cuenta loguead.', desc: 'calidad final · motor de música', use: 'Master' },
+      { id: 'suno-web',             nombre: 'Suno',                   tipo: 'pro',  badge: 'Suno',  coste: 'créditos Suno · csilva@admira.com', desc: 'UI Suno · cola agente → Stock (fase 1: dry-run)', use: 'Cápsula' },
     ],
     imagenes: [
       { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Good',   coste: 'gratis (free tier)',   desc: 'generación + edición · Gemini 2.5 Flash Image' },
@@ -290,7 +292,7 @@
             <span class="motor-title">Motor IA · ${seccion}${titleHint}</span>
             <span class="motor-disclaimer">Costes orientativos a ${COSTES_FECHA}</span>
           </div>
-          <div class="motor-grid">${opts}</div>
+          <div class="motor-grid" data-count="${opciones.length}">${opts}</div>
           <div class="motor-warning" data-warning hidden></div>
         </div>`;
       function renderWarning() {
@@ -303,6 +305,7 @@
                        : motor.id === 'grok-imagine-image-pro' ? 'WORKER pixer-eleven'
                        : motor.id === 'grok-imagine-video' ? 'WORKER pixer-eleven (xAI)'
                        : motor.id.startsWith('suno-local-') ? 'PROXY motor de música'
+                       : motor.id === 'suno-web' ? 'COLA /api/suno-queue (dry-run)'
                        : motor.id === 'lyria-3-pro-preview' ? 'WORKER pixer-eleven (GCP)'
                        : motor.id === 'nano-banana' ? 'WORKER pixer-eleven (Gemini)'
                        : (motor.id.startsWith('imagen-') || motor.id.startsWith('veo-')) ? 'WORKER pixer-eleven (Gemini)'
@@ -340,6 +343,7 @@
           if (seccion === 'musica') {
             updateMusicStage('engine');
             refreshMusicHealth(false);
+            syncSunoCapsulaPanel();
           }
         });
       });
@@ -957,6 +961,136 @@
     else setDefaultMatrixCover();   // sin carátula real → vuelve al Matrix por defecto
   }
 
+  // ── Cápsula Suno (fase 1): UI espejo + cola dry-run; NO gasta créditos ──
+  const SUNO_JOBS_KEY = 'pixer_suno_jobs_v1';
+  function loadSunoJobs() {
+    try { return JSON.parse(localStorage.getItem(SUNO_JOBS_KEY) || '[]'); }
+    catch { return []; }
+  }
+  function saveSunoJobs(list) {
+    try { localStorage.setItem(SUNO_JOBS_KEY, JSON.stringify(list.slice(0, 40))); }
+    catch {}
+  }
+  function readSunoCapsulaForm() {
+    const root = document.getElementById('sunoCapsula');
+    if (!root) return null;
+    const kind = root.querySelector('.suno-tab.is-on')?.dataset.kind || 'songs';
+    const mode = root.querySelector('.suno-pill.is-on')?.dataset.mode || 'simple';
+    const version = root.querySelector('#sunoVersion')?.value || 'v6';
+    const prompt = (root.querySelector('#sunoPrompt')?.value || '').trim();
+    const title = (root.querySelector('#sunoTitle')?.value || '').trim();
+    return {
+      kind, mode, version, prompt, title,
+      audio: !!root.querySelector('[data-attach="audio"].is-on'),
+      voice: !!root.querySelector('[data-attach="voice"].is-on'),
+      image: !!root.querySelector('[data-attach="image"].is-on'),
+      execute: false, // hard: fase 1
+    };
+  }
+  function syncSunoCapsulaPanel() {
+    const s = loadStore().musica || {};
+    const on = s.motor === 'suno-web';
+    const panel = document.getElementById('sunoCapsula');
+    const classic = document.getElementById('musicaClassicFields');
+    if (panel) panel.hidden = !on;
+    if (classic) classic.hidden = on;
+    const play = document.getElementById('playOutput');
+    if (play) {
+      const lab = play.querySelector('.play-label');
+      if (lab) lab.textContent = on ? '♪ CREATE · cola Suno' : '🎵 CREAR MÚSICA';
+    }
+  }
+  function bindSunoCapsula() {
+    const root = document.getElementById('sunoCapsula');
+    if (!root || root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+    root.querySelectorAll('.suno-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        root.querySelectorAll('.suno-tab').forEach(b => b.classList.toggle('is-on', b === btn));
+        const s = loadStore(); setNested(s, 'musica.suno.kind', btn.dataset.kind); saveStore(s);
+      });
+    });
+    root.querySelectorAll('.suno-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        root.querySelectorAll('.suno-pill').forEach(b => b.classList.toggle('is-on', b === btn));
+        const s = loadStore(); setNested(s, 'musica.suno.mode', btn.dataset.mode); saveStore(s);
+      });
+    });
+    root.querySelectorAll('.suno-attach button').forEach(btn => {
+      btn.addEventListener('click', () => { btn.classList.toggle('is-on'); });
+    });
+    root.querySelector('#sunoVersion')?.addEventListener('change', (e) => {
+      const s = loadStore(); setNested(s, 'musica.suno.version', e.target.value); saveStore(s);
+    });
+    root.querySelector('#sunoPrompt')?.addEventListener('input', (e) => {
+      const s = loadStore(); setNested(s, 'musica.suno.prompt', e.target.value); saveStore(s);
+    });
+    root.querySelector('#sunoCreate')?.addEventListener('click', () => playSunoWebCapsula());
+    const saved = (loadStore().musica || {}).suno || {};
+    if (saved.kind) root.querySelectorAll('.suno-tab').forEach(b => b.classList.toggle('is-on', b.dataset.kind === saved.kind));
+    if (saved.mode) root.querySelectorAll('.suno-pill').forEach(b => b.classList.toggle('is-on', b.dataset.mode === saved.mode));
+    if (saved.version && root.querySelector('#sunoVersion')) root.querySelector('#sunoVersion').value = saved.version;
+    if (saved.prompt && root.querySelector('#sunoPrompt')) root.querySelector('#sunoPrompt').value = saved.prompt;
+    syncSunoCapsulaPanel();
+  }
+  async function playSunoWebCapsula() {
+    const form = readSunoCapsulaForm();
+    if (!form) {
+      showPlayer('<div class="player-card"><div class="player-head">▶ SUNO · falta panel</div><pre class="player-body">No está #sunoCapsula en musica.html</pre></div>');
+      return;
+    }
+    if (!form.prompt) {
+      showToast('Escribe un prompt Suno');
+      document.getElementById('sunoPrompt')?.focus();
+      return;
+    }
+    updateMusicStage('generate');
+    showPlayer(`
+      <div class="player-card">
+        <div class="player-head">▶ SUNO · cola fase 1 (dry-run)</div>
+        ${progressHtml('Encolando cápsula · sin gastar créditos…', 'sunoWeb', 8000)}
+        <pre class="player-body">${String(form.prompt).replace(/</g,'&lt;').slice(0,400)}</pre>
+      </div>`);
+    const stop = startProgress('sunoWeb');
+    try {
+      const r = await fetch('/api/suno-queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) {
+        stop(false);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · ERROR ${r.status}</div><pre class="player-body">${JSON.stringify(data).replace(/</g,'&lt;').slice(0,600)}</pre></div>`);
+        return;
+      }
+      stop(true);
+      const jobs = loadSunoJobs();
+      jobs.unshift({ ...data, savedAt: Date.now() });
+      saveSunoJobs(jobs);
+      const jobEl = document.getElementById('sunoJobStatus');
+      if (jobEl) {
+        jobEl.innerHTML = `Job <code>${data.jobId}</code> · <strong>${data.status}</strong> · dry-run=${data.dryRun}. Fase 2 (tras OK de Carlos): agente en suno.com → Stock.`;
+      }
+      showPlayer(`
+        <div class="player-card">
+          <div class="player-head">▶ SUNO · encolado · ${data.jobId}</div>
+          <pre class="player-body">status: ${data.status}
+dryRun: ${data.dryRun}
+execute: ${data.execute}
+kind: ${form.kind} · mode: ${form.mode} · ${form.version}
+
+${data.blockedReason || 'No se ha llamado a Suno. Confirma un prompt de prueba para fase 2.'}</pre>
+          <small class="player-foot">// /api/suno-queue · fase 1 · destino futuro: Stock</small>
+        </div>`);
+      updateMusicStage('review');
+      showToast('Suno · job encolado (dry-run)');
+    } catch (e) {
+      stop(false);
+      showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);
+    }
+  }
+
   async function playSunoLocal(s, model) {
     setMusicCover('');  // limpia la portada anterior al empezar
     updateMusicStage('produce');
@@ -1200,6 +1334,7 @@
     if (motor === 'lyria-3-pro-preview')  return playSunoLocal(s, 'chirp-v5');
     if (motor === 'suno-local-v5')        return playSunoLocal(s, 'chirp-v5-5');
     if (motor === 'suno-local-v45')       return playSunoLocal(s, 'chirp-v4-5');
+    if (motor === 'suno-web')             return playSunoWebCapsula();
     // default: Pixer Loop (Web Audio)
     const bpm = parseInt(s.bpm, 10) || 92;
     stopMusic();
@@ -3951,5 +4086,7 @@
     }
   });
 
+  bindSunoCapsula();
+  syncSunoCapsulaPanel();
   window.PIXER = { loadStore, saveStore, buildBrief, showToast, MOTORES };
 })();

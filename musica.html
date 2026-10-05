@@ -180,6 +180,48 @@
       <article class="module music-workbench">
         <div class="module-head"><h3><span class="accent" style="background: var(--music);"></span>Música</h3><small>identidad + loop + energía</small></div>
         <div data-motor-section="musica"></div>
+
+        <section id="sunoCapsula" class="suno-capsula" hidden aria-label="Cápsula Suno">
+          <div class="suno-capsula-head">
+            <h4>SUNO · cápsula musical</h4>
+            <span class="suno-capsula-badge">Fase 1 · dry-run · sin créditos</span>
+          </div>
+          <div class="suno-tabs" role="tablist">
+            <button type="button" class="suno-tab is-on" data-kind="songs" role="tab">Songs</button>
+            <button type="button" class="suno-tab" data-kind="speech" role="tab">Speech</button>
+            <button type="button" class="suno-tab" data-kind="sounds" role="tab">Sounds</button>
+          </div>
+          <div class="suno-row">
+            <div class="suno-pills" role="group" aria-label="Modo">
+              <button type="button" class="suno-pill is-on" data-mode="simple">Simple</button>
+              <button type="button" class="suno-pill" data-mode="advanced">Advanced</button>
+            </div>
+            <label class="suno-ver-wrap">Versión
+              <select id="sunoVersion" class="suno-ver" name="musica.suno.version" aria-label="Versión Suno">
+                <option value="v6" selected>v6</option>
+                <option value="v5">v5</option>
+                <option value="v4.5">v4.5</option>
+              </select>
+            </label>
+          </div>
+          <div class="suno-attach" aria-label="Adjuntos">
+            <button type="button" data-attach="audio">+ Audio</button>
+            <button type="button" data-attach="voice">+ Voice</button>
+            <button type="button" data-attach="image">+ Image</button>
+          </div>
+          <div class="field">
+            <label for="sunoTitle">Título <small style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(opcional)</small></label>
+            <input id="sunoTitle" name="musica.suno.title" type="text" placeholder="Ej. Capsula retail · tribal highlife" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="sunoPrompt">Prompt</label>
+            <textarea id="sunoPrompt" class="suno-prompt" name="musica.suno.prompt" rows="5" placeholder="Tribal highlife song about toxic cycles"></textarea>
+          </div>
+          <button type="button" class="suno-create" id="sunoCreate">♪ Create</button>
+          <div class="suno-job" id="sunoJobStatus">Cola lista. Create encola un job dry-run; la fase 2 (agente → suno.com → Stock) espera confirmación de Carlos.</div>
+        </section>
+
+        <div id="musicaClassicFields">
         <div class="music-form-grid two">
           <div class="field">
             <label for="m-versiones">Versiones a entregar</label>
@@ -228,6 +270,8 @@
             </figure>
           </div>
         </div>
+        </div>
+
       </article>
 
       <div class="brief-area">
