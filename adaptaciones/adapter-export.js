@@ -3,11 +3,13 @@
 // works. The engine stays loaded between jobs and keeps the last source in memory:
 // a queue of formats from the same video downloads the engine and the source once.
 // Single-threaded core: no SharedArrayBuffer or production isolation headers.
+// The input file is `input` (video) or the name the job asks for: a still image is read
+// by extension (`input.png`), which is what lets the image2 demuxer honour -loop 1.
 const CORE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/';
 export const MAX_SOURCE_BYTES = 100 * 1024 * 1024;
 export const MAX_OUTPUT_BYTES = 124 * 1048576;
 export function createEngine() {
-  let ffmpeg=null, loading=null, inputURL=null, controller=null, generation=0;
+  let ffmpeg=null, loading=null, inputURL=null, inputName='input', controller=null, generation=0;
   const urls=[];
   function reset() {
     generation++;controller?.abort();controller=null;
@@ -52,11 +54,12 @@ export function createEngine() {
       const alive=()=>{if(mine!==generation)throw new Error('cancelled');};
       try {
         const engine=await load(onStatus,signal);alive();
-        if(inputURL!==sourceURL) {
+        const name=job.input||'input';
+        if(inputURL!==sourceURL||inputName!==name) {
           onStatus({phase:'source'});
-          if(inputURL){await engine.deleteFile('input').catch(()=>{});inputURL=null;}
+          if(inputURL){await engine.deleteFile(inputName).catch(()=>{});inputURL=null;}
           const bytes=await readSource(sourceURL,signal);alive();
-          await engine.writeFile('input',bytes);inputURL=sourceURL;
+          await engine.writeFile(name,bytes);inputURL=sourceURL;inputName=name;
         }
         const progress=({progress})=>{if(mine===generation)onStatus({phase:'encoding',progress:Math.min(.99,Math.max(0,progress))});};
         engine.on('progress',progress);progress({progress:0});

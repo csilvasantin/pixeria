@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r13.2240';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r14.2252';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -36,15 +36,15 @@
 <meta charset="utf-8">
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r13.22:40">
+  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r14.22:52">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Adapter · One piece of content, every format | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=05.10.2026.r13.2240">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r13.2240">
-  <script defer src="/assets/site-nav.js?v=05.10.2026.r13.2240"></script>
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=05.10.2026.r14.2252">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r14.2252">
+  <script defer src="/assets/site-nav.js?v=05.10.2026.r14.2252"></script>
 </head>
 <body class="adapt-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
@@ -56,9 +56,9 @@
   </header>
   <main class="adapt-main">
     <section id="sec-adapt" class="card">
-      <div class="sec-hd"><h1 title="Step 1: choose a video. Step 2: pick the formats and export. Method, focus and zoom for the selected card are in Advanced; the H.264 plan is in Expert.">Adaptation: one piece of content, n formats for every Xpace</h1></div>
+      <div class="sec-hd"><h1 title="Step 1: choose a video or an image. Step 2: pick the formats and export. Method, focus and zoom for the selected card are in Advanced; the H.264 plan is in Expert.">Adaptation: one piece of content, n formats for every Xpace</h1></div>
       <nav class="steps" aria-label="Steps">
-        <button type="button" class="step" data-go="1" aria-current="step"><b>1</b> Video</button><span class="step-sep" aria-hidden="true">·</span>
+        <button type="button" class="step" data-go="1" aria-current="step"><b>1</b> Content</button><span class="step-sep" aria-hidden="true">·</span>
         <button type="button" class="step" data-go="2" disabled><b>2</b> Adapt</button>
       </nav>
       <div id="paso-1" class="paso">
@@ -67,17 +67,17 @@
             <div class="stk-pick"><button type="button" id="stock-pick" class="stk-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="stock-list"><span class="stk-btn-txt">Loading the Stock…</span></button><ul id="stock-list" class="stk-list" role="listbox" aria-label="Stock" tabindex="-1" hidden></ul></div>
             <select id="src-select" aria-label="Stock" hidden tabindex="-1"><option value="">Loading the Stock…</option></select>
             <p id="stock-status" class="muted" role="status"></p></div>
-          <div class="src-opt src-importar"><span class="n">2</span><h3>Upload / Import</h3><form id="imp-form" class="stk-tag imp-form" novalidate><input id="imp-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Paste a URL · YouTube, Instagram, TikTok, X, mp4…" aria-label="URL of the video to import"><button type="submit" id="imp-go" class="stk-tag-clear imp-go" aria-label="Import the URL" title="Import the URL">↵</button></form><div id="imp-prog" class="imp-prog" hidden><div id="imp-bar" class="imp-bar is-indet"><span></span></div><p id="imp-status" class="imp-status" role="status" aria-live="polite"></p></div><label class="imp-file"><input type="file" id="src-file" accept="video/*"><span aria-hidden="true">⤒</span> Upload from your computer <small>100 MB max</small></label></div>
+          <div class="src-opt src-importar"><span class="n">2</span><h3>Upload / Import</h3><form id="imp-form" class="stk-tag imp-form" novalidate><input id="imp-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Paste a URL · YouTube, Instagram, TikTok, X, mp4…" aria-label="URL of the video to import"><button type="submit" id="imp-go" class="stk-tag-clear imp-go" aria-label="Import the URL" title="Import the URL">↵</button></form><div id="imp-prog" class="imp-prog" hidden><div id="imp-bar" class="imp-bar is-indet"><span></span></div><p id="imp-status" class="imp-status" role="status" aria-live="polite"></p></div><label class="imp-file"><input type="file" id="src-file" accept="video/*,image/jpeg,image/png,image/webp"><span aria-hidden="true">⤒</span> Upload from your computer <small>video or image · 100 MB</small></label></div>
           <div class="src-opt src-crear"><span class="n">3</span><h3>Create it</h3><ul class="crear-ops"><li><a href="/en/musica.html"><b>Music Capsules</b><small>Pixeria Music</small></a></li><li><a href="/stock.html?type=capsula"><b>Knowledge Capsules</b><small>Did you know? and Stock capsules</small></a></li></ul><a class="pill" href="/en/video.html">Open the video creator →</a></div>
         </div>
         <p id="src-msg" class="muted" role="status"></p>
         <div id="src-preview" class="src-preview" hidden>
-          <div class="src-stage"><video id="src" muted loop playsinline preload="auto" crossorigin="anonymous"></video><aside id="src-ficha" class="ficha" aria-label="Video tech specs" hidden></aside></div>
+          <div class="src-stage"><video id="src" muted loop playsinline preload="auto" crossorigin="anonymous"></video><img id="src-img" alt="Preview of the chosen image" crossorigin="anonymous" decoding="async" hidden><aside id="src-ficha" class="ficha" aria-label="Tech specs of the content" hidden></aside></div>
           <div class="preview-bar"><button id="btn-play" class="pill" type="button">⏯ Play / pause</button><button id="btn-sound" class="pill sound-toggle" type="button" aria-pressed="false" aria-label="Sound" title="Turn sound on"><span class="snd-ico" aria-hidden="true">🔇</span> <span class="snd-lbl">Sound off</span></button><span id="src-info" class="muted"></span><button id="btn-adaptar" class="pill accent" type="button" disabled>Adapt →</button></div>
         </div>
       </div>
       <div id="paso-2" class="paso" hidden>
-      <div class="paso2-bar"><button id="btn-volver" class="pill" type="button">← Change video</button><span id="src-info-2" class="muted"></span><button id="btn-play-2" class="pill" type="button">⏯</button><button id="btn-sizes" class="pill" type="button">＋ Sizes</button></div>
+      <div class="paso2-bar"><button id="btn-volver" class="pill" type="button">← Change video</button><span id="src-info-2" class="muted"></span><button id="btn-play-2" class="pill" type="button">⏯</button><label id="still-wrap" class="still-dur" title="Length of the MP4 made from the still image: 1 to 60 seconds, 25 fps, no audio" hidden>MP4 · still image <input id="still-seconds" type="number" min="1" max="60" step="1" value="10" inputmode="numeric" aria-label="MP4 length in seconds"> s</label><button id="btn-sizes" class="pill" type="button">＋ Sizes</button></div>
       <div class="adapter-workspace">
       <aside class="size-library" id="cuad-opciones" aria-label="Size library">
         <h2>Sizes</h2>
@@ -120,7 +120,7 @@
         <label>Compatibility
           <select id="compat"><option value="universal">Universal players</option><option value="fhd" selected>Full HD players</option><option value="uhd">4K players</option></select>
         </label>
-      <details class="export-limits"><summary>Output types and limits</summary><p class="muted">Export MP4 with your settings and the original audio, when present. Every export joins the queue in the bottom-right corner and runs in the background in this browser, one variant at a time: keep working or switch video. Source limit 100 MB; 4K can take several minutes. Large batches must be split to stay within the memory budget. The first export downloads the engine (about 32 MB). Expand uses a blurred background without AI; blur may look slightly different from the preview. Input FPS and bitrate are estimates.</p><p class="muted output-note">Social and digital: MP4. Display and print: PNG of the current frame; pause the video to choose it. Print: RGB at 150 ppi, without bleed or CMYK. Sizes are references: check file weight, safe areas and destination requirements. Compatibility affects the four aspect-ratio formats; sized presets keep their resolution.</p></details>
+      <details class="export-limits"><summary>Output types and limits</summary><p class="muted">Export MP4 with your settings and the original audio, when present. Every export joins the queue in the bottom-right corner and runs in the background in this browser, one variant at a time: keep working or switch video. Source limit 100 MB; 4K can take several minutes. Large batches must be split to stay within the memory budget. The first export downloads the engine (about 32 MB). Expand uses a blurred background without AI; blur may look slightly different from the preview. Input FPS and bitrate are estimates.</p><p class="muted output-note">Social and digital: MP4. Display and print: PNG of the current frame; pause the video to choose it. Print: RGB at 150 ppi, without bleed or CMYK. Sizes are references: check file weight, safe areas and destination requirements. Compatibility affects the four aspect-ratio formats; sized presets keep their resolution.</p><p class="muted output-note output-note-image" hidden>Still image: display and print come out as PNG (display also as JPG); social, digital, project formats and video walls as H.264 MP4 at 25 fps with the length you choose (1–60 s, 10 by default), no audio. Reframing is the same as for video.</p></details>
         <button id="reset-settings" class="pill" type="button">Reset settings</button>
       <p id="settings-status" class="muted"></p>
       <details class="adv-notes" hidden><summary>Project notes</summary><p id="project-notes" class="muted"></p><p class="muted especiales-note">Segmented video walls: reframing happens on the physical wall and every screen is cut from the same master. The delivery is one MP4 with one cell per screen; you can also export one silent MP4 per screen, with the same duration at 25 fps. The picture only flows across screens if the players start together.</p></details>
@@ -129,11 +129,12 @@
       <details class="plan"><summary>Encoding plan by format (resolution, H.264, bitrate and ffmpeg command)</summary><div id="plan-tecnico"></div></details>
     </div>
   </main>
-  <script defer src="/adaptaciones/stock-select.js?v=05.10.2026.r13.2240"></script>
-  <script defer src="/adaptaciones/ficha-tecnica.js?v=05.10.2026.r13.2240"></script>
-  <script defer src="/adaptaciones/importar.js?v=05.10.2026.r13.2240"></script>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=05.10.2026.r13.2240"></script>
-  <script defer src="/assets/cuadratura.js?v=05.10.2026.r13.2240"></script>
+  <script defer src="/adaptaciones/stock-fuentes.js?v=05.10.2026.r14.2252"></script>
+  <script defer src="/adaptaciones/stock-select.js?v=05.10.2026.r14.2252"></script>
+  <script defer src="/adaptaciones/ficha-tecnica.js?v=05.10.2026.r14.2252"></script>
+  <script defer src="/adaptaciones/importar.js?v=05.10.2026.r14.2252"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=05.10.2026.r14.2252"></script>
+  <script defer src="/assets/cuadratura.js?v=05.10.2026.r14.2252"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
