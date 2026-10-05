@@ -81,6 +81,8 @@
       <div class="adapter-workspace">
       <aside class="size-library" id="cuad-opciones" aria-label="Biblioteca de tamaños">
         <h2>Tamaños</h2>
+        <label class="project-label">Proyecto<select id="adapter-project" aria-describedby="project-status"><option value="general">General (sin proyecto)</option></select></label>
+        <p id="project-status" class="muted project-status" role="status"></p>
         <p class="muted">Una campaña marca su lote. Todos los tamaños marca los 42. Adaptar genera los marcados, en cola.</p>
         <label class="size-search-label">Buscar formatos o tamaños<input id="size-search" type="search" placeholder="Nombre o 300 × 250…"></label>
         <label class="orientation-label">Filtrar por orientación<select id="size-orientation"><option value="all">Todas</option><option value="portrait">Vertical</option><option value="landscape">Horizontal</option><option value="square">Cuadrado</option></select></label>
@@ -111,7 +113,7 @@
     </section>
     <div id="cuad-avanzado-live" class="adv-live">
       <section id="card-settings" class="card-settings" aria-label="Tarjeta seleccionada"></section>
-      <label class="profile-label">Perfil de formatos <select id="format-profile"><option value="standard">Biblioteca · redes, digital, display e impresión</option><option value="cliente" disabled>Altadis · estándar + ESPECIAL + MyBlu</option><option value="especiales" disabled>Altadis · videowalls segmentados (ESPECIAL)</option></select></label>
+      <label class="profile-label">Perfil de formatos <select id="format-profile"><option value="standard">Biblioteca · redes, digital, display e impresión</option><option value="proyecto" disabled hidden>Formatos propios del proyecto</option><option value="especiales" disabled hidden>Videowalls segmentados del proyecto</option></select></label>
         <label>Encaje por defecto
           <select id="modo-global"><option value="auto">Auto (regla Pixeria)</option><option value="cover">Recortar (llenar)</option><option value="blur">Expandir · fondo desenfocado</option><option value="contain">Contener · negro</option></select>
         </label>
@@ -121,7 +123,7 @@
       <details class="export-limits"><summary>Tipos de salida y límites</summary><p class="muted">Exporta MP4 con tus ajustes y el audio original, si existe. Cada exportación entra en la cola de la esquina inferior derecha y se procesa en segundo plano en este navegador, una variante cada vez: puedes seguir trabajando o cambiar de vídeo. Máximo 100 MB de origen; 4K puede tardar varios minutos. Los lotes grandes se deben dividir para limitar la memoria. La primera exportación descarga el motor (unos 32 MB). Expandir usa fondo desenfocado, sin IA; su desenfoque puede variar ligeramente respecto al previo. FPS y bitrate de entrada estimados.</p><p class="muted output-note">Redes y digital: MP4. Display e impresión: PNG del fotograma actual; pausa el vídeo para elegirlo. Impresión: RGB a 150 ppp, sin sangrado ni CMYK. Los tamaños son referencias: revisa peso, zonas seguras y requisitos del destino. La compatibilidad afecta a los cuatro formatos de proporción; los presets con medidas mantienen su resolución.</p></details>
         <button id="reset-settings" class="pill" type="button">Restablecer ajustes</button>
       <p id="settings-status" class="muted"></p>
-      <details class="adv-notes"><summary>Notas de los perfiles de cliente</summary><p class="muted">Altadis (estándar + MyBlu + ESPECIAL): resolución nativa, MP4 H.264, 25 fps. Vertical admite giro L/R. Sincro VW y LOGO necesitan igual duración; esta vista no sincroniza reproductores.</p><p class="muted especiales-note">Videowalls segmentados: el reencuadre se hace sobre la pared física y cada pantalla se recorta del mismo maestro. La entrega es un MP4 con una celda por pantalla; también puedes exportar un MP4 por pantalla, sin audio, con la misma duración y 25 fps. La imagen solo continúa entre pantallas si los players arrancan a la vez.</p></details>
+      <details class="adv-notes" hidden><summary>Notas del proyecto</summary><p id="project-notes" class="muted"></p><p class="muted especiales-note">Videowalls segmentados: el reencuadre se hace sobre la pared física y cada pantalla se recorta del mismo maestro. La entrega es un MP4 con una celda por pantalla; también puedes exportar un MP4 por pantalla, sin audio, con la misma duración y 25 fps. La imagen solo continúa entre pantallas si los players arrancan a la vez.</p></details>
           </div>
     <div id="cuad-experto-live" class="exp-live">
       <details class="plan"><summary>Plan técnico por formato (resolución, H.264, bitrate y orden ffmpeg)</summary><div id="plan-tecnico"></div></details>

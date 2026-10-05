@@ -5,11 +5,11 @@ import {perfilDeSalida,planificar} from '../assets/signage-perfiles.js';
 import {spawnSync} from 'node:child_process';
 import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-const formats=[{id:'16:9',on:true},{id:'cliente-V',cliente:true,on:false}];
+const formats=[{id:'16:9',on:true},{id:'cliente-V',proyecto:'altadis-estancos-bcn',on:false}];
 test('restore validates data and retains each family selection',()=>{
  assert.equal(restore({version:8},formats),null);
  const state=restore({version:1,profile:'altadis',compat:'bad',modoGlobal:'evil',selected:['16:9','unknown'],fmt:{'16:9':{modo:'cover',fx:-2,fy:99,zoom:NaN}}},formats);
- assert.equal(state.profile,'cliente');assert.equal(state.compat,'fhd');assert.equal(state.modoGlobal,'auto');assert.deepEqual(state.selected,['16:9']);
+ assert.equal(state.profile,'proyecto');assert.equal(state.compat,'fhd');assert.equal(state.modoGlobal,'auto');assert.deepEqual(state.selected,['16:9']);
  assert.deepEqual(state.fmt['16:9'],{modo:'cover',fx:0,fy:1,zoom:1});
  assert.deepEqual(restore(snapshot(state,formats),formats),state);
 });
@@ -47,9 +47,9 @@ test('extreme client-profile crop avoids enormous scale intermediates and batch 
  assert.equal(exportBudget(Infinity,[]),'duration');
 });
 
-test('settings saved with the old altadis* keys migrate to the generic client profile',()=>{
- const formats=[{id:'16:9',on:true},{id:'cliente-01',cliente:true,on:true}];
+test('settings saved with the old altadis* keys migrate to the project family',()=>{
+ const formats=[{id:'16:9',on:true},{id:'cliente-01',proyecto:'altadis-estancos-bcn',on:true}];
  const state=restore({version:1,profile:'altadis',selected:['16:9','altadis-01'],fmt:{'altadis-01':{modo:'blur',fx:.2,fy:.7,zoom:1.4}}},formats);
- assert.equal(state.profile,'cliente');assert.deepEqual(state.selected,['16:9','cliente-01']);
+ assert.equal(state.profile,'proyecto');assert.deepEqual(state.selected,['16:9','cliente-01']);
  assert.deepEqual(state.fmt['cliente-01'],{modo:'blur',fx:.2,fy:.7,zoom:1.4});
 });

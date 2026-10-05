@@ -6,10 +6,11 @@ const clamp = (v,lo,hi,fallback) => Number.isFinite(v) ? Math.max(lo,Math.min(hi
 export function settings(raw = {}) {
   return {modo:modes.includes(raw?.modo)?raw.modo:'auto',fx:clamp(raw?.fx,0,1,.5),fy:clamp(raw?.fy,0,1,.5),zoom:clamp(raw?.zoom,1,2,1)};
 }
-// Format families: the standard library, the 18-screen client profile and segmented videowalls.
-const FAMILIES = {cliente:f=>f.cliente, especiales:f=>f.especial};
-// Settings saved before the generic rename (5-oct-2026) used altadis* keys: migrate, never drop.
-const LEGACY = {profile:{altadis:'cliente'}, id:id=>String(id).replace(/^altadis-/,'cliente-')};
+// Format families: the general library, the project's own formats (ficha) and its segmented videowalls.
+const FAMILIES = {proyecto:f=>f.proyecto, especiales:f=>f.especial};
+// Settings saved before the generic rename (5-oct-2026) used altadis* keys, and before the project
+// fichas the family was «cliente»: migrate, never drop. Format ids keep their cliente-NN names.
+const LEGACY = {profile:{altadis:'proyecto',cliente:'proyecto'}, id:id=>String(id).replace(/^altadis-/,'cliente-')};
 function migrate(raw){
   if (!raw || typeof raw !== 'object') return raw;
   const fmt = raw.fmt && typeof raw.fmt === 'object' ? Object.fromEntries(Object.entries(raw.fmt).map(([k,v])=>[LEGACY.id(k),v])) : raw.fmt;
@@ -24,7 +25,7 @@ export function restore(raw, formats) {
     modoGlobal:modes.includes(raw.modoGlobal)?raw.modoGlobal:'auto',
     fmt:Object.fromEntries(formats.map(f=>[f.id,settings(raw.fmt?.[f.id])])),
     // Keep the inactive family's selection too; switching profiles never resets edits.
-    selected:formats.filter(f=>Array.isArray(raw.selected)?raw.selected.includes(f.id):!f.cliente&&!f.especial).map(f=>f.id)};
+    selected:formats.filter(f=>Array.isArray(raw.selected)?raw.selected.includes(f.id):!f.proyecto&&!f.especial).map(f=>f.id)};
 }
 export function snapshot(state,formats) {
   return {version:1,profile:state.profile,compat:state.compat,modoGlobal:state.modoGlobal,

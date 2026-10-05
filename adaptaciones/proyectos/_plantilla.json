@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "id": "id-exacto-del-proyecto-en-yokup",
+  "nombre": "Nombre corto del cliente o proyecto",
+  "alias": [],
+  "hereda": "general",
+  "fuente": {
+    "titulo": "Documento del que salen los formatos (PDF, correo, ficha técnica…)",
+    "documentacion": "docs/adaptador.md"
+  },
+  "formatos": {
+    "estandar": [
+      {
+        "id": "id-exacto-del-proyecto-en-yokup-01",
+        "nombre": "VERTICAL",
+        "custom": [1080, 1920],
+        "uso": "tótem / escaparate",
+        "useEn": "totem / shop window"
+      }
+    ],
+    "especiales": []
+  },
+  "ajustes": {
+    "metodo": "auto",
+    "compatibilidad": "uhd",
+    "fps": 25,
+    "codec": "h264",
+    "familia": "proyecto"
+  },
+  "familias": {
+    "proyecto": {"es": "Nombre · formatos propios", "en": "Name · own formats"}
+  },
+  "campanas": [
+    {
+      "id": "id-de-la-campana",
+      "es": "Nombre de la campaña",
+      "en": "Campaign name",
+      "descripcionEs": "Qué marca la campaña",
+      "descripcionEn": "What the campaign selects",
+      "incluye": "todos"
+    }
+  ],
+  "notas": {
+    "es": "Requisitos de entrega del proyecto, en una o dos frases.",
+    "en": "Project delivery requirements, in one or two sentences."
+  }
+}

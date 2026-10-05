@@ -1,0 +1,212 @@
+{
+  "fuente": "https://api.yokup.com/projects",
+  "actualizado": "2026-10-05",
+  "nota": "Respaldo de la lista pública de proyectos de Yokup (id, nombre, estado). El Adaptador la pide en vivo y usa este archivo si Yokup no responde.",
+  "proyectos": [
+    {
+      "id": "admira-academy",
+      "nombre": "Admira Academy",
+      "estado": "activo"
+    },
+    {
+      "id": "admira-etiqueta-digital",
+      "nombre": "Admira Etiqueta Digital",
+      "estado": "activo"
+    },
+    {
+      "id": "admira-live",
+      "nombre": "Admira Live · Consejo",
+      "estado": "activo"
+    },
+    {
+      "id": "admira-tv",
+      "nombre": "Admira TV",
+      "estado": "activo"
+    },
+    {
+      "id": "admiranext",
+      "nombre": "AdmiraNeXT",
+      "estado": "activo"
+    },
+    {
+      "id": "ainimation-studio",
+      "nombre": "AInimation Studio",
+      "estado": "activo"
+    },
+    {
+      "id": "alcampo-12-de-octubre",
+      "nombre": "alcampo-12-de-octubre",
+      "estado": "activo"
+    },
+    {
+      "id": "altadis-estancos-bcn",
+      "nombre": "Altadis · Estancos Barcelona 9",
+      "estado": "activo"
+    },
+    {
+      "id": "bcn-kiosk-001",
+      "nombre": "bcn-kiosk-001",
+      "estado": "activo"
+    },
+    {
+      "id": "clearchannel-tv",
+      "nombre": "Venta de activos · Clear Channel + Admira App",
+      "estado": "activo"
+    },
+    {
+      "id": "digitalavatar",
+      "nombre": "DigitalAvatar.ai",
+      "estado": "activo"
+    },
+    {
+      "id": "digitalsignage-ai",
+      "nombre": "Digital Signage AI",
+      "estado": "activo"
+    },
+    {
+      "id": "director-interactivo",
+      "nombre": "DirectorInteractivo",
+      "estado": "activo"
+    },
+    {
+      "id": "fleetcontrol",
+      "nombre": "FleetControl",
+      "estado": "activo"
+    },
+    {
+      "id": "galaxia-admira",
+      "nombre": "Galaxia Admira",
+      "estado": "activo"
+    },
+    {
+      "id": "generador-de-informes",
+      "nombre": "Generador de Informes",
+      "estado": "activo"
+    },
+    {
+      "id": "generador-de-presentaciones",
+      "nombre": "Generador de Presentaciones",
+      "estado": "activo"
+    },
+    {
+      "id": "generador-de-presites",
+      "nombre": "Generador de Presites",
+      "estado": "activo"
+    },
+    {
+      "id": "generador-presupuestos",
+      "nombre": "Generador de Presupuestos",
+      "estado": "activo"
+    },
+    {
+      "id": "gracia",
+      "nombre": "gracia",
+      "estado": "activo"
+    },
+    {
+      "id": "gran-de-gracia",
+      "nombre": "Gran de Gracia",
+      "estado": "activo"
+    },
+    {
+      "id": "i",
+      "nombre": "i",
+      "estado": "activo"
+    },
+    {
+      "id": "la-incubadora",
+      "nombre": "La Incubadora",
+      "estado": "activo"
+    },
+    {
+      "id": "macbookairazul",
+      "nombre": "macbookairazul",
+      "estado": "activo"
+    },
+    {
+      "id": "neo-metahuman",
+      "nombre": "NeoMetaHuman",
+      "estado": "activo"
+    },
+    {
+      "id": "pixeria",
+      "nombre": "Pixeria",
+      "estado": "activo"
+    },
+    {
+      "id": "pixeria-alsea",
+      "nombre": "pixeria-alsea",
+      "estado": "activo"
+    },
+    {
+      "id": "playertaza",
+      "nombre": "PlayerTaza",
+      "estado": "activo"
+    },
+    {
+      "id": "prueba-numero-5134",
+      "nombre": "Prueba número 40 · no borrar",
+      "estado": "pausado"
+    },
+    {
+      "id": "samsung-galaxy-fold-8",
+      "nombre": "samsung-galaxy-fold-8",
+      "estado": "activo"
+    },
+    {
+      "id": "smith-ascii",
+      "nombre": "Laboratorio ASCII",
+      "estado": "activo"
+    },
+    {
+      "id": "telegram",
+      "nombre": "Telegram",
+      "estado": "activo"
+    },
+    {
+      "id": "templo-de-la-soledad",
+      "nombre": "Templo de la Soledad",
+      "estado": "activo"
+    },
+    {
+      "id": "webmaster-admiranext",
+      "nombre": "Webmaster AdmiraNeXT",
+      "estado": "activo"
+    },
+    {
+      "id": "xpaceos",
+      "nombre": "XpaceOS",
+      "estado": "activo"
+    },
+    {
+      "id": "xpaceos-robot",
+      "nombre": "xpaceos-robot",
+      "estado": "activo"
+    },
+    {
+      "id": "xpaceos-web",
+      "nombre": "xpaceos-web",
+      "estado": "activo"
+    },
+    {
+      "id": "xtanco-totem",
+      "nombre": "xtanco-totem",
+      "estado": "activo"
+    },
+    {
+      "id": "yokup",
+      "nombre": "Yokup",
+      "estado": "activo"
+    },
+    {
+      "id": "yokup-aa7b7790-5b84-4702-9a3a-ca7e66b72ef7",
+      "nombre": "Estanco 1",
+      "estado": "activo"
+    },
+    {
+      "id": "yokup-ideas-objetivos",
+      "nombre": "Yokup · ideas-objetivos",
+      "estado": "activo"
+    }
+  ]
+}
