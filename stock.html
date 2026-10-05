@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r4.0819';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r5.0837';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r4.08:19">
+  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r5.08:37">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -50,7 +50,7 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=05.10.2026.r4.0819">
+  <link rel="stylesheet" href="workspace.css?v=05.10.2026.r5.0837">
   <style>
     /* Contador de elementos en stock (en el título), con flash al crecer */
     .stock-count{ font-variant-numeric:tabular-nums; display:inline-block; }
@@ -309,11 +309,11 @@
     .cat-result.sum{ color:var(--muted); border-style:dashed; }
     .cat-result a{ color:var(--matrix); }
   </style>
-  <script defer src="/assets/site-nav.js?v=05.10.2026.r4.0819"></script>
-  <script defer src="/assets/descarga-local.js?v=05.10.2026.r4.0819"></script>
-  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=05.10.2026.r4.0819">
+  <script defer src="/assets/site-nav.js?v=05.10.2026.r5.0837"></script>
+  <script defer src="/assets/descarga-local.js?v=05.10.2026.r5.0837"></script>
+  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=05.10.2026.r5.0837">
 <link rel="stylesheet" href="/assets/furniture/editor.css">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r4.0819">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r5.0837">
 </head>
 <body data-page="stock">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -475,7 +475,7 @@
   <dialog id="importModal" class="keys-modal">
     <form method="dialog" class="keys-form import-form">
       <h3>📥 IMPORTAR DESDE URL</h3>
-      <p class="keys-warn">yt-dlp en Mac Mini (audio mp3 + video mp4). Hosts permitidos: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn, Telegram (t.me). Se pueden pegar VARIAS URLs a la vez, una por línea. Si abres en local también funciona suno-local (:3777).</p>
+      <p class="keys-warn">yt-dlp en Mac Mini (audio mp3 + video mp4). Hosts permitidos: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn, Telegram (t.me). Se pueden pegar VARIAS URLs a la vez, una por línea.</p>
       <div class="field"><label for="import-url">URL <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(una o varias, una por línea)</small></label><textarea id="import-url" rows="2" autocomplete="off" spellcheck="false" placeholder="https://www.youtube.com/watch?v=…&#10;https://t.me/canal/123"></textarea></div>
       <div class="field">
         <label for="import-comment">Comentarios <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(opcional · indexable por búsqueda en Stock)</small></label>
@@ -656,8 +656,8 @@
     </form>
   </dialog>
 
-  <script defer src="/matrix-rain.js?v=05.10.2026.r4.0819"></script>
-  <script src="app.js?v=05.10.2026.r4.0819"></script>
+  <script defer src="/matrix-rain.js?v=05.10.2026.r5.0837"></script>
+  <script src="app.js?v=05.10.2026.r5.0837"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "./assets/xpaces/catalog.mjs";
   import {isFurniture3D} from "./assets/furniture/catalog.mjs";
@@ -699,6 +699,9 @@
     const RATING_VOTES_KEY = 'pixeria-stock-ratings-v1';
     const CONSUMPTION_SESSION_KEY = 'pixeria-stock-consumption-session-v1';
     let allItems = [];
+    // Suno es un motor oculto (norma de Carlos): en pantalla se ve como Pixeria Music; los datos no cambian.
+    const verMotor = m => /suno/i.test(String(m || '')) ? 'Pixeria Music' : String(m || '');
+    const verTag = t => /^suno/i.test(String(t)) ? 'pixeria-music' : String(t);
     let currentView = []; // lista filtrada+ordenada actual (para navegar el lightbox)
     let filters = { origen: (new URLSearchParams(location.search).get('origen') || '').replace(/[^A-Za-z0-9-]/g, ''), type: 'video', motor: '', q: '', tags: [], tagMode: 'or', dateQuick: '', dateFrom: '', dateTo: '' };
     let sortMode = 'date-desc';
@@ -966,8 +969,8 @@
     function renderTagsHtml(tags, id) {
       const safeId = String(id || '').replace(/[^A-Za-z0-9-]/g, '');
       const chips = (Array.isArray(tags) ? tags : []).map(t => {
-        const safe = String(t).replace(/</g, '&lt;');
-        return `<button type="button" class="stock-tag" draggable="true" data-drag-tag="${escAttr(t)}" data-tag="${escAttr(t)}" title="Arrastra para copiar #${escAttr(t)} a otro contenido · Clic: filtrar · Doble-clic: renombrar">#${safe}</button>`;
+        const safe = verTag(t).replace(/</g, '&lt;');
+        return `<button type="button" class="stock-tag" draggable="true" data-drag-tag="${escAttr(t)}" data-tag="${escAttr(t)}" title="Arrastra para copiar #${escAttr(verTag(t))} a otro contenido · Clic: filtrar · Doble-clic: renombrar">#${safe}</button>`;
       }).join('');
       const dragAll = chips ? `<button type="button" class="stock-tags-drag" draggable="true" data-act="drag-tags" data-id="${safeId}" title="Arrastra para copiar todas las etiquetas a otro contenido">⇄ tags</button>` : '';
       // "+ más": añade metatags propias para agrupar (a la derecha de las auto-tags).
@@ -978,8 +981,8 @@
     function renderTagsEditorHtml(id, tags) {
       const safeId = String(id || '').replace(/[^A-Za-z0-9-]/g, '');
       const chips = (Array.isArray(tags) ? tags : []).map(t => {
-        const safe = String(t).replace(/</g, '&lt;');
-        return `<span class="stock-tag-edit"><button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Filtrar por #${escAttr(t)}">#${safe}</button><button type="button" class="stock-tag-x" data-act="remove-tag" data-tag="${escAttr(t)}" title="Quitar etiqueta" aria-label="Quitar #${escAttr(t)}">✕</button></span>`;
+        const safe = verTag(t).replace(/</g, '&lt;');
+        return `<span class="stock-tag-edit"><button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Filtrar por #${escAttr(verTag(t))}">#${safe}</button><button type="button" class="stock-tag-x" data-act="remove-tag" data-tag="${escAttr(t)}" title="Quitar etiqueta" aria-label="Quitar #${escAttr(verTag(t))}">✕</button></span>`;
       }).join('');
       return `<div class="stock-tags-editor" data-edit-id="${safeId}">
         ${chips}
@@ -1152,7 +1155,7 @@
         ? `<span class="stock-title-inline" title="${escAttr(titleRaw)}">${titleRaw.replace(/</g,'&lt;').slice(0, 90)}${titleRaw.length > 90 ? '…' : ''}</span>`
         : '';
       // Meta de cabecera (sube footer + motor a la línea del badge): motor · coste · fecha
-      const headMeta = [it.motor, it.costEst, fmtDate(it.createdAt)]
+      const headMeta = [verMotor(it.motor), it.costEst, fmtDate(it.createdAt)]
         .filter(Boolean).map(s => String(s).replace(/</g, '&lt;')).join(' · ');
       const commentRaw = (it.comment || '').trim();
       const commentSafe = commentRaw.replace(/</g, '&lt;');
@@ -1227,7 +1230,7 @@
       }
       const matching = matchItemsByTags(filters.tags, filters.tagMode);
       const joiner = filters.tagMode === 'and' ? ' Y ' : ' O ';
-      const chips = filters.tags.map(t => `<button type="button" class="stock-tagf" data-tagf="${escAttr(t)}" title="Quitar #${escAttr(t)}">#${String(t).replace(/</g, '&lt;')} ✕</button>`).join(`<span class="stock-tagf-join">${joiner}</span>`);
+      const chips = filters.tags.map(t => `<button type="button" class="stock-tagf" data-tagf="${escAttr(t)}" title="Quitar #${escAttr(verTag(t))}">#${String(t).replace(/</g, '&lt;')} ✕</button>`).join(`<span class="stock-tagf-join">${joiner}</span>`);
       const modeBtn = filters.tags.length >= 2 ? `<button type="button" class="stock-tagmode" title="Alternar Y (todas) / O (cualquiera)">${filters.tagMode === 'and' ? 'Y · todas' : 'O · cualquiera'}</button>` : '';
       const critName = filters.tags.join(filters.tagMode === 'and' ? ' + ' : ' / ');
       banner.innerHTML = `<span class="stock-tagf-wrap">Filtrando: ${chips} ${modeBtn}</span><button type="button" class="stock-tag-playlist" title="Crear playlist con los ${matching.length} assets del criterio">🎵 Playlist (${matching.length})</button><button type="button" class="stock-tag-clear">✕ limpiar</button>`;
@@ -1301,7 +1304,7 @@
       const fo = document.getElementById('stockFailedOpt');
       if (fo) { fo.hidden = failed === 0 && typeFilter.value !== 'fallidos'; fo.textContent = 'Importaciones fallidas (' + failed + ')'; }
       el.dataset.p = playable;
-      const motores = new Set(allItems.map(i => i && i.motor).filter(Boolean));
+      const motores = new Set(allItems.map(i => i && i.motor).filter(Boolean).map(verMotor));
       const em = document.getElementById('stockMotores');
       if (em) { em.textContent = String(motores.size); em.title = Array.from(motores).sort().join(' · '); }
       el.title = playable + ' reproducibles (= los que ves en admira.tv) · ' + total +
@@ -1374,7 +1377,7 @@
         if (clienteListo && !PC.visible(it)) return false;
         if (filters.origen) return it.id === filters.origen || (isAdaptacion(it) && it.externalRef === filters.origen);
         if (!matchesType(it, filters.type)) return false;
-        if (filters.motor && it.motor !== filters.motor) return false;
+        if (filters.motor && verMotor(it.motor) !== verMotor(filters.motor)) return false;
         if (filters.tags && filters.tags.length) {
           const tags = Array.isArray(it.tags) ? it.tags.map(t => String(t).toLowerCase()) : [];
           const ok = filters.tagMode === 'and'
@@ -1481,7 +1484,7 @@
       const consumptionBlock = renderConsumptionHtml(it);
       const typeLabel = displayType(it);
       lightboxMeta.innerHTML = `
-        <div class="stock-lightbox-head"><span class="stock-type ${typeLabel}">${typeText(typeLabel)}</span> <span class="stock-motor">${it.motor || ''}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span>${ratingBlock}${consumptionBlock}</div>
+        <div class="stock-lightbox-head"><span class="stock-type ${typeLabel}">${typeText(typeLabel)}</span> <span class="stock-motor">${verMotor(it.motor)}</span> <span class="stock-date">${fmtDate(it.createdAt)}</span>${ratingBlock}${consumptionBlock}</div>
         ${titleBlock}
         ${tagsEditor}
         <p class="stock-prompt">${renderPromptHtml(it.prompt)}</p>
@@ -1862,10 +1865,10 @@
     });
     function buildMotorOptions() {
       if (!motorFilter) return;   // el combo de motores se quitó del Stock
-      const motors = Array.from(new Set(allItems.map(i => i.motor).filter(Boolean))).sort();
+      const motors = Array.from(new Map(allItems.map(i => i.motor).filter(Boolean).sort().map(m => [verMotor(m), m])).values()).sort();
       const cur = filters.motor;
       motorFilter.innerHTML = `<option value="">Todos los motores</option>`
-        + motors.map(m => `<option value="${String(m).replace(/"/g, '&quot;')}">${String(m).replace(/</g, '&lt;')}</option>`).join('');
+        + motors.map(m => `<option value="${String(m).replace(/"/g, '&quot;')}">${verMotor(m).replace(/</g, '&lt;')}</option>`).join('');
       motorFilter.value = motors.includes(cur) ? cur : '';
     }
     const STOCK_CACHE_KEY = 'stockCache_v1';
@@ -3266,7 +3269,7 @@
       .catch(()=>{});
   })();
   </script>
-  <script defer src="/assets/cuadratura.js?v=05.10.2026.r4.0819"></script>
+  <script defer src="/assets/cuadratura.js?v=05.10.2026.r5.0837"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>

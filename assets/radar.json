@@ -9,7 +9,7 @@
     { "category": "Imagen", "category_en": "Image", "name": "Flux 2",              "note": "Fotorrealismo lider y coste bajo por imagen", "note_en": "Leading photorealism at low cost per image" },
     { "category": "Imagen", "category_en": "Image", "name": "Midjourney v7",       "note": "Rey de la estetica y consistencia de marca", "note_en": "King of aesthetics and brand consistency" },
     { "category": "Voz",    "category_en": "Voice", "name": "ElevenLabs v3",       "note": "Emocion y clonacion de locutores", "note_en": "Emotion and voice cloning" },
-    { "category": "Musica", "category_en": "Music", "name": "Suno v5",             "note": "Voz con matiz humano y estructura usable", "note_en": "Human-like vocals and usable structure" },
+    { "category": "Musica", "category_en": "Music", "name": "Pixeria Music",       "note": "Voz con matiz humano y estructura usable", "note_en": "Human-like vocals and usable structure" },
     { "category": "Musica", "category_en": "Music", "name": "ElevenLabs Music v2", "note": "Audio licenciado, listo para uso comercial", "note_en": "Licensed audio, ready for commercial use" }
   ],
   "watching": "Seedance 2.5",

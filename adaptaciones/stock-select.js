@@ -34,7 +34,8 @@
       var m, re = /#([^\s#.,;:!?¡¿()\[\]{}"'<>|\/\\]+)/g, d = decodificar(txt || '');
       while ((m = re.exec(d))) { var n = norm(m[1]); if (n && !/^\d+$/.test(n)) s[n] = 1; }
     });
-    return (it._tags = Object.keys(s));
+    // Suno es un motor oculto: su etiqueta se ve como #pixeria-music.
+    return (it._tags = Object.keys(s).map(function (g) { return /^suno/.test(g) ? 'pixeria-music' : g; }).filter(function (g, i, l) { return l.indexOf(g) === i; }));
   }
 
   function contador(texto) {

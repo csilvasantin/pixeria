@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r4.0819';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r5.0837';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r4.08:19">
+  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r5.08:37">
   <title>AI model radar · June 2026 — Pixeria</title>
   <meta name="description" content="Pixeria's radar: the image, video, voice and music models that matter now, chosen for real quality, control and rights. Updated from production tests.">
   <meta name="theme-color" content="#020602">
@@ -58,8 +58,8 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="/assets/styles.css?v=05.10.2026.r4.0819">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r4.0819">
+  <link rel="stylesheet" href="/assets/styles.css?v=05.10.2026.r5.0837">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r5.0837">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -76,7 +76,7 @@
       { "@type": "ListItem", "position": 4, "name": "Flux 2", "description": "Image — Leading photorealism at low cost per image" },
       { "@type": "ListItem", "position": 5, "name": "Midjourney v7", "description": "Image — King of aesthetics and brand consistency" },
       { "@type": "ListItem", "position": 6, "name": "ElevenLabs v3", "description": "Voice — Emotion and voice cloning" },
-      { "@type": "ListItem", "position": 7, "name": "Suno v5", "description": "Music — Human-like vocals and usable structure" },
+      { "@type": "ListItem", "position": 7, "name": "Pixeria Music", "description": "Music — Human-like vocals and usable structure" },
       { "@type": "ListItem", "position": 8, "name": "ElevenLabs Music v2", "description": "Music — Licensed audio, ready for commercial use" }
     ]
   }
@@ -91,7 +91,7 @@
     ]
   }
   </script>
-  <script defer src="/assets/site-nav.js?v=05.10.2026.r4.0819"></script>
+  <script defer src="/assets/site-nav.js?v=05.10.2026.r5.0837"></script>
 </head>
 <body>
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -172,7 +172,7 @@
           <div class="model" id="flux-2"><span class="tag">Image</span><strong>Flux 2</strong><small>Leading photorealism at low cost per image</small></div>
           <div class="model" id="midjourney-v7"><span class="tag">Image</span><strong>Midjourney v7</strong><small>King of aesthetics and brand consistency</small></div>
           <div class="model" id="elevenlabs-v3"><span class="tag">Voice</span><strong>ElevenLabs v3</strong><small>Emotion and voice cloning</small></div>
-          <div class="model" id="suno-v5"><span class="tag">Music</span><strong>Suno v5</strong><small>Human-like vocals and usable structure</small></div>
+          <div class="model" id="suno-v5"><span class="tag">Music</span><strong>Pixeria Music</strong><small>Human-like vocals and usable structure</small></div>
           <div class="model" id="elevenlabs-music-v2"><span class="tag">Music</span><strong>ElevenLabs Music v2</strong><small>Licensed audio, ready for commercial use</small></div>
         </div>
         <p class="radar-note" id="radarNote">Updated from real production tests. The radar prioritizes control, rights and final quality over viral demos. On the radar: <strong>Seedance 2.0</strong>, winning image-to-video blind tests. These models feed Pixer Feed (AI signage on screens and live events).</p>
@@ -229,9 +229,9 @@
       positionMobileNav();
     })();
   </script>
-  <script defer src="/assets/radar.js?v=05.10.2026.r4.0819"></script>
-  <script defer src="/assets/matrix-rain.js?v=05.10.2026.r4.0819"></script>
-  <script defer src="/assets/newsletter.js?v=05.10.2026.r4.0819"></script>
-  <script defer src="/assets/cuadratura.js?v=05.10.2026.r4.0819"></script>
+  <script defer src="/assets/radar.js?v=05.10.2026.r5.0837"></script>
+  <script defer src="/assets/matrix-rain.js?v=05.10.2026.r5.0837"></script>
+  <script defer src="/assets/newsletter.js?v=05.10.2026.r5.0837"></script>
+  <script defer src="/assets/cuadratura.js?v=05.10.2026.r5.0837"></script>
 </body>
 </html>
