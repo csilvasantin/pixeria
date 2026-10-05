@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r5.08:37",
+  "version": "v.05.10.2026.r6.18:12",
   "deployer": "LucasGrokBotBox",
-  "machine": "GrokBotBox",
+  "machine": "MacMini",
   "signature": "LucasGrokBotBox · GrokBotBox",
-  "agent": "LucasGrokBotBox",
-  "builtAt": "2026-10-05T06:37:32Z"
+  "agent": "HuangMacMini",
+  "builtAt": "2026-10-05T16:12:39Z"
 }

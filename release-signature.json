@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r5.08:37",
-  "deployer": "LucasGrokBotBox",
-  "machine": "GrokBotBox",
-  "signature": "LucasGrokBotBox · GrokBotBox",
-  "agent": "LucasGrokBotBox",
-  "evidence": "Suno fuera de la interfaz (motor oculto): 62 menciones visibles quitadas en 30 ficheros + enmascarado en pantalla de datos del Stock; test/expert-cli.browser.cjs al nuevo Modo Experto"
+  "version": "v.05.10.2026.r6.18:12",
+  "deployer": "HuangMacMini",
+  "machine": "MacMini",
+  "signature": "HuangMacMini · MacMini",
+  "agent": "HuangMacMini",
+  "evidence": "Motor Suno 4º + formulario cápsula + /api/suno-queue dry-run (fase 1, sin créditos). PR #56."
 }
