@@ -212,3 +212,25 @@ body[data-paso="1"] #cuad-experto-live{display:none}
 .adapt-main .crear-ops b{font-size:13px}
 .adapt-main .crear-ops small{font-size:11px;color:var(--mu)}
 .adapt-main .src-crear .pill{text-decoration:none}
+
+/* Paso 1 · caja 2 «Subirlo / Importarlo» (Carlos, 5-oct-2026, 07:59): campo de URL con la estética del
+   campo de hashtag del Stock, progreso propio y subida del equipo como botón coherente (no «Examinar…» nativo). */
+.adapt-main .src-importar{cursor:default}
+.adapt-main .imp-form input{padding-right:34px}
+.adapt-main .imp-go{font-size:15px;color:var(--ac)}
+.adapt-main .imp-go:disabled{opacity:1;color:var(--mu);cursor:progress}
+.adapt-main .imp-prog{display:flex;flex-direction:column;gap:5px}
+.adapt-main .imp-bar{position:relative;height:4px;border-radius:99px;background:var(--field);border:1px solid var(--ln);overflow:hidden}
+.adapt-main .imp-bar>span{position:absolute;inset:0 auto 0 0;width:0;background:var(--ac);transition:width .2s}
+.adapt-main .imp-bar.is-indet>span{width:30%;animation:imp-indet 1.2s ease-in-out infinite}
+@keyframes imp-indet{0%{left:-30%}100%{left:100%}}
+@media (prefers-reduced-motion:reduce){.adapt-main .imp-bar.is-indet>span{animation:none;width:100%;opacity:.5}}
+.adapt-main .imp-status{margin:0;font-size:12px;color:var(--tx);overflow-wrap:anywhere}
+.adapt-main .imp-status.is-err{color:var(--err)}
+.adapt-main .imp-status.is-warn{color:var(--warn)}
+.adapt-main .imp-status.is-ok{color:var(--ok)}
+.adapt-main .imp-file{position:relative;margin-top:auto;align-self:flex-start;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--ln);border-radius:99px;background:var(--field);color:var(--tx);font-size:13px;cursor:pointer}
+.adapt-main .imp-file small{color:var(--mu);font-size:11px}
+.adapt-main .imp-file:hover,.adapt-main .imp-file:focus-within{border-color:var(--ac)}
+.adapt-main .imp-file:focus-within{outline:2px solid var(--ac);outline-offset:2px}
+.adapt-main .imp-file input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}

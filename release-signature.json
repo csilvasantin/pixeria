@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r2.08:03",
+  "version": "v.05.10.2026.r3.08:05",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "Adaptaciones paso 1: «Contenido Stock» y caja Crearlo con Cápsulas Musicales, Cápsulas de Conocimiento y creador de vídeo."
+  "evidence": "Adaptaciones caja 2: importar por URL con el importador del Stock (admira-tube/yt-dlp) y pasar solo a Adaptar; subida del equipo con botón propio."
 }

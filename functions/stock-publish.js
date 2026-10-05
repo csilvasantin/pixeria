@@ -13,13 +13,15 @@
  */
 const UPSTREAM = 'https://api.admira.store/stock/publish';
 const MAX_BODY = 95 * 1024 * 1024; // el borde corta en 100 MB
+const MOTORES = ['adaptador', 'yt-dlp', 'import'];
 const CAMPOS = ['type', 'motor', 'prompt', 'title', 'comment', 'tags', 'costEst', 'mime', 'base64', 'externalRef', 'validacion', 'quality'];
 
 export async function onRequestPost({ request }) {
   if (+request.headers.get('content-length') > MAX_BODY) return error(413, 'too-big');
   let body;
   try { body = await request.json(); } catch { return error(400, 'bad-json'); }
-  if (!body || body.type !== 'video' || body.motor !== 'adaptador' || body.mime !== 'video/mp4' || typeof body.base64 !== 'string' || !body.base64) {
+  // Exportaciones del Adaptador e importaciones por URL de su caja 2 (yt-dlp o mp4 directo), solo vídeo MP4.
+  if (!body || body.type !== 'video' || !MOTORES.includes(body.motor) || body.mime !== 'video/mp4' || typeof body.base64 !== 'string' || !body.base64) {
     return error(400, 'solo-adaptaciones');
   }
   const limpio = {};
