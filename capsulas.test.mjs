@@ -34,3 +34,12 @@ test("estrellas y consumos comparten la línea de fecha del detalle", () => {
   assert.match(stock, /sessionStorage\.getItem\(CONSUMPTION_SESSION_KEY\)/);
   assert.match(stock, /trackCapsuleConsumption\(it\)/);
 });
+
+test("Stock ofrece formulario Nueva cápsula Blinkist sin DevTools", () => {
+  assert.match(stock, /id="capsulaForm"/);
+  assert.match(stock, /id="capsulaPanel"/);
+  assert.match(stock, /id="capsulaFormToggle"/);
+  assert.match(stock, /id="cap-url"/);
+  assert.match(stock, /id="cap-carbono"/);
+  assert.match(stock, /📌 Publicar cápsula/);
+});

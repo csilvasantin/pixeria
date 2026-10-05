@@ -223,6 +223,29 @@
       padding:10px 12px; background:#0a140a; color:var(--matrix); font-size:12px; line-height:1.5;
       white-space:pre-wrap; overflow-wrap:anywhere; text-align:left; }
 
+    /* Alta fácil de cápsula Blinkist (Cafebrería) — solo texto, sin DevTools */
+    .capsula-create{ margin:12px 0 18px; border:1px solid var(--line-bright); border-radius:10px;
+      background:rgba(0,255,65,.04); padding:14px 16px; }
+    .capsula-create[hidden]{ display:none; }
+    .capsula-create-head{ display:flex; flex-wrap:wrap; gap:10px; align-items:baseline; justify-content:space-between; margin-bottom:10px; }
+    .capsula-create-head h3{ margin:0; font-size:15px; color:var(--matrix); letter-spacing:.04em; }
+    .capsula-create-head p{ margin:0; font-size:12px; color:var(--muted); max-width:62ch; line-height:1.45; }
+    .capsula-grid{ display:grid; gap:10px 14px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .capsula-grid .field{ display:flex; flex-direction:column; gap:4px; }
+    .capsula-grid .field.full{ grid-column:1/-1; }
+    .capsula-grid label{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+    .capsula-grid input,.capsula-grid select,.capsula-grid textarea{
+      font:inherit; font-size:13px; color:var(--ink); background:var(--bg);
+      border:1px solid var(--line-bright); border-radius:6px; padding:8px 10px; }
+    .capsula-grid textarea{ min-height:72px; resize:vertical; line-height:1.45; }
+    .capsula-actions{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px; }
+    .capsula-status{ font-size:12px; color:var(--muted); line-height:1.4; flex:1; min-width:200px; }
+    .capsula-status[data-ok="1"]{ color:var(--matrix); }
+    .capsula-status[data-ok="0"]{ color:#ff8866; }
+    .capsula-toggle{ font-size:12px; }
+    @media (max-width:720px){ .capsula-grid{ grid-template-columns:1fr; } }
+
+
     /* Visor de mueble girable en el Stock: 1 cara + flechas para ver las otras */
     .stock-furni-rot{ position:relative; width:100%; height:100%; min-height:120px; background-color:#0a140a; }
     .furni-arrow{ position:absolute; top:50%; transform:translateY(-50%); z-index:4; width:26px; height:38px;
@@ -397,6 +420,7 @@
                  vistas salvo esta, para que el Stock no enseñe piezas rotas. -->
             <option value="fallidos" id="stockFailedOpt" hidden>Importaciones fallidas</option>
           </select>
+          <button type="button" class="stock-pager-btn capsula-toggle" id="capsulaFormToggle" title="Crear cápsula Blinkist (texto → Stock → Cafebrería)" aria-expanded="false" aria-controls="capsulaPanel">📚 Nueva cápsula</button>
           <button type="button" class="stock-pager-btn" id="tagMgrBtn" title="Gestor de etiquetas: renombrar, fusionar variaciones y borrar en todo el Stock">🏷️ Etiquetas</button>
         </div>
         <div class="stock-pager-sort" id="stockSortBar" role="group" aria-label="Ordenar por">
@@ -417,6 +441,58 @@
 
     <section>
 
+
+
+    <section class="capsula-create" id="capsulaPanel" hidden aria-label="Nueva cápsula Blinkist">
+      <div class="capsula-create-head">
+        <h3>📚 Cápsula Blinkist → Stock</h3>
+        <p>Publica solo el texto (type <code>capsula</code>, tags <code>blinkist</code>). Cafebrería la recoge del índice. El vídeo 9:16 se compone aparte con <code>capsula.sh</code> — este formulario no pide Grok Video.</p>
+      </div>
+      <form id="capsulaForm" autocomplete="off">
+        <div class="capsula-grid">
+          <div class="field full">
+            <label for="cap-url">URL Blinkist <small style="text-transform:none;letter-spacing:0;font-weight:400">(o deja vacío y rellena título + autor)</small></label>
+            <input id="cap-url" name="url" type="url" placeholder="https://www.blinkist.com/en/books/…" spellcheck="false">
+          </div>
+          <div class="field">
+            <label for="cap-libro">Título del libro</label>
+            <input id="cap-libro" name="libro" type="text" placeholder="This Is Marketing">
+          </div>
+          <div class="field">
+            <label for="cap-autor">Autor</label>
+            <input id="cap-autor" name="autor" type="text" placeholder="Seth Godin">
+          </div>
+          <div class="field full">
+            <label for="cap-tesis">Tesis / título de la cápsula</label>
+            <input id="cap-tesis" name="tesis" type="text" required placeholder="This Is Marketing: no persuadas a la masa, lidera una tribu">
+          </div>
+          <div class="field">
+            <label for="cap-consejero">Consejero</label>
+            <select id="cap-consejero" name="consejero" required></select>
+          </div>
+          <div class="field">
+            <label for="cap-tema">Tema</label>
+            <select id="cap-tema" name="tema" required></select>
+          </div>
+          <div class="field full">
+            <label for="cap-carbono">PARA CARBONO <small style="text-transform:none;letter-spacing:0;font-weight:400">(resumen para personas, ~450–700 chars)</small></label>
+            <textarea id="cap-carbono" name="carbono" required rows="4" placeholder="La tesis del libro en lenguaje claro…"></textarea>
+          </div>
+          <div class="field">
+            <label for="cap-silicio">PARA SILICIO <small style="text-transform:none;letter-spacing:0;font-weight:400">(opcional · auto si vacío)</small></label>
+            <textarea id="cap-silicio" name="silicio" rows="3" placeholder="Instrucciones operativas para un agente…"></textarea>
+          </div>
+          <div class="field">
+            <label for="cap-aplicacion">APLICACIÓN <small style="text-transform:none;letter-spacing:0;font-weight:400">(opcional · auto si vacío)</small></label>
+            <textarea id="cap-aplicacion" name="aplicacion" rows="3" placeholder="Experimento concreto siguiente…"></textarea>
+          </div>
+        </div>
+        <div class="capsula-actions">
+          <button type="submit" class="btn primary">📌 Publicar cápsula</button>
+          <span class="capsula-status" id="cap-status" role="status"></span>
+        </div>
+      </form>
+    </section>
 
       <!-- Vista Catálogos (Yokup #3183): piezas creadas desde catálogos, agrupadas, y asignación a circuito -->
       <section id="catSection" hidden aria-label="Catálogos">
@@ -657,7 +733,7 @@
   </dialog>
 
   <script defer src="/matrix-rain.js?v=05.10.2026.r9.1859"></script>
-  <script src="app.js?v=05.10.2026.r9.1859"></script>
+  <script src="app.js?v=20261005-capsula-blinkist"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "./assets/xpaces/catalog.mjs";
   import {isFurniture3D} from "./assets/furniture/catalog.mjs";
