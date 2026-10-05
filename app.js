@@ -169,7 +169,7 @@
     musica: [
       { id: 'pixer-loop',           nombre: 'Pixer Loop (Web Audio)', tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',  desc: 'preview rápido para probar intención', use: 'Borrador' },
       { id: 'lyria-3-pro-preview',  nombre: 'Gemini (Google)',        tipo: 'pro',  badge: 'Better', coste: 'paid tier Gemini',    desc: '~2min con voz cantando la letra', use: 'Alternativa' },
-      { id: 'suno-local-v5',        nombre: 'Suno v5 (local)',        tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción · cuenta loguead.', desc: 'calidad final vía proxy suno-local', use: 'Master' },
+      { id: 'suno-local-v5',        nombre: 'Pixeria Music',          tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción · cuenta loguead.', desc: 'calidad final · motor de música', use: 'Master' },
     ],
     imagenes: [
       { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Good',   coste: 'gratis (free tier)',   desc: 'generación + edición · Gemini 2.5 Flash Image' },
@@ -302,7 +302,7 @@
         const keyLabel = motor.id.startsWith('elevenlabs-') ? 'WORKER pixer-eleven'
                        : motor.id === 'grok-imagine-image-pro' ? 'WORKER pixer-eleven'
                        : motor.id === 'grok-imagine-video' ? 'WORKER pixer-eleven (xAI)'
-                       : motor.id.startsWith('suno-local-') ? 'PROXY suno-local:3777'
+                       : motor.id.startsWith('suno-local-') ? 'PROXY motor de música'
                        : motor.id === 'lyria-3-pro-preview' ? 'WORKER pixer-eleven (GCP)'
                        : motor.id === 'nano-banana' ? 'WORKER pixer-eleven (Gemini)'
                        : (motor.id.startsWith('imagen-') || motor.id.startsWith('veo-')) ? 'WORKER pixer-eleven (Gemini)'
@@ -609,7 +609,7 @@
     updateProLockBadge();
   }
   async function unlockPro() {
-    const pw = prompt('🔒 Modelos PRO bloqueados.\n\nIntroduce el password para desbloquear los modelos de pago (Better + Best · ElevenLabs · Suno · Lyria · Veo · Grok · Runway · Imagen Ultra). Se queda desbloqueado en este navegador.');
+    const pw = prompt('🔒 Modelos PRO bloqueados.\n\nIntroduce el password para desbloquear los modelos de pago (Better + Best · ElevenLabs · Pixeria Music · Lyria · Veo · Grok · Runway · Imagen Ultra). Se queda desbloqueado en este navegador.');
     if (pw == null) return false;
     const h = await _sha256(pw);
     if (h === PRO_PASSWORD_HASH) {
@@ -630,7 +630,7 @@
     let pw = '';
     try { pw = localStorage.getItem('pixer_pro_pw') || ''; } catch (e) {}
     if (pw) return pw;
-    const entered = prompt('🔒 Password PRO (necesario para generar con Suno):');
+    const entered = prompt('🔒 Password PRO (necesario para generar con Pixeria Music):');
     if (entered == null) return '';
     if ((await _sha256(entered)) === PRO_PASSWORD_HASH) {
       try { localStorage.setItem('pixer_pro_pw', entered); localStorage.setItem(PRO_LOCK_KEY, '1'); } catch (e) {}
@@ -801,7 +801,7 @@
       if (!r.ok) return { ok: false, error: 'http ' + r.status };
       return await r.json();
     } catch (e) {
-      return { ok: false, error: 'unreachable: arranca suno-local en el Mac Mini (./suno-local/start-suno-local.sh)' };
+      return { ok: false, error: 'unreachable: arranca el motor de música en el Mac Mini' };
     }
   }
 
@@ -831,7 +831,7 @@
       state.textContent = 'Conectado';
       const left = health.total_credits_left ?? health.credits_left ?? health.monthly_limit ?? '--';
       credits.textContent = String(left);
-      if (showOkToast) showToast('Suno conectado');
+      if (showOkToast) showToast('Motor de música conectado');
     } else {
       panel.classList.add('is-warn');
       state.textContent = 'No responde';
@@ -953,7 +953,7 @@
   function setMusicCover(url) {
     const fig = document.getElementById('m-cover'); if (!fig) return;
     const img = fig.querySelector('img');
-    if (url && img) { img.onerror = null; img.src = url; fig.hidden = false; setCoverCaption('Portada · Suno'); }
+    if (url && img) { img.onerror = null; img.src = url; fig.hidden = false; setCoverCaption('Portada'); }
     else setDefaultMatrixCover();   // sin carátula real → vuelve al Matrix por defecto
   }
 
@@ -981,18 +981,18 @@
     const health = await refreshMusicHealth(false) || await sunoLocalAlive();
     if (!health.ok) {
       updateMusicStage('engine');
-      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · proxy NO responde (${SUNO_LOCAL_URL})</div><pre class="player-body">${health.error}\n\nArranca en el Mac Mini:\n  cd ~/GitHub/01.-AdmiraXperience-Game/suno-local\n  ./start-suno-local.sh</pre></div>`);
+      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · el motor no responde</div><pre class="player-body">${health.error}</pre></div>`);
       return;
     }
-    if (!(await confirmPro('Suno (local)', `~2 canciones · créditos restantes: ${health.total_credits_left}`))) return;
+    if (!(await confirmPro('Pixeria Music', `~2 canciones · créditos restantes: ${health.total_credits_left}`))) return;
 
     const proToken = await ensureProToken();
-    if (!proToken) { showPlayer('<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · falta password PRO</div></div>'); return; }
+    if (!proToken) { showPlayer('<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · falta password PRO</div></div>'); return; }
 
     showPlayer(`
       <div class="player-card">
-        <div class="player-head">▶ MÚSICA · Suno ${model.replace('chirp-','')} · ${prompt.slice(0,60)}</div>
-        ${progressHtml('Enviando prompt a Suno...', 'suno', 60000)}
+        <div class="player-head">▶ MÚSICA · Pixeria Music · ${prompt.slice(0,60)}</div>
+        ${progressHtml('Enviando prompt al motor de música...', 'suno', 60000)}
       </div>`);
     const stop = startProgress('suno');
     try {
@@ -1004,14 +1004,14 @@
       if (!r.ok) {
         stop(false);
         const err = await r.text();
-        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · ERROR ${r.status}</div><pre class="player-body">${err.slice(0,500)}</pre></div>`);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · ERROR ${r.status}</div><pre class="player-body">${err.slice(0,500)}</pre></div>`);
         return;
       }
       const data = await r.json();
       const clipIds = (data.clips || []).map(c => c.id).filter(Boolean);
       if (!clipIds.length) {
         stop(false);
-        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · sin clips</div><pre class="player-body">${JSON.stringify(data).slice(0,400)}</pre></div>`);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · sin clips</div><pre class="player-body">${JSON.stringify(data).slice(0,400)}</pre></div>`);
         return;
       }
       setProgressLabel('suno', `Generando · clips ${clipIds.map(id=>id.slice(0,6)).join(', ')}`);
@@ -1023,7 +1023,7 @@
         const pollR = await fetch(`${SUNO_LOCAL_URL}/status?ids=${clipIds.join(',')}`);
         const clips = await pollR.json();
         const ready = clips.filter(c => (c.audio_url || c.video_url) && (c.status === 'streaming' || c.status === 'complete'));
-        setProgressLabel('suno', `Suno · intento ${attempt} · ${ready.length}/${clips.length} listos`);
+        setProgressLabel('suno', `Pixeria Music · intento ${attempt} · ${ready.length}/${clips.length} listos`);
         if (ready.length >= 1) {
           stop(true);
           updateMusicStage('review');
@@ -1034,12 +1034,12 @@
           showPlayer(`
             <div class="player-card music-result-card">
               <div class="player-head music-result-head">
-                <span>▶ HILO MUSICAL · Suno ${modelLabel}</span>
+                <span>▶ HILO MUSICAL · Pixeria Music</span>
                 <span>${ready.length}/${clips.length} versiones listas</span>
               </div>
               <div class="music-result-grid">
               ${ready.map((c, i) => {
-                const cTitle = (c.title && c.title.trim()) || briefTitle || `Suno ${i + 1}`;
+                const cTitle = (c.title && c.title.trim()) || briefTitle || `Pixeria Music ${i + 1}`;
                 const cover = c.image_large_url || c.image_url || '';
                 const dur = (c.metadata && (c.metadata.duration_formatted || c.metadata.duration)) || '';
                 const pickedUrl = c.video_url || c.audio_url;
@@ -1050,7 +1050,7 @@
                   prompt: `${cTitle} · ${prompt}`.slice(0,200),
                   title: cTitle,
                   comment: `Hilo musical Admira TV · ${ver || 'pieza musical'} · ${voice || 'voz no especificada'}`,
-                  tags: ['admira-tv', 'hilo-musical', 'suno'],
+                  tags: ['admira-tv', 'hilo-musical', 'pixeria-music'],
                   costEst: '~10 cred',
                   url: pickedUrl,
                   mime: pickedMime,
@@ -1089,14 +1089,14 @@
         if (attempt > 60) { // 5 min cap
           stop(false);
           updateMusicStage('engine');
-          showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · TIMEOUT</div><pre class="player-body">clips: ${clipIds.join(', ')}</pre></div>`);
+          showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · TIMEOUT</div><pre class="player-body">clips: ${clipIds.join(', ')}</pre></div>`);
           return;
         }
       }
     } catch (e) {
       stop(false);
       updateMusicStage('engine');
-      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);
+      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);
     }
   }
 
