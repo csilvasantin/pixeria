@@ -643,22 +643,10 @@
   };
 
   // ─── Pro models · password gate ───────────────────────────────────
-  // Bloquea modelos tipo:'pro' (Better/Best) detrás de un password compartido.
-  // No es seguridad real (cualquiera con DevTools lo salta) — es un kid-mode
-  // que evita clicks accidentales en modelos que cuestan dinero. Cuando un
-  // modelo se conecte a una API real con coste, la verificación se sube al
-  // Worker y este gate frontal pasa a ser "el aviso" antes del cobro real.
+  // 2026-10-05 Carlos: sin password PRO. Studio/Pixeria ya van detrás del
+  // login Google (solo miembros Admira). Solo queda un confirm de coste.
   const PRO_LOCK_KEY = 'pixer_pro_unlocked';
-  // SHA-256 del password compartido. Cambia el hash para rotar el password.
-  const PRO_PASSWORD_HASH = 'e6f45147f091328d3300df63f8fdc719982a56e74bd8d8f7dfa088cc8ce0eb60';
-  async function _sha256(s) {
-    const buf = new TextEncoder().encode(s);
-    const h = await crypto.subtle.digest('SHA-256', buf);
-    return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-  function isProUnlocked() {
-    try { return localStorage.getItem(PRO_LOCK_KEY) === '1'; } catch { return false; }
-  }
+  function isProUnlocked() { return true; }
   function setProUnlocked(on) {
     try {
       if (on) localStorage.setItem(PRO_LOCK_KEY, '1');
@@ -666,81 +654,18 @@
     } catch {}
     updateProLockBadge();
   }
-  async function unlockPro() {
-    const pw = prompt('🔒 Modelos PRO bloqueados.\n\nIntroduce el password para desbloquear los modelos de pago (Better + Best · ElevenLabs · motor musical · Lyria · Veo · Grok · Runway · Imagen Ultra). Se queda desbloqueado en este navegador hasta que pulses "Bloquear".');
-    if (pw == null) return false;
-    const h = await _sha256(pw);
-    if (h === PRO_PASSWORD_HASH) {
-      setProUnlocked(true);
-      try { localStorage.setItem('pixer_pro_pw', pw); } catch (e) {} // token para el proxy suno-local
-      return true;
-    }
-    alert('Password incorrecto. Modelos PRO siguen bloqueados.');
-    return false;
-  }
-  async function ensureProUnlocked() {
-    if (isProUnlocked()) return true;
-    return await unlockPro();
-  }
-  // Devuelve el password PRO guardado (token para el proxy suno-local). Si PRO se
-  // desbloqueó en una versión antigua que no lo guardaba, lo pide una vez y lo guarda.
+  async function unlockPro() { setProUnlocked(true); return true; }
+  async function ensureProUnlocked() { return true; }
   async function ensureProToken() {
-    let pw = '';
-    try { pw = localStorage.getItem('pixer_pro_pw') || ''; } catch (e) {}
-    if (pw) return pw;
-    const entered = prompt('🔒 Password PRO (necesario para generar con el motor musical):');
-    if (entered == null) return '';
-    if ((await _sha256(entered)) === PRO_PASSWORD_HASH) {
-      try { localStorage.setItem('pixer_pro_pw', entered); localStorage.setItem(PRO_LOCK_KEY, '1'); } catch (e) {}
-      return entered;
-    }
-    alert('Password PRO incorrecto.');
+    // suno-local confía Origin de pixeria/admira.studio; sin token PRO.
     return '';
   }
-  // Badge insertado en .topnav-actions (al lado del estado XTORE) para no
-  // solaparse con la banda superior Admira·Xperience. Cae a position:fixed
-  // si no encuentra el contenedor.
   function updateProLockBadge() {
-    let el = document.getElementById('proLockBadge');
-    if (!el) {
-      el = document.createElement('button');
-      el.id = 'proLockBadge';
-      el.type = 'button';
-      el.title = 'Estado de modelos PRO (Better+Best). Click para alternar.';
-      el.style.cssText = 'border:1px solid rgba(120,243,255,.35);background:rgba(5,19,28,.78);color:#cceef5;font:600 11px/1 ui-monospace,monospace;letter-spacing:.04em;padding:6px 9px;border-radius:8px;cursor:pointer';
-      el.addEventListener('click', async () => {
-        if (isProUnlocked()) {
-          if (confirm('¿Bloquear de nuevo los modelos PRO? Tendrás que reintroducir el password.')) {
-            setProUnlocked(false);
-          }
-        } else {
-          await unlockPro();
-        }
-      });
-      const host = document.querySelector('.topnav-actions');
-      if (host) {
-        host.appendChild(el);
-      } else {
-        el.style.cssText += ';position:fixed;top:64px;right:14px;z-index:9999';
-        document.body.appendChild(el);
-      }
-    }
-    const on = isProUnlocked();
-    el.textContent = on ? '🔓 PRO' : '🔒 PRO';
-    el.style.color = on ? '#a7f0a8' : '#ffd86b';
-    el.style.borderColor = on ? 'rgba(167,240,168,.4)' : 'rgba(255,216,107,.4)';
-  }
-  if (typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', updateProLockBadge);
-    } else {
-      updateProLockBadge();
-    }
+    const el = document.getElementById('proLockBadge');
+    if (el) el.remove();
   }
   function confirmPro(motor, coste) {
     return (async () => {
-      const ok = await ensureProUnlocked();
-      if (!ok) return false;
       return confirm(`⚠ ${motor} es DE PAGO y consumirá tokens (${coste}).\n\n¿Continuar con la reproducción real?`);
     })();
   }
