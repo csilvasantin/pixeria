@@ -7,6 +7,10 @@
  * - Índice del Stock: id, fuente (motor / referencia), fecha de alta y cliente (PixeriaCliente).
  * - Imagen fija (5-oct-2026, #src-img): dimensiones, aspecto y orientación de la imagen; duración
  *   «Imagen fija»; formato leído de la firma del archivo (JPEG/PNG/WebP), peso y MIME; sin audio.
+ * - Formatos de entrada (5-oct-2026): GIF estático o animado (fotogramas, duración de un bucle, bucles),
+ *   SVG vectorial (tamaño de atributos o viewBox; se rasteriza a cada formato), HEIC (decodificación
+ *   nativa o libheif WASM) y AVIF. La firma la decide window.PixeriaFormatos.firma; los datos de la
+ *   fuente llegan de adaptaciones.js con el evento pixeria:fuente (window.PixeriaAdaptador.fuente).
  */
 (function () {
   var EN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
@@ -154,7 +158,7 @@
   function pintar(f) {
     var box = $('#src-ficha'); if (!box) return;
     var G = f.imagen ? [
-      [t('Imagen', 'Image'), [[t('Resolución', 'Resolution'), f.res], [t('Aspecto', 'Aspect ratio'), f.asp], [t('Orientación', 'Orientation'), f.ori], [t('Duración', 'Duration'), f.dur], [t('Formato', 'Format'), f.formato]]],
+      [t('Imagen', 'Image'), [[t('Resolución', 'Resolution'), f.res], [t('Aspecto', 'Aspect ratio'), f.asp], [t('Orientación', 'Orientation'), f.ori], [t('Duración', 'Duration'), f.dur], [t('Formato', 'Format'), f.formato]].concat(f.extra || [])],
       [t('Archivo', 'File'), [[t('Peso', 'Size'), f.peso], ['MIME', f.mime]]],
       ['Audio', [[t('Pista', 'Track'), f.audio]]],
       [t('Origen', 'Source'), [[t('Origen', 'Origin'), f.origen], [t('Fuente', 'Provider'), f.fuente], [t('Alta', 'Added'), f.alta], [t('Cliente', 'Client'), f.cliente]]]
@@ -178,40 +182,87 @@
   // Datos comunes de origen (Stock, subida local o importación) para vídeo e imagen.
   function origenDe(o, src, it, f) {
     var imp = o.file && window.PixeriaImportar && window.PixeriaImportar.ultimo && window.PixeriaImportar.ultimo.file === o.file ? window.PixeriaImportar.ultimo : null;
-    f.origen = imp ? t('Importado · ', 'Imported · ') + (function () { try { return new URL(imp.url).hostname.replace(/^www\./, ''); } catch (_) { return imp.url; } })() : o.file ? t('Subida local · ', 'Local upload · ') + o.file.name : it ? 'Stock · ' + it.id : /^blob:/.test(src) ? t('Subida local', 'Local upload') : NADA;
+    var F = fuente(), via = F && F.origen, host = function (u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (_) { return u; } };
+    f.origen = imp ? t('Importado · ', 'Imported · ') + host(imp.url)
+      : o.file ? (via === 'pegado' ? t('Pegado · ', 'Pasted · ') : via === 'soltado' ? t('Soltado · ', 'Dropped · ') : t('Subida local · ', 'Local upload · ')) + o.file.name
+      : it ? 'Stock · ' + it.id : o.url && via === 'url' ? 'URL · ' + host(o.url) : /^blob:/.test(src) ? t('Subida local', 'Local upload') : NADA;
     f.fuente = imp ? [imp.motor, imp.via].filter(Boolean).join(' · ') : it ? [/suno/i.test(it.motor || '') ? 'Pixeria Music' : it.motor, it.externalRef || it.externalIdOrigen].filter(Boolean).join(' · ') || null : null;
     f.alta = it && it.createdAt ? fecha(it.createdAt) : null;
     f.cliente = it ? clienteDe(it) : null;
   }
-  // Formato real por la firma de los primeros bytes.
+  // Formato real por la firma de los primeros bytes (formatos-entrada.js; JPEG/PNG/WebP si no ha cargado).
   function firma(buf) {
+    if (window.PixeriaFormatos) return window.PixeriaFormatos.firma(buf);
     var b = new Uint8Array(buf || new ArrayBuffer(0));
     if (b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return 'JPEG';
     if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47) return 'PNG';
     if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return 'WebP';
     return null;
   }
+  // La fuente que publica adaptaciones.js (pixeria:fuente): URL original, archivo y detalles del formato.
+  function fuente() { var A = window.PixeriaAdaptador; return A && A.fuente || null; }
+  var MIME_NOMBRE = { 'image/jpeg': 'JPEG', 'image/png': 'PNG', 'image/webp': 'WebP', 'image/gif': 'GIF', 'image/svg+xml': 'SVG', 'image/heic': 'HEIC', 'image/heif': 'HEIC', 'image/avif': 'AVIF' };
+  function seg(ms) { return num(ms / 1000, 2) + ' s'; }
+  // Filas y nombre del formato según la fuente: GIF animado/estático, SVG vectorial, HEIC (vía), AVIF.
+  function detalles(F, f) {
+    if (!F) return;
+    var g = F.gif, x = [];
+    if (F.formato === 'SVG' && F.svg) {
+      f.formato = t('SVG vectorial', 'Vector SVG');
+      f.res = t('Vectorial · ', 'Vector · ') + F.svg.ancho + ' × ' + F.svg.alto + ' px';
+      x.push([t('Tamaño base', 'Base size'), F.svg.origen === 'viewBox' ? t('viewBox (sin width/height)', 'viewBox (no width/height)') : F.svg.origen === 'defecto' ? t('300 × 150 por defecto (sin tamaño ni viewBox)', '300 × 150 default (no size or viewBox)') : t('atributos width/height', 'width/height attributes')]);
+      if (F.svg.viewBox) x.push(['viewBox', F.svg.viewBox.join(' ')]);
+      x.push([t('Rasterizado', 'Rasterised'), t('por formato de salida', 'per output format')]);
+    } else if (g && g.animado) {
+      f.formato = t('GIF animado', 'Animated GIF');
+      f.dur = tc(g.duracionMs / 1000) + t(' · un bucle', ' · one loop');
+      x.push([t('Fotogramas', 'Frames'), num(g.fotogramas, 0) + ' · ' + num(g.fotogramas / (g.duracionMs / 1000 || 1), 2) + t(' fps de media', ' fps average')]);
+      x.push([t('Bucles', 'Loops'), g.bucles === 0 ? t('infinito', 'infinite') : g.bucles ? String(g.bucles) : t('sin bloque NETSCAPE', 'no NETSCAPE block')]);
+      x.push([t('Vista previa', 'Preview'), F.previo === 'ffmpeg' ? t('MP4 intermedio (FFmpeg WASM)', 'intermediate MP4 (FFmpeg WASM)') : 'WebCodecs ImageDecoder']);
+      x.push([t('Exporta', 'Exports'), t('MP4 H.264 · 25 fps · ', 'H.264 MP4 · 25 fps · ') + seg(g.duracionMs)]);
+    } else if (g) {
+      f.formato = t('GIF estático', 'Static GIF');
+    } else if (F.ext === 'heic') {
+      f.formato = 'HEIC';
+      if (F.heic) x.push([t('Decodificación', 'Decoding'), F.heic.via === 'nativo' ? t('nativa del navegador', 'native, by the browser') : 'libheif-js ' + (F.heic.version || '') + ' · WASM']);
+    } else if (F.ext === 'avif') {
+      f.formato = 'AVIF'; x.push([t('Decodificación', 'Decoding'), t('nativa del navegador', 'native, by the browser')]);
+    }
+    f.extra = x;
+  }
+  function confirmaFormato(f, F, sig) {
+    if (!sig) return;
+    if (F && (F.gif || F.svg || F.ext === 'heic' || F.ext === 'avif') && { GIF: 1, SVG: 1, HEIC: 1, AVIF: 1 }[sig]) return; // ya está detallado
+    f.formato = sig;
+  }
   // La fuente remota se carga con ?cors=1 (corsURL de adaptaciones.js): para el índice es la misma URL.
   function sinCors(u) { try { var x = new URL(u, location.href); if (x.searchParams.get('cors') === '1') { x.searchParams.delete('cors'); return x.href; } } catch (_) {} return u; }
+  // Origen real de la fuente: el archivo o la URL que eligió el usuario (no el blob derivado de un SVG o HEIC).
+  function origenReal(src) {
+    var F = fuente(), o = origen || {};
+    if (F && (F.file || F.url)) return F.file ? { file: F.file } : { url: F.url };
+    if (!o.file && o.url !== src) o = { url: src };
+    return o;
+  }
   function construirImagen() {
     var im = $('#src-img'); if (!im || !im.getAttribute('src') || !im.naturalWidth) return;
-    var yo = ++turno, o = origen || {}, src = sinCors(im.currentSrc || im.src);
-    if (!o.file && o.url !== src) o = { url: src };
+    var yo = ++turno, src = sinCors(im.currentSrc || im.src), o = origenReal(src), F = fuente();
     var it = o.url && window.PixeriaStock && window.PixeriaStock.item ? window.PixeriaStock.item(o.url) : null;
-    var w = im.naturalWidth, hgt = im.naturalHeight;
+    var w = F && F.svg ? F.svg.ancho : im.naturalWidth, hgt = F && F.svg ? F.svg.alto : im.naturalHeight;
     var f = { imagen: true, res: w + ' × ' + hgt + ' px', asp: aspecto(w, hgt), ori: w > hgt ? t('Horizontal', 'Landscape') : w < hgt ? t('Vertical', 'Portrait') : t('Cuadrado', 'Square'),
       dur: t('Imagen fija', 'Still image'), audio: t('No · imagen fija', 'No · still image') };
     f.mime = (o.file && o.file.type) || (it && it.mime) || null;
-    f.formato = { 'image/jpeg': 'JPEG', 'image/png': 'PNG', 'image/webp': 'WebP' }[f.mime] || null; // la firma lo confirma abajo
+    f.formato = MIME_NOMBRE[f.mime] || null; // la firma lo confirma abajo
+    detalles(F, f);
     origenDe(o, src, it, f);
     var total = (o.file && o.file.size) || (it && it.size) || null;
     if (total) f.peso = num(total / 1e6, 2) + ' MB · ' + num(total, 0) + ' B';
     pintar(f);
     var L = (o.file || o.url) && !/^blob:/.test(o.url || '') ? lector(o) : null;
     if (!L) return;
-    L.leer(0, 16).then(function (buf) {
+    L.leer(0, 512).then(function (buf) {
       if (yo !== turno) return;
-      f.formato = firma(buf) || f.formato;
+      confirmaFormato(f, F, firma(buf));
       var tot = L.total || total;
       if (tot) f.peso = num(tot / 1e6, 2) + ' MB · ' + num(tot, 0) + ' B';
       f.mime = f.mime || L.tipo || null;
@@ -219,10 +270,23 @@
     }).catch(function (e) { try { console.warn('[ficha]', e && e.message || e); } catch (_) {} });
   }
 
+  // GIF animado: la ficha es del GIF (no del MP4 intermedio de la vista previa, si lo hay).
+  function construirAnim() {
+    var F = fuente(); if (!F || F.tipo !== 'anim' || !F.gif) return;
+    var yo = ++turno, g = F.gif, o = F.file ? { file: F.file } : { url: F.url };
+    var it = o.url && window.PixeriaStock && window.PixeriaStock.item ? window.PixeriaStock.item(o.url) : null;
+    var f = { imagen: true, res: g.ancho + ' × ' + g.alto + ' px', asp: aspecto(g.ancho, g.alto), ori: g.ancho > g.alto ? t('Horizontal', 'Landscape') : g.ancho < g.alto ? t('Vertical', 'Portrait') : t('Cuadrado', 'Square'), audio: t('No', 'No') };
+    f.mime = (o.file && o.file.type) || (it && it.mime) || 'image/gif';
+    detalles(F, f);
+    origenDe(o, F.url || '', it, f);
+    var total = (o.file && o.file.size) || (it && it.size) || null;
+    if (total) f.peso = num(total / 1e6, 2) + ' MB · ' + num(total, 0) + ' B';
+    if (yo === turno) pintar(f);
+  }
   function construir() {
+    var Fa = fuente(); if (Fa && Fa.tipo === 'anim') { construirAnim(); return; }
     var video = $('#src'); if (!video || !video.videoWidth) return;
-    var yo = ++turno, o = origen || {}, src = sinCors(video.currentSrc || video.src);
-    if (!o.file && o.url !== src) o = { url: src };
+    var yo = ++turno, src = sinCors(video.currentSrc || video.src), o = origenReal(src);
     var it = o.url && window.PixeriaStock && window.PixeriaStock.item ? window.PixeriaStock.item(o.url) : null;
     var w = video.videoWidth, hgt = video.videoHeight, dur = video.duration;
     var f = { res: w + ' × ' + hgt + ' px', asp: aspecto(w, hgt), ori: w > hgt ? t('Horizontal', 'Landscape') : w < hgt ? t('Vertical', 'Portrait') : t('Cuadrado', 'Square'), dur: tc(dur) };
@@ -263,7 +327,13 @@
     if (file) file.addEventListener('change', function () { var f = file.files && file.files[0]; origen = f ? { file: f } : null; }, true);
     video.addEventListener('loadedmetadata', construir);
     // Al pasar a una imagen el vídeo se vacía: su «emptied» no debe borrar la ficha de la imagen.
-    video.addEventListener('emptied', function () { if (im && im.getAttribute('src')) return; turno++; box.hidden = true; box.innerHTML = ''; });
+    video.addEventListener('emptied', function () { var F = fuente(); if ((im && im.getAttribute('src')) || (F && F.tipo === 'anim')) return; turno++; box.hidden = true; box.innerHTML = ''; });
+    document.addEventListener('pixeria:fuente', function (e) {
+      var d = e.detail || {}, F = d.fuente;
+      if (!F) { turno++; box.hidden = true; box.innerHTML = ''; origen = null; return; }
+      origen = F.file ? { file: F.file } : F.url ? { url: F.url } : origen;
+      if (d.fase === 'listo' && F.tipo === 'anim') construirAnim();
+    });
     if (im) im.addEventListener('load', construirImagen);
     box.addEventListener('click', function (e) {
       var b = e.target.closest('.ficha-copy'); if (!b || !box._texto) return;

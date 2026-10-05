@@ -2,7 +2,7 @@
 // Render en vivo en canvas; las reglas son las del motor de signage de Pixeria.
 // Reutiliza el motor de reglas real de Pixeria: assets/signage-perfiles.js
 import { perfilDeSalida, planificar } from '/assets/signage-perfiles.js';
-import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob, STILL, STILL_TYPES, stillSeconds, stillJob } from './adapter-core.mjs';
+import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob, STILL, stillSeconds, stillJob, animJob, animPreviewJob } from './adapter-core.mjs';
 import { createEngine, MAX_SOURCE_BYTES } from './adapter-export.js';
 import { createExportQueue } from './export-queue.js';
 import { publishAdaptation, shortFormat, adaptationTitle } from './stock-publish.mjs';
@@ -10,6 +10,7 @@ import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, re
 import { GENERAL, YOKUP_URL, PROJECT_KEY, projectStorageKey, formatRef, resolveRef, projectLibrary, projectCampaigns, parseYokup, mergeProjects, migrateStorage, initialProject } from './proyectos-core.mjs';
 import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
 import { pngDensity } from './png-density.mjs';
+import { gifPlayer, hasImageDecoder, decodeHEIC, LIBHEIF, rasterSVG, svgCache } from './fuentes-especiales.mjs';
 
 const EN = document.documentElement.lang === 'en';
 const t = (es, en) => EN ? en : es;
@@ -27,10 +28,22 @@ const video = $('#src');
 // PNG o WebP, del Stock o del equipo. El reencuadre es el mismo; display e impresión salen en PNG
 // (o JPG) y el resto en MP4 H.264 a 25 fps de la duración elegida (1–60 s, 10 por defecto), sin audio.
 const img = $('#src-img');
+// Formatos de entrada (Carlos, 5-oct-2026): además GIF, SVG, HEIC y AVIF (formatos-entrada.js).
+// Un GIF animado es srcKind 'anim': se reproduce en bucle (ImageDecoder en #src-anim o, sin WebCodecs,
+// un MP4 intermedio en #src) y se exporta como vídeo de 25 fps leyendo el propio GIF.
+const PF = window.PixeriaFormatos;
+window.PixeriaAdaptador = window.PixeriaAdaptador || {fuente: null};
+const animStage = $('#src-anim');
 let srcKind = 'video';
+let fuente = null; // {tipo, nombre, url (original), file, ext, formato, gif, svg, heic, ...}: lo lee ficha-tecnica.js
+let anim = null, animSourceURL = null, animSeconds = 0;
+let svgSrc = null, svgRasters = null; // {texto, medidas} del SVG activo y la caché de rásteres del previo
+let derivedURL = null; // blob propio de la fuente (SVG preparado, PNG de un HEIC, MP4 intermedio del GIF)
 const isImage = () => srcKind === 'image';
-const media = () => isImage() ? img : video;
-const mediaReady = () => isImage() ? !!(img.getAttribute('src') && img.complete && img.naturalWidth) : video.videoWidth > 0;
+const isAnim = () => srcKind === 'anim';
+const isPicture = () => srcKind !== 'video'; // imagen o GIF animado: sin audio, PNG/JPG del fotograma
+const media = () => isAnim() ? (anim ? anim.canvas : video) : isImage() ? img : video;
+const mediaReady = () => isAnim() ? (anim ? anim.ready : video.readyState >= 2) : isImage() ? !!(img.getAttribute('src') && img.complete && img.naturalWidth) : video.videoWidth > 0;
 const STILL_KEY = 'pixeria.adapter.still';
 let stillSec = STILL.default;
 try { stillSec = stillSeconds(localStorage.getItem(STILL_KEY)); } catch (_) {}
@@ -84,11 +97,11 @@ function restoreSettings(lists) {
   syncControls(); initialized = true;
 }
 // kinds applies to special layouts: the client delivery file, one MP4 per screen, or both.
-function especialJobs(f,kinds) {
+function especialJobs(f,kinds,src=state.src) {
   const tech=especialTech(f),mode=modoEfectivo(f),s=state.fmt[f.id],jobs=[];
-  if(kinds!=='segments') jobs.push({...atlasJob(state.src,f.layout,mode,s,tech),label:`${f.nombre} · ${t('entrega','delivery')}`});
+  if(kinds!=='segments') jobs.push({...atlasJob(src,f.layout,mode,s,tech),label:`${f.nombre} · ${t('entrega','delivery')}`});
   if(kinds!=='atlas') {
-    const job=segmentsJob(state.src,f.layout,mode,s,tech);job.label=`${f.nombre} · ${job.outputs.length} ${t('pantallas','screens')}`;
+    const job=segmentsJob(src,f.layout,mode,s,tech);job.label=`${f.nombre} · ${job.outputs.length} ${t('pantallas','screens')}`;
     job.outputs.forEach(o=>o.label=`${f.nombre} · ${t('pantalla','screen')} ${o.n}/${o.N}`);jobs.push(job);
   }
   return jobs;
@@ -128,7 +141,7 @@ const queue = createExportQueue({
   engine:createEngine(),t,onChange:paintBatch,
   onCreate(item){ if (batchIds) batchIds.add(item.id); },
   onComplete:saveToStock,
-  onRelease:url=>{if(url!==sourceObjectURL&&url!==stillInput.url&&url.startsWith('blob:'))URL.revokeObjectURL(url);}
+  onRelease:url=>{if(url!==sourceObjectURL&&url!==stillInput.url&&url!==derivedURL&&url.startsWith('blob:'))URL.revokeObjectURL(url);}
 });
 // What FFmpeg reads for a still image: the picture as the browser shows it (EXIF orientation
 // applied, same pixels as the preview) re-encoded as PNG once per source. If the browser cannot
@@ -153,21 +166,33 @@ async function stillSource() {
   releaseStill(); stillInput = {key, url, input};
   return stillInput;
 }
+// SVG (Carlos, 5-oct-2026): each output gets its own raster at the resolution its reframing needs
+// (svgRaster), so a vector stays sharp from 300×250 to 4K. MP4 inputs are capped at 4096×4096 px.
+const SVG_EXPORT={maxLado:8192,maxPx:4096*4096};
+async function svgExportSource(output,mode,s) {
+  const r=PF.svgRaster(svgSrc.medidas,output.ancho,output.alto,mode,s,SVG_EXPORT);
+  const canvas=await rasterSVG(svgSrc.texto,r.ancho,r.alto);
+  return {el:canvas,dims:{ancho:r.ancho,alto:r.alto,fps:25,bitrateKbps:0},raster:r};
+}
+const pngBlob=canvas=>new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
 // kinds: 'both' | 'atlas' | 'segments' for special layouts; 'jpg' turns picture outputs into JPG.
 async function exportFormats(formats,kinds='both') {
   if(!state.src.ancho || !formats.length) return;
   const status=$('#export-status');status.textContent='';
-  const still=isImage(),seconds=stillSec,duration=still?seconds:video.duration;
-  const pngFormats=formats.filter(f=>f.output==='png');
-  const jobs=formats.filter(f=>f.output!=='png').flatMap(f=>f.especial?especialJobs(f,kinds).map(job=>({job,f})):[{job:{...exportJob(state.src,perfil(f),plan(f),modoEfectivo(f),state.fmt[f.id],state.srcName,f.id),label:f.nombre},f}]);
+  const still=isImage(),animated=isAnim(),seconds=stillSec,duration=animated?animSeconds:still?seconds:video.duration;
+  const pngFormats=formats.filter(f=>f.output==='png'),mp4Formats=formats.filter(f=>f.output!=='png');
+  const build=(f,src)=>f.especial?especialJobs(f,kinds,src).map(job=>({job,f})):[{job:{...exportJob(src,perfil(f),plan(f),modoEfectivo(f),state.fmt[f.id],state.srcName,f.id),label:f.nombre},f}];
+  const jobs=mp4Formats.flatMap(f=>build(f,state.src));
   const budget=jobs.length?exportBudget(duration,jobs.map(j=>j.job)):null;
   if(budget) {status.textContent=budget==='batch-size'
     ?t('El lote supera el presupuesto local de memoria. Selecciona menos formatos y expórtalos por separado.','This batch exceeds the local memory budget. Select fewer formats and export them separately.')
     :still?t('Esta duración es demasiado larga para este perfil en el navegador. Baja los segundos del MP4 o usa un perfil de menor resolución.','This length is too long for this profile in the browser. Lower the MP4 seconds or use a lower resolution profile.')
     :t('Este vídeo es demasiado largo para exportarlo con este perfil en el navegador. Usa un clip más corto o un perfil de menor resolución.','This video is too long to export with this profile in the browser. Use a shorter clip or a lower resolution profile.');return;}
   let sourceURL=video.currentSrc||video.src,input=null;
-  if(still&&jobs.length){({url:sourceURL,input}=await stillSource());}
-  const sub=still?`${state.srcName} · ${t('imagen fija','still image')}`:state.srcName;
+  if(animated) sourceURL=animSourceURL;
+  else if(still&&jobs.length&&!svgSrc){({url:sourceURL,input}=await stillSource());}
+  const kind=animated?t('GIF animado','animated GIF'):svgSrc?t('SVG vectorial','vector SVG'):t('imagen fija','still image');
+  const sub=isPicture()?`${state.srcName} · ${kind}`:state.srcName;
   // Frozen at click time: original content, active client (top bar selector) and duration.
   const ctx={origin:{...state.origin},client:window.PixeriaCliente?.actual?.()||null,duration,still};
   batchIds = new Set();
@@ -176,21 +201,35 @@ async function exportFormats(formats,kinds='both') {
   const jpg=kinds==='jpg';
   for(const f of pngFormats){
     const p=perfil(f),canvas=document.createElement('canvas');canvas.width=p.ancho;canvas.height=p.alto;
-    drawInto(canvas,f);
+    let override=null;
+    if(svgSrc){try{override=await svgExportSource(p,modoEfectivo(f),state.fmt[f.id]);}catch(_){status.textContent=t('No se pudo rasterizar este SVG.','Could not rasterise this SVG.');continue;}}
+    drawInto(canvas,f,override);
+    if(override)override.el.width=override.el.height=0;
     let blob=await new Promise(resolve=>jpg?canvas.toBlob(resolve,'image/jpeg',0.9):canvas.toBlob(resolve,'image/png'));
     canvas.width=canvas.height=0;
     if(!blob)continue;
     if(f.print&&!jpg)blob=new Blob([pngDensity(new Uint8Array(await blob.arrayBuffer()))],{type:'image/png'});
     queue.addReady({label:`${f.nombre} · ${jpg?'JPG':'PNG'}`,sub,sourceURL:null,format:f,...ctx},[{blob,filename:`${f.id}-${p.ancho}x${p.alto}.${jpg?'jpg':'png'}`}]);
   }
-  for(const {job,f} of jobs) queue.add({label:job.label,sub,sourceURL,job:still?stillJob(job,seconds,input):job,format:f,...ctx});
+  if(svgSrc){
+    // One PNG per format at its own resolution; the job's geometry uses that raster as the source.
+    for(const f of mp4Formats){
+      const out=f.especial?wallOutput(f):perfil(f);let src;
+      try{src=await svgExportSource(out,modoEfectivo(f),state.fmt[f.id]);}catch(_){status.textContent=t('No se pudo rasterizar este SVG.','Could not rasterise this SVG.');continue;}
+      const blob=await pngBlob(src.el);src.el.width=src.el.height=0;if(!blob)continue;
+      const url=URL.createObjectURL(blob);
+      for(const {job} of build(f,src.dims)) queue.add({label:job.label,sub:`${sub} · ${src.raster.ancho}×${src.raster.alto}`,sourceURL:url,job:stillJob(job,seconds,'input.png'),format:f,...ctx});
+    }
+    return;
+  }
+  for(const {job,f} of jobs) queue.add({label:job.label,sub,sourceURL,job:animated?animJob(job,animSeconds,'input.gif'):still?stillJob(job,seconds,input):job,format:f,...ctx});
 }
 $('#export-all').onclick=()=>exportFormats(selectedFormats());
 // Back to the active project's defaults (General: the four ratios and the standard library).
 $('#reset-settings').onclick=()=>{ resetState(); syncControls(); buildGrid(); };
 // Closing the tab mid-export loses the work: the browser asks first.
 window.addEventListener('beforeunload',event=>{if(!queue.busy()&&!savingToStock)return;event.preventDefault();event.returnValue=t('Hay exportaciones en curso','Exports are in progress');return event.returnValue;});
-window.addEventListener('pagehide',event=>{if(event.persisted)return;queue.cancelAll();queue.clear();if(sourceObjectURL)URL.revokeObjectURL(sourceObjectURL);});
+window.addEventListener('pagehide',event=>{if(event.persisted)return;queue.cancelAll();queue.clear();if(sourceObjectURL)URL.revokeObjectURL(sourceObjectURL);if(derivedURL)URL.revokeObjectURL(derivedURL);});
 
 // ── Perfil + plan (motor Pixeria) ───────────────────────────────────────────
 function perfil(f) {
@@ -306,7 +345,7 @@ function buildGrid() {
     el.querySelector('.remove-format').onclick=(e)=>{e.stopPropagation();f.on=false;buildGrid();};
     el.querySelector('.export-one').onclick=(e)=>{e.stopPropagation();exportFormats([f]);};
     // Display (no print) from a still image: JPG as well, lighter for ad networks.
-    if(f.category==='display'&&f.output==='png'){const j=document.createElement('button');j.type='button';j.className='pill export-one export-jpg';j.textContent='JPG';j.hidden=!isImage();j.title=t('JPG calidad 90, más ligero para redes de display','JPG quality 90, lighter for display networks');j.onclick=(e)=>{e.stopPropagation();exportFormats([f],'jpg');};el.querySelector('.export-one').after(j);}
+    if(f.category==='display'&&f.output==='png'){const j=document.createElement('button');j.type='button';j.className='pill export-one export-jpg';j.textContent='JPG';j.hidden=!isPicture();j.title=t('JPG calidad 90, más ligero para redes de display','JPG quality 90, lighter for display networks');j.onclick=(e)=>{e.stopPropagation();exportFormats([f],'jpg');};el.querySelector('.export-one').after(j);}
     selectable(el, f);
     g.appendChild(el);
   });
@@ -324,8 +363,10 @@ function refreshOriginal() {
   const W = state.src.ancho, H = state.src.alto; if (!W || !H) return;
   const cw = W >= H ? 384 : Math.round(384 * W / H), ch = Math.round(cw * H / W);
   const el = document.createElement('div'); el.className = 'fmt fmt-original'; el.dataset.original = '1';
-  const url = isImage() ? (img.currentSrc || img.getAttribute('src') || '') : (video.currentSrc || video.getAttribute('src') || '');
-  el.innerHTML = `<div class="fmt-title"><h3>${isImage() ? t('Imagen original','Original image') : t('Vídeo original','Original video')}<span class="orig-tag">${t('Original','Original')}</span></h3></div><div class="dims">${W}×${H} · ${t('nativo, sin relleno','native, no padding')}${isImage() ? ` · ${t('imagen fija','still image')}` : ''}</div>
+  // The original as it was chosen: Stock URL (CORS mode), the local file, or what the stage shows.
+  const url = fuente?.url ? corsURL(fuente.url) : isPicture() ? (sourceObjectURL || img.currentSrc || img.getAttribute('src') || '') : (video.currentSrc || video.getAttribute('src') || '');
+  const kindNote = isAnim() ? ` · ${t('GIF animado','animated GIF')} · ${secLabel(animSeconds)} s` : svgSrc ? ` · ${t('SVG vectorial','vector SVG')}` : isImage() ? ` · ${t('imagen fija','still image')}` : '';
+  el.innerHTML = `<div class="fmt-title"><h3>${isAnim() ? t('GIF original','Original GIF') : isImage() ? t('Imagen original','Original image') : t('Vídeo original','Original video')}<span class="orig-tag">${t('Original','Original')}</span></h3></div><div class="dims">${W}×${H} · ${t('nativo, sin relleno','native, no padding')}${kindNote}</div>
       <div class="stage"><canvas width="${cw}" height="${ch}" aria-label="${escHTML(state.origin.title || state.srcName)}"></canvas></div>
       ${url ? `<a class="pill export-one" href="${escHTML(url)}" download target="_blank" rel="noopener">${t('Descargar original','Download original')}</a>` : ''}`;
   g.prepend(el); drawDirty = true;
@@ -385,22 +426,22 @@ function especialInfo(f) {
   const L = f.layout, g = geometry(L), tech = especialTech(f), m = modoEfectivo(f), s = state.fmt[f.id];
   let lost = 0;
   if (state.src.ancho && m === 'cover') { const a = state.src.ancho / state.src.alto, b = g.pared.ancho / g.pared.alto; lost = 1 - Math.min(a / b, b / a) / s.zoom ** 2; }
-  const aviso = state.src.ancho ? `${isImage() ? `MP4 ${stillSec} s · ${t('imagen fija','still image')} · ` : ''}${MODOS[m]} · ${t('sobre la pared','on the wall')} ${g.pared.ancho}×${g.pared.alto}${m === 'cover' ? ` · ${Math.round(lost * 100)}% ${t('perdido','lost')}` : ''}${m === 'blur' ? t(' · fondo derivado, sin expansión IA', ' · derived background, no AI expansion') : ''}` : t('Elige un vídeo o una imagen para calcular el recorte.', 'Choose a video or an image to calculate cropping.');
+  const aviso = state.src.ancho ? `${isImage() ? `MP4 ${stillSec} s · ${t('imagen fija','still image')} · ` : isAnim() ? `MP4 ${secLabel(animSeconds)} s · ${t('GIF animado','animated GIF')} · ` : ''}${MODOS[m]} · ${t('sobre la pared','on the wall')} ${g.pared.ancho}×${g.pared.alto}${m === 'cover' ? ` · ${Math.round(lost * 100)}% ${t('perdido','lost')}` : ''}${m === 'blur' ? t(' · fondo derivado, sin expansión IA', ' · derived background, no AI expansion') : ''}` : t('Elige un vídeo o una imagen para calcular el recorte.', 'Choose a video or an image to calculate cropping.');
   const rate = segmentKbps(L, tech.bitrateKbps);
-  const stillNote = isImage() ? ` · ${t('imagen fija','still image')} ${stillSec} s` : '';
-  const files = [`${t('Entrega','Delivery')}: ${atlasFilename(L)} · H.264 ${tech.h264Perfil}@${tech.h264Nivel} · ${tech.bitrateKbps} kbps · ${isImage() ? t('sin audio','no audio') : t('audio si existe','audio if present')}${stillNote}`,
+  const stillNote = isImage() ? ` · ${t('imagen fija','still image')} ${stillSec} s` : isAnim() ? ` · ${t('GIF animado','animated GIF')} ${secLabel(animSeconds)} s` : '';
+  const files = [`${t('Entrega','Delivery')}: ${atlasFilename(L)} · H.264 ${tech.h264Perfil}@${tech.h264Nivel} · ${tech.bitrateKbps} kbps · ${isPicture() ? t('sin audio','no audio') : t('audio si existe','audio if present')}${stillNote}`,
     `${t('Por pantalla','Per screen')}: H.264 ${tech.segmentPerfil}@${tech.segmentNivel} · ${rate} kbps · ${t('sin audio','no audio')} · GOP 1 s${stillNote}`,
     ...g.segments.map(seg => `  ${seg.n}/${seg.N} · ${t('celda','cell')} ${seg.cell} (${seg.atlas.x},${seg.atlas.y}) · ${t('pared','wall')} x=${seg.wall.x} · ${segmentFilename(L, seg.n)}`),
     ...(g.unused.length ? [`${t('Celdas sin uso (negro)','Unused cells (black)')}: ${g.unused.map(c => c.index).join(', ')}`] : []),
     t('Esta página no sincroniza players: la continuidad depende de que arranquen a la vez.','This page does not synchronise players: continuity depends on them starting together.')];
   const atlas = state.src.ancho ? atlasJob(state.src, L, m, s, tech) : null;
-  return { aviso, plan: files.join('\n') + (atlas ? `\n\nffmpeg ${(isImage() ? stillJob(atlas, stillSec, stillInput.input) : atlas).args.map(a => JSON.stringify(a)).join(' ')}` : '') };
+  return { aviso, plan: files.join('\n') + (atlas ? `\n\nffmpeg ${pictureJob(atlas).args.map(a => JSON.stringify(a)).join(' ')}` : '') };
 }
 function cardAviso(f) {
   if (f.especial) return especialInfo(f).aviso;
   const p = plan(f), m = modoEfectivo(f), settings = state.fmt[f.id];
   const what = f.output === 'png' ? (isImage() ? t('PNG de la imagen','PNG of the image') : t('PNG del fotograma actual','PNG of the current frame'))
-    : isImage() ? `MP4 ${stillSec} s · ${t('imagen fija, sin audio','still image, no audio')}` : '';
+    : isImage() ? `MP4 ${stillSec} s · ${t('imagen fija, sin audio','still image, no audio')}` : isAnim() ? `MP4 ${secLabel(animSeconds)} s · ${t('GIF animado a 25 fps, sin audio','animated GIF at 25 fps, no audio')}` : '';
   let lost = 0;
   if (state.src.ancho) {
     const sourceRatio = state.src.ancho / state.src.alto, targetRatio = perfil(f).ancho / perfil(f).alto;
@@ -427,18 +468,20 @@ function refreshInfo() {
   if (selF && selAviso) selAviso.textContent = cardAviso(selF);
   const rows = selectedFormats().map((f) => {
     if (f.especial) return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${f.layout.entrega[0]}×${f.layout.entrega[1]}</h3><pre style="white-space:pre-wrap;font-size:11px;color:var(--link)">${especialInfo(f).plan.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])}</pre></div>`;
-    const p = plan(f); if(f.output==='png')return `<p>${f.nombre} · ${perfil(f).ancho}×${perfil(f).alto} · PNG${f.print?' · 150 ppp':''}${isImage()&&f.category==='display'?' · JPG':''}</p>`; if (!p || p.error) return `<p>${f.nombre}: ${p ? p.error : t('sin contenido','no content')}</p>`;
+    const p = plan(f); if(f.output==='png')return `<p>${f.nombre} · ${perfil(f).ancho}×${perfil(f).alto} · PNG${f.print?' · 150 ppp':''}${isPicture()&&f.category==='display'?' · JPG':''}</p>`; if (!p || p.error) return `<p>${f.nombre}: ${p ? p.error : t('sin contenido','no content')}</p>`;
     return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${p.ancho}×${p.alto}</h3>
       <div class="dims">encaje <b>${p.encaje}</b> · adaptación <b>${p.adaptacion}</b> · recorte ${Math.round(p.recortePerdido * 100)}%<br>
-      H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps (${p.bitrateMotivo}) · ${p.fps} fps · GOP ${p.gopSegundos}s${isImage() ? ` · ${t('imagen fija','still image')} ${stillSec} s · ${t('sin audio','no audio')}` : ''}</div>
+      H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps (${p.bitrateMotivo}) · ${p.fps} fps · GOP ${p.gopSegundos}s${isImage() ? ` · ${t('imagen fija','still image')} ${stillSec} s · ${t('sin audio','no audio')}` : isAnim() ? ` · ${t('GIF animado','animated GIF')} ${secLabel(animSeconds)} s → 25 fps · ${t('sin audio','no audio')}` : ''}</div>
       <div class="aviso">${(p.avisos || []).map(a=>/generativ|imagina/i.test(a)?t('Fondo desenfocado derivado del original; sin expansión IA.','Blurred background derived from the original; no AI expansion.'):a).join(' · ')}</div><pre style="white-space:pre-wrap;font-size:11px;color:var(--link)">${ffmpegCmd(f)}</pre></div>`;
   });
   $('#plan-tecnico').innerHTML = rows.join('');
 }
 // Every export button says what will come out: PNG/JPG, or MP4 (with its length for a still image).
 function labelExports() {
-  const sec = isImage() ? ` · ${stillSec} s` : '';
-  const mp4Title = isImage() ? t(`MP4 H.264 · 25 fps · ${stillSec} s · imagen fija, sin audio`,`MP4 H.264 · 25 fps · ${stillSec} s · still image, no audio`) : t('MP4 H.264 con el audio del original, si existe','MP4 H.264 with the original audio, if any');
+  const sec = isImage() ? ` · ${stillSec} s` : isAnim() ? ` · ${secLabel(animSeconds)} s` : '';
+  const mp4Title = isImage() ? t(`MP4 H.264 · 25 fps · ${stillSec} s · imagen fija, sin audio`,`MP4 H.264 · 25 fps · ${stillSec} s · still image, no audio`)
+    : isAnim() ? t(`MP4 H.264 · 25 fps · ${secLabel(animSeconds)} s · GIF animado, sin audio`,`MP4 H.264 · 25 fps · ${secLabel(animSeconds)} s · animated GIF, no audio`)
+    : t('MP4 H.264 con el audio del original, si existe','MP4 H.264 with the original audio, if any');
   document.querySelectorAll('#grid .fmt[data-f]').forEach(el => {
     const f = FORMATOS.find(x => x.id === el.dataset.f); if (!f) return;
     if (f.especial) {
@@ -451,25 +494,38 @@ function labelExports() {
     const b = el.querySelector('.export-one:not(.export-jpg)'); if (!b) return;
     if (f.output === 'png') { b.textContent = t('Exportar PNG','Export PNG'); b.title = f.print ? t('PNG RGB a 150 ppp','RGB PNG at 150 ppi') : 'PNG'; }
     else { b.textContent = `${t('Exportar MP4','Export MP4')}${sec}`; b.title = mp4Title; }
-    const j = el.querySelector('.export-jpg'); if (j) j.hidden = !isImage();
+    const j = el.querySelector('.export-jpg'); if (j) j.hidden = !isPicture();
   });
 }
+// The command the plan shows: the same rewrite the export applies (still image or animated GIF).
+// For an SVG the real source is the raster of each format; the plan shows the base size.
+function pictureJob(job) { return isAnim() ? animJob(job, animSeconds, 'input.gif') : isImage() ? stillJob(job, stillSec, svgSrc ? 'input.png' : stillInput.input) : job; }
+const secLabel = v => (Math.round(v * 100) / 100).toLocaleString(EN ? 'en-US' : 'es-ES', {maximumFractionDigits: 2});
 function ffmpegCmd(f) {
   if(!state.src.ancho) return '';
-  let job=exportJob(state.src,perfil(f),plan(f)||{},modoEfectivo(f),state.fmt[f.id],state.srcName,f.id);
-  if(isImage()) job=stillJob(job,stillSec,stillInput.input);
+  const job=pictureJob(exportJob(state.src,perfil(f),plan(f)||{},modoEfectivo(f),state.fmt[f.id],state.srcName,f.id));
   return 'ffmpeg ' + job.args.map(arg=>JSON.stringify(arg==='output.mp4'?job.filename:arg)).join(' ');
 }
 
 // ── Render en vivo (canvas) ─────────────────────────────────────────────────
-function drawInto(cv, f) { paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id]); }
-function paint(cv, output, m, s) {
-  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, src = media();
+function drawInto(cv, f, override) { paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id], override); }
+// What the preview draws: the media element, or for an SVG a raster at this canvas' needed resolution
+// (cached in √2 steps; the base image is used for the frame or two until it arrives).
+const SVG_PREVIEW = {paso: true, maxLado: 4096, maxPx: 2048 * 2048};
+function drawSource(W, H, mode, s) {
+  if (!svgSrc || !svgRasters) return {el: media(), dims: state.src};
+  const r = PF.svgRaster(svgSrc.medidas, W, H, mode, s, SVG_PREVIEW);
+  const c = svgRasters.get(r.ancho, r.alto, () => { drawDirty = true; });
+  return c ? {el: c, dims: {ancho: c.width, alto: c.height}} : {el: img, dims: state.src};
+}
+function paint(cv, output, m, s, override) {
+  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
   if (!mediaReady()) return;
   const ratio=W/output.ancho;
-  const drawRect=(mode,settings)=>{const r=rect(state.src,output.ancho,output.alto,mode,settings);return [r.x*ratio,r.y*ratio,r.w*ratio,r.h*ratio];};
+  const {el: src, dims} = override || drawSource(W, H, m, s);
+  const drawRect=(mode,settings)=>{const r=rect(dims,output.ancho,output.alto,mode,settings);return [r.x*ratio,r.y*ratio,r.w*ratio,r.h*ratio];};
   ctx.filter = 'none'; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-  const drawCrop=settings=>{const c=cropWindow(state.src,output.ancho,output.alto,settings);ctx.drawImage(src,c.x,c.y,c.w,c.h,0,0,W,H);};
+  const drawCrop=settings=>{const c=cropWindow(dims,output.ancho,output.alto,settings);ctx.drawImage(src,c.x,c.y,c.w,c.h,0,0,W,H);};
   if (m === 'cover') { drawCrop(s); return; }
   if (m === 'blur') { ctx.filter = `blur(${14*Math.max(output.ancho,output.alto)/384*ratio}px) brightness(0.85)`; drawCrop({zoom:1.1,fx:.5,fy:.5}); ctx.filter = 'none'; }
   ctx.drawImage(src, ...drawRect('contain',s));
@@ -491,11 +547,14 @@ function drawEspecial(el, f) {
   for (const c of g.unused) { const [x, y, w, h] = [c.x * a, c.y * a, c.w * a, c.h * a]; ctx.fillStyle = '#111'; ctx.fillRect(x, y, w, h); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y + h); ctx.moveTo(x + w, y); ctx.lineTo(x, y + h); ctx.stroke(); }
 }
 let drawDirty=true,lastFrame=-1;
-function loop() {
-  if(drawDirty||video.currentTime!==lastFrame){
+function loop(now) {
+  if(anim) anim.tick(now ?? performance.now());
+  const frame = anim ? anim.frameNo : video.currentTime;
+  if(drawDirty||frame!==lastFrame){
   document.querySelectorAll('.fmt[data-f]').forEach((el) => { const f = FORMATOS.find((x) => x.id === el.dataset.f); if (f.especial) { drawEspecial(el, f); return; } const c = el.querySelector('canvas'); if (c) drawInto(c, f); });
-  const oc = document.querySelector('#grid .fmt-original canvas'); if (oc && (isImage() ? mediaReady() : video.readyState >= 2)) oc.getContext('2d').drawImage(media(), 0, 0, oc.width, oc.height);
-  drawDirty=false;lastFrame=video.currentTime;
+  const oc = document.querySelector('#grid .fmt-original canvas');
+  if (oc && (isPicture() ? mediaReady() : video.readyState >= 2)) { const {el} = drawSource(oc.width, oc.height, 'contain', defaults()); oc.getContext('2d').clearRect(0, 0, oc.width, oc.height); oc.getContext('2d').drawImage(el, 0, 0, oc.width, oc.height); }
+  drawDirty=false;lastFrame=frame;
   }
   requestAnimationFrame(loop);
 }
@@ -509,43 +568,196 @@ function corsURL(url) {
   if (!/^https?:\/\//.test(url)) return url;
   try { const u = new URL(url); if (u.origin === location.origin) return url; u.searchParams.set('cors', '1'); return u.href; } catch (_) { return url; }
 }
-function setSource(url, name, origin = {id:null,title:name}, kind = 'video', ext = 'png') {
+// La fuente activa, para ficha-tecnica.js: evento pixeria:fuente (fase 'inicio' y 'listo').
+function publicarFuente(fase) {
+  window.PixeriaAdaptador.fuente = fuente;
+  try { document.dispatchEvent(new CustomEvent('pixeria:fuente', {detail: {fase, fuente}})); } catch (_) {}
+}
+let previewEngine = null;
+function stopAnim() {
+  if (anim) { anim.close(); anim = null; }
+  if (animStage) { animStage.replaceChildren(); animStage.hidden = true; }
+  if (previewEngine) previewEngine.cancel();
+  animSourceURL = null; animSeconds = 0;
+}
+function releaseDerived() {
+  if (derivedURL && !queue.uses(derivedURL)) URL.revokeObjectURL(derivedURL);
+  derivedURL = null;
+}
+function setSource(url, name, origin = {id:null,title:name}, kind = 'video', ext = 'png', extra = null) {
   state.origin = {id:origin.id||null,title:origin.title||name};
-  releaseStill();
+  releaseStill(); releaseDerived(); stopAnim();
+  if (svgRasters) { svgRasters.clear(); svgRasters = null; }
+  svgSrc = extra?.svgTexto ? {texto: extra.svgTexto, medidas: extra.svg} : null;
+  if (svgSrc) svgRasters = svgCache(svgSrc.texto);
   // A local file still being exported keeps its blob URL until its last queue line ends.
   if (sourceObjectURL && sourceObjectURL !== url && !queue.uses(sourceObjectURL)) URL.revokeObjectURL(sourceObjectURL);
   sourceObjectURL = url.startsWith('blob:') ? url : null;
   $('#export-status').textContent='';
   state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0};
-  srcKind = kind === 'image' ? 'image' : 'video'; srcExt = ext;
-  const loading = isImage() ? t('Cargando imagen…','Loading image…') : t('Cargando vídeo…','Loading video…');
+  srcKind = kind === 'image' ? 'image' : kind === 'anim' ? 'anim' : 'video'; srcExt = ext;
+  fuente = extra ? {...extra} : {tipo: srcKind === 'video' ? 'video' : 'imagen', nombre: name, url: url.startsWith('blob:') ? null : url, file: null, ext};
+  fuente.imgSrc = srcKind === 'image' ? corsURL(url) : null;
+  const loading = isAnim() ? t('Leyendo el GIF animado…','Reading the animated GIF…') : isImage() ? t('Cargando imagen…','Loading image…') : t('Cargando vídeo…','Loading video…');
   $('#src-info').textContent = loading; $('#src-msg').textContent = loading;
   state.srcName = name; syncKind(); refreshInfo();
+  publicarFuente('inicio');
   if (isImage()) {
     // Free the previous video (its «emptied» must not hide the image's spec sheet: ficha-tecnica.js checks #src-img).
     img.src = corsURL(url);
     if (video.getAttribute('src')) { video.pause(); video.removeAttribute('src'); video.load(); }
+  } else if (isAnim()) {
+    img.removeAttribute('src');
+    if (video.getAttribute('src')) { video.pause(); video.removeAttribute('src'); video.load(); }
   } else { img.removeAttribute('src'); video.src = corsURL(url); video.play().catch(() => {}); }
 }
-// Video and image sources share the stage; playback and sound only exist for video, the MP4 length only for images.
+// Lo que no se puede usar se explica en el paso 1 sin cambiar la fuente activa.
+function sourceMessage(text) { $('#src-msg').textContent = text; }
+const FORMATOS_IMG = 'JPG, PNG, WebP, GIF, SVG, HEIC o AVIF', FORMATOS_IMG_EN = 'JPG, PNG, WebP, GIF, SVG, HEIC or AVIF';
+async function leerBytes(file, url) {
+  if (file) { if (file.size > MAX_SOURCE_BYTES) throw new Error('source-size'); return new Uint8Array(await file.arrayBuffer()); }
+  const r = await fetch(corsURL(url), {credentials: 'omit'});
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  if (+r.headers.get('content-length') > MAX_SOURCE_BYTES) throw new Error('source-size');
+  const bytes = new Uint8Array(await r.arrayBuffer());
+  if (bytes.length > MAX_SOURCE_BYTES) throw new Error('source-size');
+  return bytes;
+}
+const readError = (e, what) => String(e?.message) === 'source-size' ? t('El límite local es 100 MB. Elige un archivo más pequeño.','The local limit is 100 MB. Choose a smaller file.')
+  : t(`No se pudo leer ${what.es}: su servidor no permite usarlo desde otra web (CORS) o ya no existe. Descárgalo y súbelo, o cópialo y pégalo con ⌘V.`, `Could not read ${what.en}: its server does not allow using it from another site (CORS) or it is gone. Download and upload it, or copy and paste it with ⌘V.`);
+// Una fuente nueva: Stock, archivo del equipo, pegada o soltada. Decide el tipo (MIME, nombre y firma de
+// los primeros bytes) y la ruta: vídeo, imagen (JPG/PNG/WebP/AVIF/HEIC/GIF estático), SVG o GIF animado.
+let cargaTurno = 0;
+async function cargarFuente(o) {
+  const turno = ++cargaTurno, nombre = o.nombre || o.file?.name || 'archivo';
+  announce(''); // el aviso de ⌘V solo describe la fuente que se acaba de pegar o soltar
+  const origin = o.origin || {id: null, title: nombre.replace(/\.[^.]+$/, '')};
+  let det = o.clase === 'video' ? {clase: 'video', ext: PF.extDe(nombre) || 'mp4'} : PF.detectar({mime: o.mime, nombre: o.file?.name || nombre, url: o.url, ext: o.ext});
+  if (o.file && det?.clase !== 'video') { try { const sig = PF.firma(await o.file.slice(0, 4096).arrayBuffer()); if (sig) det = {clase: 'imagen', ext: PF.FIRMA_EXT[sig]}; } catch (_) {} }
+  if (turno !== cargaTurno) return;
+  if (!det) { sourceMessage(t(`Formato no reconocido. Elige un vídeo o una imagen (${FORMATOS_IMG}).`, `Unrecognised format. Choose a video or an image (${FORMATOS_IMG_EN}).`)); return; }
+  if (det.clase === 'imagen' && !det.ext) { sourceMessage(t(`Imágenes: ${FORMATOS_IMG}.`, `Images: ${FORMATOS_IMG_EN}.`)); return; }
+  const url = o.url || URL.createObjectURL(o.file);
+  const base = {nombre, url: o.file ? null : o.url, file: o.file || null, ext: det.ext, origen: o.origen || (o.file ? 'archivo' : 'url')};
+  if (det.clase === 'video') { setSource(url, nombre, origin, 'video', 'png', {...base, tipo: 'video'}); return; }
+  if (det.ext === 'gif' || det.ext === 'svg') {
+    sourceMessage(det.ext === 'svg' ? t('Leyendo el SVG…','Reading the SVG…') : t('Leyendo el GIF…','Reading the GIF…'));
+    let bytes;
+    try { bytes = await leerBytes(o.file, url); }
+    catch (e) { if (o.file) URL.revokeObjectURL(url); if (turno === cargaTurno) sourceMessage(readError(e, det.ext === 'svg' ? {es: 'este SVG', en: 'this SVG'} : {es: 'este GIF', en: 'this GIF'})); return; }
+    if (turno !== cargaTurno) { if (o.file) URL.revokeObjectURL(url); return; }
+    if (det.ext === 'svg') {
+      if (o.file) URL.revokeObjectURL(url);
+      const texto = new TextDecoder().decode(bytes), medidas = PF.svgMedidas(texto);
+      if (!medidas) { sourceMessage(t('Este archivo no es un SVG válido (falta la etiqueta <svg>).', 'This file is not a valid SVG (no <svg> element).')); return; }
+      // Solo texto: nunca se inserta en la página. Como imagen (blob) el navegador no ejecuta scripts ni carga recursos externos.
+      const prep = PF.svgConTamano(texto, medidas.ancho, medidas.alto);
+      setSource(URL.createObjectURL(new Blob([prep], {type: 'image/svg+xml'})), nombre, origin, 'image', 'svg', {...base, tipo: 'imagen', formato: 'SVG', svg: medidas, svgTexto: prep});
+      return;
+    }
+    const info = PF.gifInfo(bytes);
+    if (!info || !info.ancho || !info.alto) { if (o.file) URL.revokeObjectURL(url); sourceMessage(t('Este GIF está dañado o no se puede leer.', 'This GIF is damaged or cannot be read.')); return; }
+    if (!info.animado) { setSource(url, nombre, origin, 'image', 'gif', {...base, tipo: 'imagen', formato: 'GIF', gif: info}); return; }
+    setAnim(url, nombre, origin, info, bytes, {...base, tipo: 'anim', formato: 'GIF', gif: info});
+    return;
+  }
+  setSource(url, nombre, origin, 'image', det.ext, {...base, tipo: 'imagen', formato: PF.IMAGEN[det.ext]?.nombre || det.ext.toUpperCase()});
+}
+// GIF animado: ImageDecoder (WebCodecs) en un canvas propio; sin él, FFmpeg WASM lo pasa a un MP4 intermedio
+// que el <video> reproduce en bucle. En los dos casos el MP4 final sale del GIF original.
+async function setAnim(url, name, origin, info, bytes, extra) {
+  const turno = cargaTurno;
+  setSource(url, name, origin, 'anim', 'gif', extra);
+  animSourceURL = corsURL(url); animSeconds = info.duracionMs / 1000;
+  try {
+    const player = await gifPlayer(bytes, info);
+    if (turno !== cargaTurno) { player?.close(); return; }
+    if (player) { anim = player; animStage.replaceChildren(player.canvas); animReady('imagedecoder'); return; }
+    sourceMessage(t('Preparando la vista previa del GIF con el motor de vídeo (unos 32 MB la primera vez)…', 'Preparing the GIF preview with the video engine (about 32 MB the first time)…'));
+    previewEngine = previewEngine || createEngine();
+    let blob = null;
+    await previewEngine.encode(animSourceURL, animPreviewJob(animSeconds, info.ancho, info.alto), ev => {
+      if (turno === cargaTurno && ev.phase === 'encoding') sourceMessage(`${t('Preparando la vista previa del GIF…','Preparing the GIF preview…')} ${Math.round(ev.progress * 100)}%`);
+    }, (_, b) => { blob = b; });
+    previewEngine.cancel(); // frees the worker: the queue has its own engine
+    if (turno !== cargaTurno || !blob) return;
+    derivedURL = URL.createObjectURL(blob);
+    fuente.previo = 'ffmpeg';
+    video.src = derivedURL; video.play().catch(() => {}); // loadedmetadata → animReady
+  } catch (e) {
+    if (turno !== cargaTurno || String(e?.message) === 'cancelled') return;
+    $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true;
+    sourceMessage(t('No se pudo preparar la vista previa de este GIF animado en este navegador. Prueba con Chrome, Edge o Firefox, o súbelo como MP4.', 'Could not prepare the preview of this animated GIF in this browser. Try Chrome, Edge or Firefox, or upload it as MP4.'));
+  }
+}
+function animReady(via) {
+  const g = fuente.gif;
+  fuente.previo = via;
+  state.src = {ancho: g.ancho, alto: g.alto, fps: 25, bitrateKbps: 0};
+  syncKind();
+  const text = `${state.srcName} · ${g.ancho}×${g.alto} · ${t('GIF animado','animated GIF')} · ${g.fotogramas} ${t('fotogramas','frames')} · ${secLabel(animSeconds)} s`;
+  $('#src-info').textContent = text; $('#src-info-2').textContent = text; $('#src-msg').textContent = '';
+  $('#src-preview').hidden = false; $('#btn-adaptar').disabled = false; $('.step[data-go="2"]').disabled = false;
+  publicarFuente('listo'); refreshOriginal(); refreshInfo(); drawDirty = true;
+}
+// HEIC fuera de Safari: libheif-js (WASM) bajo demanda, decodifica a PNG y la imagen sigue como una más.
+async function heicWasm() {
+  const turno = cargaTurno, f = fuente;
+  f.heic = {via: 'libheif', estado: 'cargando'};
+  sourceMessage(t(`Este navegador no abre HEIC: descargando el decodificador libheif ${LIBHEIF.version} (≈0,6 MB comprimido, solo la primera vez)…`, `This browser cannot open HEIC: downloading the libheif ${LIBHEIF.version} decoder (≈0.6 MB compressed, first time only)…`));
+  try {
+    const bytes = await leerBytes(f.file, f.url);
+    const out = await decodeHEIC(bytes, phase => { if (turno === cargaTurno && phase === 'decoding') sourceMessage(t('Decodificando HEIC…','Decoding HEIC…')); });
+    if (turno !== cargaTurno) return;
+    releaseDerived(); derivedURL = URL.createObjectURL(out.blob);
+    f.heic = {via: 'libheif', version: LIBHEIF.version, imagenes: out.imagenes};
+    srcExt = 'png'; f.imgSrc = derivedURL; publicarFuente('inicio');
+    img.src = derivedURL;
+  } catch (e) {
+    if (turno !== cargaTurno) return;
+    f.heic = {via: 'libheif', estado: 'error'};
+    $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true;
+    const why = /integrity/.test(e?.message) ? t('el decodificador descargado no coincide con la versión fijada', 'the downloaded decoder does not match the pinned version')
+      : /download|fetch|Failed|NetworkError|import/i.test(e?.message) ? t('no se pudo descargar el decodificador', 'the decoder could not be downloaded')
+      : String(e?.message) === 'source-size' ? t('supera 100 MB', 'it is over 100 MB') : t('el archivo no se pudo decodificar', 'the file could not be decoded');
+    sourceMessage(t(`No se pudo abrir este HEIC (${why}). Ábrelo en Safari o conviértelo a JPG (en el Mac: Vista Previa → Exportar).`, `Could not open this HEIC (${why}). Open it in Safari or convert it to JPG (on a Mac: Preview → Export).`));
+  }
+}
+// Video and image sources share the stage; playback only exists for video and animated GIF, sound only for video,
+// the MP4 length only for still images.
 function syncKind() {
-  const still = isImage();
-  video.hidden = still; img.hidden = !still;
-  ['#btn-play', '#btn-sound', '#btn-play-2'].forEach(s => { const b = $(s); if (b) b.hidden = still; });
+  const still = isImage(), animated = isAnim();
+  video.hidden = still || (animated && !derivedURL); img.hidden = !still;
+  if (animStage) animStage.hidden = !(animated && anim);
+  ['#btn-play', '#btn-play-2'].forEach(s => { const b = $(s); if (b) b.hidden = still; });
+  const sound = $('#btn-sound'); if (sound) sound.hidden = still || animated;
   const wrap = $('#still-wrap'); if (wrap) wrap.hidden = !still;
-  const back = $('#btn-volver'); if (back) back.textContent = still ? t('← Cambiar imagen','← Change image') : t('← Cambiar vídeo','← Change video');
-  document.querySelectorAll('.output-note-image').forEach(n => n.hidden = !still);
+  const back = $('#btn-volver'); if (back) back.textContent = animated ? t('← Cambiar GIF','← Change GIF') : still ? t('← Cambiar imagen','← Change image') : t('← Cambiar vídeo','← Change video');
+  document.querySelectorAll('.output-note-image').forEach(n => n.hidden = !still && !animated);
 }
 img.addEventListener('load', () => {
   if (!isImage() || !img.getAttribute('src')) return;
-  const W = img.naturalWidth, H = img.naturalHeight;
+  const W = svgSrc ? svgSrc.medidas.ancho : img.naturalWidth, H = svgSrc ? svgSrc.medidas.alto : img.naturalHeight;
+  if (fuente && srcExt === 'heic' && !fuente.heic) fuente.heic = {via: 'nativo'};
   state.src = { ancho: W, alto: H, fps: 25, bitrateKbps: 0 };
-  $('#src-info').textContent = `${state.srcName} · ${W}×${H} · ${t('imagen fija','still image')}`;
-  $('#src-info-2').textContent = `${state.srcName} · ${W}×${H} · ${t('imagen fija','still image')}`; $('#src-msg').textContent = '';
+  const kind = svgSrc ? t('SVG vectorial','vector SVG') : t('imagen fija','still image');
+  $('#src-info').textContent = `${state.srcName} · ${W}×${H} · ${kind}`;
+  $('#src-info-2').textContent = `${state.srcName} · ${W}×${H} · ${kind}`; $('#src-msg').textContent = '';
   $('#src-preview').hidden = false; $('#btn-adaptar').disabled = false; $('.step[data-go="2"]').disabled = false;
-  refreshOriginal(); refreshInfo();
+  drawDirty = true; refreshOriginal(); refreshInfo();
 });
-img.addEventListener('error', () => { if (!isImage() || !img.getAttribute('src')) return; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; $('#src-msg').textContent = $('#src-info').textContent = t('No se pudo cargar esta imagen. Elige otro archivo (JPG, PNG o WebP) o una fuente Stock disponible.', 'Unable to load this image. Choose another file (JPG, PNG or WebP) or an available Stock source.'); });
+img.addEventListener('error', () => {
+  if (!isImage() || !img.getAttribute('src')) return;
+  // HEIC: el navegador no lo abre (todo salvo Safari) → libheif.
+  if (srcExt === 'heic' && fuente && !fuente.heic) { heicWasm(); return; }
+  $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true;
+  const remote = !!fuente?.url && !window.PixeriaStock?.item(fuente.url);
+  $('#src-msg').textContent = $('#src-info').textContent = srcExt === 'avif'
+    ? t('Este navegador no puede decodificar AVIF. Actualízalo (Chrome, Edge, Firefox y Safari recientes lo abren) o convierte la imagen a JPG o PNG.', 'This browser cannot decode AVIF. Update it (recent Chrome, Edge, Firefox and Safari open it) or convert the image to JPG or PNG.')
+    : srcExt === 'svg' ? t('No se pudo dibujar este SVG como imagen. Puede depender de fuentes, imágenes o scripts externos, que por seguridad no se cargan.', 'This SVG could not be drawn as an image. It may depend on external fonts, images or scripts, which are not loaded for safety.')
+    : remote ? readError(null, {es: 'esta imagen', en: 'this image'})
+    : t(`No se pudo cargar esta imagen. Elige otro archivo (${FORMATOS_IMG}) o una fuente Stock disponible.`, `Unable to load this image. Choose another file (${FORMATOS_IMG_EN}) or an available Stock source.`);
+});
 // MP4 length for still images: 1–60 s, 10 by default, remembered in this browser.
 const stillField = $('#still-seconds');
 if (stillField) {
@@ -553,26 +765,88 @@ if (stillField) {
   stillField.addEventListener('input', () => { const v = Number(stillField.value); if (Number.isInteger(v) && v >= STILL.min && v <= STILL.max) { stillSec = v; refreshInfo(); } });
   stillField.addEventListener('change', () => { stillSec = stillSeconds(stillField.value); stillField.value = String(stillSec); try { localStorage.setItem(STILL_KEY, String(stillSec)); } catch (_) {} refreshInfo(); });
 }
-video.addEventListener('error', () => { if (!video.getAttribute('src')) return; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; $('#src-msg').textContent = $('#src-info').textContent = t('No se pudo reproducir este vídeo. Elige otro archivo o una fuente Stock disponible.', 'Unable to play this video. Choose another file or an available Stock source.'); });
+video.addEventListener('error', () => {
+  if (!video.getAttribute('src')) return;
+  $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true;
+  const remote = !!fuente?.url && !isAnim() && !window.PixeriaStock?.item(fuente.url);
+  $('#src-msg').textContent = $('#src-info').textContent = isAnim() ? t('No se pudo reproducir la vista previa de este GIF.', 'Unable to play the preview of this GIF.')
+    : remote ? readError(null, {es: 'este vídeo', en: 'this video'})
+    : t('No se pudo reproducir este vídeo. Elige otro archivo o una fuente Stock disponible.', 'Unable to play this video. Choose another file or an available Stock source.');
+});
 video.addEventListener('loadedmetadata', () => {
+  if (isAnim()) { if (video.getAttribute('src') === derivedURL) animReady('ffmpeg'); return; }
   state.src = { ancho: video.videoWidth, alto: video.videoHeight, fps: 25, bitrateKbps: 0 };
   $('#src-info').textContent = `${state.srcName} · ${video.videoWidth}×${video.videoHeight} · ${video.duration.toFixed(1)} s`;
   $('#src-info-2').textContent = state.srcName; $('#src-msg').textContent = '';
   $('#src-preview').hidden = false; $('#btn-adaptar').disabled = false; $('.step[data-go="2"]').disabled = false;
   refreshOriginal(); refreshInfo();
 });
-$('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; if (!o.value) { emptySource(); return; } const image = o.dataset.type === 'image'; setSource(o.value, o.textContent.replace(/^Stock · /, ''), {id:o.dataset.id,title:o.dataset.title}, image ? 'image' : 'video', image ? (window.PixeriaStockFuentes?.extension(window.PixeriaStock?.item(o.value)) || 'png') : 'png'); };
+$('#src-select').onchange = (e) => {
+  const o = e.target.selectedOptions[0]; if (!o.value) { emptySource(); return; }
+  const item = window.PixeriaStock?.item(o.value) || null;
+  cargarFuente({url: o.value, nombre: o.textContent.replace(/^Stock · /, ''), origin: {id: o.dataset.id, title: o.dataset.title}, origen: 'stock',
+    clase: o.dataset.type === 'video' ? 'video' : undefined, mime: item?.mime, ext: window.PixeriaStockFuentes?.extension(item) || item?.ext});
+};
 // Sin vídeo por defecto (ninguna marca): estado vacío hasta que el usuario elige uno.
-function emptySource() { releaseStill(); srcKind = 'video'; img.removeAttribute('src'); syncKind(); video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
+function emptySource() { cargaTurno++; releaseStill(); releaseDerived(); stopAnim(); if (svgRasters) { svgRasters.clear(); svgRasters = null; } svgSrc = null; fuente = null; publicarFuente('inicio'); srcKind = 'video'; img.removeAttribute('src'); syncKind(); video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
 $('#src-file').onchange = (e) => {
   const f = e.target.files[0]; if (!f) return;
   if (f.size>MAX_SOURCE_BYTES) {$('#src-msg').textContent=t('El límite local es 100 MB. Elige un archivo más pequeño.','The local limit is 100 MB. Choose a smaller file.');e.target.value='';return;}
-  const image = /^image\//.test(f.type) || /\.(jpe?g|png|webp)$/i.test(f.name);
-  const ext = STILL_TYPES[f.type] || (/\.(jpe?g|png|webp)$/i.exec(f.name)?.[1].toLowerCase().replace('jpeg','jpg'));
-  if (image && !ext) {$('#src-msg').textContent=t('Imágenes: JPG, PNG o WebP.','Images: JPG, PNG or WebP.');e.target.value='';return;}
-  setSource(URL.createObjectURL(f), f.name, {id:null,title:f.name.replace(/\.[^.]+$/,'')}, image ? 'image' : 'video', ext || 'png');
+  cargarFuente({file: f, nombre: f.name, mime: f.type, origin: {id: null, title: f.name.replace(/\.[^.]+$/, '')}, origen: e.target.dataset.via || 'archivo'});
+  delete e.target.dataset.via;
 };
-$('#btn-play').onclick = $('#btn-play-2').onclick = () => (video.paused ? video.play() : video.pause());
+// ── Pegar (⌘V / Ctrl+V) y soltar en el paso 1 (Carlos, 5-oct-2026) ─────────
+// Captura de pantalla, imagen copiada de otra web o archivo copiado en Finder: entra como una subida del
+// equipo (#src-file, mismo límite y misma ficha). Una URL pegada de imagen o vídeo se usa como fuente
+// remota (corsURL); la de YouTube, Instagram, TikTok… va al importador. Nada de esto actúa si el foco
+// está en un campo de texto: ahí ⌘V pega texto, como siempre.
+const MAC = /mac|iphone|ipad/i.test(navigator.userAgentData?.platform || navigator.platform || navigator.userAgent || '');
+const PASTE_KEY = MAC ? '⌘V' : 'Ctrl+V';
+document.querySelectorAll('.paste-key').forEach(k => { k.textContent = PASTE_KEY; });
+const editable = el => !!el && el.nodeType === 1 && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+const announce = text => { const s = $('#paste-status'); if (s) { s.textContent = ''; s.textContent = text; } };
+function useTransfer(dt, via) {
+  const r = PF.portapapeles(dt);
+  if (!r) return false;
+  const pasted = via === 'paste';
+  if (r.ignorado) { announce(t(`«${r.nombre || r.mime || 'archivo'}» no es una imagen ni un vídeo que el Adaptador pueda usar (${FORMATOS_IMG}).`, `«${r.nombre || r.mime || 'file'}» is not an image or video the Adapter can use (${FORMATOS_IMG_EN}).`)); return true; }
+  if (r.archivo) {
+    const f = r.archivo, nombre = PF.nombrePegado(f);
+    const file = nombre !== f.name ? new File([f], nombre, {type: f.type || PF.IMAGEN[r.ext]?.mime || '', lastModified: Date.now()}) : f;
+    const input = $('#src-file');
+    try { const box = new DataTransfer(); box.items.add(file); input.files = box.files; input.dataset.via = via === 'paste' ? 'pegado' : 'soltado'; input.dispatchEvent(new Event('change', {bubbles: true})); }
+    catch (_) { cargarFuente({file, nombre, mime: file.type, origen: via === 'paste' ? 'pegado' : 'soltado'}); }
+    const what = r.clase === 'video' ? (pasted ? t('Vídeo pegado','Video pasted') : t('Vídeo soltado','Video dropped')) : (pasted ? t('Imagen pegada','Image pasted') : t('Imagen soltada','Image dropped'));
+    announce(`${what}: ${nombre}`);
+    return true;
+  }
+  if (r.destino === 'importar') {
+    const inp = $('#imp-url'); if (inp) inp.value = r.url;
+    if (window.PixeriaImportar?.importar) window.PixeriaImportar.importar(r.url);
+    announce(t(`URL ${pasted ? 'pegada' : 'soltada'}: se importa con el importador (caja 2).`, `URL ${pasted ? 'pasted' : 'dropped'}: importing it with the importer (box 2).`));
+    return true;
+  }
+  let nombre = 'url';
+  try { nombre = decodeURIComponent(new URL(r.url).pathname.split('/').filter(Boolean).pop() || new URL(r.url).hostname); } catch (_) {}
+  const item = window.PixeriaStock?.item(r.url) || null;
+  cargarFuente({url: r.url, nombre, origin: {id: item?.id || null, title: item?.title || nombre.replace(/\.[^.]+$/, '')}, clase: r.destino === 'video' ? 'video' : undefined, mime: item?.mime, origen: item ? 'stock' : 'url'});
+  announce(r.destino === 'video' ? t(`Vídeo por URL: ${nombre}`, `Video from URL: ${nombre}`) : t(`Imagen por URL: ${nombre}`, `Image from URL: ${nombre}`));
+  return true;
+}
+document.addEventListener('paste', (e) => {
+  if ($('#paso-1').hidden || editable(e.target) || editable(document.activeElement)) return;
+  if (useTransfer(e.clipboardData, 'paste')) e.preventDefault();
+});
+// Soltar: archivos o una URL arrastrada sobre el paso 1 (no sobre un campo de texto).
+{
+  const zone = $('#paso-1');
+  const droppable = dt => !!dt && [...(dt.types || [])].some(x => x === 'Files' || x === 'text/uri-list');
+  zone.addEventListener('dragover', (e) => { if (!droppable(e.dataTransfer) || editable(e.target)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; zone.classList.add('drop-on'); });
+  zone.addEventListener('dragleave', (e) => { if (!zone.contains(e.relatedTarget)) zone.classList.remove('drop-on'); });
+  zone.addEventListener('drop', (e) => { zone.classList.remove('drop-on'); if (editable(e.target) || !droppable(e.dataTransfer)) return; if (useTransfer(e.dataTransfer, 'drop')) e.preventDefault(); });
+}
+function togglePlay() { if (isAnim() && anim) { if (anim.paused) anim.play(); else anim.pause(); return; } if (video.paused) video.play(); else video.pause(); }
+$('#btn-play').onclick = $('#btn-play-2').onclick = togglePlay;
 // ── Sonido de la vista previa (Carlos, 4-oct-2026) ─────────────────────────
 // Arranca silenciado para que el autoplay siga funcionando; el botón activa y
 // desactiva el audio (aria-pressed = sonido activado). Si el vídeo no trae pista
@@ -627,6 +901,7 @@ if (soundBtn) {
 // solo reanuda el usuario (⏯ o elegir otro vídeo). Las vistas del paso 2 muestran el fotograma.
 function pausePaso1() {
   document.querySelectorAll('#paso-1 video, #paso-1 audio').forEach((m) => { try { m.pause(); m.muted = true; } catch (_) {} });
+  if (anim) anim.pause();
   renderSound();
 }
 window.addEventListener('pagehide', pausePaso1);

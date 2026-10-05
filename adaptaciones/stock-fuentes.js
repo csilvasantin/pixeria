@@ -1,17 +1,18 @@
 /* Adaptaciones · qué contenidos del Stock entran en el Adaptador (Carlos, 5-oct-2026).
  * Script clásico sin DOM, para que stock-select.js lo use en el navegador y los tests en Node (vm):
- * - Vídeos (type video) y, desde el 5-oct-2026, imágenes fijas (type image) JPG, PNG o WebP.
- *   GIF (animado), SVG y entradas sin formato reconocible quedan fuera.
+ * - Vídeos (type video) y, desde el 5-oct-2026, imágenes (type image) JPG, PNG, WebP, GIF (estático o
+ *   animado), SVG, HEIC/HEIF y AVIF. Las entradas sin formato reconocible (bin, text/html…) quedan fuera.
  * - Solo URL https (el canvas y FFmpeg leen el archivo con CORS).
  * - Orden: el más reciente primero (createdAt del índice, o el sello del id), sea imagen o vídeo;
  *   el empate conserva el orden del índice. Así «el último contenido generado» es siempre el primero.
  */
 (function (root) {
-  var MIME = { 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/pjpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
-  var EXT = /^(jpe?g|png|webp)$/i;
+  var MIME = { 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/pjpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp',
+    'image/gif': 'gif', 'image/svg+xml': 'svg', 'image/heic': 'heic', 'image/heif': 'heic', 'image/heic-sequence': 'heic', 'image/heif-sequence': 'heic', 'image/avif': 'avif' };
+  var EXT = /^(jpe?g|png|webp|gif|svg|heic|heif|avif)$/i;
   function url(it) { return (it && (it.url || it.mediaUrl)) || ''; }
-  function limpia(e) { e = String(e || '').toLowerCase(); return e === 'jpeg' ? 'jpg' : e; }
-  // jpg | png | webp | null. Manda el MIME del índice; si no lo trae, la extensión o la URL.
+  function limpia(e) { e = String(e || '').toLowerCase(); return e === 'jpeg' ? 'jpg' : e === 'heif' ? 'heic' : e; }
+  // jpg | png | webp | gif | svg | heic | avif | null. Manda el MIME del índice; si no lo trae, la extensión o la URL.
   function extension(it) {
     if (!it) return null;
     var m = String(it.mime || '').toLowerCase().split(';')[0].trim();

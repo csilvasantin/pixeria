@@ -84,25 +84,48 @@ export function stillSeconds(v) {
   return Number.isFinite(n)&&n>0?Math.max(STILL.min,Math.min(STILL.max,n)):STILL.default;
 }
 // Image formats the adapter accepts as a source, with the extension FFmpeg reads them by.
-export const STILL_TYPES = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+export const STILL_TYPES = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','image/svg+xml':'svg','image/heic':'heic','image/heif':'heic','image/avif':'avif'};
 // Every still starts as RGB with its alpha flattened onto black (what the canvas preview shows) and,
 // from there, the encoder converts to limited-range yuv420p (-color_range tv): a JPEG never ends up
 // as full-range yuvj420p, which many signage players show washed out.
 export const STILL_PREP='format=rgba,premultiply=inplace=1,format=rgb24';
-// Turns any job (single format, special delivery or per-screen batch) into its still-image version.
-export function stillJob(job,seconds,input='input.png') {
-  const d=String(stillSeconds(seconds)),args=[],a=job.args,fps=String(STILL.fps);
+// Rewrites a video job for a picture input: new input arguments, the picture flattened onto black
+// (plus `prep` filters) in front of the reframing graph, always 25 fps, no audio, limited range.
+function pictureArgs(job,inputArgs,prep,tune) {
+  const args=[],a=job.args,fps=String(STILL.fps);
   for(let i=0;i<a.length;i++) {
-    if(a[i]==='-i'&&a[i+1]==='input'){args.push('-loop','1','-framerate',fps,'-t',d,'-i',input);i++;continue;}
+    if(a[i]==='-i'&&a[i+1]==='input'){args.push(...inputArgs);i++;continue;}
     if(a[i]==='-map'&&a[i+1]==='0:a?'){i++;continue;}
     if(a[i]==='-c:a'||a[i]==='-b:a'){i++;continue;}
-    if(a[i]==='-filter_complex'){args.push(a[i],a[++i].replace('[0:v]',`[0:v]${STILL_PREP},`));continue;}
+    if(a[i]==='-filter_complex'){args.push(a[i],a[++i].replace('[0:v]',`[0:v]${prep},`));continue;}
     // Always 25 fps, whatever the plan of the profile says.
     if(a[i]==='-r'){args.push('-r',fps);i++;continue;}
     args.push(a[i]);
     if(a[i]==='-map'&&a[i+1]==='[out]'){args.push(a[++i],'-an');continue;}
-    if(a[i]==='-c:v'&&a[i+1]==='libx264'){args.push(a[++i],'-tune','stillimage');continue;}
+    if(a[i]==='-c:v'&&a[i+1]==='libx264'&&tune){args.push(a[++i],'-tune',tune);continue;}
     if(a[i]==='-pix_fmt'&&a[i+1]==='yuv420p'){args.push(a[++i],'-color_range','tv');continue;}
   }
-  return {...job,args,input,still:+d};
+  return args;
+}
+// Turns any job (single format, special delivery or per-screen batch) into its still-image version.
+export function stillJob(job,seconds,input='input.png') {
+  const d=String(stillSeconds(seconds)),fps=String(STILL.fps);
+  return {...job,args:pictureArgs(job,['-loop','1','-framerate',fps,'-t',d,'-i',input],STILL_PREP,'stillimage'),input,still:+d};
+}
+// Animated GIF (Carlos, 5-oct-2026): the GIF itself is the input, read once (-ignore_loop 1) with its
+// own frame delays. It is flattened onto black like a still, the last frame is cloned and the result
+// is resampled to 25 fps and cut at exactly round(duration × 25) frames: the MP4 lasts one loop
+// whatever the FFmpeg version does with the last delay. Same reframing graph, no audio.
+export const ANIM={maxSeconds:600};
+export const animFrames=seconds=>Math.max(1,Math.round(Math.min(ANIM.maxSeconds,Number(seconds)||0)*STILL.fps));
+export function animPrep(seconds){return `${STILL_PREP},tpad=stop_mode=clone:stop_duration=1,fps=${STILL.fps},trim=end_frame=${animFrames(seconds)},setpts=PTS-STARTPTS`;}
+export function animJob(job,seconds,input='input.gif') {
+  return {...job,args:pictureArgs(job,['-ignore_loop','1','-i',input],animPrep(seconds),null),input,anim:animFrames(seconds)/STILL.fps};
+}
+// Preview of an animated GIF where WebCodecs ImageDecoder is missing: a plain H.264 MP4 at the GIF
+// size (rounded up to even) that the <video> plays in a loop. Exports never use it: they read the GIF.
+export function animPreviewJob(seconds,W,H) {
+  const w=Math.max(2,Math.ceil(W/2)*2),h=Math.max(2,Math.ceil(H/2)*2);
+  return {filename:'gif-preview.mp4',W:w,H:h,bitrateKbps:0,input:'input.gif',args:['-ignore_loop','1','-i','input.gif','-filter_complex',`[0:v]${animPrep(seconds)},scale=${w}:${h},setsar=1[out]`,
+    '-map','[out]','-an','-c:v','libx264','-preset','ultrafast','-threads','1','-crf','18','-pix_fmt','yuv420p','-r',String(STILL.fps),'-movflags','+faststart','output.mp4']};
 }

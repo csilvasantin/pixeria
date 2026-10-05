@@ -152,9 +152,9 @@ Además, guarda capturas a 1440 y 390 px.
 
 Encargo de Carlos, 5-oct-2026. El Adaptador también adapta **imágenes fijas**. Motivo: Carlos eligió el último contenido generado en el Stock, la imagen «Un anuncio de café humeando…» (`1791230658801-jnv969`, JPG de 1280×720), y no aparecía porque la lista solo admitía `type === 'video'`.
 
-**Lista de origen.** La caja 1 («Contenido Stock») lista vídeos e imágenes juntos. Las imágenes (`type` image) entran si son JPG, PNG o WebP: lo decide el MIME del índice y, si falta, la extensión o la URL. Quedan fuera GIF, SVG, entradas sin formato reconocible (`bin`) y URL que no son https. El orden es por fecha, el más reciente primero, sea imagen o vídeo: `createdAt` o, si falta, el sello del id; en caso de empate, el orden del índice. Por eso el último contenido generado es siempre el primero de la lista. Cada imagen lleva la marca **Imagen** / **Image**; si el índice no trae miniatura, la imagen hace de miniatura. El filtro por cliente (`/marca`), el combo de hashtags y la preselección de la coincidencia más reciente funcionan igual. El contador dice «N vídeos e imágenes listos», «N imágenes listas» o «N vídeos listos», según lo que se ve. El filtro y el orden viven en `adaptaciones/stock-fuentes.js`, un script clásico sin DOM que también cargan los tests.
+**Lista de origen.** La caja 1 («Contenido Stock») lista vídeos e imágenes juntos. Las imágenes (`type` image) entran si son JPG, PNG o WebP (y, desde «Formatos de entrada», GIF, SVG, HEIC y AVIF): lo decide el MIME del índice y, si falta, la extensión o la URL. Quedan fuera las entradas sin formato reconocible (`bin`) y las URL que no son https. El orden es por fecha, el más reciente primero, sea imagen o vídeo: `createdAt` o, si falta, el sello del id; en caso de empate, el orden del índice. Por eso el último contenido generado es siempre el primero de la lista. Cada imagen lleva la marca **Imagen** / **Image**; si el índice no trae miniatura, la imagen hace de miniatura. El filtro por cliente (`/marca`), el combo de hashtags y la preselección de la coincidencia más reciente funcionan igual. El contador dice «N vídeos e imágenes listos», «N imágenes listas» o «N vídeos listos», según lo que se ve. El filtro y el orden viven en `adaptaciones/stock-fuentes.js`, un script clásico sin DOM que también cargan los tests.
 
-**Fuente local.** «Subir desde tu equipo» acepta vídeo o imagen (JPG, PNG o WebP), con el mismo límite de 100 MB.
+**Fuente local.** «Subir desde tu equipo» acepta vídeo o imagen (JPG, PNG o WebP; ahora también GIF, SVG, HEIC y AVIF), con el mismo límite de 100 MB.
 
 **Previsualización.** La imagen sustituye al vídeo en el escenario del paso 1; para una imagen no se muestran ⏯ ni el sonido. La línea de información y la tarjeta «Imagen original» dicen `ancho×alto · imagen fija`. El reencuadre es el del vídeo (recorte, contener, expandir con fondo desenfocado, foco y zoom) en todas las tarjetas: formatos de proporción, biblioteca, formatos del proyecto y videowalls segmentados, con la pared física y la entrega. Las tarjetas PNG (display e impresión) también tienen método, foco y zoom en Avanzado, tanto para vídeo como para imagen.
 
@@ -186,7 +186,7 @@ La fuente remota se carga con `?cors=1` (`corsURL`, PR #67). Las miniaturas de i
 **Límites.**
 - La imagen es fija: no hay animación, zoom progresivo (Ken Burns) ni audio añadido.
 - El bitrate es el del perfil (ABR), igual que con vídeo. Con una imagen fija es más de lo necesario, pero respeta el techo de cada player.
-- GIF animado, SVG, HEIC y AVIF no se admiten.
+- GIF, SVG, HEIC y AVIF: ver «Formatos de entrada».
 - Una imagen enorme que el navegador no pueda rasterizar se pasa a FFmpeg tal cual. Si además tiene rotación EXIF, el MP4 podría no coincidir con el previo.
 - Importar por URL (caja 2) sigue siendo solo para vídeo.
 
@@ -204,4 +204,59 @@ Con `ADAPTER_FFMPEG_TEST=1`, FFmpeg nativo convierte un JPG y un PNG con alfa en
 ```
 python3 -m http.server 9187 --bind 127.0.0.1 &
 BASE=http://127.0.0.1:9187 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-imagenes.browser.cjs
+```
+
+## Formatos de entrada: GIF, SVG, HEIC y AVIF, y copiar y pegar
+
+Encargo de Carlos, 5-oct-2026. Además de vídeo y de JPG, PNG y WebP, el Adaptador acepta **GIF** (estático o animado), **SVG**, **HEIC/HEIF** y **AVIF**, del Stock, del equipo, pegados con ⌘V / Ctrl+V o soltados en el paso 1. La detección vive en `adaptaciones/formatos-entrada.js`, un script clásico sin DOM que también cargan los tests (como `stock-fuentes.js`); los decodificadores del navegador, en `adaptaciones/fuentes-especiales.mjs`.
+
+**Detección.** Manda el MIME (del índice o del archivo); si falta o es genérico, la extensión del nombre o de la URL. En archivos locales se confirma con la firma de los primeros bytes: JPEG, PNG, WebP, `GIF8`, `<svg` y, en ISO BMFF, la marca `ftyp` (`avif`/`avis` → AVIF; `heic`, `heix`, `mif1`… → HEIC). Así un HEIC sin tipo, que es lo que suele dar Finder, entra igual.
+
+**GIF.**
+- Se recorre el archivo entero (sin decodificar el LZW): fotogramas, retardos y bloque `NETSCAPE2.0`. Es **animado** si tiene más de un fotograma; con datos truncados basta la cabecera NETSCAPE. Un solo fotograma, aunque traiga NETSCAPE, se ve estático y se trata como imagen fija. *Desviación justificada:* «NETSCAPE o más de un fotograma» llevado al pie de la letra convertiría en vídeo un GIF de un fotograma, con un MP4 de una décima.
+- Los retardos de 0 o 1 centésima valen 100 ms, como en Chrome, Firefox y el demuxer gif de FFmpeg (`min_delay` 2, `default_delay` 10): la vista previa, la ficha y el MP4 usan la misma duración.
+- **Vista previa en bucle.** Con WebCodecs `ImageDecoder` (Chrome, Edge, Firefox recientes) el GIF se pinta en un lienzo propio (`#src-anim`), fotograma a fotograma con sus propios retardos. Sin `ImageDecoder` (navegadores sin WebCodecs de imagen, como Safari), FFmpeg WASM lo pasa a un MP4 intermedio que el `<video>` reproduce en bucle; la ficha dice cuál se usó. ⏯ pausa y reanuda; no hay botón de sonido.
+- **Exportación.** El MP4 sale siempre del GIF original, no del intermedio: `animJob` (`adapter-core.mjs`) lee el GIF una vez (`-ignore_loop 1`), lo aplana sobre negro como una imagen fija, clona el último fotograma, remuestrea a 25 fps y corta en `round(duración × 25)` fotogramas (`tpad,fps=25,trim=end_frame=N`). El MP4 dura un bucle, ±20 ms por la rejilla de 25 fps, sea cual sea la versión de FFmpeg. H.264, 25 fps, rango limitado y sin audio; mismo grafo de reencuadre, también en videowalls (entrega y por pantalla). PNG y JPG sacan el fotograma que se ve. Publicar en el Stock funciona igual (MP4, `validacion.duracion` = duración del GIF).
+- La ficha dice «GIF animado» o «GIF estático» y, si es animado, fotogramas y fps de media, duración de un bucle, bucles (infinito, N o sin bloque), cómo se previsualiza y qué se exporta.
+
+**SVG.**
+- Tamaño base: `width`/`height` absolutos (px, pt, pc, mm, cm, in, Q); si falta uno, se deduce del `viewBox`; si faltan los dos, el `viewBox`; sin nada, 300 × 150 (el tamaño por defecto de CSS). Los porcentajes no cuentan como tamaño.
+- **Rasterizado por formato.** `svgRaster` calcula la escala que el reencuadre aplica al origen en cada salida (recorte: la mayor; contener y expandir: la menor; × zoom) y se rasteriza a ese tamaño, no una vez: un SVG de 160 × 90 sale a 3414 × 1920 para un 9:16 recortado y a 2362 × 1329 para el póster. El MP4 recibe un PNG por formato (la línea de la cola dice el tamaño) con un tope de 4096 × 4096 px (16,7 Mpx) y 8192 px de lado; por encima, FFmpeg escala. Las previsualizaciones usan rásteres en saltos de √2 en una caché de 16.
+- **Seguridad.** El SVG solo se trata como texto (`svgConTamano` cambia `width`/`height` y añade `viewBox` y `xmlns` si faltan) y se carga como imagen desde un blob: el navegador no ejecuta sus scripts ni carga recursos externos. Nunca se inserta en el DOM. El e2e lo comprueba con un `<script>` dentro del SVG.
+- Los SVG remotos se piden con `corsURL` (`?cors=1`). Un SVG que dependa de fuentes o imágenes externas puede verse distinto o no dibujarse: se avisa.
+
+**HEIC/HEIF.**
+- Si el navegador lo abre (Safari), se usa la vía nativa. Si no, se descarga bajo demanda **libheif-js 1.23.5** (`libheif-wasm/libheif-bundle.mjs`, ES module con el `.wasm` dentro), desde jsDelivr y con la versión fijada, como `@ffmpeg/core`. Antes de ejecutarlo se comprueba su SHA-256 (`095194187be00d3e36335b8ad7f5552d70655e5e2159486d7d36cd4daa47bba9`).
+- **Peso:** 2 043 959 B sin comprimir; jsDelivr lo sirve con brotli (≈ 0,63 MB) o gzip (≈ 0,72 MB). Una vez por sesión.
+- **Licencia:** LGPL-3.0 (libheif-js y libheif; incluye libde265, también LGPL-3.0). Se carga sin modificar, como biblioteca aparte y sustituible, sin enlazarla en nuestro código. No se aloja en el repositorio.
+- Se decodifica la imagen principal a PNG en el navegador; desde ahí es una imagen fija más. La ficha dice «HEIC» y la decodificación usada: nativa o `libheif-js 1.23.5 · WASM` (LGPL-3.0).
+- Si falla, un mensaje claro: no se pudo descargar el decodificador, no coincide con la versión fijada, supera 100 MB o el archivo no se pudo decodificar, con la salida práctica (abrirlo en Safari o exportarlo a JPG).
+
+**AVIF.** Decodificación nativa (Chrome, Edge, Firefox y Safari recientes). Si el navegador no puede, se dice así y se propone actualizarlo o convertir a JPG/PNG. Un AVIF animado se trata como imagen fija.
+
+**Lista del Stock.** `stock-fuentes.js` admite los MIME `image/gif`, `image/svg+xml`, `image/heic`, `image/heif` y `image/avif` y sus extensiones. El índice real (5-oct-2026) tiene 8 GIF (`image/gif`), además de JPG, PNG y WebP; ningún SVG, HEIC ni AVIF todavía: entrarán cuando aparezcan. La marca de la lista dice GIF, SVG, HEIC o AVIF en lugar de «Imagen». La subida local los acepta (`accept` con MIME y extensiones), con el mismo límite de 100 MB.
+
+**Copiar y pegar.**
+- En el paso 1, ⌘V / Ctrl+V pega una captura de pantalla, una imagen copiada de otra web o un archivo copiado en Finder (`clipboardData.files` o `items` de tipo archivo). Un vídeo pegado como archivo también entra. Lo pegado pasa por «Subir desde tu equipo» (mismo límite, misma ficha, origen «Pegado · nombre»); una captura, que llega como `image.png`, se renombra `pegado-AAAAMMDD-HHMMSS.png`.
+- Texto con una URL: si es de imagen o de vídeo, se usa como fuente remota con `corsURL`; si es de YouTube, Instagram, TikTok, X, Vimeo… (o una página sin extensión de medio), va al importador de la caja 2. Si no hay archivo ni texto, se mira el `<img src>` del HTML copiado.
+- Pista visible en la caja 2 («o pega una imagen con ⌘V», Ctrl+V fuera del Mac) y aviso accesible (`#paste-status`, `role=status`, `aria-live=polite`): «Imagen pegada: …», «Imagen por URL: …» o por qué no se puede usar.
+- No interfiere con los campos de texto: con el foco en un input (hashtag, URL…) ⌘V pega texto como siempre. Fuera del paso 1 no hace nada.
+- Arrastrar y soltar archivos o una URL sobre el paso 1 hace lo mismo, con el borde de la zona resaltado.
+
+**Bilingüe.** Toda la interfaz nueva existe en ES y EN (`/en/adaptaciones/`), con la misma UX cuadrática: nada nuevo en la barra superior; el GIF y el SVG se ven en el mismo escenario y la ficha del paso 1.
+
+**Límites.**
+- Las imágenes remotas de otros sitios dependen de su CORS: si no lo permiten, se pide descargarla y subirla, o copiarla y pegarla.
+- La rejilla de 25 fps cuantiza los retardos del GIF (cada fotograma dura un múltiplo de 40 ms) y la duración (±20 ms).
+- El MP4 intermedio sin `ImageDecoder` descarga el motor de vídeo (≈ 32 MB) la primera vez y es solo para ver: la exportación lee el GIF.
+- HEIC: solo la imagen principal; sin secuencias, ráfagas ni Live Photos. AVIF y WebP animados: imagen fija.
+- SVG: por encima de 4096 × 4096 px por formato el MP4 se reescala (p. ej. paredes de 14 400 px con recorte).
+
+**Verificación.**
+- `test/adapter-formatos.test.mjs`: detección por MIME, nombre y URL; firmas (incluidos HEIC con `mif1` y AVIF con `avif`); recorrido de GIF hechos a mano (animado, estático, un fotograma con NETSCAPE, sin NETSCAPE, truncado, retardos 0/1 → 100 ms, bucles) y fotograma visible en cada instante; medidas del SVG (unidades, `viewBox`, comentarios), reescritura como texto y `svgRaster` a varias resoluciones con topes y saltos de √2; portapapeles con archivos, `items`, HEIC sin tipo, vídeo, archivo no admitido, `text/uri-list`, texto, HTML y nada; la lista del Stock; el plan `animJob`/`animPreviewJob`; libheif fijado (con `ADAPTER_NET_TEST=1`, descarga y SHA-256). Con `ADAPTER_FFMPEG_TEST=1`, FFmpeg nativo convierte un GIF de 12 fotogramas con retardos desiguales (2,05 s) en MP4 de 1080×1920, 300×250 y 1920×1080: ffprobe da H.264, 25/1, 51 fotogramas y 2,05 ± 0,04 s, sin audio; y la vista previa intermedia dura lo mismo.
+- `test/adaptador-formatos.browser.cjs` (Playwright, verja simulada en `/auth/session`, publicación al Stock interceptada; los ficheros se crean con ffmpeg y `sips`): pegar una captura con `ClipboardEvent` + `DataTransfer` (y no hacerlo con el foco en un campo), pegar la URL de una imagen del Stock (`?cors=1`) y una de YouTube (importador); SVG con `<script>` que no se ejecuta, raster nítido a 1280×720 frente al ampliado, PNG 300×250 y póster 2362×3543, MP4 9:16 de 1 s; GIF animado con `ImageDecoder` (6 fotogramas distintos en bucle, ficha), JPG del fotograma y MP4 9:16 (ffprobe: 1080×1920, 25/1, 23 fotogramas, 0,92 s), GIF estático; GIF sin `ImageDecoder` (MP4 intermedio con FFmpeg WASM); AVIF nativo; HEIC con libheif WASM en Chrome headless; 390 px y inglés. Guarda capturas a 1440 y 390 px:
+
+```
+python3 -m http.server 9191 --bind 127.0.0.1 &
+BASE=http://127.0.0.1:9191 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-formatos.browser.cjs
 ```

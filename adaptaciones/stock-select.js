@@ -12,8 +12,9 @@
  * - Al aplicar un hashtag (elegido del datalist, Enter o PixeriaStock.tag) la caja muestra ya la
  *   coincidencia más reciente (createdAt del índice) y carga su vista previa; las demás siguen debajo en
  *   el mismo orden. Enter en el campo o en la caja = «Adaptar →». Sin coincidencias: sin preselección y aviso.
- * - Imágenes (Carlos, 5-oct-2026): además de los vídeos entran las imágenes JPG, PNG y WebP del Stock,
- *   marcadas «Imagen», en la misma lista y por fecha (más reciente primero): qué entra y en qué orden lo
+ * - Imágenes (Carlos, 5-oct-2026): además de los vídeos entran las imágenes JPG, PNG, WebP, GIF, SVG, HEIC
+ *   y AVIF del Stock, marcadas «Imagen» (o GIF/SVG/HEIC/AVIF), en la misma lista y por fecha (más reciente
+ *   primero): qué entra y en qué orden lo
  *   decide ./stock-fuentes.js. La opción del <select> lleva data-type="image" para que adaptaciones.js
  *   cargue la imagen fija en vez de un vídeo.
  */
@@ -208,7 +209,8 @@
       if (img && /^https:\/\//.test(img)) { var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; if (propia) im.crossOrigin = 'anonymous'; im.src = propia ? corsDe(img) : img; im.onerror = esImg ? function () { this.replaceWith(sinVista()); } : function () { var ph = document.createElement('span'); ph.className = 'stk-ph'; ph.dataset.video = url; this.replaceWith(ph); observarSinMiniatura(ph); }; li.appendChild(im); }
       else { var ph = document.createElement('span'); ph.className = 'stk-ph'; ph.dataset.video = url; li.appendChild(ph); observarSinMiniatura(ph); }
       var sp = document.createElement('span'); sp.className = 'stk-t'; sp.textContent = tit; li.appendChild(sp);
-      if (esImg) { var k = document.createElement('span'); k.className = 'stk-k'; k.textContent = t('Imagen', 'Image'); li.appendChild(k); li.setAttribute('aria-label', tit + ' · ' + t('imagen', 'image')); }
+      // La marca dice el formato cuando no es una foto corriente: GIF (puede ser animado), SVG, HEIC o AVIF.
+      if (esImg) { var ex = F.extension(it), fm = { gif: 'GIF', svg: 'SVG', heic: 'HEIC', avif: 'AVIF' }[ex]; var k = document.createElement('span'); k.className = 'stk-k'; k.textContent = fm || t('Imagen', 'Image'); li.appendChild(k); li.setAttribute('aria-label', tit + ' · ' + (fm ? t('imagen ', 'image ') + fm : t('imagen', 'image'))); }
       fragL.appendChild(li);
       var o = document.createElement('option'); o.value = url; o.dataset.id = it.id || ''; o.dataset.title = tit; o.dataset.type = tipo; o.textContent = tit; fragS.appendChild(o);
     });

@@ -248,3 +248,14 @@ body[data-paso="1"] #cuad-experto-live{display:none}
 .adapt-main .still-dur input{width:4.2em;padding:5px 6px;background:var(--field);color:var(--tx);border:1px solid var(--ln);border-radius:8px;font:inherit;font-size:13px;text-align:right}
 .adapt-main .still-dur input:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
 @media (max-width:820px){.adapt-main .src-stage #src-img{justify-self:center}}
+/* Formatos de entrada (5-oct-2026): GIF animado en su propio lienzo, pista de ⌘V y zona de soltar. */
+.adapt-main .src-preview .src-anim{display:flex;align-items:center;justify-content:center;justify-self:end;max-width:100%;border-radius:10px;background:#000;border:1px solid var(--ln);overflow:hidden}
+.adapt-main .src-preview .src-anim[hidden]{display:none}
+.adapt-main .src-anim canvas{display:block;max-width:100%;max-height:min(34vh,320px);width:auto;height:auto}
+.adapt-main .paste-hint{margin:8px 0 0;font-size:12px;color:var(--mu)}
+.adapt-main .paste-hint small{font-size:11px}
+.adapt-main .paste-hint kbd{font:600 11px ui-monospace,SFMono-Regular,Menlo,monospace;padding:1px 6px;border:1px solid var(--ln);border-bottom-width:2px;border-radius:5px;background:var(--field);color:var(--tx)}
+.adapt-main .paste-status{margin:4px 0 0;font-size:12px;color:var(--ok);overflow-wrap:anywhere}
+.adapt-main .paste-status:empty{display:none}
+.adapt-main #paso-1.drop-on .src-options{outline:2px dashed var(--ac);outline-offset:4px;border-radius:10px}
+@media (max-width:820px){.adapt-main .src-preview .src-anim{justify-self:center}}

@@ -35,21 +35,22 @@ const items=[
  {id:'v-tie',type:'video',url:`${S}v-tie/asset.mp4`,createdAt:'2026-10-03T10:00:00Z'},
 ];
 
-test('index filter: videos plus JPG/PNG/WebP images with https URLs; GIF, SVG, non-images and http stay out',()=>{
+// Desde «formatos de entrada» (5-oct-2026) GIF y SVG también entran (ver adapter-formatos.test.mjs).
+test('index filter: videos plus JPG/PNG/WebP/GIF/SVG images with https URLs; non-images, unknown formats and http stay out',()=>{
  const ids=F.fuentes(items).map(it=>it.id).sort();
- assert.deepEqual(ids,['1791228281962-gdtywe','1791230658801-jnv969','png-ext','v-new','v-old','v-tie','webp-url']);
- assert.equal(F.tipo(cafe),'image');assert.equal(F.tipo(items[0]),'video');assert.equal(F.tipo(items.find(i=>i.id==='gif')),null);
- assert.deepEqual(['1791230658801-jnv969','png-ext','webp-url','gif','bin'].map(id=>F.extension(items.find(i=>i.id===id))),['jpg','png','webp',null,null]);
+ assert.deepEqual(ids,['1791228281962-gdtywe','1791230658801-jnv969','gif','png-ext','svg','v-new','v-old','v-tie','webp-url']);
+ assert.equal(F.tipo(cafe),'image');assert.equal(F.tipo(items[0]),'video');assert.equal(F.tipo(items.find(i=>i.id==='gif')),'image');assert.equal(F.tipo(items.find(i=>i.id==='bin')),null);
+ assert.deepEqual(['1791230658801-jnv969','png-ext','webp-url','gif','bin'].map(id=>F.extension(items.find(i=>i.id===id))),['jpg','png','webp','gif',null]);
  assert.equal(F.tipo(null),null);assert.equal(F.fuentes(undefined).length,0);
  // Las extensiones que reconoce el índice son las que FFmpeg recibe para la imagen original.
- assert.deepEqual(Object.values(STILL_TYPES).sort(),['jpg','png','webp']);
+ assert.deepEqual([...new Set(Object.values(STILL_TYPES))].sort(),['avif','gif','heic','jpg','png','svg','webp']);
 });
 
 test('order by date: most recent first whatever the type, id stamp when createdAt is missing, stable ties',()=>{
  const order=F.fuentes(items).map(it=>it.id);
- assert.deepEqual(order,['1791230658801-jnv969','1791228281962-gdtywe','v-new','png-ext','v-tie','webp-url','v-old']);
+ assert.deepEqual(order,['gif','svg','1791230658801-jnv969','1791228281962-gdtywe','v-new','png-ext','v-tie','webp-url','v-old']);
  // «Elegir el último contenido generado»: la imagen del café va primera aunque el índice venga desordenado.
- assert.equal(F.fuentes([...items].reverse())[0].id,'1791230658801-jnv969');
+ assert.equal(F.fuentes([...items].reverse().filter(i=>!['gif','svg'].includes(i.id)))[0].id,'1791230658801-jnv969');
  assert.equal(F.fecha({id:'1791228281962-gdtywe'}),1791228281962);
  assert.deepEqual(F.ordenar([{id:'a',createdAt:'x'},{id:'b'},{id:'c',createdAt:'x'}]).map(i=>i.id),['a','b','c']);
 });
