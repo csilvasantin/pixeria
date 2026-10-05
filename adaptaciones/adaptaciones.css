@@ -203,3 +203,12 @@ body[data-paso="1"] #cuad-experto-live{display:none}
 .adapt-main .ficha dd{margin:0;text-align:right;padding:2px 0;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-bottom:1px dashed color-mix(in srgb,var(--ln) 70%,transparent)}
 .adapt-main .ficha dd.nd{color:var(--mu)}
 @media (max-width:820px){.adapt-main .src-stage{grid-template-columns:minmax(0,1fr)}.adapt-main .src-stage #src{justify-self:center}.adapt-main .ficha{max-height:none}}
+
+/* Paso 1 · caja 3 «Crearlo» (Carlos, 5-oct-2026, 07:59): Cápsulas Musicales, Cápsulas de Conocimiento y creador de vídeo. */
+.adapt-main .src-crear{cursor:default}
+.adapt-main .crear-ops{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.adapt-main .crear-ops a{display:flex;flex-direction:column;gap:1px;padding:7px 10px;border:1px solid var(--ln);border-radius:8px;background:var(--field);color:var(--tx);text-decoration:none}
+.adapt-main .crear-ops a:hover,.adapt-main .crear-ops a:focus-visible{border-color:var(--ac)}
+.adapt-main .crear-ops b{font-size:13px}
+.adapt-main .crear-ops small{font-size:11px;color:var(--mu)}
+.adapt-main .src-crear .pill{text-decoration:none}
