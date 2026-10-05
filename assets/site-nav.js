@@ -5,11 +5,78 @@
 (function () {
   // Pixeria is English; Admira Studio keeps the Spanish source routes.
   // Explicit language routes remain available for review in this shared preview.
+  //
+  // Idioma elegido en el Experto (/idioma, /language ESP|ENG · Carlos, 5-oct-2026): se guarda en
+  // localStorage[admiranext_expert_lang] y MANDA sobre el auto-redirect. Antes, en pixeria, /language ESP
+  // te llevaba a la ruta ES y esta misma línea te devolvía a /en/ al cargar: parecía que no cambiaba.
+  //   · preferencia 'es' (o ?lang=es) → nunca se redirige a /en/; desde /en/ de una página traducida, vuelves a ES.
+  //   · preferencia 'en' (o ?lang=en) → desde una ruta ES traducida pasas a /en/.
+  //   · sin preferencia → como siempre: pixeria va a /en/, Admira Studio se queda en ES.
+  var LANG_KEY = 'admiranext_expert_lang';
   var englishHost = /(^|\.)pixeria\.(com|pages\.dev)$/.test(location.hostname);
   var localePath = location.pathname;
   var translatedPages = ['/', '/index.html', '/audio.html', '/musica.html', '/imagenes.html', '/video.html', '/anonimizador.html', '/publicidad.html', '/stock.html', '/crear/'];
-  if (englishHost && !localePath.startsWith('/en/') && translatedPages.indexOf(localePath) >= 0 && new URLSearchParams(location.search).get('lang') !== 'es') {
-    location.replace('/en' + (localePath === '/index.html' ? '/' : localePath) + location.search + location.hash);
+  function langPref() {
+    try { var v = localStorage.getItem(LANG_KEY); return v === 'es' || v === 'en' ? v : ''; } catch (_) { return ''; }
+  }
+  function setLangPref(l) {
+    try { localStorage.setItem(LANG_KEY, l === 'en' ? 'en' : 'es'); } catch (_) {}
+  }
+  // Ruta canónica para comparar: /stock y /stock.html son la misma página; /index.html es /.
+  function canonPath(p) {
+    p = p || '/';
+    if (/(^|\/)index\.html$/.test(p)) return p.replace(/index\.html$/, '');
+    if (!/\/$/.test(p) && !/\.[a-z0-9]+$/i.test(p)) return p + '.html';
+    return p;
+  }
+  function isEnPath(p) { return p.indexOf('/en/') === 0; }
+  function isTranslated(p) {
+    return translatedPages.indexOf(canonPath(isEnPath(p) ? p.slice(3) : p)) >= 0;
+  }
+  // Ruta de la versión `l` de la página actual, o '' si ya estás en ella o no existe.
+  function langPath(l) {
+    var p = location.pathname;
+    var alt = document.querySelector('link[rel="alternate"][hreflang="' + l + '"]');
+    if (alt && alt.getAttribute('href')) {
+      // El hreflang lleva el dominio canónico (www.pixeria.com / www.admira.studio): solo vale su
+      // ruta, en el origen donde estés (admira.studio sin www, *.pixeria.pages.dev…).
+      try {
+        var want = new URL(alt.getAttribute('href'), location.href).pathname;
+        return canonPath(want) === canonPath(p) ? '' : want;
+      } catch (_) {}
+    }
+    if (!isTranslated(p)) return '';
+    if (l === 'en') return isEnPath(p) ? '' : '/en' + (p === '/index.html' ? '/' : p);
+    return isEnPath(p) ? (p.slice(3) || '/') : '';
+  }
+  // URL completa para pasar a `l`: conserva el resto del query (cliente=, marca=…) y el hash. En
+  // pixeria la ruta ES lleva ?lang=es por si localStorage no está disponible (privado, bloqueado).
+  function langUrl(l) {
+    var path = langPath(l);
+    if (!path) return '';
+    var q = new URLSearchParams(location.search);
+    q.delete('lang');
+    if (l === 'es' && englishHost) q.set('lang', 'es');
+    var qs = q.toString();
+    return path + (qs ? '?' + qs : '') + location.hash;
+  }
+  window.PixeriaIdioma = { clave: LANG_KEY, preferido: langPref, fijar: setLangPref, ruta: langPath, url: langUrl };
+  var langRedirect = (function () {
+    if (!isTranslated(localePath)) return '';
+    var qLang = new URLSearchParams(location.search).get('lang');
+    var want = qLang === 'es' || qLang === 'en' ? qLang : (langPref() || (englishHost ? 'en' : ''));
+    var onEn = isEnPath(localePath);
+    if (want === 'en' && !onEn) return '/en' + (localePath === '/index.html' ? '/' : localePath) + location.search + location.hash;
+    if (want === 'es' && onEn) {
+      var q = new URLSearchParams(location.search);
+      if (englishHost) q.set('lang', 'es');
+      var qs = q.toString();
+      return (localePath.slice(3) || '/') + (qs ? '?' + qs : '') + location.hash;
+    }
+    return '';
+  })();
+  if (langRedirect) {
+    location.replace(langRedirect);
     return;
   }
   // Sello de este fichero (?v=…): marca-blanca.js y la consola experta viajan con el mismo,
@@ -691,10 +758,10 @@
       // ⌘ EXPERTO · CLI con el look de digitalavatar.ai (Carlos, 4-oct-2026): piel compartida de la
       // suite (www.admiranext.com/suite) sobre la consola de expert-cli.js; los comandos no cambian.
       var axCss = document.createElement('link');
-      axCss.rel = 'stylesheet'; axCss.href = 'https://www.admiranext.com/suite/experto.css?v=20261005-experto-idioma-1';
+      axCss.rel = 'stylesheet'; axCss.href = 'https://www.admiranext.com/suite/experto.css?v=20261005-experto-idioma-2';
       document.head.appendChild(axCss);
       var ax = document.createElement('script');
-      ax.src = 'https://www.admiranext.com/suite/experto.js?v=20261005-experto-idioma-1';
+      ax.src = 'https://www.admiranext.com/suite/experto.js?v=20261005-experto-idioma-2';
       ax.setAttribute('data-panel', '.pf-cli');
       ax.setAttribute('data-body', '');
       ax.setAttribute('data-form', '.pf-cli-form');
