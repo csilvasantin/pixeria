@@ -305,20 +305,34 @@
     var cur = document.documentElement.lang.indexOf('en') === 0 ? 'en' : 'es';
     return {ok: true, lang: token || (cur === 'en' ? 'es' : 'en')};
   }
+  // Idioma del Experto: se recuerda en localStorage[admiranext_expert_lang] (la misma clave que lee
+  // site-nav.js y que guarda suite/experto.js), para que el auto-redirect de pixeria a /en/ no te
+  // devuelva al inglés tras /language ESP. Navega a la versión hreflang en ESTE origen.
+  var LANG_KEY = 'admiranext_expert_lang';
+  function expertLangUrl(l) {
+    var I = window.PixeriaIdioma;
+    if (I && typeof I.url === 'function') return I.url(l);
+    var link = document.querySelector('link[rel="alternate"][hreflang="' + l + '"]');
+    if (!link || !link.getAttribute('href')) return '';
+    var target = new URL(link.getAttribute('href'), location.href);
+    var cur = location.pathname.replace(/\/$/, '') || '/';
+    var want = target.pathname.replace(/\/$/, '') || '/';
+    if (cur === want) return '';
+    var q = new URLSearchParams(location.search);
+    q.delete('lang');
+    if (l === 'es' && /(^|\.)pixeria\.(com|pages\.dev)$/.test(location.hostname)) q.set('lang', 'es');
+    var qs = q.toString();
+    return target.pathname + (qs ? '?' + qs : '') + location.hash;
+  }
   function applyExpertLang(next) {
     var l = next === 'en' ? 'en' : 'es';
+    try { localStorage.setItem(LANG_KEY, l); } catch (_) {}
     document.documentElement.lang = l;
+    // La suite (si está) aplica el idioma y puede navegar ella misma, a la misma URL que calculamos aquí.
     try { if (typeof window.AdmiraSetLanguage === 'function') window.AdmiraSetLanguage(l); } catch (_) {}
     try {
-      var link = document.querySelector('link[rel="alternate"][hreflang="' + l + '"]');
-      if (link && link.href) {
-        var target = new URL(link.href, location.href);
-        if (target.origin === location.origin) {
-          var cur = location.pathname.replace(/\/$/, '') || '/';
-          var want = target.pathname.replace(/\/$/, '') || '/';
-          if (cur !== want) { location.assign(target.pathname + target.search + target.hash); return l; }
-        }
-      }
+      var url = expertLangUrl(l);
+      if (url) { location.assign(url); return l; }
     } catch (_) {}
     try { document.dispatchEvent(new CustomEvent('admiranext:lang', {detail: {lang: l}})); } catch (_) {}
     return l;
