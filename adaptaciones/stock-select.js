@@ -170,7 +170,10 @@
     v.className = 'stk-ph stk-vid'; v.muted = true; v.playsInline = true; v.preload = 'metadata';
     v.setAttribute('aria-hidden', 'true'); v.tabIndex = -1;
     v.onerror = function () { v.replaceWith(sinVista()); };
-    v.src = ph.dataset.video + (ph.dataset.video.indexOf('#') < 0 ? '#t=1' : '');
+    // Modo CORS y la misma URL que usará el Adaptador: así la copia en caché sirve también para adaptar.
+    v.crossOrigin = 'anonymous';
+    var su = ph.dataset.video; try { var uu = new URL(su, location.href); if (uu.origin !== location.origin) { uu.searchParams.set('cors', '1'); su = uu.href; } } catch (_) {}
+    v.src = su + (su.indexOf('#') < 0 ? '#t=1' : '');
     ph.replaceWith(v);
   }
   function observarSinMiniatura(ph) {
