@@ -50,3 +50,5 @@ Fecha: 2026-10-05 (Europe/Madrid) · Agente: Huang · Fase 1
 ## 2026-10-05 r7
 - Idiomas ESP/ENG multi-select.
 - Create con execute real vía suno-local.
+
+- **2026-10-05 r8:** sin password PRO en Create / Admira Studio Music / suno-web (Google gate). Tag `retorno/pre-sin-pro-pass-20261005`.
