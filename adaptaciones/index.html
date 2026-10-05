@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r14.2252';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r15.2345';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -36,15 +36,15 @@
 <meta charset="utf-8">
 <script>if (/(^|\.)pixeria\.(com|pages\.dev)$/.test(location.hostname) && !location.pathname.startsWith('/en/') && new URLSearchParams(location.search).get('lang') !== 'es') location.replace('/en/adaptaciones/' + location.search);</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r14.22:52">
+  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r15.23:45">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Adaptador · Un contenido, todos los formatos | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=05.10.2026.r14.2252">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r14.2252">
-  <script defer src="/assets/site-nav.js?v=05.10.2026.r14.2252"></script>
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=05.10.2026.r15.2345">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r15.2345">
+  <script defer src="/assets/site-nav.js?v=05.10.2026.r15.2345"></script>
 </head>
 <body class="adapt-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
@@ -67,12 +67,12 @@
             <div class="stk-pick"><button type="button" id="stock-pick" class="stk-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="stock-list"><span class="stk-btn-txt">Cargando el Stock…</span></button><ul id="stock-list" class="stk-list" role="listbox" aria-label="Stock" tabindex="-1" hidden></ul></div>
             <select id="src-select" aria-label="Stock" hidden tabindex="-1"><option value="">Cargando el Stock…</option></select>
             <p id="stock-status" class="muted" role="status"></p></div>
-          <div class="src-opt src-importar"><span class="n">2</span><h3>Subirlo / Importarlo</h3><form id="imp-form" class="stk-tag imp-form" novalidate><input id="imp-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Pega una URL · YouTube, Instagram, TikTok, X, mp4…" aria-label="URL del vídeo que quieres importar"><button type="submit" id="imp-go" class="stk-tag-clear imp-go" aria-label="Importar la URL" title="Importar la URL">↵</button></form><div id="imp-prog" class="imp-prog" hidden><div id="imp-bar" class="imp-bar is-indet"><span></span></div><p id="imp-status" class="imp-status" role="status" aria-live="polite"></p></div><label class="imp-file"><input type="file" id="src-file" accept="video/*,image/jpeg,image/png,image/webp"><span aria-hidden="true">⤒</span> Subir desde tu equipo <small>vídeo o imagen · 100 MB</small></label></div>
+          <div class="src-opt src-importar"><span class="n">2</span><h3>Subirlo / Importarlo</h3><form id="imp-form" class="stk-tag imp-form" novalidate><input id="imp-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Pega una URL · YouTube, Instagram, TikTok, X, mp4…" aria-label="URL del vídeo que quieres importar"><button type="submit" id="imp-go" class="stk-tag-clear imp-go" aria-label="Importar la URL" title="Importar la URL">↵</button></form><div id="imp-prog" class="imp-prog" hidden><div id="imp-bar" class="imp-bar is-indet"><span></span></div><p id="imp-status" class="imp-status" role="status" aria-live="polite"></p></div><label class="imp-file"><input type="file" id="src-file" accept="video/*,image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/heic,image/heif,image/avif,.heic,.heif,.avif,.svg,.gif"><span aria-hidden="true">⤒</span> Subir desde tu equipo <small title="Vídeo o imagen JPG, PNG, WebP, GIF, SVG, HEIC o AVIF, hasta 100 MB">vídeo o imagen · 100 MB</small></label><p class="paste-hint">o pega una imagen con <kbd class="paste-key">⌘V</kbd> <small>· captura, imagen copiada o archivo · o suéltala aquí</small></p><p id="paste-status" class="paste-status" role="status" aria-live="polite"></p></div>
           <div class="src-opt src-crear"><span class="n">3</span><h3>Crearlo</h3><ul class="crear-ops"><li><a href="/musica.html"><b>Cápsulas Musicales</b><small>Pixeria Music</small></a></li><li><a href="/stock.html?type=capsula"><b>Cápsulas de Conocimiento</b><small>¿Sabías que? y cápsulas del Stock</small></a></li></ul><a class="pill" href="/video.html">Abrir el creador de vídeo →</a></div>
         </div>
         <p id="src-msg" class="muted" role="status"></p>
         <div id="src-preview" class="src-preview" hidden>
-          <div class="src-stage"><video id="src" muted loop playsinline preload="auto" crossorigin="anonymous"></video><img id="src-img" alt="Vista previa de la imagen elegida" crossorigin="anonymous" decoding="async" hidden><aside id="src-ficha" class="ficha" aria-label="Ficha técnica del contenido" hidden></aside></div>
+          <div class="src-stage"><video id="src" muted loop playsinline preload="auto" crossorigin="anonymous"></video><img id="src-img" alt="Vista previa de la imagen elegida" crossorigin="anonymous" decoding="async" hidden><div id="src-anim" class="src-anim" role="img" aria-label="Vista previa del GIF animado, en bucle" hidden></div><aside id="src-ficha" class="ficha" aria-label="Ficha técnica del contenido" hidden></aside></div>
           <div class="preview-bar"><button id="btn-play" class="pill" type="button">⏯ Reproducir / pausa</button><button id="btn-sound" class="pill sound-toggle" type="button" aria-pressed="false" aria-label="Sonido" title="Activar sonido"><span class="snd-ico" aria-hidden="true">🔇</span> <span class="snd-lbl">Sin sonido</span></button><span id="src-info" class="muted"></span><button id="btn-adaptar" class="pill accent" type="button" disabled>Adaptar →</button></div>
         </div>
       </div>
@@ -120,7 +120,7 @@
         <label>Compatibilidad
           <select id="compat"><option value="universal">Cualquier equipo</option><option value="fhd" selected>Parque Full HD</option><option value="uhd">Parque 4K</option></select>
         </label>
-      <details class="export-limits"><summary>Tipos de salida y límites</summary><p class="muted">Exporta MP4 con tus ajustes y el audio original, si existe. Cada exportación entra en la cola de la esquina inferior derecha y se procesa en segundo plano en este navegador, una variante cada vez: puedes seguir trabajando o cambiar de vídeo. Máximo 100 MB de origen; 4K puede tardar varios minutos. Los lotes grandes se deben dividir para limitar la memoria. La primera exportación descarga el motor (unos 32 MB). Expandir usa fondo desenfocado, sin IA; su desenfoque puede variar ligeramente respecto al previo. FPS y bitrate de entrada estimados.</p><p class="muted output-note">Redes y digital: MP4. Display e impresión: PNG del fotograma actual; pausa el vídeo para elegirlo. Impresión: RGB a 150 ppp, sin sangrado ni CMYK. Los tamaños son referencias: revisa peso, zonas seguras y requisitos del destino. La compatibilidad afecta a los cuatro formatos de proporción; los presets con medidas mantienen su resolución.</p><p class="muted output-note output-note-image" hidden>Imagen fija: display e impresión salen en PNG (display, también en JPG); redes, digital, formatos del proyecto y videowalls, en MP4 H.264 a 25 fps de la duración elegida (1–60 s, 10 por defecto), sin audio. El reencuadre es el mismo que en vídeo.</p></details>
+      <details class="export-limits"><summary>Tipos de salida y límites</summary><p class="muted">Exporta MP4 con tus ajustes y el audio original, si existe. Cada exportación entra en la cola de la esquina inferior derecha y se procesa en segundo plano en este navegador, una variante cada vez: puedes seguir trabajando o cambiar de vídeo. Máximo 100 MB de origen; 4K puede tardar varios minutos. Los lotes grandes se deben dividir para limitar la memoria. La primera exportación descarga el motor (unos 32 MB). Expandir usa fondo desenfocado, sin IA; su desenfoque puede variar ligeramente respecto al previo. FPS y bitrate de entrada estimados.</p><p class="muted output-note">Redes y digital: MP4. Display e impresión: PNG del fotograma actual; pausa el vídeo para elegirlo. Impresión: RGB a 150 ppp, sin sangrado ni CMYK. Los tamaños son referencias: revisa peso, zonas seguras y requisitos del destino. La compatibilidad afecta a los cuatro formatos de proporción; los presets con medidas mantienen su resolución.</p><p class="muted output-note output-note-image" hidden>Imagen fija: display e impresión salen en PNG (display, también en JPG); redes, digital, formatos del proyecto y videowalls, en MP4 H.264 a 25 fps de la duración elegida (1–60 s, 10 por defecto), sin audio. El reencuadre es el mismo que en vídeo. Un SVG se rasteriza a la resolución de cada formato. Un GIF animado sale en MP4 H.264 a 25 fps con la duración de un bucle; PNG y JPG sacan el fotograma actual.</p></details>
         <button id="reset-settings" class="pill" type="button">Restablecer ajustes</button>
       <p id="settings-status" class="muted"></p>
       <details class="adv-notes" hidden><summary>Notas del proyecto</summary><p id="project-notes" class="muted"></p><p class="muted especiales-note">Videowalls segmentados: el reencuadre se hace sobre la pared física y cada pantalla se recorta del mismo maestro. La entrega es un MP4 con una celda por pantalla; también puedes exportar un MP4 por pantalla, sin audio, con la misma duración y 25 fps. La imagen solo continúa entre pantallas si los players arrancan a la vez.</p></details>
@@ -129,12 +129,13 @@
       <details class="plan"><summary>Plan técnico por formato (resolución, H.264, bitrate y orden ffmpeg)</summary><div id="plan-tecnico"></div></details>
     </div>
   </main>
-  <script defer src="/adaptaciones/stock-fuentes.js?v=05.10.2026.r14.2252"></script>
-  <script defer src="/adaptaciones/stock-select.js?v=05.10.2026.r14.2252"></script>
-  <script defer src="/adaptaciones/ficha-tecnica.js?v=05.10.2026.r14.2252"></script>
-  <script defer src="/adaptaciones/importar.js?v=05.10.2026.r14.2252"></script>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=05.10.2026.r14.2252"></script>
-  <script defer src="/assets/cuadratura.js?v=05.10.2026.r14.2252"></script>
+  <script defer src="/adaptaciones/formatos-entrada.js?v=05.10.2026.r15.2345"></script>
+  <script defer src="/adaptaciones/stock-fuentes.js?v=05.10.2026.r15.2345"></script>
+  <script defer src="/adaptaciones/stock-select.js?v=05.10.2026.r15.2345"></script>
+  <script defer src="/adaptaciones/ficha-tecnica.js?v=05.10.2026.r15.2345"></script>
+  <script defer src="/adaptaciones/importar.js?v=05.10.2026.r15.2345"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=05.10.2026.r15.2345"></script>
+  <script defer src="/assets/cuadratura.js?v=05.10.2026.r15.2345"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
