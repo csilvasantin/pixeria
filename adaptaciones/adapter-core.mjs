@@ -85,16 +85,24 @@ export function stillSeconds(v) {
 }
 // Image formats the adapter accepts as a source, with the extension FFmpeg reads them by.
 export const STILL_TYPES = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+// Every still starts as RGB with its alpha flattened onto black (what the canvas preview shows) and,
+// from there, the encoder converts to limited-range yuv420p (-color_range tv): a JPEG never ends up
+// as full-range yuvj420p, which many signage players show washed out.
+export const STILL_PREP='format=rgba,premultiply=inplace=1,format=rgb24';
 // Turns any job (single format, special delivery or per-screen batch) into its still-image version.
 export function stillJob(job,seconds,input='input.png') {
-  const d=String(stillSeconds(seconds)),args=[],a=job.args;
+  const d=String(stillSeconds(seconds)),args=[],a=job.args,fps=String(STILL.fps);
   for(let i=0;i<a.length;i++) {
-    if(a[i]==='-i'&&a[i+1]==='input'){args.push('-loop','1','-framerate',String(STILL.fps),'-t',d,'-i',input);i++;continue;}
+    if(a[i]==='-i'&&a[i+1]==='input'){args.push('-loop','1','-framerate',fps,'-t',d,'-i',input);i++;continue;}
     if(a[i]==='-map'&&a[i+1]==='0:a?'){i++;continue;}
     if(a[i]==='-c:a'||a[i]==='-b:a'){i++;continue;}
+    if(a[i]==='-filter_complex'){args.push(a[i],a[++i].replace('[0:v]',`[0:v]${STILL_PREP},`));continue;}
+    // Always 25 fps, whatever the plan of the profile says.
+    if(a[i]==='-r'){args.push('-r',fps);i++;continue;}
     args.push(a[i]);
     if(a[i]==='-map'&&a[i+1]==='[out]'){args.push(a[++i],'-an');continue;}
     if(a[i]==='-c:v'&&a[i+1]==='libx264'){args.push(a[++i],'-tune','stillimage');continue;}
+    if(a[i]==='-pix_fmt'&&a[i+1]==='yuv420p'){args.push(a[++i],'-color_range','tv');continue;}
   }
   return {...job,args,input,still:+d};
 }

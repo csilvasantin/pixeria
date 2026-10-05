@@ -202,6 +202,7 @@
     var f = { imagen: true, res: w + ' × ' + hgt + ' px', asp: aspecto(w, hgt), ori: w > hgt ? t('Horizontal', 'Landscape') : w < hgt ? t('Vertical', 'Portrait') : t('Cuadrado', 'Square'),
       dur: t('Imagen fija', 'Still image'), audio: t('No · imagen fija', 'No · still image') };
     f.mime = (o.file && o.file.type) || (it && it.mime) || null;
+    f.formato = { 'image/jpeg': 'JPEG', 'image/png': 'PNG', 'image/webp': 'WebP' }[f.mime] || null; // la firma lo confirma abajo
     origenDe(o, src, it, f);
     var total = (o.file && o.file.size) || (it && it.size) || null;
     if (total) f.peso = num(total / 1e6, 2) + ' MB · ' + num(total, 0) + ' B';
@@ -210,7 +211,7 @@
     if (!L) return;
     L.leer(0, 16).then(function (buf) {
       if (yo !== turno) return;
-      f.formato = firma(buf);
+      f.formato = firma(buf) || f.formato;
       var tot = L.total || total;
       if (tot) f.peso = num(tot / 1e6, 2) + ' MB · ' + num(tot, 0) + ' B';
       f.mime = f.mime || L.tipo || null;

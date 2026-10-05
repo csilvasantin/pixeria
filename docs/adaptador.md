@@ -147,3 +147,61 @@ Verificación: `test/adapter-proyectos.test.mjs` cubre:
 
 Además, guarda capturas a 1440 y 390 px.
 
+
+## Imágenes
+
+Encargo de Carlos, 5-oct-2026. El Adaptador también adapta **imágenes fijas**. Motivo: Carlos eligió el último contenido generado en el Stock, la imagen «Un anuncio de café humeando…» (`1791230658801-jnv969`, JPG de 1280×720), y no aparecía porque la lista solo admitía `type === 'video'`.
+
+**Lista de origen.** La caja 1 («Contenido Stock») lista vídeos e imágenes juntos. Las imágenes (`type` image) entran si son JPG, PNG o WebP: lo decide el MIME del índice y, si falta, la extensión o la URL. Quedan fuera GIF, SVG, entradas sin formato reconocible (`bin`) y URL que no son https. El orden es por fecha, el más reciente primero, sea imagen o vídeo: `createdAt` o, si falta, el sello del id; en caso de empate, el orden del índice. Por eso el último contenido generado es siempre el primero de la lista. Cada imagen lleva la marca **Imagen** / **Image**; si el índice no trae miniatura, la imagen hace de miniatura. El filtro por cliente (`/marca`), el combo de hashtags y la preselección de la coincidencia más reciente funcionan igual. El contador dice «N vídeos e imágenes listos», «N imágenes listas» o «N vídeos listos», según lo que se ve. El filtro y el orden viven en `adaptaciones/stock-fuentes.js`, un script clásico sin DOM que también cargan los tests.
+
+**Fuente local.** «Subir desde tu equipo» acepta vídeo o imagen (JPG, PNG o WebP), con el mismo límite de 100 MB.
+
+**Previsualización.** La imagen sustituye al vídeo en el escenario del paso 1; para una imagen no se muestran ⏯ ni el sonido. La línea de información y la tarjeta «Imagen original» dicen `ancho×alto · imagen fija`. El reencuadre es el del vídeo (recorte, contener, expandir con fondo desenfocado, foco y zoom) en todas las tarjetas: formatos de proporción, biblioteca, formatos del proyecto y videowalls segmentados, con la pared física y la entrega. Las tarjetas PNG (display e impresión) también tienen método, foco y zoom en Avanzado, tanto para vídeo como para imagen.
+
+**Exportación.** Cada botón dice qué saldrá:
+- **Display e impresión:** «Exportar PNG», como hasta ahora, con 150 ppp en impresión. Con una imagen, las tarjetas de display ofrecen también **JPG** (calidad 90), más ligero para las redes de display. Impresión sigue solo en PNG.
+- **Redes, digital, formatos del proyecto (Altadis) y especiales:** «Exportar MP4 · N s». Es un MP4 H.264 a 25 fps con la imagen fija, sin audio. La duración se elige en la barra del paso 2 («MP4 · imagen fija»): de 1 a 60 s enteros, 10 por defecto, y se recuerda en el navegador (`pixeria.adapter.still`). En los videowalls, «Exportar entrega» y «Exportar por pantalla» también indican la duración.
+
+El MP4 sale del mismo pipeline FFmpeg WASM, por la misma cola y con los mismos límites: presupuesto de 96/192 MiB, tope de 128 MiB por salida y rechazo a partir de 124 MiB. `stillJob` (`adapter-core.mjs`) toma el trabajo de vídeo de cualquier formato, entrega o lote por pantalla y solo cambia esto:
+- la entrada: `-loop 1 -framerate 25 -t N -i input.png`;
+- la imagen se pasa a RGB y se aplana su alfa sobre negro (`format=rgba,premultiply=inplace=1,format=rgb24`), que es lo que muestra el canvas;
+- `-r 25` siempre;
+- quita el audio (`-an`);
+- añade `-tune stillimage` y `-color_range tv`.
+
+El grafo de reencuadre es el mismo carácter a carácter. `-color_range tv` convierte de verdad a rango limitado: un JPEG pasado tal cual saldría `yuvj420p` (rango completo), que muchos players muestran lavado. FFmpeg recibe la imagen tal como la pinta el navegador, con la orientación EXIF aplicada y los mismos píxeles que el previo: se rasteriza una vez por fuente a PNG. Si el navegador no puede (límites de canvas), usa el archivo original con su extensión. El motor (`adapter-export.js`) escribe la entrada con el nombre que pide el trabajo (`input.png`), porque el demuxer image2 necesita la extensión para aplicar `-loop 1`. El plan técnico (Experto) enseña la orden real con `-loop 1`.
+
+**Stock.** Los MP4 hechos desde una imagen se publican al Stock como cualquier adaptación (`/stock-publish`, `type: video`). Llevan además la etiqueta `imagen-fija`, «imagen fija · N s» en el prompt, la duración elegida en `validacion.duracion` y el póster del propio MP4. Los PNG y JPG no se publican, igual que los PNG hechos desde vídeo: el proxy `/stock-publish` solo admite MP4.
+
+**Ficha técnica.** Con una imagen la ficha muestra:
+- **Imagen:** resolución, aspecto, orientación, duración «Imagen fija» y formato (JPEG, PNG o WebP). El formato sale del MIME y se confirma con la firma de los primeros bytes, que se leen por Range.
+- **Archivo:** peso y MIME.
+- **Audio:** «No · imagen fija».
+- **Origen:** origen, fuente, alta y cliente, como con los vídeos.
+
+La fuente remota se carga con `?cors=1` (`corsURL`, PR #67). Las miniaturas de imagen de la lista usan la misma URL en modo CORS para compartir caché. La ficha quita ese parámetro para reconocer el contenido del índice, también con los vídeos.
+
+**Bilingüe.** Toda la interfaz nueva existe en ES y EN. El paso 1 se llama «Contenido» / «Content» y el botón de vuelta dice «← Cambiar imagen» / «← Change image» cuando la fuente es una imagen.
+
+**Límites.**
+- La imagen es fija: no hay animación, zoom progresivo (Ken Burns) ni audio añadido.
+- El bitrate es el del perfil (ABR), igual que con vídeo. Con una imagen fija es más de lo necesario, pero respeta el techo de cada player.
+- GIF animado, SVG, HEIC y AVIF no se admiten.
+- Una imagen enorme que el navegador no pueda rasterizar se pasa a FFmpeg tal cual. Si además tiene rotación EXIF, el MP4 podría no coincidir con el previo.
+- Importar por URL (caja 2) sigue siendo solo para vídeo.
+
+**Verificación.** `test/adapter-imagenes.test.mjs` cubre:
+- el filtro del índice con imágenes y vídeos, sobre la forma real de la entrada del café;
+- el orden por fecha;
+- el plan imagen → MP4: dimensiones, 25 fps aunque el plan diga otra cosa, duración y límites de 1–60 s, sin audio y el mismo reencuadre;
+- los especiales;
+- la carga útil del Stock.
+
+Con `ADAPTER_FFMPEG_TEST=1`, FFmpeg nativo convierte un JPG y un PNG con alfa en MP4 (cover, blur y contain; 1080×1920 y 300×250). ffprobe confirma H.264, 25/1, `yuv420p` de rango limitado, N×25 fotogramas, la duración y que no hay audio. También comprueba que la mitad transparente sale negra y que el lote por pantalla da 50 fotogramas por pantalla. Con `STOCK_INDEX=<index.json>` se valida además el índice real.
+
+`test/adaptador-imagenes.browser.cjs` usa Playwright con la verja simulada en `/auth/session` y el índice real del Stock. Elige la imagen más reciente y comprueba la ficha, la URL `?cors=1`, el canvas sin contaminar y las tarjetas reencuadradas. Después exporta un PNG de 300×250 (firma e IHDR), un JPG y un MP4 9:16 de 3 s con FFmpeg WASM. ffprobe da 1080×1920, H.264, 25/1, 75 fotogramas, 3,000 s y sin audio. La publicación al Stock se intercepta: no se publica nada. Repite la elección a 390 px y en inglés y guarda capturas a 1440 y 390 px:
+
+```
+python3 -m http.server 9187 --bind 127.0.0.1 &
+BASE=http://127.0.0.1:9187 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-imagenes.browser.cjs
+```
