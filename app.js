@@ -953,6 +953,8 @@
     };
   }
   function syncSunoCapsulaPanel() {
+    // Solo Música: antes renombraba #playOutput a «CREAR MÚSICA» en Imágenes/Vídeo/Megafonía.
+    if (!document.body || document.body.dataset.page !== 'musica') return;
     const s = loadStore().musica || {};
     const on = s.motor === 'suno-web';
     const panel = document.getElementById('sunoCapsula');
@@ -4262,7 +4264,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     if (cell) label = cell.dataset.motorLabel || '';
     if (!label) {
       const head = holder && holder.querySelector('.player-head');
-      label = head ? head.textContent.replace(/^▶\s*IMAGEN\s*·\s*/i, '').split('·')[0].trim() : '';
+      label = head ? head.textContent.replace(/^▶\s*IMAGEN\s*·\s*/i, '').split('·')[0].replace(/\s*\([^)]*\)\s*/g, ' ').trim() : '';
     }
     return { meta, label: label || meta.motor || 'Imagen' };
   }
@@ -4311,7 +4313,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         </button>
         <figcaption><b>${escAttr(e.label)}</b> <span>${hhmm}</span></figcaption>
         <div class="image-gallery-actions">
-          ${downloadBtnHTML({ ...e.meta, title: e.title || prompt }, '⬇')}
+          ${downloadBtnHTML({ ...e.meta, title: e.title || prompt }, isEn ? 'Save' : 'Bajar')}
           ${e.published ? '<button type="button" class="btn publish-btn done" disabled>✅ EN STOCK</button>' : publishBtnHTML(e.meta)}
         </div>
       </figure>`;
