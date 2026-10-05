@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r8.18:50",
+  "version": "v.05.10.2026.r9.18:59",
   "deployer": "HuangMacMini",
   "machine": "MacMini",
   "signature": "HuangMacMini · MacMini",
   "agent": "HuangMacMini",
-  "evidence": "Música sin password PRO: Create/suno-web/Admira Studio Music; suno-local confía Origin. Tag retorno/pre-sin-pro-pass-20261005."
+  "evidence": "suno-local healthz ok while sleeping + async /generate 202 (fixnel ERR_CONNECTION_CLOSED fix) + client pending poll"
 }
