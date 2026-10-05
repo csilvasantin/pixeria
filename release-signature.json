@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r4.08:19",
+  "version": "v.05.10.2026.r5.08:37",
   "deployer": "LucasGrokBotBox",
   "machine": "GrokBotBox",
   "signature": "LucasGrokBotBox · GrokBotBox",
   "agent": "LucasGrokBotBox",
-  "evidence": "Modo Experto: mostrar u ocultar del todo (data-min=hide de la suite, recuerdo por pestaña); /avatarDigital, /avatar Digital y /admirito alternan a Admirito (admira-next-web #59)"
+  "evidence": "Suno fuera de la interfaz (motor oculto): 62 menciones visibles quitadas en 30 ficheros + enmascarado en pantalla de datos del Stock; test/expert-cli.browser.cjs al nuevo Modo Experto"
 }
