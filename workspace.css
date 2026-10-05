@@ -1535,7 +1535,8 @@ p { margin: 0; }
 .motor-section .motor-title { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--matrix); text-shadow: var(--glow); }
 .motor-section .motor-title::before { content: "> "; opacity: .7; }
 .motor-section .motor-disclaimer { font-size: 11px; color: var(--muted); opacity: .8; }
-.motor-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.motor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.motor-grid[data-count="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .motor-opt { position: relative; }
 .motor-opt input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .motor-opt > label {
@@ -1562,6 +1563,7 @@ p { margin: 0; }
 .motor-tag.good   { color: #4df0c8; }
 .motor-tag.better { color: #d4ff5a; }
 .motor-tag.best   { color: #ffd866; border-color: #ffd866; box-shadow: 0 0 8px rgba(255,216,102,.35); }
+.motor-tag.suno   { color: #ff8ad8; border-color: #ff8ad8; box-shadow: 0 0 8px rgba(255,138,216,.3); }
 .motor-tag.soon   { color: #75aab9; border-color: #75aab9; }
 .motor-use {
   display: inline-block;
@@ -2964,4 +2966,32 @@ body.quad-ui footer {
     overflow-x: auto;
     justify-content: flex-start;
   }
+}
+
+
+/* Cápsula Suno (fase 1) — espejo UI suno.com */
+.suno-capsula { margin-top: 14px; border: 1px solid var(--line-bright); border-radius: 10px; padding: 14px; background: rgba(0,0,0,.35); }
+.suno-capsula[hidden] { display: none !important; }
+.suno-capsula-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.suno-capsula-head h4 { margin:0; font-size:13px; letter-spacing:.04em; color:var(--matrix); }
+.suno-capsula-badge { font-size:10px; border:1px solid rgba(255,200,80,.5); color:#ffc850; border-radius:999px; padding:2px 8px; }
+.suno-tabs { display:flex; gap:18px; border-bottom:1px solid var(--line); margin-bottom:12px; }
+.suno-tab { background:none; border:0; border-bottom:2px solid transparent; color:var(--muted); padding:8px 2px; cursor:pointer; font:inherit; font-size:13px; }
+.suno-tab.is-on { color:var(--ink); border-bottom-color:var(--ink); }
+.suno-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.suno-pills { display:flex; gap:6px; }
+.suno-pill { border:1px solid var(--line-bright); background:transparent; color:var(--ink); border-radius:999px; padding:6px 14px; cursor:pointer; font:inherit; font-size:12px; }
+.suno-pill.is-on { background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.35); }
+.suno-ver { border:1px solid var(--line-bright); background:rgba(0,0,0,.4); color:var(--ink); border-radius:8px; padding:6px 10px; font:inherit; font-size:12px; }
+.suno-attach { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:10px; }
+.suno-attach button { border:1px solid var(--line-bright); background:rgba(0,0,0,.35); color:var(--ink); border-radius:10px; padding:12px 8px; cursor:pointer; font:inherit; font-size:12px; }
+.suno-attach button.is-on { border-color:var(--matrix); color:var(--matrix); box-shadow:0 0 10px rgba(0,255,65,.2); }
+.suno-prompt { width:100%; min-height:110px; border:1px solid var(--line-bright); border-radius:10px; background:#0a0a0a; color:var(--ink); padding:12px; font:inherit; resize:vertical; }
+.suno-create { margin-top:12px; width:100%; border:0; border-radius:999px; padding:12px 16px; font:inherit; font-weight:700; letter-spacing:.03em; cursor:pointer; background:linear-gradient(90deg,#e8e8e8,#cfcfcf); color:#111; }
+.suno-create:disabled { opacity:.55; cursor:not-allowed; }
+.suno-job { margin-top:10px; font-size:12px; color:var(--muted); line-height:1.45; }
+.suno-job code { color:var(--matrix); }
+@media (max-width: 900px) {
+  .motor-grid[data-count="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .suno-attach { grid-template-columns: 1fr; }
 }
