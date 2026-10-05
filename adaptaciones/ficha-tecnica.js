@@ -176,8 +176,9 @@
     var w = video.videoWidth, hgt = video.videoHeight, dur = video.duration;
     var f = { res: w + ' × ' + hgt + ' px', asp: aspecto(w, hgt), ori: w > hgt ? t('Horizontal', 'Landscape') : w < hgt ? t('Vertical', 'Portrait') : t('Cuadrado', 'Square'), dur: tc(dur) };
     f.mime = (o.file && o.file.type) || (it && it.mime) || null;
-    f.origen = o.file ? t('Subida local · ', 'Local upload · ') + o.file.name : it ? 'Stock · ' + it.id : /^blob:/.test(src) ? t('Subida local', 'Local upload') : NADA;
-    f.fuente = it ? [it.motor, it.externalRef || it.externalIdOrigen].filter(Boolean).join(' · ') || null : null;
+    var imp = o.file && window.PixeriaImportar && window.PixeriaImportar.ultimo && window.PixeriaImportar.ultimo.file === o.file ? window.PixeriaImportar.ultimo : null;
+    f.origen = imp ? t('Importado · ', 'Imported · ') + (function () { try { return new URL(imp.url).hostname.replace(/^www\./, ''); } catch (_) { return imp.url; } })() : o.file ? t('Subida local · ', 'Local upload · ') + o.file.name : it ? 'Stock · ' + it.id : /^blob:/.test(src) ? t('Subida local', 'Local upload') : NADA;
+    f.fuente = imp ? [imp.motor, imp.via].filter(Boolean).join(' · ') : it ? [it.motor, it.externalRef || it.externalIdOrigen].filter(Boolean).join(' · ') || null : null;
     f.alta = it && it.createdAt ? fecha(it.createdAt) : null;
     f.cliente = it ? clienteDe(it) : null;
     pintar(f);

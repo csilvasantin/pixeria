@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r2.0803';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r3.0805';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r2.08:03">
+  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r3.08:05">
   <title>Pixeria · Ideas</title>
   <meta name="description" content="Ideas del Consejo de Silicio: mapas del tesoro con las ideas anotadas, listos para debatir.">
   <meta name="theme-color" content="#020602">
@@ -56,8 +56,8 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="assets/styles.css?v=05.10.2026.r2.0803">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r2.0803">
+  <link rel="stylesheet" href="assets/styles.css?v=05.10.2026.r3.0805">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r3.0805">
   <style>
     :root { --idea-max: 860px; }
     .idea-main {
@@ -181,7 +181,7 @@
       .typing span { animation: none; }
     }
   </style>
-  <script defer src="/assets/site-nav.js?v=05.10.2026.r2.0803"></script>
+  <script defer src="/assets/site-nav.js?v=05.10.2026.r3.0805"></script>
 </head>
 <body>
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -362,7 +362,7 @@
         .catch(function () { /* categoría recién abierta: se queda el cartel */ });
     })();
   </script>
-  <script defer src="/assets/cuadratura.js?v=05.10.2026.r2.0803"></script>
+  <script defer src="/assets/cuadratura.js?v=05.10.2026.r3.0805"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
