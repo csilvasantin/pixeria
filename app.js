@@ -631,16 +631,8 @@
   // Devuelve el password PRO guardado (token para el proxy suno-local). Si PRO se
   // desbloqueó en una versión antigua que no lo guardaba, lo pide una vez y lo guarda.
   async function ensureProToken() {
-    let pw = '';
-    try { pw = localStorage.getItem('pixer_pro_pw') || ''; } catch (e) {}
-    if (pw) return pw;
-    const entered = prompt('🔒 Password PRO (necesario para generar con Pixeria Music):');
-    if (entered == null) return '';
-    if ((await _sha256(entered)) === PRO_PASSWORD_HASH) {
-      try { localStorage.setItem('pixer_pro_pw', entered); localStorage.setItem(PRO_LOCK_KEY, '1'); } catch (e) {}
-      return entered;
-    }
-    alert('Password PRO incorrecto.');
+    // 2026-10-05 Carlos: generación musical NO pide password PRO (Google gate en studio).
+    // suno-local confía Origin de pixeria/admira.studio; este helper ya no bloquea.
     return '';
   }
   // Sin candado visible (Carlos, 29-sep-2026): ensuciaba la interfaz. El gate
@@ -1125,13 +1117,7 @@
         return;
       }
 
-      // Execute for real via suno-local (Mac Mini) — same path as Pixeria/Admira Studio Music.
-      const proToken = await ensureProToken();
-      if (!proToken) {
-        stop(false);
-        showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · falta password PRO</div><pre class="player-body">Job ${jobId} encolado. Desbloquea PRO (⚙) para generar con suno-local.</pre></div>`);
-        return;
-      }
+      // Execute via suno-local (Mac Mini). Sin password PRO: studio ya autenticado con Google.
       const alive = await sunoLocalAlive();
       // sleeping:true = proxy vivo, Chrome dormido → /generate lo despierta
       if (!(alive && (alive.ok === true || alive.sleeping === true))) {
@@ -1157,7 +1143,6 @@
           title: titleHint,
           instrumental: false,
           model,
-          token: proToken,
         }),
       });
       const gdata = await gr.json().catch(() => ({}));
@@ -1230,10 +1215,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · el motor no responde</div><pre class="player-body">${health.error}</pre></div>`);
       return;
     }
-    if (!(await confirmPro('Pixeria Music', `~2 canciones · créditos restantes: ${health.total_credits_left}`))) return;
-
-    const proToken = await ensureProToken();
-    if (!proToken) { showPlayer('<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · falta password PRO</div></div>'); return; }
+    // Sin password PRO / confirm: admira.studio ya autenticado con Google (miembros Admira).
 
     showPlayer(`
       <div class="player-card">
@@ -1245,7 +1227,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       const r = await fetch(SUNO_LOCAL_URL + '/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, lyrics, title: titleHint, instrumental: isInstrumental, model, token: proToken }),
+        body: JSON.stringify({ prompt, lyrics, title: titleHint, instrumental: isInstrumental, model }),
       });
       if (!r.ok) {
         stop(false);
