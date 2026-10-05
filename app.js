@@ -822,12 +822,12 @@
     credits.textContent = '--';
     const health = await sunoLocalAlive();
     panel.classList.remove('is-checking');
-    if (health && health.ok) {
-      panel.classList.add('is-ok');
-      state.textContent = 'Conectado';
-      const left = health.total_credits_left ?? health.credits_left ?? health.monthly_limit ?? '--';
+    if (health && (health.ok === true || health.sleeping === true)) {
+      panel.classList.add(health.sleeping ? 'is-warn' : 'is-ok');
+      state.textContent = health.sleeping ? 'Dormido (ok)' : 'Conectado';
+      const left = health.total_credits_left ?? health.credits_left ?? health.monthly_limit ?? (health.sleeping ? '—' : '--');
       credits.textContent = String(left);
-      if (showOkToast) showToast('Motor de música conectado');
+      if (showOkToast) showToast(health.sleeping ? 'Motor vivo · dormido hasta Create' : 'Motor de música conectado');
     } else {
       panel.classList.add('is-warn');
       state.textContent = 'No responde';
@@ -1049,6 +1049,20 @@
     }
     syncSunoCapsulaPanel();
   }
+
+  async function waitSunoPending(pendingId, onTick) {
+    for (let i = 0; i < 90; i++) {
+      await new Promise(r => setTimeout(r, 2000));
+      if (onTick) onTick(i + 1);
+      const pr = await fetch(`${SUNO_LOCAL_URL}/status?pending=${encodeURIComponent(pendingId)}`);
+      const pj = await pr.json().catch(() => ({}));
+      if (pj.status === 'error') throw new Error(pj.error || 'pending generate error');
+      const ids = pj.ids || [];
+      if (ids.length) return { ids, clips: pj.clips || [] };
+    }
+    throw new Error('timeout esperando pending generate');
+  }
+
   function sunoLangPromptPrefix(languages) {
     const langs = (languages || []).map(l => String(l).toUpperCase());
     const hasEs = langs.includes('ESP');
@@ -1145,13 +1159,25 @@
           model,
         }),
       });
-      const gdata = await gr.json().catch(() => ({}));
-      if (!gr.ok || !(gdata.ids || gdata.clips)) {
+            const gdata = await gr.json().catch(() => ({}));
+      if (!gr.ok) {
         stop(false);
-        showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · generate ERROR ${gr.status}</div><pre class="player-body">job ${jobId}\\n${JSON.stringify(gdata).replace(/</g,'&lt;').slice(0,700)}</pre></div>`);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · generate ERROR ${gr.status}</div><pre class="player-body">job ${jobId}\n${JSON.stringify(gdata).replace(/</g,'&lt;').slice(0,700)}</pre></div>`);
         return;
       }
-      const clipIds = (gdata.ids || (gdata.clips || []).map(c => c.id)).filter(Boolean);
+      let clipIds = (gdata.ids || (gdata.clips || []).map(c => c.id)).filter(Boolean);
+      if (!clipIds.length && gdata.pendingId) {
+        const waited = await waitSunoPending(gdata.pendingId, (n) => {
+          const jobEl2 = document.getElementById('sunoJobStatus');
+          if (jobEl2) jobEl2.innerHTML = `Job <code>${jobId}</code> · pending ${gdata.pendingId} · ${n}`;
+        });
+        clipIds = waited.ids;
+      }
+      if (!clipIds.length) {
+        stop(false);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · generate sin clips</div><pre class="player-body">job ${jobId}\n${JSON.stringify(gdata).replace(/</g,'&lt;').slice(0,700)}</pre></div>`);
+        return;
+      }
       // Poll status until complete (reuse pattern from playSunoLocal lightly)
       let clips = [];
       for (let i = 0; i < 60; i++) {
@@ -1210,9 +1236,10 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     const titleHint = (s.titulo || s.cliente || styleText || '').slice(0, 60);
 
     const health = await refreshMusicHealth(false) || await sunoLocalAlive();
-    if (!health.ok) {
+    // sleeping:true / ready:false = proxy vivo (Chrome se despierta en /generate)
+    if (!(health && (health.ok === true || health.sleeping === true))) {
       updateMusicStage('engine');
-      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · el motor no responde</div><pre class="player-body">${health.error}</pre></div>`);
+      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · el motor no responde</div><pre class="player-body">${(health && health.error) || JSON.stringify(health)}</pre></div>`);
       return;
     }
     // Sin password PRO / confirm: admira.studio ya autenticado con Google (miembros Admira).
@@ -1236,7 +1263,12 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         return;
       }
       const data = await r.json();
-      const clipIds = (data.clips || []).map(c => c.id).filter(Boolean);
+      let clipIds = (data.ids || (data.clips || []).map(c => c.id)).filter(Boolean);
+      if (!clipIds.length && data.pendingId) {
+        setProgressLabel('suno', `En cola · ${data.pendingId}`);
+        const waited = await waitSunoPending(data.pendingId, (n) => setProgressLabel('suno', `Generando en Mac Mini · ${n}`));
+        clipIds = waited.ids;
+      }
       if (!clipIds.length) {
         stop(false);
         showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · sin clips</div><pre class="player-body">${JSON.stringify(data).slice(0,400)}</pre></div>`);
