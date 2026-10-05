@@ -19,7 +19,7 @@ const tiles=(rects,W,H)=>{
  assert.equal(rects.reduce((n,r)=>n+area(r),0),W*H,'no gaps');
 };
 
-test('the five ESPECIAL rows of page 3 are transcribed from the same PDF as the 18-screen client profile',()=>{
+test('the five ESPECIAL rows of page 3 are transcribed from the same PDF as the Altadis client profile',()=>{
  assert.equal(especiales.source.sha256,cliente.source.sha256);
  assert.equal(especiales.source.sha256,'16a17b2f81c5713d5d0fc676a02d2192fb95ad07ecb13e29dbec1b09da5239f7');
  if(existsSync(PDF))assert.equal(createHash('sha256').update(readFileSync(PDF)).digest('hex'),especiales.source.sha256);
@@ -29,11 +29,12 @@ test('the five ESPECIAL rows of page 3 are transcribed from the same PDF as the 
   'VIDEOWALL 9x1 H (2880 X 1620) - ESPECIAL','CORDOBA-098 (3840 X 2160) - ESPECIAL',
   'VIDEOWALL 13x1 V (2160 X 3840) - ESPECIAL']);
  assert.deepEqual(L.map(l=>l.row),[18,19,20,21,22]);
- assert.equal(cliente.formats.length+L.length,23);
+ assert.equal(cliente.formats.length,24); // 18 Altadis estándar + 6 MyBlu únicos
+ assert.equal(cliente.formats.length+L.length,29); // categoría Altadis completa
  for(const l of L){
   assert.equal(l.observaciones,'Formato especial');
   const [,w,h]=l.tabla.match(/\((\d+) X (\d+)\)/);assert.deepEqual(l.entrega,[+w,+h]);
-  assert(!cliente.formats.some(f=>f.nombre===l.nombre),'not duplicated in the 18-screen profile');
+  assert(!cliente.formats.some(f=>f.nombre===l.nombre),'not duplicated in the flat client profile');
  }
  assert.deepEqual(L.map(l=>l.pantallas),[5,6,11,15,13]);
  // Ambiguities stay documented instead of silently resolved.
@@ -76,7 +77,8 @@ test('special family persists its own selection and settings and filters separat
  assert.equal(restore({version:1,profile:'especiales'},formats.filter(f=>!f.especial)).profile,'standard');
  assert.deepEqual(restore({version:1},formats).selected,['16:9']);
  assert.deepEqual(matchingFormats(formats,{profile:'especiales'}).map(f=>f.id),especiales.layouts.map(l=>l.id));
- assert.deepEqual(matchingFormats(formats,{profile:'cliente'}).map(f=>f.id),['cliente-01']);
+ // Altadis category includes flat client sizes AND ESPECIAL videowalls.
+ assert.deepEqual(matchingFormats(formats,{profile:'cliente'}).map(f=>f.id),['cliente-01',...especiales.layouts.map(l=>l.id)]);
  assert.equal(matchingFormats(formats,{profile:'especiales',query:'2880x1620'}).length,1);
 });
 

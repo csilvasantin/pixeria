@@ -1,12 +1,13 @@
 {
   "source": {
-    "title": "Altadis · Resoluciones y formatos",
+    "title": "Altadis · Resoluciones y formatos (+ MyBlu)",
     "page": 3,
     "sha256": "16a17b2f81c5713d5d0fc676a02d2192fb95ad07ecb13e29dbec1b09da5239f7",
-    "scope": "18 filas estándar: excluye 5 filas marcadas ESPECIAL; incluye SHUTTLE STRETCH (SEDE)",
+    "scope": "24 filas de pantalla en la categoría Altadis: 18 estándar Altadis (perfil-cliente-18 original) + formatos MyBlu no duplicados por nombre×WxH. Los 5 ESPECIAL segmentados viven en perfil-cliente-especiales.json y también entran en la campaña Altadis.",
     "requirements": "MP4 / H264 / 25fps. Sincro VW y LOGO requieren igual duración; esta preview no sincroniza players.",
     "client": "Altadis",
-    "count": 18
+    "count": 18,
+    "mybluNote": "Tabla MyBlu del mismo PDF; sin categoría propia. Dedupe por nombre+WxH frente a Altadis."
   },
   "formats": [
     {
@@ -242,6 +243,90 @@
       "fps": 25,
       "on": false,
       "cliente": true
+    },
+    {
+      "id": "cliente-19",
+      "nombre": "LG STRETCH MADRID-199",
+      "custom": [
+        3840,
+        600
+      ],
+      "uso": "stretch LG Madrid · MyBlu",
+      "useEn": "LG stretch Madrid · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
+    },
+    {
+      "id": "cliente-20",
+      "nombre": "PANTALLA LED",
+      "custom": [
+        704,
+        300
+      ],
+      "uso": "pantalla LED · MyBlu",
+      "useEn": "LED screen · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
+    },
+    {
+      "id": "cliente-21",
+      "nombre": "VIDEOWALL 1X4 H",
+      "custom": [
+        960,
+        2160
+      ],
+      "uso": "videowall 1×4 H · MyBlu",
+      "useEn": "video wall 1×4 H · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
+    },
+    {
+      "id": "cliente-22",
+      "nombre": "VIDEOWALL 2X3 H",
+      "custom": [
+        2880,
+        1080
+      ],
+      "uso": "videowall 2×3 H · MyBlu",
+      "useEn": "video wall 2×3 H · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
+    },
+    {
+      "id": "cliente-23",
+      "nombre": "VIDEOWALL 3X2 V",
+      "custom": [
+        1620,
+        1920
+      ],
+      "uso": "videowall 3×2 V · MyBlu",
+      "useEn": "video wall 3×2 V · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
+    },
+    {
+      "id": "cliente-24",
+      "nombre": "VIDEOWALL 5X1 V",
+      "custom": [
+        2700,
+        960
+      ],
+      "uso": "videowall 5×1 V · MyBlu",
+      "useEn": "video wall 5×1 V · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
     }
   ]
 }

@@ -40,8 +40,9 @@ export function createCatalog(en=false) {
  if(en) formats.forEach(f=>{f.nombre=f.nameEn;f.uso=f.useEn;});
  return formats;
 }
+export const isAltadisFormat = f => !!(f.cliente || f.especial);
 export const CAMPAIGNS=[
- {id:'altadis',es:'Altadis',en:'Altadis',descriptionEs:'18 pantallas del circuito · MP4 H.264 · 25 fps',descriptionEn:'18 circuit screens · MP4 H.264 · 25 fps',matches:f=>!!f.cliente,profile:'cliente'},
+ {id:'altadis',es:'Altadis',en:'Altadis',descriptionEs:'Estándar + ESPECIAL + MyBlu · MP4 H.264 · 25 fps',descriptionEn:'Standard + ESPECIAL + MyBlu · MP4 H.264 · 25 fps',matches:isAltadisFormat,profile:'cliente'},
  {id:'social',es:'Campaña de redes sociales',en:'Social media campaign',descriptionEs:'Publicaciones, stories y portadas',descriptionEn:'Posts, stories and covers',matches:f=>f.category==='social'},
  {id:'display',es:'Anuncios display',en:'Display ads',descriptionEs:'Rectángulos, banners y formatos regionales',descriptionEn:'Rectangles, banners and regional sizes',matches:f=>f.category==='display'},
  {id:'mobile',es:'Anuncios móviles',en:'Mobile ads',descriptionEs:'Tres banners para móvil',descriptionEn:'Three mobile banners',matches:f=>f.mobile},
@@ -51,7 +52,8 @@ export function matchingFormats(formats,{query='',orientation='all',category,pro
  const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[×:]/g,'x').replace(/\s+/g,'');
  const q=norm(query);
  return formats.filter(f=>{
-  if(formatFamily(f)!==profile) return false;
+  if(profile==='cliente'){ if(!isAltadisFormat(f)) return false; }
+  else if(formatFamily(f)!==profile) return false;
   if(category&&f.category!==category) return false;
   const [w,h]=f.custom||({'9:16':[1080,1920],'16:9':[1920,1080],'1:1':[1080,1080],'4:5':[1080,1350]}[f.id]||[0,0]);
   if(orientation!=='all'&&(orientation==='portrait'?h<=w:orientation==='landscape'?w<=h:w!==h)) return false;
@@ -84,6 +86,8 @@ export function applyCampaign(formats, campaignId) {
   // Campañas de cliente (Altadis): activan el perfil cliente y sus formatos.
   if (profile === 'standard') {
    if (!isLibrarySize(f)) continue;
+  } else if (profile === 'cliente') {
+   if (!isAltadisFormat(f)) continue;
   } else if (formatFamily(f) !== profile) continue;
   f.on = !!campaign.matches(f);
   if (f.on) n++;

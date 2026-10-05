@@ -109,20 +109,20 @@
 .adapt-main .steps .step[aria-current] b{background:var(--ac);color:var(--on-ac)}
 .adapt-main .steps .step:disabled{opacity:.45;cursor:default}
 .adapt-main .step-sep{color:var(--mu)}
-.adapt-main .paso-hd{font-size:22px;margin:4px 0 14px}
-.adapt-main .src-options{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:14px}
-.adapt-main .src-opt{position:relative;display:flex;flex-direction:column;gap:8px;padding:18px 18px 16px;border:1px solid var(--ln);border-radius:12px;background:var(--card);color:var(--tx);text-decoration:none;cursor:pointer;min-height:150px;box-sizing:border-box}
+.adapt-main .paso-hd{display:none}
+.adapt-main .src-options{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px}
+.adapt-main .src-opt{position:relative;display:flex;flex-direction:column;gap:6px;padding:12px 14px 10px;border:1px solid var(--ln);border-radius:10px;background:var(--card);color:var(--tx);text-decoration:none;cursor:pointer;min-height:0;box-sizing:border-box}
 .adapt-main .src-opt:hover{border-color:color-mix(in srgb,var(--tx) 30%,var(--ln))}
 .adapt-main .src-opt-main{border-color:var(--ac);background:linear-gradient(180deg,var(--card-hi),var(--card))}
 .adapt-main .src-opt .n{position:absolute;top:14px;right:16px;color:var(--mu);font:700 12px ui-monospace,monospace}
-.adapt-main .src-opt h3{margin:0;font-size:18px}
-.adapt-main .src-opt p{margin:0;font-size:13px}
+.adapt-main .src-opt h3{margin:0;font-size:15px}
+.adapt-main .src-opt p{margin:0;font-size:12px}
 .adapt-main .src-opt select{width:100%;padding:9px;background:var(--field);color:var(--tx);border:1px solid var(--ln);border-radius:8px;font:inherit;margin-top:auto}
 .adapt-main .src-opt input[type=file]{margin-top:auto;color:var(--mu);max-width:100%}
 .adapt-main .src-opt .pill{margin-top:auto;align-self:flex-start}
 .adapt-main #src-msg:empty{display:none}
-.adapt-main .src-preview{margin-top:18px;display:flex;flex-direction:column;gap:10px;align-items:center}
-.adapt-main .src-preview #src{display:block;max-width:100%;max-height:42vh;border-radius:10px;background:#000;border:1px solid var(--ln)}
+.adapt-main .src-preview{margin-top:10px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.adapt-main .src-preview #src{display:block;max-width:100%;max-height:min(34vh,320px);border-radius:10px;background:#000;border:1px solid var(--ln)}
 .adapt-main .preview-bar,.adapt-main .paso2-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .adapt-main .preview-bar #src-info{flex:1 1 auto;font-size:12px}
 .adapt-main #btn-adaptar{font-size:15px;padding:9px 22px}
@@ -188,19 +188,19 @@ body[data-paso="1"] #cuad-experto-live{display:none}
 
 /* Paso 1 · ficha técnica junto a la vista previa (Carlos, 4-oct-2026, 23:52): monitor técnico, mono,
    etiquetas pequeñas en mayúsculas y valores alineados; colores por variables (marca blanca incluida). */
-.adapt-main .src-stage{display:grid;grid-template-columns:minmax(0,auto) minmax(280px,360px);gap:18px;align-items:start;justify-content:center;width:100%}
+.adapt-main .src-stage{display:grid;grid-template-columns:minmax(0,auto) minmax(260px,340px);gap:12px;align-items:start;justify-content:center;width:100%}
 .adapt-main .src-stage #src{justify-self:end}
-.adapt-main .ficha{font:12px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--field);color:var(--tx);border:1px solid var(--ln);border-top:2px solid var(--ac);border-radius:6px;padding:10px 12px 8px;max-height:42vh;overflow:auto;scrollbar-width:thin;font-variant-numeric:tabular-nums}
+.adapt-main .ficha{font:11px/1.25 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--field);color:var(--tx);border:1px solid var(--ln);border-top:2px solid var(--ac);border-radius:6px;padding:8px 10px 6px;max-height:none;overflow:visible;font-variant-numeric:tabular-nums}
 .adapt-main .ficha-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--ln)}
 .adapt-main .ficha-tit{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ac)}
 .adapt-main .ficha-copy{font:inherit;font-size:11px;background:transparent;color:var(--tx);border:1px solid var(--ln);border-radius:4px;padding:2px 8px;cursor:pointer}
 .adapt-main .ficha-copy:hover{border-color:var(--ac)}
-.adapt-main .ficha-g{margin-top:7px}
+.adapt-main .ficha-g{margin-top:4px}
 .adapt-main .ficha-g h4{margin:0 0 3px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--mu)}
 .adapt-main .ficha dl{margin:0;display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:12px}
 .adapt-main .ficha dl>div{display:contents}
-.adapt-main .ficha dt{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);padding:2px 0;border-bottom:1px dashed color-mix(in srgb,var(--ln) 70%,transparent)}
-.adapt-main .ficha dd{margin:0;text-align:right;padding:2px 0;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-bottom:1px dashed color-mix(in srgb,var(--ln) 70%,transparent)}
+.adapt-main .ficha dt{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:1px 0;border-bottom:1px dashed color-mix(in srgb,var(--ln) 70%,transparent)}
+.adapt-main .ficha dd{margin:0;text-align:right;padding:1px 0;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-bottom:1px dashed color-mix(in srgb,var(--ln) 70%,transparent)}
 .adapt-main .ficha dd.nd{color:var(--mu)}
 @media (max-width:820px){.adapt-main .src-stage{grid-template-columns:minmax(0,1fr)}.adapt-main .src-stage #src{justify-self:center}.adapt-main .ficha{max-height:none}}
 
@@ -234,3 +234,8 @@ body[data-paso="1"] #cuad-experto-live{display:none}
 .adapt-main .imp-file:hover,.adapt-main .imp-file:focus-within{border-color:var(--ac)}
 .adapt-main .imp-file:focus-within{outline:2px solid var(--ac);outline-offset:2px}
 .adapt-main .imp-file input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
+
+/* Compactación paso 1 · sin scroll en ficha (5-oct-2026) */
+.adapt-main .src-opt > p.muted{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.adapt-main .sec-hd h1{font-size:clamp(18px,2.2vw,26px);margin:0 0 6px}
+.adapt-main .steps{margin:0 0 8px}
