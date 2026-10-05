@@ -536,6 +536,8 @@
     if (!p) return;
     p.hidden = false;
     p.innerHTML = html;
+    // Imágenes: la «pantalla» (#imageStage) deja de mostrar el estado vacío.
+    document.getElementById('imageStage')?.classList.add('has-result');
   }
 
   // Genera el HTML de una barra de progreso (indeterminada por defecto).
@@ -951,6 +953,8 @@
     };
   }
   function syncSunoCapsulaPanel() {
+    // Solo Música: antes renombraba #playOutput a «CREAR MÚSICA» en Imágenes/Vídeo/Megafonía.
+    if (!document.body || document.body.dataset.page !== 'musica') return;
     const s = loadStore().musica || {};
     const on = s.motor === 'suno-web';
     const panel = document.getElementById('sunoCapsula');
@@ -1668,7 +1672,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         const cellMeta = JSON.stringify({ type: 'image', motor: m.id, prompt: fullPrompt, costEst: m.cost, url: res.url, mime: 'image/png' }).replace(/'/g, '&#39;');
         // crossorigin solo en imágenes con CORS (admira-imagen) → si no, el navegador
         // bloquea la carga (p.ej. imgen.x.ai de Grok no manda cabeceras CORS).
-        const cors = /admira-imagen\.|^data:/.test(res.url || '') ? ' crossorigin="anonymous"' : '';
+        const cors = /admira-imagen\.|imagen\.admira\.store|^data:/.test(res.url || '') ? ' crossorigin="anonymous"' : '';
         cell.innerHTML = `<img${cors} src="${res.url}" alt="${m.label}" data-pixer-title="${safeTitle}" onload="this.parentElement.querySelector('.compare-time')?.remove()" onerror="this.parentElement.innerHTML='<div style=&quot;color:#ff8a5c;font-size:11px;padding:10px;line-height:1.4&quot;>⚠ ${m.label}: sin imagen — el modelo rechazó el prompt (personajes con copyright o marcas) o cuota.</div>'"><span class="compare-time">${(ms/1000).toFixed(1)}s</span>`
           + `<button type="button" class="btn publish-btn compare-pub" data-publish-meta='${cellMeta}' title="Publicar esta imagen en Stock" style="display:block;width:100%;margin-top:6px;font-size:11px;padding:6px 8px">📌 PUBLICAR EN STOCK</button>`;
         // Auto-selecciona la primera imagen que carga (default seleccionada).
@@ -2889,7 +2893,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     const labels = {
       audio: '🎙️ CREAR MEGAFONÍA',
       musica: '🎵 CREAR MÚSICA',
-      imagenes: '✨ CREAR IMAGEN',
+      imagenes: (document.documentElement.lang === 'en') ? '✨ CREATE IMAGE' : '✨ CREAR IMAGEN',
       video: '✨ CREAR VÍDEO',
       plataforma: '▶ REPRODUCIR TODO DE NUEVO',
       publicidad: '✨ REGENERAR ANUNCIO',
@@ -2974,7 +2978,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
   // Fichero de la tarjeta en la que vive el botón (para las data: URL y para los
   // resultados con varias versiones, donde cada una tiene su propio media).
   function downloadSrcNear(btn) {
-    const card = btn.closest('.music-result-item, .player-card, .cmp-cell') || document;
+    const card = btn.closest('.music-result-item, .image-gallery-item, .compare-cell, .player-card, .cmp-cell') || document;
     const el = card.querySelector('img.player-img, video, audio, img');
     return el ? (el.currentSrc || el.src || '') : '';
   }
@@ -4226,6 +4230,146 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     });
   }
 
+
+  // ─── Imágenes · galería de la sesión ─────────────────────────────
+  // Cada imagen que termina de cargar en #player (motor único o comparativa)
+  // se copia a una galería de sesión (últimas IMAGE_GALLERY_MAX) bajo la
+  // pantalla. La copia se congela como data: URL cuando el CORS lo permite:
+  // las URL de Nano Banana (imagen.admira.store/img?prompt=…) regeneran al
+  // volver a pedirse, así que la galería guarda EXACTAMENTE lo que se vio.
+  // Solo memoria de la pestaña: no toca localStorage (los base64 pesan megas).
+  const IMAGE_GALLERY_MAX = 12;
+  const imageGallery = [];
+  let imageGallerySeq = 0;
+
+  function galleryFreezeSrc(img) {
+    const src = img.currentSrc || img.src || '';
+    if (!src || src.startsWith('data:')) return src;
+    try {
+      if (!img.naturalWidth) return src;
+      const cv = document.createElement('canvas');
+      cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+      cv.getContext('2d').drawImage(img, 0, 0);
+      return cv.toDataURL('image/png');
+    } catch (_) { return src; }  // canvas tainted (p.ej. Grok sin CORS) → URL original
+  }
+
+  function galleryMetaFor(img) {
+    const holder = img.closest('.compare-cell, .player-card') || getPlayer();
+    const btn = holder && holder.querySelector('.publish-btn[data-publish-meta]');
+    let meta = {};
+    try { meta = btn ? JSON.parse(btn.dataset.publishMeta) : {}; } catch (_) {}
+    let label = '';
+    const cell = img.closest('.compare-cell');
+    if (cell) label = cell.dataset.motorLabel || '';
+    if (!label) {
+      const head = holder && holder.querySelector('.player-head');
+      label = head ? head.textContent.replace(/^▶\s*IMAGEN\s*·\s*/i, '').split('·')[0].replace(/\s*\([^)]*\)\s*/g, ' ').trim() : '';
+    }
+    return { meta, label: label || meta.motor || 'Imagen' };
+  }
+
+  function addToImageGallery(img) {
+    if (!img || img.dataset.fromGallery === '1' || img.dataset.galleryAdded === '1') return;
+    if (!img.naturalWidth) return;
+    img.dataset.galleryAdded = '1';
+    const { meta, label } = galleryMetaFor(img);
+    const src = galleryFreezeSrc(img);
+    if (!src) return;
+    const isData = src.startsWith('data:');
+    const mime = isData ? ((src.match(/^data:([^;,]+)/) || [])[1] || 'image/png') : (meta.mime || 'image/png');
+    const entry = {
+      id: ++imageGallerySeq,
+      src,
+      label,
+      title: (img.dataset && img.dataset.pixerTitle) || '',
+      ts: new Date(),
+      meta: Object.assign({ type: 'image' }, meta, { url: src, mime }),
+    };
+    imageGallery.unshift(entry);
+    if (imageGallery.length > IMAGE_GALLERY_MAX) imageGallery.length = IMAGE_GALLERY_MAX;
+    renderImageGallery(entry.id);
+  }
+
+  function renderImageGallery(activeId) {
+    const wrap = document.getElementById('imageGalleryWrap');
+    const grid = document.getElementById('imageGallery');
+    if (!wrap || !grid) return;
+    // Conserva el «✅ EN STOCK» de lo ya publicado desde la galería al re-pintar.
+    grid.querySelectorAll('.image-gallery-item .publish-btn.done').forEach(b => {
+      const id = Number(b.closest('.image-gallery-item')?.dataset.galleryId);
+      const e = imageGallery.find(x => x.id === id);
+      if (e) e.published = true;
+    });
+    wrap.hidden = imageGallery.length === 0;
+    const isEn = document.documentElement.lang === 'en';
+    grid.innerHTML = imageGallery.map(e => {
+      const hhmm = e.ts.toLocaleTimeString(isEn ? 'en-GB' : 'es-ES', { hour: '2-digit', minute: '2-digit' });
+      const prompt = String(e.meta.prompt || '');
+      return `
+      <figure class="image-gallery-item${e.id === activeId ? ' is-active' : ''}" data-gallery-id="${e.id}">
+        <button type="button" class="image-gallery-thumb" data-gallery-show="${e.id}" title="${escAttr(prompt.slice(0, 200) || (isEn ? 'Show on screen' : 'Ver en pantalla'))}">
+          <img src="${e.src}" alt="${escAttr(e.label)}" loading="lazy" data-from-gallery="1">
+        </button>
+        <figcaption><b>${escAttr(e.label)}</b> <span>${hhmm}</span></figcaption>
+        <div class="image-gallery-actions">
+          ${downloadBtnHTML({ ...e.meta, title: e.title || prompt }, isEn ? 'Save' : 'Bajar')}
+          ${e.published ? '<button type="button" class="btn publish-btn done" disabled>✅ EN STOCK</button>' : publishBtnHTML(e.meta)}
+        </div>
+      </figure>`;
+    }).join('');
+  }
+
+  function showGalleryEntry(id) {
+    const e = imageGallery.find(x => x.id === id);
+    if (!e) return;
+    const isEn = document.documentElement.lang === 'en';
+    const prompt = String(e.meta.prompt || '');
+    showPlayer(`
+      <div class="player-card">
+        <div class="player-head">▶ IMAGEN · ${escAttr(e.label)} · ${isEn ? 'from gallery' : 'de la galería'}</div>
+        <div class="player-img-wrap">
+          <img class="player-img" src="${e.src}" alt="generada" data-from-gallery="1" data-pixer-title="${escAttr(e.title)}">
+        </div>
+        <pre class="player-body">${prompt.replace(/</g, '&lt;')}</pre>
+        ${downloadBtnHTML({ ...e.meta, title: e.title || prompt }, isEn ? 'Download image' : 'Descargar imagen')}
+        ${publishBtnHTML(e.meta)}
+      </div>`);
+    document.querySelectorAll('.image-gallery-item.is-active').forEach(x => x.classList.remove('is-active'));
+    document.querySelector(`.image-gallery-item[data-gallery-id="${id}"]`)?.classList.add('is-active');
+    document.getElementById('imageStage')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function bindImageGallery() {
+    if (document.body.dataset.page !== 'imagenes') return;
+    const player = getPlayer();
+    if (!player) return;
+    // load no burbujea → captura. Vale para todos los motores y la comparativa.
+    document.addEventListener('load', (ev) => {
+      const img = ev.target;
+      if (!img || img.tagName !== 'IMG' || !player.contains(img)) return;
+      if (!img.matches('img.player-img, .compare-cell-img img')) return;
+      addToImageGallery(img);
+    }, true);
+    document.getElementById('imageGallery')?.addEventListener('click', (ev) => {
+      const b = ev.target.closest('[data-gallery-show]');
+      if (!b) return;
+      ev.preventDefault();
+      showGalleryEntry(Number(b.dataset.galleryShow));
+    });
+    document.getElementById('clearImageGallery')?.addEventListener('click', () => {
+      imageGallery.length = 0;
+      renderImageGallery();
+    });
+    // Ctrl/⌘ + Enter en el prompt = CREAR IMAGEN
+    document.getElementById('i-prompt')?.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' && (ev.metaKey || ev.ctrlKey)) {
+        ev.preventDefault();
+        document.getElementById('playOutput')?.click();
+      }
+    });
+  }
+
   // Init por página
   document.addEventListener('DOMContentLoaded', () => {
     applyDefaults();
@@ -4259,6 +4403,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       bindGenLyrics();
       bindSegmentedAds();
       bindSendToAdmiraXP();
+      bindImageGallery();
       bindConsejoHandoff();
 
       const demoBtn = document.getElementById('loadDemo');

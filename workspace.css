@@ -3002,3 +3002,94 @@ body.quad-ui footer {
   .motor-grid[data-count="4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .suno-attach { grid-template-columns: 1fr; }
 }
+
+/* ─── Imágenes · prompt protagonista + pantalla + galería de sesión ─── */
+.image-create-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.15fr);
+  gap: 18px;
+  align-items: start;
+}
+.image-create-main { display: grid; gap: 14px; min-width: 0; }
+.image-prompt-field textarea {
+  min-height: 240px;
+  font-size: 15px;
+  line-height: 1.5;
+  border-color: var(--line-bright);
+}
+.image-prompt-field textarea:focus { border-color: var(--matrix); box-shadow: 0 0 12px rgba(0,255,65,.25); }
+.image-prompt-hint { font-size: 10px; letter-spacing: .04em; }
+.image-create-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.image-create-actions .btn.play { flex: 1 1 200px; }
+.image-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 10px;
+  padding: 10px;
+  border: 1px dashed var(--line);
+}
+.image-options .field label { font-size: 10px; }
+.image-options .field input,
+.image-options .field select { padding-top: 6px; padding-bottom: 6px; font-size: 12px; }
+.image-options-wide { grid-column: 1 / -1; }
+.image-stage {
+  position: sticky;
+  top: 70px;
+  min-width: 0;
+  min-height: 320px;
+  border: 1px solid var(--line-bright);
+  background: rgba(0,0,0,.55);
+  padding: 10px;
+}
+.image-stage .player-area { margin-top: 0; }
+.image-stage-empty {
+  min-height: 300px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+  color: var(--muted);
+  padding: 20px;
+}
+.image-stage-icon { font-size: 44px; filter: drop-shadow(0 0 10px rgba(0,255,65,.35)); }
+.image-stage-empty strong { color: var(--matrix); letter-spacing: .08em; text-transform: uppercase; font-size: 13px; }
+.image-stage-empty small { max-width: 34ch; font-size: 11px; line-height: 1.5; }
+.image-stage.has-result .image-stage-empty { display: none; }
+.image-stage .compare-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.image-gallery { margin-top: 18px; }
+.image-gallery-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 10px; }
+.image-gallery-head strong { color: var(--matrix); letter-spacing: .1em; text-transform: uppercase; font-size: 12px; }
+.image-gallery-head small { flex: 1 1 auto; font-size: 11px; }
+.image-gallery-head .btn { font-size: 10px; padding: 4px 8px; }
+.image-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.image-gallery-item {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,.5);
+  padding: 6px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.image-gallery-item:hover { border-color: var(--line-bright); }
+.image-gallery-item.is-active { border-color: var(--matrix); box-shadow: 0 0 12px rgba(0,255,65,.35); }
+.image-gallery-thumb { display: block; padding: 0; border: 0; background: #000; cursor: zoom-in; aspect-ratio: 1 / 1; overflow: hidden; }
+.image-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.image-gallery-item figcaption { font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; gap: 6px; white-space: nowrap; overflow: hidden; }
+.image-gallery-item figcaption b { color: var(--matrix); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.image-gallery-actions { display: grid; grid-template-columns: auto 1fr; gap: 4px; }
+.image-gallery-actions .btn { font-size: 10px; padding: 4px 6px; margin: 0; }
+.image-motor { margin-top: 18px; }
+.image-brief-tools { margin-top: 18px; }
+.image-brief-tools summary { cursor: pointer; color: var(--muted); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.image-brief-tools .brief-actions { margin: 10px 0; }
+@media (max-width: 900px) {
+  .image-create-grid { grid-template-columns: 1fr; }
+  .image-stage { position: static; }
+  .image-prompt-field textarea { min-height: 180px; }
+}
