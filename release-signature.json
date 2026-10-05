@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r13.22:40",
+  "version": "v.05.10.2026.r14.22:52",
   "deployer": "MorfeoMacMini",
   "machine": "MacMini",
   "signature": "MorfeoMacMini · MacMini",
   "agent": "MorfeoMacMini",
-  "evidence": "Adaptador: proyectos de Yokup con ajustes generales + ficha propia (Altadis primera ficha, ?proyecto=, persistencia por proyecto)"
+  "evidence": "Adaptador: también adapta imágenes del Stock y del equipo (PNG/JPG y MP4 de imagen fija 1–60 s, 25 fps)"
 }
