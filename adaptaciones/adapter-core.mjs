@@ -75,3 +75,26 @@ export function exportJob(source,profile,technical,mode,s,name,id) {
     '-b:v',`${rate}k`,'-maxrate',`${rate}k`,'-bufsize',`${rate*2}k`,'-g',String(Math.round(fps*(technical.gopSegundos||2))),
     '-c:a','aac','-b:a','128k','-movflags','+faststart','-fs',String(128*1048576),'output.mp4']};
 }
+// Still images (Carlos, 5-oct-2026): an image becomes an MP4 of a fixed, configurable length.
+// Same jobs, same filter graph and the same limits as a video: only the input changes
+// (-loop 1 at 25 fps for N seconds) and the audio goes away.
+export const STILL = {min:1,max:60,default:10,fps:25};
+export function stillSeconds(v) {
+  const n=Math.round(Number(v));
+  return Number.isFinite(n)&&n>0?Math.max(STILL.min,Math.min(STILL.max,n)):STILL.default;
+}
+// Image formats the adapter accepts as a source, with the extension FFmpeg reads them by.
+export const STILL_TYPES = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+// Turns any job (single format, special delivery or per-screen batch) into its still-image version.
+export function stillJob(job,seconds,input='input.png') {
+  const d=String(stillSeconds(seconds)),args=[],a=job.args;
+  for(let i=0;i<a.length;i++) {
+    if(a[i]==='-i'&&a[i+1]==='input'){args.push('-loop','1','-framerate',String(STILL.fps),'-t',d,'-i',input);i++;continue;}
+    if(a[i]==='-map'&&a[i+1]==='0:a?'){i++;continue;}
+    if(a[i]==='-c:a'||a[i]==='-b:a'){i++;continue;}
+    args.push(a[i]);
+    if(a[i]==='-map'&&a[i+1]==='[out]'){args.push(a[++i],'-an');continue;}
+    if(a[i]==='-c:v'&&a[i+1]==='libx264'){args.push(a[++i],'-tune','stillimage');continue;}
+  }
+  return {...job,args,input,still:+d};
+}

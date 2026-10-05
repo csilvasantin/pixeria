@@ -2,7 +2,7 @@
 // Render en vivo en canvas; las reglas son las del motor de signage de Pixeria.
 // Reutiliza el motor de reglas real de Pixeria: assets/signage-perfiles.js
 import { perfilDeSalida, planificar } from '/assets/signage-perfiles.js';
-import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob } from './adapter-core.mjs';
+import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob, STILL, STILL_TYPES, stillSeconds, stillJob } from './adapter-core.mjs';
 import { createEngine, MAX_SOURCE_BYTES } from './adapter-export.js';
 import { createExportQueue } from './export-queue.js';
 import { publishAdaptation, shortFormat, adaptationTitle } from './stock-publish.mjs';
@@ -23,6 +23,18 @@ FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoo
 let FICHA = null, INDEX = [], PROJECTS = [], campaigns = CAMPAIGNS, yokupSource = 'none', yokupDate = '';
 
 const video = $('#src');
+// Imagen fija (Carlos, 5-oct-2026): la fuente puede ser un vídeo (#src) o una imagen (#src-img) JPG,
+// PNG o WebP, del Stock o del equipo. El reencuadre es el mismo; display e impresión salen en PNG
+// (o JPG) y el resto en MP4 H.264 a 25 fps de la duración elegida (1–60 s, 10 por defecto), sin audio.
+const img = $('#src-img');
+let srcKind = 'video';
+const isImage = () => srcKind === 'image';
+const media = () => isImage() ? img : video;
+const mediaReady = () => isImage() ? !!(img.getAttribute('src') && img.complete && img.naturalWidth) : video.videoWidth > 0;
+const STILL_KEY = 'pixeria.adapter.still';
+let stillSec = STILL.default;
+try { stillSec = stillSeconds(localStorage.getItem(STILL_KEY)); } catch (_) {}
+let srcExt = 'png';
 let initialized = false;
 const selectedFormats = () => FORMATOS.filter(f => f.on && (state.profile === 'proyecto' ? isProjectFormat(f) : formatFamily(f) === state.profile));
 // Biblioteca uses the compatibility selector; project formats keep native resolutions.
@@ -95,7 +107,7 @@ async function saveOne(item,file) {
   item.stock=item.stock||{ok:0,fail:0,ids:[]};
   queue.note(item,t('Guardando en el Stock…','Saving to Stock…'));
   let result;
-  try {result=await publishAdaptation(file.blob,{title,originId:item.origin.id,client:item.client,format,width:file.output.W,height:file.output.H,duration:item.duration});}
+  try {result=await publishAdaptation(file.blob,{title,originId:item.origin.id,client:item.client,format,width:file.output.W,height:file.output.H,duration:item.duration,still:!!item.still});}
   catch(_) {result={ok:false,error:'network'};}
   if(result.ok){item.stock.ok++;item.stock.ids.push(result.num?`#${result.num}`:result.id);}else item.stock.fail++;
   const done=item.stock.ok+item.stock.fail;
@@ -116,33 +128,62 @@ const queue = createExportQueue({
   engine:createEngine(),t,onChange:paintBatch,
   onCreate(item){ if (batchIds) batchIds.add(item.id); },
   onComplete:saveToStock,
-  onRelease:url=>{if(url!==sourceObjectURL&&url.startsWith('blob:'))URL.revokeObjectURL(url);}
+  onRelease:url=>{if(url!==sourceObjectURL&&url!==stillInput.url&&url.startsWith('blob:'))URL.revokeObjectURL(url);}
 });
+// What FFmpeg reads for a still image: the picture as the browser shows it (EXIF orientation
+// applied, same pixels as the preview) re-encoded as PNG once per source. If the browser cannot
+// rasterise it (canvas limits), the original file is used. Lines in the queue keep their own URL.
+let stillInput = {key: '', url: null, input: 'input.png'};
+function releaseStill() {
+  const u = stillInput.url;
+  if (u && u.startsWith('blob:') && u !== sourceObjectURL && !queue.uses(u)) URL.revokeObjectURL(u);
+  stillInput = {key: '', url: null, input: 'input.png'};
+}
+async function stillSource() {
+  const key = img.currentSrc || img.src;
+  if (stillInput.key === key && stillInput.url) return stillInput;
+  let url = null, input = 'input.png';
+  try {
+    const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    c.getContext('2d').drawImage(img, 0, 0);
+    const blob = await new Promise(resolve => c.toBlob(resolve, 'image/png')); c.width = c.height = 0;
+    if (blob && blob.size <= MAX_SOURCE_BYTES) url = URL.createObjectURL(blob);
+  } catch (_) {}
+  if (!url) { url = key; input = `input.${srcExt}`; }
+  releaseStill(); stillInput = {key, url, input};
+  return stillInput;
+}
+// kinds: 'both' | 'atlas' | 'segments' for special layouts; 'jpg' turns picture outputs into JPG.
 async function exportFormats(formats,kinds='both') {
   if(!state.src.ancho || !formats.length) return;
   const status=$('#export-status');status.textContent='';
+  const still=isImage(),seconds=stillSec,duration=still?seconds:video.duration;
   const pngFormats=formats.filter(f=>f.output==='png');
   const jobs=formats.filter(f=>f.output!=='png').flatMap(f=>f.especial?especialJobs(f,kinds).map(job=>({job,f})):[{job:{...exportJob(state.src,perfil(f),plan(f),modoEfectivo(f),state.fmt[f.id],state.srcName,f.id),label:f.nombre},f}]);
-  const budget=jobs.length?exportBudget(video.duration,jobs.map(j=>j.job)):null;
+  const budget=jobs.length?exportBudget(duration,jobs.map(j=>j.job)):null;
   if(budget) {status.textContent=budget==='batch-size'
     ?t('El lote supera el presupuesto local de memoria. Selecciona menos formatos y expórtalos por separado.','This batch exceeds the local memory budget. Select fewer formats and export them separately.')
+    :still?t('Esta duración es demasiado larga para este perfil en el navegador. Baja los segundos del MP4 o usa un perfil de menor resolución.','This length is too long for this profile in the browser. Lower the MP4 seconds or use a lower resolution profile.')
     :t('Este vídeo es demasiado largo para exportarlo con este perfil en el navegador. Usa un clip más corto o un perfil de menor resolución.','This video is too long to export with this profile in the browser. Use a shorter clip or a lower resolution profile.');return;}
-  const sourceURL=video.currentSrc||video.src,sub=state.srcName;
-  // Frozen at click time: original video, active client (top bar selector) and duration.
-  const ctx={origin:{...state.origin},client:window.PixeriaCliente?.actual?.()||null,duration:video.duration};
+  let sourceURL=video.currentSrc||video.src,input=null;
+  if(still&&jobs.length){({url:sourceURL,input}=await stillSource());}
+  const sub=still?`${state.srcName} · ${t('imagen fija','still image')}`:state.srcName;
+  // Frozen at click time: original content, active client (top bar selector) and duration.
+  const ctx={origin:{...state.origin},client:window.PixeriaCliente?.actual?.()||null,duration,still};
   batchIds = new Set();
   batchTotal = pngFormats.length + jobs.length;
   status.textContent = `0/${batchTotal}`;
+  const jpg=kinds==='jpg';
   for(const f of pngFormats){
     const p=perfil(f),canvas=document.createElement('canvas');canvas.width=p.ancho;canvas.height=p.alto;
     drawInto(canvas,f);
-    let blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+    let blob=await new Promise(resolve=>jpg?canvas.toBlob(resolve,'image/jpeg',0.9):canvas.toBlob(resolve,'image/png'));
     canvas.width=canvas.height=0;
     if(!blob)continue;
-    if(f.print)blob=new Blob([pngDensity(new Uint8Array(await blob.arrayBuffer()))],{type:'image/png'});
-    queue.addReady({label:`${f.nombre} · PNG`,sub,sourceURL:null,format:f,...ctx},[{blob,filename:`${f.id}-${p.ancho}x${p.alto}.png`}]);
+    if(f.print&&!jpg)blob=new Blob([pngDensity(new Uint8Array(await blob.arrayBuffer()))],{type:'image/png'});
+    queue.addReady({label:`${f.nombre} · ${jpg?'JPG':'PNG'}`,sub,sourceURL:null,format:f,...ctx},[{blob,filename:`${f.id}-${p.ancho}x${p.alto}.${jpg?'jpg':'png'}`}]);
   }
-  for(const {job,f} of jobs) queue.add({label:job.label,sub,sourceURL,job,format:f,...ctx});
+  for(const {job,f} of jobs) queue.add({label:job.label,sub,sourceURL,job:still?stillJob(job,seconds,input):job,format:f,...ctx});
 }
 $('#export-all').onclick=()=>exportFormats(selectedFormats());
 // Back to the active project's defaults (General: the four ratios and the standard library).
@@ -263,7 +304,9 @@ function buildGrid() {
       <div class="stage"><canvas width="${cw}" height="${ch}"></canvas></div>
       <button class="pill accent export-one" type="button"></button>`;
     el.querySelector('.remove-format').onclick=(e)=>{e.stopPropagation();f.on=false;buildGrid();};
-    el.querySelector('.export-one').textContent=f.output==='png'?t('Exportar PNG','Export PNG'):t('Exportar MP4','Export MP4'); el.querySelector('.export-one').onclick=(e)=>{e.stopPropagation();exportFormats([f]);};
+    el.querySelector('.export-one').onclick=(e)=>{e.stopPropagation();exportFormats([f]);};
+    // Display (no print) from a still image: JPG as well, lighter for ad networks.
+    if(f.category==='display'&&f.output==='png'){const j=document.createElement('button');j.type='button';j.className='pill export-one export-jpg';j.textContent='JPG';j.hidden=!isImage();j.title=t('JPG calidad 90, más ligero para redes de display','JPG quality 90, lighter for display networks');j.onclick=(e)=>{e.stopPropagation();exportFormats([f],'jpg');};el.querySelector('.export-one').after(j);}
     selectable(el, f);
     g.appendChild(el);
   });
@@ -281,8 +324,8 @@ function refreshOriginal() {
   const W = state.src.ancho, H = state.src.alto; if (!W || !H) return;
   const cw = W >= H ? 384 : Math.round(384 * W / H), ch = Math.round(cw * H / W);
   const el = document.createElement('div'); el.className = 'fmt fmt-original'; el.dataset.original = '1';
-  const url = video.currentSrc || video.getAttribute('src') || '';
-  el.innerHTML = `<div class="fmt-title"><h3>${t('Vídeo original','Original video')}<span class="orig-tag">${t('Original','Original')}</span></h3></div><div class="dims">${W}×${H} · ${t('nativo, sin relleno','native, no padding')}</div>
+  const url = isImage() ? (img.currentSrc || img.getAttribute('src') || '') : (video.currentSrc || video.getAttribute('src') || '');
+  el.innerHTML = `<div class="fmt-title"><h3>${isImage() ? t('Imagen original','Original image') : t('Vídeo original','Original video')}<span class="orig-tag">${t('Original','Original')}</span></h3></div><div class="dims">${W}×${H} · ${t('nativo, sin relleno','native, no padding')}${isImage() ? ` · ${t('imagen fija','still image')}` : ''}</div>
       <div class="stage"><canvas width="${cw}" height="${ch}" aria-label="${escHTML(state.origin.title || state.srcName)}"></canvas></div>
       ${url ? `<a class="pill export-one" href="${escHTML(url)}" download target="_blank" rel="noopener">${t('Descargar original','Download original')}</a>` : ''}`;
   g.prepend(el); drawDirty = true;
@@ -306,7 +349,7 @@ function buildCardSettings() {
   const f = FORMATOS.find(x => x.id === state.sel && x.on);
   if (!f) { box.innerHTML = `<p class="muted">${t('Elige una tarjeta para ajustar su método, foco y zoom.','Select a card to adjust its method, focus and zoom.')}</p>`; return; }
   const L = f.layout, size = f.especial ? `${L.entrega[0]}×${L.entrega[1]}` : `${perfil(f).ancho}×${perfil(f).alto}`;
-  box.innerHTML = `<div class="card-sel-hd">${t('Tarjeta seleccionada','Selected card')}: <b>${f.nombre}</b> · ${size}</div>${f.output==='png'?'':controlsHTML()}<div class="aviso"></div>`
+  box.innerHTML = `<div class="card-sel-hd">${t('Tarjeta seleccionada','Selected card')}: <b>${f.nombre}</b> · ${size}</div>${controlsHTML()}<div class="aviso"></div>`
     + (f.especial && L.ambiguedades.length ? `<ul class="esp-warn">${L.ambiguedades.map(a => `<li>${t('Ambigüedad en el PDF','PDF ambiguity')}: ${a}</li>`).join('')}</ul>` : '');
   bindControls(box, f);
 }
@@ -329,8 +372,8 @@ function especialCard(f) {
       <figure class="esp-view esp-atlas"><figcaption>${t('Entrega · una celda por pantalla, en orden de lectura','Delivery · one cell per screen, in reading order')}</figcaption>
         <div class="stage"><canvas class="atlas" width="${aw}" height="${ah}"></canvas></div></figure>
     </div>
-    <div class="esp-actions"><button class="pill accent export-one export-atlas" type="button">${t('Exportar entrega · 1 MP4','Export delivery · 1 MP4')} ${W}×${H}</button>
-    <button class="pill export-one export-segments" type="button">${t('Exportar por pantalla','Export per screen')} · ${g.segments.length} MP4 ${cw}×${ch}</button></div>
+    <div class="esp-actions"><button class="pill accent export-one export-atlas" type="button"></button>
+    <button class="pill export-one export-segments" type="button"></button></div>
 `;
   el.querySelector('.remove-format').onclick = (e) => { e.stopPropagation(); f.on = false; buildGrid(); };
   el.querySelector('.export-atlas').onclick = (e) => { e.stopPropagation(); exportFormats([f], 'atlas'); };
@@ -342,19 +385,22 @@ function especialInfo(f) {
   const L = f.layout, g = geometry(L), tech = especialTech(f), m = modoEfectivo(f), s = state.fmt[f.id];
   let lost = 0;
   if (state.src.ancho && m === 'cover') { const a = state.src.ancho / state.src.alto, b = g.pared.ancho / g.pared.alto; lost = 1 - Math.min(a / b, b / a) / s.zoom ** 2; }
-  const aviso = state.src.ancho ? `${MODOS[m]} · ${t('sobre la pared','on the wall')} ${g.pared.ancho}×${g.pared.alto}${m === 'cover' ? ` · ${Math.round(lost * 100)}% ${t('perdido','lost')}` : ''}${m === 'blur' ? t(' · fondo derivado, sin expansión IA', ' · derived background, no AI expansion') : ''}` : t('Elige un vídeo para calcular el recorte.', 'Choose a video to calculate cropping.');
+  const aviso = state.src.ancho ? `${isImage() ? `MP4 ${stillSec} s · ${t('imagen fija','still image')} · ` : ''}${MODOS[m]} · ${t('sobre la pared','on the wall')} ${g.pared.ancho}×${g.pared.alto}${m === 'cover' ? ` · ${Math.round(lost * 100)}% ${t('perdido','lost')}` : ''}${m === 'blur' ? t(' · fondo derivado, sin expansión IA', ' · derived background, no AI expansion') : ''}` : t('Elige un vídeo o una imagen para calcular el recorte.', 'Choose a video or an image to calculate cropping.');
   const rate = segmentKbps(L, tech.bitrateKbps);
-  const files = [`${t('Entrega','Delivery')}: ${atlasFilename(L)} · H.264 ${tech.h264Perfil}@${tech.h264Nivel} · ${tech.bitrateKbps} kbps · ${t('audio si existe','audio if present')}`,
-    `${t('Por pantalla','Per screen')}: H.264 ${tech.segmentPerfil}@${tech.segmentNivel} · ${rate} kbps · ${t('sin audio','no audio')} · GOP 1 s`,
+  const stillNote = isImage() ? ` · ${t('imagen fija','still image')} ${stillSec} s` : '';
+  const files = [`${t('Entrega','Delivery')}: ${atlasFilename(L)} · H.264 ${tech.h264Perfil}@${tech.h264Nivel} · ${tech.bitrateKbps} kbps · ${isImage() ? t('sin audio','no audio') : t('audio si existe','audio if present')}${stillNote}`,
+    `${t('Por pantalla','Per screen')}: H.264 ${tech.segmentPerfil}@${tech.segmentNivel} · ${rate} kbps · ${t('sin audio','no audio')} · GOP 1 s${stillNote}`,
     ...g.segments.map(seg => `  ${seg.n}/${seg.N} · ${t('celda','cell')} ${seg.cell} (${seg.atlas.x},${seg.atlas.y}) · ${t('pared','wall')} x=${seg.wall.x} · ${segmentFilename(L, seg.n)}`),
     ...(g.unused.length ? [`${t('Celdas sin uso (negro)','Unused cells (black)')}: ${g.unused.map(c => c.index).join(', ')}`] : []),
     t('Esta página no sincroniza players: la continuidad depende de que arranquen a la vez.','This page does not synchronise players: continuity depends on them starting together.')];
-  return { aviso, plan: files.join('\n') + (state.src.ancho ? `\n\nffmpeg ${atlasJob(state.src, L, m, s, tech).args.map(a => JSON.stringify(a)).join(' ')}` : '') };
+  const atlas = state.src.ancho ? atlasJob(state.src, L, m, s, tech) : null;
+  return { aviso, plan: files.join('\n') + (atlas ? `\n\nffmpeg ${(isImage() ? stillJob(atlas, stillSec, stillInput.input) : atlas).args.map(a => JSON.stringify(a)).join(' ')}` : '') };
 }
 function cardAviso(f) {
   if (f.especial) return especialInfo(f).aviso;
-  if (f.output === 'png') return t('Fotograma actual en PNG.','Current frame as PNG.');
   const p = plan(f), m = modoEfectivo(f), settings = state.fmt[f.id];
+  const what = f.output === 'png' ? (isImage() ? t('PNG de la imagen','PNG of the image') : t('PNG del fotograma actual','PNG of the current frame'))
+    : isImage() ? `MP4 ${stillSec} s · ${t('imagen fija, sin audio','still image, no audio')}` : '';
   let lost = 0;
   if (state.src.ancho) {
     const sourceRatio = state.src.ancho / state.src.alto, targetRatio = perfil(f).ancho / perfil(f).alto;
@@ -365,8 +411,8 @@ function cardAviso(f) {
     }
   }
   return p && !p.error
-    ? `${MODOS[m]} · ${Math.round(lost * 100)}% ${t('perdido', 'lost')}${m === 'blur' ? t(' · fondo derivado, sin expansión IA', ' · derived background, no AI expansion') : ''}`
-    : t('Elige un vídeo para calcular el recorte.', 'Choose a video to calculate cropping.');
+    ? `${what ? what + ' · ' : ''}${MODOS[m]} · ${Math.round(lost * 100)}% ${t('perdido', 'lost')}${m === 'blur' ? t(' · fondo derivado, sin expansión IA', ' · derived background, no AI expansion') : ''}`
+    : t('Elige un vídeo o una imagen para calcular el recorte.', 'Choose a video or an image to calculate cropping.');
 }
 function refreshInfo() {
   drawDirty=true;saveSettings();
@@ -376,41 +422,62 @@ function refreshInfo() {
   const allCount=FORMATOS.filter(isLibrarySize).length;
   const allLabel=$('#all-sizes .all-sizes-count');if(allLabel)allLabel.textContent=String(allCount);
   document.querySelectorAll('.export-one').forEach(el=>el.disabled=!state.src.ancho);
+  labelExports();
   const selF = FORMATOS.find((x) => x.id === state.sel && x.on), selAviso = $('#card-settings .aviso');
   if (selF && selAviso) selAviso.textContent = cardAviso(selF);
   const rows = selectedFormats().map((f) => {
     if (f.especial) return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${f.layout.entrega[0]}×${f.layout.entrega[1]}</h3><pre style="white-space:pre-wrap;font-size:11px;color:var(--link)">${especialInfo(f).plan.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])}</pre></div>`;
-    const p = plan(f); if(f.output==='png')return `<p>${f.nombre} · ${perfil(f).ancho}×${perfil(f).alto} · PNG${f.print?' · 150 ppp':''}</p>`; if (!p || p.error) return `<p>${f.nombre}: ${p ? p.error : 'sin vídeo'}</p>`;
+    const p = plan(f); if(f.output==='png')return `<p>${f.nombre} · ${perfil(f).ancho}×${perfil(f).alto} · PNG${f.print?' · 150 ppp':''}${isImage()&&f.category==='display'?' · JPG':''}</p>`; if (!p || p.error) return `<p>${f.nombre}: ${p ? p.error : t('sin contenido','no content')}</p>`;
     return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${p.ancho}×${p.alto}</h3>
       <div class="dims">encaje <b>${p.encaje}</b> · adaptación <b>${p.adaptacion}</b> · recorte ${Math.round(p.recortePerdido * 100)}%<br>
-      H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps (${p.bitrateMotivo}) · ${p.fps} fps · GOP ${p.gopSegundos}s</div>
+      H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps (${p.bitrateMotivo}) · ${p.fps} fps · GOP ${p.gopSegundos}s${isImage() ? ` · ${t('imagen fija','still image')} ${stillSec} s · ${t('sin audio','no audio')}` : ''}</div>
       <div class="aviso">${(p.avisos || []).map(a=>/generativ|imagina/i.test(a)?t('Fondo desenfocado derivado del original; sin expansión IA.','Blurred background derived from the original; no AI expansion.'):a).join(' · ')}</div><pre style="white-space:pre-wrap;font-size:11px;color:var(--link)">${ffmpegCmd(f)}</pre></div>`;
   });
   $('#plan-tecnico').innerHTML = rows.join('');
 }
+// Every export button says what will come out: PNG/JPG, or MP4 (with its length for a still image).
+function labelExports() {
+  const sec = isImage() ? ` · ${stillSec} s` : '';
+  const mp4Title = isImage() ? t(`MP4 H.264 · 25 fps · ${stillSec} s · imagen fija, sin audio`,`MP4 H.264 · 25 fps · ${stillSec} s · still image, no audio`) : t('MP4 H.264 con el audio del original, si existe','MP4 H.264 with the original audio, if any');
+  document.querySelectorAll('#grid .fmt[data-f]').forEach(el => {
+    const f = FORMATOS.find(x => x.id === el.dataset.f); if (!f) return;
+    if (f.especial) {
+      const g = geometry(f.layout), [W, H] = f.layout.entrega, [cw, ch] = f.layout.celda;
+      const a = el.querySelector('.export-atlas'), s = el.querySelector('.export-segments');
+      if (a) { a.textContent = `${t('Exportar entrega · 1 MP4','Export delivery · 1 MP4')} ${W}×${H}${sec}`; a.title = mp4Title; }
+      if (s) { s.textContent = `${t('Exportar por pantalla','Export per screen')} · ${g.segments.length} MP4 ${cw}×${ch}${sec}`; s.title = t('MP4 H.264 · 25 fps · sin audio','MP4 H.264 · 25 fps · no audio') + sec; }
+      return;
+    }
+    const b = el.querySelector('.export-one:not(.export-jpg)'); if (!b) return;
+    if (f.output === 'png') { b.textContent = t('Exportar PNG','Export PNG'); b.title = f.print ? t('PNG RGB a 150 ppp','RGB PNG at 150 ppi') : 'PNG'; }
+    else { b.textContent = `${t('Exportar MP4','Export MP4')}${sec}`; b.title = mp4Title; }
+    const j = el.querySelector('.export-jpg'); if (j) j.hidden = !isImage();
+  });
+}
 function ffmpegCmd(f) {
   if(!state.src.ancho) return '';
-  const job=exportJob(state.src,perfil(f),plan(f)||{},modoEfectivo(f),state.fmt[f.id],state.srcName,f.id);
+  let job=exportJob(state.src,perfil(f),plan(f)||{},modoEfectivo(f),state.fmt[f.id],state.srcName,f.id);
+  if(isImage()) job=stillJob(job,stillSec,stillInput.input);
   return 'ffmpeg ' + job.args.map(arg=>JSON.stringify(arg==='output.mp4'?job.filename:arg)).join(' ');
 }
 
 // ── Render en vivo (canvas) ─────────────────────────────────────────────────
 function drawInto(cv, f) { paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id]); }
 function paint(cv, output, m, s) {
-  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, vw = video.videoWidth;
-  if (!vw) return;
+  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, src = media();
+  if (!mediaReady()) return;
   const ratio=W/output.ancho;
   const drawRect=(mode,settings)=>{const r=rect(state.src,output.ancho,output.alto,mode,settings);return [r.x*ratio,r.y*ratio,r.w*ratio,r.h*ratio];};
   ctx.filter = 'none'; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-  const drawCrop=settings=>{const c=cropWindow(state.src,output.ancho,output.alto,settings);ctx.drawImage(video,c.x,c.y,c.w,c.h,0,0,W,H);};
+  const drawCrop=settings=>{const c=cropWindow(state.src,output.ancho,output.alto,settings);ctx.drawImage(src,c.x,c.y,c.w,c.h,0,0,W,H);};
   if (m === 'cover') { drawCrop(s); return; }
   if (m === 'blur') { ctx.filter = `blur(${14*Math.max(output.ancho,output.alto)/384*ratio}px) brightness(0.85)`; drawCrop({zoom:1.1,fx:.5,fy:.5}); ctx.filter = 'none'; }
-  ctx.drawImage(video, ...drawRect('contain',s));
+  ctx.drawImage(src, ...drawRect('contain',s));
 }
 // Preview only: the wall is painted once, then every screen is copied into its
 // delivery cell, exactly as the encoder cuts them. Cut lines and numbers are overlays.
 function drawEspecial(el, f) {
-  const wall = el.querySelector('canvas.wall'), atlas = el.querySelector('canvas.atlas'); if (!wall || !video.videoWidth) return;
+  const wall = el.querySelector('canvas.wall'), atlas = el.querySelector('canvas.atlas'); if (!wall || !mediaReady()) return;
   const g = geometry(f.layout); paint(wall, wallOutput(f), modoEfectivo(f), state.fmt[f.id]);
   const k = wall.width / g.pared.ancho, a = atlas.width / g.entrega.ancho, ctx = atlas.getContext('2d');
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, atlas.width, atlas.height);
@@ -427,7 +494,7 @@ let drawDirty=true,lastFrame=-1;
 function loop() {
   if(drawDirty||video.currentTime!==lastFrame){
   document.querySelectorAll('.fmt[data-f]').forEach((el) => { const f = FORMATOS.find((x) => x.id === el.dataset.f); if (f.especial) { drawEspecial(el, f); return; } const c = el.querySelector('canvas'); if (c) drawInto(c, f); });
-  const oc = document.querySelector('#grid .fmt-original canvas'); if (oc && video.readyState >= 2) oc.getContext('2d').drawImage(video, 0, 0, oc.width, oc.height);
+  const oc = document.querySelector('#grid .fmt-original canvas'); if (oc && (isImage() ? mediaReady() : video.readyState >= 2)) oc.getContext('2d').drawImage(media(), 0, 0, oc.width, oc.height);
   drawDirty=false;lastFrame=video.currentTime;
   }
   requestAnimationFrame(loop);
@@ -435,15 +502,49 @@ function loop() {
 
 // ── Fuente ──────────────────────────────────────────────────────────────────
 let sourceObjectURL = null;
-function setSource(url, name, origin = {id:null,title:name}) {
+function setSource(url, name, origin = {id:null,title:name}, kind = 'video', ext = 'png') {
   state.origin = {id:origin.id||null,title:origin.title||name};
+  releaseStill();
   // A local file still being exported keeps its blob URL until its last queue line ends.
   if (sourceObjectURL && sourceObjectURL !== url && !queue.uses(sourceObjectURL)) URL.revokeObjectURL(sourceObjectURL);
   sourceObjectURL = url.startsWith('blob:') ? url : null;
   $('#export-status').textContent='';
   state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0};
-  $('#src-info').textContent = t('Cargando vídeo…','Loading video…'); $('#src-msg').textContent = t('Cargando vídeo…','Loading video…');
-  state.srcName = name; refreshInfo(); video.src = url; video.play().catch(() => {});
+  srcKind = kind === 'image' ? 'image' : 'video'; srcExt = ext;
+  const loading = isImage() ? t('Cargando imagen…','Loading image…') : t('Cargando vídeo…','Loading video…');
+  $('#src-info').textContent = loading; $('#src-msg').textContent = loading;
+  state.srcName = name; syncKind(); refreshInfo();
+  if (isImage()) {
+    // Free the previous video (its «emptied» must not hide the image's spec sheet: ficha-tecnica.js checks #src-img).
+    img.src = url;
+    if (video.getAttribute('src')) { video.pause(); video.removeAttribute('src'); video.load(); }
+  } else { img.removeAttribute('src'); video.src = url; video.play().catch(() => {}); }
+}
+// Video and image sources share the stage; playback and sound only exist for video, the MP4 length only for images.
+function syncKind() {
+  const still = isImage();
+  video.hidden = still; img.hidden = !still;
+  ['#btn-play', '#btn-sound', '#btn-play-2'].forEach(s => { const b = $(s); if (b) b.hidden = still; });
+  const wrap = $('#still-wrap'); if (wrap) wrap.hidden = !still;
+  const back = $('#btn-volver'); if (back) back.textContent = still ? t('← Cambiar imagen','← Change image') : t('← Cambiar vídeo','← Change video');
+  document.querySelectorAll('.output-note-image').forEach(n => n.hidden = !still);
+}
+img.addEventListener('load', () => {
+  if (!isImage() || !img.getAttribute('src')) return;
+  const W = img.naturalWidth, H = img.naturalHeight;
+  state.src = { ancho: W, alto: H, fps: 25, bitrateKbps: 0 };
+  $('#src-info').textContent = `${state.srcName} · ${W}×${H} · ${t('imagen fija','still image')}`;
+  $('#src-info-2').textContent = `${state.srcName} · ${W}×${H} · ${t('imagen fija','still image')}`; $('#src-msg').textContent = '';
+  $('#src-preview').hidden = false; $('#btn-adaptar').disabled = false; $('.step[data-go="2"]').disabled = false;
+  refreshOriginal(); refreshInfo();
+});
+img.addEventListener('error', () => { if (!isImage() || !img.getAttribute('src')) return; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; $('#src-msg').textContent = $('#src-info').textContent = t('No se pudo cargar esta imagen. Elige otro archivo (JPG, PNG o WebP) o una fuente Stock disponible.', 'Unable to load this image. Choose another file (JPG, PNG or WebP) or an available Stock source.'); });
+// MP4 length for still images: 1–60 s, 10 by default, remembered in this browser.
+const stillField = $('#still-seconds');
+if (stillField) {
+  stillField.value = String(stillSec);
+  stillField.addEventListener('input', () => { const v = Number(stillField.value); if (Number.isInteger(v) && v >= STILL.min && v <= STILL.max) { stillSec = v; refreshInfo(); } });
+  stillField.addEventListener('change', () => { stillSec = stillSeconds(stillField.value); stillField.value = String(stillSec); try { localStorage.setItem(STILL_KEY, String(stillSec)); } catch (_) {} refreshInfo(); });
 }
 video.addEventListener('error', () => { if (!video.getAttribute('src')) return; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; $('#src-msg').textContent = $('#src-info').textContent = t('No se pudo reproducir este vídeo. Elige otro archivo o una fuente Stock disponible.', 'Unable to play this video. Choose another file or an available Stock source.'); });
 video.addEventListener('loadedmetadata', () => {
@@ -453,10 +554,17 @@ video.addEventListener('loadedmetadata', () => {
   $('#src-preview').hidden = false; $('#btn-adaptar').disabled = false; $('.step[data-go="2"]').disabled = false;
   refreshOriginal(); refreshInfo();
 });
-$('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; if (!o.value) { emptySource(); return; } setSource(o.value, o.textContent.replace(/^Stock · /, ''), {id:o.dataset.id,title:o.dataset.title}); };
+$('#src-select').onchange = (e) => { const o = e.target.selectedOptions[0]; if (!o.value) { emptySource(); return; } const image = o.dataset.type === 'image'; setSource(o.value, o.textContent.replace(/^Stock · /, ''), {id:o.dataset.id,title:o.dataset.title}, image ? 'image' : 'video', image ? (window.PixeriaStockFuentes?.extension(window.PixeriaStock?.item(o.value)) || 'png') : 'png'); };
 // Sin vídeo por defecto (ninguna marca): estado vacío hasta que el usuario elige uno.
-function emptySource() { video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
-$('#src-file').onchange = (e) => { const f = e.target.files[0]; if(f && f.size>MAX_SOURCE_BYTES) {$('#src-msg').textContent=t('El límite local es 100 MB. Elige un vídeo más pequeño.','The local limit is 100 MB. Choose a smaller video.');e.target.value='';return;} if (f) setSource(URL.createObjectURL(f), f.name, {id:null,title:f.name.replace(/\.[^.]+$/,'')}); };
+function emptySource() { releaseStill(); srcKind = 'video'; img.removeAttribute('src'); syncKind(); video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
+$('#src-file').onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size>MAX_SOURCE_BYTES) {$('#src-msg').textContent=t('El límite local es 100 MB. Elige un archivo más pequeño.','The local limit is 100 MB. Choose a smaller file.');e.target.value='';return;}
+  const image = /^image\//.test(f.type) || /\.(jpe?g|png|webp)$/i.test(f.name);
+  const ext = STILL_TYPES[f.type] || (/\.(jpe?g|png|webp)$/i.exec(f.name)?.[1].toLowerCase().replace('jpeg','jpg'));
+  if (image && !ext) {$('#src-msg').textContent=t('Imágenes: JPG, PNG o WebP.','Images: JPG, PNG or WebP.');e.target.value='';return;}
+  setSource(URL.createObjectURL(f), f.name, {id:null,title:f.name.replace(/\.[^.]+$/,'')}, image ? 'image' : 'video', ext || 'png');
+};
 $('#btn-play').onclick = $('#btn-play-2').onclick = () => (video.paused ? video.play() : video.pause());
 // ── Sonido de la vista previa (Carlos, 4-oct-2026) ─────────────────────────
 // Arranca silenciado para que el autoplay siga funcionando; el botón activa y

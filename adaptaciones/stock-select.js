@@ -12,6 +12,10 @@
  * - Al aplicar un hashtag (elegido del datalist, Enter o PixeriaStock.tag) la caja muestra ya la
  *   coincidencia más reciente (createdAt del índice) y carga su vista previa; las demás siguen debajo en
  *   el mismo orden. Enter en el campo o en la caja = «Adaptar →». Sin coincidencias: sin preselección y aviso.
+ * - Imágenes (Carlos, 5-oct-2026): además de los vídeos entran las imágenes JPG, PNG y WebP del Stock,
+ *   marcadas «Imagen», en la misma lista y por fecha (más reciente primero): qué entra y en qué orden lo
+ *   decide ./stock-fuentes.js. La opción del <select> lleva data-type="image" para que adaptaciones.js
+ *   cargue la imagen fija en vez de un vídeo.
  */
 (function () {
   var EN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
@@ -19,6 +23,7 @@
   var $ = function (s) { return document.querySelector(s); };
   var ORIGENES = ['/stock-index', 'https://stock.admira.store/stock/index.json'];
   var ESPERA_MS = 20000, ESPERA_CLIENTE_MS = 4000;
+  var F = window.PixeriaStockFuentes;
   var videos = null, error = false, esperaAgotada = false, tagActivo = '', tagAplicado = null, mostrados = [];
 
   var dec = document.createElement('textarea');
@@ -38,9 +43,14 @@
     return (it._tags = Object.keys(s).map(function (g) { return /^suno/.test(g) ? 'pixeria-music' : g; }).filter(function (g, i, l) { return l.indexOf(g) === i; }));
   }
 
-  function contador(texto) {
+  // «N vídeos listos», «N imágenes listas» o «N vídeos e imágenes listos», según lo que se ve.
+  function contador(texto, lista) {
     var n = $('#stock-count'); if (n) n.textContent = texto;
-    var w = $('#stock-nombre'); if (w) w.textContent = texto === '1' ? t('vídeo listo', 'video') : t('vídeos listos', 'videos');
+    var w = $('#stock-nombre'); if (!w) return;
+    var img = (lista || []).filter(function (it) { return F.tipo(it) === 'image'; }).length, vid = (lista || []).length - img, uno = texto === '1';
+    w.textContent = img && vid ? t('vídeos e imágenes listos', 'videos and images')
+      : img ? (uno ? t('imagen lista', 'image') : t('imágenes listas', 'images'))
+      : uno ? t('vídeo listo', 'video') : t('vídeos listos', 'videos');
   }
   function aviso(texto) { var s = $('#stock-status'); if (s) s.textContent = texto || ''; }
   function boton(texto, full) { var b = $('#stock-pick .stk-btn-txt'); if (b) { b.textContent = texto; b.parentNode.title = full || ''; } }
@@ -55,11 +65,9 @@
       if (!r.ok || !/json/i.test(r.headers.get('content-type') || '')) throw new Error(url + ' ' + (r.status || r.type));
       return r.json();
     }).then(function (data) {
-      var items = (data && Array.isArray(data.items) ? data.items : []).filter(function (it) {
-        var u = it && it.type === 'video' && (it.url || it.mediaUrl);
-        return u && /^https:\/\//.test(u);
-      });
-      if (!items.length) throw new Error(url + ' sin vídeos');
+      // Vídeos e imágenes (JPG, PNG, WebP) con URL https, el más reciente primero.
+      var items = F.fuentes(data && data.items);
+      if (!items.length) throw new Error(url + ' sin vídeos ni imágenes');
       return items;
     }).finally(function () { clearTimeout(reloj); });
   }
@@ -108,7 +116,7 @@
     pintar();
   }
   // Coincidencia más reciente del filtro: mayor createdAt del índice (o el sello del id); empate = la primera.
-  function fecha(it) { var d = Date.parse(it.createdAt || ''); if (!isNaN(d)) return d; var m = /^(\d{12,})-/.exec(it.id || ''); return m ? +m[1] : 0; }
+  function fecha(it) { return F.fecha(it); }
   function masReciente(lista) { var r = null; lista.forEach(function (it) { if (!r || fecha(it) > fecha(r)) r = it; }); return r; }
   // Aplica el hashtag del campo: filtra y preselecciona la coincidencia más reciente (vista previa incluida).
   function aplicarTag() {
@@ -182,18 +190,21 @@
     var ul = $('#stock-list'), select = $('#src-select'); if (!ul || !select) return;
     var actual = select.value, fragL = document.createDocumentFragment(), fragS = document.createDocumentFragment();
     lista.forEach(function (it, i) {
-      var url = it.url || it.mediaUrl, tit = titulo(it), img = it.poster || it.thumbnail;
+      var url = it.url || it.mediaUrl, tit = titulo(it), tipo = F.tipo(it), esImg = tipo === 'image';
+      // Una imagen sin miniatura en el índice es su propia miniatura (carga perezosa).
+      var img = it.poster || it.thumbnail || (esImg ? url : null);
       var li = document.createElement('li');
       li.setAttribute('role', 'option'); li.tabIndex = -1; li.id = 'stk-o' + i;
-      li.dataset.url = url; li.dataset.title = tit; li.title = tit;
+      li.dataset.url = url; li.dataset.title = tit; li.dataset.type = tipo; li.title = tit;
       li.setAttribute('aria-selected', url === actual ? 'true' : 'false');
-      if (img && /^https:\/\//.test(img)) { var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = img; im.onerror = function () { var ph = document.createElement('span'); ph.className = 'stk-ph'; ph.dataset.video = url; this.replaceWith(ph); observarSinMiniatura(ph); }; li.appendChild(im); }
+      if (img && /^https:\/\//.test(img)) { var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = img; im.onerror = esImg ? function () { this.replaceWith(sinVista()); } : function () { var ph = document.createElement('span'); ph.className = 'stk-ph'; ph.dataset.video = url; this.replaceWith(ph); observarSinMiniatura(ph); }; li.appendChild(im); }
       else { var ph = document.createElement('span'); ph.className = 'stk-ph'; ph.dataset.video = url; li.appendChild(ph); observarSinMiniatura(ph); }
       var sp = document.createElement('span'); sp.className = 'stk-t'; sp.textContent = tit; li.appendChild(sp);
+      if (esImg) { var k = document.createElement('span'); k.className = 'stk-k'; k.textContent = t('Imagen', 'Image'); li.appendChild(k); li.setAttribute('aria-label', tit + ' · ' + t('imagen', 'image')); }
       fragL.appendChild(li);
-      var o = document.createElement('option'); o.value = url; o.dataset.id = it.id || ''; o.dataset.title = tit; o.textContent = tit; fragS.appendChild(o);
+      var o = document.createElement('option'); o.value = url; o.dataset.id = it.id || ''; o.dataset.title = tit; o.dataset.type = tipo; o.textContent = tit; fragS.appendChild(o);
     });
-    if (!lista.length) { var v = document.createElement('li'); v.className = 'stk-vacio'; v.textContent = t('Ningún vídeo con este filtro', 'No videos match this filter'); fragL.appendChild(v); }
+    if (!lista.length) { var v = document.createElement('li'); v.className = 'stk-vacio'; v.textContent = t('Ningún contenido con este filtro', 'Nothing matches this filter'); fragL.appendChild(v); }
     ul.innerHTML = ''; ul.appendChild(fragL);
     Array.prototype.slice.call(select.querySelectorAll('option[data-id]')).forEach(function (o) { o.remove(); });
     select.appendChild(fragS);
@@ -201,17 +212,17 @@
     if (actual) {
       if (!lista.some(function (it) { return (it.url || it.mediaUrl) === actual; })) {
         var previo = (videos || []).filter(function (it) { return (it.url || it.mediaUrl) === actual; })[0];
-        var o = document.createElement('option'); o.value = actual; o.dataset.id = previo && previo.id || ''; o.dataset.title = previo ? titulo(previo) : ''; o.textContent = o.dataset.title; select.appendChild(o);
+        var o = document.createElement('option'); o.value = actual; o.dataset.id = previo && previo.id || ''; o.dataset.title = previo ? titulo(previo) : ''; o.dataset.type = previo ? F.tipo(previo) : 'video'; o.textContent = o.dataset.title; select.appendChild(o);
       }
       select.value = actual; var op = select.selectedOptions[0]; boton(op && op.dataset.title || actual, op && op.dataset.title);
-    } else boton(lista.length ? t('Elige un vídeo…', 'Choose a video…') : t('Ningún vídeo con este filtro', 'No videos match this filter'));
+    } else boton(lista.length ? t('Elige un vídeo o una imagen…', 'Choose a video or an image…') : t('Ningún contenido con este filtro', 'Nothing matches this filter'));
   }
 
   function pintar() {
     if (!$('#stock-list')) return;
     if (error) {
-      contador('—'); boton(t('Stock no disponible · sube un vídeo', 'Stock unavailable · upload a video')); mostrados = []; cerrar();
-      aviso(t('No se ha podido leer el Stock ahora mismo. Recarga la página o sube tu vídeo.', 'The Stock could not be loaded right now. Reload the page or upload your video.'));
+      contador('—'); boton(t('Stock no disponible · sube un archivo', 'Stock unavailable · upload a file')); mostrados = []; cerrar();
+      aviso(t('No se ha podido leer el Stock ahora mismo. Recarga la página o sube tu vídeo o imagen.', 'The Stock could not be loaded right now. Reload the page or upload your video or image.'));
       return;
     }
     var PC = window.PixeriaCliente;
@@ -221,10 +232,10 @@
     var lista = tagActivo ? c.lista.filter(function (it) { return tagsDe(it).indexOf(tagActivo) >= 0; }) : c.lista;
     mostrados = lista;
     pintarLista(lista);
-    contador(String(lista.length));
+    contador(String(lista.length), lista);
     var cli = $('#stock-cliente'); if (cli) cli.textContent = c.activo ? ' · ' + c.activo.nombre : ''; // el tag ya se ve en su combo
-    if (!c.lista.length) aviso(t('Este cliente no tiene vídeos en el Stock. /marca off vuelve a Admira, que lo ve todo.', 'This client has no Stock videos. /marca off returns to Admira, which sees everything.'));
-    else if (tagAplicado && !lista.length) aviso(t('Ningún vídeo del Stock con #' + tagAplicado + '. Prueba otro hashtag o bórralo para ver todos.', 'No Stock videos with #' + tagAplicado + '. Try another hashtag or clear it to see them all.'));
+    if (!c.lista.length) aviso(t('Este cliente no tiene vídeos ni imágenes en el Stock. /marca off vuelve a Admira, que lo ve todo.', 'This client has no Stock videos or images. /marca off returns to Admira, which sees everything.'));
+    else if (tagAplicado && !lista.length) aviso(t('Ningún vídeo ni imagen del Stock con #' + tagAplicado + '. Prueba otro hashtag o bórralo para ver todos.', 'No Stock videos or images with #' + tagAplicado + '. Try another hashtag or clear it to see them all.'));
     else aviso('');
   }
 
@@ -282,6 +293,8 @@
     total: function () { return videos ? videos.length : null; },
     visibles: function () { return videos ? mostrados.length : null; },
     item: function (url) { return (videos || []).filter(function (it) { return (it.url || it.mediaUrl) === url; })[0] || null; },
+    // 'video' | 'image' | null del contenido con esa URL.
+    tipo: function (url) { var it = window.PixeriaStock.item(url); return it ? F.tipo(it) : null; },
     tags: function () { return (window.PixeriaStock._tags || []).slice(); },
     tag: function (g) { var inp = $('#stock-tag'); if (inp) { inp.value = g ? '#' + norm(g) : ''; if (g) aplicarTag(); else leerTag(); } }
   };

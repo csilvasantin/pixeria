@@ -5,6 +5,8 @@
  * - MP4/MOV: se lee el `moov` en el cliente (con Range si está al final): fps (stts), códec y perfil
  *   (avcC/hvcC/vpcC/av1C), pista de audio (mp4a/esds…), marca del contenedor (ftyp) y si es faststart.
  * - Índice del Stock: id, fuente (motor / referencia), fecha de alta y cliente (PixeriaCliente).
+ * - Imagen fija (5-oct-2026, #src-img): dimensiones, aspecto y orientación de la imagen; duración
+ *   «Imagen fija»; formato leído de la firma del archivo (JPEG/PNG/WebP), peso y MIME; sin audio.
  */
 (function () {
   var EN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
@@ -151,7 +153,12 @@
   // ─── Pintar ───
   function pintar(f) {
     var box = $('#src-ficha'); if (!box) return;
-    var G = [
+    var G = f.imagen ? [
+      [t('Imagen', 'Image'), [[t('Resolución', 'Resolution'), f.res], [t('Aspecto', 'Aspect ratio'), f.asp], [t('Orientación', 'Orientation'), f.ori], [t('Duración', 'Duration'), f.dur], [t('Formato', 'Format'), f.formato]]],
+      [t('Archivo', 'File'), [[t('Peso', 'Size'), f.peso], ['MIME', f.mime]]],
+      ['Audio', [[t('Pista', 'Track'), f.audio]]],
+      [t('Origen', 'Source'), [[t('Origen', 'Origin'), f.origen], [t('Fuente', 'Provider'), f.fuente], [t('Alta', 'Added'), f.alta], [t('Cliente', 'Client'), f.cliente]]]
+    ] : [
       [t('Vídeo', 'Video'), [[t('Resolución', 'Resolution'), f.res], [t('Aspecto', 'Aspect ratio'), f.asp], [t('Orientación', 'Orientation'), f.ori], [t('Duración', 'Duration'), f.dur], ['FPS', f.fps], [t('Códec', 'Codec'), f.codec], [t('Perfil', 'Profile'), f.perfil]]],
       [t('Archivo', 'File'), [[t('Peso', 'Size'), f.peso], [t('Bitrate medio', 'Avg. bitrate'), f.br], [t('Contenedor', 'Container'), f.cont], ['MIME', f.mime]]],
       ['Audio', [[t('Pista', 'Track'), f.audio]]],
@@ -168,6 +175,47 @@
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
+  // Datos comunes de origen (Stock, subida local o importación) para vídeo e imagen.
+  function origenDe(o, src, it, f) {
+    var imp = o.file && window.PixeriaImportar && window.PixeriaImportar.ultimo && window.PixeriaImportar.ultimo.file === o.file ? window.PixeriaImportar.ultimo : null;
+    f.origen = imp ? t('Importado · ', 'Imported · ') + (function () { try { return new URL(imp.url).hostname.replace(/^www\./, ''); } catch (_) { return imp.url; } })() : o.file ? t('Subida local · ', 'Local upload · ') + o.file.name : it ? 'Stock · ' + it.id : /^blob:/.test(src) ? t('Subida local', 'Local upload') : NADA;
+    f.fuente = imp ? [imp.motor, imp.via].filter(Boolean).join(' · ') : it ? [/suno/i.test(it.motor || '') ? 'Pixeria Music' : it.motor, it.externalRef || it.externalIdOrigen].filter(Boolean).join(' · ') || null : null;
+    f.alta = it && it.createdAt ? fecha(it.createdAt) : null;
+    f.cliente = it ? clienteDe(it) : null;
+  }
+  // Formato real por la firma de los primeros bytes.
+  function firma(buf) {
+    var b = new Uint8Array(buf || new ArrayBuffer(0));
+    if (b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return 'JPEG';
+    if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47) return 'PNG';
+    if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return 'WebP';
+    return null;
+  }
+  function construirImagen() {
+    var im = $('#src-img'); if (!im || !im.getAttribute('src') || !im.naturalWidth) return;
+    var yo = ++turno, o = origen || {}, src = im.currentSrc || im.src;
+    if (!o.file && o.url !== src) o = { url: src };
+    var it = o.url && window.PixeriaStock && window.PixeriaStock.item ? window.PixeriaStock.item(o.url) : null;
+    var w = im.naturalWidth, hgt = im.naturalHeight;
+    var f = { imagen: true, res: w + ' × ' + hgt + ' px', asp: aspecto(w, hgt), ori: w > hgt ? t('Horizontal', 'Landscape') : w < hgt ? t('Vertical', 'Portrait') : t('Cuadrado', 'Square'),
+      dur: t('Imagen fija', 'Still image'), audio: t('No · imagen fija', 'No · still image') };
+    f.mime = (o.file && o.file.type) || (it && it.mime) || null;
+    origenDe(o, src, it, f);
+    var total = (o.file && o.file.size) || (it && it.size) || null;
+    if (total) f.peso = num(total / 1e6, 2) + ' MB · ' + num(total, 0) + ' B';
+    pintar(f);
+    var L = (o.file || o.url) && !/^blob:/.test(o.url || '') ? lector(o) : null;
+    if (!L) return;
+    L.leer(0, 16).then(function (buf) {
+      if (yo !== turno) return;
+      f.formato = firma(buf);
+      var tot = L.total || total;
+      if (tot) f.peso = num(tot / 1e6, 2) + ' MB · ' + num(tot, 0) + ' B';
+      f.mime = f.mime || L.tipo || null;
+      pintar(f);
+    }).catch(function (e) { try { console.warn('[ficha]', e && e.message || e); } catch (_) {} });
+  }
+
   function construir() {
     var video = $('#src'); if (!video || !video.videoWidth) return;
     var yo = ++turno, o = origen || {}, src = video.currentSrc || video.src;
@@ -176,11 +224,7 @@
     var w = video.videoWidth, hgt = video.videoHeight, dur = video.duration;
     var f = { res: w + ' × ' + hgt + ' px', asp: aspecto(w, hgt), ori: w > hgt ? t('Horizontal', 'Landscape') : w < hgt ? t('Vertical', 'Portrait') : t('Cuadrado', 'Square'), dur: tc(dur) };
     f.mime = (o.file && o.file.type) || (it && it.mime) || null;
-    var imp = o.file && window.PixeriaImportar && window.PixeriaImportar.ultimo && window.PixeriaImportar.ultimo.file === o.file ? window.PixeriaImportar.ultimo : null;
-    f.origen = imp ? t('Importado · ', 'Imported · ') + (function () { try { return new URL(imp.url).hostname.replace(/^www\./, ''); } catch (_) { return imp.url; } })() : o.file ? t('Subida local · ', 'Local upload · ') + o.file.name : it ? 'Stock · ' + it.id : /^blob:/.test(src) ? t('Subida local', 'Local upload') : NADA;
-    f.fuente = imp ? [imp.motor, imp.via].filter(Boolean).join(' · ') : it ? [/suno/i.test(it.motor || '') ? 'Pixeria Music' : it.motor, it.externalRef || it.externalIdOrigen].filter(Boolean).join(' · ') || null : null;
-    f.alta = it && it.createdAt ? fecha(it.createdAt) : null;
-    f.cliente = it ? clienteDe(it) : null;
+    origenDe(o, src, it, f);
     pintar(f);
     var L = (o.file || o.url) && !/^blob:/.test(o.url || '') ? lector(o) : null;
     if (!L) return;
@@ -210,18 +254,20 @@
   }
 
   function iniciar() {
-    var video = $('#src'), sel = $('#src-select'), file = $('#src-file'), box = $('#src-ficha');
+    var video = $('#src'), im = $('#src-img'), sel = $('#src-select'), file = $('#src-file'), box = $('#src-ficha');
     if (!video || !box) return;
     if (sel) sel.addEventListener('change', function () { origen = sel.value ? { url: sel.value } : null; }, true);
     if (file) file.addEventListener('change', function () { var f = file.files && file.files[0]; origen = f ? { file: f } : null; }, true);
     video.addEventListener('loadedmetadata', construir);
-    video.addEventListener('emptied', function () { turno++; box.hidden = true; box.innerHTML = ''; });
+    // Al pasar a una imagen el vídeo se vacía: su «emptied» no debe borrar la ficha de la imagen.
+    video.addEventListener('emptied', function () { if (im && im.getAttribute('src')) return; turno++; box.hidden = true; box.innerHTML = ''; });
+    if (im) im.addEventListener('load', construirImagen);
     box.addEventListener('click', function (e) {
       var b = e.target.closest('.ficha-copy'); if (!b || !box._texto) return;
       var ok = function () { b.textContent = t('Copiada ✓', 'Copied ✓'); setTimeout(function () { b.textContent = t('Copiar', 'Copy'); }, 1600); };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(box._texto).then(ok, function () {}); 
     });
-    if (video.videoWidth) construir();
+    if (im && im.getAttribute('src') && im.naturalWidth) construirImagen(); else if (video.videoWidth) construir();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
