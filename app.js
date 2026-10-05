@@ -48,7 +48,7 @@
     if (motorId === 'gemini-omni-flash') return false; // API aún no pública (Google I/O 2026) — sin endpoint todavía
     if (motorId === 'suno-local-v45') return true; // depende del proxy local, se chequea aparte
     if (motorId === 'suno-local-v5') return true; // depende del proxy local, se chequea aparte
-    if (motorId === 'suno-web') return true; // cola /api/suno-queue (fase 1 dry-run; agente en fase 2)
+    if (motorId === 'suno-web') return true; // cola /api/suno-queue + suno-local execute
     if (motorId === 'lyria-3-pro-preview') return true; // proxied vía worker
     if (motorId === 'runway-gen3' || motorId === 'openai-tts-hd' || motorId === 'openai-sora') return false;
     return true;
@@ -171,7 +171,7 @@
       { id: 'pixer-loop',           nombre: 'Pixer Loop (Web Audio)', tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',  desc: 'preview rápido para probar intención', use: 'Borrador' },
       { id: 'lyria-3-pro-preview',  nombre: 'Gemini (Google)',        tipo: 'pro',  badge: 'Better', coste: 'paid tier Gemini',    desc: '~2min con voz cantando la letra', use: 'Alternativa' },
       { id: 'suno-local-v5',        nombre: 'Pixeria Music',          tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción · cuenta loguead.', desc: 'calidad final · motor de música', use: 'Master' },
-      { id: 'suno-web',             nombre: 'Suno',                   tipo: 'pro',  badge: 'Suno',  coste: 'créditos Suno · csilva@admira.com', desc: 'UI Suno · cola agente → Stock (fase 1: dry-run)', use: 'Cápsula' },
+      { id: 'suno-web',             nombre: 'Suno',                   tipo: 'pro',  badge: 'Suno',  coste: 'créditos Suno · csilva@admira.com', desc: 'UI Suno · ESP/ENG · execute → Stock', use: 'Cápsula' },
     ],
     imagenes: [
       { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Good',   coste: 'gratis (free tier)',   desc: 'generación + edición · Gemini 2.5 Flash Image' },
@@ -305,7 +305,7 @@
                        : motor.id === 'grok-imagine-image-pro' ? 'WORKER pixer-eleven'
                        : motor.id === 'grok-imagine-video' ? 'WORKER pixer-eleven (xAI)'
                        : motor.id.startsWith('suno-local-') ? 'PROXY motor de música'
-                       : motor.id === 'suno-web' ? 'COLA /api/suno-queue (dry-run)'
+                       : motor.id === 'suno-web' ? 'COLA /api/suno-queue + suno-local'
                        : motor.id === 'lyria-3-pro-preview' ? 'WORKER pixer-eleven (GCP)'
                        : motor.id === 'nano-banana' ? 'WORKER pixer-eleven (Gemini)'
                        : (motor.id.startsWith('imagen-') || motor.id.startsWith('veo-')) ? 'WORKER pixer-eleven (Gemini)'
@@ -979,12 +979,16 @@
     const version = root.querySelector('#sunoVersion')?.value || 'v6';
     const prompt = (root.querySelector('#sunoPrompt')?.value || '').trim();
     const title = (root.querySelector('#sunoTitle')?.value || '').trim();
+    const languages = Array.from(root.querySelectorAll('.suno-lang.is-on'))
+      .map(b => (b.dataset.lang || '').toUpperCase())
+      .filter(l => l === 'ESP' || l === 'ENG');
     return {
       kind, mode, version, prompt, title,
+      languages: languages.length ? languages : ['ESP'],
       audio: !!root.querySelector('[data-attach="audio"].is-on'),
       voice: !!root.querySelector('[data-attach="voice"].is-on'),
       image: !!root.querySelector('[data-attach="image"].is-on'),
-      execute: false, // hard: fase 1
+      execute: true, // Carlos: create for real from studio panel
     };
   }
   function syncSunoCapsulaPanel() {
@@ -1019,6 +1023,19 @@
     root.querySelectorAll('.suno-attach button').forEach(btn => {
       btn.addEventListener('click', () => { btn.classList.toggle('is-on'); });
     });
+    root.querySelectorAll('.suno-lang').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('is-on');
+        btn.setAttribute('aria-pressed', btn.classList.contains('is-on') ? 'true' : 'false');
+        // Al menos un idioma siempre activo
+        if (!root.querySelector('.suno-lang.is-on')) {
+          btn.classList.add('is-on');
+          btn.setAttribute('aria-pressed', 'true');
+        }
+        const langs = Array.from(root.querySelectorAll('.suno-lang.is-on')).map(b => b.dataset.lang);
+        const s = loadStore(); setNested(s, 'musica.suno.languages', langs); saveStore(s);
+      });
+    });
     root.querySelector('#sunoVersion')?.addEventListener('change', (e) => {
       const s = loadStore(); setNested(s, 'musica.suno.version', e.target.value); saveStore(s);
     });
@@ -1031,7 +1048,30 @@
     if (saved.mode) root.querySelectorAll('.suno-pill').forEach(b => b.classList.toggle('is-on', b.dataset.mode === saved.mode));
     if (saved.version && root.querySelector('#sunoVersion')) root.querySelector('#sunoVersion').value = saved.version;
     if (saved.prompt && root.querySelector('#sunoPrompt')) root.querySelector('#sunoPrompt').value = saved.prompt;
+    if (Array.isArray(saved.languages) && saved.languages.length) {
+      root.querySelectorAll('.suno-lang').forEach(b => {
+        const on = saved.languages.includes(b.dataset.lang);
+        b.classList.toggle('is-on', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    }
     syncSunoCapsulaPanel();
+  }
+  function sunoLangPromptPrefix(languages) {
+    const langs = (languages || []).map(l => String(l).toUpperCase());
+    const hasEs = langs.includes('ESP');
+    const hasEn = langs.includes('ENG');
+    if (hasEs && hasEn) {
+      return 'Bilingual Spanish and English (ESP+ENG) lyrics and vocals. Mix both languages naturally in the song. ';
+    }
+    if (hasEn) return 'English language lyrics and vocals (ENG). ';
+    return 'Spanish language lyrics and vocals (ESP). ';
+  }
+  function sunoVersionToModel(version) {
+    const v = String(version || 'v6').toLowerCase();
+    if (v === 'v4.5' || v === 'v4') return 'chirp-v4-5';
+    if (v === 'v5') return 'chirp-v5';
+    return 'chirp-v5-5'; // v6 default
   }
   async function playSunoWebCapsula() {
     const form = readSunoCapsulaForm();
@@ -1044,14 +1084,20 @@
       document.getElementById('sunoPrompt')?.focus();
       return;
     }
+    if (!(form.languages && form.languages.length)) {
+      showToast('Elige al menos un idioma (ESP y/o ENG)');
+      return;
+    }
     updateMusicStage('generate');
+    const langLabel = form.languages.join('+');
     showPlayer(`
       <div class="player-card">
-        <div class="player-head">▶ SUNO · cola fase 1 (dry-run)</div>
-        ${progressHtml('Encolando cápsula · sin gastar créditos…', 'sunoWeb', 8000)}
+        <div class="player-head">▶ SUNO · execute · ${langLabel}</div>
+        ${progressHtml('Encolando cápsula y generando…', 'sunoWeb', 120000)}
         <pre class="player-body">${String(form.prompt).replace(/</g,'&lt;').slice(0,400)}</pre>
       </div>`);
     const stop = startProgress('sunoWeb');
+    let jobId = null;
     try {
       const r = await fetch('/api/suno-queue', {
         method: 'POST',
@@ -1064,27 +1110,93 @@
         showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · ERROR ${r.status}</div><pre class="player-body">${JSON.stringify(data).replace(/</g,'&lt;').slice(0,600)}</pre></div>`);
         return;
       }
-      stop(true);
+      jobId = data.jobId;
       const jobs = loadSunoJobs();
       jobs.unshift({ ...data, savedAt: Date.now() });
       saveSunoJobs(jobs);
       const jobEl = document.getElementById('sunoJobStatus');
       if (jobEl) {
-        jobEl.innerHTML = `Job <code>${data.jobId}</code> · <strong>${data.status}</strong> · dry-run=${data.dryRun}. Fase 2 (tras OK de Carlos): agente en suno.com → Stock.`;
+        jobEl.innerHTML = `Job <code>${data.jobId}</code> · <strong>${data.status}</strong> · langs=${langLabel} · execute=${data.execute}`;
       }
+      if (!data.execute) {
+        stop(true);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · dry-run · ${data.jobId}</div><pre class="player-body">${JSON.stringify(data,null,2).replace(/</g,'&lt;').slice(0,800)}</pre></div>`);
+        showToast('Suno · job dry-run');
+        return;
+      }
+
+      // Execute for real via suno-local (Mac Mini) — same path as Pixeria/Admira Studio Music.
+      const proToken = await ensureProToken();
+      if (!proToken) {
+        stop(false);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · falta password PRO</div><pre class="player-body">Job ${jobId} encolado. Desbloquea PRO (⚙) para generar con suno-local.</pre></div>`);
+        return;
+      }
+      const alive = await sunoLocalAlive();
+      // sleeping:true = proxy vivo, Chrome dormido → /generate lo despierta
+      if (!(alive && (alive.ok === true || alive.sleeping === true))) {
+        stop(false);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · suno-local offline</div><pre class="player-body">Job ${jobId}. Arranca el motor en el Mac Mini.\n${JSON.stringify(alive).replace(/</g,'&lt;')}</pre></div>`);
+        return;
+      }
+      const fullPrompt = (sunoLangPromptPrefix(form.languages) + form.prompt).slice(0, 1500);
+      const model = sunoVersionToModel(form.version);
+      const titleHint = (form.title || '').slice(0, 80);
       showPlayer(`
         <div class="player-card">
-          <div class="player-head">▶ SUNO · encolado · ${data.jobId}</div>
-          <pre class="player-body">status: ${data.status}
-dryRun: ${data.dryRun}
-execute: ${data.execute}
-kind: ${form.kind} · mode: ${form.mode} · ${form.version}
-
-${data.blockedReason || 'No se ha llamado a Suno. Confirma un prompt de prueba para fase 2.'}</pre>
-          <small class="player-foot">// /api/suno-queue · fase 1 · destino futuro: Stock</small>
+          <div class="player-head">▶ SUNO · generando · ${jobId}</div>
+          ${progressHtml('Create en Suno (UI) · ' + langLabel + ' · ' + model, 'sunoWeb', 180000)}
+          <pre class="player-body">${fullPrompt.replace(/</g,'&lt;').slice(0,500)}</pre>
         </div>`);
+      const gr = await fetch(SUNO_LOCAL_URL + '/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: fullPrompt,
+          lyrics: '',
+          title: titleHint,
+          instrumental: false,
+          model,
+          token: proToken,
+        }),
+      });
+      const gdata = await gr.json().catch(() => ({}));
+      if (!gr.ok || !(gdata.ids || gdata.clips)) {
+        stop(false);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · generate ERROR ${gr.status}</div><pre class="player-body">job ${jobId}\\n${JSON.stringify(gdata).replace(/</g,'&lt;').slice(0,700)}</pre></div>`);
+        return;
+      }
+      const clipIds = (gdata.ids || (gdata.clips || []).map(c => c.id)).filter(Boolean);
+      // Poll status until complete (reuse pattern from playSunoLocal lightly)
+      let clips = [];
+      for (let i = 0; i < 60; i++) {
+        await new Promise(r => setTimeout(r, 5000));
+        const pollR = await fetch(`${SUNO_LOCAL_URL}/status?ids=${clipIds.join(',')}`);
+        const poll = await pollR.json().catch(() => []);
+        clips = Array.isArray(poll) ? poll : (poll.clips || []);
+        const done = clips.filter(c => c && (c.status === 'complete' || c.audio_url));
+        if (done.length >= Math.min(1, clipIds.length)) break;
+        const jobEl2 = document.getElementById('sunoJobStatus');
+        if (jobEl2) jobEl2.innerHTML = `Job <code>${jobId}</code> · poll ${i + 1}/60 · clips=${clips.length}`;
+      }
+      stop(true);
+      const first = clips.find(c => c && c.audio_url) || clips[0] || {};
+      if (first.audio_url) {
+        try { setMusicCover(first.image_url || first.image_large_url || ''); } catch {}
+        showPlayer(`
+          <div class="player-card">
+            <div class="player-head">▶ SUNO · listo · ${jobId}</div>
+            <audio controls src="${first.audio_url}" style="width:100%;margin:8px 0"></audio>
+            <pre class="player-body">langs: ${langLabel}
+clips: ${clipIds.join(', ')}
+title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
+            <small class="player-foot">// suno-web · execute · suno-local · destino Stock</small>
+          </div>`);
+      } else {
+        showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · pendiente · ${jobId}</div><pre class="player-body">ids: ${clipIds.join(', ')}\\nAún sin audio_url. Reintenta poll.</pre></div>`);
+      }
       updateMusicStage('review');
-      showToast('Suno · job encolado (dry-run)');
+      showToast('Suno · ' + jobId);
     } catch (e) {
       stop(false);
       showPlayer(`<div class="player-card"><div class="player-head">▶ SUNO · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);

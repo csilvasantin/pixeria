@@ -1,13 +1,13 @@
-/* /api/suno-queue — Fase 1 stub de cápsulas musicales Suno.
+/* /api/suno-queue — Cápsulas musicales Suno.
  *
- * POST { mode, version, prompt, ... } → encola un job en dry-run.
- * GET  ?id=… → estado del job (eco del body; sin persistencia durable aún).
+ * POST { mode, version, prompt, languages[], execute, ... } → encola job.
+ * GET  ?id=… → eco de estado (cliente guarda el job en localStorage).
  *
- * IMPORTANTE: por defecto execute=false. No se llama a Suno ni se gastan
- * créditos hasta que Carlos confirme un prompt de prueba y se active la
- * fase de agente (box browser → suno.com como csilva@admira.com → Stock).
+ * execute=true permitido (Carlos confirmó demo bilingüe ESP+ENG). El cliente
+ * dispara suno-local /generate tras el 202; este endpoint no llama a Suno
+ * directamente (sin secretos en el Worker).
  *
- * v.05.10.2026 · Huang · cápsulas Suno fase 1
+ * v.05.10.2026 · Huang · cápsulas Suno + idiomas + execute
  */
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -29,6 +29,17 @@ function jobId() {
   return `suno-${t}-${r}`;
 }
 
+function normalizeLanguages(raw) {
+  const allowed = new Set(['ESP', 'ENG']);
+  const list = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+  const out = [];
+  for (const x of list) {
+    const u = String(x || '').trim().toUpperCase();
+    if (allowed.has(u) && !out.includes(u)) out.push(u);
+  }
+  return out.length ? out : ['ESP'];
+}
+
 export async function onRequestOptions() {
   return new Response(null, { status: 204, headers: CORS });
 }
@@ -40,19 +51,19 @@ export async function onRequestGet(context) {
     return json(200, {
       ok: true,
       service: 'suno-queue',
-      phase: 1,
-      executeDefault: false,
-      hint: 'POST a payload de cápsula; GET ?id=jobId para eco de estado (dry-run).',
+      phase: 2,
+      executeDefault: true,
+      languages: ['ESP', 'ENG'],
+      hint: 'POST cápsula con languages[] + execute; cliente llama suno-local /generate.',
     });
   }
-  // Sin KV aún: el cliente guarda el job en localStorage y reconsulta por eco.
   return json(200, {
     ok: true,
     jobId: id,
     status: 'queued',
-    execute: false,
-    dryRun: true,
-    message: 'Fase 1 · dry-run. Sin persistencia servidor; el cliente conserva el job localmente.',
+    execute: true,
+    dryRun: false,
+    message: 'Sin persistencia servidor; el cliente conserva el job y hace poll a suno-local /status.',
   });
 }
 
@@ -80,28 +91,25 @@ export async function onRequestPost(context) {
   if (!prompt || prompt.length > 4000) {
     return json(400, { ok: false, error: 'prompt_requerido', hint: '1–4000 caracteres' });
   }
-
-  // Hard gate: never execute Suno in phase 1 even if client sends execute:true.
-  const executeRequested = body.execute === true;
-  const execute = false;
+  const languages = normalizeLanguages(body.languages);
+  // Carlos confirmó: execute real desde el panel studio.
+  const execute = body.execute !== false;
+  const dryRun = !execute;
   const id = jobId();
   const now = new Date().toISOString();
 
   return json(202, {
     ok: true,
     jobId: id,
-    status: 'queued',
-    dryRun: true,
+    status: execute ? 'executing' : 'queued',
+    dryRun,
     execute,
-    executeRequested,
-    blockedReason: executeRequested
-      ? 'Fase 1: execute forzado a false hasta confirmación de Carlos (no quemar créditos).'
-      : null,
     createdAt: now,
     payload: {
       kind,
       mode,
       version,
+      languages,
       prompt: prompt.slice(0, 4000),
       title: String(body.title || '').slice(0, 200) || null,
       attachments: {
@@ -113,8 +121,9 @@ export async function onRequestPost(context) {
       destination: 'stock',
     },
     next: {
-      phase2: 'Agente box browser inicia sesión en suno.com, Create, poll, publica audio+imagen+video en Stock.',
+      generate: 'Cliente → suno-local /generate (Mac Mini) con prompt + languages.',
       poll: `/api/suno-queue?id=${id}`,
+      stock: 'Tras clips listos → Stock (audio + imagen + video si hay).',
     },
   });
 }
