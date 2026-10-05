@@ -1304,7 +1304,7 @@
       const fo = document.getElementById('stockFailedOpt');
       if (fo) { fo.hidden = failed === 0 && typeFilter.value !== 'fallidos'; fo.textContent = 'Importaciones fallidas (' + failed + ')'; }
       el.dataset.p = playable;
-      const motores = new Set(allItems.map(i => i && i.motor).filter(Boolean));
+      const motores = new Set(allItems.map(i => i && i.motor).filter(Boolean).map(verMotor));
       const em = document.getElementById('stockMotores');
       if (em) { em.textContent = String(motores.size); em.title = Array.from(motores).sort().join(' · '); }
       el.title = playable + ' reproducibles (= los que ves en admira.tv) · ' + total +
