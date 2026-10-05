@@ -5,8 +5,9 @@ import {restore,snapshot,defaults} from '../adaptaciones/adapter-core.mjs';
 import {pngDensity} from '../adaptaciones/png-density.mjs';
 test('campaigns have unique dimensions/IDs and correct PNG/mobile membership',()=>{
  const f=createCatalog();assert.equal(new Set(f.map(x=>x.id)).size,f.length);
- assert.equal(CAMPAIGNS[0].id,'altadis');
- assert.deepEqual(CAMPAIGNS.filter(c=>c.id!=='altadis').map(c=>f.filter(c.matches).length),[8,23,3]);
+ // Las campañas de cliente (Altadis) salen de la ficha de su proyecto: aquí solo quedan las generales.
+ assert.deepEqual(CAMPAIGNS.map(c=>c.id),['social','display','mobile']);
+ assert.deepEqual(CAMPAIGNS.map(c=>f.filter(c.matches).length),[8,23,3]);
  const display=CAMPAIGNS.find(c=>c.id==='display');
  assert.ok(f.filter(display.matches).every(x=>x.output==='png'&&x.category==='display'));
  assert.deepEqual(f.filter(x=>x.on).map(x=>x.id),['9:16','16:9','1:1','4:5']);

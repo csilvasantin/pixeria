@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r10.20:04",
-  "deployer": "HuangMacMini",
+  "version": "v.05.10.2026.r12.21:48",
+  "deployer": "MorfeoMacMini",
   "machine": "MacMini",
-  "signature": "HuangMacMini · MacMini",
-  "agent": "HuangMacMini",
-  "evidence": "Imágenes: prompt protagonista + pantalla #imageStage + galería de sesión (12) con publicar/descargar"
+  "signature": "MorfeoMacMini · MacMini",
+  "agent": "MorfeoMacMini",
+  "evidence": "Adaptador: proyectos de Yokup con ajustes generales + ficha propia (Altadis primera ficha, ?proyecto=, persistencia por proyecto)"
 }

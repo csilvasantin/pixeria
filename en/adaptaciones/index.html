@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r11.2045';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=05.10.2026.r12.2148';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -36,15 +36,15 @@
 <meta charset="utf-8">
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r11.20:45">
+  <meta name="admiranext-version" content="Pixeria v.05.10.2026.r12.21:48">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Adapter · One piece of content, every format | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=05.10.2026.r11.2045">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r11.2045">
-  <script defer src="/assets/site-nav.js?v=05.10.2026.r11.2045"></script>
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=05.10.2026.r12.2148">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=05.10.2026.r12.2148">
+  <script defer src="/assets/site-nav.js?v=05.10.2026.r12.2148"></script>
 </head>
 <body class="adapt-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
@@ -81,6 +81,8 @@
       <div class="adapter-workspace">
       <aside class="size-library" id="cuad-opciones" aria-label="Size library">
         <h2>Sizes</h2>
+        <label class="project-label">Project<select id="adapter-project" aria-describedby="project-status"><option value="general">General (no project)</option></select></label>
+        <p id="project-status" class="muted project-status" role="status"></p>
         <p class="muted">A campaign selects its batch. All sizes selects all 42. Adapt generates the checked sizes, in a queue.</p>
         <label class="size-search-label">Search formats or sizes<input id="size-search" type="search" placeholder="Name or 300 × 250…"></label>
         <label class="orientation-label">Filter by orientation<select id="size-orientation"><option value="all">All</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option><option value="square">Square</option></select></label>
@@ -111,7 +113,7 @@
     </section>
     <div id="cuad-avanzado-live" class="adv-live">
       <section id="card-settings" class="card-settings" aria-label="Selected card"></section>
-      <label class="profile-label">Format profile <select id="format-profile"><option value="standard">Library · social, digital, display and print</option><option value="cliente" disabled>Altadis · standard + ESPECIAL + MyBlu</option><option value="especiales" disabled>Altadis · segmented video walls (ESPECIAL)</option></select></label>
+      <label class="profile-label">Format profile <select id="format-profile"><option value="standard">Library · social, digital, display and print</option><option value="proyecto" disabled hidden>Project formats</option><option value="especiales" disabled hidden>Project segmented video walls</option></select></label>
         <label>Default framing
           <select id="modo-global"><option value="auto">Auto (Pixeria rule)</option><option value="cover">Crop (fill)</option><option value="blur">Expand · blurred background</option><option value="contain">Contain · black</option></select>
         </label>
@@ -121,17 +123,17 @@
       <details class="export-limits"><summary>Output types and limits</summary><p class="muted">Export MP4 with your settings and the original audio, when present. Every export joins the queue in the bottom-right corner and runs in the background in this browser, one variant at a time: keep working or switch video. Source limit 100 MB; 4K can take several minutes. Large batches must be split to stay within the memory budget. The first export downloads the engine (about 32 MB). Expand uses a blurred background without AI; blur may look slightly different from the preview. Input FPS and bitrate are estimates.</p><p class="muted output-note">Social and digital: MP4. Display and print: PNG of the current frame; pause the video to choose it. Print: RGB at 150 ppi, without bleed or CMYK. Sizes are references: check file weight, safe areas and destination requirements. Compatibility affects the four aspect-ratio formats; sized presets keep their resolution.</p></details>
         <button id="reset-settings" class="pill" type="button">Reset settings</button>
       <p id="settings-status" class="muted"></p>
-      <details class="adv-notes"><summary>Client profile notes</summary><p class="muted">Altadis (standard + MyBlu + ESPECIAL): native resolution, MP4 H.264, 25 fps. Vertical may rotate L/R. Sync formats need matching duration; this view does not sync players.</p><p class="muted especiales-note">Segmented video walls: reframing happens on the physical wall and every screen is cut from the same master. The delivery is one MP4 with one cell per screen; you can also export one silent MP4 per screen, with the same duration at 25 fps. The picture only flows across screens if the players start together.</p></details>
+      <details class="adv-notes" hidden><summary>Project notes</summary><p id="project-notes" class="muted"></p><p class="muted especiales-note">Segmented video walls: reframing happens on the physical wall and every screen is cut from the same master. The delivery is one MP4 with one cell per screen; you can also export one silent MP4 per screen, with the same duration at 25 fps. The picture only flows across screens if the players start together.</p></details>
           </div>
     <div id="cuad-experto-live" class="exp-live">
       <details class="plan"><summary>Encoding plan by format (resolution, H.264, bitrate and ffmpeg command)</summary><div id="plan-tecnico"></div></details>
     </div>
   </main>
-  <script defer src="/adaptaciones/stock-select.js?v=05.10.2026.r11.2045"></script>
-  <script defer src="/adaptaciones/ficha-tecnica.js?v=05.10.2026.r11.2045"></script>
-  <script defer src="/adaptaciones/importar.js?v=05.10.2026.r11.2045"></script>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=05.10.2026.r11.2045"></script>
-  <script defer src="/assets/cuadratura.js?v=05.10.2026.r11.2045"></script>
+  <script defer src="/adaptaciones/stock-select.js?v=05.10.2026.r12.2148"></script>
+  <script defer src="/adaptaciones/ficha-tecnica.js?v=05.10.2026.r12.2148"></script>
+  <script defer src="/adaptaciones/importar.js?v=05.10.2026.r12.2148"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=05.10.2026.r12.2148"></script>
+  <script defer src="/assets/cuadratura.js?v=05.10.2026.r12.2148"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>

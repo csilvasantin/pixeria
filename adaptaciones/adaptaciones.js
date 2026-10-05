@@ -6,7 +6,8 @@ import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudge
 import { createEngine, MAX_SOURCE_BYTES } from './adapter-export.js';
 import { createExportQueue } from './export-queue.js';
 import { publishAdaptation, shortFormat, adaptationTitle } from './stock-publish.mjs';
-import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily, isAltadisFormat, isLibrarySize, applyCampaign, setGroupSelected, groupSelection, selectAllSizes } from './format-catalog.mjs';
+import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily, isProjectFormat, isLibrarySize, applyCampaign, setGroupSelected, groupSelection, selectAllSizes } from './format-catalog.mjs';
+import { GENERAL, YOKUP_URL, PROJECT_KEY, projectStorageKey, formatRef, resolveRef, projectLibrary, projectCampaigns, parseYokup, mergeProjects, migrateStorage, initialProject } from './proyectos-core.mjs';
 import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
 import { pngDensity } from './png-density.mjs';
 
@@ -16,28 +17,59 @@ const $ = (s) => document.querySelector(s);
 const FORMATOS = createCatalog(EN);
 const MODOS = { auto: t('Auto (regla Pixeria)', 'Auto (Pixeria rule)'), cover: t('Recorte', 'Crop'), blur: t('Expandir · fondo desenfocado', 'Expand · blurred background'), contain: t('Contener · negro', 'Contain · black') };
 const picker = {query:'',orientation:'all',open:new Set()};
-const state = { sel: '', profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '', origin: { id: null, title: '' } };
+const state = { sel: '', proyecto: GENERAL, profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '', origin: { id: null, title: '' } };
 FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoom: 1 }));
+// Proyecto activo (Carlos, 5-oct-2026): biblioteca general + la ficha del proyecto de Yokup, si la tiene.
+let FICHA = null, INDEX = [], PROJECTS = [], campaigns = CAMPAIGNS, yokupSource = 'none', yokupDate = '';
 
 const video = $('#src');
 let initialized = false;
-const selectedFormats = () => FORMATOS.filter(f => f.on && (state.profile === 'cliente' ? isAltadisFormat(f) : formatFamily(f) === state.profile));
-// Biblioteca uses the compatibility selector; client profiles keep native resolutions.
+const selectedFormats = () => FORMATOS.filter(f => f.on && (state.profile === 'proyecto' ? isProjectFormat(f) : formatFamily(f) === state.profile));
+// Biblioteca uses the compatibility selector; project formats keep native resolutions.
 const syncCompat = () => { $('#compat').disabled = state.profile !== 'standard'; };
+// Persistence is separated by project (and, inside, by format id): General keeps the historic key
+// pixeria.adapter.v1; each project uses pixeria.adapter.v1.proyecto.<id>. Custom sizes belong to
+// the general library, so they are shared and always live in the General record.
+const keyFor = id => projectStorageKey(STORAGE_KEY, id);
+const readJSON = key => { try { return JSON.parse(localStorage.getItem(key)); } catch (_) { return null; } };
+const RATIOS = ['9:16', '16:9', '1:1', '4:5'];
 function saveSettings() {
   if (!initialized) return;
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot(state, FORMATOS))); $('#settings-status').textContent = t('Ajustes guardados en este navegador. Al volver, elige de nuevo tu archivo local.', 'Settings saved in this browser. Select your local file again when returning.'); }
+  try {
+    const snap = snapshot(state, FORMATOS);
+    localStorage.setItem(keyFor(state.proyecto), JSON.stringify(snap));
+    if (state.proyecto !== GENERAL) {
+      const general = readJSON(STORAGE_KEY);
+      if (general && general.version === 1) { if (JSON.stringify(general.custom || []) !== JSON.stringify(snap.custom)) localStorage.setItem(STORAGE_KEY, JSON.stringify({...general, custom: snap.custom})); }
+      else if (snap.custom.length) localStorage.setItem(STORAGE_KEY, JSON.stringify({version: 1, profile: 'standard', compat: 'fhd', modoGlobal: 'auto', custom: snap.custom, selected: RATIOS, fmt: {}}));
+    }
+    $('#settings-status').textContent = t('Ajustes guardados en este navegador. Al volver, elige de nuevo tu archivo local.', 'Settings saved in this browser. Select your local file again when returning.');
+  }
   catch (_) { $('#settings-status').textContent = t('Este navegador no permite guardar los ajustes.', 'This browser does not allow saving settings.'); }
 }
-function restoreSettings() {
+const hasFamily = fam => fam === 'standard' || FORMATOS.some(fam === 'proyecto' ? isProjectFormat : f => f.especial && fam === 'especiales');
+const defaultFamily = () => FICHA && hasFamily(FICHA.ajustes?.familia) ? FICHA.ajustes.familia : 'standard';
+// Fresh state of the active project: the four ratios of the library, the project's flat formats
+// on (as the Altadis profile always loaded), segmented walls off, and the ficha's defaults.
+function resetState() {
+  Object.assign(state, {profile: defaultFamily(), compat: 'fhd', modoGlobal: FICHA?.ajustes?.metodo || 'auto'});
+  FORMATOS.forEach(f => { f.on = f.proyecto ? !f.especial : RATIOS.includes(f.id); state.fmt[f.id] = defaults(); });
+}
+function syncControls() {
+  $('#format-profile').value = state.profile; $('#compat').value = state.compat; $('#modo-global').value = state.modoGlobal;
+  syncCompat();
+}
+// General library + shared custom sizes + the project's own formats, then that project's settings.
+function restoreSettings(lists) {
+  initialized = false;
+  const general = [...createCatalog(EN), ...restoreCustomFormats(readJSON(STORAGE_KEY)?.custom, EN)];
+  FORMATOS.length = 0; FORMATOS.push(...projectLibrary(general, FICHA, lists, EN));
+  resetState();
   try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    restoreCustomFormats(raw?.custom,EN).forEach(f=>{FORMATOS.push(f);state.fmt[f.id]=defaults();});
-    const saved = restore(raw, FORMATOS);
+    const saved = restore(readJSON(keyFor(state.proyecto)), FORMATOS);
     if (saved) { Object.assign(state, {profile:saved.profile,compat:saved.compat,modoGlobal:saved.modoGlobal,fmt:saved.fmt}); FORMATOS.forEach(f=>f.on=saved.selected.includes(f.id)); }
   } catch (_) { /* corrupt or unavailable storage: keep safe defaults */ }
-  $('#format-profile').value=state.profile; $('#compat').value=state.compat; $('#modo-global').value=state.modoGlobal;
-  syncCompat();initialized=true;
+  syncControls(); initialized = true;
 }
 // kinds applies to special layouts: the client delivery file, one MP4 per screen, or both.
 function especialJobs(f,kinds) {
@@ -113,11 +145,8 @@ async function exportFormats(formats,kinds='both') {
   for(const {job,f} of jobs) queue.add({label:job.label,sub,sourceURL,job,format:f,...ctx});
 }
 $('#export-all').onclick=()=>exportFormats(selectedFormats());
-$('#reset-settings').onclick=()=>{
-  Object.assign(state,{profile:'standard',compat:'fhd',modoGlobal:'auto'});FORMATOS.forEach(f=>{f.on=['9:16','16:9','1:1','4:5'].includes(f.id);state.fmt[f.id]=defaults();});
-  FORMATOS.filter(f=>f.especial).forEach((f,i)=>f.on=i===0);
-  $('#format-profile').value='standard';$('#compat').value='fhd';syncCompat();$('#modo-global').value='auto';buildGrid();
-};
+// Back to the active project's defaults (General: the four ratios and the standard library).
+$('#reset-settings').onclick=()=>{ resetState(); syncControls(); buildGrid(); };
 // Closing the tab mid-export loses the work: the browser asks first.
 window.addEventListener('beforeunload',event=>{if(!queue.busy()&&!savingToStock)return;event.preventDefault();event.returnValue=t('Hay exportaciones en curso','Exports are in progress');return event.returnValue;});
 window.addEventListener('pagehide',event=>{if(event.persisted)return;queue.cancelAll();queue.clear();if(sourceObjectURL)URL.revokeObjectURL(sourceObjectURL);});
@@ -126,12 +155,12 @@ window.addEventListener('pagehide',event=>{if(event.persisted)return;queue.cance
 function perfil(f) {
   if(f.output==='png')return {ancho:f.custom[0],alto:f.custom[1],orientacion:f.custom[0]>f.custom[1]?'apaisada':f.custom[0]<f.custom[1]?'vertical':'custom',fps:25,techoKbps:8000,sueloKbps:2500,h264:'high@4.0'};
   return f.custom
-    ? perfilDeSalida({ formato: 'custom', ancho: f.custom[0], alto: f.custom[1], compatibilidad: f.cliente || f.especial ? 'uhd' : f.native ? (Math.max(...f.custom)>1920||f.custom[0]*f.custom[1]>1920*1080?'uhd':'fhd') : state.compat })
+    ? perfilDeSalida({ formato: 'custom', ancho: f.custom[0], alto: f.custom[1], compatibilidad: f.proyecto ? (FICHA?.ajustes?.compatibilidad || 'uhd') : f.native ? (Math.max(...f.custom)>1920||f.custom[0]*f.custom[1]>1920*1080?'uhd':'fhd') : state.compat })
     : perfilDeSalida({ formato: f.id, compatibilidad: state.compat });
 }
 function plan(f) {
   if (!state.src.ancho) return null;
-  try { const output = planificar(state.src, perfil(f)); if (f.cliente || f.especial) output.fps = 25; return output; } catch (e) { return { error: e.message }; }
+  try { const output = planificar(state.src, perfil(f)); if (f.proyecto) output.fps = f.especial ? 25 : (FICHA?.ajustes?.fps || 25); return output; } catch (e) { return { error: e.message }; }
 }
 // Special layouts reframe the physical wall (every screen side by side), not the
 // packed delivery file: that is the picture people actually see across screens.
@@ -188,19 +217,22 @@ function buildPicker() {
   $('#search-status').textContent=t(`${visible.length} tamaños disponibles`,`${visible.length} sizes available`);
   $('#size-no-results').hidden=!!visible.length;
   $('#campaigns').querySelectorAll('[data-campaign]').forEach(button=>{
-    const campaign=CAMPAIGNS.find(c=>c.id===button.dataset.campaign),formats=FORMATOS.filter(campaign.matches);
+    const campaign=campaigns.find(c=>c.id===button.dataset.campaign);if(!campaign)return;const formats=FORMATOS.filter(campaign.matches);
     button.querySelector('.campaign-count').textContent=t(`${formats.length} tamaños`,`${formats.length} sizes`);
     button.setAttribute('aria-label',`${t('Seleccionar','Select')} ${EN?campaign.en:campaign.es}`);
   });
 }
-$('#campaigns').replaceChildren(...CAMPAIGNS.map(c=>{
-  const b=document.createElement('button');b.type='button';b.className='campaign';b.dataset.campaign=c.id;
-  const heading=document.createElement('strong');heading.textContent=EN?c.en:c.es;
-  const count=document.createElement('span');count.className='campaign-count';
-  const description=document.createElement('small');description.textContent=EN?c.descriptionEn:c.descriptionEs;
-  b.append(heading,count,description);
-  b.onclick=()=>{const profile=c.profile||'standard';state.profile=profile;$('#format-profile').value=profile;syncCompat();applyCampaign(FORMATOS,c.id);buildGrid();};return b;
-}));
+// The project's own campaigns (ficha) go first, then the general ones.
+function renderCampaigns() {
+  $('#campaigns').replaceChildren(...campaigns.map(c=>{
+    const b=document.createElement('button');b.type='button';b.className='campaign';b.dataset.campaign=c.id;
+    const heading=document.createElement('strong');heading.textContent=EN?c.en:c.es;
+    const count=document.createElement('span');count.className='campaign-count';
+    const description=document.createElement('small');description.textContent=EN?c.descriptionEn:c.descriptionEs;
+    b.append(heading,count,description);
+    b.onclick=()=>{const profile=c.profile||'standard';state.profile=profile;$('#format-profile').value=profile;syncCompat();applyCampaign(FORMATOS,c.id,campaigns);buildGrid();};return b;
+  }));
+}
 $('#all-sizes').onclick=()=>{state.profile='standard';$('#format-profile').value='standard';syncCompat();selectAllSizes(FORMATOS);buildGrid();};
 $('#size-search').oninput=e=>{picker.query=e.target.value;buildPicker();};
 $('#size-orientation').onchange=e=>{picker.orientation=e.target.value;buildPicker();};
@@ -505,19 +537,111 @@ $('#format-profile').onchange = (e) => {
 $('#compat').onchange = (e) => { state.compat = e.target.value; buildGrid(); };
 
 
-const clienteResponse = await fetch('/adaptaciones/perfil-cliente-18.json').catch(() => null);
-if (clienteResponse && clienteResponse.ok) {
- const data = await clienteResponse.json();
- for (const f of data.formats) { f.on=true;f.category='digital'; if (EN) f.uso = f.useEn; FORMATOS.push(f); state.fmt[f.id] = {modo:'auto',fx:0.5,fy:0.5,zoom:1}; }
- $('#format-profile').querySelector('[value=cliente]').disabled = false;
+// ── Proyecto (Carlos, 5-oct-2026) ───────────────────────────────────────────
+// Lista: proyectos de Yokup (en vivo, con respaldo en proyectos/yokup.json). Ajustes propios:
+// fichas de proyectos/index.json. Sin ficha, el proyecto usa solo la biblioteca general.
+const PROJECTS_DIR = 'adaptaciones/proyectos/';
+const getJSON = async (url) => { const r = await fetch(url); if (!r.ok) throw new Error(`${r.status} ${url}`); return r.json(); };
+const fichaCache = new Map();
+async function loadFicha(entry) {
+  if (fichaCache.has(entry.id)) return fichaCache.get(entry.id);
+  const path = PROJECTS_DIR + entry.archivo, ficha = await getJSON('/' + path), lists = {};
+  for (const k of ['estandar', 'especiales']) {
+    const ref = formatRef(ficha.formatos?.[k]);
+    lists[k] = !ref ? [] : ref.inline ? ref.inline : ((await getJSON('/' + resolveRef(path, ref.archivo)))[ref.clave] || []);
+  }
+  const out = {ficha, lists};
+  fichaCache.set(entry.id, out);
+  return out;
 }
-const especialesResponse = await fetch('/adaptaciones/perfil-cliente-especiales.json').catch(() => null);
-if (especialesResponse && especialesResponse.ok) {
- const data = await especialesResponse.json();
- data.layouts.forEach((layout) => { FORMATOS.push({ id: layout.id, nombre: layout.nombre, nameEn: layout.nombre, uso: EN ? layout.useEn : layout.uso, custom: layout.entrega, category: 'digital', especial: true, cliente: true, layout, fps: 25, on: false }); state.fmt[layout.id] = defaults(); });
- $('#format-profile').querySelector('[value=especiales]').disabled = false;
+const projectName = id => PROJECTS.find(p => p.id === id)?.nombre || id;
+function renderProjects() {
+  const sel = $('#adapter-project'); if (!sel) return;
+  const option = (parent, value, text) => { const o = document.createElement('option'); o.value = value; o.textContent = text; parent.appendChild(o); };
+  const group = (label, list, text) => { if (!list.length) return; const g = document.createElement('optgroup'); g.label = label; list.forEach(p => option(g, p.id, text(p))); sel.appendChild(g); };
+  sel.replaceChildren();
+  option(sel, GENERAL, t('General (sin proyecto)', 'General (no project)'));
+  const own = PROJECTS.filter(p => p.propios), rest = PROJECTS.filter(p => !p.propios);
+  const count = p => (p.ficha.formatos?.estandar || 0) + (p.ficha.formatos?.especiales || 0);
+  group(t('Con formatos propios', 'With own formats'), own, p => `★ ${p.nombre} · ${count(p)} ${t('propios', 'own')}`);
+  group(t('Proyectos de Yokup · solo biblioteca general', 'Yokup projects · general library only'), rest, p => p.nombre);
+  if (state.proyecto !== GENERAL && !PROJECTS.some(p => p.id === state.proyecto)) option(sel, state.proyecto, state.proyecto);
+  sel.value = state.proyecto;
 }
-restoreSettings(); buildGrid(); emptySource(); loop();
+function renderProjectStatus(extra = '') {
+  const box = $('#project-status'); if (!box) return;
+  const own = FORMATOS.filter(f => f.proyecto && !f.especial).length, walls = FORMATOS.filter(f => f.especial).length, myblu = FORMATOS.filter(f => f.proyecto && f.myblu).length;
+  const what = state.proyecto === GENERAL ? t('Biblioteca general, sin ajustes de cliente.', 'General library, no client settings.')
+    : FICHA ? `${t('Biblioteca general', 'General library')} + ${own} ${t('formatos propios', 'own formats')}${myblu ? ` (${myblu} MyBlu)` : ''}${walls ? ` + ${walls} ${t('videowalls segmentados', 'segmented video walls')}` : ''}.`
+    : t('Sin ficha propia: usa solo la biblioteca general.', 'No project file: uses the general library only.');
+  const src = yokupSource === 'live' ? t('Proyectos de Yokup en vivo.', 'Live Yokup projects.')
+    : yokupSource === 'saved' ? t(`Proyectos de Yokup: copia guardada (${yokupDate}).`, `Yokup projects: saved copy (${yokupDate}).`) : '';
+  box.textContent = [extra, what, src].filter(Boolean).join(' ');
+}
+// «Perfil de formatos»: biblioteca general siempre; la familia del proyecto y sus videowalls solo si la ficha los trae.
+function renderProfiles() {
+  const sel = $('#format-profile'), fam = FICHA?.familias || {}, name = FICHA?.nombre || '';
+  const set = (value, label, on) => { const o = sel.querySelector(`option[value="${value}"]`); if (!o) return; o.textContent = label; o.disabled = !on; o.hidden = !on; };
+  set('proyecto', fam.proyecto ? (EN ? fam.proyecto.en : fam.proyecto.es) : `${name} · ${t('formatos propios', 'own formats')}`, hasFamily('proyecto') && FORMATOS.some(f => f.proyecto && !f.especial));
+  set('especiales', fam.especiales ? (EN ? fam.especiales.en : fam.especiales.es) : `${name} · ${t('videowalls segmentados', 'segmented video walls')}`, FORMATOS.some(f => f.especial));
+  sel.value = state.profile;
+  const notes = $('#project-notes'), box = notes?.closest('details');
+  if (notes) notes.textContent = FICHA?.notas ? (EN ? FICHA.notas.en : FICHA.notas.es) : '';
+  if (box) box.hidden = !FICHA;
+  const wallNote = document.querySelector('.especiales-note'); if (wallNote) wallNote.hidden = !FORMATOS.some(f => f.especial);
+}
+function syncURL() {
+  try {
+    const u = new URL(location.href);
+    if (state.proyecto === GENERAL) u.searchParams.delete('proyecto'); else u.searchParams.set('proyecto', state.proyecto);
+    if (u.href !== location.href) history.replaceState(history.state, '', u.href);
+  } catch (_) {}
+  try { if (state.proyecto === GENERAL) localStorage.removeItem(PROJECT_KEY); else localStorage.setItem(PROJECT_KEY, state.proyecto); } catch (_) {}
+}
+let switching = 0;
+async function switchProject(id) {
+  saveSettings();
+  const turn = ++switching, entry = INDEX.find(x => x.id === id);
+  let ficha = null, lists = {}, note = '';
+  if (entry) {
+    try { ({ficha, lists} = await loadFicha(entry)); }
+    catch (_) { note = t('No se pudo leer la ficha del proyecto: se usa la biblioteca general.', 'Could not read the project file: using the general library.'); }
+  }
+  if (turn !== switching) return; // a later pick won while this ficha was loading
+  FICHA = ficha; state.proyecto = id;
+  campaigns = [...projectCampaigns(ficha), ...CAMPAIGNS];
+  restoreSettings(lists);
+  renderProfiles(); renderCampaigns(); renderProjects(); renderProjectStatus(note); syncURL();
+  buildGrid();
+}
+$('#adapter-project').onchange = (e) => { switchProject(e.target.value); };
+// Yokup en vivo: GET público con CORS *. Si tarda o falla, se queda la copia del repositorio.
+function fetchYokup() {
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), 4000) : 0;
+  return fetch(YOKUP_URL, {cache: 'no-store', headers: {Accept: 'application/json'}, ...(ctl ? {signal: ctl.signal} : {})})
+    .then(r => r.ok ? r.json() : null)
+    .then(json => { const list = parseYokup(json); if (!list.length) return; yokupSource = 'live'; PROJECTS = mergeProjects(list, INDEX); renderProjects(); renderProjectStatus(); })
+    .catch(() => {}).finally(() => clearTimeout(timer));
+}
+
+const [indexJSON, yokupJSON] = await Promise.all([getJSON('/' + PROJECTS_DIR + 'index.json').catch(() => null), getJSON('/' + PROJECTS_DIR + 'yokup.json').catch(() => null)]);
+INDEX = Array.isArray(indexJSON?.proyectos) ? indexJSON.proyectos : [];
+const savedList = parseYokup(yokupJSON);
+if (savedList.length) { yokupSource = 'saved'; yokupDate = String(yokupJSON.actualizado || ''); }
+PROJECTS = mergeProjects(savedList, INDEX);
+// Altadis preferences saved before the fichas move to their project once; nothing is deleted.
+let migratedTo = null; try { migratedTo = migrateStorage(localStorage, STORAGE_KEY); } catch (_) {}
+let query = null, lastProject = null;
+try { query = new URLSearchParams(location.search).get('proyecto'); } catch (_) {}
+try { lastProject = localStorage.getItem(PROJECT_KEY) || migratedTo; } catch (_) { lastProject = migratedTo; }
+const live = fetchYokup();
+let start = initialProject({query, saved: lastProject, projects: PROJECTS, index: INDEX});
+// An id that is not in the saved copy may be a brand-new Yokup project: wait for the live list.
+if (start.unknown) { await live; start = initialProject({query, saved: lastProject, projects: PROJECTS, index: INDEX}); }
+await switchProject(start.id);
+if (start.unknown) renderProjectStatus(t(`«${start.unknown}» no es un proyecto de Yokup: se usa ${projectName(start.id) === GENERAL ? 'General' : projectName(start.id)}.`, `«${start.unknown}» is not a Yokup project: using ${projectName(start.id) === GENERAL ? 'General' : projectName(start.id)}.`));
+emptySource(); loop();
 
 // El desplegable y el contador del Stock viven en ./stock-select.js (script clásico aparte): si este
 // módulo falla en un navegador, el Stock se lista igual y avisa si no se puede leer.

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "nota": "Generado por scripts/adaptador-proyectos.py a partir de las fichas de esta carpeta. No editar a mano.",
+  "proyectos": [
+    {
+      "id": "altadis-estancos-bcn",
+      "nombre": "Altadis",
+      "alias": [
+        "altadis"
+      ],
+      "archivo": "altadis-estancos-bcn.json",
+      "formatos": {
+        "estandar": 24,
+        "especiales": 5,
+        "myblu": 6
+      },
+      "campanas": [
+        "altadis"
+      ]
+    }
+  ]
+}

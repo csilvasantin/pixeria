@@ -18,7 +18,7 @@ La preview incluye un paquete de revisión explícitamente público en `/review/
 
 ## Exportación y ajustes guardados · misión #223
 
-Los ajustes se guardan automáticamente en localStorage, separados por ID de formato: método, foco X/Y, zoom, selección, compatibilidad y familia estándar o de cliente. Se restauran después de cargar los 18 formatos. Cambiar de familia conserva sus ajustes y selecciones. “Restablecer ajustes” vuelve al perfil estándar. No se guardan archivos ni URLs blob: al recargar hay que volver a elegir el archivo local. Al navegar con BFCache la fuente conservada sigue disponible. Si el almacenamiento está bloqueado se avisa y el editor sigue funcionando.
+Los ajustes se guardan automáticamente en localStorage, separados por proyecto y, dentro de cada uno, por ID de formato: método, foco X/Y, zoom, selección, compatibilidad y familia (biblioteca, formatos propios o videowalls). Ver «Proyectos». Cambiar de familia conserva sus ajustes y selecciones. “Restablecer ajustes” vuelve a los ajustes por defecto del proyecto activo (en General, el perfil estándar). No se guardan archivos ni URLs blob: al recargar hay que volver a elegir el archivo local. Al navegar con BFCache la fuente conservada sigue disponible. Si el almacenamiento está bloqueado se avisa y el editor sigue funcionando.
 
 El origen tiene un límite de 100 MiB. El encoder single-thread descarga bajo demanda unos 32 MB de @ffmpeg/core 0.12.10 desde jsDelivr; el wrapper MIT @ffmpeg/ffmpeg 0.12.15 está fijado y alojado en el repositorio. El vídeo local no se envía a ese CDN. Para impedir intermediarios enormes en pantallas panorámicas, cover y blur recortan el origen antes de escalar. El presupuesto estimado admite 96 MiB por variante y 192 MiB por lote; si se excede, se pide un clip más corto, menor perfil o menos formatos. Hay además un tope real de 128 MiB por salida y se rechazan resultados desde 124 MiB para no ofrecer archivos truncados. Son límites de esta versión local, no garantías de consumo de RAM.
 
@@ -71,3 +71,79 @@ Se reutilizan el exportador WASM y los límites existentes: 100 MiB de origen, p
 Límites: esta página no sincroniza players. La imagen solo continúa entre pantallas si arrancan a la vez y en bucle juntos. Las paredes largas (CORDOBA-098, 14400 px) componen un fotograma intermedio grande y pueden tardar en navegadores modestos. Con `-preset ultrafast`, ffprobe identifica el H.264 como «Constrained Baseline», igual que en el resto del Adaptador. No hay biseles ni huecos entre pantallas, porque el PDF no los da.
 
 Verificación: `test/adapter-especiales.test.mjs` cubre el catálogo y el SHA (también contra el PDF local si existe); la geometría (las celdas cubren la entrega y las pantallas cubren la pared sin solapes ni huecos); los nombres; la persistencia y el filtro por familia; y los trabajos. Con `ADAPTER_FFMPEG_TEST=1`, FFmpeg nativo convierte un maestro de 2 s en N pantallas: ffprobe confirma resolución, H.264, 25/1, 50 fotogramas y duración idéntica, además de la entrega con AAC. En Chrome se exportaron 5 MP4 de 640×360 y la entrega de 1280×1080 de VW 5x1 H con FFmpeg WASM. ffprobe dio 50 fotogramas y 2,000 s en cada pantalla, y apilar las 5 pantallas reconstruye la pared continua.
+
+## Proyectos: ajustes generales + los propios de cada proyecto
+
+Encargo de Carlos, 5-oct-2026. Cada proyecto tiene los **ajustes generales**: la biblioteca de 42 tamaños, los cuatro formatos de proporción, los tamaños personalizados y las campañas de redes, display y móviles. Además tiene **sus ajustes propios**, si existen. Antes solo Altadis tenía ajustes propios, cableados en el código como «perfil de cliente».
+
+**Selector Proyecto.** Está arriba del panel ☰ Tamaños y es bilingüe ES/EN. Ofrece «General (sin proyecto)», luego los proyectos con ficha marcados con ★ y el número de formatos propios, y después el resto de proyectos activos de Yokup. Al elegir uno:
+- se ven la biblioteca general y sus formatos propios;
+- «Perfil de formatos» (▤) ofrece la biblioteca general, la familia del proyecto y sus videowalls segmentados, solo si la ficha los trae;
+- sus campañas salen las primeras en «Campañas completas»;
+- las notas del proyecto aparecen en ▤.
+
+Un proyecto sin ficha usa solo la biblioteca general. El estado bajo el selector dice qué se está viendo y si la lista de Yokup llegó en vivo o es la copia guardada. La familia que antes se llamaba «cliente» ahora es «proyecto», y no se pierde ninguna función: Altadis conserva sus 18 estándar, 6 MyBlu y 5 ESPECIAL, su campaña, la compatibilidad 4K y los 25 fps.
+
+**URL.** `?proyecto=<id>` abre ese proyecto y la página mantiene el parámetro al cambiar de proyecto; General lo quita. También acepta los alias de la ficha: `?proyecto=altadis` abre `altadis-estancos-bcn`. Un id que no está en Yokup cae en General y lo avisa. Sin parámetro, se vuelve al último proyecto elegido (`pixeria.adapter.proyecto`).
+
+**Fuente de proyectos.** La lista sale de `GET https://api.yokup.com/projects`: es pública, tiene `Access-Control-Allow-Origin: *` y es la misma que usan las misiones (`project_id`). El Adaptador la pide en vivo, con un límite de 4 s y sin credenciales. Si falla, usa `adaptaciones/proyectos/yokup.json`, una copia con solo id, nombre y estado, generada por script. No se usan secretos.
+
+**Persistencia.** General conserva la clave de siempre, `pixeria.adapter.v1`. Cada proyecto usa `pixeria.adapter.v1.proyecto.<id>`. Los tamaños personalizados son de la biblioteca general: se comparten y viven en la clave de General. Las preferencias de Altadis guardadas antes de las fichas (perfil `cliente`/`altadis`/`especiales` e ids `cliente-*`/`altadis-*` en la clave general) se copian una sola vez a la clave del proyecto Altadis, sin borrar nada. Quien estaba en Altadis vuelve a Altadis.
+
+### Ficha de proyecto
+
+`adaptaciones/proyectos/<id-yokup>.json`, uno por proyecto, con el **id exacto de Yokup** como nombre de archivo:
+
+| Campo | Qué es |
+|---|---|
+| `version` | `1` |
+| `id`, `nombre`, `alias` | id de Yokup; nombre corto; slugs extra aceptados en `?proyecto=` |
+| `hereda` | siempre `"general"`: la ficha suma, nunca sustituye, la biblioteca general |
+| `fuente` | `titulo` (obligatorio), `archivo`, `sha256`, `documentacion`, `nota` |
+| `formatos.estandar` | lista de `{id, nombre, custom:[ancho, alto], uso, useEn, fps?, myblu?}`, o `{archivo, clave}` hacia un JSON de transcripción dentro de `adaptaciones/` |
+| `formatos.especiales` | videowalls segmentados (forma de `perfil-cliente-especiales.json`): lista o `{archivo, clave}` |
+| `ajustes` | `metodo` (auto/cover/contain/blur), `compatibilidad` (universal/fhd/uhd) de sus formatos, `fps`, `codec` (`h264`), `familia` con la que se abre |
+| `familias` | etiquetas ES/EN de «Perfil de formatos» para la familia propia y los videowalls |
+| `campanas` | `{id, es, en, descripcionEs, descripcionEn, incluye}`; `incluye` = `todos`, `estandar`, `especiales`, `myblu` o lista de ids propios |
+| `notas` | requisitos de entrega ES/EN para ▤ |
+
+Altadis es la primera ficha: `proyectos/altadis-estancos-bcn.json`. Yokup no tiene un proyecto `altadis`; su proyecto Altadis, el que usan sus misiones, es `altadis-estancos-bcn` («Altadis · Estancos Barcelona 9»). Por eso la ficha usa ese id y declara `altadis` como alias. La ficha **referencia** `perfil-cliente-18.json` y `perfil-cliente-especiales.json`, que siguen intactos byte a byte, con su procedencia y SHA del PDF. Los ids de formato `cliente-NN` y `cliente-esp-N` no cambian, para no romper preferencias guardadas.
+
+`adaptaciones/proyectos/index.json` (fichas existentes con recuentos) y `yokup.json` (lista de Yokup) los genera `scripts/adaptador-proyectos.py`:
+
+```
+scripts/adaptador-proyectos.py                 # regenera index.json
+scripts/adaptador-proyectos.py --yokup         # además renueva yokup.json desde la API
+scripts/adaptador-proyectos.py --check         # sale 1 si index.json está desfasado o un id no está en yokup.json
+scripts/adaptador-proyectos.py --check --yokup # además compara yokup.json con Yokup en vivo
+```
+
+### Cómo añadir un proyecto
+
+1. Crea el proyecto en Yokup si no existe y copia su id exacto, el de `/misiones`.
+2. Si es nuevo en Yokup, ejecuta `scripts/adaptador-proyectos.py --yokup`.
+3. Copia `adaptaciones/proyectos/_plantilla.json` a `adaptaciones/proyectos/<id>.json`.
+4. Rellena `id`, `nombre`, `fuente`, los formatos, los `ajustes`, las `familias`, las `campanas` y las `notas`. Da a los formatos ids que empiecen por el del proyecto, para que no choquen con la biblioteca. Si la fuente es un PDF largo, transcríbelo aparte y apúntalo con `{archivo, clave}`, como Altadis.
+5. Ejecuta `scripts/adaptador-proyectos.py` para regenerar `index.json`.
+6. Ejecuta `node --test test/adapter-proyectos.test.mjs`. Valida el esquema de todas las fichas: que el nombre de archivo coincida con el id, que el id exista en la lista de Yokup, que ningún id pise la biblioteca general, la geometría de los videowalls, los 25 fps de los segmentados y las campañas. También comprueba que `index.json` está al día.
+7. Abre un PR. Al publicarse, el proyecto sale marcado con ★ en el selector.
+
+Verificación: `test/adapter-proyectos.test.mjs` cubre:
+- el esquema;
+- que Altadis sea idéntico a main: SHA de las dos transcripciones y el cargador antiguo, comparado formato a formato en ES y EN; campaña de 29 formatos; etiquetas;
+- la herencia de la biblioteca general;
+- que un proyecto de Yokup sin ficha use solo la general;
+- la lista de Yokup;
+- `?proyecto=` con id, alias y desconocido;
+- la persistencia separada;
+- la migración de preferencias antiguas.
+
+`test/adaptador-proyectos.browser.cjs` (Playwright, con un servidor local y la verja simulada en `/auth/session`) recorre en el navegador:
+- General;
+- Altadis por alias;
+- `pixeria-alsea`, proyecto sin ficha;
+- la migración desde una clave antigua;
+- inglés sin conexión con Yokup.
+
+Además, guarda capturas a 1440 y 390 px.
+

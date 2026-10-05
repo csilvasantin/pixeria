@@ -40,19 +40,21 @@ export function createCatalog(en=false) {
  if(en) formats.forEach(f=>{f.nombre=f.nameEn;f.uso=f.useEn;});
  return formats;
 }
-export const isAltadisFormat = f => !!(f.cliente || f.especial);
+// Formatos propios de un proyecto (ficha adaptaciones/proyectos/<id>.json): estándar,
+// MyBlu y videowalls segmentados. Antes de las fichas era «perfil de cliente» (Altadis).
+export const isProjectFormat = f => !!f.proyecto;
+// Campañas generales (sin cliente). Las de cada proyecto salen de su ficha (projectCampaigns).
 export const CAMPAIGNS=[
- {id:'altadis',es:'Altadis',en:'Altadis',descriptionEs:'Estándar + ESPECIAL + MyBlu · MP4 H.264 · 25 fps',descriptionEn:'Standard + ESPECIAL + MyBlu · MP4 H.264 · 25 fps',matches:isAltadisFormat,profile:'cliente'},
  {id:'social',es:'Campaña de redes sociales',en:'Social media campaign',descriptionEs:'Publicaciones, stories y portadas',descriptionEn:'Posts, stories and covers',matches:f=>f.category==='social'},
  {id:'display',es:'Anuncios display',en:'Display ads',descriptionEs:'Rectángulos, banners y formatos regionales',descriptionEn:'Rectangles, banners and regional sizes',matches:f=>f.category==='display'},
  {id:'mobile',es:'Anuncios móviles',en:'Mobile ads',descriptionEs:'Tres banners para móvil',descriptionEn:'Three mobile banners',matches:f=>f.mobile},
 ];
-export const formatFamily=f=>f.especial?'especiales':f.cliente?'cliente':'standard';
+export const formatFamily=f=>f.especial?'especiales':f.proyecto?'proyecto':'standard';
 export function matchingFormats(formats,{query='',orientation='all',category,profile='standard'}={}) {
  const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[×:]/g,'x').replace(/\s+/g,'');
  const q=norm(query);
  return formats.filter(f=>{
-  if(profile==='cliente'){ if(!isAltadisFormat(f)) return false; }
+  if(profile==='proyecto'){ if(!isProjectFormat(f)) return false; }
   else if(formatFamily(f)!==profile) return false;
   if(category&&f.category!==category) return false;
   const [w,h]=f.custom||({'9:16':[1080,1920],'16:9':[1920,1080],'1:1':[1080,1080],'4:5':[1080,1350]}[f.id]||[0,0]);
@@ -73,21 +75,21 @@ export function restoreCustomFormats(raw,en=false) {
  });
 }
 // The size library is the 42 presets (social 8, digital 6, display 23, print 5).
-// Client profiles and sizes the user typed are other families.
+// Project formats and sizes the user typed are other families.
 export const LIBRARY_SIZE_COUNT = 42;
-export const isLibrarySize = f => !f.cliente && !f.especial && !f.user;
-export function applyCampaign(formats, campaignId) {
- const campaign = CAMPAIGNS.find(c => c.id === campaignId);
+export const isLibrarySize = f => !f.proyecto && !f.especial && !f.user;
+export function applyCampaign(formats, campaignId, campaigns = CAMPAIGNS) {
+ const campaign = campaigns.find(c => c.id === campaignId);
  if (!campaign) return 0;
  let n = 0;
  const profile = campaign.profile || 'standard';
  for (const f of formats) {
   // Biblioteca: solo presets de redes/digital/display/impresión.
-  // Campañas de cliente (Altadis): activan el perfil cliente y sus formatos.
+  // Campañas de proyecto (ficha): activan la familia «proyecto» y sus formatos.
   if (profile === 'standard') {
    if (!isLibrarySize(f)) continue;
-  } else if (profile === 'cliente') {
-   if (!isAltadisFormat(f)) continue;
+  } else if (profile === 'proyecto') {
+   if (!isProjectFormat(f) || (campaign.proyecto && f.proyecto !== campaign.proyecto)) continue;
   } else if (formatFamily(f) !== profile) continue;
   f.on = !!campaign.matches(f);
   if (f.on) n++;
