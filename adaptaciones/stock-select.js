@@ -173,12 +173,17 @@
     s.title = EN ? 'No preview available' : 'Sin vista previa'; s.setAttribute('aria-label', s.title);
     return s;
   }
+  // Misma URL en modo CORS que usará el Adaptador (corsURL de adaptaciones.js): comparten caché.
+  function corsDe(u) { try { var uu = new URL(u, location.href); if (uu.origin !== location.origin) { uu.searchParams.set('cors', '1'); return uu.href; } } catch (_) {} return u; }
   function fotogramaEnCliente(ph) {
     var v = document.createElement('video');
     v.className = 'stk-ph stk-vid'; v.muted = true; v.playsInline = true; v.preload = 'metadata';
     v.setAttribute('aria-hidden', 'true'); v.tabIndex = -1;
     v.onerror = function () { v.replaceWith(sinVista()); };
-    v.src = ph.dataset.video + (ph.dataset.video.indexOf('#') < 0 ? '#t=1' : '');
+    // Modo CORS y la misma URL que usará el Adaptador: así la copia en caché sirve también para adaptar.
+    v.crossOrigin = 'anonymous';
+    var su = corsDe(ph.dataset.video);
+    v.src = su + (su.indexOf('#') < 0 ? '#t=1' : '');
     ph.replaceWith(v);
   }
   function observarSinMiniatura(ph) {
@@ -197,7 +202,10 @@
       li.setAttribute('role', 'option'); li.tabIndex = -1; li.id = 'stk-o' + i;
       li.dataset.url = url; li.dataset.title = tit; li.dataset.type = tipo; li.title = tit;
       li.setAttribute('aria-selected', url === actual ? 'true' : 'false');
-      if (img && /^https:\/\//.test(img)) { var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = img; im.onerror = esImg ? function () { this.replaceWith(sinVista()); } : function () { var ph = document.createElement('span'); ph.className = 'stk-ph'; ph.dataset.video = url; this.replaceWith(ph); observarSinMiniatura(ph); }; li.appendChild(im); }
+      // La imagen que hace de su propia miniatura se pide en modo CORS con la URL del Adaptador: al
+      // elegirla, el canvas reutiliza esa copia (con Access-Control-Allow-Origin) en vez de una sin CORS.
+      var propia = esImg && img === url;
+      if (img && /^https:\/\//.test(img)) { var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; if (propia) im.crossOrigin = 'anonymous'; im.src = propia ? corsDe(img) : img; im.onerror = esImg ? function () { this.replaceWith(sinVista()); } : function () { var ph = document.createElement('span'); ph.className = 'stk-ph'; ph.dataset.video = url; this.replaceWith(ph); observarSinMiniatura(ph); }; li.appendChild(im); }
       else { var ph = document.createElement('span'); ph.className = 'stk-ph'; ph.dataset.video = url; li.appendChild(ph); observarSinMiniatura(ph); }
       var sp = document.createElement('span'); sp.className = 'stk-t'; sp.textContent = tit; li.appendChild(sp);
       if (esImg) { var k = document.createElement('span'); k.className = 'stk-k'; k.textContent = t('Imagen', 'Image'); li.appendChild(k); li.setAttribute('aria-label', tit + ' · ' + t('imagen', 'image')); }

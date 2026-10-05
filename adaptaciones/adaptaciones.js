@@ -502,6 +502,13 @@ function loop() {
 
 // ── Fuente ──────────────────────────────────────────────────────────────────
 let sourceObjectURL = null;
+// El <video id="src"> y la <img id="src-img"> son crossorigin (se pintan en canvas y se codifican). Si el mismo MP4 se pidió antes sin
+// CORS (miniatura, Stock, otra pestaña), el navegador puede reutilizar esa copia sin Access-Control-Allow-Origin
+// y el vídeo falla con «No se pudo reproducir». Una URL propia del modo CORS nunca comparte caché con ella.
+function corsURL(url) {
+  if (!/^https?:\/\//.test(url)) return url;
+  try { const u = new URL(url); if (u.origin === location.origin) return url; u.searchParams.set('cors', '1'); return u.href; } catch (_) { return url; }
+}
 function setSource(url, name, origin = {id:null,title:name}, kind = 'video', ext = 'png') {
   state.origin = {id:origin.id||null,title:origin.title||name};
   releaseStill();
@@ -516,9 +523,9 @@ function setSource(url, name, origin = {id:null,title:name}, kind = 'video', ext
   state.srcName = name; syncKind(); refreshInfo();
   if (isImage()) {
     // Free the previous video (its «emptied» must not hide the image's spec sheet: ficha-tecnica.js checks #src-img).
-    img.src = url;
+    img.src = corsURL(url);
     if (video.getAttribute('src')) { video.pause(); video.removeAttribute('src'); video.load(); }
-  } else { img.removeAttribute('src'); video.src = url; video.play().catch(() => {}); }
+  } else { img.removeAttribute('src'); video.src = corsURL(url); video.play().catch(() => {}); }
 }
 // Video and image sources share the stage; playback and sound only exist for video, the MP4 length only for images.
 function syncKind() {

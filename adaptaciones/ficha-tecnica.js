@@ -191,9 +191,11 @@
     if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return 'WebP';
     return null;
   }
+  // La fuente remota se carga con ?cors=1 (corsURL de adaptaciones.js): para el índice es la misma URL.
+  function sinCors(u) { try { var x = new URL(u, location.href); if (x.searchParams.get('cors') === '1') { x.searchParams.delete('cors'); return x.href; } } catch (_) {} return u; }
   function construirImagen() {
     var im = $('#src-img'); if (!im || !im.getAttribute('src') || !im.naturalWidth) return;
-    var yo = ++turno, o = origen || {}, src = im.currentSrc || im.src;
+    var yo = ++turno, o = origen || {}, src = sinCors(im.currentSrc || im.src);
     if (!o.file && o.url !== src) o = { url: src };
     var it = o.url && window.PixeriaStock && window.PixeriaStock.item ? window.PixeriaStock.item(o.url) : null;
     var w = im.naturalWidth, hgt = im.naturalHeight;
@@ -218,7 +220,7 @@
 
   function construir() {
     var video = $('#src'); if (!video || !video.videoWidth) return;
-    var yo = ++turno, o = origen || {}, src = video.currentSrc || video.src;
+    var yo = ++turno, o = origen || {}, src = sinCors(video.currentSrc || video.src);
     if (!o.file && o.url !== src) o = { url: src };
     var it = o.url && window.PixeriaStock && window.PixeriaStock.item ? window.PixeriaStock.item(o.url) : null;
     var w = video.videoWidth, hgt = video.videoHeight, dur = video.duration;
