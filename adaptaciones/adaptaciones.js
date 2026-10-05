@@ -6,7 +6,7 @@ import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudge
 import { createEngine, MAX_SOURCE_BYTES } from './adapter-export.js';
 import { createExportQueue } from './export-queue.js';
 import { publishAdaptation, shortFormat, adaptationTitle } from './stock-publish.mjs';
-import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily, isLibrarySize, applyCampaign, setGroupSelected, groupSelection, selectAllSizes } from './format-catalog.mjs';
+import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily, isAltadisFormat, isLibrarySize, applyCampaign, setGroupSelected, groupSelection, selectAllSizes } from './format-catalog.mjs';
 import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
 import { pngDensity } from './png-density.mjs';
 
@@ -21,7 +21,7 @@ FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoo
 
 const video = $('#src');
 let initialized = false;
-const selectedFormats = () => FORMATOS.filter(f => f.on && formatFamily(f) === state.profile);
+const selectedFormats = () => FORMATOS.filter(f => f.on && (state.profile === 'cliente' ? isAltadisFormat(f) : formatFamily(f) === state.profile));
 // Biblioteca uses the compatibility selector; client profiles keep native resolutions.
 const syncCompat = () => { $('#compat').disabled = state.profile !== 'standard'; };
 function saveSettings() {
@@ -514,7 +514,7 @@ if (clienteResponse && clienteResponse.ok) {
 const especialesResponse = await fetch('/adaptaciones/perfil-cliente-especiales.json').catch(() => null);
 if (especialesResponse && especialesResponse.ok) {
  const data = await especialesResponse.json();
- data.layouts.forEach((layout, i) => { FORMATOS.push({ id: layout.id, nombre: layout.nombre, nameEn: layout.nombre, uso: EN ? layout.useEn : layout.uso, custom: layout.entrega, category: 'digital', especial: true, layout, fps: 25, on: i === 0 }); state.fmt[layout.id] = defaults(); });
+ data.layouts.forEach((layout) => { FORMATOS.push({ id: layout.id, nombre: layout.nombre, nameEn: layout.nombre, uso: EN ? layout.useEn : layout.uso, custom: layout.entrega, category: 'digital', especial: true, cliente: true, layout, fps: 25, on: false }); state.fmt[layout.id] = defaults(); });
  $('#format-profile').querySelector('[value=especiales]').disabled = false;
 }
 restoreSettings(); buildGrid(); emptySource(); loop();
