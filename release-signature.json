@@ -1,8 +1,8 @@
 {
-  "version": "v.05.10.2026.r6.18:12",
+  "version": "v.05.10.2026.r7.18:44",
   "deployer": "HuangMacMini",
   "machine": "MacMini",
   "signature": "HuangMacMini · MacMini",
   "agent": "HuangMacMini",
-  "evidence": "Motor Suno 4º + formulario cápsula + /api/suno-queue dry-run (fase 1, sin créditos). PR #56."
+  "evidence": "Suno ESP/ENG multi-select + execute real (suno-queue + suno-local) desde panel Música."
 }

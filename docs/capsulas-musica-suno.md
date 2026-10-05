@@ -45,3 +45,8 @@ Fecha: 2026-10-05 (Europe/Madrid) · Agente: Huang · Fase 1
 - [ ] Formulario espejo al elegir Suno
 - [ ] Create → job dry-run, sin llamada a Suno / sin gasto
 - [ ] Plan en `/workspace/huang/store/CAPSULAS-MUSICA-SUNO.md`
+
+
+## 2026-10-05 r7
+- Idiomas ESP/ENG multi-select.
+- Create con execute real vía suno-local.
