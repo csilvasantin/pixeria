@@ -1,8 +1,8 @@
 {
-  "version": "v.06.10.2026.r1.00:08",
-  "deployer": "SmithMacMini",
+  "version": "v.06.10.2026.r2.20:13",
+  "deployer": "MorfeoMacMini",
   "machine": "MacMini",
-  "signature": "SmithMacMini · MacMini",
-  "agent": "SmithMacMini",
-  "evidence": "Stock ES/EN: locuciones en Megafonía, reproductor MP3 y enlace directo al índice completo; contrato admira.store."
+  "signature": "MorfeoMacMini · MacMini",
+  "agent": "MorfeoMacMini",
+  "evidence": "Adaptador · Estancos y circuito: paquete por estanco (ZIP por estanco y global con manifiesto) y publicación al Stock con etiquetas de Altadis, sin duplicados; programación de players no conectada (sin API de navegador)."
 }

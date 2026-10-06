@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=06.10.2026.r1.0008';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=06.10.2026.r2.2013';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="admiranext-version" content="Pixeria v.06.10.2026.r1.00:08">
+  <meta name="admiranext-version" content="Pixeria v.06.10.2026.r2.20:13">
   <title>Labs · Lanetro | Pixeria</title>
   <meta name="description" content="Pixeria Labs para Lanetro: puente operativo con Yarig, sesiones, radar y herramientas internas de producción.">
   <meta name="theme-color" content="#11110f">
@@ -573,8 +573,8 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=06.10.2026.r1.0008">
-  <script defer src="/assets/site-nav.js?v=06.10.2026.r1.0008"></script>
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=06.10.2026.r2.2013">
+  <script defer src="/assets/site-nav.js?v=06.10.2026.r2.2013"></script>
 </head>
 <body>
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -1030,6 +1030,6 @@
     healthCheck();
     loadYarig();
   </script>
-  <script defer src="/assets/cuadratura.js?v=06.10.2026.r1.0008"></script>
+  <script defer src="/assets/cuadratura.js?v=06.10.2026.r2.2013"></script>
 </body>
 </html>
