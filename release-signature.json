@@ -1,8 +1,8 @@
 {
-  "version": "v.06.10.2026.r4.21:26",
+  "version": "v.06.10.2026.r5.21:46",
   "deployer": "MorfeoMacMini",
   "machine": "MacMini",
   "signature": "MorfeoMacMini · MacMini",
   "agent": "MorfeoMacMini",
-  "evidence": "Adaptador · ☰ Tamaños: marcar y desmarcar un grupo entero de un clic (tri-estado), también en proyectos (Altadis estándar, MyBlu, especiales) y con filtro."
+  "evidence": "Adaptador · modo Crear para formatos extremos (r ≥ 3,5): tira de momentos, barrido y rótulo en movimiento, locales y sin coste; receta por formato en la ficha del proyecto."
 }

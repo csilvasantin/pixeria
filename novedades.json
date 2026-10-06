@@ -17,5 +17,10 @@
   "v.06.10.2026.r4.21:26": [
     "Adaptador: un clic marca un grupo de tamaños entero y otro lo desmarca",
     "Funciona también en Altadis (estándar, MyBlu y videowalls) y con búsqueda o filtro activo"
+  ],
+  "v.06.10.2026.r5.21:46": [
+    "Adaptador: modo «Crear» para formatos extremos (banner ultralargo, rascacielos, videowalls)",
+    "Tres recetas sin coste: tira de momentos, barrido y rótulo en movimiento",
+    "Cada tarjeta se puede forzar a Adaptar o Crear; receta por formato en la ficha del proyecto"
   ]
 }
