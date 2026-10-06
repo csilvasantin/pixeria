@@ -42,12 +42,15 @@
   <title>Adaptador · Un contenido, todos los formatos | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
+  <!-- Tema Matrix compartido con /video.html y el resto del sitio (tokens, mono, CRT y lluvia) -->
+  <link rel="stylesheet" href="/workspace.css?v=06.10.2026.r2.2013">
   <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=06.10.2026.r2.2013">
   <link rel="stylesheet" href="/assets/cuadratura.css?v=06.10.2026.r2.2013">
   <script defer src="/assets/site-nav.js?v=06.10.2026.r2.2013"></script>
 </head>
 <body class="adapt-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
   <header class="site-header">
     <a class="brand" href="/" aria-label="Pixeria inicio"><span>Pixeria</span></a>
     <nav class="nav" aria-label="Secciones de Pixeria">
@@ -153,6 +156,7 @@
   <script defer src="/adaptaciones/ficha-tecnica.js?v=06.10.2026.r2.2013"></script>
   <script defer src="/adaptaciones/importar.js?v=06.10.2026.r2.2013"></script>
   <script type="module" src="/adaptaciones/adaptaciones.js?v=06.10.2026.r2.2013"></script>
+  <script defer src="/matrix-rain.js?v=06.10.2026.r2.2013"></script>
   <script defer src="/assets/cuadratura.js?v=06.10.2026.r2.2013"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
