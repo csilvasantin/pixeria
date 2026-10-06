@@ -273,11 +273,14 @@
   <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Abrir Admira XP — el gemelo digital">Pixeria AI Workspace · Anonimizador · v.2026.06.19h-anon</a></footer>
 
   <script defer src="/matrix-rain.js?v=06.10.2026.r6.2214"></script>
+  <script src="/assets/anonimizador-fiable.js?v=06.10.2026.r6.2214"></script>
   <script>
   (function () {
     const $ = (s) => document.querySelector(s);
     // dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
     const WORKER = 'https://api.admira.store';
+    // Fiabilidad (clasificación de fallos, reintento con otra foto, avisos ES/EN).
+    const AF = window.AnonFiable;
 
     // ---- Prompts: NPC 8-bit, NPC 16-bit, y la vuelta a humano anónimo ----
     const NPC8_SYS = 'Eres un artista de pixel-art 8-bit estilo NES / simulador de gestión (tipo Kairosoft). A partir de la foto, genera un SPRITE de personaje DIMINUTO y achaparrado: proporción chibi, cabezón, solo 2 a 2,5 cabezas de alto, de cuerpo entero y de frente. MUY baja resolución (como un sprite de ~32×40 px), píxeles grandes y cuadrados bien visibles, paleta de SOLO 4-5 colores planos, contorno duro, sin degradados, sombras ni antialias. Fondo de UN SOLO color plano y uniforme (blanco puro) para poder recortarlo. MANTÉN el SEXO/género aparente de la persona (si es mujer, mujer; si es hombre, hombre), el color de ropa y pelo y la complexión aproximada. NO conserves rasgos faciales reconocibles: es un NPC anónimo minúsculo, no un retrato. Debe verse claramente MÁS SIMPLE, MÁS PEQUEÑO y MÁS achaparrado que un sprite de 16 bits.';
@@ -314,6 +317,8 @@
       card1: $('#card1'), card2: $('#card2'), card3: $('#card3'), card4: $('#card4'),
       prog: $('#anonProg'), progFill: $('#anonProgFill'), progLabel: $('#anonProgLabel')
     };
+    // Aviso de foto descartada, registro plegable de descartes y error final.
+    const ui = AF.mountUI(els.status, 'es');
     // Previo vertical → rellena las franjas con el ENTORNO (copia desenfocada de la
     // misma foto, escalada a cubrir), nunca negro. Espejamos src/hidden del still al fondo.
     try {
@@ -326,16 +331,7 @@
     } catch (_) {}
 
     const setStatus = (t, err) => { els.status.textContent = t; els.status.classList.toggle('err', !!err); };
-    // Mensajes humanos según el motivo de rechazo del motor de imagen.
-    const ERR_MAP = {
-      'image-declined': '🚫 El motor no pudo generar la imagen. Suele pasar con personas reconocibles, famosos o personajes con copyright. Prueba con una foto de una persona anónima.',
-      'safety': '🚫 El motor rechazó la imagen por contenido sensible. Prueba con otra foto.',
-      'copyright': '🚫 Bloqueado por posible copyright. Prueba con otra foto.',
-      'empty': 'El motor no devolvió imagen. Reinténtalo o prueba con otra foto.',
-      'timeout': '⏱️ El motor ha tardado demasiado. La generación se ha detenido; pulsa Anonimizar para reintentarlo.',
-      'network': 'Sin conexión con el motor. (Funciona desde pixeria.com.)'
-    };
-    const errMsg = (e) => (e && ERR_MAP[e.reason]) || ('Error: ' + ((e && e.message) || 'desconocido'));
+    // Los mensajes de error (motivo + qué hacer, ES/EN) viven en assets/anonimizador-fiable.js.
     function progShow(on) { els.prog.classList.toggle('on', !!on); if (!on) els.progFill.style.width = '0'; }
     function progSet(done, total, label) { els.progFill.style.width = Math.round(done / total * 100) + '%'; els.progLabel.textContent = label || (done + '/' + total); }
     // Barra "indeterminada": para pasos de un solo await (inventar) en los que no
@@ -394,7 +390,7 @@
       });
     }
 
-    function showOriginal(dataURL) {
+    function showOriginal(dataURL, auto) {
       leaveDemo();
       original = dataURL; npc8 = null; npc16 = null; anon = null;
       frameFillFinish(els.frame1, dataURL);
@@ -403,7 +399,7 @@
       els.frame4.innerHTML = '<div class="ph">Persona realista distinta</div>';
       els.go.disabled = false;
       els.download.disabled = true; els.publish.disabled = true; els.sendStore.disabled = true;
-      run(); // auto-arranca en cuanto hay foto (no hace falta pulsar el botón)
+      if (auto !== false) run(); // auto-arranca en cuanto hay foto (no hace falta pulsar el botón)
     }
 
     function frameImg(frame, dataURL) { frameFillStop(frame); frame.innerHTML = '<img src="' + dataURL + '" alt="">'; }
@@ -461,30 +457,10 @@
       const m = ((e.message || '') + ' ' + (e.reason || '')).toLowerCase();
       return /high demand|overload|try again|temporar|unavailable|resource_exhausted|rate.?limit|busy|503|429/.test(m);
     }
-    async function pixeriaPaidHeaders() {
-      const headers = { 'Content-Type': 'application/json' };
-      try {
-        const s = await fetch('/auth/api-token', { credentials: 'include', cache: 'no-store' });
-        if (s.ok) { const d = await s.json(); if (d.token) headers.Authorization = 'Bearer ' + d.token; }
-      } catch (e) {}
-      return headers;
-    }
+    // Token de pago cacheado hasta su caducidad; sin sesión se avisa ANTES de
+    // llamar al motor (el worker contestaría 401 a todo). Ver assets/anonimizador-fiable.js.
     async function imageEditOnce(image, sys, prompt) {
-      let r;
-      const ctrl = new AbortController();
-      const timeout = setTimeout(() => ctrl.abort(), 90000);
-      try {
-        r = await fetch(WORKER + '/image/edit', {
-          method: 'POST', headers: await pixeriaPaidHeaders(),
-          body: JSON.stringify({ image, sys, prompt }), signal: ctrl.signal
-        });
-      } catch (netErr) {
-        const e = new Error(ctrl.signal.aborted ? 'tiempo de espera agotado (90 s)' : 'sin conexión con el motor');
-        e.reason = ctrl.signal.aborted ? 'timeout' : 'network';
-        e.status = ctrl.signal.aborted ? 408 : 0;
-        throw e;
-      } finally { clearTimeout(timeout); }
-      const d = await r.json().catch(() => ({}));
+      const { r, d } = await AF.paidFetch(WORKER + '/image/edit', { image, sys, prompt }, AF.config.editTimeoutMs);
       if (r.ok && d && d.ok && d.image) return d.image;
       const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
       e.reason = (d && d.reason) || null;
@@ -495,13 +471,13 @@
     // Reintenta los errores transitorios con backoff (2s, 4s, 8s). Los rechazos
     // de contenido (image-declined, safety…) NO se reintentan: fallan al instante.
     async function imageEdit(image, sys, prompt, onRetry) {
-      const MAX = 4;
+      const MAX = AF.config.editRetries;   // acotado: si no sale, se prueba OTRA foto (aleatoria)
       let lastErr;
       for (let attempt = 1; attempt <= MAX; attempt++) {
         try { return await imageEditOnce(image, sys, prompt); }
         catch (e) {
           lastErr = e;
-          if (!isTransient(e) || attempt === MAX) throw e;
+          if (!isTransient(e) || e.code === 'timeout' || attempt === MAX) throw e;
           if (onRetry) onRetry(attempt, MAX);
           await sleep(2000 * Math.pow(2, attempt - 1));
         }
@@ -515,16 +491,18 @@
     // "reconocibles". No tiene sentido: la persona no existe. En ese caso, en vez
     // de fallar, REGENERAMOS el resultado pedido con Grok (texto→imagen) a partir
     // del segmento elegido. (Norma de Carlos, 2026-06-19.)
-    const REFUSAL = new Set(['image-declined', 'safety', 'copyright']);
+    // 'empty' también: Gemini a menudo devuelve solo texto (sin imagen) ante una
+    // persona realista; con un sintético eso es un rechazo más, no un error.
+    const REFUSAL = new Set(['image-declined', 'safety', 'copyright', 'empty']);
     async function grokImage(prompt) {
-      const r = await fetch(WORKER + '/xai/image', {
-        method: 'POST', headers: await pixeriaPaidHeaders(),
-        body: JSON.stringify({ prompt, b64: true, model: 'grok-imagine-image' })
-      });
-      const d = await r.json().catch(() => ({}));
+      const { r, d } = await AF.paidFetch(WORKER + '/xai/image', { prompt, b64: true, model: 'grok-imagine-image' }, AF.config.xaiTimeoutMs);
       const item = d && Array.isArray(d.data) && d.data[0];
-      if (!r.ok || !item || !item.b64_json) { const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status)); e.reason = (d && d.reason) || null; throw e; }
-      return 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
+      if (r.ok && item && item.b64_json) return 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
+      // 200 sin b64: el worker no pudo traer la imagen de x.ai → no es «HTTP 200».
+      if (r.ok) throw AF.fail('no-data', 'la fuente no entregó la imagen', { status: r.status });
+      const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
+      e.reason = (d && d.reason) || null; e.status = r.status;
+      throw e;
     }
     // Descripción de la persona para los prompts de Grok (usa el segmento si lo hay).
     function segPersonDesc() {
@@ -539,6 +517,10 @@
     const grokHumanPrompt = () => 'Fotografía realista de cuerpo entero, vertical, de ' + segPersonDesc() + ', una persona anónima NUEVA (no famosa ni reconocible), fondo de calle desenfocado, luz natural, sin texto ni marcas.';
     // Intenta editar con Gemini; si RECHAZA por contenido, regenera con Grok.
     async function editOrGrok(image, sys, editPrompt, grokPrompt, onRetry, tag) {
+      try { return await editOrGrokInner(image, sys, editPrompt, grokPrompt, onRetry, tag); }
+      catch (e) { if (e && !e.step) e.step = tag; throw e; }
+    }
+    async function editOrGrokInner(image, sys, editPrompt, grokPrompt, onRetry, tag) {
       try {
         const img = await imageEdit(image, sys, editPrompt, onRetry);
         enginesUsed.add('nano-banana (Gemini)');
@@ -547,7 +529,7 @@
         // Solo caemos a Grok con personas INVENTADAS (segment): ahí el sintético
         // está definido por el segmento. Con una FOTO REAL subida, Grok no sabe
         // cómo es esa persona y saldría otra distinta (otro sexo) → mejor el error.
-        if (segment && grokPrompt && REFUSAL.has(e.reason)) {
+        if (segment && grokPrompt && REFUSAL.has(e.reason) && e.code !== 'session') {
           setStatus('⚠️ El motor rechazó la imagen sintética; generando el ' + (tag || 'resultado') + ' con Grok…');
           const img = await grokImage(grokPrompt);
           enginesUsed.add('Grok (grok-imagine-image)');
@@ -582,7 +564,7 @@
       stopCam();
       segment = null; // foto real de cámara: sin segmentación elegida
       originalSource = 'foto de tu cámara';
-      downscale(url, 768).then(showOriginal);
+      loadOwn(url);
     }
 
     // ---- Sin cámara: inventar una persona realista (texto → imagen) ----
@@ -625,58 +607,80 @@
       if (seg.desc) p += ' Detalle adicional pedido (respétalo): ' + seg.desc + '.';
       return p;
     }
-    async function inventPerson() {
-      if (busy) return;
-      busy = true;
-      const btn = els.invent, label = btn.textContent;
-      btn.disabled = true; stopCam();
-      els.hint.style.display = 'none';
-      const seg = currentSegment();
-      const parts = [];
-      if (seg.sex !== 'any') parts.push(SEG_LBL[seg.sex]);
-      if (seg.age !== 'any') parts.push(SEG_LBL[seg.age]);
-      const segTxt = parts.join(' · ');
-      const audTxt = '👥 Creando audiencia' + (segTxt ? ': ' + segTxt : '') + '…';
-      setStatus(audTxt);
-      // Borra el resultado anterior (previo grande + tríptico) ANTES de generar, para
-      // no pintar el progreso encima del NPC ya creado. Luego rellena la card ORIGINAL.
+    // Una foto aleatoria (persona inventada por Grok según la segmentación).
+    async function inventOne(seg) {
+      try {
+        const url = await grokImage(inventPrompt(seg));
+        return await AF.prepareImage(url, 768);   // decodifica y valida antes de seguir
+      } catch (e) { if (e && !e.step) e.step = 'original'; throw e; }
+    }
+    function clearCards() {
       els.still.hidden = true; els.still.removeAttribute('src');
       els.frame1.innerHTML = '<div class="ph">Tu foto aparece aquí</div>';
       els.frame2.innerHTML = '<div class="ph">NPC 8-bit<br>(NES)</div>';
       els.frame3.innerHTML = '<div class="ph">NPC 16-bit<br>(detallado)</div>';
       els.frame4.innerHTML = '<div class="ph">Persona realista distinta</div>';
-      activeCard(els.card1); frameFillCreep(els.frame1);
-      try {
-        const r = await fetch(WORKER + '/xai/image', {
-          method: 'POST', headers: await pixeriaPaidHeaders(),
-          body: JSON.stringify({ prompt: inventPrompt(seg), b64: true, model: 'grok-imagine-image' })
-        });
-        const d = await r.json().catch(() => ({}));
-        const item = d && Array.isArray(d.data) && d.data[0];
-        if (!r.ok || !item || !item.b64_json) {
-          const reason = (d && (d.detail || d.error)) || ('HTTP ' + r.status);
-          throw new Error(reason);
+    }
+    // «Crear audiencia»: si una foto aleatoria no se puede procesar (rechazo, sin
+    // imagen, timeout, saturación…) se DESCARTA, se explica por qué y se prueba otra,
+    // hasta AF.config.maxRandom (5). Solo si fallan todas: error final + «Probar otra vez».
+    // `first`: original aleatorio ya cargado (re-anonimizar) que cuenta como foto 1.
+    async function inventPerson(first) {
+      if (busy) return;
+      busy = true;
+      const btn = els.invent, label = btn.dataset.label || btn.textContent;
+      btn.dataset.label = label;
+      btn.disabled = true; els.go.disabled = true; stopCam();
+      els.hint.style.display = 'none';
+      const seg = (typeof first === 'string' && segment) ? segment : currentSegment();
+      const parts = [];
+      if (seg.sex !== 'any') parts.push(SEG_LBL[seg.sex]);
+      if (seg.age !== 'any') parts.push(SEG_LBL[seg.age]);
+      const segTxt = parts.join(' · ');
+      ui.reset();
+      const res = await AF.tryRandomPhotos({
+        max: AF.config.maxRandom,
+        attempt: async (n, max) => {
+          setStatus('👥 Creando audiencia' + (segTxt ? ': ' + segTxt : '') + ' · foto aleatoria ' + n + '/' + max + '…');
+          let photo;
+          if (n === 1 && typeof first === 'string') photo = first;
+          else {
+            clearCards(); activeCard(els.card1); frameFillCreep(els.frame1);
+            photo = await inventOne(seg);
+          }
+          segment = seg; // la segmentación elegida viaja a la publi (tags Stock)
+          originalSource = 'Grok (grok-imagine-image)';
+          showOriginal(photo, false);
+          await pipeline();
+        },
+        onDiscard: (d, n, max) => {
+          ui.discard(d, n, max);
+          ui.notice(AF.discardMessage(d, n, max, 'es'));
+          [els.frame1, els.frame2, els.frame3, els.frame4].forEach(frameFillStop);
         }
-        segment = seg; // la segmentación elegida viaja a la publi (tags Stock)
-        originalSource = 'Grok (grok-imagine-image)';
-        const url = 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
-        els.still.src = url; els.still.hidden = false; els.cam.hidden = true;
-        progStop(); progShow(false); busy = false;
-        btn.disabled = false; btn.textContent = label; // re-armar el botón: permite volver a crear otra audiencia
-        downscale(url, 768).then(showOriginal); // muestra el original y auto-arranca el pipeline
-      } catch (e) {
-        progStop(); progShow(false); busy = false;
-        setStatus('No se pudo crear la audiencia (' + e.message + '). Reinténtalo o sube una foto.', true);
-        btn.disabled = false; btn.textContent = label;
+      });
+      progStop(); progShow(false);
+      [els.frame1, els.frame2, els.frame3, els.frame4].forEach(frameFillStop);
+      if (res.ok) {
+        ui.notice(res.discards.length ? '✓ Hecho con la foto ' + res.attempts + '/' + AF.config.maxRandom + ' (' + res.discards.length + ' descartada' + (res.discards.length > 1 ? 's' : '') + ' — detalle abajo).' : '');
+        finishOk();
+      } else {
+        const text = AF.finalMessage(res, 'es');
+        setStatus(text, true); activeCard(null);
+        frameFillFail(els.frame1, text);
+        ui.final(text, res.fatal && res.fatal.code === 'session' ? null : () => inventPerson());
       }
+      els.go.disabled = !original; busy = false;
+      btn.disabled = false; btn.textContent = label; // re-armar el botón: permite volver a crear otra audiencia
     }
 
     // ---- Pipeline ----
-    async function run() {
-      if (busy || !original) return;
-      busy = true;
+    // Foto → NPC 8-bit → NPC 16-bit → persona nueva. Lanza si un paso falla (la
+    // tarjeta de ese paso queda marcada); quien llama decide: otra foto aleatoria
+    // (inventPerson) o explicar el fallo de la foto propia (run).
+    async function pipeline() {
       enginesUsed = new Set();           // reinicia el registro de modelos de esta pasada
-      els.status.removeAttribute('title');
+      els.status.removeAttribute('title'); els.status.style.cursor = '';
       els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true; els.sendStore.disabled = true;
       progShow(true); progSet(0, 3, 'Generando NPCs…');
       let workingFrame = null;
@@ -707,23 +711,42 @@
         const prompt = HUMAN_PROMPT[els.strength.value] || HUMAN_PROMPT.aire;
         anon = await editOrGrok(npc16, HUMAN_SYS, prompt, grokHumanPrompt(), retryMsg(els.frame4, 'retrato'), 'retrato');
         frameFillFinish(els.frame4, anon); progSet(3, 3, 'Listo');
-
-        activeCard(els.card4);
-        setStatus('✓ Listo: 2 NPCs (8/16-bit) + una persona que no existe.');
-        // Tooltip al pasar el ratón por "Listo": con qué modelos se hicieron las imágenes.
-        const motores = Array.from(enginesUsed).join(' + ') || 'nano-banana (Gemini)';
-        els.status.title = 'Imágenes generadas con — Original: ' + originalSource + ' · NPCs y persona: ' + motores + '.';
-        els.status.style.cursor = 'help';
-        els.download.disabled = false; els.publish.disabled = false; els.sendStore.disabled = false;
-        workingFrame = null;
       } catch (e) {
-        const message = errMsg(e);
-        frameFillFail(workingFrame, message);
-        setStatus(message, true);
-        activeCard(null);
+        frameFillFail(workingFrame, AF.texts.es.why[AF.classify(e).code] || 'Generación detenida');
+        throw e;
       } finally {
         [els.frame2, els.frame3, els.frame4].forEach(frameFillStop);
-        progShow(false); els.go.disabled = false; busy = false;
+        progShow(false);
+      }
+    }
+    function finishOk() {
+      activeCard(els.card4);
+      setStatus('✓ Listo: 2 NPCs (8/16-bit) + una persona que no existe.');
+      // Tooltip al pasar el ratón por "Listo": con qué modelos se hicieron las imágenes.
+      const motores = Array.from(enginesUsed).join(' + ') || 'nano-banana (Gemini)';
+      els.status.title = 'Imágenes generadas con — Original: ' + originalSource + ' · NPCs y persona: ' + motores + '.';
+      els.status.style.cursor = 'help';
+      els.download.disabled = false; els.publish.disabled = false; els.sendStore.disabled = false;
+    }
+    // Reintentables con la MISMA foto propia (no dependen de la foto).
+    const OWN_RETRY = new Set(['timeout', 'overload', 'network', 'offline', 'no-data', 'unknown']);
+    async function run() {
+      if (busy || !original) return;
+      // Original aleatorio (Crear audiencia): si falla, se prueba otra foto aleatoria.
+      if (segment && /^Grok/.test(originalSource) && !demoActive) return inventPerson(original);
+      // Foto PROPIA (cámara, subida, arrastrada): nunca se sustituye; se explica.
+      busy = true; ui.reset();
+      try {
+        await pipeline();
+        finishOk();
+      } catch (e) {
+        const inf = AF.classify(e);
+        const text = '🚫 ' + AF.ownMessage(inf, 'es');
+        setStatus(text, true); activeCard(null);
+        ui.final(text, OWN_RETRY.has(inf.code) ? () => run() : null);
+        console.warn('[anonimizador] foto propia no procesada:', inf.code, inf.status, inf.detail);
+      } finally {
+        els.go.disabled = false; busy = false;
       }
     }
 
@@ -858,7 +881,7 @@
     // ---- Eventos ----
     els.btnCam.addEventListener('click', () => stream ? shoot() : startCam());
     els.btnUpload.addEventListener('click', () => els.file.click());
-    els.invent.addEventListener('click', inventPerson);
+    els.invent.addEventListener('click', () => inventPerson());
 
     // Si el dispositivo no tiene cámara (PC sin webcam, móvil bloqueado…),
     // promocionamos "Inventar persona" como vía principal.
@@ -879,16 +902,31 @@
         if (!demoActive) setStatus('No detecto cámara: pulsa “Crear audiencia”, sube una foto o arrástrala.');
       }
     })();
+    // Foto PROPIA: se decodifica y valida aquí; si no sirve, se explica por qué y qué
+    // hacer, sin cambiarla por otra ni mandarla al motor.
+    function ownFail(e) {
+      const inf = AF.classify(e);
+      const text = '🚫 ' + AF.ownMessage(inf, 'es');
+      setStatus(text, true); ui.reset(); ui.final(text, null);
+      console.warn('[anonimizador] foto propia no válida:', inf.code, inf.detail);
+    }
+    function loadOwn(url) {
+      if (busy) return;
+      AF.prepareImage(url, 768).then((small) => { ui.reset(); showOriginal(small); }, ownFail);
+    }
     function loadDataURL(url) {
       stopCam();
       els.still.src = url; els.still.hidden = false; els.cam.hidden = true; els.hint.style.display = 'none';
       segment = null; // foto subida/arrastrada: sin segmentación elegida
       originalSource = 'foto subida/arrastrada';
-      downscale(url, 768).then(showOriginal);
+      loadOwn(url);
     }
     function loadImageFile(f) {
-      if (!f || !/^image\//.test(f.type)) { setStatus('Eso no es una imagen.', true); return; }
-      const rd = new FileReader(); rd.onload = () => loadDataURL(rd.result); rd.readAsDataURL(f);
+      try { AF.checkFile(f); } catch (e) { ownFail(e); return; }
+      const rd = new FileReader();
+      rd.onload = () => loadDataURL(rd.result);
+      rd.onerror = () => ownFail(AF.fail('bad-image', 'no se pudo leer el archivo'));
+      rd.readAsDataURL(f);
     }
     els.file.addEventListener('change', (e) => {
       const f = e.target.files && e.target.files[0]; if (f) loadImageFile(f);
@@ -918,11 +956,10 @@
         try {
           setStatus('Descargando imagen arrastrada…');
           const r = await fetch(WORKER + '/image/proxy?url=' + encodeURIComponent(url));
-          if (!r.ok) throw new Error('HTTP ' + r.status);
+          if (!r.ok) { const d = await r.json().catch(() => ({})); throw AF.fail(r.status === 413 ? 'too-big' : r.status === 415 ? 'bad-image' : 'cors', 'proxy: ' + ((d && d.error) || ('HTTP ' + r.status)), { status: r.status }); }
           const blob = await r.blob();
-          if (!/^image\//.test(blob.type)) throw new Error('no es una imagen');
-          const rd = new FileReader(); rd.onload = () => loadDataURL(rd.result); rd.readAsDataURL(blob);
-        } catch (err) { setStatus('No pude traer esa imagen (' + err.message + '). Descárgala y súbela.', true); }
+          loadImageFile(new File([blob], 'arrastrada', { type: blob.type }));
+        } catch (err) { ownFail(err.code ? err : AF.fail('cors', String(err.message || err))); }
       });
     })();
     els.go.addEventListener('click', run);
