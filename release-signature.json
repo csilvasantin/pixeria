@@ -1,8 +1,8 @@
 {
-  "version": "v.06.10.2026.r2.20:13",
+  "version": "v.06.10.2026.r3.20:56",
   "deployer": "MorfeoMacMini",
   "machine": "MacMini",
   "signature": "MorfeoMacMini · MacMini",
   "agent": "MorfeoMacMini",
-  "evidence": "Adaptador · Estancos y circuito: paquete por estanco (ZIP por estanco y global con manifiesto) y publicación al Stock con etiquetas de Altadis, sin duplicados; programación de players no conectada (sin API de navegador)."
+  "evidence": "Adaptador: programación de players desde el servidor (/players-programar, modo prueba sin cambios y real con STOCK_NOTIFY_KEY en Pages) y tema Matrix verde como el resto de Pixeria."
 }
