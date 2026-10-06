@@ -83,6 +83,16 @@
         <h2>Tamaños</h2>
         <label class="project-label">Proyecto<select id="adapter-project" aria-describedby="project-status"><option value="general">General (sin proyecto)</option></select></label>
         <p id="project-status" class="muted project-status" role="status"></p>
+        <section id="estancos" class="estancos" aria-labelledby="estancos-h" hidden>
+          <h3 id="estancos-h">Estancos</h3>
+          <p id="estancos-nota" class="muted estancos-nota"></p>
+          <details class="estancos-mapa"><summary>Cómo se asigna el formato a cada pantalla</summary><p id="estancos-criterio" class="muted"></p></details>
+          <label class="estanco-todos"><input type="checkbox" id="estancos-todos"> <span>Todos los estancos</span> <b id="estancos-n" class="campaign-count"></b></label>
+          <ul id="estancos-lista" class="estancos-lista"></ul>
+          <label class="estancos-stock"><input type="checkbox" id="estancos-stock"> <span>Publicar el lote en el Stock <small>etiquetas del proyecto, estanco, pantalla y formato</small></span></label>
+          <button type="button" id="estancos-preparar" class="pill accent estancos-preparar" disabled>Preparar paquete</button>
+          <p id="estancos-status" class="muted estancos-status" role="status" aria-live="polite"></p>
+        </section>
         <p class="muted">Una campaña marca su lote. Todos los tamaños marca los 42. Adaptar genera los marcados, en cola.</p>
         <label class="size-search-label">Buscar formatos o tamaños<input id="size-search" type="search" placeholder="Nombre o 300 × 250…"></label>
         <label class="orientation-label">Filtrar por orientación<select id="size-orientation"><option value="all">Todas</option><option value="portrait">Vertical</option><option value="landscape">Horizontal</option><option value="square">Cuadrado</option></select></label>
@@ -105,6 +115,14 @@
         <button id="export-all" class="pill accent" type="button" disabled>Adaptar</button>
       </div>
       <p id="export-status" role="status" aria-live="polite"></p>
+      <section id="paquete" class="paquete" aria-labelledby="paquete-h" hidden>
+        <div class="paquete-hd"><h2 id="paquete-h">Paquete por estanco</h2><span id="paquete-progreso" class="tag"></span></div>
+        <p id="paquete-fuente" class="muted"></p>
+        <div class="paquete-acciones"><button type="button" id="paquete-zip" class="pill accent" disabled>ZIP · todos</button><button type="button" id="paquete-publicar" class="pill" disabled>Publicar en el Stock</button></div>
+        <div id="paquete-grupos" class="paquete-grupos"></div>
+        <details id="paquete-stock" class="paquete-log" hidden><summary>Stock · registro</summary><ol id="paquete-stock-log"></ol></details>
+        <details class="paquete-log paquete-programacion"><summary>Programación de players · pendiente</summary><p class="muted">Esta página no programa players. El único sistema que asigna contenido a cada pantalla (la lista por defecto de admira.tv que leen los players con <code>canal.html?screen=…</code>) pide una clave de servidor desde aquí, y las 18 pantallas de los estancos todavía no están dadas de alta en la parrilla ni tienen player físico. El lote queda en el Stock y en el ZIP con su manifiesto (id de pantalla de cada pieza) para programarlo cuando exista ese acceso.</p></details>
+      </section>
       <div class="variants-heading"><h2 id="selected-count"></h2><button id="clear-formats" class="pill" type="button">Quitar todos</button></div>
       <p id="empty-formats" class="muted" hidden>Elige tamaños en el panel de la izquierda para crear tus adaptaciones.</p>
       <div id="grid" class="grid"></div>

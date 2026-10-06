@@ -306,6 +306,8 @@
     // 'video' | 'image' | null del contenido con esa URL.
     tipo: function (url) { var it = window.PixeriaStock.item(url); return it ? F.tipo(it) : null; },
     tags: function () { return (window.PixeriaStock._tags || []).slice(); },
+    // Piezas ya publicadas con una referencia estable (externalRef), para no volver a subirlas.
+    porRef: function (ref) { return ref ? (videos || []).filter(function (it) { return it.externalRef === ref; })[0] || null : null; },
     tag: function (g) { var inp = $('#stock-tag'); if (inp) { inp.value = g ? '#' + norm(g) : ''; if (g) aplicarTag(); else leerTag(); } }
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();

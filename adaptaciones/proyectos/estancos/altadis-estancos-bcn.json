@@ -1,0 +1,371 @@
+{
+ "version": 1,
+ "proyecto": "altadis-estancos-bcn",
+ "circuito": "altadis_bcn",
+ "estado": "demo",
+ "fuente": {
+  "titulo": "Circuito altadis_bcn · semilla de admira.app",
+  "archivo": "clearchannel-tv/data/circuitos/circuito-altadis-bcn-9.seed.json",
+  "commit": "3d39ba3",
+  "yokup": "https://api.yokup.com/projects · altadis-estancos-bcn",
+  "nota": "Los 9 estancos son los shop=tobacco de OpenStreetMap más cercanos a Carrer del Planeta 7 (Gràcia), elegidos para la demo de Altadis (FLT-101349, FLT-101401). Cada uno tiene dos pantallas registradas (P1 vertical en el escaparate y P2 horizontal en el mostrador); no hay LED ni videowalls registrados. Altadis no ha confirmado todavía ni el parque real ni las medidas."
+ },
+ "mapa": {
+  "estado": "derivado",
+  "criterio": "Ningún sistema guarda qué formato de la ficha Altadis corresponde a cada pantalla. Se deriva por resolución exacta y uso: P1 1080×1920 escaparate → cliente-01 VERTICAL (tótem / escaparate); P2 1920×1080 mostrador → cliente-02 HORIZONTAL (mostrador). cliente-04 SINCRO LOGO también mide 1920×1080, pero es para logo sincronizado: no se usa. Pendiente de confirmar con Altadis.",
+  "criterioEn": "No system stores which Altadis format belongs to each screen. It is derived from exact resolution and use: P1 1080×1920 shop window → cliente-01 VERTICAL (totem / shop window); P2 1920×1080 counter → cliente-02 HORIZONTAL (counter). cliente-04 SINCRO LOGO is also 1920×1080 but is meant for synchronised logos: not used. Pending confirmation by Altadis."
+ },
+ "estancos": [
+  {
+   "id": "altadis-bcn-001",
+   "orden": 1,
+   "nombre": "Estanc Gran de Gràcia 61",
+   "slug": "altadis-bcn-001-gran-de-gracia-61",
+   "direccion": "Carrer Gran de Gràcia 61 · 08012 Barcelona",
+   "expendeduria": null,
+   "osm": "node/12875861930",
+   "coords": [
+    2.155556,
+    41.3996304
+   ],
+   "pantallas": [
+    {
+     "id": "p1-vertical",
+     "screen": "altadis-bcn-001-p1-vertical",
+     "nombre": "P1 · Vertical escaparate",
+     "nameEn": "P1 · Portrait shop window",
+     "ubicacion": "escaparate",
+     "orientacion": "vertical",
+     "ancho": 1080,
+     "alto": 1920,
+     "formato": "cliente-01"
+    },
+    {
+     "id": "p2-horizontal",
+     "screen": "altadis-bcn-001-p2-horizontal",
+     "nombre": "P2 · Horizontal mostrador",
+     "nameEn": "P2 · Landscape counter",
+     "ubicacion": "pantalla",
+     "orientacion": "horizontal",
+     "ancho": 1920,
+     "alto": 1080,
+     "formato": "cliente-02"
+    }
+   ]
+  },
+  {
+   "id": "altadis-bcn-002",
+   "orden": 2,
+   "nombre": "Moe's Expenedoria",
+   "slug": "altadis-bcn-002-moes-expenedoria",
+   "direccion": "Plaça de la Vila de Gràcia s/n · 08012 Barcelona",
+   "expendeduria": null,
+   "osm": "node/6777658347",
+   "coords": [
+    2.1577654,
+    41.3999081
+   ],
+   "pantallas": [
+    {
+     "id": "p1-vertical",
+     "screen": "altadis-bcn-002-p1-vertical",
+     "nombre": "P1 · Vertical escaparate",
+     "nameEn": "P1 · Portrait shop window",
+     "ubicacion": "escaparate",
+     "orientacion": "vertical",
+     "ancho": 1080,
+     "alto": 1920,
+     "formato": "cliente-01"
+    },
+    {
+     "id": "p2-horizontal",
+     "screen": "altadis-bcn-002-p2-horizontal",
+     "nombre": "P2 · Horizontal mostrador",
+     "nameEn": "P2 · Landscape counter",
+     "ubicacion": "pantalla",
+     "orientacion": "horizontal",
+     "ancho": 1920,
+     "alto": 1080,
+     "formato": "cliente-02"
+    }
+   ]
+  },
+  {
+   "id": "altadis-bcn-003",
+   "orden": 3,
+   "nombre": "Estanc nº 275 · Torrent de l'Olla",
+   "slug": "altadis-bcn-003-n275-torrent-de-l-olla",
+   "direccion": "Carrer del Torrent de l'Olla 24 · 08012 Barcelona",
+   "expendeduria": {
+    "numero": "080275",
+    "fuente": "CMT · expendedurías activas 03-10-2026"
+   },
+   "osm": "node/10761696806",
+   "coords": [
+    2.1607485,
+    41.3991169
+   ],
+   "pantallas": [
+    {
+     "id": "p1-vertical",
+     "screen": "altadis-bcn-003-p1-vertical",
+     "nombre": "P1 · Vertical escaparate",
+     "nameEn": "P1 · Portrait shop window",
+     "ubicacion": "escaparate",
+     "orientacion": "vertical",
+     "ancho": 1080,
+     "alto": 1920,
+     "formato": "cliente-01"
+    },
+    {
+     "id": "p2-horizontal",
+     "screen": "altadis-bcn-003-p2-horizontal",
+     "nombre": "P2 · Horizontal mostrador",
+     "nameEn": "P2 · Landscape counter",
+     "ubicacion": "pantalla",
+     "orientacion": "horizontal",
+     "ancho": 1920,
+     "alto": 1080,
+     "formato": "cliente-02"
+    }
+   ]
+  },
+  {
+   "id": "altadis-bcn-004",
+   "orden": 4,
+   "nombre": "L'Estanc de Còrsega · nº 124",
+   "slug": "altadis-bcn-004-n124-corsega",
+   "direccion": "Carrer de Còrsega 329 (esq. Santa Teresa) · Barcelona",
+   "expendeduria": {
+    "numero": "080124",
+    "fuente": "CMT · expendedurías activas 03-10-2026"
+   },
+   "osm": "node/10769626613",
+   "coords": [
+    2.1602111,
+    41.3973394
+   ],
+   "pantallas": [
+    {
+     "id": "p1-vertical",
+     "screen": "altadis-bcn-004-p1-vertical",
+     "nombre": "P1 · Vertical escaparate",
+     "nameEn": "P1 · Portrait shop window",
+     "ubicacion": "escaparate",
+     "orientacion": "vertical",
+     "ancho": 1080,
+     "alto": 1920,
+     "formato": "cliente-01"
+    },
+    {
+     "id": "p2-horizontal",
+     "screen": "altadis-bcn-004-p2-horizontal",
+     "nombre": "P2 · Horizontal mostrador",
+     "nameEn": "P2 · Landscape counter",
+     "ubicacion": "pantalla",
+     "orientacion": "horizontal",
+     "ancho": 1920,
+     "alto": 1080,
+     "formato": "cliente-02"
+    }
+   ]
+  },
+  {
+   "id": "altadis-bcn-005",
+   "orden": 5,
+   "nombre": "Estanc nº 419 · Via Augusta",
+   "slug": "altadis-bcn-005-n419-via-augusta",
+   "direccion": "Via Augusta 12 · 08006 Barcelona",
+   "expendeduria": {
+    "numero": "080419",
+    "fuente": "CMT · expendedurías activas 03-10-2026"
+   },
+   "osm": "node/11554659567",
+   "coords": [
+    2.1551713,
+    41.3967736
+   ],
+   "pantallas": [
+    {
+     "id": "p1-vertical",
+     "screen": "altadis-bcn-005-p1-vertical",
+     "nombre": "P1 · Vertical escaparate",
+     "nameEn": "P1 · Portrait shop window",
+     "ubicacion": "escaparate",
+     "orientacion": "vertical",
+     "ancho": 1080,
+     "alto": 1920,
+     "formato": "cliente-01"
+    },
+    {
+     "id": "p2-horizontal",
+     "screen": "altadis-bcn-005-p2-horizontal",
+     "nombre": "P2 · Horizontal mostrador",
+     "nameEn": "P2 · Landscape counter",
+     "ubicacion": "pantalla",
+     "orientacion": "horizontal",
+     "ancho": 1920,
+     "alto": 1080,
+     "formato": "cliente-02"
+    }
+   ]
+  },
+  {
+   "id": "altadis-bcn-006",
+   "orden": 6,
+   "nombre": "Estanco nº 003",
+   "slug": "altadis-bcn-006-n003-gala-placidia",
+   "direccion": "Plaça de Gal·la Placídia 26 · 08006 Barcelona",
+   "expendeduria": {
+    "numero": "003",
+    "fuente": "rótulo en OpenStreetMap; sin cruzar con el CMT"
+   },
+   "osm": "node/4755079723",
+   "coords": [
+    2.1526809,
+    41.3997778
+   ],
+   "pantallas": [
+    {
+     "id": "p1-vertical",
+     "screen": "altadis-bcn-006-p1-vertical",
+     "nombre": "P1 · Vertical escaparate",
+     "nameEn": "P1 · Portrait shop window",
+     "ubicacion": "escaparate",
+     "orientacion": "vertical",
+     "ancho": 1080,
+     "alto": 1920,
+     "formato": "cliente-01"
+    },
+    {
+     "id": "p2-horizontal",
+     "screen": "altadis-bcn-006-p2-horizontal",
+     "nombre": "P2 · Horizontal mostrador",
+     "nameEn": "P2 · Landscape counter",
+     "ubicacion": "pantalla",
+     "orientacion": "horizontal",
+     "ancho": 1920,
+     "alto": 1080,
+     "formato": "cliente-02"
+    }
+   ]
+  },
+  {
+   "id": "altadis-bcn-007",
+   "orden": 7,
+   "nombre": "Tabacs M. Àngels · nº 359",
+   "slug": "altadis-bcn-007-n359-tabacs-m-angels",
+   "direccion": "Carrer de Terol 41-43 · 08012 Barcelona",
+   "expendeduria": {
+    "numero": "080359",
+    "fuente": "CMT · expendedurías activas 03-10-2026"
+   },
+   "osm": "node/11741880447",
+   "coords": [
+    2.1587066,
+    41.403443
+   ],
+   "pantallas": [
+    {
+     "id": "p1-vertical",
+     "screen": "altadis-bcn-007-p1-vertical",
+     "nombre": "P1 · Vertical escaparate",
+     "nameEn": "P1 · Portrait shop window",
+     "ubicacion": "escaparate",
+     "orientacion": "vertical",
+     "ancho": 1080,
+     "alto": 1920,
+     "formato": "cliente-01"
+    },
+    {
+     "id": "p2-horizontal",
+     "screen": "altadis-bcn-007-p2-horizontal",
+     "nombre": "P2 · Horizontal mostrador",
+     "nameEn": "P2 · Landscape counter",
+     "ubicacion": "pantalla",
+     "orientacion": "horizontal",
+     "ancho": 1920,
+     "alto": 1080,
+     "formato": "cliente-02"
+    }
+   ]
+  },
+  {
+   "id": "altadis-bcn-008",
+   "orden": 8,
+   "nombre": "Estanc de Gràcia · nº 393",
+   "slug": "altadis-bcn-008-n393-travessera-de-gracia",
+   "direccion": "Travessera de Gràcia 194 · 08012 Barcelona",
+   "expendeduria": {
+    "numero": "080393",
+    "fuente": "CMT · expendedurías activas 03-10-2026"
+   },
+   "osm": "node/11339652076",
+   "coords": [
+    2.1602077,
+    41.4027259
+   ],
+   "pantallas": [
+    {
+     "id": "p1-vertical",
+     "screen": "altadis-bcn-008-p1-vertical",
+     "nombre": "P1 · Vertical escaparate",
+     "nameEn": "P1 · Portrait shop window",
+     "ubicacion": "escaparate",
+     "orientacion": "vertical",
+     "ancho": 1080,
+     "alto": 1920,
+     "formato": "cliente-01"
+    },
+    {
+     "id": "p2-horizontal",
+     "screen": "altadis-bcn-008-p2-horizontal",
+     "nombre": "P2 · Horizontal mostrador",
+     "nameEn": "P2 · Landscape counter",
+     "ubicacion": "pantalla",
+     "orientacion": "horizontal",
+     "ancho": 1920,
+     "alto": 1080,
+     "formato": "cliente-02"
+    }
+   ]
+  },
+  {
+   "id": "altadis-bcn-009",
+   "orden": 9,
+   "nombre": "Estanc Torrijos 8",
+   "slug": "altadis-bcn-009-torrijos-8",
+   "direccion": "Carrer de Torrijos 8 · 08012 Barcelona",
+   "expendeduria": null,
+   "osm": "node/10772906416",
+   "coords": [
+    2.1599081,
+    41.4024557
+   ],
+   "pantallas": [
+    {
+     "id": "p1-vertical",
+     "screen": "altadis-bcn-009-p1-vertical",
+     "nombre": "P1 · Vertical escaparate",
+     "nameEn": "P1 · Portrait shop window",
+     "ubicacion": "escaparate",
+     "orientacion": "vertical",
+     "ancho": 1080,
+     "alto": 1920,
+     "formato": "cliente-01"
+    },
+    {
+     "id": "p2-horizontal",
+     "screen": "altadis-bcn-009-p2-horizontal",
+     "nombre": "P2 · Horizontal mostrador",
+     "nameEn": "P2 · Landscape counter",
+     "ubicacion": "pantalla",
+     "orientacion": "horizontal",
+     "ancho": 1920,
+     "alto": 1080,
+     "formato": "cliente-02"
+    }
+   ]
+  }
+ ]
+}

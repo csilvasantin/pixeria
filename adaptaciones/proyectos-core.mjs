@@ -110,6 +110,12 @@ export function validateFicha(ficha, {lists = {}, yokupIds = null, generalIds = 
     if (!(INCLUDES.includes(inc) || (Array.isArray(inc) && inc.length && inc.every(id => ids.has(id))))) e(`${w}: incluye debe ser ${INCLUDES.join('|')} o una lista de ids propios`);
   }
   if (ficha.notas != null && (!isText(ficha.notas.es) || !isText(ficha.notas.en))) e('notas necesita es y en');
+  // Estancos y circuito (6-oct-2026): JSON aparte con los puntos de venta y el formato de cada pantalla.
+  if (ficha.estancos != null) {
+    const est = ficha.estancos;
+    if (!est || typeof est !== 'object' || !isText(est.archivo) || !/\.json$/.test(est.archivo)) e('estancos debe ser {archivo: "<ruta>.json"}');
+    else if (!resolveRef('adaptaciones/proyectos/x.json', est.archivo).startsWith('adaptaciones/')) e('estancos.archivo debe quedar dentro de adaptaciones/');
+  }
   return errors;
 }
 

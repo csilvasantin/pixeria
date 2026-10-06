@@ -260,3 +260,110 @@ Encargo de Carlos, 5-oct-2026. Además de vídeo y de JPG, PNG y WebP, el Adapta
 python3 -m http.server 9191 --bind 127.0.0.1 &
 BASE=http://127.0.0.1:9191 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-formatos.browser.cjs
 ```
+
+## Estancos y circuito
+
+Encargo de Carlos (6-oct-2026) para los 9 estancos Altadis de Barcelona. Hay dos piezas: el paquete por estanco y la publicación al circuito.
+
+### Datos
+
+- La ficha `adaptaciones/proyectos/altadis-estancos-bcn.json` apunta a `estancos: {archivo: "estancos/altadis-estancos-bcn.json"}`.
+- Ese JSON contiene el circuito (`altadis_bcn`), la fuente y el mapa de pantallas a formatos. También contiene los 9 estancos, cada uno con:
+  - `id`, `orden`, `nombre`, `slug`, `direccion`;
+  - `expendeduria`, con su número y su fuente, o `null`;
+  - `osm` y `coords`;
+  - `pantallas[]`, cada una con `id`, `screen`, `nombre`/`nameEn`, `ubicacion`, `ancho`, `alto` y el `formato` de la ficha.
+- Los estancos y sus pantallas se copian de la semilla canónica del circuito: `clearchannel-tv/data/circuitos/circuito-altadis-bcn-9.seed.json`, commit `3d39ba3`.
+  - Esa misma lista está en Yokup (proyecto `altadis-estancos-bcn`) y en `brain.digitalavatar.ai/locations`.
+  - Son los `shop=tobacco` de OpenStreetMap más cercanos a Carrer del Planeta 7. Se eligieron para la demo, así que son **demo**: Altadis no ha confirmado ni su parque real ni sus medidas.
+  - Cada estanco tiene dos pantallas: P1 vertical de 1080×1920 en el escaparate y P2 horizontal de 1920×1080 en el mostrador. No hay LED ni videowalls registrados.
+- **El mapa de pantallas a formatos no existe en ningún sistema.** Se deriva así (`mapa.estado = "derivado"`):
+  - por resolución exacta y uso de la ficha: P1 → `cliente-01` VERTICAL (tótem / escaparate) y P2 → `cliente-02` HORIZONTAL (mostrador);
+  - `cliente-04` SINCRO LOGO también mide 1920×1080, pero no se usa.
+  - Cuando Altadis confirme sus pantallas, se cambia `formato` en el JSON. Puede ser cualquier id de la ficha, también `cliente-esp-N` o MyBlu. El test de esquema comprueba que existe y que las medidas cuadran.
+- `test/adapter-estancos.test.mjs` valida el esquema:
+  - la versión y el proyecto de la ficha;
+  - que cada estanco tenga al menos una pantalla;
+  - que cada formato referenciado exista en la ficha y mida lo que dice la pantalla;
+  - que no haya ids, slugs ni `screen` repetidos, y que `screen` sea `<estanco>-<pantalla>`.
+- `validateFicha` acepta `estancos: {archivo}` siempre que el archivo quede dentro de `adaptaciones/`.
+
+### Interfaz (proyecto Altadis activo)
+
+- En ☰ Tamaños, debajo de Proyecto, aparece la sección **Estancos**:
+  - los 9 estancos con dirección, número de expendeduría y, por cada pantalla, su medida y su formato;
+  - la casilla «Todos los estancos»;
+  - la casilla «Publicar el lote en el Stock»;
+  - el botón «Preparar paquete · N estancos · M formatos».
+- La elección se recuerda por proyecto en `pixeria.adapter.estancos.<proyecto>`.
+- «Preparar paquete» necesita un contenido elegido en el paso 1. Al pulsarlo:
+  1. Pasa al perfil del proyecto y marca **exactamente** los formatos de esas pantallas. Desmarca los demás formatos propios; la biblioteca general no se toca.
+  2. Los exporta en la cola de siempre. Cada formato se codifica **una sola vez**; los videowalls salen en su archivo de entrega.
+- El panel **Paquete por estanco** agrupa el resultado por estanco:
+  - por cada pantalla muestra el archivo, el tamaño y, si se ha publicado, el número del Stock;
+  - cada estanco tiene su botón ZIP, y hay otro botón «ZIP · todos».
+- El ZIP se genera en el navegador con fflate 0.8.2, que se baja de jsDelivr. Antes de ejecutarlo se comprueba su SHA-256 (`FFLATE` en `estancos-core.mjs`).
+  - Va sin deflate, porque MP4 y PNG ya están comprimidos, y con fecha fija: el mismo lote da el mismo ZIP.
+  - Rutas: `<estanco>/<pantalla>-<formato>-<ancho>x<alto>.mp4|png`, por ejemplo `altadis-bcn-003-n275-torrent-de-l-olla/p1-vertical-cliente-01-1080x1920.mp4`. Si varios estancos usan el mismo archivo, se copia en cada uno.
+  - En la raíz va `manifest.json`, con una entrada por pantalla: estanco, pantalla, `screen`, formato, medidas, archivo, duración, bytes, SHA-256, fuente y, si se publicó, `stock {id, num, externalRef}`.
+- Si una línea falla o se cancela, el paquete queda «incompleto» y lo dice.
+
+### Publicar al Stock
+
+- Con la casilla marcada, el lote se publica al terminar. El botón «Publicar en el Stock» lo repite o lo reintenta.
+- Va por el mismo `/stock-publish` de las adaptaciones (`publishAdaptation` con `extra`).
+- Se publica **una pieza por fuente y formato**:
+  - El mismo MP4 sirve a la misma pantalla de todos los estancos del lote.
+  - El Stock ya deduplica por contenido (SHA-256): si se suben bytes iguales, devuelve la pieza existente sin cambiarle las etiquetas.
+- Etiquetas:
+  - `altadis`, `adaptación`, el id del formato y `pantalla-<id>`;
+  - `estanco-<id>` por cada estanco, si caben.
+  - El worker admite 10 etiquetas de 30 caracteres y añade la de calidad y la de orientación. Si no caben, va `estancos-todos` o `estancos-N`.
+  - El reparto exacto estanco × pantalla va en `comment`, que se puede buscar con `/stock/list?q=altadis-bcn-003`, y en el manifiesto.
+- `externalRef` estable: `pixeria:altadis-estancos-bcn:<fuente>:<formato>`.
+  - La fuente es `stock-<id>` para un contenido del Stock, o `sha256-<16 hex>` de los bytes del archivo, o de la URL si es remota.
+- **Sin duplicados**: antes de subir una pieza se mira su `externalRef` en el índice del Stock (`PixeriaStock.porRef`) y en el registro de este navegador (`pixeria.adapter.stock-refs`).
+  - Si ya está, se anota «ya estaba» y no se sube.
+  - El registro del panel distingue publicada, ya estaba, reutilizada (mismo contenido) y error.
+- El Stock solo acepta MP4 desde el Adaptador. Los PNG van únicamente en el ZIP.
+
+### Programación de players: no conectada
+
+Esta página no programa players. Esto es lo que hay hoy (investigado el 6-oct-2026):
+
+- **Qué reproduce cada player.** Todos los players reales abren `https://www.admira.tv/canal.html?screen=<id>`. Ese canal combina tres fuentes:
+  - la lista por defecto de la pantalla, en `admira.tv/api/playlist` (KV `ACCESS`);
+  - la parrilla de `api.admira.store/grid/day`, que se reserva con `/grid/book` o `/grid/rundown` y la clave `GRID_KEY`;
+  - el modo sincronizado.
+- **Quién puede escribir.** El único endpoint que acepta peticiones desde pixeria.com por CORS es `POST admira.tv/api/playlist`. Admite una sesión de admira.tv (`__Host-atv_session`), pero esa cookie no viaja entre orígenes porque no hay `Allow-Credentials`. Desde aquí solo funciona con el secreto `STOCK_NOTIFY_KEY`. Ese es el modo que usa hoy «Asignar al circuito…» en `stock.html`, pidiendo la clave con un `prompt()`.
+  - Eso es un secreto en el cliente, así que no se ha conectado.
+- **Las pantallas de Altadis no existen en el sistema de players:**
+  - las 18 pantallas `altadis-bcn-00N-p1-vertical` / `-p2-horizontal` no están en `/grid/screens`;
+  - ningún player las abre;
+  - sus listas por defecto están vacías;
+  - el gemelo de XpaceOS lee un `demo.json` estático.
+- **Qué falta y quién decide:**
+  - **Carlos o el responsable de admira.tv:** decidir el canal de programación. Lo propuesto es una función de Pages en pixeria.com que compruebe `__Host-pixeria_session` (`hasSession`) y guarde `STOCK_NOTIFY_KEY` como secreto del servidor, con un modo de prueba.
+  - **Operaciones de admira:** dar de alta las 18 pantallas en `/grid/config` con `circuit: "altadis_bcn"`.
+  - **Altadis:** confirmar el parque real y sus medidas.
+- Hasta entonces, el lote queda en el Stock y en el ZIP. El manifiesto lleva el `screen` de cada pieza, listo para programarlo.
+
+### Pruebas
+
+- `node --test test/adapter-estancos.test.mjs` cubre:
+  - el esquema;
+  - la selección de estancos y sus formatos exactos;
+  - los nombres y el manifiesto;
+  - el ZIP con fflate local (variable `FFLATE`; si no está, el test se salta) y `unzip -l`;
+  - el payload del Stock con etiquetas y `externalRef`, sin duplicados.
+- `test/adaptador-estancos.browser.cjs` usa Playwright, con la verja simulada en `/auth/session`, `/stock-publish` interceptado y cualquier escritura a `admira.tv/api/playlist` o `api.admira.store/grid|signage` bloqueada y contada como fallo. Recorre esto:
+  1. Elige dos estancos, prepara el paquete y comprueba que salen exactamente `cliente-01` y `cliente-02`.
+  2. Comprueba que se publican 2 piezas con sus etiquetas y su `externalRef`, y que al volver a publicar no se sube nada.
+  3. Descarga el ZIP del estanco y comprueba las rutas, el manifiesto, los SHA-256 y ffprobe con H.264 a la medida de cada pantalla.
+  4. Descarga el ZIP global (4 archivos y el manifiesto).
+  5. A 390 px y en inglés comprueba «todos» y que no hay desbordamiento horizontal.
+
+```
+python3 -m http.server 9193 --bind 127.0.0.1 &
+BASE=http://127.0.0.1:9193 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-estancos.browser.cjs
+```

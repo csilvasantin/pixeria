@@ -37,9 +37,10 @@ const toBase64 = blob => new Promise((resolve, reject) => {
   reader.onerror = () => reject(reader.error || new Error('read'));
   reader.readAsDataURL(blob);
 });
-export async function publishAdaptation(blob, meta) {
+// `extra` (paquete por estanco) sustituye tags, externalRef y comment del payload.
+export async function publishAdaptation(blob, meta, extra = null) {
   if (blob.size > MAX_STOCK_BYTES) return {ok: false, error: 'too-big'};
-  const body = stockPayload({...meta, size: blob.size, base64: await toBase64(blob)});
+  const body = {...stockPayload({...meta, size: blob.size, base64: await toBase64(blob)}), ...(extra || {})};
   // Miniatura real del vídeo exportado (fotograma ~10 %): nada llega al Stock sin imagen.
   try {
     const {posterFromVideo} = await import('/assets/poster-frame.mjs');

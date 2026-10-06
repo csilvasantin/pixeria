@@ -83,6 +83,16 @@
         <h2>Sizes</h2>
         <label class="project-label">Project<select id="adapter-project" aria-describedby="project-status"><option value="general">General (no project)</option></select></label>
         <p id="project-status" class="muted project-status" role="status"></p>
+        <section id="estancos" class="estancos" aria-labelledby="estancos-h" hidden>
+          <h3 id="estancos-h">Tobacconists</h3>
+          <p id="estancos-nota" class="muted estancos-nota"></p>
+          <details class="estancos-mapa"><summary>How each screen gets its format</summary><p id="estancos-criterio" class="muted"></p></details>
+          <label class="estanco-todos"><input type="checkbox" id="estancos-todos"> <span>All tobacconists</span> <b id="estancos-n" class="campaign-count"></b></label>
+          <ul id="estancos-lista" class="estancos-lista"></ul>
+          <label class="estancos-stock"><input type="checkbox" id="estancos-stock"> <span>Publish the batch to the Stock <small>project, shop, screen and format tags</small></span></label>
+          <button type="button" id="estancos-preparar" class="pill accent estancos-preparar" disabled>Prepare package</button>
+          <p id="estancos-status" class="muted estancos-status" role="status" aria-live="polite"></p>
+        </section>
         <p class="muted">A campaign selects its batch. All sizes selects all 42. Adapt generates the checked sizes, in a queue.</p>
         <label class="size-search-label">Search formats or sizes<input id="size-search" type="search" placeholder="Name or 300 × 250…"></label>
         <label class="orientation-label">Filter by orientation<select id="size-orientation"><option value="all">All</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option><option value="square">Square</option></select></label>
@@ -105,6 +115,14 @@
         <button id="export-all" class="pill accent" type="button" disabled>Adapt</button>
       </div>
       <p id="export-status" role="status" aria-live="polite"></p>
+      <section id="paquete" class="paquete" aria-labelledby="paquete-h" hidden>
+        <div class="paquete-hd"><h2 id="paquete-h">Package per shop</h2><span id="paquete-progreso" class="tag"></span></div>
+        <p id="paquete-fuente" class="muted"></p>
+        <div class="paquete-acciones"><button type="button" id="paquete-zip" class="pill accent" disabled>ZIP · all</button><button type="button" id="paquete-publicar" class="pill" disabled>Publish to the Stock</button></div>
+        <div id="paquete-grupos" class="paquete-grupos"></div>
+        <details id="paquete-stock" class="paquete-log" hidden><summary>Stock · log</summary><ol id="paquete-stock-log"></ol></details>
+        <details class="paquete-log paquete-programacion"><summary>Player scheduling · pending</summary><p class="muted">This page does not schedule players. The only system that assigns content to each screen (the admira.tv default playlist read by players running <code>canal.html?screen=…</code>) needs a server key from here, and the 18 shop screens are not yet registered in the grid nor have a physical player. The batch stays in the Stock and in the ZIP with its manifest (screen id of every piece), ready to be scheduled once that access exists.</p></details>
+      </section>
       <div class="variants-heading"><h2 id="selected-count"></h2><button id="clear-formats" class="pill" type="button">Remove all</button></div>
       <p id="empty-formats" class="muted" hidden>Choose sizes in the library to create your adaptations.</p>
       <div id="grid" class="grid"></div>
