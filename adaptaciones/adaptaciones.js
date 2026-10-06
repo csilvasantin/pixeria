@@ -404,7 +404,7 @@ function buildGrid() {
   selectedFormats().forEach((f) => {
     if (f.especial) { g.appendChild(especialCard(f)); return; }
     // Extreme banners (≥ 4:1 or 1:4) take the whole row and a wider preview (Crear, 6-oct-2026).
-    const p = perfil(f), extreme = Math.max(p.ancho / p.alto, p.alto / p.ancho) >= 4, base = extreme && p.ancho > p.alto ? 768 : 384;
+    const p = perfil(f), extreme = Math.max(p.ancho / p.alto, p.alto / p.ancho) >= 4, base = extreme && p.ancho > p.alto ? 1152 : 384;
     const cw = p.ancho >= p.alto ? base : Math.round(384 * p.ancho / p.alto); const ch = Math.max(1, Math.round(cw * p.alto / p.ancho));
     const el = document.createElement('div'); el.className = `fmt${extreme ? ' fmt-extremo' : ''}`; el.dataset.f = f.id;
     el.innerHTML = `<div class="fmt-title"><h3>${f.nombre} <span class="accion-tag" hidden></span></h3><button class="remove-format" type="button" aria-label="${t('Quitar','Remove')} ${f.nombre}">×</button></div><div class="dims">${p.ancho}×${p.alto}</div>
@@ -566,7 +566,7 @@ function labelExports() {
     if (f.especial) {
       const g = geometry(f.layout), [W, H] = f.layout.entrega, [cw, ch] = f.layout.celda;
       const a = el.querySelector('.export-atlas'), s = el.querySelector('.export-segments');
-      const crea = creando(f), rs = crea ? ` · ${secLabel(duracionReceta(crearCfg(f), {kind: srcKindCrear(), seconds: recetaSeconds()}))} s` : sec, rt = crea ? ` · ${RECETA_NOMBRE[crearCfg(f).receta]}` : '';
+      const crea = creando(f), rs = crea ? ` · ${secLabel(duracionReceta(crearCfg(f), {kind: srcKindCrear(), seconds: recetaSeconds(), src: state.src, dst: destino(f)}))} s` : sec, rt = crea ? ` · ${RECETA_NOMBRE[crearCfg(f).receta]}` : '';
       if (a) { a.textContent = `${t('Exportar entrega · 1 MP4','Export delivery · 1 MP4')} ${W}×${H}${rs}`; a.title = mp4Title + rt; }
       if (s) { s.textContent = `${t('Exportar por pantalla','Export per screen')} · ${g.segments.length} MP4 ${cw}×${ch}${rs}`; s.title = t('MP4 H.264 · 25 fps · sin audio','MP4 H.264 · 25 fps · no audio') + rs + rt; }
       return;
@@ -574,7 +574,7 @@ function labelExports() {
     const b = el.querySelector('.export-one:not(.export-jpg)'); if (!b) return;
     const crea = creando(f), cfg = crearCfg(f);
     if (f.output === 'png') { b.textContent = t('Exportar PNG','Export PNG'); b.title = (f.print ? t('PNG RGB a 150 ppp','RGB PNG at 150 ppi') : 'PNG') + (crea ? ` · ${RECETA_NOMBRE[cfg.receta]} · ${t('fotograma representativo','representative frame')}` : ''); }
-    else if (crea) { const d = duracionReceta(cfg, {kind: srcKindCrear(), seconds: recetaSeconds()}); b.textContent = `${t('Crear MP4','Create MP4')} · ${secLabel(d)} s`; b.title = `${RECETA_NOMBRE[cfg.receta]} · MP4 H.264 · 25 fps · ${secLabel(d)} s`; }
+    else if (crea) { const d = duracionReceta(cfg, {kind: srcKindCrear(), seconds: recetaSeconds(), src: state.src, dst: destino(f)}); b.textContent = `${t('Crear MP4','Create MP4')} · ${secLabel(d)} s`; b.title = `${RECETA_NOMBRE[cfg.receta]} · MP4 H.264 · 25 fps · ${secLabel(d)} s`; }
     else { b.textContent = `${t('Exportar MP4','Export MP4')}${sec}`; b.title = mp4Title; }
     const j = el.querySelector('.export-jpg'); if (j) j.hidden = !isPicture();
   });
@@ -754,7 +754,9 @@ function paintCrear(cv, output, f, tFixed = null, override = null) {
   const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, ratio = W / output.ancho;
   ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   if (!mediaReady()) return;
-  const cfg = crearCfg(f), s = state.fmt[f.id], kind = srcKindCrear(), seconds = recetaSeconds() || 1, dur = duracionReceta(cfg, {kind, seconds});
+  const cfg = crearCfg(f), s = state.fmt[f.id], kind = srcKindCrear(), seconds = recetaSeconds() || 1, dur = duracionReceta(cfg, {kind, seconds, src: state.src, dst: output});
+  // A paused video shows the representative frame (whole strip, middle of the pan, ticker start); ⏯ animates it.
+  if (tFixed == null && kind === 'video' && video.paused) tFixed = 'rep';
   const {el: src, dims} = override || drawSource(W, H, 'cover', crearZoom(f));
   if (cfg.receta === 'barrido') {
     const p = barridoPlan(dims, output.ancho, output.alto, s, cfg, dur);
@@ -903,7 +905,7 @@ function syncCrearSettings(skip = null) {
 function pickCard(f) { if (state.sel === f.id) return; state.sel = f.id; markSelected(); buildCardSettings(); }
 // Aviso of a recipe (Avanzado) and its plan (Experto).
 function crearAviso(f) {
-  const cfg = crearCfg(f), kind = srcKindCrear(), seconds = recetaSeconds(), dur = duracionReceta(cfg, {kind, seconds}), out = destino(f);
+  const cfg = crearCfg(f), kind = srcKindCrear(), seconds = recetaSeconds(), out = destino(f), dur = duracionReceta(cfg, {kind, seconds, src: state.src, dst: out});
   const r = desproporcion(state.src, out), what = `${t('Crear', 'Create')} · ${RECETA_NOMBRE[cfg.receta]} · MP4 ${secLabel(dur)} s · 25 fps`;
   let how = '';
   if (cfg.receta === 'tira') {

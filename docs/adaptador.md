@@ -427,3 +427,90 @@ python3 -m http.server 9193 --bind 127.0.0.1 &
 BASE=http://127.0.0.1:9193 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-estancos.browser.cjs
 BASE=http://127.0.0.1:9193 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-programar.browser.cjs
 ```
+
+## Crear (formatos extremos)
+
+Encargo de Carlos (6-oct-2026). En algunos formatos, adaptar es deformar o recortar destrozando la pieza: un banner ultralargo 3840×540 (7:1) desde un 16:9, un rascacielos 160×600 o los videowalls 9x1, 13x1 y CORDOBA-098 de Altadis. Ahí no se adapta: se **crea** un formato nuevo con el mismo contenido. Hay tres recetas locales y gratuitas, sin IA ni servicios externos. El código está en `adaptaciones/crear-core.mjs`, un módulo puro que usan la vista previa, el plan FFmpeg y los tests.
+
+### Cuándo una tarjeta pasa a «Crear»
+
+- Para cada formato se calcula la desproporción `r = max(a_src/a_dst, a_dst/a_src)`, con `a = ancho/alto`. En los videowalls segmentados se usa la pared física, no el archivo de entrega.
+- Si `r ≥ UMBRAL_CREAR` (constante en `crear-core.mjs`, **2,5**), la tarjeta pasa a «Crear». El título muestra la etiqueta **CREAR · <receta>**, y el *tooltip* da el valor de r. Con r < 2,5 todo sigue como antes.
+- **Atención:** 16:9 ↔ 9:16 da r ≈ 3,16, así que también cruza el umbral. Un vídeo horizontal en la tarjeta vertical 9:16 (o en `cliente-01` de Altadis) sale por defecto con la receta. Si se quiere que esas tarjetas sigan en «Adaptar», basta con subir el umbral a 3,5. 1:1 (1,78) y 4:5 (2,22) no cambian.
+- Cada tarjeta tiene el selector **[Adaptar | Crear]**. El botón activo en automático lleva la marca «· auto». Pulsar el otro botón fuerza esa acción solo en esa tarjeta, y la elección se guarda. En Avanzado, «Acción» vuelve a **Auto** y explica la decisión, por ejemplo «Auto · Crear (r = 4; umbral 2,5)».
+- En «Crear», la tarjeta muestra las tres recetas (**Tira · Barrido · Rótulo**). El botón de exportar dice «Crear MP4 · N s». El método (recorte, contener o expandir) es de «Adaptar» y queda desactivado; el foco y el zoom siguen contando.
+
+### Las tres recetas
+
+Todas se calculan en el navegador. La vista previa en canvas usa las mismas funciones que generan el filtro de FFmpeg: geometría, trayectoria y desplazamiento. El MP4 sale por el pipeline FFmpeg WASM de siempre, en H.264 a 25 fps. Funcionan con vídeo y con imagen: JPG, PNG, WebP, AVIF, HEIC, GIF estático, GIF animado y SVG. El SVG se rasteriza a la resolución que pide la receta.
+
+1. **Tira de momentos** (`tira`). Divide el formato en 3–5 piezas a lo largo de su lado largo. Las piezas no se solapan, tienen medidas pares y pueden llevar una separación fina opcional.
+   - El número de piezas sale de `round(r)`, limitado entre 3 y 5: 4 en 3840×540 desde 16:9 y 5 en un rascacielos. Se puede fijar en Avanzado.
+   - Con **vídeo**, cada pieza es el fotograma central de su tramo, alineado a 25 fps. FFmpeg lee la misma entrada N veces con `-ss`; la vista previa captura esos instantes con un `<video>` oculto. La opción **«Cada pieza reproduce su tramo en bucle»** hace que cada pieza reproduzca su tramo `[i·L, (i+1)·L)`. En ese caso el MP4 dura un tramo (L = D/N) y el player lo repite.
+   - Con **imagen o GIF animado**, cada pieza es un recorte con zoom (1,6 por defecto, ajustable de 1 a 3) de una zona distinta, repartida a lo largo del lado largo del contenido.
+   - Las piezas aparecen en cascada con un fundido corto (`fade` con alfa). La tira no lleva audio.
+2. **Barrido** (`barrido`). El contenido se escala lo justo para llenar el formato sin deformar, multiplicado por el zoom de la tarjeta. Una ventana del tamaño del formato recorre el sobrante de extremo a extremo con un paneo suave (coseno). En 3840×540 desde 16:9, el paneo es vertical; en un rascacielos, horizontal. El otro eje queda en el foco.
+   - **Duración:** la del clip, la elegida para una imagen fija o un bucle del GIF.
+   - **Ajustes:** recorrido de ida o de ida y vuelta, sentido normal o inverso, y segundos del paneo (0 es toda la pieza; con menos segundos el paneo es más rápido y, en ida, se queda en el extremo).
+   - **Precisión:** FFmpeg hace dos recortes. El primero es par y en el espacio del contenido, para no crear intermedios gigantes en paredes de 14 400 px. El segundo se hace tras escalar, con 2 px de precisión en la salida. Las expresiones usan `n` (número de fotograma) y los mismos números redondeados que la vista previa.
+   - Conserva el audio del vídeo.
+3. **Rótulo en movimiento** (`rotulo`). Un claim y, si se quiere, la miniatura del contenido o un logo recorren el banner: de derecha a izquierda en formatos apaisados y hacia arriba, en líneas, en formatos verticales.
+   - **Claim:** campo ES y campo EN opcional; si están los dos, se alternan. Sin texto se usa el título del contenido.
+   - **Ajustes:** velocidad (× el lado corto por segundo; 2 por defecto, es decir, 1080 px/s en 3840×540), color del texto y fondo **desenfocado** del propio contenido o **sólido** con su color.
+   - **Tipografía:** la del sitio o, si hay marca blanca activa, `--mb-fuente-titulos`.
+   - **Cómo se dibuja:** la tira (un periodo de icono, texto y separador, repetido) se dibuja una vez en un canvas. FFmpeg recibe ese mismo PNG como segunda entrada (`rotulo.png`) y lo superpone en `x = −2·floor(mod(v·n/25, P)/2)`. Así, el texto del MP4 es idéntico al de la vista previa.
+   - El logo se sube desde Avanzado y solo vive en memoria.
+   - Conserva el audio del vídeo.
+
+### Exportación, Stock y especiales
+
+- Mismo pipeline, cola, presupuesto de memoria (96/192 MiB), tope de 128 MiB y rechazo desde 124 MiB. El motor (`adapter-export.js`) admite archivos de entrada extra por trabajo (`extraFiles`), que se escriben y se borran en cada ejecución.
+- Nombre del archivo: `<contenido>-<formato>-crear-<receta>-<ancho>x<alto>.mp4`.
+- **Stock:** el MP4 se publica como cualquier adaptación, con la etiqueta extra `crear-tira`, `crear-barrido` o `crear-rotulo` y con «crear · receta …» en el prompt. En el paquete por estanco, la etiqueta va junto al formato y el `externalRef` lleva la receta (`…:cliente-01:crear-barrido`): una pieza creada no se confunde con la adaptada. Sin receta, el `externalRef` es el de siempre.
+- **PNG y JPG** (display e impresión) en «Crear»: sacan un fotograma representativo. Es la tira completa, la mitad del barrido o el arranque del rótulo, y también es lo que se ve en pausa.
+- **Videowalls segmentados:** la receta se compone sobre la pared física (por ejemplo, 7020×960 en el 13x1 V) en `[wall]`. Después se corta por pantalla como siempre: «Exportar entrega» y «Exportar por pantalla». Ver `atlasJob` y `segmentsJob` con `receta`.
+- **Experto:** el plan técnico enseña la orden FFmpeg real de la receta. **Avanzado** resume la receta (piezas, eje del paneo, claim, velocidad y r).
+
+### Proyectos: receta por defecto por formato
+
+La ficha admite `"recetas": {"<formato propio>": "tira" | "barrido" | "rotulo" | "adaptar"}`. `validateFicha` comprueba que el formato sea propio de la ficha y que el valor sea válido. La receta es la que se usa cuando la tarjeta pasa a «Crear». Así, el paquete por estanco crea sin preguntar. `"adaptar"` fuerza el reencuadre de siempre en ese formato. La plantilla trae un ejemplo. Los ajustes del usuario por formato tienen prioridad y se guardan solo si difieren de los de la ficha. Altadis no lleva todavía recetas: hay una propuesta en el informe de la misión.
+
+### Límites
+
+- La tira con vídeo no lleva audio, porque mezcla momentos distintos. Con tramos en bucle dura un tramo.
+- La vista previa de los tramos en bucle usa un `<video>` oculto por tramo, que se resincroniza si se desvía más de 0,3 s. El MP4 es exacto; la vista previa puede ir unos fotogramas desfasada.
+- Las piezas de vídeo se capturan buscando el instante con un `<video>` oculto. Si el origen no es de 25 fps, puede haber un fotograma de diferencia con `-ss`.
+- El GIF animado dura un bucle, también en el barrido: un GIF de 1 s barre en 1 s.
+- Rótulo: el periodo de la tira no tiene por qué dividir la duración, así que el bucle del MP4 puede dar un pequeño salto en el texto. El logo no se guarda al recargar. Una pared muy larga (CORDOBA-098) pinta una tira de unos 17 000 px.
+- No hay IA generativa, maquetación de capas ni zonas seguras automáticas.
+
+### Verificación
+
+- `node --test test/adapter-crear.test.mjs` cubre:
+  - la desproporción y el umbral (incluido r = 2,5 exacto y el caso 9:16);
+  - el saneado de ajustes;
+  - la geometría de la tira (sin solapes, pares, separación, número según r, momentos alineados, tramos, zonas dentro del contenido y distintas, cascada);
+  - el barrido en 4 destinos × ida/vuelta × sentido × zoom: empieza y acaba en los extremos, es monótono, nunca sale del contenido, y la **expresión FFmpeg evaluada en JS da los mismos recortes que la vista previa en cada fotograma**;
+  - el rótulo (layout, desplazamiento = velocidad × tiempo mód. periodo, misma expresión, formato vertical en líneas);
+  - los planes FFmpeg de cada receta con vídeo, imagen y GIF (entradas, audio, `-color_range`, `-r 25`, duración);
+  - los videowalls con receta;
+  - la ficha con `recetas`;
+  - la etiqueta del Stock y el `externalRef` del paquete.
+- Con `ADAPTER_FFMPEG_TEST=1`, FFmpeg nativo convierte un 16:9 de 2 s (y una imagen de 3 s) a 3840×540 con cada receta. ffprobe confirma H.264, 25/1, el número de fotogramas, la duración y el audio. También comprueba:
+  - que la tira con tramos en bucle dura 0,48 s;
+  - que en el barrido la ventana que calcula la vista previa coincide con el fotograma del MP4 mejor que cualquier ventana desplazada ±2/±4 px;
+  - que el rótulo coincide con el PNG superpuesto en el desplazamiento calculado;
+  - que la pared 13x1 V con barrido da 13 pantallas de 540×960 con 50 fotogramas cada una.
+- `test/adaptador-crear.browser.cjs` (Playwright, verja simulada y Stock interceptado) sube un 16:9 de 2 s y añade el 3840×540. Comprueba la etiqueta y el selector, y que la 16:9 siga en «Adaptar». Pinta y exporta las tres recetas con FFmpeg WASM (ffprobe: 3840×540, 25/1, 50 fotogramas, 2 s; audio en barrido y rótulo) y verifica las etiquetas `crear-*` del Stock. Después:
+  - fuerza «Adaptar» y «Crear» y comprueba que persisten;
+  - exporta una PNG fija (tira), un GIF animado (barrido) y un SVG (rótulo);
+  - prueba 390 px e inglés sin desbordamiento.
+
+  Guarda capturas a 1440 y 390 px:
+
+```
+python3 -m http.server 9195 --bind 127.0.0.1 &
+BASE=http://127.0.0.1:9195 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-crear.browser.cjs
+```
+
+- Los e2e `adaptador-imagenes`, `adaptador-formatos` y `adaptador-estancos` prueban el reencuadre en 9:16 con fuentes 16:9. Ahora fuerzan «Adaptar» en esa tarjeta, o aceptan el sufijo de receta en el `externalRef` del paquete.

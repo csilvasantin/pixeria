@@ -86,8 +86,9 @@ export function crearSettings(raw, base = crearDefaults()) {
 // La tira con «tramos en bucle» dura un tramo (D/N): cada celda reproduce el suyo y el player repite.
 export function frames(seconds) { return Math.max(1, Math.round(seconds * FPS)); }
 export function tramo(seconds, n) { return Math.max(1, Math.floor(seconds * FPS / n)) / FPS; }
-export function duracionReceta(cfg, {kind, seconds}) {
-  if (cfg.receta === 'tira' && cfg.tira.bucle && kind === 'video') return tramo(seconds, tiraNumero(cfg));
+// src/dst: para el número automático de piezas de la tira.
+export function duracionReceta(cfg, {kind, seconds, src = null, dst = null}) {
+  if (cfg.receta === 'tira' && cfg.tira.bucle && kind === 'video') return tramo(seconds, src && dst ? tiraN(src, dst, cfg.tira.n) : cfg.tira.n || TIRA.min);
   return seconds;
 }
 // Las piezas de la tira aparecen una tras otra con un fundido corto.
@@ -101,7 +102,6 @@ export function alphaCelda(t, i, c) {
 
 // ── Tira de momentos ────────────────────────────────────────────────────────
 // Número de piezas: automático según la desproporción (redondeada, entre 3 y 5) o el elegido.
-const tiraNumero = cfg => cfg.tira.n || 0;
 export function tiraN(src, dst, n = 0) {
   if (Number.isInteger(n) && n >= TIRA.min && n <= TIRA.max) return n;
   return clamp(Math.round(desproporcion(src, dst)), TIRA.min, TIRA.max);
@@ -179,7 +179,8 @@ function pExpr(p) {
 // Ventana del fotograma n: recortes 1 y 2 y el rectángulo efectivo en el espacio del contenido.
 export function barridoVentana(n, p) {
   const P = barridoP(n, p);
-  const px = p.eje === 'x' ? P * p.ox : p.fx * p.ox, py = p.eje === 'y' ? P * p.oy : p.fy * p.oy;
+  // The fixed axis uses the same 6-decimal constant the FFmpeg expression prints.
+  const px = p.eje === 'x' ? P * p.ox : r6(p.fx * p.ox), py = p.eje === 'y' ? P * p.oy : r6(p.fy * p.oy);
   const x1 = Math.min(2 * Math.floor(px / 2), p.sw - p.cw1), y1 = Math.min(2 * Math.floor(py / 2), p.sh - p.ch1);
   const x2 = Math.max(0, Math.min(p.S2w - p.W, 2 * Math.floor((px - x1) * p.k2x / 2)));
   const y2 = Math.max(0, Math.min(p.S2h - p.H, 2 * Math.floor((py - y1) * p.k2y / 2)));
@@ -270,7 +271,7 @@ export const ROTULO_PNG = 'rotulo.png';
 // audio del original (solo barrido y rótulo con vídeo), la duración y los archivos extra que FFmpeg
 // necesita (la tira del rótulo en PNG). `s` = foco y zoom de la tarjeta; `rotulo` = layout del ticker.
 export function crearGrafo({kind, src, W, H, s, cfg, seconds, input = 'input', label = 'out', rotulo = null}) {
-  const dur = duracionReceta(cfg, {kind, seconds});
+  const dur = duracionReceta(cfg, {kind, seconds, src, dst: {ancho: W, alto: H}});
   const out = {kind, receta: cfg.receta, W, H, duracion: dur, audio: false, extras: [], picture: kind !== 'video'};
   if (cfg.receta === 'barrido') {
     const p = barridoPlan(src, W, H, s, cfg, dur);

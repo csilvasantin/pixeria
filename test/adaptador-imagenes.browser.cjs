@@ -72,8 +72,9 @@ const BASE = process.env.BASE || 'http://127.0.0.1:9187', SHOTS = process.env.SH
     await page.fill('#still-seconds', String(SECONDS)); await page.$eval('#still-seconds', el => el.dispatchEvent(new Event('change', { bubbles: true })));
     // Display 300×250 además de los cuatro formatos de proporción (el panel ☰ entra cerrado: se marca por script, como un clic).
     await page.$eval('#size-categories input[aria-label="Tamaño Medium rectangle"]', el => { el.checked = true; el.dispatchEvent(new Event('change', { bubbles: true })); });
-    // Foco a la izquierda y zoom en el 9:16, como haría el usuario en Avanzado.
-    await page.click('#grid .fmt[data-f="9:16"]');
+    // Foco a la izquierda y zoom en el 9:16, como haría el usuario en Avanzado. La imagen es 16:9 y 9:16 pasa a
+    // «Crear» por la desproporción (r ≈ 3,16, 6-oct-2026): aquí se prueba el reencuadre, así que se fuerza «Adaptar».
+    await page.click('#grid .fmt[data-f="9:16"]'); await page.click('#grid .fmt[data-f="9:16"] .accion-btn[data-accion="adaptar"]');
     await page.$eval('#card-settings [data-k="modo"]', el => { el.value = 'cover'; el.dispatchEvent(new Event('input')); });
     await page.$eval('#card-settings [data-k="fx"]', el => { el.value = '0.2'; el.dispatchEvent(new Event('input')); });
     await page.$eval('#card-settings [data-k="zoom"]', el => { el.value = '1.2'; el.dispatchEvent(new Event('input')); });
@@ -130,7 +131,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:9187', SHOTS = process.env.SH
     if (lang && !process.env.IMAGE) assert.equal(await page.textContent('#stock-list li[role=option] .stk-k'), 'Image');
     await chooseFirst(page);
     if (SHOTS) { await page.waitForTimeout(800); await page.screenshot({ path: path.join(SHOTS, `paso1-imagen-${lang ? 'en-' : ''}${width}.png`), fullPage: width < 500 }); }
-    await page.click('#btn-adaptar'); await page.waitForTimeout(800);
+    await page.click('#btn-adaptar'); await page.waitForTimeout(800); await page.click('#grid .fmt[data-f="9:16"] .accion-btn[data-accion="adaptar"]'); await page.waitForTimeout(200);
     assert.match(await page.textContent('#grid .fmt[data-f="9:16"] .export-one'), lang ? /^Export MP4 · \d+ s$/ : /^Exportar MP4 · \d+ s$/);
     assert.equal(await page.textContent('#btn-volver'), lang ? '← Change image' : '← Cambiar imagen');
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `tarjetas-imagen-${lang ? 'en-' : ''}${width}.png`), fullPage: width < 500 });

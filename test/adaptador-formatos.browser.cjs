@@ -150,6 +150,8 @@ const probe = f => JSON.parse(spawnSync('ffprobe', ['-v', 'error', '-count_frame
     console.log('SVG → PNG', png.file, pb.length, 'B ·', poster.file, qb.length, 'B');
     if (SHOTS) { fs.writeFileSync(path.join(SHOTS, png.file), pb); }
     // MP4 9:16 de 1 s: la línea indica el raster usado (recorte: 1920 de alto; contener: 1080 de ancho).
+    // Reencuadre de siempre: se fuerza «Adaptar» (16:9 → 9:16 pasa a «Crear» por la desproporción).
+    await page.click('#grid .fmt[data-f="9:16"] .accion-btn[data-accion="adaptar"]'); 
     await page.click('#grid .fmt[data-f="9:16"] .export-one');
     await mp4(page, 'Vertical 9:16', [1080, 1920], 25);
     assert.match(await page.textContent('.export-queue'), /Vertical 9:16[\s\S]*SVG vectorial · (3414×1920|1080×608)/);
@@ -172,6 +174,8 @@ const probe = f => JSON.parse(spawnSync('ffprobe', ['-v', 'error', '-count_frame
     const f = await ficha(page); assert.match(f, /Fotogramas6 · 6,67 fps de media/); assert.match(f, /00:00:00 · 0,900 s · un bucle/); assert.match(f, /BuclesInfinito|Buclesinfinito/); assert.match(f, /WebCodecs ImageDecoder/);
     await shot(page, 'gif-animado-1440.png'); await fichaShot(page, 'ficha-gif-1440.png');
     await page.click('#btn-adaptar'); await page.waitForTimeout(600);
+    // 16:9 → 9:16 (r ≈ 3,16) pasa a «Crear» desde el 6-oct-2026: aquí se prueba el reencuadre, así que se fuerza «Adaptar».
+    await page.click('#grid .fmt[data-f="9:16"] .accion-btn[data-accion="adaptar"]'); await page.waitForTimeout(200);
     assert.equal(await page.textContent('#grid .fmt[data-f="9:16"] .export-one'), 'Exportar MP4 · 0,9 s');
     assert.equal(await page.isHidden('#still-wrap'), true);
     await check(page, 'Tamaño Medium rectangle'); await page.waitForTimeout(300);
