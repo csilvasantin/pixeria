@@ -23,6 +23,22 @@
     "codec": "h264",
     "familia": "proyecto"
   },
+  "recetas": {
+    "cliente-06": "barrido",
+    "cliente-10": "barrido",
+    "cliente-14": "barrido",
+    "cliente-esp-2": "barrido",
+    "cliente-esp-3": "barrido",
+    "cliente-esp-5": "barrido",
+    "cliente-12": "tira",
+    "cliente-15": "tira",
+    "cliente-21": "tira",
+    "cliente-esp-1": "tira",
+    "cliente-09": "rotulo",
+    "cliente-18": "rotulo",
+    "cliente-19": "rotulo",
+    "cliente-esp-4": "rotulo"
+  },
   "familias": {
     "proyecto": {"es": "Altadis · estándar + ESPECIAL + MyBlu", "en": "Altadis · standard + ESPECIAL + MyBlu"},
     "especiales": {"es": "Altadis · videowalls segmentados (ESPECIAL)", "en": "Altadis · segmented video walls (ESPECIAL)"}

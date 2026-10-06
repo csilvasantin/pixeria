@@ -65,7 +65,8 @@ function legacyAltadis(EN) {
   esp.layouts.forEach((layout) => { out.push({id: layout.id, nombre: layout.nombre, nameEn: layout.nombre, uso: EN ? layout.useEn : layout.uso, custom: layout.entrega, category: 'digital', especial: true, cliente: true, layout, fps: 25, on: false}); });
   return out;
 }
-const family = ({cliente, proyecto, ...rest}) => rest;
+// `receta` (Crear, 6-oct-2026) la añade la ficha a propósito; se comprueba en adapter-crear.test.mjs.
+const family = ({cliente, proyecto, receta, ...rest}) => rest;
 
 test('Altadis idéntico a hoy: 18 estándar + 6 MyBlu + 5 ESPECIAL, mismos datos, campaña y textos', () => {
   // Las transcripciones no cambian ni un byte respecto a main.
