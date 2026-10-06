@@ -9,6 +9,7 @@ import { publishAdaptation, shortFormat, adaptationTitle } from './stock-publish
 import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily, isProjectFormat, isLibrarySize, applyCampaign, setGroupSelected, groupSelection, selectAllSizes } from './format-catalog.mjs';
 import { GENERAL, YOKUP_URL, PROJECT_KEY, projectStorageKey, formatRef, resolveRef, projectLibrary, projectCampaigns, parseYokup, mergeProjects, migrateStorage, initialProject } from './proyectos-core.mjs';
 import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
+import { sizeGroups, selectionState, toggleSelection, selectionAction } from './format-catalog.mjs';
 import { pngDensity } from './png-density.mjs';
 import { validateEstancos, formatsFor, packagePlan, groupByEstanco, manifest as packageManifest, zipEntries, buildZip, zipName, sourceKey, publishPlan, publishPieces, FFLATE, PROGRAMAR_URL, PROGRAMAR_MAX, programPieces, loteKey } from './estancos-core.mjs';
 import { gifPlayer, hasImageDecoder, decodeHEIC, LIBHEIF, rasterSVG, svgCache } from './fuentes-especiales.mjs';
@@ -305,27 +306,48 @@ function modoEfectivo(f) {
 }
 
 // ── Size library: searching never changes selection ────────────────────────
+// Grupos (Carlos, 6-oct-2026): cada grupo de ☰ y «Todos los tamaños» tienen un control tri-estado.
+// Un clic marca el grupo entero; si ya estaba entero, lo desmarca. Con búsqueda u orientación,
+// actúa solo sobre lo visible y el rótulo lo dice. Los grupos siguen a la familia activa.
+const pickerFiltered = () => !!picker.query.trim() || picker.orientation !== 'all';
+// One tri-state checkbox: indeterminate when partial, the label says what the next click does,
+// Enter works like Space, and focus comes back to it after the picker is rebuilt.
+function selectionControl(members, name, key, filtered, input = document.createElement('input')) {
+  const s = selectionState(members), action = selectionAction(s, {filtered, en: EN});
+  input.type = 'checkbox'; input.dataset.selectKey = key;
+  input.checked = s.all; input.indeterminate = s.partial;
+  input.setAttribute('aria-label', `${name}: ${t(`${s.on} de ${s.total} marcados`, `${s.on} of ${s.total} selected`)}${filtered ? t(' (visibles)', ' (visible)') : ''}. ${action}`);
+  input.onclick = event => event.stopPropagation();
+  input.onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); input.click(); } };
+  input.onchange = () => {
+    toggleSelection(members); buildGrid();
+    const after = selectionState(members);
+    $('#group-status').textContent = `${name}: ${t(`${after.on} de ${after.total} marcados`, `${after.on} of ${after.total} selected`)}`;
+  };
+  return {state: s, action, input};
+}
 function buildPicker() {
   const visible=matchingFormats(FORMATOS,{query:picker.query,orientation:picker.orientation,profile:state.profile});
+  const shown=new Set(visible),filtered=pickerFiltered();
+  const focusKey=document.activeElement?.dataset?.selectKey||null;
   const container=$('#size-categories');container.replaceChildren();
-  for(const cat of CATEGORIES){
-    const formats=visible.filter(f=>f.category===cat.id);if(!formats.length)continue;
-    const detail=document.createElement('details');detail.className='size-category';detail.open=!!picker.query||picker.open.has(cat.id)||state.profile!=='standard';
-    const group=groupSelection(FORMATOS,cat.id);
+  for(const group of sizeGroups(FORMATOS,state.profile)){
+    const formats=group.members.filter(f=>shown.has(f));if(!formats.length)continue;
+    const name=EN?group.en:group.es;
+    const detail=document.createElement('details');detail.className='size-category';detail.dataset.group=group.id;detail.open=!!picker.query||picker.open.has(group.id)||state.profile!=='standard';
     const summary=document.createElement('summary');
-    const title=document.createElement('span');title.textContent=`${EN?cat.en:cat.es} · ${group.total}`;
+    const title=document.createElement('span');title.className='group-title';
+    const control=selectionControl(formats,name,`group:${group.id}`,filtered);
+    const count=document.createElement('small');count.className='group-count';count.textContent=`${control.state.on}/${control.state.total}`;
+    title.append(document.createTextNode(name),count);
     const groupLabel=document.createElement('label');groupLabel.className='group-toggle';
-    const groupBox=document.createElement('input');groupBox.type='checkbox';groupBox.checked=group.all;groupBox.indeterminate=!group.all&&!group.none;
-    groupBox.setAttribute('aria-label',t('Seleccionar todo el grupo','Select the whole group'));
     groupLabel.addEventListener('click',event=>event.stopPropagation());
-    groupBox.addEventListener('click',event=>event.stopPropagation());
-    groupBox.onchange=()=>{setGroupSelected(FORMATOS,cat.id,groupBox.checked);buildGrid();};
-    const groupText=document.createElement('span');groupText.textContent=t('Seleccionar todo el grupo','Select the whole group');
-    groupLabel.append(groupBox,groupText);summary.append(title,groupLabel);detail.append(summary);
-    detail.ontoggle=()=>{if(detail.open)picker.open.add(cat.id);else picker.open.delete(cat.id);};
+    const groupText=document.createElement('span');groupText.textContent=control.action;groupText.setAttribute('aria-hidden','true');
+    groupLabel.append(control.input,groupText);summary.append(title,groupLabel);detail.append(summary);
+    detail.ontoggle=()=>{if(detail.open)picker.open.add(group.id);else picker.open.delete(group.id);};
     for(const f of formats){
       const label=document.createElement('label');label.className='size-option';
-      const input=document.createElement('input');input.type='checkbox';input.checked=f.on;input.setAttribute('aria-label',`${t('Tamaño','Size')} ${f.nombre}`);
+      const input=document.createElement('input');input.type='checkbox';input.checked=f.on;input.dataset.selectKey=`size:${f.id}`;input.setAttribute('aria-label',`${t('Tamaño','Size')} ${f.nombre}`);
       input.onchange=()=>{f.on=input.checked;buildGrid();};
       const text=document.createElement('span');const name=document.createElement('strong');name.textContent=f.nombre;
       const dims=document.createElement('small');const p=perfil(f);dims.textContent=f.especial?`${p.ancho} × ${p.alto} px · ${f.layout.pantallas} ${t('pantallas','screens')} · MP4`:`${p.ancho} × ${p.alto} px · ${f.output==='png'?'PNG':'MP4'}${f.regional?t(' · Polonia',' · Poland'):''}`;
@@ -333,6 +355,12 @@ function buildPicker() {
     }
     container.append(detail);
   }
+  // «Todos los tamaños»: the same tri-state control over everything the panel shows.
+  const all=selectionControl(visible,t('Todos los tamaños','All sizes'),'all',filtered,$('#all-sizes'));
+  all.input.disabled=!visible.length;
+  $('#all-sizes-action').textContent=visible.length?all.action:t('Sin tamaños visibles','No visible sizes');
+  $('#all-sizes-count').textContent=`${all.state.on}/${all.state.total}`;
+  if(focusKey){const back=document.querySelector(`[data-select-key="${CSS.escape(focusKey)}"]`);if(back)back.focus();}
   $('#search-status').textContent=t(`${visible.length} tamaños disponibles`,`${visible.length} sizes available`);
   $('#size-no-results').hidden=!!visible.length;
   $('#campaigns').querySelectorAll('[data-campaign]').forEach(button=>{
@@ -352,7 +380,6 @@ function renderCampaigns() {
     b.onclick=()=>{const profile=c.profile||'standard';state.profile=profile;$('#format-profile').value=profile;syncCompat();applyCampaign(FORMATOS,c.id,campaigns);buildGrid();};return b;
   }));
 }
-$('#all-sizes').onclick=()=>{state.profile='standard';$('#format-profile').value='standard';syncCompat();selectAllSizes(FORMATOS);buildGrid();};
 $('#size-search').oninput=e=>{picker.query=e.target.value;buildPicker();};
 $('#size-orientation').onchange=e=>{picker.orientation=e.target.value;buildPicker();};
 $('#clear-formats').onclick=()=>{selectedFormats().forEach(f=>f.on=false);buildGrid();};

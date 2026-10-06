@@ -1,8 +1,8 @@
 {
-  "version": "v.06.10.2026.r3.20:56",
+  "version": "v.06.10.2026.r4.21:26",
   "deployer": "MorfeoMacMini",
   "machine": "MacMini",
   "signature": "MorfeoMacMini · MacMini",
   "agent": "MorfeoMacMini",
-  "evidence": "Adaptador: programación de players desde el servidor (/players-programar, modo prueba sin cambios y real con STOCK_NOTIFY_KEY en Pages) y tema Matrix verde como el resto de Pixeria."
+  "evidence": "Adaptador · ☰ Tamaños: marcar y desmarcar un grupo entero de un clic (tri-estado), también en proyectos (Altadis estándar, MyBlu, especiales) y con filtro."
 }

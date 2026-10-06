@@ -119,3 +119,40 @@ export function selectAllSizes(formats) {
  }
  return n;
 }
+
+// ── Selección por grupos del panel ☰ (Carlos, 6-oct-2026) ──────────────────
+// Un clic en el control de un grupo marca el grupo entero; si ya estaba entero, lo desmarca.
+// Los grupos dependen de la familia activa: en la biblioteca, las cuatro categorías (con los
+// tamaños propios dentro de Digital); en un proyecto, estándar, MyBlu y especiales (videowalls).
+// Con búsqueda u orientación activas, el control actúa solo sobre lo visible.
+export const PROJECT_GROUPS = [
+ {id:'estandar',es:'Estándar',en:'Standard',matches:f=>!f.especial&&!f.myblu},
+ {id:'myblu',es:'MyBlu',en:'MyBlu',matches:f=>!f.especial&&!!f.myblu},
+ {id:'especiales',es:'Especiales · videowalls',en:'Specials · video walls',matches:f=>!!f.especial},
+];
+export const inFamily = (f, profile = 'standard') => profile === 'proyecto' ? isProjectFormat(f) : formatFamily(f) === profile;
+export function sizeGroups(formats, profile = 'standard') {
+ const family = formats.filter(f => inFamily(f, profile));
+ const defs = profile === 'standard' ? CATEGORIES.map(c => ({...c, matches: f => f.category === c.id})) : PROJECT_GROUPS;
+ return defs.map(({matches, ...d}) => ({...d, members: family.filter(matches)})).filter(g => g.members.length);
+}
+// Tri-estado: 'true' (todos), 'false' (ninguno) o 'mixed' (algunos), como aria-checked.
+export function selectionState(members) {
+ const total = members.length, on = members.filter(f => f.on).length;
+ const all = total > 0 && on === total, none = on === 0;
+ return {total, on, all, none, partial: !all && !none, checked: all ? 'true' : none ? 'false' : 'mixed'};
+}
+// Todos marcados → desmarca todos; ninguno o algunos → marca todos. Devuelve el nuevo valor.
+export function toggleSelection(members) {
+ const value = !selectionState(members).all;
+ for (const f of members) f.on = value;
+ return value;
+}
+// Rótulo de la acción que hará el próximo clic: «Marcar los 8», «Desmarcar los 8»,
+// «Marcar 5 visibles» (con filtro activo).
+export function selectionAction(state, {filtered = false, en = false} = {}) {
+ const n = state.total, off = state.all;
+ if (filtered) return en ? `${off ? 'Clear' : 'Select'} ${n} visible` : `${off ? 'Desmarcar' : 'Marcar'} ${n} ${n === 1 ? 'visible' : 'visibles'}`;
+ if (n === 1) return en ? (off ? 'Clear 1' : 'Select 1') : (off ? 'Desmarcar 1' : 'Marcar 1');
+ return en ? `${off ? 'Clear' : 'Select'} all ${n}` : `${off ? 'Desmarcar' : 'Marcar'} los ${n}`;
+}
