@@ -171,8 +171,9 @@ export const zipName = (doc, est = null) => `${doc.proyecto}${est ? `-${est.slug
 // lote, y el Stock ya deduplica por contenido (SHA-256). El reparto exacto estanco × pantalla va en
 // `comment` (lo busca /stock/list?q=) y en el manifiesto.
 const cleanTag = t => String(t || '').toLowerCase().replace(/[#·.]/g, '').trim().slice(0, STOCK_TAG_MAX);
-export function publishTags({proyectoTag = 'altadis', formato, rows, totalEstancos}) {
-  const base = [proyectoTag, 'adaptación', formato, ...new Set(rows.map(r => `pantalla-${r.pantalla}`))].map(cleanTag);
+// receta (Crear, 6-oct-2026): crear-tira / crear-barrido / crear-rotulo junto al formato.
+export function publishTags({proyectoTag = 'altadis', formato, rows, totalEstancos, receta = null}) {
+  const base = [proyectoTag, 'adaptación', formato, receta ? `crear-${receta}` : null, ...new Set(rows.map(r => `pantalla-${r.pantalla}`))].filter(Boolean).map(cleanTag);
   const estancos = [...new Set(rows.map(r => r.estanco))];
   const own = estancos.map(id => cleanTag(`estanco-${id}`));
   const tags = base.length + own.length <= STOCK_TAGS_OWN ? [...base, ...own]
@@ -184,12 +185,13 @@ export function publishComment({doc, rows}) {
 }
 // Qué piezas faltan en el Stock: `known` = Map(externalRef → {id, num}) con lo ya publicado (índice
 // del Stock y registro local). Las que ya están no se vuelven a subir.
-export function publishPlan({doc, plan, formatos, fuente, known = new Map(), totalEstancos = doc.estancos.length, proyectoTag = 'altadis'}) {
+export function publishPlan({doc, plan, formatos, fuente, known = new Map(), totalEstancos = doc.estancos.length, proyectoTag = 'altadis', recetas = {}}) {
   return formatos.map(formato => {
     const rows = plan.filter(r => r.formato === formato);
-    const externalRef = stockRef(doc.proyecto, fuente?.clave, formato);
+    // Una pieza creada con receta es otra pieza: su externalRef lleva la receta (las demás no cambian).
+    const externalRef = stockRef(doc.proyecto, fuente?.clave, recetas[formato] ? `${formato}:crear-${recetas[formato]}` : formato);
     const prev = externalRef ? known.get(externalRef) : null;
-    return {formato, rows, externalRef, tags: publishTags({proyectoTag, formato, rows, totalEstancos}), comment: publishComment({doc, rows}), skip: !!prev, prev: prev || null};
+    return {formato, rows, externalRef, tags: publishTags({proyectoTag, formato, rows, totalEstancos, receta: recetas[formato] || null}), comment: publishComment({doc, rows}), skip: !!prev, prev: prev || null};
   });
 }
 // Payload final: el de las adaptaciones (stockPayload) con las etiquetas del proyecto, el

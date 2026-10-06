@@ -18,13 +18,15 @@ export function shortFormat(format, output) {
 export function adaptationTitle(title, client, format) {
   return [String(title || '').trim(), client?.nombre, format].filter(Boolean).join(' · ').slice(0, 300);
 }
-export function stockPayload({base64, size, title, originId, client, format, width, height, duration, still}) {
+// Crear (6-oct-2026): un MP4 hecho con una receta lleva además su etiqueta (crear-tira, crear-barrido, crear-rotulo).
+export const recipeTag = receta => ['tira', 'barrido', 'rotulo'].includes(receta) ? `crear-${receta}` : null;
+export function stockPayload({base64, size, title, originId, client, format, width, height, duration, still, receta}) {
   const resolution = `${width}×${height}`;
-  const tags = [ADAPTATION_TAG, RATIO.test(format) ? format : null, still ? STILL_TAG : null, client?.id].filter(Boolean);
+  const tags = [ADAPTATION_TAG, RATIO.test(format) ? format : null, still ? STILL_TAG : null, recipeTag(receta), client?.id].filter(Boolean);
   return {
     type: 'video', motor: 'adaptador', mime: 'video/mp4', base64, quality: 'good',
     title,
-    prompt: [`Adaptación · origen ${originId || 'archivo local'}`, still ? `imagen fija · ${Math.round(duration)} s` : null, `formato ${format}`, resolution, client ? `cliente ${client.id}` : null].filter(Boolean).join(' · '),
+    prompt: [`Adaptación · origen ${originId || 'archivo local'}`, recipeTag(receta) ? `crear · receta ${receta}` : null, still ? `imagen fija · ${Math.round(duration)} s` : null, `formato ${format}`, resolution, client ? `cliente ${client.id}` : null].filter(Boolean).join(' · '),
     tags,
     externalRef: originId || null,
     validacion: {ok: true, ancho: width, alto: height, duracion: Number.isFinite(duration) ? Math.round(duration * 100) / 100 : null, por: 'adaptador'},

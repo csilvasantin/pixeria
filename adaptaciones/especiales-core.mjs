@@ -53,17 +53,22 @@ const crop = r => `crop=${r.w}:${r.h}:${r.x}:${r.y},setsar=1`;
 const master = (source, g, mode, s) => `[0:v]fps=${FPS}[src];${composeFilter(source, g.pared.ancho, g.pared.alto, mode, s, 'wall', 'src')}`;
 const split = (N, prefix) => `[wall]split=${N}${Array.from({length: N}, (_, i) => `[${prefix}${i + 1}]`).join('')}`;
 
+// Crear (6-oct-2026): `receta` (crear-core: crearPared) replaces the reframed master with a recipe
+// composed on the physical wall in [wall]: its own inputs, its own graph and, for pictures, -color_range tv.
+const range = receta => receta?.picture ? ['-color_range', 'tv'] : [];
 // One pass: compose the wall, split it and encode one silent MP4 per screen.
 // Same input, same graph and the same output rate give the same frame count.
-export function segmentsJob(source, layout, mode, s, tech) {
+export function segmentsJob(source, layout, mode, s, tech, receta = null) {
   const g = geometry(layout), N = g.segments.length;
   const rate = segmentKbps(layout, tech.bitrateKbps);
-  const filter = [master(source, g, mode, s), split(N, 'w'),
+  const filter = [receta ? receta.graph : master(source, g, mode, s), split(N, 'w'),
     ...g.segments.map(seg => `[w${seg.n}]${crop(seg.wall)}[s${seg.n}]`)].join(';');
-  const args = ['-i', 'input', '-filter_complex', filter];
+  const args = [...(receta ? receta.inputs : ['-i', 'input']), '-filter_complex', filter];
   const outputs = g.segments.map(seg => {
     const file = `seg${seg.n}.mp4`;
-    args.push('-map', `[s${seg.n}]`, '-an', ...encode(rate, tech.segmentPerfil, tech.segmentNivel),
+    const enc = encode(rate, tech.segmentPerfil, tech.segmentNivel), at = enc.indexOf('yuv420p') + 1;
+    enc.splice(at, 0, ...range(receta));
+    args.push('-map', `[s${seg.n}]`, '-an', ...enc,
       '-movflags', '+faststart', '-fs', String(128 * 1048576), file);
     return {file, filename: segmentFilename(layout, seg.n), W: seg.wall.w, H: seg.wall.h, n: seg.n, N};
   });
@@ -72,15 +77,17 @@ export function segmentsJob(source, layout, mode, s, tech) {
 
 // The delivery file the PDF specifies: cells packed in reading order on the table
 // resolution, unused cells left black. Audio is kept when the source has it.
-export function atlasJob(source, layout, mode, s, tech) {
+export function atlasJob(source, layout, mode, s, tech, receta = null) {
   const g = geometry(layout), [W, H] = layout.entrega, N = g.segments.length;
-  const parts = [master(source, g, mode, s), split(N, 'w'),
+  const parts = [receta ? receta.graph : master(source, g, mode, s), split(N, 'w'),
     ...g.segments.map(seg => `[w${seg.n}]${crop(seg.wall)}[c${seg.n}]`),
     `[c1]pad=${W}:${H}:${g.segments[0].atlas.x}:${g.segments[0].atlas.y}:color=black[t1]`,
     ...g.segments.slice(1).map(seg => `[t${seg.n - 1}][c${seg.n}]overlay=x=${seg.atlas.x}:y=${seg.atlas.y}:format=auto${seg.n === N ? ',setsar=1[out]' : `[t${seg.n}]`}`)];
-  const rate = tech.bitrateKbps;
+  const rate = tech.bitrateKbps, audio = !receta || receta.audio;
+  const enc = encode(rate, tech.h264Perfil, tech.h264Nivel);
+  enc.splice(enc.indexOf('yuv420p') + 1, 0, ...range(receta));
   return {kind: 'atlas', filename: atlasFilename(layout), W, H, bitrateKbps: rate,
-    args: ['-i', 'input', '-filter_complex', parts.join(';'), '-map', '[out]', '-map', '0:a?',
-      ...encode(rate, tech.h264Perfil, tech.h264Nivel), '-c:a', 'aac', '-b:a', '128k',
+    args: [...(receta ? receta.inputs : ['-i', 'input']), '-filter_complex', parts.join(';'), '-map', '[out]', ...(audio ? ['-map', '0:a?'] : ['-an']),
+      ...enc, ...(audio ? ['-c:a', 'aac', '-b:a', '128k'] : []),
       '-movflags', '+faststart', '-fs', String(128 * 1048576), 'output.mp4']};
 }
