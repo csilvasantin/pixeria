@@ -13,5 +13,9 @@
     "Adaptador en verde Matrix, como el resto de Pixeria",
     "Programación de players de los estancos desde el servidor, con modo de prueba sin cambios",
     "La clave de admira.tv se guarda en el servidor y nunca llega al navegador"
+  ],
+  "v.06.10.2026.r4.21:26": [
+    "Adaptador: un clic marca un grupo de tamaños entero y otro lo desmarca",
+    "Funciona también en Altadis (estándar, MyBlu y videowalls) y con búsqueda o filtro activo"
   ]
 }
