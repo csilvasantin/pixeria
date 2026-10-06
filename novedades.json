@@ -3,5 +3,10 @@
   "default": [
     "Sello de versión con novedades al pasar el ratón",
     "Marca NUEVO cuando hay una versión que aún no has visto"
+  ],
+  "v.06.10.2026.r2.20:13": [
+    "Adaptador: paquete por estanco para los 9 estancos Altadis",
+    "ZIP por estanco o de todos, con manifiesto y hash de cada pieza",
+    "Publicación al Stock con etiquetas de proyecto, estanco, pantalla y formato, sin duplicados"
   ]
 }

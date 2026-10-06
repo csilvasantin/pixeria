@@ -15,6 +15,7 @@
     "estandar": {"archivo": "../perfil-cliente-18.json", "clave": "formats"},
     "especiales": {"archivo": "../perfil-cliente-especiales.json", "clave": "layouts"}
   },
+  "estancos": {"archivo": "estancos/altadis-estancos-bcn.json"},
   "ajustes": {
     "metodo": "auto",
     "compatibilidad": "uhd",

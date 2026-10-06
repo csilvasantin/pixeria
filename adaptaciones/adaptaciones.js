@@ -10,6 +10,7 @@ import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, re
 import { GENERAL, YOKUP_URL, PROJECT_KEY, projectStorageKey, formatRef, resolveRef, projectLibrary, projectCampaigns, parseYokup, mergeProjects, migrateStorage, initialProject } from './proyectos-core.mjs';
 import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
 import { pngDensity } from './png-density.mjs';
+import { validateEstancos, formatsFor, packagePlan, groupByEstanco, manifest as packageManifest, zipEntries, buildZip, zipName, sourceKey, publishPlan, publishPieces, FFLATE } from './estancos-core.mjs';
 import { gifPlayer, hasImageDecoder, decodeHEIC, LIBHEIF, rasterSVG, svgCache } from './fuentes-especiales.mjs';
 
 const EN = document.documentElement.lang === 'en';
@@ -111,6 +112,7 @@ function especialJobs(f,kinds,src=state.src) {
 // Every finished MP4 is also saved to the Stock as a new video: «<title> · <client> · <format>».
 let savingToStock=0;
 async function saveToStock(item,file) {
+  if(item.paquete){onPackageFile(item,file);return;} // el paquete por estanco publica con sus propias etiquetas
   if(file.blob.type!=='video/mp4') return;
   savingToStock++;try {await saveOne(item,file);} finally {savingToStock--;}
 }
@@ -138,8 +140,8 @@ function paintBatch(rows) {
   if (status) status.textContent = `${finished}/${batchTotal}`;
 }
 const queue = createExportQueue({
-  engine:createEngine(),t,onChange:paintBatch,
-  onCreate(item){ if (batchIds) batchIds.add(item.id); },
+  engine:createEngine(),t,onChange:rows=>{paintBatch(rows);paintPackageRows(rows);},
+  onCreate(item){ if (batchIds) batchIds.add(item.id); if (item.paquete && pkg && item.paquete === pkg.id && item.format) pkg.items.set(item.id, item.format.id); },
   onComplete:saveToStock,
   onRelease:url=>{if(url!==sourceObjectURL&&url!==stillInput.url&&url!==derivedURL&&url.startsWith('blob:'))URL.revokeObjectURL(url);}
 });
@@ -176,7 +178,7 @@ async function svgExportSource(output,mode,s) {
 }
 const pngBlob=canvas=>new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
 // kinds: 'both' | 'atlas' | 'segments' for special layouts; 'jpg' turns picture outputs into JPG.
-async function exportFormats(formats,kinds='both') {
+async function exportFormats(formats,kinds='both',extra=null) {
   if(!state.src.ancho || !formats.length) return;
   const status=$('#export-status');status.textContent='';
   const still=isImage(),animated=isAnim(),seconds=stillSec,duration=animated?animSeconds:still?seconds:video.duration;
@@ -194,7 +196,7 @@ async function exportFormats(formats,kinds='both') {
   const kind=animated?t('GIF animado','animated GIF'):svgSrc?t('SVG vectorial','vector SVG'):t('imagen fija','still image');
   const sub=isPicture()?`${state.srcName} · ${kind}`:state.srcName;
   // Frozen at click time: original content, active client (top bar selector) and duration.
-  const ctx={origin:{...state.origin},client:window.PixeriaCliente?.actual?.()||null,duration,still};
+  const ctx={origin:{...state.origin},client:window.PixeriaCliente?.actual?.()||null,duration,still,...(extra||{})};
   batchIds = new Set();
   batchTotal = pngFormats.length + jobs.length;
   status.textContent = `0/${batchTotal}`;
@@ -460,6 +462,7 @@ function refreshInfo() {
   const chosen=selectedFormats().length;
   $('#export-all').textContent=t(`Adaptar · ${chosen}`,`Adapt · ${chosen}`);
   $('#export-all').disabled=!state.src.ancho || !chosen;
+  syncEstancosButton();
   const allCount=FORMATOS.filter(isLibrarySize).length;
   const allLabel=$('#all-sizes .all-sizes-count');if(allLabel)allLabel.textContent=String(allCount);
   document.querySelectorAll('.export-one').forEach(el=>el.disabled=!state.src.ancho);
@@ -927,6 +930,219 @@ $('#format-profile').onchange = (e) => {
 $('#compat').onchange = (e) => { state.compat = e.target.value; buildGrid(); };
 
 
+// ── Estancos y circuito (Carlos, 6-oct-2026) ────────────────────────────────
+// Con el proyecto activo y su JSON de estancos (ficha.estancos): elegir uno, varios o todos,
+// «Preparar paquete» marca exactamente los formatos de sus pantallas y los exporta en la cola.
+// Cada formato se codifica una vez; el ZIP (por estanco o global) copia el archivo en cada pantalla
+// que lo usa, con manifest.json. La casilla Stock publica una pieza por fuente y formato con las
+// etiquetas del proyecto y un externalRef estable (sin duplicados). No programa players: ver
+// docs/adaptador.md · «Estancos y circuito».
+let EST = null;              // JSON de estancos del proyecto activo (validado) o null
+const estSel = new Set();    // ids elegidos
+let pkg = null, pkgSeq = 0;  // paquete en curso
+const EST_KEY = id => `pixeria.adapter.estancos.${id}`;
+const STOCK_REFS_KEY = 'pixeria.adapter.stock-refs';
+const projectFormatList = () => FORMATOS.filter(f => f.proyecto);
+function setEstancos(doc) {
+  EST = null; estSel.clear();
+  if (doc && FICHA) {
+    const errors = validateEstancos(doc, {formats: projectFormatList(), proyecto: FICHA.id});
+    if (errors.length) console.warn('[estancos]', errors); else EST = doc;
+  }
+  if (EST) { try { (JSON.parse(localStorage.getItem(EST_KEY(FICHA.id))) || []).forEach(id => { if (EST.estancos.some(e => e.id === id)) estSel.add(id); }); } catch (_) {} }
+  renderEstancos();
+}
+function saveEstSel() { if (!EST) return; try { localStorage.setItem(EST_KEY(EST.proyecto), JSON.stringify([...estSel])); } catch (_) {} }
+const fmtById = id => FORMATOS.find(f => f.id === id);
+function renderEstancos() {
+  const box = $('#estancos'); if (!box) return;
+  box.hidden = !EST; if (!EST) { $('#paquete').hidden = true; return; }
+  const demo = EST.estado === 'demo' ? t(' · demo: parque pendiente de confirmar', ' · demo: screens pending confirmation') : '';
+  $('#estancos-nota').textContent = `${t('Circuito', 'Circuit')} ${EST.circuito} · ${EST.estancos.length} ${t('estancos', 'shops')}${demo}.`;
+  $('#estancos-criterio').textContent = EN ? EST.mapa.criterioEn : EST.mapa.criterio;
+  $('#estancos-n').textContent = String(EST.estancos.length);
+  const list = $('#estancos-lista'); list.replaceChildren();
+  for (const est of EST.estancos) {
+    const li = document.createElement('li'); li.className = 'estanco';
+    const label = document.createElement('label');
+    const box2 = document.createElement('input'); box2.type = 'checkbox'; box2.value = est.id; box2.checked = estSel.has(est.id);
+    box2.setAttribute('aria-label', `${t('Estanco', 'Shop')} ${est.nombre}`);
+    box2.onchange = () => { if (box2.checked) estSel.add(est.id); else estSel.delete(est.id); saveEstSel(); syncEstancosButton(); };
+    const text = document.createElement('span'), name = document.createElement('strong'), meta = document.createElement('small');
+    name.textContent = `${est.orden}. ${est.nombre}`;
+    meta.textContent = `${est.direccion}${est.expendeduria ? ` · ${t('expendeduría', 'licence')} ${est.expendeduria.numero}` : ''}`;
+    text.append(name, meta);
+    const screens = document.createElement('ul'); screens.className = 'estanco-pantallas';
+    for (const p of est.pantallas) {
+      const f = fmtById(p.formato), s = document.createElement('li');
+      s.textContent = `${EN ? p.nameEn : p.nombre} · ${p.ancho}×${p.alto} → ${p.formato}${f ? ` ${f.nombre}` : ''}`;
+      screens.append(s);
+    }
+    text.append(screens); label.append(box2, text); li.append(label); list.append(li);
+  }
+  syncEstancosButton();
+}
+function syncEstancosButton() {
+  const btn = $('#estancos-preparar'); if (!btn || !EST) return;
+  const all = $('#estancos-todos'), n = estSel.size;
+  all.checked = n === EST.estancos.length; all.indeterminate = n > 0 && !all.checked;
+  const fmts = formatsFor(EST, [...estSel]), screens = EST.estancos.filter(e => estSel.has(e.id)).reduce((a, e) => a + e.pantallas.length, 0);
+  btn.textContent = n ? t(`Preparar paquete · ${n} ${n === 1 ? 'estanco' : 'estancos'} · ${fmts.length} ${fmts.length === 1 ? 'formato' : 'formatos'}`, `Prepare package · ${n} ${n === 1 ? 'shop' : 'shops'} · ${fmts.length} ${fmts.length === 1 ? 'format' : 'formats'}`) : t('Preparar paquete', 'Prepare package');
+  btn.disabled = !n || !state.src.ancho || (pkg && pkg.running);
+  const st = $('#estancos-status');
+  if (st && !(pkg && pkg.running)) st.textContent = !state.src.ancho ? t('Elige primero un contenido (paso 1).', 'Choose some content first (step 1).') : n ? t(`${screens} pantallas reciben ${fmts.length} ${fmts.length === 1 ? 'formato' : 'formatos'}.`, `${screens} screens get ${fmts.length} ${fmts.length === 1 ? 'format' : 'formats'}.`) : t('Elige uno, varios o todos los estancos.', 'Pick one, several or all shops.');
+}
+$('#estancos-todos').onchange = e => { estSel.clear(); if (e.target.checked && EST) EST.estancos.forEach(x => estSel.add(x.id)); saveEstSel(); renderEstancos(); };
+const hexOf = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+const sha256 = async data => hexOf(await crypto.subtle.digest('SHA-256', data));
+// Fuente estable del lote: el id del Stock o el SHA-256 del archivo (o de la URL remota).
+async function packageSource() {
+  const f = {id: state.origin.id || null, titulo: state.origin.title || state.srcName, url: fuente?.url || null, clave: null};
+  if (f.id) f.clave = sourceKey({stockId: f.id});
+  else if (fuente?.file) f.clave = sourceKey({sha256: await sha256(await fuente.file.arrayBuffer())});
+  else if (fuente?.url) f.clave = sourceKey({sha256: await sha256(new TextEncoder().encode(fuente.url))});
+  return f;
+}
+$('#estancos-preparar').onclick = async () => {
+  if (!EST || !estSel.size || !state.src.ancho) return;
+  const ids = EST.estancos.filter(e => estSel.has(e.id)).map(e => e.id), formatos = formatsFor(EST, ids);
+  // Marca exactamente esos formatos (solo los del proyecto; la biblioteca general no se toca).
+  state.profile = 'proyecto'; $('#format-profile').value = 'proyecto'; syncCompat();
+  projectFormatList().forEach(f => { f.on = formatos.includes(f.id); });
+  buildGrid();
+  const formats = formatos.map(fmtById).filter(Boolean);
+  pkg = {id: ++pkgSeq, ids, formatos, plan: packagePlan(EST, ids, projectFormatList()), fuente: await packageSource(), files: new Map(), items: new Map(), fallos: new Map(), publicar: $('#estancos-stock').checked, stock: new Map(), log: [], running: true, published: false, generado: new Date().toISOString()};
+  $('#estancos-status').textContent = t(`Paquete en la cola: ${formats.length} ${formats.length === 1 ? 'formato' : 'formatos'} para ${ids.length} ${ids.length === 1 ? 'estanco' : 'estancos'}.`, `Package queued: ${formats.length} ${formats.length === 1 ? 'format' : 'formats'} for ${ids.length} ${ids.length === 1 ? 'shop' : 'shops'}.`);
+  renderPackage();
+  const mine = pkg;
+  await exportFormats(formats, 'atlas', {paquete: mine.id});
+  // Sin líneas en la cola (presupuesto de memoria o contenido no válido): el motivo está en #export-status.
+  if (mine === pkg && !mine.items.size && !mine.files.size) { mine.running = false; $('#estancos-status').textContent = $('#export-status').textContent || t('No se pudo poner el paquete en la cola.', 'Could not queue the package.'); renderPackage(); }
+  syncEstancosButton();
+};
+// Un archivo terminado de la cola: se guarda con su hash para el ZIP y el manifiesto.
+async function onPackageFile(item, file) {
+  if (!pkg || item.paquete !== pkg.id || !item.format) return;
+  const p = pkg, data = new Uint8Array(await file.blob.arrayBuffer());
+  p.files.set(item.format.id, {data, blob: file.blob, bytes: data.length, duracion: item.duration, sha256: await sha256(data), mime: file.blob.type, item});
+  p.fallos.delete(item.format.id);
+  if (p !== pkg) return;
+  checkPackage();
+}
+// Errores o cancelaciones de líneas del paquete (la cola avisa en cada cambio).
+function paintPackageRows(rows) {
+  const p = pkg; if (!p || !p.running) return;
+  let changed = false;
+  for (const row of rows) {
+    const id = p.items.get(row.id);
+    if (id && (row.state === 'error' || row.state === 'cancelled') && !p.files.has(id) && p.fallos.get(id) !== row.state) { p.fallos.set(id, row.state); changed = true; }
+  }
+  if (changed) checkPackage();
+}
+function checkPackage() {
+  const p = pkg; if (!p) return;
+  const done = p.formatos.filter(id => p.files.has(id)).length;
+  if (p.running && p.fallos.size && done + p.fallos.size >= p.formatos.length) {
+    p.running = false;
+    $('#estancos-status').textContent = t(`Paquete incompleto: no salieron ${[...p.fallos.keys()].join(', ')}. Vuelve a preparar el paquete.`, `Incomplete package: ${[...p.fallos.keys()].join(', ')} failed. Prepare the package again.`);
+  }
+  if (done === p.formatos.length && p.running) {
+    p.running = false;
+    $('#estancos-status').textContent = t('Paquete listo: descarga el ZIP por estanco o el de todos.', 'Package ready: download the ZIP per shop or for all.');
+    if (p.publicar) publishPackage();
+  }
+  renderPackage(); syncEstancosButton();
+}
+function renderPackage() {
+  const sec = $('#paquete'); if (!sec) return;
+  const p = pkg; sec.hidden = !p || !EST; if (!p || !EST) return;
+  const done = p.formatos.filter(id => p.files.has(id)).length, ready = done === p.formatos.length;
+  $('#paquete-progreso').textContent = `${done}/${p.formatos.length} ${t('formatos', 'formats')}`;
+  $('#paquete-fuente').textContent = `${t('Fuente', 'Source')}: ${p.fuente.titulo || '—'}${p.fuente.id ? ` · Stock ${p.fuente.id}` : ''} · ${p.ids.length} ${t('estancos', 'shops')} · ${p.plan.length} ${t('pantallas', 'screens')}`;
+  const zipAll = $('#paquete-zip'); zipAll.disabled = !ready; zipAll.textContent = `${t('ZIP · todos', 'ZIP · all')} (${p.ids.length})`;
+  const pub = $('#paquete-publicar'); pub.disabled = !ready || p.publishing;
+  const box = $('#paquete-grupos'); box.replaceChildren();
+  for (const g of groupByEstanco(p.plan)) {
+    const el = document.createElement('div'); el.className = 'paquete-grupo'; el.dataset.estanco = g.estanco;
+    const hd = document.createElement('div'); hd.className = 'paquete-grupo-hd';
+    const h = document.createElement('h3'); h.textContent = g.nombre;
+    const zip = document.createElement('button'); zip.type = 'button'; zip.className = 'pill export-one paquete-zip-estanco'; zip.textContent = 'ZIP'; zip.disabled = !ready;
+    zip.setAttribute('aria-label', `ZIP · ${g.nombre}`); zip.onclick = () => downloadZip(g.estanco);
+    hd.append(h, zip); el.append(hd);
+    const ul = document.createElement('ul');
+    for (const r of g.rows) {
+      const li = document.createElement('li'), f = p.files.get(r.formato), s = p.stock.get(r.formato);
+      li.innerHTML = `<code></code><small></small>`;
+      li.querySelector('code').textContent = r.archivo.split('/').pop();
+      li.querySelector('small').textContent = `${EN ? r.pantallaNameEn : r.pantallaNombre} · ${f ? `${(f.bytes / 1048576).toFixed(1)} MB` : p.fallos.has(r.formato) ? t('falló', 'failed') : t('en cola', 'queued')}${s ? ` · Stock ${s.num ? '#' + s.num : s.id}` : ''}`;
+      ul.append(li);
+    }
+    el.append(ul); box.append(el);
+  }
+  const log = $('#paquete-stock'); log.hidden = !p.log.length;
+  $('#paquete-stock-log').replaceChildren(...p.log.map(l => { const li = document.createElement('li'); li.textContent = `${l.formato} · ${({publicada: t('publicada', 'published'), reutilizada: t('ya estaba (mismo contenido)', 'already there (same content)'), 'ya-estaba': t('ya estaba', 'already there'), error: t('error', 'error'), omitida: t('omitida', 'skipped')})[l.estado] || l.estado}${l.num ? ` #${l.num}` : l.id ? ` ${l.id}` : ''}${l.error ? ` · ${l.error}` : ''}`; return li; }));
+}
+// fflate fijado en jsDelivr, comprobado por SHA-256 antes de importarlo (como libheif).
+let fflateLoading = null;
+function loadFflate() {
+  if (!fflateLoading) fflateLoading = (async () => {
+    const r = await fetch(FFLATE.url, {credentials: 'omit'}); if (!r.ok) throw new Error('zip-download');
+    const code = await r.arrayBuffer();
+    if (await sha256(code) !== FFLATE.sha256) throw new Error('zip-integrity');
+    const url = URL.createObjectURL(new Blob([code], {type: 'text/javascript'}));
+    try { return await import(/* @vite-ignore */ url); } finally { URL.revokeObjectURL(url); }
+  })().catch(e => { fflateLoading = null; throw e; });
+  return fflateLoading;
+}
+function packageManifestFor(scope) { return packageManifest({doc: EST, plan: pkg.plan, files: pkg.files, fuente: pkg.fuente, generado: pkg.generado, scope, stock: pkg.stock}); }
+async function downloadZip(estanco = null) {
+  if (!pkg || !EST) return;
+  const st = $('#estancos-status'), scope = estanco ? [estanco] : null;
+  try {
+    const {zipSync} = await loadFflate();
+    const bytes = buildZip(zipEntries({plan: pkg.plan, files: pkg.files, manifestJSON: packageManifestFor(scope), scope}), zipSync);
+    const name = zipName(EST, estanco ? EST.estancos.find(e => e.id === estanco) : null);
+    const url = URL.createObjectURL(new Blob([bytes], {type: 'application/zip'}));
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    st.textContent = t(`ZIP listo: ${name} (${(bytes.length / 1048576).toFixed(1)} MB).`, `ZIP ready: ${name} (${(bytes.length / 1048576).toFixed(1)} MB).`);
+  } catch (e) {
+    st.textContent = /integrity/.test(e?.message) ? t('El compresor descargado no coincide con la versión fijada: no se genera el ZIP.', 'The downloaded zip library does not match the pinned version: no ZIP generated.') : t('No se pudo generar el ZIP (¿sin conexión con jsDelivr?).', 'Could not build the ZIP (no connection to jsDelivr?).');
+  }
+}
+$('#paquete-zip').onclick = () => downloadZip(null);
+// Referencias ya publicadas: índice del Stock (externalRef) + registro de este navegador.
+function knownRefs(pieces) {
+  const known = new Map();
+  try { Object.entries(JSON.parse(localStorage.getItem(STOCK_REFS_KEY)) || {}).forEach(([k, v]) => known.set(k, v)); } catch (_) {}
+  for (const piece of pieces) { const it = window.PixeriaStock?.porRef?.(piece.externalRef); if (it && !known.has(piece.externalRef)) known.set(piece.externalRef, {id: it.id, num: it.num ?? null}); }
+  return known;
+}
+function saveRefs(known) { try { localStorage.setItem(STOCK_REFS_KEY, JSON.stringify(Object.fromEntries([...known].slice(-500)))); } catch (_) {} }
+async function publishPackage() {
+  const p = pkg; if (!p || p.publishing || !EST) return;
+  p.publishing = true; renderPackage();
+  const pieces = publishPlan({doc: EST, plan: p.plan, formatos: p.formatos, fuente: p.fuente, known: new Map(), proyectoTag: FICHA?.alias?.[0] || EST.proyecto});
+  const known = knownRefs(pieces);
+  // El Stock solo admite MP4 desde el Adaptador: los PNG van solo en el ZIP.
+  const mp4 = pieces.filter(piece => p.files.get(piece.formato)?.mime === 'video/mp4');
+  p.log = pieces.filter(piece => !mp4.includes(piece)).map(piece => ({formato: piece.formato, estado: 'omitida', error: 'PNG'}));
+  if (!pieces.every(piece => piece.externalRef)) { p.log.push({formato: '—', estado: 'error', error: t('fuente sin referencia estable', 'source without a stable reference')}); p.publishing = false; renderPackage(); return; }
+  const upload = async piece => {
+    const f = p.files.get(piece.formato), fmt = fmtById(piece.formato), size = fmt ? (fmt.layout?.entrega || fmt.custom) : [0, 0];
+    return publishAdaptation(f.blob, {title: adaptationTitle(p.fuente.titulo, {nombre: FICHA?.nombre || EST.proyecto}, fmt?.nombre || piece.formato), originId: p.fuente.id, client: null, format: piece.formato, width: size[0], height: size[1], duration: f.duracion, still: !!f.item?.still}, {tags: piece.tags, externalRef: piece.externalRef, comment: piece.comment});
+  };
+  const base = p.log.slice();
+  const log = await publishPieces(mp4, {upload, known, onStep: l => { p.log = [...base, ...l]; renderPackage(); }});
+  for (const l of log) if (l.estado !== 'error') p.stock.set(l.formato, {id: l.id, num: l.num, externalRef: l.externalRef, reused: l.estado !== 'publicada'});
+  saveRefs(known);
+  p.publishing = false; p.published = true;
+  const ok = log.filter(l => l.estado !== 'error').length;
+  $('#estancos-status').textContent = t(`Stock: ${ok}/${mp4.length} piezas con etiquetas del proyecto.`, `Stock: ${ok}/${mp4.length} pieces tagged with the project.`);
+  renderPackage();
+}
+$('#paquete-publicar').onclick = () => publishPackage();
+
 // ── Proyecto (Carlos, 5-oct-2026) ───────────────────────────────────────────
 // Lista: proyectos de Yokup (en vivo, con respaldo en proyectos/yokup.json). Ajustes propios:
 // fichas de proyectos/index.json. Sin ficha, el proyecto usa solo la biblioteca general.
@@ -940,7 +1156,10 @@ async function loadFicha(entry) {
     const ref = formatRef(ficha.formatos?.[k]);
     lists[k] = !ref ? [] : ref.inline ? ref.inline : ((await getJSON('/' + resolveRef(path, ref.archivo)))[ref.clave] || []);
   }
-  const out = {ficha, lists};
+  // Estancos y circuito: si falta o no cuadra con los formatos, el proyecto sigue sin la sección.
+  let estancos = null;
+  if (ficha.estancos?.archivo) { try { estancos = await getJSON('/' + resolveRef(path, ficha.estancos.archivo)); } catch (_) { estancos = null; } }
+  const out = {ficha, lists, estancos};
   fichaCache.set(entry.id, out);
   return out;
 }
@@ -992,15 +1211,16 @@ let switching = 0;
 async function switchProject(id) {
   saveSettings();
   const turn = ++switching, entry = INDEX.find(x => x.id === id);
-  let ficha = null, lists = {}, note = '';
+  let ficha = null, lists = {}, note = '', estancos = null;
   if (entry) {
-    try { ({ficha, lists} = await loadFicha(entry)); }
+    try { ({ficha, lists, estancos} = await loadFicha(entry)); }
     catch (_) { note = t('No se pudo leer la ficha del proyecto: se usa la biblioteca general.', 'Could not read the project file: using the general library.'); }
   }
   if (turn !== switching) return; // a later pick won while this ficha was loading
   FICHA = ficha; state.proyecto = id;
   campaigns = [...projectCampaigns(ficha), ...CAMPAIGNS];
   restoreSettings(lists);
+  setEstancos(estancos);
   renderProfiles(); renderCampaigns(); renderProjects(); renderProjectStatus(note); syncURL();
   buildGrid();
 }
