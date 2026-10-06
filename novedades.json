@@ -27,5 +27,10 @@
     "Adaptador: previo animado en «Crear» con ▶/⏸ y barra de tiempo, también con imagen fija o vídeo en pausa",
     "«Previsualizar todas» anima a la vez todas las tarjetas que crean",
     "Altadis: cada formato extremo crea con su receta de la ficha (barrido, tira o rótulo)"
+  ],
+  "v.07.10.2026.r1.00:12": [
+    "Anonimizador: si una foto aleatoria no se puede procesar, explica por qué y prueba sola con otra (hasta 5)",
+    "Registro plegable de fotos descartadas y botón «Probar otra vez» si fallan todas",
+    "Con tu propia foto, dice qué pasó y qué hacer, sin cambiarla por otra"
   ]
 }

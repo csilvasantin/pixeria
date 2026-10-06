@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=06.10.2026.r6.2214';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=07.10.2026.r1.0012';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.06.10.2026.r6.22:14">
+  <meta name="admiranext-version" content="Pixeria v.07.10.2026.r1.00:12">
   <link rel="canonical" href="https://www.pixeria.com/en/anonimizador.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/anonimizador.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/anonimizador.html">
@@ -49,7 +49,7 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="../workspace.css?v=06.10.2026.r6.2214">
+  <link rel="stylesheet" href="../workspace.css?v=07.10.2026.r1.0012">
   <style>
     .anon-main{max-width:1080px;margin:0 auto;padding:0 20px 64px;display:flex;flex-direction:column;gap:22px}
     .anon-stage-wrap{display:flex;flex-direction:column;gap:16px}
@@ -120,8 +120,8 @@
     body.anon-demo .anon-pipeline{display:none}
     .anon-demo-download{display:block;padding:10px;text-align:center;color:#8af0bf}
 </style>
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=06.10.2026.r6.2214">
-  <script defer src="/assets/site-nav.js?v=06.10.2026.r6.2214"></script>
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=07.10.2026.r1.0012">
+  <script defer src="/assets/site-nav.js?v=07.10.2026.r1.0012"></script>
 </head>
 <body data-page="anonimizador">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -272,12 +272,15 @@
 
   <footer><a href="https://csilvasantin.github.io/01.-AdmiraXperience-Game/" target="_blank" rel="noopener" title="Open Admira XP — the digital twin">Pixeria AI Workspace · Anonymizer · v.2026.06.19h-anon</a></footer>
 
-  <script defer src="/matrix-rain.js?v=06.10.2026.r6.2214"></script>
+  <script defer src="/matrix-rain.js?v=07.10.2026.r1.0012"></script>
+  <script src="/assets/anonimizador-fiable.js?v=07.10.2026.r1.0012"></script>
   <script>
   (function () {
     const $ = (s) => document.querySelector(s);
     // dominio propio: LaLiga bloquea workers.dev en horas de fútbol, FLT-1633
     const WORKER = 'https://api.admira.store';
+    // Reliability (failure classification, retry with another photo, ES/EN notices).
+    const AF = window.AnonFiable;
 
     const NPC8_SYS = 'You are an 8-bit pixel-art artist, NES / management-sim style (à la Kairosoft). From the given photo, generate a TINY, stubby character SPRITE: chibi proportions, big head, only 2 to 2.5 heads tall, full body facing front. VERY low resolution (like a ~32×40 px sprite), large clearly-visible square pixels, a palette of ONLY 4-5 flat colors, hard outline, no gradients, shadows or antialiasing. A SINGLE flat uniform background color (pure white) so it can be cut out. KEEP the apparent SEX/gender of the person (if female, female; if male, male), the clothing and hair color and the approximate build. Do NOT keep recognizable facial features: it is a tiny anonymous NPC, not a portrait. It must look clearly SIMPLER, SMALLER and stubbier than a 16-bit sprite.';
     const NPC8_PROMPT = 'Turn it into a TINY, stubby 8-bit NPC sprite (chibi, big head, ~2 heads tall), very low resolution, large pixels and only 4-5 flat colors, like the tiny passers-by of the Admira XP digital twin.';
@@ -306,6 +309,8 @@
       card1: $('#card1'), card2: $('#card2'), card3: $('#card3'), card4: $('#card4'),
       prog: $('#anonProg'), progFill: $('#anonProgFill'), progLabel: $('#anonProgLabel')
     };
+    // Discarded-photo notice, collapsible discard log and final error.
+    const ui = AF.mountUI(els.status, 'en');
     // Vertical preview → fill the side bands with the ENVIRONMENT (a blurred, cover-scaled
     // copy of the same photo behind), never black. Mirror the still's src/hidden to the bg.
     try {
@@ -318,16 +323,7 @@
     } catch (_) {}
 
     const setStatus = (t, err) => { els.status.textContent = t; els.status.classList.toggle('err', !!err); };
-    // Human-readable messages by engine refusal reason.
-    const ERR_MAP = {
-      'image-declined': '🚫 The engine could not generate the image. This usually happens with recognizable people, celebrities or copyrighted characters. Try a photo of an anonymous person.',
-      'safety': '🚫 The engine rejected the image for sensitive content. Try another photo.',
-      'copyright': '🚫 Blocked for possible copyright. Try another photo.',
-      'empty': 'The engine returned no image. Retry or try another photo.',
-      'timeout': '⏱️ The engine took too long. Generation was stopped; press Anonymize to try again.',
-      'network': 'No connection to the engine. (Works from pixeria.com.)'
-    };
-    const errMsg = (e) => (e && ERR_MAP[e.reason]) || ('Error: ' + ((e && e.message) || 'unknown'));
+    // Error messages (reason + what to do, ES/EN) live in assets/anonimizador-fiable.js.
     function progShow(on) { els.prog.classList.toggle('on', !!on); if (!on) els.progFill.style.width = '0'; }
     function progSet(done, total, label) { els.progFill.style.width = Math.round(done / total * 100) + '%'; els.progLabel.textContent = label || (done + '/' + total); }
     // "Indeterminate" bar: for single-await steps (inventing) with no real
@@ -385,7 +381,7 @@
       });
     }
 
-    function showOriginal(dataURL) {
+    function showOriginal(dataURL, auto) {
       leaveDemo();
       original = dataURL; npc8 = null; npc16 = null; anon = null;
       frameFillFinish(els.frame1, dataURL);
@@ -393,7 +389,7 @@
       els.frame3.innerHTML = '<div class="ph">16-bit NPC<br>(detailed)</div>';
       els.frame4.innerHTML = '<div class="ph">Different realistic person</div>';
       els.go.disabled = false; els.download.disabled = true; els.publish.disabled = true; els.sendStore.disabled = true;
-      run(); // auto-start as soon as there's a photo (no need to press the button)
+      if (auto !== false) run(); // auto-start as soon as there's a photo (no need to press the button)
     }
 
     function frameImg(frame, dataURL) { frameFillStop(frame); frame.innerHTML = '<img src="' + dataURL + '" alt="">'; }
@@ -451,30 +447,10 @@
       const m = ((e.message || '') + ' ' + (e.reason || '')).toLowerCase();
       return /high demand|overload|try again|temporar|unavailable|resource_exhausted|rate.?limit|busy|503|429/.test(m);
     }
-    async function pixeriaPaidHeaders() {
-      const headers = { 'Content-Type': 'application/json' };
-      try {
-        const s = await fetch('/auth/api-token', { credentials: 'include', cache: 'no-store' });
-        if (s.ok) { const d = await s.json(); if (d.token) headers.Authorization = 'Bearer ' + d.token; }
-      } catch (e) {}
-      return headers;
-    }
+    // Paid token cached until it expires; with no session we say so BEFORE calling
+    // the engine (the worker would answer 401 to everything). See assets/anonimizador-fiable.js.
     async function imageEditOnce(image, sys, prompt) {
-      let r;
-      const ctrl = new AbortController();
-      const timeout = setTimeout(() => ctrl.abort(), 90000);
-      try {
-        r = await fetch(WORKER + '/image/edit', {
-          method: 'POST', headers: await pixeriaPaidHeaders(),
-          body: JSON.stringify({ image, sys, prompt }), signal: ctrl.signal
-        });
-      } catch (netErr) {
-        const e = new Error(ctrl.signal.aborted ? 'request timed out (90 s)' : 'no connection to the engine');
-        e.reason = ctrl.signal.aborted ? 'timeout' : 'network';
-        e.status = ctrl.signal.aborted ? 408 : 0;
-        throw e;
-      } finally { clearTimeout(timeout); }
-      const d = await r.json().catch(() => ({}));
+      const { r, d } = await AF.paidFetch(WORKER + '/image/edit', { image, sys, prompt }, AF.config.editTimeoutMs);
       if (r.ok && d && d.ok && d.image) return d.image;
       const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
       e.reason = (d && d.reason) || null;
@@ -485,13 +461,13 @@
     // Retries transient errors with backoff (2s, 4s, 8s). Content refusals
     // (image-declined, safety…) are NOT retried: they fail instantly.
     async function imageEdit(image, sys, prompt, onRetry) {
-      const MAX = 4;
+      const MAX = AF.config.editRetries;   // bounded: if it fails, ANOTHER (random) photo is tried
       let lastErr;
       for (let attempt = 1; attempt <= MAX; attempt++) {
         try { return await imageEditOnce(image, sys, prompt); }
         catch (e) {
           lastErr = e;
-          if (!isTransient(e) || attempt === MAX) throw e;
+          if (!isTransient(e) || e.code === 'timeout' || attempt === MAX) throw e;
           if (onRetry) onRetry(attempt, MAX);
           await sleep(2000 * Math.pow(2, attempt - 1));
         }
@@ -505,16 +481,18 @@
     // It makes no sense: the person doesn't exist. In that case, instead of
     // failing, we REGENERATE the requested result with Grok (text→image) from the
     // chosen segment. (Carlos's rule, 2026-06-19.)
-    const REFUSAL = new Set(['image-declined', 'safety', 'copyright']);
+    // 'empty' too: Gemini often returns text only (no image) for a realistic person;
+    // with a synthetic one that is just another refusal, not an error.
+    const REFUSAL = new Set(['image-declined', 'safety', 'copyright', 'empty']);
     async function grokImage(prompt) {
-      const r = await fetch(WORKER + '/xai/image', {
-        method: 'POST', headers: await pixeriaPaidHeaders(),
-        body: JSON.stringify({ prompt, b64: true, model: 'grok-imagine-image' })
-      });
-      const d = await r.json().catch(() => ({}));
+      const { r, d } = await AF.paidFetch(WORKER + '/xai/image', { prompt, b64: true, model: 'grok-imagine-image' }, AF.config.xaiTimeoutMs);
       const item = d && Array.isArray(d.data) && d.data[0];
-      if (!r.ok || !item || !item.b64_json) { const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status)); e.reason = (d && d.reason) || null; throw e; }
-      return 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
+      if (r.ok && item && item.b64_json) return 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
+      // 200 without b64: the worker could not fetch the x.ai image → not "HTTP 200".
+      if (r.ok) throw AF.fail('no-data', 'the source did not deliver the image', { status: r.status });
+      const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
+      e.reason = (d && d.reason) || null; e.status = r.status;
+      throw e;
     }
     // Person description for the Grok prompts (uses the segment when available).
     function segPersonDesc() {
@@ -529,6 +507,10 @@
     const grokHumanPrompt = () => 'Realistic full-body photo, vertical, of ' + segPersonDesc() + ', a NEW anonymous person (not famous or recognizable), blurred street background, natural light, no text or logos.';
     // Try editing with Gemini; if it REFUSES on content, regenerate with Grok.
     async function editOrGrok(image, sys, editPrompt, grokPrompt, onRetry, tag) {
+      try { return await editOrGrokInner(image, sys, editPrompt, grokPrompt, onRetry, tag); }
+      catch (e) { if (e && !e.step) e.step = tag; throw e; }
+    }
+    async function editOrGrokInner(image, sys, editPrompt, grokPrompt, onRetry, tag) {
       try {
         const img = await imageEdit(image, sys, editPrompt, onRetry);
         enginesUsed.add('nano-banana (Gemini)');
@@ -537,7 +519,7 @@
         // Only fall back to Grok for INVENTED people (segment): there the synthetic
         // is defined by the segment. With a REAL uploaded photo, Grok can't know
         // what that person looks like and would output a different one (wrong sex).
-        if (segment && grokPrompt && REFUSAL.has(e.reason)) {
+        if (segment && grokPrompt && REFUSAL.has(e.reason) && e.code !== 'session') {
           setStatus('⚠️ The engine refused the synthetic image; generating the ' + (tag || 'result') + ' with Grok…');
           const img = await grokImage(grokPrompt);
           enginesUsed.add('Grok (grok-imagine-image)');
@@ -571,7 +553,7 @@
       stopCam();
       segment = null; // real camera photo: no chosen segment
       originalSource = 'photo from your camera';
-      downscale(url, 768).then(showOriginal);
+      loadOwn(url);
     }
 
     // ---- No camera: invent a realistic person (text → image) ----
@@ -614,57 +596,79 @@
       if (seg.desc) p += ' Extra detail requested (respect it): ' + seg.desc + '.';
       return p;
     }
-    async function inventPerson() {
-      if (busy) return;
-      busy = true;
-      const btn = els.invent, label = btn.textContent;
-      btn.disabled = true; stopCam();
-      els.hint.style.display = 'none';
-      const seg = currentSegment();
-      const parts = [];
-      if (seg.sex !== 'any') parts.push(SEG_LBL[seg.sex]);
-      if (seg.age !== 'any') parts.push(SEG_LBL[seg.age]);
-      const segTxt = parts.join(' · ');
-      const audTxt = '👥 Building audience' + (segTxt ? ': ' + segTxt : '') + '…';
-      setStatus(audTxt);
-      // Clear the previous result (big preview + triptych) BEFORE generating, so the
-      // progress isn't painted over the already-created NPC. Then fill the ORIGINAL card.
+    // One random photo (a person invented by Grok from the segment).
+    async function inventOne(seg) {
+      try {
+        const url = await grokImage(inventPrompt(seg));
+        return await AF.prepareImage(url, 768);   // decode and validate before going on
+      } catch (e) { if (e && !e.step) e.step = 'original'; throw e; }
+    }
+    function clearCards() {
       els.still.hidden = true; els.still.removeAttribute('src');
       els.frame1.innerHTML = '<div class="ph">Your photo shows up here</div>';
       els.frame2.innerHTML = '<div class="ph">8-bit NPC<br>(NES)</div>';
       els.frame3.innerHTML = '<div class="ph">16-bit NPC<br>(detailed)</div>';
       els.frame4.innerHTML = '<div class="ph">Different realistic person</div>';
-      activeCard(els.card1); frameFillCreep(els.frame1);
-      try {
-        const r = await fetch(WORKER + '/xai/image', {
-          method: 'POST', headers: await pixeriaPaidHeaders(),
-          body: JSON.stringify({ prompt: inventPrompt(seg), b64: true, model: 'grok-imagine-image' })
-        });
-        const d = await r.json().catch(() => ({}));
-        const item = d && Array.isArray(d.data) && d.data[0];
-        if (!r.ok || !item || !item.b64_json) {
-          const reason = (d && (d.detail || d.error)) || ('HTTP ' + r.status);
-          throw new Error(reason);
+    }
+    // "Build audience": if a random photo cannot be processed (refusal, no image,
+    // timeout, overload…) it is DISCARDED, the reason is explained and another one is
+    // tried, up to AF.config.maxRandom (5). Only if all fail: final error + "Try again".
+    // `first`: random original already loaded (re-anonymize), counted as photo 1.
+    async function inventPerson(first) {
+      if (busy) return;
+      busy = true;
+      const btn = els.invent, label = btn.dataset.label || btn.textContent;
+      btn.dataset.label = label;
+      btn.disabled = true; els.go.disabled = true; stopCam();
+      els.hint.style.display = 'none';
+      const seg = (typeof first === 'string' && segment) ? segment : currentSegment();
+      const parts = [];
+      if (seg.sex !== 'any') parts.push(SEG_LBL[seg.sex]);
+      if (seg.age !== 'any') parts.push(SEG_LBL[seg.age]);
+      const segTxt = parts.join(' · ');
+      ui.reset();
+      const res = await AF.tryRandomPhotos({
+        max: AF.config.maxRandom,
+        attempt: async (n, max) => {
+          setStatus('👥 Building audience' + (segTxt ? ': ' + segTxt : '') + ' · random photo ' + n + '/' + max + '…');
+          let photo;
+          if (n === 1 && typeof first === 'string') photo = first;
+          else {
+            clearCards(); activeCard(els.card1); frameFillCreep(els.frame1);
+            photo = await inventOne(seg);
+          }
+          segment = seg; // the chosen segment travels to the ad (Stock tags)
+          originalSource = 'Grok (grok-imagine-image)';
+          showOriginal(photo, false);
+          await pipeline();
+        },
+        onDiscard: (d, n, max) => {
+          ui.discard(d, n, max);
+          ui.notice(AF.discardMessage(d, n, max, 'en'));
+          [els.frame1, els.frame2, els.frame3, els.frame4].forEach(frameFillStop);
         }
-        segment = seg; // the chosen segment travels to the ad (Stock tags)
-        originalSource = 'Grok (grok-imagine-image)';
-        const url = 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
-        els.still.src = url; els.still.hidden = false; els.cam.hidden = true;
-        progStop(); progShow(false); busy = false;
-        btn.disabled = false; btn.textContent = label; // re-arm the button: lets you build another audience
-        downscale(url, 768).then(showOriginal); // shows the original and auto-starts the pipeline
-      } catch (e) {
-        progStop(); progShow(false); busy = false;
-        setStatus('Could not create the audience (' + e.message + '). Try again or upload a photo.', true);
-        btn.disabled = false; btn.textContent = label;
+      });
+      progStop(); progShow(false);
+      [els.frame1, els.frame2, els.frame3, els.frame4].forEach(frameFillStop);
+      if (res.ok) {
+        ui.notice(AF.doneAfterMessage(res, 'en'), 'ok');
+        finishOk();
+      } else {
+        const text = AF.finalMessage(res, 'en');
+        setStatus(AF.failedLine('en'), true); activeCard(null);
+        frameFillFail(els.frame1, text);
+        ui.final(text, res.fatal && res.fatal.code === 'session' ? null : () => inventPerson());
       }
+      els.go.disabled = !original; busy = false;
+      btn.disabled = false; btn.textContent = label; // re-arm the button: lets you build another audience
     }
 
-    async function run() {
-      if (busy || !original) return;
-      busy = true;
+    // Photo → 8-bit NPC → 16-bit NPC → new person. Throws if a step fails (that
+    // step's card is marked); the caller decides: another random photo
+    // (inventPerson) or explain why the user's own photo failed (run).
+    async function pipeline() {
       enginesUsed = new Set();           // reset the model registry for this pass
-      els.status.removeAttribute('title');
+      els.status.removeAttribute('title'); els.status.style.cursor = '';
       els.go.disabled = true; els.download.disabled = true; els.publish.disabled = true; els.sendStore.disabled = true;
       progShow(true); progSet(0, 3, 'Generating NPCs…');
       let workingFrame = null;
@@ -695,23 +699,42 @@
         const prompt = HUMAN_PROMPT[els.strength.value] || HUMAN_PROMPT.aire;
         anon = await editOrGrok(npc16, HUMAN_SYS, prompt, grokHumanPrompt(), retryMsg(els.frame4, 'portrait'), 'portrait');
         frameFillFinish(els.frame4, anon); progSet(3, 3, 'Done');
-
-        activeCard(els.card4);
-        setStatus('✓ Done: 2 NPCs (8/16-bit) + a person who does not exist.');
-        // Tooltip on hover over "Done": which models made the images.
-        const models = Array.from(enginesUsed).join(' + ') || 'nano-banana (Gemini)';
-        els.status.title = 'Images generated with — Original: ' + originalSource + ' · NPCs and person: ' + models + '.';
-        els.status.style.cursor = 'help';
-        els.download.disabled = false; els.publish.disabled = false; els.sendStore.disabled = false;
-        workingFrame = null;
       } catch (e) {
-        const message = errMsg(e);
-        frameFillFail(workingFrame, message);
-        setStatus(message, true);
-        activeCard(null);
+        frameFillFail(workingFrame, AF.texts.en.why[AF.classify(e).code] || 'Generation stopped');
+        throw e;
       } finally {
         [els.frame2, els.frame3, els.frame4].forEach(frameFillStop);
-        progShow(false); els.go.disabled = false; busy = false;
+        progShow(false);
+      }
+    }
+    function finishOk() {
+      activeCard(els.card4);
+      setStatus('✓ Done: 2 NPCs (8/16-bit) + a person who does not exist.');
+      // Tooltip on hover over "Done": which models made the images.
+      const models = Array.from(enginesUsed).join(' + ') || 'nano-banana (Gemini)';
+      els.status.title = 'Images generated with — Original: ' + originalSource + ' · NPCs and person: ' + models + '.';
+      els.status.style.cursor = 'help';
+      els.download.disabled = false; els.publish.disabled = false; els.sendStore.disabled = false;
+    }
+    // Retryable with the SAME own photo (they do not depend on the photo).
+    const OWN_RETRY = new Set(['timeout', 'overload', 'network', 'offline', 'no-data', 'unknown']);
+    async function run() {
+      if (busy || !original) return;
+      // Random original (Build audience): if it fails, another random photo is tried.
+      if (segment && /^Grok/.test(originalSource) && !demoActive) return inventPerson(original);
+      // The user's OWN photo (camera, upload, drop): never replaced; explained instead.
+      busy = true; ui.reset();
+      try {
+        await pipeline();
+        finishOk();
+      } catch (e) {
+        const inf = AF.classify(e);
+        const text = '🚫 ' + AF.ownMessage(inf, 'en');
+        setStatus(AF.failedLine('en'), true); activeCard(null);
+        ui.final(text, OWN_RETRY.has(inf.code) ? () => run() : null);
+        console.warn('[anonymizer] own photo not processed:', inf.code, inf.status, inf.detail);
+      } finally {
+        els.go.disabled = false; busy = false;
       }
     }
 
@@ -845,7 +868,7 @@
 
     els.btnCam.addEventListener('click', () => stream ? shoot() : startCam());
     els.btnUpload.addEventListener('click', () => els.file.click());
-    els.invent.addEventListener('click', inventPerson);
+    els.invent.addEventListener('click', () => inventPerson());
 
     // If the device has no camera (PC with no webcam, blocked phone…), promote
     // "Invent a person" as the main path.
@@ -866,16 +889,31 @@
         if (!demoActive) setStatus('No camera detected: tap “Create audience”, upload a photo or drag one in.');
       }
     })();
+    // The user's OWN photo: decoded and validated here; if it is not usable, say why
+    // and what to do, without swapping it for another or sending it to the engine.
+    function ownFail(e) {
+      const inf = AF.classify(e);
+      const text = '🚫 ' + AF.ownMessage(inf, 'en');
+      setStatus(AF.failedLine('en'), true); ui.reset(); ui.final(text, null);
+      console.warn('[anonymizer] own photo not valid:', inf.code, inf.detail);
+    }
+    function loadOwn(url) {
+      if (busy) return;
+      AF.prepareImage(url, 768).then((small) => { ui.reset(); showOriginal(small); }, ownFail);
+    }
     function loadDataURL(url) {
       stopCam();
       els.still.src = url; els.still.hidden = false; els.cam.hidden = true; els.hint.style.display = 'none';
       segment = null; // uploaded/dropped photo: no chosen segment
       originalSource = 'uploaded/dropped photo';
-      downscale(url, 768).then(showOriginal);
+      loadOwn(url);
     }
     function loadImageFile(f) {
-      if (!f || !/^image\//.test(f.type)) { setStatus('That is not an image.', true); return; }
-      const rd = new FileReader(); rd.onload = () => loadDataURL(rd.result); rd.readAsDataURL(f);
+      try { AF.checkFile(f); } catch (e) { ownFail(e); return; }
+      const rd = new FileReader();
+      rd.onload = () => loadDataURL(rd.result);
+      rd.onerror = () => ownFail(AF.fail('bad-image', 'could not read the file'));
+      rd.readAsDataURL(f);
     }
     els.file.addEventListener('change', (e) => {
       const f = e.target.files && e.target.files[0]; if (f) loadImageFile(f);
@@ -905,11 +943,10 @@
         try {
           setStatus('Downloading dragged image…');
           const r = await fetch(WORKER + '/image/proxy?url=' + encodeURIComponent(url));
-          if (!r.ok) throw new Error('HTTP ' + r.status);
+          if (!r.ok) { const d = await r.json().catch(() => ({})); throw AF.fail(r.status === 413 ? 'too-big' : r.status === 415 ? 'bad-image' : 'cors', 'proxy: ' + ((d && d.error) || ('HTTP ' + r.status)), { status: r.status }); }
           const blob = await r.blob();
-          if (!/^image\//.test(blob.type)) throw new Error('not an image');
-          const rd = new FileReader(); rd.onload = () => loadDataURL(rd.result); rd.readAsDataURL(blob);
-        } catch (err) { setStatus('Could not fetch that image (' + err.message + '). Download and upload it.', true); }
+          loadImageFile(new File([blob], 'dropped', { type: blob.type }));
+        } catch (err) { ownFail(err.code ? err : AF.fail('cors', String(err.message || err))); }
       });
     })();
     els.go.addEventListener('click', run);
@@ -950,6 +987,6 @@
     window.addEventListener('beforeunload', stopCam);
   })();
   </script>
-  <script defer src="/assets/cuadratura.js?v=06.10.2026.r6.2214"></script>
+  <script defer src="/assets/cuadratura.js?v=07.10.2026.r1.0012"></script>
 </body>
 </html>

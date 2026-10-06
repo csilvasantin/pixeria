@@ -1,8 +1,8 @@
 {
-  "version": "v.06.10.2026.r6.22:14",
+  "version": "v.07.10.2026.r1.00:12",
   "deployer": "MorfeoMacMini",
   "machine": "MacMini",
   "signature": "MorfeoMacMini · MacMini",
   "agent": "MorfeoMacMini",
-  "evidence": "Adaptador · Crear: recetas de la ficha de Altadis (14 formatos; la receta de la ficha crea aunque r < umbral, salvo «Adaptar» forzado) y previo animado por tarjeta con ▶/⏸, barra de tiempo y «Previsualizar todas», fiel al plan FFmpeg."
+  "evidence": "Anonimizador fiable: si una foto aleatoria falla se descarta, se explica el motivo (ES/EN) y se prueba otra, hasta 5; registro plegable de descartes y «Probar otra vez»; la foto propia nunca se sustituye; sesión caducada detectada antes de llamar al motor; timeouts reales en Grok y Gemini. 12 unitarios + 14 escenarios e2e."
 }
