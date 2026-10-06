@@ -107,6 +107,8 @@
       finalAll: 'No se pudo con ninguna de las {max} fotos aleatorias.',
       lastWhy: 'Último motivo',
       retryAll: '↻ Probar otra vez',
+      failed: '✖ No se pudo anonimizar · motivo abajo.',
+      doneAfter: 'Hecho con la foto {n}/{max} ({k} descartada{s} · detalle abajo).',
       fatal: {
         session: 'Tu sesión de Pixeria ha caducado. Recarga la página y vuelve a entrar; no hemos gastado más intentos.',
         offline: 'No hay conexión a internet. Revisa la red y pulsa «Probar otra vez».'
@@ -149,6 +151,8 @@
       finalAll: 'None of the {max} random photos could be processed.',
       lastWhy: 'Last reason',
       retryAll: '↻ Try again',
+      failed: '✖ Could not anonymize · reason below.',
+      doneAfter: 'Done with photo {n}/{max} ({k} discarded · details below).',
       fatal: {
         session: 'Your Pixeria session has expired. Reload the page and sign in again; no more attempts were spent.',
         offline: 'There is no internet connection. Check your network and press “Try again”.'
@@ -185,6 +189,12 @@
     return t.finalAll.replace('{max}', max) + (last ? ' ' + t.lastWhy + ': ' + (t.why[last.code] || t.why.unknown).toLowerCase() + '.' : '');
   }
   function ownMessage(inf, l) { var t = T(l); return t.own[inf && inf.code] || t.own.unknown; }
+  function doneAfterMessage(res, l) {
+    var k = (res && res.discards && res.discards.length) || 0;
+    if (!k) return '';
+    return T(l).doneAfter.replace('{n}', res.attempts).replace('{max}', config.maxRandom).replace('{k}', k).replace('{s}', k > 1 ? 's' : '');
+  }
+  function failedLine(l) { return T(l).failed; }
 
   // ── Política: probar con otra foto aleatoria, con máximo duro ──────────────
   function clampMax(max) {
@@ -325,7 +335,7 @@
     var count = 0;
     return {
       reset: function () { count = 0; ol.replaceChildren(); det.hidden = true; det.open = false; notice.hidden = true; fin.hidden = true; },
-      notice: function (text) { nt.textContent = text; notice.hidden = !text; },
+      notice: function (text, kind) { ic.textContent = kind === 'ok' ? '✓' : '⚠'; ic.style.color = kind === 'ok' ? 'var(--accent,#39d353)' : ''; nt.textContent = text; notice.hidden = !text; },
       discard: function (d, n, max) {
         count++;
         var li = doc.createElement('li'); li.textContent = discardMessage(d, n, max, l).replace(/; [^;]*$/, '');
@@ -340,7 +350,7 @@
   return {
     config: config, CODES: CODES, fail: fail, classify: classify, clampMax: clampMax,
     tryRandomPhotos: tryRandomPhotos, discardMessage: discardMessage, finalMessage: finalMessage,
-    ownMessage: ownMessage, texts: TXT, paidHeaders: paidHeaders, paidFetch: paidFetch,
+    ownMessage: ownMessage, doneAfterMessage: doneAfterMessage, failedLine: failedLine, texts: TXT, paidHeaders: paidHeaders, paidFetch: paidFetch,
     fetchWithTimeout: fetchWithTimeout, forgetToken: forgetToken, checkFile: checkFile,
     prepareImage: prepareImage, mountUI: mountUI
   };

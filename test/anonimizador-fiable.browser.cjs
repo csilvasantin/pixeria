@@ -24,10 +24,10 @@ const DECLINED = { status: 422, json: { ok: false, error: 'no-image-out', reason
 const exe = process.env.CHROME_PATH || (fs.existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : undefined);
 
 const L = {
-  es: { page: '/anonimizador.html', ok: /Listo/, timeout: /tardó demasiado/, net: /red o CORS/, bad: /no se puede leer/, done2: /Hecho con la foto 2\/5/,
-        all: /ninguna de las 5 fotos/, retry: /Probar otra vez/, session: /sesión de Pixeria ha caducado/, ownDeclined: /rechazó tu foto.*cuerpo entero/, ownBad: /JPG o PNG/ },
-  en: { page: '/en/anonimizador.html', ok: /Done/, timeout: /took too long/, net: /network or CORS/, bad: /unreadable format/, done2: /Done with photo 2\/5/,
-        all: /None of the 5 random photos/, retry: /Try again/, session: /session has expired/, ownDeclined: /refused your photo.*full-body/, ownBad: /JPG or PNG/ }
+  es: { page: '/anonimizador.html', ok: /Listo/, timeout: /tardó demasiado/, net: /red o CORS/, bad: /no se puede leer/, done2: /Hecho con la foto 2\/5 \(1 descartada/,
+        all: /ninguna de las 5 fotos/, retry: /Probar otra vez/, session: /sesión de Pixeria ha caducado/, ownDeclined: /rechazó tu foto.*cuerpo entero/, ownBad: /JPG o PNG/, failed: /No se pudo anonimizar/ },
+  en: { page: '/en/anonimizador.html', ok: /Done/, timeout: /took too long/, net: /network or CORS/, bad: /unreadable format/, done2: /Done with photo 2\/5 \(1 discarded/,
+        all: /None of the 5 random photos/, retry: /Try again/, session: /session has expired/, ownDeclined: /refused your photo.*full-body/, ownBad: /JPG or PNG/, failed: /Could not anonymize/ }
 };
 
 async function open(browser, lang, width, script) {
@@ -115,7 +115,8 @@ async function firstFailsSecondWorks(b, lang, width, x, why) {
       const { p, ctx, calls, errors } = await open(b, lang, 1440, { e: [DECLINED] });
       await p.setInputFiles('#fileInput', { name: 'mia.jpg', mimeType: 'image/jpeg', buffer: JPG });
       await terminal(p, t.ok);
-      assert.match(await text(p, '#status'), t.ownDeclined);
+      assert.match(await text(p, '#anonFinal p'), t.ownDeclined);
+      assert.match(await text(p, '#status'), t.failed, 'la línea de estado resume; el motivo va en la caja');
       assert.equal(calls.xai, 0, 'nunca se pide una foto aleatoria en su lugar');
       assert.equal(calls.edit, 1, 'un rechazo de contenido no se reintenta a ciegas');
       assert.match(await p.$eval('#frame1 img', (i) => i.getAttribute('src')), /^data:image\/jpeg/, 'su foto sigue en la tarjeta Original');
@@ -131,7 +132,7 @@ async function firstFailsSecondWorks(b, lang, width, x, why) {
       const { p, ctx, calls } = await open(b, lang, 390, {});
       await p.setInputFiles('#fileInput', { name: 'foto.heic', mimeType: 'image/heic', buffer: Buffer.from('ftypheic no decodificable') });
       await p.waitForFunction(() => document.querySelector('#status').classList.contains('err'), null, { timeout: 15000 });
-      assert.match(await text(p, '#status'), t.ownBad);
+      assert.match(await text(p, '#anonFinal p'), t.ownBad);
       assert.equal(calls.edit + calls.xai, 0, 'no se envía nada al motor');
       assert.equal(await noHScroll(p), true);
       await ctx.close(); n++;
@@ -142,7 +143,7 @@ async function firstFailsSecondWorks(b, lang, width, x, why) {
       const { p, ctx, calls } = await open(b, lang, 1440, { token: { status: 401, json: { ok: false } } });
       await p.click('#btnInvent');
       await terminal(p, t.ok);
-      assert.match(await text(p, '#status'), t.session);
+      assert.match(await text(p, '#anonFinal p'), t.session);
       assert.equal(calls.xai, 0, 'no se llama al motor sin sesión');
       assert.equal(await visible(p, '#btnRetryAll'), false);
       await ctx.close(); n++;

@@ -107,6 +107,11 @@ test('mensajes ES/EN: completos, breves y sin texto crudo del motor', () => {
   assert.match(AF.ownMessage({ code: 'bad-image' }, 'es'), /JPG o PNG/);
   assert.match(AF.ownMessage({ code: 'declined' }, 'en'), /full-body/);
   assert.equal(AF.ownMessage({ code: 'nada' }, 'es'), AF.texts.es.own.unknown);
+  assert.equal(AF.doneAfterMessage({ attempts: 1, discards: [] }, 'es'), '');
+  assert.match(AF.doneAfterMessage({ attempts: 3, discards: [{}, {}] }, 'es'), /^Hecho con la foto 3\/5 \(2 descartadas/);
+  assert.match(AF.doneAfterMessage({ attempts: 2, discards: [{}] }, 'en'), /^Done with photo 2\/5 \(1 discarded/);
+  assert.match(AF.failedLine('es'), /No se pudo anonimizar/);
+  assert.match(AF.failedLine('en'), /Could not anonymize/);
 });
 
 test('validación de la foto propia: tipo y tamaño', () => {

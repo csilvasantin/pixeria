@@ -662,11 +662,11 @@
       progStop(); progShow(false);
       [els.frame1, els.frame2, els.frame3, els.frame4].forEach(frameFillStop);
       if (res.ok) {
-        ui.notice(res.discards.length ? '✓ Hecho con la foto ' + res.attempts + '/' + AF.config.maxRandom + ' (' + res.discards.length + ' descartada' + (res.discards.length > 1 ? 's' : '') + ' — detalle abajo).' : '');
+        ui.notice(AF.doneAfterMessage(res, 'es'), 'ok');
         finishOk();
       } else {
         const text = AF.finalMessage(res, 'es');
-        setStatus(text, true); activeCard(null);
+        setStatus(AF.failedLine('es'), true); activeCard(null);
         frameFillFail(els.frame1, text);
         ui.final(text, res.fatal && res.fatal.code === 'session' ? null : () => inventPerson());
       }
@@ -742,7 +742,7 @@
       } catch (e) {
         const inf = AF.classify(e);
         const text = '🚫 ' + AF.ownMessage(inf, 'es');
-        setStatus(text, true); activeCard(null);
+        setStatus(AF.failedLine('es'), true); activeCard(null);
         ui.final(text, OWN_RETRY.has(inf.code) ? () => run() : null);
         console.warn('[anonimizador] foto propia no procesada:', inf.code, inf.status, inf.detail);
       } finally {
@@ -907,7 +907,7 @@
     function ownFail(e) {
       const inf = AF.classify(e);
       const text = '🚫 ' + AF.ownMessage(inf, 'es');
-      setStatus(text, true); ui.reset(); ui.final(text, null);
+      setStatus(AF.failedLine('es'), true); ui.reset(); ui.final(text, null);
       console.warn('[anonimizador] foto propia no válida:', inf.code, inf.detail);
     }
     function loadOwn(url) {
