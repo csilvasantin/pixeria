@@ -10,7 +10,7 @@ import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, re
 import { GENERAL, YOKUP_URL, PROJECT_KEY, projectStorageKey, formatRef, resolveRef, projectLibrary, projectCampaigns, parseYokup, mergeProjects, migrateStorage, initialProject } from './proyectos-core.mjs';
 import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
 import { pngDensity } from './png-density.mjs';
-import { validateEstancos, formatsFor, packagePlan, groupByEstanco, manifest as packageManifest, zipEntries, buildZip, zipName, sourceKey, publishPlan, publishPieces, FFLATE } from './estancos-core.mjs';
+import { validateEstancos, formatsFor, packagePlan, groupByEstanco, manifest as packageManifest, zipEntries, buildZip, zipName, sourceKey, publishPlan, publishPieces, FFLATE, PROGRAMAR_URL, PROGRAMAR_MAX, programPieces, loteKey } from './estancos-core.mjs';
 import { gifPlayer, hasImageDecoder, decodeHEIC, LIBHEIF, rasterSVG, svgCache } from './fuentes-especiales.mjs';
 
 const EN = document.documentElement.lang === 'en';
@@ -935,8 +935,8 @@ $('#compat').onchange = (e) => { state.compat = e.target.value; buildGrid(); };
 // «Preparar paquete» marca exactamente los formatos de sus pantallas y los exporta en la cola.
 // Cada formato se codifica una vez; el ZIP (por estanco o global) copia el archivo en cada pantalla
 // que lo usa, con manifest.json. La casilla Stock publica una pieza por fuente y formato con las
-// etiquetas del proyecto y un externalRef estable (sin duplicados). No programa players: ver
-// docs/adaptador.md · «Estancos y circuito».
+// etiquetas del proyecto y un externalRef estable (sin duplicados). Los players se programan desde el
+// servidor (/players-programar): ver docs/adaptador.md · «Programación de players».
 let EST = null;              // JSON de estancos del proyecto activo (validado) o null
 const estSel = new Set();    // ids elegidos
 let pkg = null, pkgSeq = 0;  // paquete en curso
@@ -1081,6 +1081,7 @@ function renderPackage() {
   }
   const log = $('#paquete-stock'); log.hidden = !p.log.length;
   $('#paquete-stock-log').replaceChildren(...p.log.map(l => { const li = document.createElement('li'); li.textContent = `${l.formato} · ${({publicada: t('publicada', 'published'), reutilizada: t('ya estaba (mismo contenido)', 'already there (same content)'), 'ya-estaba': t('ya estaba', 'already there'), error: t('error', 'error'), omitida: t('omitida', 'skipped')})[l.estado] || l.estado}${l.num ? ` #${l.num}` : l.id ? ` ${l.id}` : ''}${l.error ? ` · ${l.error}` : ''}`; return li; }));
+  renderProgramar();
 }
 // fflate fijado en jsDelivr, comprobado por SHA-256 antes de importarlo (como libheif).
 let fflateLoading = null;
@@ -1142,6 +1143,117 @@ async function publishPackage() {
   renderPackage();
 }
 $('#paquete-publicar').onclick = () => publishPackage();
+
+// ── Programación de players (Carlos, 6-oct-2026) ────────────────────────────
+// POST /players-programar con la sesión de Pixeria: «Probar» (modo prueba) enseña el plan exacto y
+// qué pantallas no existen; «Programar» (modo real) solo se habilita con una prueba de ESTE lote,
+// todas las pantallas dadas de alta, los assets servidos y el secreto instalado en el servidor.
+// Pide confirmación explícita. El secreto de admira.tv nunca pasa por el navegador.
+const prog = {prueba: null, running: false, log: []};
+const hora = () => new Date().toLocaleTimeString(EN ? 'en-GB' : 'es-ES', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+function progLote() { return pkg && EST ? programPieces({plan: pkg.plan, stock: pkg.stock, files: pkg.files}) : null; }
+function progLog(text, estado = '') { prog.log.unshift({at: hora(), text, estado}); prog.log = prog.log.slice(0, 50); }
+function renderProgramar() {
+  const box = $('#programar'); if (!box) return;
+  const lote = progLote(); if (!lote) return;
+  const key = loteKey(lote.piezas), pr = prog.prueba && prog.prueba.key === key ? prog.prueba : null;
+  const n = lote.piezas.length, m = lote.estancos;
+  const probar = $('#programar-probar'), real = $('#programar-real');
+  probar.disabled = prog.running || !n || n > PROGRAMAR_MAX || pkg.running || pkg.publishing;
+  const bloqueo = !pr ? 'sin-prueba' : !pr.ok ? 'error' : pr.inexistentes.length ? 'inexistentes' : pr.assetsNoDisponibles.length ? 'assets' : !pr.secretoConfigurado ? 'secreto' : '';
+  real.disabled = prog.running || !n || !!bloqueo;
+  real.textContent = n ? t(`Programar ${plural(n, 'player', 'players')} de ${plural(m, 'estanco', 'estancos')}`, `Schedule ${plural(n, 'player', 'players')} in ${plural(m, 'shop', 'shops')}`) : t('Programar players', 'Schedule players');
+  const st = $('#programar-status');
+  if (!prog.running) st.textContent =
+    !n ? (lote.faltan.length ? t(`Publica primero el lote en el Stock: los players solo reciben piezas del Stock (faltan ${lote.faltan.join(', ')}).`, `Publish the package to the Stock first: players only get Stock pieces (missing ${lote.faltan.join(', ')}).`) : t('Prepara un paquete para programarlo.', 'Prepare a package to schedule it.'))
+    : n > PROGRAMAR_MAX ? t(`Como máximo ${PROGRAMAR_MAX} pantallas por programación.`, `At most ${PROGRAMAR_MAX} screens per run.`)
+    : bloqueo === 'sin-prueba' ? t(`${plural(n, 'pantalla lista', 'pantallas listas')} para programar${lote.faltan.length ? ` (sin ${lote.faltan.join(', ')}: no está en el Stock)` : ''}. Prueba la programación antes de programar.`, `${n} ${n === 1 ? 'screen' : 'screens'} ready${lote.faltan.length ? ` (without ${lote.faltan.join(', ')}: not in the Stock)` : ''}. Test the scheduling before running it.`)
+    : bloqueo === 'error' ? pr.mensaje
+    : bloqueo === 'inexistentes' ? t(`No se puede programar: ${plural(pr.inexistentes.length, 'pantalla no existe', 'pantallas no existen')} en la parrilla de players (api.admira.store/grid/screens).`, `Cannot schedule: ${pr.inexistentes.length} ${pr.inexistentes.length === 1 ? 'screen does' : 'screens do'} not exist in the player grid (api.admira.store/grid/screens).`)
+    : bloqueo === 'assets' ? t(`No se puede programar: el Stock no sirve ${plural(pr.assetsNoDisponibles.length, 'pieza', 'piezas')}.`, `Cannot schedule: the Stock does not serve ${pr.assetsNoDisponibles.length} ${pr.assetsNoDisponibles.length === 1 ? 'piece' : 'pieces'}.`)
+    : bloqueo === 'secreto' ? t('Prueba correcta, pero falta configurar el secreto STOCK_NOTIFY_KEY en el proyecto Pages: no se puede programar todavía.', 'Test passed, but the STOCK_NOTIFY_KEY secret is not set in the Pages project: scheduling is not possible yet.')
+    : t(`Prueba correcta: ${plural(n, 'pantalla', 'pantallas')} de ${plural(m, 'estanco', 'estancos')} listas para programar.`, `Test passed: ${n} ${n === 1 ? 'screen' : 'screens'} in ${m} ${m === 1 ? 'shop' : 'shops'} ready to schedule.`);
+  const ul = $('#programar-plan');
+  ul.hidden = !pr || !pr.plan.length;
+  ul.replaceChildren(...(pr ? pr.plan : []).map(row => {
+    const li = document.createElement('li'), mark = document.createElement('b'), name = document.createElement('code'), info = document.createElement('small');
+    const bad = row.existe !== true || row.assetsOk === false;
+    li.className = bad ? 'bad' : 'ok'; li.dataset.screen = row.screenId;
+    mark.textContent = bad ? '✗' : '✓'; mark.setAttribute('aria-hidden', 'true');
+    name.textContent = row.screenId;
+    const items = row.payload?.items || [];
+    const que = items.map(it => it.stockId ? `Stock ${it.stockId}` : it.asset.split('/').pop()).join(', ');
+    const ahora = row.actual ? t(`ahora ${plural(row.actual.items, 'pieza', 'piezas')}`, `now ${row.actual.items} ${row.actual.items === 1 ? 'piece' : 'pieces'}`) : t('lista actual desconocida', 'current playlist unknown');
+    const estado = row.existe === true ? t('existe', 'exists') : row.existe === false ? t('no existe en la parrilla', 'not in the grid') : t('parrilla no disponible', 'grid unavailable');
+    info.textContent = `${estado} · ${t('recibiría', 'would get')} ${t(plural(items.length, 'pieza', 'piezas'), plural(items.length, 'piece', 'pieces'))} (${que}, ${items.map(it => it.seconds + ' s').join(', ')}) · ${ahora}${row.assetsOk === false ? ` · ${t('asset no disponible', 'asset unavailable')}` : ''}`;
+    li.append(mark, ' ', name, info); return li;
+  }));
+  const reg = $('#programar-registro'); reg.hidden = !prog.log.length;
+  $('#programar-log').replaceChildren(...prog.log.map(l => { const li = document.createElement('li'); li.textContent = `${l.at} · ${l.text}`; if (l.estado) li.className = l.estado; return li; }));
+}
+async function callProgramar(body) {
+  let r, data = {};
+  try {
+    r = await fetch(PROGRAMAR_URL, {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/json', Accept: 'application/json'}, body: JSON.stringify(body)});
+    data = await r.json().catch(() => ({}));
+  } catch (_) { return {status: 0, data: {ok: false, error: 'red'}}; }
+  return {status: r.status, data};
+}
+function progError({status, data}) {
+  if (status === 401) return t('Tu sesión de Pixeria ha caducado: vuelve a entrar.', 'Your Pixeria session has expired: sign in again.');
+  if (status === 503 && data.error === 'falta-secreto') return t('Falta configurar el secreto STOCK_NOTIFY_KEY en el proyecto Pages.', 'The STOCK_NOTIFY_KEY secret is not set in the Pages project.');
+  if (status === 400 && Array.isArray(data.errores)) return `${t('Lote no válido', 'Invalid package')}: ${data.errores.slice(0, 3).join(' · ')}`;
+  if (status === 409 && data.error === 'pantallas-inexistentes') return t(`No se programa: ${plural(data.inexistentes.length, 'pantalla no existe', 'pantallas no existen')}.`, `Not scheduled: ${plural(data.inexistentes.length, 'screen does', 'screens do')} not exist.`);
+  if (status === 409 && data.error === 'prueba-pendiente') return t('El lote cambió desde la prueba: vuelve a probarlo.', 'The package changed since the test: test it again.');
+  if (status === 0) return t('Sin conexión con el servidor.', 'No connection to the server.');
+  return `${t('Error', 'Error')} ${status || ''} ${data.error || ''}`.trim();
+}
+$('#programar-probar').onclick = async () => {
+  const lote = progLote(); if (!lote || !lote.piezas.length || prog.running) return;
+  const key = loteKey(lote.piezas);
+  prog.running = true; $('#programar-status').textContent = t('Probando la programación (sin cambios)…', 'Testing the scheduling (no changes)…'); renderProgramar();
+  const res = await callProgramar({modo: 'prueba', proyecto: EST.proyecto, piezas: lote.piezas});
+  prog.running = false;
+  if (res.status === 200 && res.data.ok) {
+    prog.prueba = {key, ok: true, ...res.data};
+    const r = res.data.resumen;
+    progLog(t(`Prueba · ${plural(r.pantallas, 'pantalla', 'pantallas')} de ${plural(r.estancos, 'estanco', 'estancos')} · ${r.inexistentes ? `${r.inexistentes} no ${r.inexistentes === 1 ? 'existe' : 'existen'}` : 'todas existen'} · sin cambios · ${res.data.quien}`, `Test · ${plural(r.pantallas, 'screen', 'screens')} in ${plural(r.estancos, 'shop', 'shops')} · ${r.inexistentes ? `${r.inexistentes} missing` : 'all exist'} · no changes · ${res.data.quien}`), r.inexistentes || r.assetsNoDisponibles ? 'bad' : 'ok');
+  } else {
+    prog.prueba = {key, ok: false, plan: [], inexistentes: [], assetsNoDisponibles: [], mensaje: progError(res)};
+    progLog(`${t('Prueba', 'Test')} · ${prog.prueba.mensaje}`, 'bad');
+  }
+  renderProgramar();
+};
+$('#programar-real').onclick = async () => {
+  const lote = progLote(); if (!lote || prog.running) return;
+  const key = loteKey(lote.piezas), pr = prog.prueba;
+  if (!pr || pr.key !== key || !pr.ok) return;
+  const n = lote.piezas.length, m = lote.estancos;
+  const ask = t(`Vas a SUSTITUIR la lista por defecto de ${plural(n, 'player', 'players')} de ${plural(m, 'estanco', 'estancos')} en admira.tv con las piezas de este lote. Los players la releen en unos 30 s.
+
+¿Programar ahora?`, `You are about to REPLACE the admira.tv default playlist of ${n} ${n === 1 ? 'player' : 'players'} in ${m} ${m === 1 ? 'shop' : 'shops'} with this package. Players reload it within about 30 s.
+
+Schedule now?`);
+  if (!window.confirm(ask)) { progLog(t('Programación cancelada: no se ha cambiado nada.', 'Scheduling cancelled: nothing changed.')); renderProgramar(); return; }
+  prog.running = true; $('#programar-status').textContent = t(`Programando ${plural(n, 'player', 'players')}…`, `Scheduling ${plural(n, 'player', 'players')}…`); renderProgramar();
+  const res = await callProgramar({modo: 'real', proyecto: EST.proyecto, piezas: lote.piezas, firma: pr.firma});
+  prog.running = false;
+  const d = res.data;
+  if (Array.isArray(d.resultados)) {
+    const ok = d.resultados.filter(x => x.ok).length;
+    for (const x of d.resultados) progLog(`${x.ok ? '✓' : '✗'} ${x.screenId} · ${x.ok ? `${t(plural(x.items, 'pieza', 'piezas'), plural(x.items, 'piece', 'pieces'))} · rev ${x.rev}` : x.error}`, x.ok ? 'ok' : 'bad');
+    progLog(t(`Programación · ${ok}/${d.resultados.length} players · ${d.quien} · ${new Date(d.cuando).toLocaleString('es-ES')}`, `Scheduling · ${ok}/${d.resultados.length} players · ${d.quien} · ${new Date(d.cuando).toLocaleString('en-GB')}`), d.ok ? 'ok' : 'bad');
+    prog.prueba = null; // el estado de las listas cambió: la siguiente programación necesita otra prueba
+    renderProgramar();
+    $('#programar-status').textContent = d.ok ? t(`Programados ${plural(ok, 'player', 'players')}: lo reproducen en unos 30 s.`, `${plural(ok, 'player', 'players')} scheduled: they play it within about 30 s.`) : t(`Programación incompleta: ${ok}/${d.resultados.length} players. Revisa el registro.`, `Incomplete scheduling: ${ok}/${d.resultados.length} players. Check the log.`);
+  } else {
+    progLog(`${t('Programación', 'Scheduling')} · ${progError(res)}`, 'bad');
+    if (res.status === 409) prog.prueba = null;
+    renderProgramar();
+    $('#programar-status').textContent = progError(res);
+  }
+};
 
 // ── Proyecto (Carlos, 5-oct-2026) ───────────────────────────────────────────
 // Lista: proyectos de Yokup (en vivo, con respaldo en proyectos/yokup.json). Ajustes propios:

@@ -280,3 +280,6 @@ body[data-paso="1"] #cuad-experto-live{display:none}
 .paquete-log{margin-top:10px;font-size:11px}.paquete-log summary{cursor:pointer;color:var(--ac)}.paquete-log ol{margin:6px 0 0;padding-left:18px}.paquete-log p{margin:6px 0 0}
 .estancos-mapa{font-size:11px;margin:4px 0 6px}.estancos-mapa summary{cursor:pointer;color:var(--ac)}.estancos-mapa p{margin:6px 0 0;line-height:1.45}
 .estancos .estancos-preparar{display:block;background:#1b2030;color:var(--ac);border:1px solid var(--ac);border-radius:99px;padding:8px 12px;cursor:pointer;font:inherit;font-size:12px;font-weight:600;text-align:center}.estancos .estancos-preparar:disabled{opacity:.45;cursor:default}.estancos .estancos-preparar:not(:disabled):hover{background:#17333d}
+/* Programación de players (6-oct-2026): plan de la prueba y registro. Solo variables del tema. */
+.programar-plan{list-style:none;margin:6px 0 0;padding:0}.programar-plan[hidden]{display:none}.programar-plan li{padding:4px 0;border-top:1px solid var(--ln);overflow-wrap:anywhere}.programar-plan li b{color:var(--ok)}.programar-plan li.bad b{color:var(--err)}.programar-plan li small{display:block;color:var(--mu)}
+#programar-log li.ok{color:var(--ok)}#programar-log li.bad{color:var(--err)}
