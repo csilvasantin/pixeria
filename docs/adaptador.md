@@ -436,7 +436,8 @@ Encargo de Carlos (6-oct-2026). En algunos formatos, adaptar es deformar o recor
 
 - Para cada formato se calcula la desproporción `r = max(a_src/a_dst, a_dst/a_src)`, con `a = ancho/alto`. En los videowalls segmentados se usa la pared física, no el archivo de entrega.
 - Si `r ≥ UMBRAL_CREAR` (constante en `crear-core.mjs`, **3,5**; 16:9 → 9:16, con r ≈ 3,16, sigue en «Adaptar»), la tarjeta pasa a «Crear». El título muestra la etiqueta **CREAR · <receta>**, y el *tooltip* da el valor de r. Con r < 3,5 todo sigue como antes.
-- **Atención:** 16:9 ↔ 9:16 da r ≈ 3,16, así que también cruza el umbral. Un vídeo horizontal en la tarjeta vertical 9:16 (o en `cliente-01` de Altadis) sale por defecto con la receta. Si se quiere que esas tarjetas sigan en «Adaptar», basta con subir el umbral a 3,5. 1:1 (1,78) y 4:5 (2,22) no cambian.
+- 16:9 ↔ 9:16 da r ≈ 3,16: con el umbral en 3,5 no lo cruza, así que un vídeo horizontal en la tarjeta vertical 9:16 (o en `cliente-01` de Altadis) sigue en «Adaptar». 1:1 (1,78) y 4:5 (2,22) tampoco cambian.
+- Una **receta explícita en la ficha del proyecto** también pasa la tarjeta a «Crear», aunque r < 3,5 (ver «Proyectos: receta por defecto por formato»).
 - Cada tarjeta tiene el selector **[Adaptar | Crear]**. El botón activo en automático lleva la marca «· auto». Pulsar el otro botón fuerza esa acción solo en esa tarjeta, y la elección se guarda. En Avanzado, «Acción» vuelve a **Auto** y explica la decisión, por ejemplo «Auto · Crear (r = 4; umbral 3,5)».
 - En «Crear», la tarjeta muestra las tres recetas (**Tira · Barrido · Rótulo**). El botón de exportar dice «Crear MP4 · N s». El método (recorte, contener o expandir) es de «Adaptar» y queda desactivado; el foco y el zoom siguen contando.
 
@@ -467,13 +468,61 @@ Todas se calculan en el navegador. La vista previa en canvas usa las mismas func
 - Mismo pipeline, cola, presupuesto de memoria (96/192 MiB), tope de 128 MiB y rechazo desde 124 MiB. El motor (`adapter-export.js`) admite archivos de entrada extra por trabajo (`extraFiles`), que se escriben y se borran en cada ejecución.
 - Nombre del archivo: `<contenido>-<formato>-crear-<receta>-<ancho>x<alto>.mp4`.
 - **Stock:** el MP4 se publica como cualquier adaptación, con la etiqueta extra `crear-tira`, `crear-barrido` o `crear-rotulo` y con «crear · receta …» en el prompt. En el paquete por estanco, la etiqueta va junto al formato y el `externalRef` lleva la receta (`…:cliente-01:crear-barrido`): una pieza creada no se confunde con la adaptada. Sin receta, el `externalRef` es el de siempre.
-- **PNG y JPG** (display e impresión) en «Crear»: sacan un fotograma representativo. Es la tira completa, la mitad del barrido o el arranque del rótulo, y también es lo que se ve en pausa.
+- **PNG y JPG** (display e impresión) en «Crear»: sacan un fotograma representativo. Es la tira completa, la mitad del barrido o el arranque del rótulo. Es también lo que enseña el previo con movimiento reducido antes de pulsar ▶ (ver «Previo animado»).
 - **Videowalls segmentados:** la receta se compone sobre la pared física (por ejemplo, 7020×960 en el 13x1 V) en `[wall]`. Después se corta por pantalla como siempre: «Exportar entrega» y «Exportar por pantalla». Ver `atlasJob` y `segmentsJob` con `receta`.
 - **Experto:** el plan técnico enseña la orden FFmpeg real de la receta. **Avanzado** resume la receta (piezas, eje del paneo, claim, velocidad y r).
 
 ### Proyectos: receta por defecto por formato
 
-La ficha admite `"recetas": {"<formato propio>": "tira" | "barrido" | "rotulo" | "adaptar"}`. `validateFicha` comprueba que el formato sea propio de la ficha y que el valor sea válido. La receta es la que se usa cuando la tarjeta pasa a «Crear». Así, el paquete por estanco crea sin preguntar. `"adaptar"` fuerza el reencuadre de siempre en ese formato. La plantilla trae un ejemplo. Los ajustes del usuario por formato tienen prioridad y se guardan solo si difieren de los de la ficha. Altadis no lleva todavía recetas: hay una propuesta en el informe de la misión.
+La ficha admite `"recetas": {"<formato propio>": "tira" | "barrido" | "rotulo" | "adaptar"}`. `validateFicha` comprueba que el formato sea propio de la ficha y que el valor sea válido. `projectFormats` copia la receta en el formato (`f.receta`), también en los videowalls. La plantilla trae un ejemplo.
+
+**Cómo se combina con el umbral** (6-oct-2026). Una receta explícita de la ficha es la receta por defecto de ese formato y, en la práctica, fuerza «Crear»:
+
+| Acción de la tarjeta | Ficha | Resultado |
+|---|---|---|
+| `auto` | `tira` / `barrido` / `rotulo` | **Crear** con esa receta, **aunque r < 3,5** |
+| `auto` | sin receta | el umbral: Crear si r ≥ 3,5 |
+| `auto` | `"adaptar"` | Adaptar (la base de la tarjeta ya es «Adaptar» forzado) |
+| `adaptar` (el usuario la fuerza en la tarjeta) | cualquiera | **Adaptar** |
+| `crear` (el usuario la fuerza) | cualquiera | Crear |
+
+Lo decide `crear-core · motivoAccion(cfg, src, dst, recetaFicha)` (`accionEfectiva` es su atajo); `motivo` es `forzado`, `ficha`, `umbral` o `sin-contenido`. Sin contenido no hay receta. En la tarjeta, el botón «Crear · auto» y la etiqueta dicen «receta de la ficha del proyecto», y en Avanzado la opción Auto queda como «Auto · Crear (receta de la ficha: Barrido; r = 3)». Los ajustes del usuario por formato tienen prioridad y se guardan solo si difieren de los de la ficha: forzar «Adaptar» en una tarjeta con receta se guarda; dejarla como la ficha, no. El paquete por estanco usa la misma decisión (`creando`), así que con recetas en la ficha **crea sin preguntar**, con la etiqueta `crear-<receta>` y el `externalRef` con la receta.
+
+**Altadis** (`altadis-estancos-bcn.json`, aprobado por Carlos el 6-oct-2026):
+
+- **barrido:** `cliente-06` (SINCRO VW 4X1 H, 3840×540), `cliente-10` (góndola LED 64×384), `cliente-14` (VIDEOWALL 3X1 H, 2880×540), `cliente-esp-2` (6x1 H), `cliente-esp-3` (9x1 H) y `cliente-esp-5` (13x1 V).
+- **tira:** `cliente-12` (VIDEOWALL 1X2 V, 540×1920), `cliente-15` (VIDEOWALL 4X1 H), `cliente-21` (VIDEOWALL 1X4 H, 960×2160) y `cliente-esp-1` (5x1 H: 5 piezas, una por pantalla de 640 px).
+- **rotulo:** `cliente-09` (LED GRANADA-021, 1536×192), `cliente-18` (SHUTTLE STRETCH, 1920×158), `cliente-19` (LG STRETCH MADRID-199, 3840×600) y `cliente-esp-4` (CORDOBA-098).
+- **Sin receta:** `cliente-01` y los que quedan por debajo del umbral frente a un 16:9 (`03`, `05`, `08`, `16`, `20`, `24`): adaptan como siempre.
+- **`cliente-17` se queda fuera.** La propuesta lo agrupaba con `cliente-06` como pantalla «Sincro», pero en el PDF es VIDEOWALL 8X1 H (2880×640, uso «videowall»), no un formato sincronizado. Además, r = 2,53 frente a un 16:9. Si se quiere barrido ahí, basta con añadir `"cliente-17": "barrido"`.
+- **Por debajo del umbral y con receta:** frente a un 16:9, solo `cliente-14` (r = 3). Crea por la ficha. El resto de formatos con receta tiene r ≥ 3,5 (de 3,6 en `cliente-19` a 15 en CORDOBA-098).
+
+### Previo animado
+
+Encargo de Carlos (6-oct-2026): hay que poder ver cómo quedan las animaciones antes de exportar.
+
+- **Qué ve el usuario.** Cada tarjeta en «Crear» (también los videowalls) lleva, bajo la vista previa:
+  - el botón **▶ Previsualizar animación** / **⏸ Pausar animación**;
+  - una barra de tiempo fina, que se arrastra o se pulsa para ir a cualquier instante (también con el teclado, porque es un `input range`);
+  - la posición y la duración, por ejemplo «0:04 / 0:10». Con piezas de menos de 3 s se muestran décimas: «0:00.4 / 0:00.5».
+- **Previsualizar todas.** Junto a «Adaptar · N» aparece **▶ Previsualizar todas · N** cuando hay tarjetas en «Crear». Arranca todas a la vez desde 0, y al pulsarlo otra vez (**⏸ Pausar todas**) las detiene.
+- **Reloj propio.** Cada tarjeta tiene un reloj de previsualización (`crear-core · relojPrevio`: `relojT`, `relojPlay`, `relojPausa`, `relojSeek`, `relojDuracion`). Corre en bucle sobre la duración de la receta (`duracionReceta`):
+  - funciona con imagen fija, SVG, GIF animado y con el vídeo en pausa;
+  - el barrido hace el paneo completo, de ida o de ida y vuelta;
+  - la tira hace la cascada de aparición y, con «tramos en bucle», cada pieza reproduce su tramo;
+  - el rótulo desplaza el texto.
+- **Fiel al MP4.** El previo no tiene trayectoria propia. En el instante t pinta el fotograma `n = previoN(t)` = ⌊t·25⌋ y `previoFotograma(g, n)` devuelve lo que hace el filtro FFmpeg en ese n:
+  - en el barrido, la ventana de `barridoVentana`;
+  - en el rótulo, el desplazamiento de `rotuloDesplazamiento`;
+  - en la tira, el alfa de `alphaCelda` en n/25 y, con vídeo, el instante del origen de cada pieza.
+- **Cuándo se mueve solo.**
+  - Con imagen, SVG, GIF o el vídeo en pausa, el previo arranca en marcha.
+  - Si el vídeo se reproduce, la tarjeta sigue al vídeo como antes («Sigue al vídeo») y ▶ queda como alternativa: al pulsarlo manda su propio reloj.
+  - ▶, ⏸ y la barra pasan la tarjeta a control manual. Al volver a reproducir el vídeo, todas vuelven a seguirlo.
+  - Con `prefers-reduced-motion`, el previo arranca en pausa en el fotograma representativo y lo indica: «Movimiento reducido: el previo arranca en pausa. Pulsa ▶ para verlo.»
+- **En vivo.** Cambiar la receta o sus ajustes (sentido, recorrido, segundos del paneo, piezas, zoom, claim, velocidad, colores) repinta el previo en el mismo instante. Si cambia la duración, el reloj conserva la posición módulo la nueva duración.
+- **Rendimiento.** Un `IntersectionObserver` apunta qué tarjetas están en pantalla. Fuera de los repintados generales (cambio de ajustes o fotograma nuevo del vídeo), cada fotograma solo se repintan las tarjetas «Crear» visibles con su reloj en marcha. Antes, una imagen con alguna receta repintaba todas las tarjetas en cada fotograma.
+- **Bilingüe, tema Matrix y UX cuadrática.** Los textos salen en ES/EN con `t()`. Los botones son cuadrados, con los tokens del tema (`--ac`, `--ln-hi`, `--rad`), y la barra es de 3 px con el pulgar en el color de acento. «Previsualizar todas» va en la barra de exportación, no en la superior.
 
 ### Límites
 
@@ -483,6 +532,11 @@ La ficha admite `"recetas": {"<formato propio>": "tira" | "barrido" | "rotulo" |
 - El GIF animado dura un bucle, también en el barrido: un GIF de 1 s barre en 1 s.
 - Rótulo: el periodo de la tira no tiene por qué dividir la duración, así que el bucle del MP4 puede dar un pequeño salto en el texto. El logo no se guarda al recargar. Una pared muy larga (CORDOBA-098) pinta una tira de unos 17 000 px.
 - No hay IA generativa, maquetación de capas ni zonas seguras automáticas.
+- Previo animado:
+  - Los fotogramas de la tira con vídeo (momentos) se capturan la primera vez que se piden, así que una pieza puede tardar un instante en aparecer.
+  - Con tramos en bucle, cada `<video>` oculto se resincroniza si se desvía más de 0,3 s mientras corre. En pausa o al buscar un instante, se ajusta al fotograma.
+  - Las tarjetas fuera de pantalla no se repintan, aunque su reloj sigue corriendo.
+  - El estado del previo no se guarda: al recargar, las tarjetas vuelven a su modo automático.
 
 ### Verificación
 
@@ -514,3 +568,22 @@ BASE=http://127.0.0.1:9195 SHOTS=/dir PW=/ruta/playwright-core node test/adaptad
 ```
 
 - Los e2e `adaptador-imagenes`, `adaptador-formatos` y `adaptador-estancos` prueban el reencuadre en 9:16 con fuentes 16:9. Ahora fuerzan «Adaptar» en esa tarjeta, o aceptan el sufijo de receta en el `externalRef` del paquete.
+- **Recetas de Altadis y previo animado** (`node --test test/adapter-crear.test.mjs`):
+  - **Altadis:** las 14 recetas aprobadas; cada id existe en `perfil-cliente-18.json` o `perfil-cliente-especiales.json` y cada valor es una receta; `validateFicha` limpia; `cliente-17` y los formatos por debajo del umbral, sin receta; con receta y r < 3,5, solo `cliente-14`.
+  - **Receta de la ficha + umbral + forzado manual:** `motivoAccion` y `accionEfectiva`. Con cualquier contenido, el paquete crea en los 14 formatos y el `externalRef` lleva la receta.
+  - **Reloj:** bucle, duración, posición, pausa, seek, cambio de duración; un bucle recorre todos los fotogramas en orden y vuelve a 0; «0:04 / 0:10».
+  - **Previo = plan FFmpeg:** en más de 1000 instantes del reloj, para 3 destinos (banner, rascacielos y pared 13x1 V), 3 fuentes (vídeo, imagen y GIF) y 6 variantes de receta, el fotograma del previo coincide con las expresiones FFmpeg evaluadas en ese n (ventana del barrido y desplazamiento del rótulo) y con los `fade` y `-ss` de la tira.
+- `test/adaptador-previo.browser.cjs` (Playwright):
+  - **Imagen fija con barrido:** con movimiento reducido arranca en pausa y lo indica; ▶ cambia el canvas entre dos instantes y la barra avanza.
+  - **Seek:** con valor exacto el mismo instante pinta el mismo fotograma, y un clic a mitad de la barra lleva a unos 5 s de 10.
+  - **Ajuste en vivo:** cambiarlo actualiza el previo.
+  - **Tira y rótulo:** la tira aparece en cascada (0 % → 25 % → 50 % → todo) y el rótulo se desplaza.
+  - **Previsualizar todas:** arranca y pausa dos tarjetas.
+  - **Vídeo:** reproduciéndose, la tarjeta sigue al vídeo; ▶ toma el reloj propio, que sigue animando con el vídeo en pausa.
+  - **Altadis:** aplica las 14 recetas (`cliente-14` incluida) y deja sin receta las demás; forzar «Adaptar» se guarda; el videowall 13x1 V anima la pared y la entrega.
+  - **390 px y /en/:** sin desbordamiento.
+  - **Capturas y vídeo:** con `SHOTS` guarda capturas y un MP4/GIF del previo grabado con `recordVideo`.
+
+```
+BASE=http://127.0.0.1:9195 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-previo.browser.cjs
+```

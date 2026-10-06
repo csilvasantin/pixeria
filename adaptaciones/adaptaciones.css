@@ -379,3 +379,21 @@ body.adapt-page{overflow-x:clip;overflow-y:visible}
 .adv-live .crear-chk input{accent-color:var(--ac);margin:2px 0 0}
 .adv-live .crear-receta{display:flex;flex-direction:column;gap:6px}
 .adv-live select:disabled{opacity:.5}
+
+/* Previo animado (Carlos, 6-oct-2026): ▶/⏸ por tarjeta en «Crear», barra de tiempo fina y «Previsualizar todas». */
+.previo{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-width:0}
+.previo[hidden]{display:none!important}
+.previo-btn,#previo-todas{font:inherit;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;min-height:28px;background:transparent;color:var(--ac);border:1px solid var(--ln-hi);border-radius:var(--rad);cursor:pointer;white-space:nowrap}
+#previo-todas{padding:6px 12px;font-size:12px}
+.previo-btn:hover,#previo-todas:hover{background:var(--hover)}
+.previo-btn[aria-pressed="true"],#previo-todas[aria-pressed="true"]{background:color-mix(in srgb,var(--ac) 18%,transparent);font-weight:700}
+#previo-todas[hidden]{display:none}
+.previo-pos{flex:1 1 140px;min-width:0;height:16px;margin:0;accent-color:var(--ac);cursor:pointer;background:transparent;-webkit-appearance:none;appearance:none}
+.previo-pos::-webkit-slider-runnable-track{height:3px;background:color-mix(in srgb,var(--ac) 30%,var(--ln))}
+.previo-pos::-moz-range-track{height:3px;background:color-mix(in srgb,var(--ac) 30%,var(--ln))}
+.previo-pos::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:14px;margin-top:-5.5px;border:0;border-radius:0;background:var(--ac);box-shadow:0 0 6px color-mix(in srgb,var(--ac) 60%,transparent)}
+.previo-pos::-moz-range-thumb{width:10px;height:14px;border:0;border-radius:0;background:var(--ac)}
+.previo-pos:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.previo-t{font:600 11px ui-monospace,monospace;color:var(--mu);font-variant-numeric:tabular-nums;white-space:nowrap}
+.previo-nota{flex:1 1 100%;font-size:11px;color:var(--mu)}
+.previo-nota[hidden]{display:none}

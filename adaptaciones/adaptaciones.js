@@ -13,7 +13,7 @@ import { sizeGroups, selectionState, toggleSelection, selectionAction } from './
 import { pngDensity } from './png-density.mjs';
 import { validateEstancos, formatsFor, packagePlan, groupByEstanco, manifest as packageManifest, zipEntries, buildZip, zipName, sourceKey, publishPlan, publishPieces, FFLATE, PROGRAMAR_URL, PROGRAMAR_MAX, programPieces, loteKey } from './estancos-core.mjs';
 import { gifPlayer, hasImageDecoder, decodeHEIC, LIBHEIF, rasterSVG, svgCache } from './fuentes-especiales.mjs';
-import { UMBRAL_CREAR, RECETAS, TIRA, ROTULO, crearDefaults, defaultsFicha, crearSettings, desproporcion, accionAuto, accionEfectiva, tiraN, tiraGeometria, tiraMomentos, tiraTramos, tiraRecortes, cascada, alphaCelda, barridoPlan, barridoVentana, rotuloLayout, rotuloVelocidad, rotuloDesplazamiento, crearJob, crearPared, duracionReceta, tiempoRepresentativo, ROTULO_PNG } from './crear-core.mjs';
+import { UMBRAL_CREAR, RECETAS, TIRA, ROTULO, crearDefaults, defaultsFicha, crearSettings, desproporcion, accionAuto, accionEfectiva, tiraN, tiraGeometria, tiraMomentos, tiraTramos, tiraRecortes, cascada, alphaCelda, barridoPlan, barridoVentana, rotuloLayout, rotuloVelocidad, rotuloDesplazamiento, crearJob, crearPared, duracionReceta, tiempoRepresentativo, ROTULO_PNG, motivoAccion, relojPrevio, relojT, relojPlay, relojPausa, relojSeek, relojDuracion, relojEnMarcha, previoN, previoFotograma, etiquetaTiempo } from './crear-core.mjs';
 
 const EN = document.documentElement.lang === 'en';
 const t = (es, en) => EN ? en : es;
@@ -27,6 +27,13 @@ FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoo
 // receta de la ficha del proyecto o «barrido»; la acción «auto» pasa a Crear con r ≥ UMBRAL_CREAR.
 const crearBase = f => defaultsFicha(f.receta);
 const crearCfg = f => state.crear[f.id] || (state.crear[f.id] = crearBase(f));
+// Previo animado (6-oct-2026): reloj por tarjeta, lo último pintado, tarjetas visibles y movimiento reducido.
+const previos = new Map(); // id → {reloj, manual, reanudar, arrastre}
+const ultimaInfo = new Map(); // id → {t, dur, modo, corre}
+const visibles = new Set(); let io = null, previoTodas = null;
+const reduceMQ = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+let movimientoReducido = !!reduceMQ?.matches;
+reduceMQ?.addEventListener?.('change', e => { movimientoReducido = e.matches; drawDirty = true; });
 // Proyecto activo (Carlos, 5-oct-2026): biblioteca general + la ficha del proyecto de Yokup, si la tiene.
 let FICHA = null, INDEX = [], PROJECTS = [], campaigns = CAMPAIGNS, yokupSource = 'none', yokupDate = '';
 
@@ -418,7 +425,7 @@ function buildGrid() {
     selectable(el, f);
     g.appendChild(el);
   });
-  refreshOriginal();
+  refreshOriginal(); observarTarjetas(g);
   if (!selected.some(f=>f.id===state.sel)) state.sel = selected[0]?.id || '';
   markSelected(); buildCardSettings(); refreshInfo();
 }
@@ -540,8 +547,7 @@ function refreshInfo() {
   const allCount=FORMATOS.filter(isLibrarySize).length;
   const allLabel=$('#all-sizes .all-sizes-count');if(allLabel)allLabel.textContent=String(allCount);
   document.querySelectorAll('.export-one').forEach(el=>el.disabled=!state.src.ancho);
-  labelExports(); syncCrearCards();
-  crearAnim = isPicture() && !!state.src.ancho && !$('#paso-2').hidden && selectedFormats().some(creando);
+  labelExports(); syncCrearCards(); syncPrevioTodas();
   const selF = FORMATOS.find((x) => x.id === state.sel && x.on), selAviso = $('#card-settings .aviso');
   if (selF && selAviso) selAviso.textContent = cardAviso(selF);
   const rows = selectedFormats().map((f) => {
@@ -591,7 +597,7 @@ function ffmpegCmd(f) {
 }
 
 // ── Render en vivo (canvas) ─────────────────────────────────────────────────
-function drawInto(cv, f, override) { if (creando(f)) { paintCrear(cv, perfil(f), f, null, override); return; } paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id], override); }
+function drawInto(cv, f, override) { if (creando(f)) return paintCrear(cv, perfil(f), f, null, override); paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id], override); return null; }
 // What the preview draws: the media element, or for an SVG a raster at this canvas' needed resolution
 // (cached in √2 steps; the base image is used for the frame or two until it arrives).
 const SVG_PREVIEW = {paso: true, maxLado: 4096, maxPx: 2048 * 2048};
@@ -616,8 +622,9 @@ function paint(cv, output, m, s, override) {
 // Preview only: the wall is painted once, then every screen is copied into its
 // delivery cell, exactly as the encoder cuts them. Cut lines and numbers are overlays.
 function drawEspecial(el, f) {
-  const wall = el.querySelector('canvas.wall'), atlas = el.querySelector('canvas.atlas'); if (!wall || !mediaReady()) return;
-  const g = geometry(f.layout); if (creando(f)) paintCrear(wall, wallOutput(f), f); else paint(wall, wallOutput(f), modoEfectivo(f), state.fmt[f.id]);
+  const wall = el.querySelector('canvas.wall'), atlas = el.querySelector('canvas.atlas'); if (!wall || !mediaReady()) return null;
+  // Crear: the recipe is painted on the physical wall and the delivery copies its cuts, so both animate.
+  const g = geometry(f.layout); let info = null; if (creando(f)) info = paintCrear(wall, wallOutput(f), f); else paint(wall, wallOutput(f), modoEfectivo(f), state.fmt[f.id]);
   const k = wall.width / g.pared.ancho, a = atlas.width / g.entrega.ancho, ctx = atlas.getContext('2d');
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, atlas.width, atlas.height);
   for (const seg of g.segments) ctx.drawImage(wall, seg.wall.x * k, seg.wall.y * k, seg.wall.w * k, seg.wall.h * k, seg.atlas.x * a, seg.atlas.y * a, seg.atlas.w * a, seg.atlas.h * a);
@@ -628,6 +635,7 @@ function drawEspecial(el, f) {
   for (const seg of g.segments) { ctx.strokeRect(seg.atlas.x * a + .5, seg.atlas.y * a + .5, seg.atlas.w * a - 1, seg.atlas.h * a - 1); label(ctx, seg.atlas.x * a, seg.atlas.y * a, String(seg.n), Math.max(10, Math.min(18, seg.atlas.w * a / 6))); }
   ctx.setLineDash([]); ctx.strokeStyle = '#ff6a3d';
   for (const c of g.unused) { const [x, y, w, h] = [c.x * a, c.y * a, c.w * a, c.h * a]; ctx.fillStyle = '#111'; ctx.fillRect(x, y, w, h); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y + h); ctx.moveTo(x + w, y); ctx.lineTo(x, y + h); ctx.stroke(); }
+  return info;
 }
 // ── Crear (formatos extremos, 6-oct-2026) ───────────────────────────────────
 // Con r = max(a_src/a_dst, a_dst/a_src) ≥ UMBRAL_CREAR la tarjeta pasa de «Adaptar» a «Crear» y ofrece
@@ -640,7 +648,10 @@ const srcKindCrear = () => isAnim() ? 'anim' : isImage() ? 'still' : 'video';
 const recetaSeconds = () => isAnim() ? animSeconds : isImage() ? stillSec : (Number.isFinite(video.duration) ? video.duration : 0);
 // Destination used for the disproportion: the output size, or the physical wall for segmented walls.
 function destino(f) { if (f.especial) { const g = geometry(f.layout); return {ancho: g.pared.ancho, alto: g.pared.alto}; } const p = perfil(f); return {ancho: p.ancho, alto: p.alto}; }
-const accionDe = f => accionEfectiva(crearCfg(f), state.src, destino(f));
+// Receta explícita de la ficha (Altadis, 6-oct-2026): en «auto» fuerza «Crear» aunque r < umbral; la tarjeta
+// puede forzar «Adaptar». Ver crear-core · motivoAccion y docs/adaptador.md.
+const recetaFicha = f => RECETAS.includes(f.receta) ? f.receta : null;
+const accionDe = f => accionEfectiva(crearCfg(f), state.src, destino(f), recetaFicha(f));
 const creando = f => !!state.src.ancho && accionDe(f) === 'crear';
 const crearZoom = f => { const c = crearCfg(f), s = state.fmt[f.id]; return {fx: .5, fy: .5, zoom: Math.max(s.zoom, c.receta === 'tira' ? c.tira.zoom : 1)}; };
 function crearArgs(f, src = state.src) {
@@ -648,12 +659,28 @@ function crearArgs(f, src = state.src) {
   return {kind, src, s: state.fmt[f.id], cfg: crearCfg(f), seconds: recetaSeconds(), input: crearInput.name !== 'input' || kind === 'video' ? crearInput.name : kind === 'anim' ? 'input.gif' : 'input.png'};
 }
 const fmtNum = (v, d = 1) => Number(v).toLocaleString(EN ? 'en-US' : 'es-ES', {maximumFractionDigits: d});
-// Time of the recipe preview: the clip clock for video, a free clock for pictures.
-const crearT0 = performance.now();
-function crearT(dur) {
-  if (!(dur > 0)) return 0;
-  if (srcKind === 'video') return (video.currentTime || 0) % dur;
-  return ((performance.now() - crearT0) / 1000) % dur;
+// ── Previo animado (Carlos, 6-oct-2026) ──
+// Cada tarjeta en «Crear» tiene su reloj de previsualización (crear-core · relojPrevio): corre en bucle sobre
+// la duración de la receta con imagen fija, SVG, GIF y con el vídeo en pausa. Mientras el vídeo se reproduce,
+// la tarjeta sigue al vídeo como siempre, salvo que se pulse ▶ (entonces manda su reloj). ▶/⏸ y la barra de
+// tiempo pasan la tarjeta a control manual; al volver a reproducir el vídeo, todas vuelven a seguirlo.
+// prefers-reduced-motion: arranca en pausa en el fotograma representativo y lo indica. Solo se repintan
+// cada fotograma las tarjetas visibles (IntersectionObserver).
+function previoDe(f) {
+  let p = previos.get(f.id);
+  if (!p) previos.set(f.id, p = {reloj: relojPrevio({duracion: 1, ahora: performance.now()}), manual: false, reanudar: false, arrastre: false});
+  return p;
+}
+// Instante que pinta la tarjeta: {t, modo: 'reloj' | 'video' | 'rep', corre}.
+function tiempoPrevio(f, dur, rep) {
+  const pv = previoDe(f), ahora = performance.now();
+  relojDuracion(pv.reloj, dur, ahora);
+  if (!pv.manual) {
+    if (srcKind === 'video' && !video.paused) { const t = (video.currentTime || 0) % dur; relojSeek(pv.reloj, t, ahora); return {t, modo: 'video', corre: true}; }
+    if (movimientoReducido) { relojPausa(pv.reloj, ahora); relojSeek(pv.reloj, rep, ahora); return {t: rep, modo: 'rep', corre: false}; }
+    relojPlay(pv.reloj, ahora);
+  }
+  return {t: relojT(pv.reloj, ahora), modo: 'reloj', corre: relojEnMarcha(pv.reloj)};
 }
 // Fotogramas del vídeo para la tira (momentos) y la miniatura del rótulo: un <video> oculto con la misma
 // URL que busca cada instante y lo copia a un canvas (máx. 1920 px de ancho).
@@ -749,47 +776,51 @@ async function prepararCrear(f, out) {
   if (srcKind === 'video' && cfg.receta === 'rotulo' && cfg.rotulo.icono === 'miniatura') await fotogramaAsync(tiraMomentos(seconds || 1, 1)[0]);
   if (document.fonts?.ready) await document.fonts.ready;
 }
-// Paints a recipe at time t ('rep' = representative frame for PNG/JPG; null = preview clock).
+// Paints a recipe at time t ('rep' = representative frame for PNG/JPG; a number = that instant; null = the
+// card's preview clock). Every instant goes through previoN/previoFotograma: frame n of the MP4, the same
+// window, offset and alphas the FFmpeg plan computes. Returns {t, dur, modo, corre} for the time bar.
 function paintCrear(cv, output, f, tFixed = null, override = null) {
   const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, ratio = W / output.ancho;
   ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-  if (!mediaReady()) return;
+  if (!mediaReady()) return null;
   const cfg = crearCfg(f), s = state.fmt[f.id], kind = srcKindCrear(), seconds = recetaSeconds() || 1, dur = duracionReceta(cfg, {kind, seconds, src: state.src, dst: output});
-  // A paused video shows the representative frame (whole strip, middle of the pan, ticker start); ⏯ animates it.
-  if (tFixed == null && kind === 'video' && video.paused) tFixed = 'rep';
   const {el: src, dims} = override || drawSource(W, H, 'cover', crearZoom(f));
+  const p = cfg.receta === 'barrido' ? barridoPlan(dims, output.ancho, output.alto, s, cfg, dur) : null;
+  const rep = tiempoRepresentativo(cfg, dur, p);
+  const info = tFixed === 'rep' ? {t: rep, modo: 'rep', corre: false} : tFixed != null ? {t: tFixed, modo: 'fijo', corre: false} : tiempoPrevio(f, dur, rep);
+  info.dur = dur;
+  const n = previoN(info.t, dur);
   if (cfg.receta === 'barrido') {
-    const p = barridoPlan(dims, output.ancho, output.alto, s, cfg, dur);
-    const t = tFixed === 'rep' ? tiempoRepresentativo(cfg, dur, p) : tFixed ?? crearT(dur);
-    const r = barridoVentana(Math.floor(t * 25 + 1e-6), p).rect;
+    const r = previoFotograma({receta: 'barrido', barrido: p}, n).ventana.rect;
     ctx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, W, H);
-    return;
+    return info;
   }
-  const t = tFixed === 'rep' ? tiempoRepresentativo(cfg, dur) : tFixed ?? crearT(dur);
   if (cfg.receta === 'rotulo') {
     if (cfg.rotulo.fondo === 'solido') { ctx.fillStyle = cfg.rotulo.fondoColor; ctx.fillRect(0, 0, W, H); }
     else {
       const c = cropWindow(dims, output.ancho, output.alto, {zoom: 1.1, fx: .5, fy: .5});
       ctx.filter = `blur(${14 * Math.max(output.ancho, output.alto) / 384 * ratio}px) brightness(0.85)`; ctx.drawImage(src, c.x, c.y, c.w, c.h, 0, 0, W, H); ctx.filter = 'none';
     }
-    const st = rotuloStrip(f, output), L = st.layout, off = rotuloDesplazamiento(Math.floor(t * 25 + 1e-6), rotuloVelocidad(cfg, output.ancho, output.alto), L.P);
+    const st = rotuloStrip(f, output), L = st.layout, off = previoFotograma({receta: 'rotulo', rotulo: {v: rotuloVelocidad(cfg, output.ancho, output.alto), P: L.P}}, n).desplazamiento;
     if (L.eje === 'x') ctx.drawImage(st.canvas, off, 0, output.ancho, output.alto, 0, 0, W, H);
     else ctx.drawImage(st.canvas, 0, off, output.ancho, output.alto, 0, 0, W, H);
-    return;
+    return info;
   }
   // Tira de momentos.
-  const n = tiraN(dims, output, cfg.tira.n), g = tiraGeometria(output.ancho, output.alto, n, cfg.tira.sep), c = cascada(dur, n);
+  const nP = tiraN(dims, output, cfg.tira.n), g = tiraGeometria(output.ancho, output.alto, nP, cfg.tira.sep), c = cascada(dur, nP);
   const rec = tiraRecortes(dims, g.celdas, kind, s, cfg);
-  const momentos = kind === 'video' && !cfg.tira.bucle ? tiraMomentos(seconds, n) : null, tramos = kind === 'video' && cfg.tira.bucle ? tiraTramos(seconds, n) : null;
+  const momentos = kind === 'video' && !cfg.tira.bucle ? tiraMomentos(seconds, nP) : null, tramos = kind === 'video' && cfg.tira.bucle ? tiraTramos(seconds, nP) : null;
+  const fr = previoFotograma({receta: 'tira', tira: g, cascada: c, tramos, momentos}, n);
   g.celdas.forEach((cell, i) => {
-    const a = alphaCelda(t, i, c); if (a <= 0) return;
+    const a = fr.alfas[i]; if (a <= 0) return;
     let el = src, q = 1;
     if (momentos) { el = fotograma(momentos[i]); if (!el) return; q = el.width / dims.ancho; }
     else if (tramos) {
       el = tramoVideo(tramos.inicios[i]);
-      const target = tramos.inicios[i] + t;
-      if (el.readyState >= 1 && Math.abs(el.currentTime - target) > .3) el.currentTime = target;
-      if (video.paused || tFixed != null) { if (!el.paused) el.pause(); } else if (el.paused) el.play().catch(() => {});
+      // Plays with the clock that drives the card (video or preview); paused or fixed, it seeks the exact frame.
+      const target = fr.origen[i], corre = info.corre && tFixed == null;
+      if (el.readyState >= 1 && Math.abs(el.currentTime - target) > (corre ? .3 : .02)) el.currentTime = target;
+      if (!corre) { if (!el.paused) el.pause(); } else if (el.paused) el.play().catch(() => {});
       if (el.readyState < 2) return;
       q = el.videoWidth / dims.ancho;
     }
@@ -797,6 +828,7 @@ function paintCrear(cv, output, f, tFixed = null, override = null) {
     ctx.globalAlpha = a; ctx.drawImage(el, r.x * q, r.y * q, r.w * q, r.h * q, cell.x * ratio, cell.y * ratio, cell.w * ratio, cell.h * ratio);
   });
   ctx.globalAlpha = 1;
+  return info;
 }
 function resetCrearMedia() { dropGrabber(); dropTramos(); stripCache.clear(); }
 if (document.fonts?.ready) document.fonts.ready.then(() => { stripCache.clear(); drawDirty = true; });
@@ -804,17 +836,60 @@ if (document.fonts?.ready) document.fonts.ready.then(() => { stripCache.clear();
 // disproportion live in the title. Forcing either action is per card and persists.
 function crearControls(f) {
   const box = document.createElement('div'); box.className = 'crear-ctl';
-  box.innerHTML = `<div class="accion-seg" role="group" aria-label="${t('Adaptar o crear', 'Adapt or create')} · ${escHTML(f.nombre)}"><button type="button" class="accion-btn" data-accion="adaptar" aria-pressed="false">${t('Adaptar', 'Adapt')}</button><button type="button" class="accion-btn" data-accion="crear" aria-pressed="false">${t('Crear', 'Create')}</button></div>
+  box.innerHTML = `${previoHTML(f)}<div class="accion-seg" role="group" aria-label="${t('Adaptar o crear', 'Adapt or create')} · ${escHTML(f.nombre)}"><button type="button" class="accion-btn" data-accion="adaptar" aria-pressed="false">${t('Adaptar', 'Adapt')}</button><button type="button" class="accion-btn" data-accion="crear" aria-pressed="false">${t('Crear', 'Create')}</button></div>
     <div class="recetas" role="group" aria-label="${t('Receta', 'Recipe')} · ${escHTML(f.nombre)}" hidden>${RECETAS.map(r => `<button type="button" class="receta-btn" data-receta="${r}" aria-pressed="false" title="${RECETA_NOMBRE[r]}">${RECETA_CORTA[r]}</button>`).join('')}</div>`;
   box.querySelectorAll('.accion-btn').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); crearCfg(f).accion = b.dataset.accion; pickCard(f); refreshInfo(); syncCrearSettings(); }));
   box.querySelectorAll('.receta-btn').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); const c = crearCfg(f); c.receta = b.dataset.receta; if (c.accion === 'adaptar') c.accion = 'crear'; pickCard(f); refreshInfo(); syncCrearSettings(); }));
+  bindPrevio(box, f);
   return box;
+}
+// Previo animado: ▶ Previsualizar animación / ⏸, barra fina (arrastrar o clic: cualquier instante) y «0:04 / 0:10».
+const previoHTML = f => `<div class="previo" hidden><button type="button" class="previo-btn" aria-pressed="false">${t('▶ Previsualizar animación', '▶ Preview animation')}</button>
+  <input type="range" class="previo-pos" min="0" max="1" step="0.04" value="0" aria-label="${t('Instante del previo', 'Preview instant')} · ${escHTML(f.nombre)}">
+  <output class="previo-t" aria-live="off">0:00 / 0:00</output><span class="previo-nota" hidden></span></div>`;
+const previoCorre = info => !!info && info.modo === 'reloj' && info.corre;
+function bindPrevio(box, f) {
+  const btn = box.querySelector('.previo-btn'), pos = box.querySelector('.previo-pos');
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const pv = previoDe(f), info = ultimaInfo.get(f.id), ahora = performance.now();
+    if (previoCorre(info)) relojPausa(pv.reloj, ahora);
+    else { if (info) relojSeek(pv.reloj, info.t, ahora); relojPlay(pv.reloj, ahora); }
+    pv.manual = true; drawDirty = true;
+  });
+  pos.addEventListener('click', e => e.stopPropagation());
+  pos.addEventListener('pointerdown', () => { const pv = previoDe(f), ahora = performance.now(); pv.arrastre = true; pv.reanudar = previoCorre(ultimaInfo.get(f.id)); relojPausa(pv.reloj, ahora); pv.manual = true; });
+  const soltar = () => { const pv = previoDe(f); if (!pv.arrastre) return; pv.arrastre = false; if (pv.reanudar) relojPlay(pv.reloj, performance.now()); pv.reanudar = false; drawDirty = true; };
+  pos.addEventListener('pointerup', soltar); pos.addEventListener('pointercancel', soltar); pos.addEventListener('change', soltar);
+  pos.addEventListener('input', () => { const pv = previoDe(f); pv.manual = true; relojSeek(pv.reloj, +pos.value, performance.now()); drawDirty = true; });
+}
+// Time bar of a card, after it is painted.
+function syncPrevio(el, f, info) {
+  const box = el.querySelector('.previo'); if (!box) return;
+  const crea = !!info && creando(f);
+  if (box.hidden === crea) box.hidden = !crea;
+  if (!crea) { ultimaInfo.delete(f.id); return; }
+  ultimaInfo.set(f.id, info);
+  const pv = previoDe(f), corre = previoCorre(info), btn = box.querySelector('.previo-btn'), pos = box.querySelector('.previo-pos');
+  const label = corre ? t('⏸ Pausar animación', '⏸ Pause animation') : t('▶ Previsualizar animación', '▶ Preview animation');
+  if (btn.textContent !== label) btn.textContent = label;
+  btn.setAttribute('aria-pressed', String(corre));
+  btn.title = info.modo === 'video' ? t('Sigue al vídeo. Pulsa para verla con su propio reloj.', 'Following the video. Press to use its own clock.') : '';
+  const max = String(+info.dur.toFixed(3));
+  if (pos.max !== max) pos.max = max;
+  if (!pv.arrastre) pos.value = String(info.t);
+  const txt = etiquetaTiempo(info.t, info.dur), out = box.querySelector('.previo-t');
+  if (out.textContent !== txt) out.textContent = txt;
+  const nota = box.querySelector('.previo-nota'), reducido = info.modo === 'rep' && movimientoReducido;
+  const nt = reducido ? t('Movimiento reducido: el previo arranca en pausa. Pulsa ▶ para verlo.', 'Reduced motion: the preview starts paused. Press ▶ to play it.') : info.modo === 'video' ? t('Sigue al vídeo', 'Following the video') : '';
+  if (nota.textContent !== nt) nota.textContent = nt;
+  nota.hidden = !nt;
 }
 function crearTag(f) {
   const r = state.src.ancho ? desproporcion(state.src, destino(f)) : 0, cfg = crearCfg(f), crea = creando(f);
-  const forced = cfg.accion !== 'auto';
+  const forced = cfg.accion !== 'auto', ficha = !forced && !!recetaFicha(f);
   return {crea, r, forced, text: crea ? `${t('Crear', 'Create')} · ${RECETA_CORTA[cfg.receta]}` : '',
-    title: r ? `${t('Desproporción', 'Disproportion')} r = ${fmtNum(r, 2)} · ${t('umbral', 'threshold')} ${fmtNum(UMBRAL_CREAR, 1)}${forced ? ` · ${t('forzado', 'forced')}` : ` · ${t('automático', 'automatic')}`}` : ''};
+    title: r ? `${t('Desproporción', 'Disproportion')} r = ${fmtNum(r, 2)} · ${t('umbral', 'threshold')} ${fmtNum(UMBRAL_CREAR, 1)}${forced ? ` · ${t('forzado', 'forced')}` : ficha ? ` · ${t('receta de la ficha del proyecto', 'project ficha recipe')}` : ` · ${t('automático', 'automatic')}`}` : ''};
 }
 // Keeps every card's tag, toggle and recipe chips in step with the state (called by refreshInfo).
 function syncCrearCards() {
@@ -824,7 +899,7 @@ function syncCrearCards() {
     const tag = el.querySelector('.accion-tag');
     if (tag) { tag.hidden = !tg.crea; tag.textContent = tg.text; tag.title = tg.title; }
     el.classList.toggle('fmt-crear', tg.crea);
-    el.querySelectorAll('.accion-btn').forEach(b => { b.setAttribute('aria-pressed', String(ef === b.dataset.accion)); b.disabled = !state.src.ancho; b.classList.toggle('auto', cfg.accion === 'auto' && ef === b.dataset.accion); b.title = cfg.accion === 'auto' ? t(`Automático: Crear con r ≥ ${fmtNum(UMBRAL_CREAR)}`, `Automatic: Create when r ≥ ${fmtNum(UMBRAL_CREAR)}`) + (tg.r ? ` (r = ${fmtNum(tg.r, 2)})` : '') : t('Forzado en esta tarjeta', 'Forced on this card'); });
+    el.querySelectorAll('.accion-btn').forEach(b => { b.setAttribute('aria-pressed', String(ef === b.dataset.accion)); b.disabled = !state.src.ancho; b.classList.toggle('auto', cfg.accion === 'auto' && ef === b.dataset.accion); b.title = cfg.accion !== 'auto' ? t('Forzado en esta tarjeta', 'Forced on this card') : recetaFicha(f) ? t(`Automático: la ficha del proyecto pide ${RECETA_NOMBRE[recetaFicha(f)]}`, `Automatic: the project ficha asks for ${RECETA_NOMBRE[recetaFicha(f)]}`) + (tg.r ? ` (r = ${fmtNum(tg.r, 2)})` : '') : t(`Automático: Crear con r ≥ ${fmtNum(UMBRAL_CREAR)}`, `Automatic: Create when r ≥ ${fmtNum(UMBRAL_CREAR)}`) + (tg.r ? ` (r = ${fmtNum(tg.r, 2)})` : ''); });
     const rec = el.querySelector('.recetas'); if (rec) rec.hidden = !tg.crea;
     el.querySelectorAll('.receta-btn').forEach(b => b.setAttribute('aria-pressed', String(cfg.receta === b.dataset.receta)));
   });
@@ -886,7 +961,10 @@ function syncCrearSettings(skip = null) {
   const f = FORMATOS.find(x => x.id === state.sel && x.on); if (!f) return;
   const c = crearCfg(f), crea = creando(f), r = state.src.ancho ? desproporcion(state.src, destino(f)) : 0;
   const auto = box.querySelector('[data-c="accion"] option[value="auto"]');
-  auto.textContent = `${t('Auto', 'Auto')} · ${state.src.ancho ? `${accionAuto(state.src, destino(f)) === 'crear' ? t('Crear', 'Create') : t('Adaptar', 'Adapt')} (r = ${fmtNum(r, 2)}; ${t('umbral', 'threshold')} ${fmtNum(UMBRAL_CREAR)})` : `${t('Crear si r ≥', 'Create if r ≥')} ${fmtNum(UMBRAL_CREAR)}`}`;
+  const mot = motivoAccion({accion: 'auto'}, state.src, destino(f), recetaFicha(f));
+  auto.textContent = `${t('Auto', 'Auto')} · ${!state.src.ancho ? (recetaFicha(f) ? t('Crear (receta de la ficha)', 'Create (ficha recipe)') : `${t('Crear si r ≥', 'Create if r ≥')} ${fmtNum(UMBRAL_CREAR)}`)
+    : mot.motivo === 'ficha' ? `${t('Crear', 'Create')} (${t('receta de la ficha', 'ficha recipe')}: ${RECETA_NOMBRE[recetaFicha(f)]}; r = ${fmtNum(r, 2)})`
+    : `${mot.accion === 'crear' ? t('Crear', 'Create') : t('Adaptar', 'Adapt')} (r = ${fmtNum(r, 2)}; ${t('umbral', 'threshold')} ${fmtNum(UMBRAL_CREAR)})`}`;
   const autoN = box.querySelector('[data-c="tira.n"] option[value="0"]');
   autoN.textContent = `${t('Auto', 'Auto')}${state.src.ancho ? ` (${tiraN(state.src, destino(f), 0)})` : ''}`;
   box.querySelectorAll('[data-c]').forEach(inp => {
@@ -926,19 +1004,62 @@ function crearCmd(f) {
     return 'ffmpeg ' + job.args.map(arg => JSON.stringify(arg === 'output.mp4' ? job.filename : arg)).join(' ');
   } catch (_) { return ''; }
 }
-let drawDirty=true,lastFrame=-1,crearAnim=false;
+let drawDirty=true,lastFrame=-1;
+// Cards on screen (IntersectionObserver): only these are repainted every frame by the preview clocks.
+function observarTarjetas(g) {
+  visibles.clear();
+  if (!('IntersectionObserver' in window)) return;
+  io = io || new IntersectionObserver(entries => { for (const e of entries) { const id = e.target.dataset.f; if (e.isIntersecting) visibles.add(id); else visibles.delete(id); } }, {rootMargin: '120px 0px'});
+  io.disconnect(); g.querySelectorAll('.fmt[data-f]').forEach(el => io.observe(el));
+}
+function pintarTarjeta(el, f) {
+  let info = null;
+  if (f.especial) info = drawEspecial(el, f); else { const c = el.querySelector('canvas'); if (c) info = drawInto(c, f); }
+  syncPrevio(el, f, info);
+}
 function loop(now) {
   if(anim) anim.tick(now ?? performance.now());
-  if(crearAnim) drawDirty=true; // recipes on pictures move on their own clock
   const frame = anim ? anim.frameNo : video.currentTime;
   if(drawDirty||frame!==lastFrame){
-  document.querySelectorAll('.fmt[data-f]').forEach((el) => { const f = FORMATOS.find((x) => x.id === el.dataset.f); if (f.especial) { drawEspecial(el, f); return; } const c = el.querySelector('canvas'); if (c) drawInto(c, f); });
+  document.querySelectorAll('.fmt[data-f]').forEach((el) => { const f = FORMATOS.find((x) => x.id === el.dataset.f); if (f) pintarTarjeta(el, f); });
   const oc = document.querySelector('#grid .fmt-original canvas');
   if (oc && (isPicture() ? mediaReady() : video.readyState >= 2)) { const {el} = drawSource(oc.width, oc.height, 'contain', defaults()); oc.getContext('2d').clearRect(0, 0, oc.width, oc.height); oc.getContext('2d').drawImage(el, 0, 0, oc.width, oc.height); }
   drawDirty=false;lastFrame=frame;
+  } else {
+    // Previo animado: only «Crear» cards whose own clock runs, and only the visible ones.
+    document.querySelectorAll('#grid .fmt-crear[data-f]').forEach(el => {
+      const id = el.dataset.f; if ((io && !visibles.has(id)) || !previoCorre(ultimaInfo.get(id))) return;
+      const f = FORMATOS.find(x => x.id === id); if (f) pintarTarjeta(el, f);
+    });
   }
+  syncPrevioTodas();
   requestAnimationFrame(loop);
 }
+// «Previsualizar todas» (next to «Adaptar · N»): every «Crear» card from 0, in step; again, pauses them all.
+previoTodas = document.createElement('button');
+previoTodas.id = 'previo-todas'; previoTodas.type = 'button'; previoTodas.className = 'pill'; previoTodas.hidden = true;
+$('#export-all').after(previoTodas);
+const tarjetasCrear = () => [...document.querySelectorAll('#grid .fmt-crear[data-f]')].map(el => el.dataset.f);
+function syncPrevioTodas() {
+  if (!previoTodas) return;
+  const ids = tarjetasCrear(), todas = ids.length > 0 && ids.every(id => previoCorre(ultimaInfo.get(id)));
+  if (previoTodas.hidden !== !ids.length) previoTodas.hidden = !ids.length;
+  const label = todas ? t('⏸ Pausar todas', '⏸ Pause all') : t(`▶ Previsualizar todas · ${ids.length}`, `▶ Preview all · ${ids.length}`);
+  if (previoTodas.textContent !== label) previoTodas.textContent = label;
+  previoTodas.setAttribute('aria-pressed', String(todas));
+  previoTodas.title = t('Anima a la vez todas las tarjetas en «Crear», desde el principio', 'Plays every «Create» card at once, from the start');
+}
+previoTodas.addEventListener('click', () => {
+  const ids = tarjetasCrear(), ahora = performance.now(), todas = ids.length > 0 && ids.every(id => previoCorre(ultimaInfo.get(id)));
+  for (const id of ids) {
+    const f = FORMATOS.find(x => x.id === id); if (!f) continue;
+    const pv = previoDe(f); pv.manual = true;
+    if (todas) relojPausa(pv.reloj, ahora); else { relojSeek(pv.reloj, 0, ahora); relojPlay(pv.reloj, ahora); }
+  }
+  drawDirty = true;
+});
+// Playing the video again: every card follows it, as before.
+video.addEventListener('play', () => { previos.forEach(p => { p.manual = false; }); drawDirty = true; });
 
 // ── Fuente ──────────────────────────────────────────────────────────────────
 let sourceObjectURL = null;

@@ -39,9 +39,20 @@ export function desproporcion(src, dst) {
 }
 export const accionAuto = (src, dst, umbral = UMBRAL_CREAR) => desproporcion(src, dst) >= umbral ? 'crear' : 'adaptar';
 // cfg.accion: 'auto' decide por el umbral; 'crear' y 'adaptar' son la elección forzada del usuario.
-export function accionEfectiva(cfg, src, dst) {
-  if (cfg?.accion === 'crear' || cfg?.accion === 'adaptar') return cfg.accion;
-  return src?.ancho ? accionAuto(src, dst) : 'adaptar';
+// recetaFicha (6-oct-2026): la receta explícita de la ficha del proyecto para ese formato. En 'auto' fuerza
+// «Crear» aunque r < UMBRAL_CREAR (es la receta por defecto del formato); el usuario aún puede forzar
+// «Adaptar» en la tarjeta. Sin contenido no hay receta.
+export function accionEfectiva(cfg, src, dst, recetaFicha = null) {
+  return motivoAccion(cfg, src, dst, recetaFicha).accion;
+}
+// Por qué la tarjeta adapta o crea: 'forzado' (el usuario), 'ficha' (receta de la ficha), 'umbral' (r) o
+// 'sin-contenido'. r = desproporción (1 sin contenido).
+export function motivoAccion(cfg, src, dst, recetaFicha = null) {
+  const r = desproporcion(src, dst);
+  if (cfg?.accion === 'crear' || cfg?.accion === 'adaptar') return {accion: cfg.accion, motivo: 'forzado', r};
+  if (!src?.ancho) return {accion: 'adaptar', motivo: 'sin-contenido', r};
+  if (RECETAS.includes(recetaFicha)) return {accion: 'crear', motivo: 'ficha', r};
+  return {accion: accionAuto(src, dst), motivo: 'umbral', r};
 }
 
 // ── Ajustes (persistidos por formato) ────────────────────────────────────────
@@ -347,4 +358,65 @@ export function tiempoRepresentativo(cfg, dur, plan = null) {
   if (cfg.receta === 'tira') return Math.max(0, dur - 1 / FPS);
   if (cfg.receta === 'barrido' && plan) return Math.round(plan.N1 / 2) / FPS;
   return 0;
+}
+
+// ── Previo animado (Carlos, 6-oct-2026) ─────────────────────────────────────
+// Cada tarjeta en «Crear» tiene su propio reloj de previsualización: corre en bucle sobre la duración de
+// la receta (duracionReceta), también con imagen fija, SVG, GIF o con el vídeo en pausa. El fotograma que
+// pinta en el instante t es el n = floor(t·25) del MP4: el mismo que calcula el plan FFmpeg (previoFotograma).
+// Reloj puro: `ahora` en milisegundos (performance.now() en el navegador; números fijos en los tests).
+const modulo = (v, m) => ((v % m) + m) % m;
+const durPrevio = d => Number.isFinite(d) && d > 0 ? d : 1 / FPS;
+export function relojPrevio({duracion = 1, enMarcha = false, t = 0, ahora = 0} = {}) {
+  const r = {duracion: durPrevio(duracion), base: 0, desde: null};
+  relojSeek(r, t, ahora);
+  if (enMarcha) r.desde = ahora;
+  return r;
+}
+export const relojEnMarcha = r => r.desde != null;
+// Posición en [0, duración): en marcha avanza con el tiempo real y vuelve a 0 al llegar al final (bucle).
+export function relojT(r, ahora) {
+  const t = r.base + (r.desde == null ? 0 : Math.max(0, ahora - r.desde) / 1000);
+  return modulo(t, r.duracion);
+}
+export function relojPlay(r, ahora) { if (r.desde == null) r.desde = ahora; return r; }
+export function relojPausa(r, ahora) { if (r.desde != null) { r.base = relojT(r, ahora); r.desde = null; } return r; }
+// Ir a un instante (barra de tiempo): se limita a [0, duración] y el final muestra el último fotograma.
+export function relojSeek(r, t, ahora) {
+  const v = Number.isFinite(+t) ? Math.max(0, +t) : 0;
+  r.base = v >= r.duracion ? Math.max(0, r.duracion - 1e-6) : v;
+  if (r.desde != null) r.desde = ahora;
+  return r;
+}
+// Cambiar la receta o sus ajustes cambia la duración: se conserva la posición (módulo la nueva duración).
+export function relojDuracion(r, duracion, ahora) {
+  const d = durPrevio(duracion);
+  if (Math.abs(d - r.duracion) < 1e-9) return r;
+  const t = relojT(r, ahora);
+  r.duracion = d; r.base = modulo(t, d);
+  if (r.desde != null) r.desde = ahora;
+  return r;
+}
+// Fotograma del previo en t: el mismo n que FFmpeg (25 fps), dentro de la pieza [0, frames(dur) − 1].
+export function previoN(t, dur) {
+  return Math.max(0, Math.min(frames(durPrevio(dur)) - 1, Math.floor(Math.max(0, t) * FPS + 1e-6)));
+}
+// «0:04 / 0:10» (decimas si la pieza dura menos de 3 s: la tira en bucle dura 0,48 s).
+// La posición se trunca (no anuncia un segundo antes de tiempo); la duración se redondea.
+export function fmtTiempo(s, decimas = false, redondear = false) {
+  const q = decimas ? 10 : 1, v = Math.max(0, +s || 0);
+  const k = redondear ? Math.round(v * q) : Math.floor(v * q + 1e-6), m = Math.floor(k / (60 * q)), r = k / q - m * 60;
+  return `${m}:${decimas ? r.toFixed(1).padStart(4, '0') : String(r).padStart(2, '0')}`;
+}
+export const etiquetaTiempo = (t, dur) => `${fmtTiempo(t, dur < 3)} / ${fmtTiempo(dur, dur < 3, true)}`;
+// Lo que pinta el previo en el fotograma n, con la geometría de crearGrafo (o la misma calculada en el
+// navegador): ventana del barrido, desplazamiento del rótulo, alfa de cada pieza de la tira y, con vídeo,
+// el instante del origen que muestra cada pieza. Es exactamente lo que hace el filtro FFmpeg en n.
+export function previoFotograma(g, n) {
+  if (g.receta === 'barrido') return {n, ventana: barridoVentana(n, g.barrido)};
+  if (g.receta === 'rotulo') return {n, desplazamiento: rotuloDesplazamiento(n, g.rotulo.v, g.rotulo.P)};
+  const t = n / FPS, out = {n, alfas: g.tira.celdas.map((_, i) => alphaCelda(t, i, g.cascada))};
+  if (g.tramos) out.origen = g.tramos.inicios.map(st => r6(st + t));
+  else if (g.momentos) out.origen = g.momentos.slice();
+  return out;
 }

@@ -9,7 +9,8 @@ import {mkdtempSync, rmSync, readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {UMBRAL_CREAR, RECETAS, TIRA, desproporcion, accionAuto, accionEfectiva, crearDefaults, defaultsFicha, crearSettings, tiraN, tiraGeometria,
   tiraMomentos, tiraTramos, tiraZonas, cascada, alphaCelda, barridoPlan, barridoP, barridoVentana, barridoFiltro, rotuloLayout, rotuloVelocidad,
-  rotuloDesplazamiento, crearGrafo, crearJob, crearPared, duracionReceta, tiempoRepresentativo, recetaTag, FPS} from '../adaptaciones/crear-core.mjs';
+  rotuloDesplazamiento, crearGrafo, crearJob, crearPared, duracionReceta, tiempoRepresentativo, recetaTag, FPS, motivoAccion, frames,
+  relojPrevio, relojT, relojPlay, relojPausa, relojSeek, relojDuracion, relojEnMarcha, previoN, previoFotograma, fmtTiempo, etiquetaTiempo} from '../adaptaciones/crear-core.mjs';
 import {atlasJob, segmentsJob, geometry} from '../adaptaciones/especiales-core.mjs';
 import {validateFicha, projectFormats} from '../adaptaciones/proyectos-core.mjs';
 import {stockPayload} from '../adaptaciones/stock-publish.mjs';
@@ -199,6 +200,137 @@ test('ficha: recetas por formato validadas y aplicadas; Stock con la etiqueta de
   const [sin] = publishPlan({doc, plan, formatos: ['cliente-01'], fuente: {clave: 'stock-1'}});
   assert.equal(sin.externalRef, 'pixeria:altadis-estancos-bcn:stock-1:cliente-01', 'sin receta, el externalRef de siempre');
   assert.equal(con.externalRef, 'pixeria:altadis-estancos-bcn:stock-1:cliente-01:crear-tira'); assert(con.tags.includes('crear-tira'));
+});
+
+// ── Recetas de la ficha de Altadis (Carlos, 6-oct-2026) ─────────────────────
+const json = rel => JSON.parse(readFileSync(new URL(`../adaptaciones/${rel}`, import.meta.url)));
+const ALTADIS = {
+  barrido: ['cliente-06', 'cliente-10', 'cliente-14', 'cliente-esp-2', 'cliente-esp-3', 'cliente-esp-5'],
+  tira: ['cliente-12', 'cliente-15', 'cliente-21', 'cliente-esp-1'],
+  rotulo: ['cliente-09', 'cliente-18', 'cliente-19', 'cliente-esp-4'],
+};
+// Tamaño con el que se mide r: la resolución nativa o, en los videowalls segmentados, la pared física.
+function altadisDestinos() {
+  const out = {};
+  for (const f of json('perfil-cliente-18.json').formats) out[f.id] = {ancho: f.custom[0], alto: f.custom[1], nombre: f.nombre};
+  for (const l of json('perfil-cliente-especiales.json').layouts) { const g = geometry(l); out[l.id] = {ancho: g.pared.ancho, alto: g.pared.alto, nombre: l.nombre}; }
+  return out;
+}
+
+test('Altadis: recetas de la ficha con ids existentes y recetas permitidas; validateFicha limpia', () => {
+  const ficha = json('proyectos/altadis-estancos-bcn.json'), dst = altadisDestinos();
+  const lists = {estandar: json('perfil-cliente-18.json').formats, especiales: json('perfil-cliente-especiales.json').layouts};
+  assert.deepEqual(validateFicha(ficha, {lists, file: 'altadis-estancos-bcn.json'}), []);
+  const esperado = Object.fromEntries(Object.entries(ALTADIS).flatMap(([r, ids]) => ids.map(id => [id, r])));
+  assert.deepEqual(ficha.recetas, esperado, 'las 14 recetas aprobadas, sin más');
+  for (const [id, r] of Object.entries(ficha.recetas)) { assert(dst[id], `${id} existe en los perfiles`); assert(RECETAS.includes(r), `${id}: ${r} es una receta`); }
+  // Nombres que la propuesta citaba: Shuttle 1920×158, CORDOBA-098, Sincro (cliente-06).
+  assert.deepEqual([dst['cliente-18'].nombre, dst['cliente-18'].ancho, dst['cliente-18'].alto], ['SHUTTLE STRETCH', 1920, 158]);
+  assert.equal(dst['cliente-esp-4'].nombre, 'CORDOBA-098'); assert.match(dst['cliente-06'].nombre, /SINCRO/);
+  // Sin receta: cliente-01, los que quedan por debajo del umbral y cliente-17 (la propuesta lo daba por «Sincro»
+  // y en el PDF es VIDEOWALL 8X1 H, 2880×640: no cuadra, se deja fuera).
+  for (const id of ['cliente-01', 'cliente-03', 'cliente-05', 'cliente-08', 'cliente-16', 'cliente-20', 'cliente-24', 'cliente-17']) assert(!(id in ficha.recetas), `${id} sin receta`);
+  assert.doesNotMatch(dst['cliente-17'].nombre, /SINCRO/i);
+  for (const id of ['cliente-03', 'cliente-05', 'cliente-08', 'cliente-16', 'cliente-20', 'cliente-24', 'cliente-01']) assert(desproporcion(SRC, dst[id]) < UMBRAL_CREAR, `${id}: por debajo del umbral`);
+  // Con receta y por debajo del umbral frente a un 16:9: solo cliente-14 (2880×540, r = 3).
+  const bajo = Object.keys(ficha.recetas).filter(id => desproporcion(SRC, dst[id]) < UMBRAL_CREAR);
+  assert.deepEqual(bajo, ['cliente-14']); assert.equal(desproporcion(SRC, dst['cliente-14']), 3);
+  // projectFormats lleva la receta a cada formato (también a los videowalls).
+  const fmts = projectFormats(ficha, lists);
+  for (const [id, r] of Object.entries(ficha.recetas)) assert.equal(fmts.find(f => f.id === id).receta, r);
+  assert.equal(fmts.filter(f => f.receta).length, 14);
+});
+
+test('receta de la ficha + umbral + forzado manual: la ficha crea aunque r < umbral; «Adaptar» en la tarjeta manda', () => {
+  const dst = altadisDestinos(), c14 = dst['cliente-14'], auto = defaultsFicha('barrido');
+  assert.equal(accionAuto(SRC, c14), 'adaptar', 'por r sola, cliente-14 adaptaría');
+  assert.equal(accionEfectiva(auto, SRC, c14), 'adaptar', 'sin ficha: el umbral');
+  assert.equal(accionEfectiva(auto, SRC, c14, 'barrido'), 'crear', 'con receta en la ficha: Crear');
+  assert.deepEqual(motivoAccion(auto, SRC, c14, 'barrido'), {accion: 'crear', motivo: 'ficha', r: 3});
+  assert.equal(motivoAccion(auto, SRC, c14).motivo, 'umbral');
+  // El usuario fuerza «Adaptar» en la tarjeta: gana a la ficha, y se guarda (difiere de la base de la ficha).
+  const forzado = crearSettings({...auto, accion: 'adaptar'}, auto);
+  assert.equal(accionEfectiva(forzado, SRC, c14, 'barrido'), 'adaptar'); assert.equal(motivoAccion(forzado, SRC, c14, 'barrido').motivo, 'forzado');
+  assert.notDeepEqual(forzado, auto, 'el forzado se persiste');
+  assert.equal(accionEfectiva({...auto, accion: 'crear'}, SRC, {ancho: 1920, alto: 1080}, null), 'crear', 'forzar Crear sin ficha');
+  // Valor "adaptar" en la ficha: el reencuadre de siempre aunque r ≥ umbral.
+  assert.equal(accionEfectiva(defaultsFicha('adaptar'), SRC, BANNER, 'adaptar'), 'adaptar');
+  assert.equal(accionEfectiva(auto, SRC, BANNER, 'adaptar'), 'crear', '"adaptar" no es receta: decide el umbral');
+  assert.equal(accionEfectiva(auto, {ancho: 0, alto: 0}, c14, 'barrido'), 'adaptar', 'sin contenido no hay receta');
+  // Paquete por estanco: con estas recetas, cada formato con receta crea sin preguntar, sea cual sea el contenido.
+  const ficha = json('proyectos/altadis-estancos-bcn.json');
+  for (const src of [SRC, {ancho: 1080, alto: 1920}, {ancho: 1080, alto: 1080}, {ancho: 3840, alto: 540}]) for (const [id, r] of Object.entries(ficha.recetas)) {
+    const cfg = defaultsFicha(r);
+    assert.equal(cfg.receta, r); assert.equal(accionEfectiva(cfg, src, dst[id], r), 'crear', `${id} con ${src.ancho}×${src.alto}`);
+  }
+  for (const id of ['cliente-01', 'cliente-03', 'cliente-17', 'cliente-24']) assert.equal(accionEfectiva(defaultsFicha(undefined), SRC, dst[id], null), 'adaptar', `${id} adapta`);
+  const doc = {proyecto: 'altadis-estancos-bcn', circuito: 'c', estancos: [{id: 'e1'}]};
+  const plan = ['cliente-14', 'cliente-01'].map((formato, i) => ({formato, pantalla: `p${i}`, estanco: 'e1', screen: `s${i}`, archivo: 'a'}));
+  const [p14, p01] = publishPlan({doc, plan, formatos: ['cliente-14', 'cliente-01'], fuente: {clave: 'stock-1'}, recetas: {'cliente-14': ficha.recetas['cliente-14']}});
+  assert.match(p14.externalRef, /:cliente-14:crear-barrido$/); assert(p14.tags.includes('crear-barrido'));
+  assert.match(p01.externalRef, /:cliente-01$/, 'sin receta, el externalRef de siempre');
+});
+
+// ── Previo animado (Carlos, 6-oct-2026) ─────────────────────────────────────
+test('reloj del previo: bucle, duración, posición, pausa y seek', () => {
+  const r = relojPrevio({duracion: 10, ahora: 1000});
+  assert.equal(relojEnMarcha(r), false); assert.equal(relojT(r, 99999), 0, 'en pausa no avanza');
+  relojPlay(r, 1000);
+  assert.equal(relojT(r, 1000), 0); assert(Math.abs(relojT(r, 5000) - 4) < 1e-9, 'avanza en tiempo real');
+  assert(Math.abs(relojT(r, 13500) - 2.5) < 1e-9, 'bucle: vuelve a empezar al llegar a la duración');
+  relojPausa(r, 5000); assert(Math.abs(relojT(r, 60000) - 4) < 1e-9, 'pausado se queda en el instante');
+  relojPlay(r, 60000); assert(Math.abs(relojT(r, 61000) - 5) < 1e-9, 'reanuda desde donde estaba');
+  relojSeek(r, 8, 62000); assert(Math.abs(relojT(r, 62000) - 8) < 1e-9); assert(Math.abs(relojT(r, 63000) - 9) < 1e-9, 'seek en marcha sigue corriendo');
+  relojPausa(r, 63000); relojSeek(r, 7.5, 63000); assert.equal(relojT(r, 70000), 7.5, 'seek en pausa');
+  relojSeek(r, -3, 0); assert.equal(relojT(r, 0), 0); relojSeek(r, 99, 0); assert(relojT(r, 0) < 10 && relojT(r, 0) > 9.99, 'el final muestra el último fotograma');
+  assert.equal(previoN(relojT(r, 0), 10), 249);
+  // Cambiar la duración (otra receta, otros segundos) conserva la posición módulo la nueva duración.
+  const q = relojPrevio({duracion: 10, t: 7, ahora: 0}); relojDuracion(q, 4, 0); assert.equal(q.duracion, 4); assert(Math.abs(relojT(q, 0) - 3) < 1e-9);
+  relojDuracion(q, 0, 0); assert.equal(q.duracion, 1 / FPS, 'duración nula: un fotograma');
+  assert.equal(relojPrevio({duracion: 2, enMarcha: true, ahora: 50}).desde, 50);
+  // Fotograma: el mismo n que FFmpeg, dentro de la pieza.
+  assert.equal(previoN(0, 2), 0); assert.equal(previoN(.04, 2), 1); assert.equal(previoN(.0399, 2), 0); assert.equal(previoN(1.999, 2), 49); assert.equal(previoN(5, 2), 49); assert.equal(previoN(-1, 2), 0);
+  // En marcha, un bucle completo recorre todos los fotogramas de la pieza, en orden, y vuelve a 0.
+  const b = relojPrevio({duracion: 2, enMarcha: true, ahora: 0}), vistos = [];
+  for (let ms = 0; ms < 2000; ms += 8) vistos.push(previoN(relojT(b, ms), 2));
+  assert.deepEqual([...new Set(vistos)], Array.from({length: frames(2)}, (_, i) => i)); assert.equal(previoN(relojT(b, 2000), 2), 0);
+  // «0:04 / 0:10»; decimas si la pieza dura menos de 3 s.
+  assert.equal(etiquetaTiempo(4.2, 10), '0:04 / 0:10'); assert.equal(etiquetaTiempo(65.3, 125.6), '1:05 / 2:06');
+  assert.equal(etiquetaTiempo(.4, .48), '0:00.4 / 0:00.5'); assert.equal(fmtTiempo(9.999), '0:09');
+});
+
+test('previo = plan FFmpeg: el fotograma del reloj en t es el del MP4 en n, para cada receta y fuente', () => {
+  const L = rotuloLayout({W: 3840, H: 540, textos: ['Nuevo sabor', 'New flavour'], icono: {ancho: 1920, alto: 1080}, medir});
+  const fade = graph => [...graph.matchAll(/fade=t=in:st=([\d.]+):d=([\d.]+):alpha=1\[c(\d+)\]/g)].map(m => ({st: +m[1], d: +m[2]}));
+  const alfaFF = (n, {st, d}) => { const T = n / FPS; return T < st ? 0 : T >= st + d ? 1 : (T - st) / d; };
+  let casos = 0;
+  for (const [dst, sk] of [[BANNER, S], [SKY, {fx: .2, fy: .8, zoom: 1.3}], [{ancho: 7020, alto: 960}, S]]) for (const kind of ['video', 'still', 'anim']) for (const [receta, extra] of [['barrido', {}], ['barrido', {barrido: {recorrido: 'vuelta', sentido: -1, seg: 0}}], ['barrido', {barrido: {seg: .6}}], ['rotulo', {}], ['tira', {}], ['tira', {tira: {bucle: true, sep: true}}]]) {
+    const cfg = cfgOf(receta, extra), seconds = kind === 'anim' ? 1.2 : 2;
+    const rot = receta === 'rotulo' ? rotuloLayout({W: dst.ancho, H: dst.alto, textos: ['Claim'], icono: null, medir}) : L;
+    const g = crearGrafo({kind, src: SRC, W: dst.ancho, H: dst.alto, s: sk, cfg, seconds, rotulo: rot}), dur = g.duracion;
+    // El reloj del previo corre sobre la duración de la receta.
+    const reloj = relojPrevio({duracion: duracionReceta(cfg, {kind, seconds, src: SRC, dst}), enMarcha: true, ahora: 0});
+    assert.equal(reloj.duracion, dur);
+    const [xe, ye, x2e, y2e] = receta === 'barrido' ? exprs(g.graph) : [];
+    const xr = receta === 'rotulo' ? g.graph.match(/[xy]='([^']+)'/)[1] : null, fades = receta === 'tira' ? fade(g.graph) : null;
+    for (let ms = 0; ms <= dur * 1000 * 1.5; ms += 37) {
+      const t = relojT(reloj, ms), n = previoN(t, dur), fr = previoFotograma(g, n);
+      assert(n >= 0 && n < frames(dur));
+      if (receta === 'barrido') assert.deepEqual([fr.ventana.x1, fr.ventana.y1, fr.ventana.x2, fr.ventana.y2], [xe, ye, x2e, y2e].map(e => evalExpr(e, n)), `barrido ${kind} n=${n}`);
+      else if (receta === 'rotulo') assert.equal(-fr.desplazamiento, evalExpr(xr, n), `rótulo ${kind} n=${n}`);
+      else {
+        assert.equal(fades.length, g.n); fr.alfas.forEach((a, i) => assert(Math.abs(a - alfaFF(n, fades[i])) < 1e-9, `tira ${kind} pieza ${i} n=${n}`));
+        if (kind === 'video' && cfg.tira.bucle) fr.origen.forEach((o, i) => assert(Math.abs(o - (g.tramos.inicios[i] + n / FPS)) < 1e-6, 'cada pieza en su tramo'));
+        if (kind === 'video' && !cfg.tira.bucle) assert.deepEqual(fr.origen, g.momentos, 'momentos de -ss');
+      }
+      casos++;
+    }
+  }
+  assert(casos > 1000, `${casos} instantes comparados`);
+  // El fotograma representativo (PNG/JPG y pausa) es un instante del mismo reloj.
+  const g = crearGrafo({kind: 'still', src: SRC, W: 3840, H: 540, s: S, cfg: cfgOf('barrido'), seconds: 2});
+  assert.equal(previoN(tiempoRepresentativo(cfgOf('barrido'), 2, g.barrido), 2), Math.round(g.barrido.N1 / 2));
+  assert.equal(previoN(tiempoRepresentativo(cfgOf('tira'), 2), 2), 49, 'tira: último fotograma, todas las piezas');
 });
 
 // ── FFmpeg nativo ────────────────────────────────────────────────────────────

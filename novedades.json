@@ -22,5 +22,10 @@
     "Adaptador: modo «Crear» para formatos extremos (banner ultralargo, rascacielos, videowalls)",
     "Tres recetas sin coste: tira de momentos, barrido y rótulo en movimiento",
     "Cada tarjeta se puede forzar a Adaptar o Crear; receta por formato en la ficha del proyecto"
+  ],
+  "v.06.10.2026.r6.22:14": [
+    "Adaptador: previo animado en «Crear» con ▶/⏸ y barra de tiempo, también con imagen fija o vídeo en pausa",
+    "«Previsualizar todas» anima a la vez todas las tarjetas que crean",
+    "Altadis: cada formato extremo crea con su receta de la ficha (barrido, tira o rótulo)"
   ]
 }

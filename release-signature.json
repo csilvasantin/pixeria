@@ -1,8 +1,8 @@
 {
-  "version": "v.06.10.2026.r5.21:46",
+  "version": "v.06.10.2026.r6.22:14",
   "deployer": "MorfeoMacMini",
   "machine": "MacMini",
   "signature": "MorfeoMacMini · MacMini",
   "agent": "MorfeoMacMini",
-  "evidence": "Adaptador · modo Crear para formatos extremos (r ≥ 3,5): tira de momentos, barrido y rótulo en movimiento, locales y sin coste; receta por formato en la ficha del proyecto."
+  "evidence": "Adaptador · Crear: recetas de la ficha de Altadis (14 formatos; la receta de la ficha crea aunque r < umbral, salvo «Adaptar» forzado) y previo animado por tarjeta con ▶/⏸, barra de tiempo y «Previsualizar todas», fiel al plan FFmpeg."
 }
