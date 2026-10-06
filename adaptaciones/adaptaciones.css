@@ -354,3 +354,28 @@ body.adapt-page{overflow-x:clip;overflow-y:visible}
 /* Programación de players (6-oct-2026): plan de la prueba y registro. Solo variables del tema. */
 .programar-plan{list-style:none;margin:6px 0 0;padding:0}.programar-plan[hidden]{display:none}.programar-plan li{padding:4px 0;border-top:1px solid var(--ln);overflow-wrap:anywhere}.programar-plan li b{color:var(--ok)}.programar-plan li.bad b{color:var(--err)}.programar-plan li small{display:block;color:var(--mu)}
 #programar-log li.ok{color:var(--ok)}#programar-log li.bad{color:var(--err)}
+
+/* Crear · formatos extremos (6-oct-2026): [Adaptar | Crear], recetas y etiqueta visible. Cuadrado, tema Matrix. */
+.adapt-main #grid .fmt-extremo{grid-column:1/-1;min-width:0}
+.adapt-main #grid .fmt-extremo .stage{height:auto;min-height:120px;padding:10px 0}
+.adapt-main #grid .fmt-extremo canvas{max-height:300px;width:100%;height:auto}
+.accion-tag{display:inline-block;margin-left:6px;padding:1px 7px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;vertical-align:middle;color:var(--on-ac,#020602);background:var(--ac);border:1px solid var(--ac);border-radius:var(--rad)}
+.adapt-main #grid .fmt.fmt-crear{border-top-color:var(--ok)}
+.crear-ctl{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:6px}
+.accion-seg,.recetas{display:inline-flex;flex-wrap:wrap;border:1px solid var(--ln-hi);border-radius:var(--rad)}
+.recetas[hidden]{display:none!important}
+.accion-btn,.receta-btn{font:inherit;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;background:transparent;color:var(--mu);border:0;border-right:1px solid var(--ln);border-radius:0;cursor:pointer;min-height:28px}
+.accion-btn:last-child,.receta-btn:last-child{border-right:0}
+.accion-btn:hover,.receta-btn:hover{background:var(--hover);color:var(--tx)}
+.accion-btn[aria-pressed="true"],.receta-btn[aria-pressed="true"]{background:color-mix(in srgb,var(--ac) 18%,transparent);color:var(--ac);font-weight:700}
+.accion-btn.auto::after{content:" · auto";font-size:9px;opacity:.7;text-transform:lowercase}
+.accion-btn:disabled{opacity:.45;cursor:default}
+.adv-live .crear-set{display:flex;flex-direction:column;gap:6px;padding:8px;border:1px dashed var(--ln-hi);border-radius:var(--rad)}
+.adv-live .crear-row{display:grid!important;grid-template-columns:86px minmax(0,1fr);gap:6px 8px;align-items:center;font-size:12px}
+.adv-live .crear-row[hidden],.adv-live .crear-chk[hidden],.adv-live .crear-receta[hidden]{display:none!important}
+.adv-live .crear-row select,.adv-live .crear-row input[type=text],.adv-live .crear-row input[type=number],.adv-live .crear-row input[type=file]{width:100%;min-width:0;box-sizing:border-box;padding:5px;background:var(--field-2);color:var(--tx);border:1px solid var(--ln-hi);border-radius:var(--rad);font:inherit;font-size:12px}
+.adv-live .crear-row input[type=color]{width:44px;height:26px;padding:0;border:1px solid var(--ln-hi);background:transparent}
+.adv-live .crear-chk{display:flex!important;flex-direction:row!important;gap:6px;align-items:flex-start;font-size:12px}
+.adv-live .crear-chk input{accent-color:var(--ac);margin:2px 0 0}
+.adv-live .crear-receta{display:flex;flex-direction:column;gap:6px}
+.adv-live select:disabled{opacity:.5}

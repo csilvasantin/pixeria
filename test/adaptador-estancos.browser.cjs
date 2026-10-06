@@ -71,7 +71,8 @@ const PICK = ['altadis-bcn-003', 'altadis-bcn-007'];
       assert.equal(body.type, 'video'); assert.equal(body.motor, 'adaptador'); assert.equal(body.mime, 'video/mp4');
       assert.ok(body.tags.includes('altadis') && body.tags.includes('estanco-altadis-bcn-003') && body.tags.includes('estanco-altadis-bcn-007'), body.tags.join());
       assert.ok(body.tags.some(t => /^pantalla-p\d-/.test(t)) && body.tags.some(t => /^cliente-0[12]$/.test(t)));
-      assert.match(body.externalRef, /^pixeria:altadis-estancos-bcn:sha256-[0-9a-f]{16}:cliente-0[12]$/);
+      // cliente-01 (vertical) desde un 16:9 pasa a «Crear» (receta por defecto): su ref lleva la receta.
+      assert.match(body.externalRef, /^pixeria:altadis-estancos-bcn:sha256-[0-9a-f]{16}:cliente-0[12](:crear-(tira|barrido|rotulo))?$/);
       assert.match(body.comment, /estanco altadis-bcn-003 · pantalla altadis-bcn-003-p/);
     }
     assert.notEqual(published[0].externalRef, published[1].externalRef);

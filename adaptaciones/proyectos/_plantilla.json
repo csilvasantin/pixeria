@@ -27,6 +27,9 @@
     "codec": "h264",
     "familia": "proyecto"
   },
+  "recetas": {
+    "id-exacto-del-proyecto-en-yokup-01": "barrido"
+  },
   "familias": {
     "proyecto": {"es": "Nombre · formatos propios", "en": "Name · own formats"}
   },

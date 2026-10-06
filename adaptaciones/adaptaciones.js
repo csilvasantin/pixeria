@@ -13,6 +13,7 @@ import { sizeGroups, selectionState, toggleSelection, selectionAction } from './
 import { pngDensity } from './png-density.mjs';
 import { validateEstancos, formatsFor, packagePlan, groupByEstanco, manifest as packageManifest, zipEntries, buildZip, zipName, sourceKey, publishPlan, publishPieces, FFLATE, PROGRAMAR_URL, PROGRAMAR_MAX, programPieces, loteKey } from './estancos-core.mjs';
 import { gifPlayer, hasImageDecoder, decodeHEIC, LIBHEIF, rasterSVG, svgCache } from './fuentes-especiales.mjs';
+import { UMBRAL_CREAR, RECETAS, TIRA, ROTULO, crearDefaults, defaultsFicha, crearSettings, desproporcion, accionAuto, accionEfectiva, tiraN, tiraGeometria, tiraMomentos, tiraTramos, tiraRecortes, cascada, alphaCelda, barridoPlan, barridoVentana, rotuloLayout, rotuloVelocidad, rotuloDesplazamiento, crearJob, crearPared, duracionReceta, tiempoRepresentativo, ROTULO_PNG } from './crear-core.mjs';
 
 const EN = document.documentElement.lang === 'en';
 const t = (es, en) => EN ? en : es;
@@ -20,8 +21,12 @@ const $ = (s) => document.querySelector(s);
 const FORMATOS = createCatalog(EN);
 const MODOS = { auto: t('Auto (regla Pixeria)', 'Auto (Pixeria rule)'), cover: t('Recorte', 'Crop'), blur: t('Expandir · fondo desenfocado', 'Expand · blurred background'), contain: t('Contener · negro', 'Contain · black') };
 const picker = {query:'',orientation:'all',open:new Set()};
-const state = { sel: '', proyecto: GENERAL, profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '', origin: { id: null, title: '' } };
+const state = { sel: '', proyecto: GENERAL, profile: 'standard', compat: 'fhd', modoGlobal: 'auto', fmt: {}, crear: {}, src: { ancho: 0, alto: 0, fps: 25, bitrateKbps: 0 }, srcName: '', origin: { id: null, title: '' } };
 FORMATOS.forEach((f) => (state.fmt[f.id] = { modo: 'auto', fx: 0.5, fy: 0.5, zoom: 1 }));
+// Crear (formatos extremos, 6-oct-2026): acción y receta por formato (crear-core.mjs). Por defecto, la
+// receta de la ficha del proyecto o «barrido»; la acción «auto» pasa a Crear con r ≥ UMBRAL_CREAR.
+const crearBase = f => defaultsFicha(f.receta);
+const crearCfg = f => state.crear[f.id] || (state.crear[f.id] = crearBase(f));
 // Proyecto activo (Carlos, 5-oct-2026): biblioteca general + la ficha del proyecto de Yokup, si la tiene.
 let FICHA = null, INDEX = [], PROJECTS = [], campaigns = CAMPAIGNS, yokupSource = 'none', yokupDate = '';
 
@@ -64,6 +69,7 @@ function saveSettings() {
   if (!initialized) return;
   try {
     const snap = snapshot(state, FORMATOS);
+    snap.crear = Object.fromEntries(FORMATOS.filter(f => state.crear[f.id] && JSON.stringify(state.crear[f.id]) !== JSON.stringify(crearBase(f))).map(f => [f.id, state.crear[f.id]]));
     localStorage.setItem(keyFor(state.proyecto), JSON.stringify(snap));
     if (state.proyecto !== GENERAL) {
       const general = readJSON(STORAGE_KEY);
@@ -80,7 +86,7 @@ const defaultFamily = () => FICHA && hasFamily(FICHA.ajustes?.familia) ? FICHA.a
 // on (as the Altadis profile always loaded), segmented walls off, and the ficha's defaults.
 function resetState() {
   Object.assign(state, {profile: defaultFamily(), compat: 'fhd', modoGlobal: FICHA?.ajustes?.metodo || 'auto'});
-  FORMATOS.forEach(f => { f.on = f.proyecto ? !f.especial : RATIOS.includes(f.id); state.fmt[f.id] = defaults(); });
+  FORMATOS.forEach(f => { f.on = f.proyecto ? !f.especial : RATIOS.includes(f.id); state.fmt[f.id] = defaults(); state.crear[f.id] = crearBase(f); });
 }
 function syncControls() {
   $('#format-profile').value = state.profile; $('#compat').value = state.compat; $('#modo-global').value = state.modoGlobal;
@@ -93,17 +99,21 @@ function restoreSettings(lists) {
   FORMATOS.length = 0; FORMATOS.push(...projectLibrary(general, FICHA, lists, EN));
   resetState();
   try {
-    const saved = restore(readJSON(keyFor(state.proyecto)), FORMATOS);
+    const raw = readJSON(keyFor(state.proyecto)), saved = restore(raw, FORMATOS);
     if (saved) { Object.assign(state, {profile:saved.profile,compat:saved.compat,modoGlobal:saved.modoGlobal,fmt:saved.fmt}); FORMATOS.forEach(f=>f.on=saved.selected.includes(f.id)); }
+    if (saved && raw.crear && typeof raw.crear === 'object') FORMATOS.forEach(f => { state.crear[f.id] = crearSettings(raw.crear[f.id], crearBase(f)); });
   } catch (_) { /* corrupt or unavailable storage: keep safe defaults */ }
   syncControls(); initialized = true;
 }
 // kinds applies to special layouts: the client delivery file, one MP4 per screen, or both.
-function especialJobs(f,kinds,src=state.src) {
+// Crear: `receta` (crearPared) composes the recipe on the physical wall; the cuts are the same.
+function especialJobs(f,kinds,src=state.src,receta=null) {
   const tech=especialTech(f),mode=modoEfectivo(f),s=state.fmt[f.id],jobs=[];
-  if(kinds!=='segments') jobs.push({...atlasJob(src,f.layout,mode,s,tech),label:`${f.nombre} · ${t('entrega','delivery')}`});
+  const tag=receta?{crear:receta.receta,duration:receta.duracion,input:receta.picture?crearInput.name:undefined,extras:receta.extras}:{};
+  const rl=receta?` · ${RECETA_CORTA[receta.receta]}`:'';
+  if(kinds!=='segments') jobs.push({...atlasJob(src,f.layout,mode,s,tech,receta),...tag,label:`${f.nombre} · ${t('entrega','delivery')}${rl}`});
   if(kinds!=='atlas') {
-    const job=segmentsJob(src,f.layout,mode,s,tech);job.label=`${f.nombre} · ${job.outputs.length} ${t('pantallas','screens')}`;
+    const job=Object.assign(segmentsJob(src,f.layout,mode,s,tech,receta),tag);job.label=`${f.nombre} · ${job.outputs.length} ${t('pantallas','screens')}${rl}`;
     job.outputs.forEach(o=>o.label=`${f.nombre} · ${t('pantalla','screen')} ${o.n}/${o.N}`);jobs.push(job);
   }
   return jobs;
@@ -123,7 +133,7 @@ async function saveOne(item,file) {
   item.stock=item.stock||{ok:0,fail:0,ids:[]};
   queue.note(item,t('Guardando en el Stock…','Saving to Stock…'));
   let result;
-  try {result=await publishAdaptation(file.blob,{title,originId:item.origin.id,client:item.client,format,width:file.output.W,height:file.output.H,duration:item.duration,still:!!item.still});}
+  try {result=await publishAdaptation(file.blob,{title,originId:item.origin.id,client:item.client,format,width:file.output.W,height:file.output.H,duration:item.duration,still:!!item.still,receta:item.receta||null});}
   catch(_) {result={ok:false,error:'network'};}
   if(result.ok){item.stock.ok++;item.stock.ids.push(result.num?`#${result.num}`:result.id);}else item.stock.fail++;
   const done=item.stock.ok+item.stock.fail;
@@ -179,53 +189,80 @@ async function svgExportSource(output,mode,s) {
 }
 const pngBlob=canvas=>new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
 // kinds: 'both' | 'atlas' | 'segments' for special layouts; 'jpg' turns picture outputs into JPG.
+// Crear (6-oct-2026): a card in «Crear» builds its recipe job (crear-core) instead of the reframe; the
+// recipe already carries its picture inputs (no stillJob/animJob rewrite) and, for the ticker, the strip PNG.
 async function exportFormats(formats,kinds='both',extra=null) {
   if(!state.src.ancho || !formats.length) return;
   const status=$('#export-status');status.textContent='';
   const still=isImage(),animated=isAnim(),seconds=stillSec,duration=animated?animSeconds:still?seconds:video.duration;
   const pngFormats=formats.filter(f=>f.output==='png'),mp4Formats=formats.filter(f=>f.output!=='png');
-  const build=(f,src)=>f.especial?especialJobs(f,kinds,src).map(job=>({job,f})):[{job:{...exportJob(src,perfil(f),plan(f),modoEfectivo(f),state.fmt[f.id],state.srcName,f.id),label:f.nombre},f}];
-  const jobs=mp4Formats.flatMap(f=>build(f,state.src));
-  const budget=jobs.length?exportBudget(duration,jobs.map(j=>j.job)):null;
+  let sourceURL=video.currentSrc||video.src,input=null;
+  if(animated) sourceURL=animSourceURL;
+  else if(still&&mp4Formats.length&&!svgSrc){({url:sourceURL,input}=await stillSource());}
+  crearInput.name=animated?'input.gif':still?(svgSrc?'input.png':input||'input.png'):'input';
+  const build=(f,src)=>{
+    if(creando(f)){
+      if(f.especial) return especialJobs(f,kinds,src,crearPared({...crearArgs(f,src),pared:geometry(f.layout).pared,rotulo:rotuloLayoutDe(f,wallOutput(f))})).map(job=>({job,f}));
+      const p=perfil(f);
+      return [{job:{...crearJob({...crearArgs(f,src),profile:p,technical:plan(f)||{},name:state.srcName,id:f.id,rotulo:rotuloLayoutDe(f,p)}),label:`${f.nombre} · ${RECETA_CORTA[crearCfg(f).receta]}`},f}];
+    }
+    return f.especial?especialJobs(f,kinds,src).map(job=>({job,f})):[{job:{...exportJob(src,perfil(f),plan(f),modoEfectivo(f),state.fmt[f.id],state.srcName,f.id),label:f.nombre},f}];
+  };
+  // Recipes need their frames (video), thumbnails and ticker strips before the job exists.
+  for(const f of formats) if(creando(f)) {try{await prepararCrear(f,f.especial?wallOutput(f):perfil(f));}catch(_){}}
+  let jobs;
+  try{jobs=svgSrc?[]:mp4Formats.flatMap(f=>build(f,state.src));}catch(_){status.textContent=t('No se pudo preparar la receta para este contenido.','Could not prepare the recipe for this content.');return;}
+  const budgetJobs=svgSrc?mp4Formats.flatMap(f=>build(f,state.src)):jobs;
+  const longest=Math.max(duration||0,...budgetJobs.map(j=>j.job.duration||0));
+  const budget=budgetJobs.length?exportBudget(longest,budgetJobs.map(j=>j.job)):null;
   if(budget) {status.textContent=budget==='batch-size'
     ?t('El lote supera el presupuesto local de memoria. Selecciona menos formatos y expórtalos por separado.','This batch exceeds the local memory budget. Select fewer formats and export them separately.')
     :still?t('Esta duración es demasiado larga para este perfil en el navegador. Baja los segundos del MP4 o usa un perfil de menor resolución.','This length is too long for this profile in the browser. Lower the MP4 seconds or use a lower resolution profile.')
     :t('Este vídeo es demasiado largo para exportarlo con este perfil en el navegador. Usa un clip más corto o un perfil de menor resolución.','This video is too long to export with this profile in the browser. Use a shorter clip or a lower resolution profile.');return;}
-  let sourceURL=video.currentSrc||video.src,input=null;
-  if(animated) sourceURL=animSourceURL;
-  else if(still&&jobs.length&&!svgSrc){({url:sourceURL,input}=await stillSource());}
   const kind=animated?t('GIF animado','animated GIF'):svgSrc?t('SVG vectorial','vector SVG'):t('imagen fija','still image');
   const sub=isPicture()?`${state.srcName} · ${kind}`:state.srcName;
   // Frozen at click time: original content, active client (top bar selector) and duration.
   const ctx={origin:{...state.origin},client:window.PixeriaCliente?.actual?.()||null,duration,still,...(extra||{})};
   batchIds = new Set();
-  batchTotal = pngFormats.length + jobs.length;
+  batchTotal = pngFormats.length + budgetJobs.length;
   status.textContent = `0/${batchTotal}`;
   const jpg=kinds==='jpg';
   for(const f of pngFormats){
     const p=perfil(f),canvas=document.createElement('canvas');canvas.width=p.ancho;canvas.height=p.alto;
-    let override=null;
-    if(svgSrc){try{override=await svgExportSource(p,modoEfectivo(f),state.fmt[f.id]);}catch(_){status.textContent=t('No se pudo rasterizar este SVG.','Could not rasterise this SVG.');continue;}}
-    drawInto(canvas,f,override);
+    let override=null;const crea=creando(f);
+    if(svgSrc){try{override=await svgExportSource(p,crea?'cover':modoEfectivo(f),crea?crearZoom(f):state.fmt[f.id]);}catch(_){status.textContent=t('No se pudo rasterizar este SVG.','Could not rasterise this SVG.');continue;}}
+    // A recipe on a still output: its representative frame (all the strip, the middle of the pan, the ticker start).
+    if(crea) paintCrear(canvas,p,f,'rep',override); else drawInto(canvas,f,override);
     if(override)override.el.width=override.el.height=0;
     let blob=await new Promise(resolve=>jpg?canvas.toBlob(resolve,'image/jpeg',0.9):canvas.toBlob(resolve,'image/png'));
     canvas.width=canvas.height=0;
     if(!blob)continue;
     if(f.print&&!jpg)blob=new Blob([pngDensity(new Uint8Array(await blob.arrayBuffer()))],{type:'image/png'});
-    queue.addReady({label:`${f.nombre} · ${jpg?'JPG':'PNG'}`,sub,sourceURL:null,format:f,...ctx},[{blob,filename:`${f.id}-${p.ancho}x${p.alto}.${jpg?'jpg':'png'}`}]);
+    const rec=crea?crearCfg(f).receta:null;
+    queue.addReady({label:`${f.nombre} · ${jpg?'JPG':'PNG'}${rec?` · ${RECETA_CORTA[rec]}`:''}`,sub,sourceURL:null,format:f,...ctx,receta:rec},[{blob,filename:`${f.id}${rec?`-crear-${rec}`:''}-${p.ancho}x${p.alto}.${jpg?'jpg':'png'}`}]);
   }
+  // Extra inputs of a recipe (ticker strip): one PNG per job, frozen at click time.
+  const extrasOf=async(job,f)=>{
+    if(!job.extras?.length) return [];
+    const out=f.especial?wallOutput(f):perfil(f),st=rotuloStrip(f,out);
+    const blob=await pngBlob(st.canvas);return blob?[{name:ROTULO_PNG,url:URL.createObjectURL(blob)}]:[];
+  };
+  const add=async(job,f,url,subline)=>{
+    const crea=!!job.crear;
+    queue.add({label:job.label,sub:subline,sourceURL:url,job:crea?{...job,extraFiles:await extrasOf(job,f)}:animated?animJob(job,animSeconds,'input.gif'):still?stillJob(job,seconds,svgSrc?'input.png':input):job,format:f,...ctx,duration:crea?job.duration:ctx.duration,receta:job.crear||null});
+  };
   if(svgSrc){
     // One PNG per format at its own resolution; the job's geometry uses that raster as the source.
     for(const f of mp4Formats){
-      const out=f.especial?wallOutput(f):perfil(f);let src;
-      try{src=await svgExportSource(out,modoEfectivo(f),state.fmt[f.id]);}catch(_){status.textContent=t('No se pudo rasterizar este SVG.','Could not rasterise this SVG.');continue;}
+      const out=f.especial?wallOutput(f):perfil(f),crea=creando(f);let src;
+      try{src=await svgExportSource(out,crea?'cover':modoEfectivo(f),crea?crearZoom(f):state.fmt[f.id]);}catch(_){status.textContent=t('No se pudo rasterizar este SVG.','Could not rasterise this SVG.');continue;}
       const blob=await pngBlob(src.el);src.el.width=src.el.height=0;if(!blob)continue;
       const url=URL.createObjectURL(blob);
-      for(const {job} of build(f,src.dims)) queue.add({label:job.label,sub:`${sub} · ${src.raster.ancho}×${src.raster.alto}`,sourceURL:url,job:stillJob(job,seconds,'input.png'),format:f,...ctx});
+      for(const {job} of build(f,src.dims)) await add(job,f,url,`${sub} · ${src.raster.ancho}×${src.raster.alto}`);
     }
     return;
   }
-  for(const {job,f} of jobs) queue.add({label:job.label,sub,sourceURL,job:animated?animJob(job,animSeconds,'input.gif'):still?stillJob(job,seconds,input):job,format:f,...ctx});
+  for(const {job,f} of jobs) await add(job,f,sourceURL,sub);
 }
 $('#export-all').onclick=()=>exportFormats(selectedFormats());
 // Back to the active project's defaults (General: the four ratios and the standard library).
@@ -351,7 +388,7 @@ $('#custom-size-form').onsubmit=e=>{
   if(!f){$('#custom-status').textContent=t('Usa dimensiones pares de 64 a 3840 px, máximo 8,3 Mpx.','Use even dimensions from 64 to 3840 px, maximum 8.3 MP.');return;}
   const existing=FORMATOS.find(x=>x.id===f.id);
   if(!existing&&FORMATOS.filter(x=>x.user).length>=12){$('#custom-status').textContent=t('Máximo 12 tamaños personalizados guardados.','Maximum 12 saved custom sizes.');return;}
-  if(existing)existing.on=true;else{f.on=true;FORMATOS.push(f);state.fmt[f.id]=defaults();}
+  if(existing)existing.on=true;else{f.on=true;FORMATOS.push(f);state.fmt[f.id]=defaults();state.crear[f.id]=crearBase(f);}
   state.profile='standard';$('#format-profile').value='standard';syncCompat();
   picker.query='';$('#size-search').value='';picker.orientation='all';$('#size-orientation').value='all';picker.open.add('digital');
   $('#custom-status').textContent=t('Tamaño añadido y guardado.','Size added and saved.');buildGrid();
@@ -366,11 +403,14 @@ function buildGrid() {
   $('#empty-formats').hidden=!!selected.length;
   selectedFormats().forEach((f) => {
     if (f.especial) { g.appendChild(especialCard(f)); return; }
-    const p = perfil(f); const cw = p.ancho >= p.alto ? 384 : Math.round(384 * p.ancho / p.alto); const ch = Math.round(cw * p.alto / p.ancho);
-    const el = document.createElement('div'); el.className = 'fmt'; el.dataset.f = f.id;
-    el.innerHTML = `<div class="fmt-title"><h3>${f.nombre}</h3><button class="remove-format" type="button" aria-label="${t('Quitar','Remove')} ${f.nombre}">×</button></div><div class="dims">${p.ancho}×${p.alto}</div>
+    // Extreme banners (≥ 4:1 or 1:4) take the whole row and a wider preview (Crear, 6-oct-2026).
+    const p = perfil(f), extreme = Math.max(p.ancho / p.alto, p.alto / p.ancho) >= 4, base = extreme && p.ancho > p.alto ? 1152 : 384;
+    const cw = p.ancho >= p.alto ? base : Math.round(384 * p.ancho / p.alto); const ch = Math.max(1, Math.round(cw * p.alto / p.ancho));
+    const el = document.createElement('div'); el.className = `fmt${extreme ? ' fmt-extremo' : ''}`; el.dataset.f = f.id;
+    el.innerHTML = `<div class="fmt-title"><h3>${f.nombre} <span class="accion-tag" hidden></span></h3><button class="remove-format" type="button" aria-label="${t('Quitar','Remove')} ${f.nombre}">×</button></div><div class="dims">${p.ancho}×${p.alto}</div>
       <div class="stage"><canvas width="${cw}" height="${ch}"></canvas></div>
       <button class="pill accent export-one" type="button"></button>`;
+    el.querySelector('.stage').after(crearControls(f));
     el.querySelector('.remove-format').onclick=(e)=>{e.stopPropagation();f.on=false;buildGrid();};
     el.querySelector('.export-one').onclick=(e)=>{e.stopPropagation();exportFormats([f]);};
     // Display (no print) from a still image: JPG as well, lighter for ad networks.
@@ -407,7 +447,7 @@ const controlsHTML = () => `<div class="ctl"><span>${t('Método','Method')}</spa
 // Avanzado actúa sobre la tarjeta seleccionada: método, foco y zoom, aviso de recorte y dudas del PDF.
 function selectable(el, f) {
   el.tabIndex = 0; el.setAttribute('role', 'button'); el.setAttribute('aria-pressed', 'false');
-  const pick = () => { if (state.sel === f.id) return; state.sel = f.id; markSelected(); buildCardSettings(); refreshInfo(); };
+  const pick = () => { if (state.sel === f.id) return; state.sel = f.id; markSelected(); buildCardSettings(); refreshInfo(); syncCrearSettings(); };
   el.addEventListener('click', pick);
   el.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === el) { e.preventDefault(); pick(); } });
 }
@@ -419,9 +459,9 @@ function buildCardSettings() {
   const f = FORMATOS.find(x => x.id === state.sel && x.on);
   if (!f) { box.innerHTML = `<p class="muted">${t('Elige una tarjeta para ajustar su método, foco y zoom.','Select a card to adjust its method, focus and zoom.')}</p>`; return; }
   const L = f.layout, size = f.especial ? `${L.entrega[0]}×${L.entrega[1]}` : `${perfil(f).ancho}×${perfil(f).alto}`;
-  box.innerHTML = `<div class="card-sel-hd">${t('Tarjeta seleccionada','Selected card')}: <b>${f.nombre}</b> · ${size}</div>${controlsHTML()}<div class="aviso"></div>`
+  box.innerHTML = `<div class="card-sel-hd">${t('Tarjeta seleccionada','Selected card')}: <b>${f.nombre}</b> · ${size}</div>${crearHTML()}${controlsHTML()}<div class="aviso"></div>`
     + (f.especial && L.ambiguedades.length ? `<ul class="esp-warn">${L.ambiguedades.map(a => `<li>${t('Ambigüedad en el PDF','PDF ambiguity')}: ${a}</li>`).join('')}</ul>` : '');
-  bindControls(box, f);
+  bindControls(box, f); bindCrear(box, f); syncCrearSettings();
 }
 function bindControls(el, f) {
   el.querySelectorAll('[data-k]').forEach((inp) => { inp.value = state.fmt[f.id][inp.dataset.k]; inp.setAttribute('aria-label', `${t('Ajuste','Setting')} ${inp.dataset.k} · ${f.nombre}`); inp.oninput = () => { const k = inp.dataset.k; state.fmt[f.id][k] = k === 'modo' ? inp.value : +inp.value; refreshInfo(); }; });
@@ -434,7 +474,7 @@ function especialCard(f) {
   const aspect = g.pared.ancho / g.pared.alto, wallW = Math.round(WALL_CSS_H * aspect);
   const aw = W >= H ? 480 : Math.round(480 * W / H), ah = Math.round(aw * H / W);
   const el = document.createElement('div'); el.className = 'fmt fmt-especial'; el.dataset.f = f.id;
-  el.innerHTML = `<div class="fmt-title"><h3>${f.nombre}</h3><button class="remove-format" type="button" aria-label="${t('Quitar','Remove')} ${f.nombre}">×</button></div>
+  el.innerHTML = `<div class="fmt-title"><h3>${f.nombre} <span class="accion-tag" hidden></span></h3><button class="remove-format" type="button" aria-label="${t('Quitar','Remove')} ${f.nombre}">×</button></div>
     <div class="dims">${W}×${H} · ${g.segments.length} ${t('pantallas','screens')}</div>
     <div class="esp-views">
       <figure class="esp-view esp-wall"><figcaption>${t('Pared física · el vídeo continúa de una pantalla a la siguiente','Physical wall · the video continues from one screen to the next')}</figcaption>
@@ -448,6 +488,7 @@ function especialCard(f) {
   el.querySelector('.remove-format').onclick = (e) => { e.stopPropagation(); f.on = false; buildGrid(); };
   el.querySelector('.export-atlas').onclick = (e) => { e.stopPropagation(); exportFormats([f], 'atlas'); };
   el.querySelector('.export-segments').onclick = (e) => { e.stopPropagation(); exportFormats([f], 'segments'); };
+  el.querySelector('.esp-actions').before(crearControls(f));
   selectable(el, f);
   return el;
 }
@@ -463,11 +504,17 @@ function especialInfo(f) {
     ...g.segments.map(seg => `  ${seg.n}/${seg.N} · ${t('celda','cell')} ${seg.cell} (${seg.atlas.x},${seg.atlas.y}) · ${t('pared','wall')} x=${seg.wall.x} · ${segmentFilename(L, seg.n)}`),
     ...(g.unused.length ? [`${t('Celdas sin uso (negro)','Unused cells (black)')}: ${g.unused.map(c => c.index).join(', ')}`] : []),
     t('Esta página no sincroniza players: la continuidad depende de que arranquen a la vez.','This page does not synchronise players: continuity depends on them starting together.')];
+  if (state.src.ancho && creando(f)) {
+    let cmd = '';
+    try { const receta = crearPared({...crearArgs(f), pared: g.pared, rotulo: rotuloLayoutDe(f, wallOutput(f))}); cmd = `\n\nffmpeg ${atlasJob(state.src, L, m, s, tech, receta).args.map(a => JSON.stringify(a)).join(' ')}`; } catch (_) {}
+    return { aviso: `${crearAviso(f)} · ${t('sobre la pared','on the wall')} ${g.pared.ancho}×${g.pared.alto}`, plan: files.join('\n') + cmd };
+  }
   const atlas = state.src.ancho ? atlasJob(state.src, L, m, s, tech) : null;
   return { aviso, plan: files.join('\n') + (atlas ? `\n\nffmpeg ${pictureJob(atlas).args.map(a => JSON.stringify(a)).join(' ')}` : '') };
 }
 function cardAviso(f) {
   if (f.especial) return especialInfo(f).aviso;
+  if (creando(f)) return crearAviso(f);
   const p = plan(f), m = modoEfectivo(f), settings = state.fmt[f.id];
   const what = f.output === 'png' ? (isImage() ? t('PNG de la imagen','PNG of the image') : t('PNG del fotograma actual','PNG of the current frame'))
     : isImage() ? `MP4 ${stillSec} s · ${t('imagen fija, sin audio','still image, no audio')}` : isAnim() ? `MP4 ${secLabel(animSeconds)} s · ${t('GIF animado a 25 fps, sin audio','animated GIF at 25 fps, no audio')}` : '';
@@ -493,12 +540,14 @@ function refreshInfo() {
   const allCount=FORMATOS.filter(isLibrarySize).length;
   const allLabel=$('#all-sizes .all-sizes-count');if(allLabel)allLabel.textContent=String(allCount);
   document.querySelectorAll('.export-one').forEach(el=>el.disabled=!state.src.ancho);
-  labelExports();
+  labelExports(); syncCrearCards();
+  crearAnim = isPicture() && !!state.src.ancho && !$('#paso-2').hidden && selectedFormats().some(creando);
   const selF = FORMATOS.find((x) => x.id === state.sel && x.on), selAviso = $('#card-settings .aviso');
   if (selF && selAviso) selAviso.textContent = cardAviso(selF);
   const rows = selectedFormats().map((f) => {
     if (f.especial) return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${f.layout.entrega[0]}×${f.layout.entrega[1]}</h3><pre style="white-space:pre-wrap;font-size:11px;color:var(--link)">${especialInfo(f).plan.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])}</pre></div>`;
-    const p = plan(f); if(f.output==='png')return `<p>${f.nombre} · ${perfil(f).ancho}×${perfil(f).alto} · PNG${f.print?' · 150 ppp':''}${isPicture()&&f.category==='display'?' · JPG':''}</p>`; if (!p || p.error) return `<p>${f.nombre}: ${p ? p.error : t('sin contenido','no content')}</p>`;
+    const p = plan(f); if(f.output==='png')return `<p>${f.nombre} · ${perfil(f).ancho}×${perfil(f).alto} · PNG${f.print?' · 150 ppp':''}${isPicture()&&f.category==='display'?' · JPG':''}${creando(f)?` · ${t('Crear','Create')} ${RECETA_NOMBRE[crearCfg(f).receta]} (${t('fotograma representativo','representative frame')})`:''}</p>`; if (!p || p.error) return `<p>${f.nombre}: ${p ? p.error : t('sin contenido','no content')}</p>`;
+    if (creando(f)) return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${p.ancho}×${p.alto} · ${t('Crear','Create')} · ${RECETA_NOMBRE[crearCfg(f).receta]}</h3><div class="dims">H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps · 25 fps · GOP ${p.gopSegundos}s</div><div class="aviso">${escHTML(crearAviso(f))}</div><pre style="white-space:pre-wrap;font-size:11px;color:var(--link)">${escHTML(crearCmd(f))}</pre></div>`;
     return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${p.ancho}×${p.alto}</h3>
       <div class="dims">encaje <b>${p.encaje}</b> · adaptación <b>${p.adaptacion}</b> · recorte ${Math.round(p.recortePerdido * 100)}%<br>
       H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps (${p.bitrateMotivo}) · ${p.fps} fps · GOP ${p.gopSegundos}s${isImage() ? ` · ${t('imagen fija','still image')} ${stillSec} s · ${t('sin audio','no audio')}` : isAnim() ? ` · ${t('GIF animado','animated GIF')} ${secLabel(animSeconds)} s → 25 fps · ${t('sin audio','no audio')}` : ''}</div>
@@ -517,12 +566,15 @@ function labelExports() {
     if (f.especial) {
       const g = geometry(f.layout), [W, H] = f.layout.entrega, [cw, ch] = f.layout.celda;
       const a = el.querySelector('.export-atlas'), s = el.querySelector('.export-segments');
-      if (a) { a.textContent = `${t('Exportar entrega · 1 MP4','Export delivery · 1 MP4')} ${W}×${H}${sec}`; a.title = mp4Title; }
-      if (s) { s.textContent = `${t('Exportar por pantalla','Export per screen')} · ${g.segments.length} MP4 ${cw}×${ch}${sec}`; s.title = t('MP4 H.264 · 25 fps · sin audio','MP4 H.264 · 25 fps · no audio') + sec; }
+      const crea = creando(f), rs = crea ? ` · ${secLabel(duracionReceta(crearCfg(f), {kind: srcKindCrear(), seconds: recetaSeconds(), src: state.src, dst: destino(f)}))} s` : sec, rt = crea ? ` · ${RECETA_NOMBRE[crearCfg(f).receta]}` : '';
+      if (a) { a.textContent = `${t('Exportar entrega · 1 MP4','Export delivery · 1 MP4')} ${W}×${H}${rs}`; a.title = mp4Title + rt; }
+      if (s) { s.textContent = `${t('Exportar por pantalla','Export per screen')} · ${g.segments.length} MP4 ${cw}×${ch}${rs}`; s.title = t('MP4 H.264 · 25 fps · sin audio','MP4 H.264 · 25 fps · no audio') + rs + rt; }
       return;
     }
     const b = el.querySelector('.export-one:not(.export-jpg)'); if (!b) return;
-    if (f.output === 'png') { b.textContent = t('Exportar PNG','Export PNG'); b.title = f.print ? t('PNG RGB a 150 ppp','RGB PNG at 150 ppi') : 'PNG'; }
+    const crea = creando(f), cfg = crearCfg(f);
+    if (f.output === 'png') { b.textContent = t('Exportar PNG','Export PNG'); b.title = (f.print ? t('PNG RGB a 150 ppp','RGB PNG at 150 ppi') : 'PNG') + (crea ? ` · ${RECETA_NOMBRE[cfg.receta]} · ${t('fotograma representativo','representative frame')}` : ''); }
+    else if (crea) { const d = duracionReceta(cfg, {kind: srcKindCrear(), seconds: recetaSeconds(), src: state.src, dst: destino(f)}); b.textContent = `${t('Crear MP4','Create MP4')} · ${secLabel(d)} s`; b.title = `${RECETA_NOMBRE[cfg.receta]} · MP4 H.264 · 25 fps · ${secLabel(d)} s`; }
     else { b.textContent = `${t('Exportar MP4','Export MP4')}${sec}`; b.title = mp4Title; }
     const j = el.querySelector('.export-jpg'); if (j) j.hidden = !isPicture();
   });
@@ -533,12 +585,13 @@ function pictureJob(job) { return isAnim() ? animJob(job, animSeconds, 'input.gi
 const secLabel = v => (Math.round(v * 100) / 100).toLocaleString(EN ? 'en-US' : 'es-ES', {maximumFractionDigits: 2});
 function ffmpegCmd(f) {
   if(!state.src.ancho) return '';
+  if(creando(f)) return crearCmd(f);
   const job=pictureJob(exportJob(state.src,perfil(f),plan(f)||{},modoEfectivo(f),state.fmt[f.id],state.srcName,f.id));
   return 'ffmpeg ' + job.args.map(arg=>JSON.stringify(arg==='output.mp4'?job.filename:arg)).join(' ');
 }
 
 // ── Render en vivo (canvas) ─────────────────────────────────────────────────
-function drawInto(cv, f, override) { paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id], override); }
+function drawInto(cv, f, override) { if (creando(f)) { paintCrear(cv, perfil(f), f, null, override); return; } paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id], override); }
 // What the preview draws: the media element, or for an SVG a raster at this canvas' needed resolution
 // (cached in √2 steps; the base image is used for the frame or two until it arrives).
 const SVG_PREVIEW = {paso: true, maxLado: 4096, maxPx: 2048 * 2048};
@@ -564,7 +617,7 @@ function paint(cv, output, m, s, override) {
 // delivery cell, exactly as the encoder cuts them. Cut lines and numbers are overlays.
 function drawEspecial(el, f) {
   const wall = el.querySelector('canvas.wall'), atlas = el.querySelector('canvas.atlas'); if (!wall || !mediaReady()) return;
-  const g = geometry(f.layout); paint(wall, wallOutput(f), modoEfectivo(f), state.fmt[f.id]);
+  const g = geometry(f.layout); if (creando(f)) paintCrear(wall, wallOutput(f), f); else paint(wall, wallOutput(f), modoEfectivo(f), state.fmt[f.id]);
   const k = wall.width / g.pared.ancho, a = atlas.width / g.entrega.ancho, ctx = atlas.getContext('2d');
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, atlas.width, atlas.height);
   for (const seg of g.segments) ctx.drawImage(wall, seg.wall.x * k, seg.wall.y * k, seg.wall.w * k, seg.wall.h * k, seg.atlas.x * a, seg.atlas.y * a, seg.atlas.w * a, seg.atlas.h * a);
@@ -576,9 +629,307 @@ function drawEspecial(el, f) {
   ctx.setLineDash([]); ctx.strokeStyle = '#ff6a3d';
   for (const c of g.unused) { const [x, y, w, h] = [c.x * a, c.y * a, c.w * a, c.h * a]; ctx.fillStyle = '#111'; ctx.fillRect(x, y, w, h); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y + h); ctx.moveTo(x + w, y); ctx.lineTo(x, y + h); ctx.stroke(); }
 }
-let drawDirty=true,lastFrame=-1;
+// ── Crear (formatos extremos, 6-oct-2026) ───────────────────────────────────
+// Con r = max(a_src/a_dst, a_dst/a_src) ≥ UMBRAL_CREAR la tarjeta pasa de «Adaptar» a «Crear» y ofrece
+// tres recetas (crear-core.mjs): tira de momentos, barrido y rótulo en movimiento. La vista previa
+// pinta con las mismas funciones que generan el filtro FFmpeg (geometría, trayectoria y desplazamiento).
+const RECETA_NOMBRE = {tira: t('Tira de momentos', 'Moments strip'), barrido: t('Barrido', 'Pan sweep'), rotulo: t('Rótulo en movimiento', 'Moving ticker')};
+const RECETA_CORTA = {tira: t('Tira', 'Strip'), barrido: t('Barrido', 'Sweep'), rotulo: t('Rótulo', 'Ticker')};
+const crearInput = {name: 'input'};
+const srcKindCrear = () => isAnim() ? 'anim' : isImage() ? 'still' : 'video';
+const recetaSeconds = () => isAnim() ? animSeconds : isImage() ? stillSec : (Number.isFinite(video.duration) ? video.duration : 0);
+// Destination used for the disproportion: the output size, or the physical wall for segmented walls.
+function destino(f) { if (f.especial) { const g = geometry(f.layout); return {ancho: g.pared.ancho, alto: g.pared.alto}; } const p = perfil(f); return {ancho: p.ancho, alto: p.alto}; }
+const accionDe = f => accionEfectiva(crearCfg(f), state.src, destino(f));
+const creando = f => !!state.src.ancho && accionDe(f) === 'crear';
+const crearZoom = f => { const c = crearCfg(f), s = state.fmt[f.id]; return {fx: .5, fy: .5, zoom: Math.max(s.zoom, c.receta === 'tira' ? c.tira.zoom : 1)}; };
+function crearArgs(f, src = state.src) {
+  const kind = srcKindCrear();
+  return {kind, src, s: state.fmt[f.id], cfg: crearCfg(f), seconds: recetaSeconds(), input: crearInput.name !== 'input' || kind === 'video' ? crearInput.name : kind === 'anim' ? 'input.gif' : 'input.png'};
+}
+const fmtNum = (v, d = 1) => Number(v).toLocaleString(EN ? 'en-US' : 'es-ES', {maximumFractionDigits: d});
+// Time of the recipe preview: the clip clock for video, a free clock for pictures.
+const crearT0 = performance.now();
+function crearT(dur) {
+  if (!(dur > 0)) return 0;
+  if (srcKind === 'video') return (video.currentTime || 0) % dur;
+  return ((performance.now() - crearT0) / 1000) % dur;
+}
+// Fotogramas del vídeo para la tira (momentos) y la miniatura del rótulo: un <video> oculto con la misma
+// URL que busca cada instante y lo copia a un canvas (máx. 1920 px de ancho).
+let grab = null;
+function grabber() {
+  const url = srcKind === 'video' ? (video.currentSrc || video.getAttribute('src')) : null;
+  if (!url) return null;
+  if (grab && grab.url === url) return grab;
+  dropGrabber();
+  const v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.playsInline = true; v.crossOrigin = 'anonymous'; v.src = url;
+  grab = {url, video: v, cache: new Map(), pend: new Map(), cola: Promise.resolve()};
+  return grab;
+}
+function dropGrabber() { if (grab) { try { grab.video.removeAttribute('src'); grab.video.load(); } catch (_) {} grab = null; } }
+const once = (el, ev, ms = 8000) => new Promise((resolve, reject) => { const tm = setTimeout(() => reject(new Error('timeout')), ms); el.addEventListener(ev, () => { clearTimeout(tm); resolve(); }, {once: true}); });
+async function capturar(g, t) {
+  const v = g.video;
+  if (v.readyState < 1) await once(v, 'loadedmetadata');
+  // Inside the frame that starts at t (FFmpeg -ss t takes that same frame).
+  const target = Math.max(0, Math.min(t + .005, (v.duration || t + 1) - .001));
+  if (Math.abs(v.currentTime - target) > 1e-4 || v.readyState < 2) { const p = once(v, 'seeked'); v.currentTime = target; await p; }
+  const q = Math.min(1, 1920 / v.videoWidth), c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(v.videoWidth * q)); c.height = Math.max(1, Math.round(v.videoHeight * q));
+  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  return c;
+}
+function fotogramaAsync(t) {
+  const g = grabber(); if (!g) return Promise.resolve(null);
+  const k = t.toFixed(3);
+  if (g.cache.has(k)) return Promise.resolve(g.cache.get(k));
+  if (!g.pend.has(k)) g.pend.set(k, g.cola = g.cola.catch(() => {}).then(() => capturar(g, t)).then(c => { if (grab === g) { g.cache.set(k, c); drawDirty = true; } return c; }).finally(() => g.pend.delete(k)));
+  return g.pend.get(k);
+}
+function fotograma(t) { const g = grabber(); if (!g) return null; const c = g.cache.get(t.toFixed(3)); if (c) return c; fotogramaAsync(t).catch(() => {}); return null; }
+// Tira con «tramos en bucle»: un <video> oculto por tramo que sigue al reloj del vídeo principal.
+const tramoVids = new Map();
+function tramoVideo(inicio) {
+  const url = video.currentSrc || video.getAttribute('src'), k = `${url}|${inicio}`;
+  let v = tramoVids.get(k);
+  if (!v) { v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.playsInline = true; v.crossOrigin = 'anonymous'; v.src = url; v.currentTime = inicio; tramoVids.set(k, v); }
+  return v;
+}
+function dropTramos() { tramoVids.forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (_) {} }); tramoVids.clear(); }
+// Rótulo: tipografía del sitio o la de la marca blanca activa (--mb-fuente-titulos).
+function fuenteRotulo() {
+  const cs = getComputedStyle(document.body), mb = cs.getPropertyValue('--mb-fuente-titulos').trim();
+  return mb || cs.fontFamily || 'ui-monospace, monospace';
+}
+let logo = null; // {el, ancho, alto, key}: logo subido para el rótulo (solo en memoria)
+function rotuloTextos(cfg) {
+  const a = cfg.rotulo.texto.trim() || state.origin.title || state.srcName.replace(/\.[^.]+$/, '') || 'Pixeria', b = cfg.rotulo.textoEn.trim();
+  return b ? [a, b] : [a];
+}
+function rotuloIcono(cfg) {
+  if (cfg.rotulo.icono === 'logo') return logo;
+  if (cfg.rotulo.icono !== 'miniatura' || !mediaReady()) return null;
+  if (srcKind === 'video') {
+    const tm = tiraMomentos(recetaSeconds() || 1, 1)[0], c = fotograma(tm);
+    return c ? {el: c, ancho: c.width, alto: c.height, key: `v${tm}`} : null;
+  }
+  const {el, dims} = drawSource(Math.min(1280, state.src.ancho), Math.min(1280, state.src.alto), 'contain', defaults());
+  return {el, ancho: dims.ancho, alto: dims.alto, key: `p${state.srcName}|${dims.ancho}`};
+}
+const stripCache = new Map(), measureCtx = document.createElement('canvas').getContext('2d');
+function rotuloStrip(f, out) {
+  const cfg = crearCfg(f), ic = rotuloIcono(cfg), textos = rotuloTextos(cfg), font = fuenteRotulo();
+  const key = JSON.stringify([out.ancho, out.alto, textos, cfg.rotulo.color, ic ? ic.key : null, font]);
+  if (stripCache.has(key)) return stripCache.get(key);
+  const medir = (txt, px) => { measureCtx.font = `700 ${px}px ${font}`; return measureCtx.measureText(txt).width; };
+  const layout = rotuloLayout({W: out.ancho, H: out.alto, textos, icono: ic ? {ancho: ic.ancho, alto: ic.alto} : null, medir});
+  const canvas = document.createElement('canvas'); canvas.width = layout.ancho; canvas.height = layout.alto;
+  const x = canvas.getContext('2d');
+  x.textBaseline = 'middle'; x.fillStyle = cfg.rotulo.color;
+  for (let r = 0; r < layout.reps; r++) {
+    const dx = layout.eje === 'x' ? r * layout.P : 0, dy = layout.eje === 'y' ? r * layout.P : 0;
+    for (const op of layout.ops) {
+      if (op.tipo === 'icono') { x.shadowColor = 'transparent'; x.drawImage(ic.el, dx + op.x, dy + op.y, op.w, op.h); continue; }
+      x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = Math.round(layout.medidas.fuente * .12);
+      if (op.tipo === 'sep') { x.fillRect(dx + op.x, dy + op.y, op.w, op.h); continue; }
+      x.font = `700 ${op.px}px ${font}`; x.textAlign = op.centrado ? 'center' : 'left'; x.fillText(op.texto, dx + op.x, dy + op.y);
+    }
+  }
+  const st = {canvas, layout};
+  stripCache.set(key, st);
+  if (stripCache.size > 8) stripCache.delete(stripCache.keys().next().value);
+  return st;
+}
+const rotuloLayoutDe = (f, out) => crearCfg(f).receta === 'rotulo' ? rotuloStrip(f, out).layout : null;
+// Before exporting: the frames of the strip and the ticker thumbnail must be captured.
+async function prepararCrear(f, out) {
+  const cfg = crearCfg(f), seconds = recetaSeconds();
+  if (srcKind === 'video' && cfg.receta === 'tira' && !cfg.tira.bucle) await Promise.all(tiraMomentos(seconds, tiraN(state.src, out, cfg.tira.n)).map(fotogramaAsync));
+  if (srcKind === 'video' && cfg.receta === 'rotulo' && cfg.rotulo.icono === 'miniatura') await fotogramaAsync(tiraMomentos(seconds || 1, 1)[0]);
+  if (document.fonts?.ready) await document.fonts.ready;
+}
+// Paints a recipe at time t ('rep' = representative frame for PNG/JPG; null = preview clock).
+function paintCrear(cv, output, f, tFixed = null, override = null) {
+  const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, ratio = W / output.ancho;
+  ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  if (!mediaReady()) return;
+  const cfg = crearCfg(f), s = state.fmt[f.id], kind = srcKindCrear(), seconds = recetaSeconds() || 1, dur = duracionReceta(cfg, {kind, seconds, src: state.src, dst: output});
+  // A paused video shows the representative frame (whole strip, middle of the pan, ticker start); ⏯ animates it.
+  if (tFixed == null && kind === 'video' && video.paused) tFixed = 'rep';
+  const {el: src, dims} = override || drawSource(W, H, 'cover', crearZoom(f));
+  if (cfg.receta === 'barrido') {
+    const p = barridoPlan(dims, output.ancho, output.alto, s, cfg, dur);
+    const t = tFixed === 'rep' ? tiempoRepresentativo(cfg, dur, p) : tFixed ?? crearT(dur);
+    const r = barridoVentana(Math.floor(t * 25 + 1e-6), p).rect;
+    ctx.drawImage(src, r.x, r.y, r.w, r.h, 0, 0, W, H);
+    return;
+  }
+  const t = tFixed === 'rep' ? tiempoRepresentativo(cfg, dur) : tFixed ?? crearT(dur);
+  if (cfg.receta === 'rotulo') {
+    if (cfg.rotulo.fondo === 'solido') { ctx.fillStyle = cfg.rotulo.fondoColor; ctx.fillRect(0, 0, W, H); }
+    else {
+      const c = cropWindow(dims, output.ancho, output.alto, {zoom: 1.1, fx: .5, fy: .5});
+      ctx.filter = `blur(${14 * Math.max(output.ancho, output.alto) / 384 * ratio}px) brightness(0.85)`; ctx.drawImage(src, c.x, c.y, c.w, c.h, 0, 0, W, H); ctx.filter = 'none';
+    }
+    const st = rotuloStrip(f, output), L = st.layout, off = rotuloDesplazamiento(Math.floor(t * 25 + 1e-6), rotuloVelocidad(cfg, output.ancho, output.alto), L.P);
+    if (L.eje === 'x') ctx.drawImage(st.canvas, off, 0, output.ancho, output.alto, 0, 0, W, H);
+    else ctx.drawImage(st.canvas, 0, off, output.ancho, output.alto, 0, 0, W, H);
+    return;
+  }
+  // Tira de momentos.
+  const n = tiraN(dims, output, cfg.tira.n), g = tiraGeometria(output.ancho, output.alto, n, cfg.tira.sep), c = cascada(dur, n);
+  const rec = tiraRecortes(dims, g.celdas, kind, s, cfg);
+  const momentos = kind === 'video' && !cfg.tira.bucle ? tiraMomentos(seconds, n) : null, tramos = kind === 'video' && cfg.tira.bucle ? tiraTramos(seconds, n) : null;
+  g.celdas.forEach((cell, i) => {
+    const a = alphaCelda(t, i, c); if (a <= 0) return;
+    let el = src, q = 1;
+    if (momentos) { el = fotograma(momentos[i]); if (!el) return; q = el.width / dims.ancho; }
+    else if (tramos) {
+      el = tramoVideo(tramos.inicios[i]);
+      const target = tramos.inicios[i] + t;
+      if (el.readyState >= 1 && Math.abs(el.currentTime - target) > .3) el.currentTime = target;
+      if (video.paused || tFixed != null) { if (!el.paused) el.pause(); } else if (el.paused) el.play().catch(() => {});
+      if (el.readyState < 2) return;
+      q = el.videoWidth / dims.ancho;
+    }
+    const r = rec[i];
+    ctx.globalAlpha = a; ctx.drawImage(el, r.x * q, r.y * q, r.w * q, r.h * q, cell.x * ratio, cell.y * ratio, cell.w * ratio, cell.h * ratio);
+  });
+  ctx.globalAlpha = 1;
+}
+function resetCrearMedia() { dropGrabber(); dropTramos(); stripCache.clear(); }
+if (document.fonts?.ready) document.fonts.ready.then(() => { stripCache.clear(); drawDirty = true; });
+// Card controls: [Adaptar | Crear] and, in Crear, the three recipes. The visible «Crear» tag and the
+// disproportion live in the title. Forcing either action is per card and persists.
+function crearControls(f) {
+  const box = document.createElement('div'); box.className = 'crear-ctl';
+  box.innerHTML = `<div class="accion-seg" role="group" aria-label="${t('Adaptar o crear', 'Adapt or create')} · ${escHTML(f.nombre)}"><button type="button" class="accion-btn" data-accion="adaptar" aria-pressed="false">${t('Adaptar', 'Adapt')}</button><button type="button" class="accion-btn" data-accion="crear" aria-pressed="false">${t('Crear', 'Create')}</button></div>
+    <div class="recetas" role="group" aria-label="${t('Receta', 'Recipe')} · ${escHTML(f.nombre)}" hidden>${RECETAS.map(r => `<button type="button" class="receta-btn" data-receta="${r}" aria-pressed="false" title="${RECETA_NOMBRE[r]}">${RECETA_CORTA[r]}</button>`).join('')}</div>`;
+  box.querySelectorAll('.accion-btn').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); crearCfg(f).accion = b.dataset.accion; pickCard(f); refreshInfo(); syncCrearSettings(); }));
+  box.querySelectorAll('.receta-btn').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); const c = crearCfg(f); c.receta = b.dataset.receta; if (c.accion === 'adaptar') c.accion = 'crear'; pickCard(f); refreshInfo(); syncCrearSettings(); }));
+  return box;
+}
+function crearTag(f) {
+  const r = state.src.ancho ? desproporcion(state.src, destino(f)) : 0, cfg = crearCfg(f), crea = creando(f);
+  const forced = cfg.accion !== 'auto';
+  return {crea, r, forced, text: crea ? `${t('Crear', 'Create')} · ${RECETA_CORTA[cfg.receta]}` : '',
+    title: r ? `${t('Desproporción', 'Disproportion')} r = ${fmtNum(r, 2)} · ${t('umbral', 'threshold')} ${fmtNum(UMBRAL_CREAR, 1)}${forced ? ` · ${t('forzado', 'forced')}` : ` · ${t('automático', 'automatic')}`}` : ''};
+}
+// Keeps every card's tag, toggle and recipe chips in step with the state (called by refreshInfo).
+function syncCrearCards() {
+  document.querySelectorAll('#grid .fmt[data-f]').forEach(el => {
+    const f = FORMATOS.find(x => x.id === el.dataset.f); if (!f) return;
+    const tg = crearTag(f), cfg = crearCfg(f), ef = state.src.ancho ? accionDe(f) : null;
+    const tag = el.querySelector('.accion-tag');
+    if (tag) { tag.hidden = !tg.crea; tag.textContent = tg.text; tag.title = tg.title; }
+    el.classList.toggle('fmt-crear', tg.crea);
+    el.querySelectorAll('.accion-btn').forEach(b => { b.setAttribute('aria-pressed', String(ef === b.dataset.accion)); b.disabled = !state.src.ancho; b.classList.toggle('auto', cfg.accion === 'auto' && ef === b.dataset.accion); b.title = cfg.accion === 'auto' ? t(`Automático: Crear con r ≥ ${fmtNum(UMBRAL_CREAR)}`, `Automatic: Create when r ≥ ${fmtNum(UMBRAL_CREAR)}`) + (tg.r ? ` (r = ${fmtNum(tg.r, 2)})` : '') : t('Forzado en esta tarjeta', 'Forced on this card'); });
+    const rec = el.querySelector('.recetas'); if (rec) rec.hidden = !tg.crea;
+    el.querySelectorAll('.receta-btn').forEach(b => b.setAttribute('aria-pressed', String(cfg.receta === b.dataset.receta)));
+  });
+}
+// Avanzado · recipe settings of the selected card.
+const crearHTML = () => `<div class="crear-set">
+  <label class="crear-row"><span>${t('Acción', 'Action')}</span><select data-c="accion"><option value="auto"></option><option value="adaptar">${t('Adaptar (forzado)', 'Adapt (forced)')}</option><option value="crear">${t('Crear (forzado)', 'Create (forced)')}</option></select></label>
+  <label class="crear-row"><span>${t('Receta', 'Recipe')}</span><select data-c="receta">${RECETAS.map(r => `<option value="${r}">${RECETA_NOMBRE[r]}</option>`).join('')}</select></label>
+  <div class="crear-receta" data-receta="tira">
+    <label class="crear-row"><span>${t('Piezas', 'Pieces')}</span><select data-c="tira.n"><option value="0"></option>${[3, 4, 5].map(n => `<option value="${n}">${n}</option>`).join('')}</select></label>
+    <label class="crear-chk"><input type="checkbox" data-c="tira.sep"> ${t('Separación fina entre piezas', 'Thin gap between pieces')}</label>
+    <label class="crear-chk crear-solo-video"><input type="checkbox" data-c="tira.bucle"> ${t('Cada pieza reproduce su tramo en bucle (la pieza dura un tramo)', 'Each piece loops its own segment (the piece lasts one segment)')}</label>
+    <label class="crear-row crear-solo-imagen"><span>${t('Zoom de las zonas', 'Zone zoom')}</span><input type="range" data-c="tira.zoom" min="${TIRA.zoomMin}" max="${TIRA.zoomMax}" step="0.05"></label>
+  </div>
+  <div class="crear-receta" data-receta="barrido">
+    <label class="crear-row"><span>${t('Recorrido', 'Path')}</span><select data-c="barrido.recorrido"><option value="ida">${t('Ida', 'One way')}</option><option value="vuelta">${t('Ida y vuelta', 'There and back')}</option></select></label>
+    <label class="crear-row"><span>${t('Sentido', 'Direction')}</span><select data-c="barrido.sentido"><option value="1">${t('Normal (← → / ↓)', 'Normal (← → / ↓)')}</option><option value="-1">${t('Inverso', 'Reverse')}</option></select></label>
+    <label class="crear-row"><span>${t('Paneo (s)', 'Pan (s)')}</span><input type="number" data-c="barrido.seg" min="0" max="600" step="0.5" inputmode="decimal" title="${t('0 = toda la pieza; menos segundos = más rápido', '0 = the whole piece; fewer seconds = faster')}"></label>
+  </div>
+  <div class="crear-receta" data-receta="rotulo">
+    <label class="crear-row"><span>Claim ES</span><input type="text" data-c="rotulo.texto" maxlength="${ROTULO.maxTexto}" placeholder="${t('Título del contenido', 'Content title')}"></label>
+    <label class="crear-row"><span>Claim EN</span><input type="text" data-c="rotulo.textoEn" maxlength="${ROTULO.maxTexto}" placeholder="${t('Opcional: se alterna', 'Optional: alternates')}"></label>
+    <label class="crear-row"><span>${t('Velocidad', 'Speed')}</span><input type="range" data-c="rotulo.velocidad" min="${ROTULO.velMin}" max="${ROTULO.velMax}" step="0.25"></label>
+    <label class="crear-row"><span>${t('Texto', 'Text')}</span><input type="color" data-c="rotulo.color"></label>
+    <label class="crear-row"><span>${t('Fondo', 'Background')}</span><select data-c="rotulo.fondo"><option value="desenfocado">${t('Desenfocado del contenido', 'Blurred content')}</option><option value="solido">${t('Sólido', 'Solid')}</option></select></label>
+    <label class="crear-row"><span>${t('Color fondo', 'Bg colour')}</span><input type="color" data-c="rotulo.fondoColor"></label>
+    <label class="crear-row"><span>${t('Icono', 'Icon')}</span><select data-c="rotulo.icono"><option value="miniatura">${t('Miniatura del contenido', 'Content thumbnail')}</option><option value="logo">${t('Logo', 'Logo')}</option><option value="ninguno">${t('Ninguno', 'None')}</option></select></label>
+    <label class="crear-row crear-logo"><span>${t('Logo', 'Logo')}</span><input type="file" data-logo accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"></label>
+  </div>
+</div>`;
+const getPath = (o, p) => p.split('.').reduce((a, k) => a?.[k], o);
+function setPath(o, p, v) { const ks = p.split('.'), last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = v; }
+function bindCrear(box, f) {
+  box.querySelectorAll('[data-c]').forEach(inp => {
+    const path = inp.dataset.c;
+    inp.setAttribute('aria-label', `${inp.closest('label')?.querySelector('span')?.textContent || path} · ${f.nombre}`);
+    const apply = () => {
+      const c = crearCfg(f), cur = getPath(c, path);
+      let v = inp.type === 'checkbox' ? inp.checked : inp.value;
+      if (typeof cur === 'number') v = Number(v);
+      setPath(c, path, v);
+      state.crear[f.id] = crearSettings(c, crearBase(f));
+      if (path.startsWith('rotulo.') || path === 'receta') stripCache.clear();
+      refreshInfo(); syncCrearSettings(inp);
+    };
+    inp.addEventListener(inp.type === 'text' || inp.type === 'range' || inp.type === 'color' || inp.type === 'number' ? 'input' : 'change', apply);
+  });
+  const file = box.querySelector('[data-logo]');
+  if (file) file.addEventListener('change', async () => {
+    const fl = file.files?.[0]; if (!fl) return;
+    const url = URL.createObjectURL(fl), im = new Image();
+    try { im.src = url; await im.decode(); logo = {el: im, ancho: im.naturalWidth || 512, alto: im.naturalHeight || 512, key: `logo:${fl.name}:${fl.size}`}; crearCfg(f).rotulo.icono = 'logo'; stripCache.clear(); refreshInfo(); syncCrearSettings(); }
+    catch (_) { URL.revokeObjectURL(url); const a = box.closest('#card-settings')?.querySelector('.aviso'); if (a) a.textContent = t('No se pudo leer el logo.', 'Could not read the logo.'); }
+  });
+}
+// Values and visible fieldsets of the Avanzado recipe form (except the field being typed in).
+function syncCrearSettings(skip = null) {
+  const box = $('#card-settings .crear-set'); if (!box) return;
+  const f = FORMATOS.find(x => x.id === state.sel && x.on); if (!f) return;
+  const c = crearCfg(f), crea = creando(f), r = state.src.ancho ? desproporcion(state.src, destino(f)) : 0;
+  const auto = box.querySelector('[data-c="accion"] option[value="auto"]');
+  auto.textContent = `${t('Auto', 'Auto')} · ${state.src.ancho ? `${accionAuto(state.src, destino(f)) === 'crear' ? t('Crear', 'Create') : t('Adaptar', 'Adapt')} (r = ${fmtNum(r, 2)}; ${t('umbral', 'threshold')} ${fmtNum(UMBRAL_CREAR)})` : `${t('Crear si r ≥', 'Create if r ≥')} ${fmtNum(UMBRAL_CREAR)}`}`;
+  const autoN = box.querySelector('[data-c="tira.n"] option[value="0"]');
+  autoN.textContent = `${t('Auto', 'Auto')}${state.src.ancho ? ` (${tiraN(state.src, destino(f), 0)})` : ''}`;
+  box.querySelectorAll('[data-c]').forEach(inp => {
+    if (inp === skip) return;
+    const v = getPath(c, inp.dataset.c);
+    if (inp.type === 'checkbox') inp.checked = !!v; else inp.value = String(v);
+  });
+  box.querySelectorAll('.crear-receta').forEach(el => { el.hidden = !crea || el.dataset.receta !== c.receta; });
+  box.querySelector('[data-c="receta"]').closest('label').hidden = !crea;
+  box.querySelectorAll('.crear-solo-video').forEach(el => { el.hidden = srcKind !== 'video'; });
+  box.querySelectorAll('.crear-solo-imagen').forEach(el => { el.hidden = srcKind === 'video'; });
+  const lg = box.querySelector('.crear-logo'); if (lg) lg.hidden = c.rotulo.icono !== 'logo';
+  const modo = $('#card-settings .ctl [data-k="modo"]');
+  if (modo) { modo.disabled = crea; modo.title = crea ? t('El método es de «Adaptar»; en «Crear» manda la receta.', 'The method belongs to «Adapt»; in «Create» the recipe rules.') : ''; }
+}
+function pickCard(f) { if (state.sel === f.id) return; state.sel = f.id; markSelected(); buildCardSettings(); }
+// Aviso of a recipe (Avanzado) and its plan (Experto).
+function crearAviso(f) {
+  const cfg = crearCfg(f), kind = srcKindCrear(), seconds = recetaSeconds(), out = destino(f), dur = duracionReceta(cfg, {kind, seconds, src: state.src, dst: out});
+  const r = desproporcion(state.src, out), what = `${t('Crear', 'Create')} · ${RECETA_NOMBRE[cfg.receta]} · MP4 ${secLabel(dur)} s · 25 fps`;
+  let how = '';
+  if (cfg.receta === 'tira') {
+    const n = tiraN(state.src, out, cfg.tira.n);
+    how = kind === 'video' ? (cfg.tira.bucle ? t(`${n} tramos de ${secLabel(dur)} s en bucle, sin audio`, `${n} segments of ${secLabel(dur)} s looping, no audio`) : t(`${n} momentos del vídeo, sin audio`, `${n} moments of the video, no audio`)) : t(`${n} zonas del contenido (zoom ${fmtNum(cfg.tira.zoom, 2)})`, `${n} zones of the content (zoom ${fmtNum(cfg.tira.zoom, 2)})`);
+    how += t(' · aparecen en cascada', ' · cascading in');
+  } else if (cfg.receta === 'barrido') {
+    const p = barridoPlan(state.src, out.ancho, out.alto, state.fmt[f.id], cfg, dur);
+    how = `${t('paneo', 'pan')} ${p.eje === 'x' ? t('horizontal', 'horizontal') : t('vertical', 'vertical')} · ${cfg.barrido.recorrido === 'vuelta' ? t('ida y vuelta', 'there and back') : t('ida', 'one way')} · ${t('sin deformar', 'no distortion')}${kind === 'video' ? t(' · audio si existe', ' · audio if present') : ''}`;
+  } else {
+    how = `${t('claim', 'claim')} «${rotuloTextos(cfg).join(' / ').slice(0, 60)}» · ${fmtNum(rotuloVelocidad(cfg, out.ancho, out.alto), 0)} px/s · ${cfg.rotulo.fondo === 'solido' ? t('fondo sólido', 'solid background') : t('fondo desenfocado', 'blurred background')}${kind === 'video' ? t(' · audio si existe', ' · audio if present') : ''}`;
+  }
+  return `${what} · ${how} · r = ${fmtNum(r, 2)}${f.output === 'png' ? t(' · PNG/JPG: fotograma representativo', ' · PNG/JPG: representative frame') : ''}`;
+}
+function crearCmd(f) {
+  try {
+    const job = crearJob({...crearArgs(f), profile: perfil(f), technical: plan(f) || {}, name: state.srcName, id: f.id, rotulo: rotuloLayoutDe(f, perfil(f))});
+    return 'ffmpeg ' + job.args.map(arg => JSON.stringify(arg === 'output.mp4' ? job.filename : arg)).join(' ');
+  } catch (_) { return ''; }
+}
+let drawDirty=true,lastFrame=-1,crearAnim=false;
 function loop(now) {
   if(anim) anim.tick(now ?? performance.now());
+  if(crearAnim) drawDirty=true; // recipes on pictures move on their own clock
   const frame = anim ? anim.frameNo : video.currentTime;
   if(drawDirty||frame!==lastFrame){
   document.querySelectorAll('.fmt[data-f]').forEach((el) => { const f = FORMATOS.find((x) => x.id === el.dataset.f); if (f.especial) { drawEspecial(el, f); return; } const c = el.querySelector('canvas'); if (c) drawInto(c, f); });
@@ -616,7 +967,7 @@ function releaseDerived() {
 }
 function setSource(url, name, origin = {id:null,title:name}, kind = 'video', ext = 'png', extra = null) {
   state.origin = {id:origin.id||null,title:origin.title||name};
-  releaseStill(); releaseDerived(); stopAnim();
+  releaseStill(); releaseDerived(); stopAnim(); resetCrearMedia();
   if (svgRasters) { svgRasters.clear(); svgRasters = null; }
   svgSrc = extra?.svgTexto ? {texto: extra.svgTexto, medidas: extra.svg} : null;
   if (svgSrc) svgRasters = svgCache(svgSrc.texto);
@@ -818,7 +1169,7 @@ $('#src-select').onchange = (e) => {
     clase: o.dataset.type === 'video' ? 'video' : undefined, mime: item?.mime, ext: window.PixeriaStockFuentes?.extension(item) || item?.ext});
 };
 // Sin vídeo por defecto (ninguna marca): estado vacío hasta que el usuario elige uno.
-function emptySource() { cargaTurno++; releaseStill(); releaseDerived(); stopAnim(); if (svgRasters) { svgRasters.clear(); svgRasters = null; } svgSrc = null; fuente = null; publicarFuente('inicio'); srcKind = 'video'; img.removeAttribute('src'); syncKind(); video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
+function emptySource() { cargaTurno++; releaseStill(); releaseDerived(); stopAnim(); resetCrearMedia(); if (svgRasters) { svgRasters.clear(); svgRasters = null; } svgSrc = null; fuente = null; publicarFuente('inicio'); srcKind = 'video'; img.removeAttribute('src'); syncKind(); video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
 $('#src-file').onchange = (e) => {
   const f = e.target.files[0]; if (!f) return;
   if (f.size>MAX_SOURCE_BYTES) {$('#src-msg').textContent=t('El límite local es 100 MB. Elige un archivo más pequeño.','The local limit is 100 MB. Choose a smaller file.');e.target.value='';return;}
@@ -1150,7 +1501,8 @@ function saveRefs(known) { try { localStorage.setItem(STOCK_REFS_KEY, JSON.strin
 async function publishPackage() {
   const p = pkg; if (!p || p.publishing || !EST) return;
   p.publishing = true; renderPackage();
-  const pieces = publishPlan({doc: EST, plan: p.plan, formatos: p.formatos, fuente: p.fuente, known: new Map(), proyectoTag: FICHA?.alias?.[0] || EST.proyecto});
+  const recetas = Object.fromEntries([...p.files].filter(([, x]) => x.item?.receta).map(([id, x]) => [id, x.item.receta]));
+  const pieces = publishPlan({doc: EST, plan: p.plan, formatos: p.formatos, fuente: p.fuente, known: new Map(), proyectoTag: FICHA?.alias?.[0] || EST.proyecto, recetas});
   const known = knownRefs(pieces);
   // El Stock solo admite MP4 desde el Adaptador: los PNG van solo en el ZIP.
   const mp4 = pieces.filter(piece => p.files.get(piece.formato)?.mime === 'video/mp4');

@@ -3,6 +3,7 @@
 // una ficha JSON versionada: adaptaciones/proyectos/<id-yokup>.json. Sin ficha, el proyecto
 // usa solo la biblioteca general. Módulo puro: lo usan el navegador, los tests y el generador.
 import {settings} from './adapter-core.mjs';
+import {RECETAS} from './crear-core.mjs';
 
 export const GENERAL = 'general';
 export const YOKUP_URL = 'https://api.yokup.com/projects';
@@ -110,6 +111,16 @@ export function validateFicha(ficha, {lists = {}, yokupIds = null, generalIds = 
     if (!(INCLUDES.includes(inc) || (Array.isArray(inc) && inc.length && inc.every(id => ids.has(id))))) e(`${w}: incluye debe ser ${INCLUDES.join('|')} o una lista de ids propios`);
   }
   if (ficha.notas != null && (!isText(ficha.notas.es) || !isText(ficha.notas.en))) e('notas necesita es y en');
+  // Crear (6-oct-2026): receta por defecto por formato propio, para crear sin preguntar cuando la
+  // tarjeta pasa a «Crear» (o "adaptar" para forzar el reencuadre de siempre en ese formato).
+  if (ficha.recetas != null) {
+    const r = ficha.recetas, validas = [...RECETAS, 'adaptar'];
+    if (!r || typeof r !== 'object' || Array.isArray(r)) e(`recetas debe ser un objeto {"<formato>": "${validas.join('|')}"}`);
+    else for (const [id, v] of Object.entries(r)) {
+      if (!ids.has(id)) e(`recetas: «${id}» no es un formato propio de la ficha`);
+      if (!validas.includes(v)) e(`recetas.${id} debe ser ${validas.join('|')}`);
+    }
+  }
   // Estancos y circuito (6-oct-2026): JSON aparte con los puntos de venta y el formato de cada pantalla.
   if (ficha.estancos != null) {
     const est = ficha.estancos;
@@ -134,6 +145,9 @@ export function projectFormats(ficha, {estandar = [], especiales = []} = {}, en 
     const layout = JSON.parse(JSON.stringify(src));
     return {id: layout.id, nombre: layout.nombre, nameEn: layout.nombre, uso: en ? layout.useEn : layout.uso, custom: layout.entrega, category: 'digital', especial: true, proyecto: ficha.id, layout, fps: 25, on: false};
   });
+  // Receta por defecto de la ficha (Crear): viaja con el formato.
+  const recetas = ficha.recetas && typeof ficha.recetas === 'object' ? ficha.recetas : {};
+  for (const f of [...flat, ...walls]) if (recetas[f.id]) f.receta = recetas[f.id];
   return [...flat, ...walls];
 }
 

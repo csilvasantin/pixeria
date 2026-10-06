@@ -61,10 +61,12 @@ export function createEngine() {
           const bytes=await readSource(sourceURL,signal);alive();
           await engine.writeFile(name,bytes);inputURL=sourceURL;inputName=name;
         }
+        // Crear (6-oct-2026): extra inputs of a recipe (the ticker strip PNG), written for this job only.
+        for(const x of job.extraFiles||[]){const bytes=await readSource(x.url,signal);alive();await engine.writeFile(x.name,bytes);}
         const progress=({progress})=>{if(mine===generation)onStatus({phase:'encoding',progress:Math.min(.99,Math.max(0,progress))});};
         engine.on('progress',progress);progress({progress:0});
         let code;
-        try {code=await engine.exec(job.args);} finally {engine.off('progress',progress);}
+        try {code=await engine.exec(job.args);} finally {engine.off('progress',progress);for(const x of job.extraFiles||[])await engine.deleteFile(x.name).catch(()=>{});}
         alive();
         if(code!==0) throw new Error('encoding');
         for(const output of job.outputs||[{...job,file:'output.mp4'}]) {
