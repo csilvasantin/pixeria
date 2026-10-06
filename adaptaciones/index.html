@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=06.10.2026.r2.2013';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=06.10.2026.r3.2056';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -36,18 +36,21 @@
 <meta charset="utf-8">
 <script>if (/(^|\.)pixeria\.(com|pages\.dev)$/.test(location.hostname) && !location.pathname.startsWith('/en/') && new URLSearchParams(location.search).get('lang') !== 'es') location.replace('/en/adaptaciones/' + location.search);</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.06.10.2026.r2.20:13">
+  <meta name="admiranext-version" content="Pixeria v.06.10.2026.r3.20:56">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Adaptador · Un contenido, todos los formatos | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=06.10.2026.r2.2013">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=06.10.2026.r2.2013">
-  <script defer src="/assets/site-nav.js?v=06.10.2026.r2.2013"></script>
+  <!-- Tema Matrix compartido con /video.html y el resto del sitio (tokens, mono, CRT y lluvia) -->
+  <link rel="stylesheet" href="/workspace.css?v=06.10.2026.r3.2056">
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=06.10.2026.r3.2056">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=06.10.2026.r3.2056">
+  <script defer src="/assets/site-nav.js?v=06.10.2026.r3.2056"></script>
 </head>
 <body class="adapt-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
+  <canvas id="matrix-rain" aria-hidden="true"></canvas>
   <header class="site-header">
     <a class="brand" href="/" aria-label="Pixeria inicio"><span>Pixeria</span></a>
     <nav class="nav" aria-label="Secciones de Pixeria">
@@ -121,7 +124,7 @@
         <div class="paquete-acciones"><button type="button" id="paquete-zip" class="pill accent" disabled>ZIP · todos</button><button type="button" id="paquete-publicar" class="pill" disabled>Publicar en el Stock</button></div>
         <div id="paquete-grupos" class="paquete-grupos"></div>
         <details id="paquete-stock" class="paquete-log" hidden><summary>Stock · registro</summary><ol id="paquete-stock-log"></ol></details>
-        <details class="paquete-log paquete-programacion"><summary>Programación de players · pendiente</summary><p class="muted">Esta página no programa players. El único sistema que asigna contenido a cada pantalla (la lista por defecto de admira.tv que leen los players con <code>canal.html?screen=…</code>) pide una clave de servidor desde aquí, y las 18 pantallas de los estancos todavía no están dadas de alta en la parrilla ni tienen player físico. El lote queda en el Stock y en el ZIP con su manifiesto (id de pantalla de cada pieza) para programarlo cuando exista ese acceso.</p></details>
+        <details id="programar" class="paquete-log paquete-programacion" open><summary>Programación de players</summary><p id="programar-nota" class="muted">Programa la lista por defecto de admira.tv que reproduce cada pantalla (<code>canal.html?screen=…</code>). Primero se prueba sin cambiar nada; después se programa con confirmación. La clave de admira.tv la pone el servidor: aquí no se pide.</p><div class="paquete-acciones"><button type="button" id="programar-probar" class="pill" disabled>Probar programación (sin cambios)</button><button type="button" id="programar-real" class="pill accent" disabled>Programar players</button></div><p id="programar-status" class="muted" role="status" aria-live="polite"></p><ul id="programar-plan" class="programar-plan" hidden></ul><details id="programar-registro" class="paquete-log" hidden><summary>Registro de programación</summary><ol id="programar-log"></ol></details></details>
       </section>
       <div class="variants-heading"><h2 id="selected-count"></h2><button id="clear-formats" class="pill" type="button">Quitar todos</button></div>
       <p id="empty-formats" class="muted" hidden>Elige tamaños en el panel de la izquierda para crear tus adaptaciones.</p>
@@ -147,13 +150,14 @@
       <details class="plan"><summary>Plan técnico por formato (resolución, H.264, bitrate y orden ffmpeg)</summary><div id="plan-tecnico"></div></details>
     </div>
   </main>
-  <script defer src="/adaptaciones/formatos-entrada.js?v=06.10.2026.r2.2013"></script>
-  <script defer src="/adaptaciones/stock-fuentes.js?v=06.10.2026.r2.2013"></script>
-  <script defer src="/adaptaciones/stock-select.js?v=06.10.2026.r2.2013"></script>
-  <script defer src="/adaptaciones/ficha-tecnica.js?v=06.10.2026.r2.2013"></script>
-  <script defer src="/adaptaciones/importar.js?v=06.10.2026.r2.2013"></script>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=06.10.2026.r2.2013"></script>
-  <script defer src="/assets/cuadratura.js?v=06.10.2026.r2.2013"></script>
+  <script defer src="/adaptaciones/formatos-entrada.js?v=06.10.2026.r3.2056"></script>
+  <script defer src="/adaptaciones/stock-fuentes.js?v=06.10.2026.r3.2056"></script>
+  <script defer src="/adaptaciones/stock-select.js?v=06.10.2026.r3.2056"></script>
+  <script defer src="/adaptaciones/ficha-tecnica.js?v=06.10.2026.r3.2056"></script>
+  <script defer src="/adaptaciones/importar.js?v=06.10.2026.r3.2056"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=06.10.2026.r3.2056"></script>
+  <script defer src="/matrix-rain.js?v=06.10.2026.r3.2056"></script>
+  <script defer src="/assets/cuadratura.js?v=06.10.2026.r3.2056"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>

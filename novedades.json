@@ -8,5 +8,10 @@
     "Adaptador: paquete por estanco para los 9 estancos Altadis",
     "ZIP por estanco o de todos, con manifiesto y hash de cada pieza",
     "Publicación al Stock con etiquetas de proyecto, estanco, pantalla y formato, sin duplicados"
+  ],
+  "v.06.10.2026.r3.20:56": [
+    "Adaptador en verde Matrix, como el resto de Pixeria",
+    "Programación de players de los estancos desde el servidor, con modo de prueba sin cambios",
+    "La clave de admira.tv se guarda en el servidor y nunca llega al navegador"
   ]
 }

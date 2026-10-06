@@ -568,3 +568,11 @@ export async function handleAuth(request, env, waitUntil = null) {
 export async function hasSession(request, env) {
   return Boolean(await readSession(request, env));
 }
+
+// Quién llama (functions que escriben fuera, p. ej. /players-programar): la misma verja que
+// hasSession —cookie firmada, lista y versión de sesión— pero devolviendo el email y si es la
+// sesión de agente. Sin sesión válida, null.
+export async function sessionInfo(request, env) {
+  const session = await readSession(request, env);
+  return session ? {email:session.email, agent:Boolean(session.agent)} : null;
+}

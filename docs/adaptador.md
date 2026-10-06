@@ -327,26 +327,81 @@ Encargo de Carlos (6-oct-2026) para los 9 estancos Altadis de Barcelona. Hay dos
   - El registro del panel distingue publicada, ya estaba, reutilizada (mismo contenido) y error.
 - El Stock solo acepta MP4 desde el Adaptador. Los PNG van únicamente en el ZIP.
 
-### Programación de players: no conectada
+### Programación de players
 
-Esta página no programa players. Esto es lo que hay hoy (investigado el 6-oct-2026):
+Encargo de Carlos (6-oct-2026): la programación la hace **una función de servidor en pixeria.com, con modo de prueba**. El navegador nunca ve el secreto de admira.tv.
+
+**Contexto (investigado el 6-oct-2026):**
 
 - **Qué reproduce cada player.** Todos los players reales abren `https://www.admira.tv/canal.html?screen=<id>`. Ese canal combina tres fuentes:
   - la lista por defecto de la pantalla, en `admira.tv/api/playlist` (KV `ACCESS`);
   - la parrilla de `api.admira.store/grid/day`, que se reserva con `/grid/book` o `/grid/rundown` y la clave `GRID_KEY`;
   - el modo sincronizado.
-- **Quién puede escribir.** El único endpoint que acepta peticiones desde pixeria.com por CORS es `POST admira.tv/api/playlist`. Admite una sesión de admira.tv (`__Host-atv_session`), pero esa cookie no viaja entre orígenes porque no hay `Allow-Credentials`. Desde aquí solo funciona con el secreto `STOCK_NOTIFY_KEY`. Ese es el modo que usa hoy «Asignar al circuito…» en `stock.html`, pidiendo la clave con un `prompt()`.
-  - Eso es un secreto en el cliente, así que no se ha conectado.
+- **Quién puede escribir.** Desde pixeria.com solo se puede escribir con `POST admira.tv/api/playlist` y el secreto `STOCK_NOTIFY_KEY` (en admira.tv es el secreto del mismo nombre; acepta la cabecera `X-Notify-Key` o el campo `secret`). «Asignar al circuito…» de `stock.html` lo sigue pidiendo con `prompt()`; el Adaptador ya no lo necesita.
 - **Las pantallas de Altadis no existen en el sistema de players:**
   - las 18 pantallas `altadis-bcn-00N-p1-vertical` / `-p2-horizontal` no están en `/grid/screens`;
-  - ningún player las abre;
-  - sus listas por defecto están vacías;
+  - ningún player las abre y sus listas por defecto están vacías;
   - el gemelo de XpaceOS lee un `demo.json` estático.
-- **Qué falta y quién decide:**
-  - **Carlos o el responsable de admira.tv:** decidir el canal de programación. Lo propuesto es una función de Pages en pixeria.com que compruebe `__Host-pixeria_session` (`hasSession`) y guarde `STOCK_NOTIFY_KEY` como secreto del servidor, con un modo de prueba.
-  - **Operaciones de admira:** dar de alta las 18 pantallas en `/grid/config` con `circuit: "altadis_bcn"`.
-  - **Altadis:** confirmar el parque real y sus medidas.
-- Hasta entonces, el lote queda en el Stock y en el ZIP. El manifiesto lleva el `screen` de cada pieza, listo para programarlo.
+  - Mientras sea así, la prueba las marca como inexistentes y **no se puede programar** (ni en la interfaz ni en el servidor).
+
+**Formato de admira.tv** (`admira-tv/functions/api/playlist.js`, `cleanItem`). Un POST por pantalla, que **sustituye** su lista por defecto entera:
+
+```json
+{"screen": "altadis-bcn-003-p1-vertical", "name": "altadis-estancos-bcn · Estanc nº 275 · Torrent de l'Olla",
+ "source": "adaptador altadis-estancos-bcn", "rev": 42,
+ "items": [{"id": "<stockId>", "stockId": "<stockId>", "title": "…", "sub": "<estanco> · <pantalla>",
+            "lane": "publicidad", "seconds": 10, "asset": "https://stock.admira.store/stock/<id>/asset.mp4",
+            "assetType": "video", "tags": ["altadis-estancos-bcn", "altadis_bcn", "altadis-bcn-003", "pantalla-p1-vertical", "cliente-01", "adaptador"]}]}
+```
+
+- La clave va en la cabecera `X-Notify-Key`, nunca en el cuerpo ni en la URL. admira.tv firma la lista con `updatedBy: "pixeria-stock · adaptador altadis-estancos-bcn"`.
+- Máximo 200 piezas por lista; `seconds` de 2 a 600; `asset` en https. `rev` solo se envía si la lista ya tenía revisión: si alguien la cambió entre la prueba y el POST, admira.tv responde 409.
+
+**Function `functions/players-programar.js`** · `POST /players-programar`:
+
+- **Sesión.** La misma verja de la cookie firmada (`__Host-pixeria_session`, con `aud` del dominio, lista y versión de sesión) mediante `sessionInfo` de `functions/_auth.js`. Vale también la sesión de agente. Sin sesión, 401. Además exige `Content-Type: application/json` y, si llega `Origin`, que sea el propio.
+- **Entrada:** `{modo: 'prueba'|'real', proyecto: 'altadis-estancos-bcn', piezas: [{estanco, pantalla, screenId, stockId|url, formato, duracion}], firma?}`.
+- **Validación estricta** (400 con la lista `errores`):
+  - proyecto conocido: el JSON `adaptaciones/proyectos/estancos/altadis-estancos-bcn.json` se importa en el build (`import … with {type: 'json'}`), no se copia;
+  - estanco y pantalla del JSON, `screenId` = `screen` de esa pantalla y `formato` = el suyo;
+  - URL `https://stock.admira.store/…` exacta (sin puerto ni usuario) y, si viene `stockId`, de ese asset;
+  - `duracion` de 2 a 600 s, sin piezas repetidas y como máximo 50 piezas.
+  - Un `stockId` se busca en el índice público del Stock (`stock.admira.store/stock/index.json`): de ahí salen el título y, si las trae, las medidas, que tienen que coincidir con las de la pantalla.
+- **`modo: 'prueba'`** no escribe nada fuera. Hace solo lecturas:
+  - `GET api.admira.store/grid/screens` para saber si cada `screenId` existe hoy;
+  - `GET admira.tv/api/playlist?screen=…` para saber qué tiene ahora cada lista;
+  - `HEAD` de cada asset del Stock.
+  - Devuelve el plan exacto (por pantalla, el `payload` que se enviaría y cuántas piezas sustituye), `inexistentes`, `assetsNoDisponibles`, `secretoConfigurado`, quién y cuándo, y `firma` (SHA-256 de los payloads).
+- **`modo: 'real'`:**
+  - sin `env.STOCK_NOTIFY_KEY` → 503 «falta configurar el secreto en el proyecto Pages»;
+  - sin la `firma` de una prueba de este mismo lote → 409 `prueba-pendiente`;
+  - con pantallas inexistentes o assets que el Stock no sirve → 409 y no escribe nada;
+  - si todo cuadra, un POST por pantalla con `X-Notify-Key` y la respuesta por pieza (`ok`, `rev` o `error`), con quién (email de la sesión) y cuándo. 200 si todo fue bien; 502 si alguna pantalla falló.
+- **Logs** (`console.log`, evento `players_programar`): modo, email, fecha, proyecto, pantallas y resultado. Nunca el secreto.
+
+**Interfaz.** En el panel «Paquete por estanco», sección «Programación de players» (ES/EN, dentro del contenido, nada en la barra):
+
+- Las piezas salen del lote publicado en el Stock (`programPieces` en `estancos-core.mjs`): una por estanco × pantalla, con `stockId`, `url` del Stock y la duración del archivo. Los PNG no van al Stock y no se programan. Sin publicar, el panel lo dice.
+- «Probar programación (sin cambios)» llama al modo prueba y pinta, por pantalla, si existe, qué recibiría y qué tiene ahora.
+- «Programar N players de M estancos» está deshabilitado mientras no haya una prueba de **ese** lote (`loteKey`), haya pantallas inexistentes o assets no servidos, o falte el secreto. Pide confirmación explícita (sustituye la lista por defecto) y llama al modo real con la `firma`.
+- «Registro de programación» guarda cada prueba y programación con hora, quién y el resultado por pantalla. Después de programar hay que volver a probar.
+
+**Secreto (lo pone Carlos; nadie más lo lee ni lo escribe).** El valor es el mismo `STOCK_NOTIFY_KEY` de admira.tv (la clave del Stock). Hay que instalarlo en los dos proyectos Pages, porque admira.studio es el espejo generado y ejecuta la misma function:
+
+```
+npx wrangler pages secret put STOCK_NOTIFY_KEY --project-name pixeria
+npx wrangler pages secret put STOCK_NOTIFY_KEY --project-name admira-studio
+```
+
+Hasta que esté puesto, la prueba funciona y avisa con `secretoConfigurado: false`, y el modo real responde 503.
+
+**Espejo admira.studio.** `sync.sh` cambia `pixeria.com` por `admira.studio`, así que el `aud` de la cookie cambia igual al crearla y al leerla, y `sessionInfo` sigue valiendo. El nombre `__Host-pixeria_session` va en minúscula y no se sustituye. La function no añade identificadores con «Pixeria» delante; el User-Agent `PixeriaAdaptador/1.0` ya está protegido en `marca.json`. Un test aplica las sustituciones al código y lo comprueba.
+
+**Qué falta y quién decide:**
+
+- **Carlos:** poner el secreto en los dos proyectos Pages (comandos de arriba).
+- **Operaciones de admira:** dar de alta las 18 pantallas en `/grid/config` con `circuit: "altadis_bcn"`. Hasta entonces, la prueba sale con 18 inexistentes y no se programa nada.
+- **Altadis:** confirmar el parque real y sus medidas.
 
 ### Pruebas
 
@@ -362,8 +417,13 @@ Esta página no programa players. Esto es lo que hay hoy (investigado el 6-oct-2
   3. Descarga el ZIP del estanco y comprueba las rutas, el manifiesto, los SHA-256 y ffprobe con H.264 a la medida de cada pantalla.
   4. Descarga el ZIP global (4 archivos y el manifiesto).
   5. A 390 px y en inglés comprueba «todos» y que no hay desbordamiento horizontal.
+- `node --test test/players-programar.test.mjs` cubre la function con `fetch` simulado: sesión válida (agente y Google), sin sesión, entrada no válida, modo prueba sin escrituras, `stockId` resuelto con el índice, modo real con la cabecera `X-Notify-Key` (nunca en el cuerpo ni en los logs), firma y pantallas inexistentes, assets caídos, falta del secreto (503) y el espejo de marca.
+- `test/adaptador-programar.browser.cjs` usa Playwright con `/auth/session`, `/stock-publish` y `/players-programar` simulados, y cualquier escritura a admira.tv o a la parrilla contada como fallo:
+  1. A 1440 px: dos estancos publicados, «Programar» deshabilitado sin prueba; la prueba enseña 4 pantallas inexistentes y sigue deshabilitado; con las pantallas dadas de alta se habilita, cancelar la confirmación no programa y aceptarla llama al modo real con la firma.
+  2. A 390 px y en inglés: la prueba, sin desbordamiento horizontal, y la sesión caducada.
 
 ```
 python3 -m http.server 9193 --bind 127.0.0.1 &
 BASE=http://127.0.0.1:9193 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-estancos.browser.cjs
+BASE=http://127.0.0.1:9193 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-programar.browser.cjs
 ```

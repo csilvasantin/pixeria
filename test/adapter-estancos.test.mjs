@@ -8,7 +8,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {validateEstancos, formatsFor, packagePlan, groupByEstanco, entryPath, manifest, zipEntries, buildZip, zipName, sourceKey, stockRef, publishPlan, publishTags, packagePayload, publishPieces, FFLATE, MANIFEST, STOCK_TAG_MAX, STOCK_TAGS_OWN, PROGRAMACION} from '../adaptaciones/estancos-core.mjs';
+import {validateEstancos, formatsFor, packagePlan, groupByEstanco, entryPath, manifest, zipEntries, buildZip, zipName, sourceKey, stockRef, publishPlan, publishTags, packagePayload, publishPieces, FFLATE, MANIFEST, STOCK_TAG_MAX, STOCK_TAGS_OWN, programPieces, loteKey, PROGRAMAR_MAX} from '../adaptaciones/estancos-core.mjs';
 import {formatRef, resolveRef, projectFormats, validateFicha} from '../adaptaciones/proyectos-core.mjs';
 import {stockPayload} from '../adaptaciones/stock-publish.mjs';
 
@@ -167,6 +167,18 @@ test('Stock: con todos los estancos las etiquetas caben en el límite del worker
   assert.ok(publishTags({formato: 'cliente-01', rows: five.filter(r => r.formato === 'cliente-01'), totalEstancos: 9}).includes('estancos-5'));
 });
 
-test('programación de players: no se conecta sin API de navegador', () => {
-  assert.equal(PROGRAMACION.disponible, false);
+test('programación de players: piezas del lote para /players-programar', () => {
+  const plan = packagePlan(doc, ['altadis-bcn-003', 'altadis-bcn-007'], formats);
+  const files = new Map([['cliente-01', {duracion: 10.004}], ['cliente-02', {duracion: 1}]]);
+  // Solo cliente-01 está en el Stock: cliente-02 falta y no se programa.
+  const half = programPieces({plan, stock: new Map([['cliente-01', {id: 'abc-1'}]]), files});
+  assert.deepEqual(half.faltan, ['cliente-02']);
+  assert.equal(half.piezas.length, 2); assert.equal(half.estancos, 2);
+  assert.deepEqual(half.piezas[0], {estanco: 'altadis-bcn-003', pantalla: 'p1-vertical', screenId: 'altadis-bcn-003-p1-vertical', stockId: 'abc-1', url: 'https://stock.admira.store/stock/abc-1/asset.mp4', formato: 'cliente-01', duracion: 10});
+  const all = programPieces({plan, stock: new Map([['cliente-01', {id: 'abc-1'}], ['cliente-02', {id: 'abc-2'}]]), files});
+  assert.equal(all.piezas.length, 4); assert.deepEqual(all.faltan, []);
+  assert.equal(all.piezas.find(p => p.formato === 'cliente-02').duracion, 2, 'admira.tv no admite menos de 2 s');
+  assert.ok(all.piezas.length <= PROGRAMAR_MAX && doc.estancos.reduce((n, e) => n + e.pantallas.length, 0) <= PROGRAMAR_MAX, 'el circuito entero cabe en una llamada');
+  assert.notEqual(loteKey(half.piezas), loteKey(all.piezas));
+  assert.equal(loteKey(all.piezas), loteKey(programPieces({plan, stock: new Map([['cliente-01', {id: 'abc-1'}], ['cliente-02', {id: 'abc-2'}]]), files}).piezas));
 });

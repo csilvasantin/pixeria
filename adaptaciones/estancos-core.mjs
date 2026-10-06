@@ -219,6 +219,27 @@ export async function publishPieces(pieces, {upload, known, onStep = () => {}}) 
 }
 
 // ── Programación de players ────────────────────────────────────────────────
-// Sin API de programación usable desde el navegador (ver docs/adaptador.md · «Estancos y circuito»):
-// el lote queda publicado en el Stock con su manifiesto; nada programa players desde aquí.
-export const PROGRAMACION = {disponible: false, motivo: 'sin-api'};
+// La programa el servidor: POST /players-programar (functions/players-programar.js) con la sesión de
+// Pixeria. El secreto de admira.tv (STOCK_NOTIFY_KEY) vive solo en el proyecto Pages; aquí no se pide.
+// Primero modo «prueba» (plan exacto, sin escribir), luego modo «real» con la firma de esa prueba.
+// Ver docs/adaptador.md · «Programación de players».
+export const PROGRAMAR_URL = '/players-programar';
+export const PROGRAMAR_MAX = 50;
+// URL pública de un vídeo del Stock publicado por el Adaptador (siempre MP4: stock/<id>/asset.mp4).
+export const stockAssetURL = id => `https://stock.admira.store/stock/${encodeURIComponent(id)}/asset.mp4`;
+// Piezas del lote para /players-programar: una por estanco × pantalla cuya pieza ya está en el Stock.
+// `stock` = Map(formato → {id}); `files` = Map(formato → {duracion}). Los formatos sin pieza en el
+// Stock (PNG o sin publicar) van en `faltan` y no se programan.
+export function programPieces({plan, stock, files}) {
+  const piezas = [], faltan = [];
+  for (const r of plan) {
+    const s = stock?.get?.(r.formato), f = files?.get?.(r.formato);
+    if (!s?.id) { if (!faltan.includes(r.formato)) faltan.push(r.formato); continue; }
+    const d = Number(f?.duracion);
+    const duracion = Number.isFinite(d) ? Math.max(2, Math.min(600, Math.round(d * 100) / 100)) : 10;
+    piezas.push({estanco: r.estanco, pantalla: r.pantalla, screenId: r.screen, stockId: String(s.id), url: stockAssetURL(s.id), formato: r.formato, duracion});
+  }
+  return {piezas, faltan, estancos: new Set(piezas.map(p => p.estanco)).size};
+}
+// Identidad del lote: si cambia cualquier pieza, la prueba anterior deja de valer.
+export const loteKey = piezas => JSON.stringify(piezas.map(p => [p.screenId, p.stockId, p.url, p.duracion]));
