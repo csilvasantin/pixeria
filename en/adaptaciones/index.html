@@ -96,12 +96,13 @@
           <button type="button" id="estancos-preparar" class="pill accent estancos-preparar" disabled>Prepare package</button>
           <p id="estancos-status" class="muted estancos-status" role="status" aria-live="polite"></p>
         </section>
-        <p class="muted">A campaign selects its batch. All sizes selects all 42. Adapt generates the checked sizes, in a queue.</p>
+        <p class="muted">A campaign selects its batch. The checkbox of each group and All sizes select the whole group in one click and, if it is already complete, clear it; with a search or orientation filter, only what is visible. Adapt generates the checked sizes, in a queue.</p>
         <label class="size-search-label">Search formats or sizes<input id="size-search" type="search" placeholder="Name or 300 × 250…"></label>
         <label class="orientation-label">Filter by orientation<select id="size-orientation"><option value="all">All</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option><option value="square">Square</option></select></label>
         <h3>Full campaigns</h3>
         <div id="campaigns"></div>
-        <button type="button" id="all-sizes" class="all-sizes">All sizes <span class="all-sizes-count">42</span></button>
+        <label class="all-sizes"><input type="checkbox" id="all-sizes"><span class="all-sizes-text"><b>All sizes</b><small id="all-sizes-action" aria-hidden="true">Select all 42</small></span><span id="all-sizes-count" class="all-sizes-count">0/42</span></label>
+        <p id="group-status" class="visually-hidden" role="status" aria-live="polite"></p>
         <p id="search-status" class="muted" role="status"></p>
         <div id="size-categories"></div>
         <p id="size-no-results" class="muted" hidden>No matches. Try another name, size or orientation.</p>

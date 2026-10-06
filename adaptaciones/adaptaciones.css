@@ -57,10 +57,17 @@
 .adapter-workspace{display:grid;grid-template-columns:300px minmax(0,1fr);gap:22px;margin-top:16px;align-items:start}
 .size-library{padding:16px;background:var(--lib);border:1px solid var(--ln-hi);border-radius:var(--rad);position:sticky;top:80px;max-height:calc(100vh - 100px);overflow:auto;scrollbar-width:thin}
 .size-library h2{margin:0;font-size:18px}.size-library h3{margin:20px 0 8px;font-size:12px;color:var(--mu);font-weight:600}.size-library p{font-size:12px}
-.all-sizes{display:flex;justify-content:space-between;align-items:center;width:100%;margin:18px 0 8px;padding:11px 12px;background:transparent;color:var(--tx);border:1px solid var(--ln-hi);border-radius:var(--rad);cursor:pointer;font:inherit;font-size:12px;font-weight:700;text-align:left}
+.all-sizes{display:flex;justify-content:space-between;align-items:center;gap:10px;box-sizing:border-box;width:100%;margin:18px 0 8px;padding:11px 12px;background:transparent;color:var(--tx);border:1px solid var(--ln-hi);border-radius:var(--rad);cursor:pointer;font:inherit;font-size:12px;font-weight:700;text-align:left}
 .all-sizes:hover{border-color:var(--ac);background:var(--hover)}.all-sizes-count{color:var(--ac);font-weight:600}
 .group-toggle{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:600;color:var(--mu);cursor:pointer}
 .group-toggle input{accent-color:var(--ac);margin:0}
+/* Selección por grupos (6-oct-2026): casilla tri-estado + rótulo con la acción del próximo clic. */
+.all-sizes input,.group-toggle input{width:16px;height:16px;flex:none;cursor:pointer}
+.all-sizes input:focus-visible,.group-toggle input:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.all-sizes-text{flex:1;min-width:0;display:grid;gap:2px}.all-sizes-text small{font-size:10px;font-weight:600;color:var(--mu);text-transform:none;letter-spacing:normal}
+.group-title{display:flex;align-items:baseline;gap:8px;min-width:0}.group-count{font-size:10px;color:var(--ac);font-weight:600;letter-spacing:normal;white-space:nowrap}
+.group-toggle{flex:none;white-space:nowrap;text-transform:none;letter-spacing:normal}
+.size-library .visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .project-label,.size-search-label,.orientation-label{display:block;font-size:12px;margin-top:12px}.project-label{font-weight:600}.size-library .project-status{margin:6px 0 0;font-size:11px;line-height:1.4}.size-library input[type=search],.size-library select,.custom-size input{display:block;width:100%;box-sizing:border-box;margin-top:5px;padding:9px;background:var(--field-2);color:var(--tx);border:1px solid var(--ln-hi);border-radius:var(--rad);font:inherit;min-width:0}
 .campaign{display:grid;grid-template-columns:1fr auto;gap:6px;text-align:left;width:100%;padding:13px 11px;margin:8px 0;background:var(--fmt-a);color:var(--tx);border:1px solid var(--ln-hi);border-radius:var(--rad);cursor:pointer;font:inherit;font-size:12px}
 .campaign:hover{border-color:var(--ac);background:var(--hover)}.campaign small{grid-column:1/-1;color:var(--mu)}.campaign-count{font-size:10px;color:var(--ac);white-space:nowrap}

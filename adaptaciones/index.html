@@ -96,12 +96,13 @@
           <button type="button" id="estancos-preparar" class="pill accent estancos-preparar" disabled>Preparar paquete</button>
           <p id="estancos-status" class="muted estancos-status" role="status" aria-live="polite"></p>
         </section>
-        <p class="muted">Una campaña marca su lote. Todos los tamaños marca los 42. Adaptar genera los marcados, en cola.</p>
+        <p class="muted">Una campaña marca su lote. La casilla de cada grupo y la de Todos los tamaños marcan el grupo entero de un clic y, si ya está entero, lo desmarcan; con búsqueda u orientación, solo lo visible. Adaptar genera los marcados, en cola.</p>
         <label class="size-search-label">Buscar formatos o tamaños<input id="size-search" type="search" placeholder="Nombre o 300 × 250…"></label>
         <label class="orientation-label">Filtrar por orientación<select id="size-orientation"><option value="all">Todas</option><option value="portrait">Vertical</option><option value="landscape">Horizontal</option><option value="square">Cuadrado</option></select></label>
         <h3>Campañas completas</h3>
         <div id="campaigns"></div>
-        <button type="button" id="all-sizes" class="all-sizes">Todos los tamaños <span class="all-sizes-count">42</span></button>
+        <label class="all-sizes"><input type="checkbox" id="all-sizes"><span class="all-sizes-text"><b>Todos los tamaños</b><small id="all-sizes-action" aria-hidden="true">Marcar los 42</small></span><span id="all-sizes-count" class="all-sizes-count">0/42</span></label>
+        <p id="group-status" class="visually-hidden" role="status" aria-live="polite"></p>
         <p id="search-status" class="muted" role="status"></p>
         <div id="size-categories"></div>
         <p id="size-no-results" class="muted" hidden>Sin coincidencias. Prueba otro nombre, medida u orientación.</p>
