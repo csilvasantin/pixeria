@@ -435,9 +435,9 @@ Encargo de Carlos (6-oct-2026). En algunos formatos, adaptar es deformar o recor
 ### Cuándo una tarjeta pasa a «Crear»
 
 - Para cada formato se calcula la desproporción `r = max(a_src/a_dst, a_dst/a_src)`, con `a = ancho/alto`. En los videowalls segmentados se usa la pared física, no el archivo de entrega.
-- Si `r ≥ UMBRAL_CREAR` (constante en `crear-core.mjs`, **2,5**), la tarjeta pasa a «Crear». El título muestra la etiqueta **CREAR · <receta>**, y el *tooltip* da el valor de r. Con r < 2,5 todo sigue como antes.
+- Si `r ≥ UMBRAL_CREAR` (constante en `crear-core.mjs`, **3,5**; 16:9 → 9:16, con r ≈ 3,16, sigue en «Adaptar»), la tarjeta pasa a «Crear». El título muestra la etiqueta **CREAR · <receta>**, y el *tooltip* da el valor de r. Con r < 3,5 todo sigue como antes.
 - **Atención:** 16:9 ↔ 9:16 da r ≈ 3,16, así que también cruza el umbral. Un vídeo horizontal en la tarjeta vertical 9:16 (o en `cliente-01` de Altadis) sale por defecto con la receta. Si se quiere que esas tarjetas sigan en «Adaptar», basta con subir el umbral a 3,5. 1:1 (1,78) y 4:5 (2,22) no cambian.
-- Cada tarjeta tiene el selector **[Adaptar | Crear]**. El botón activo en automático lleva la marca «· auto». Pulsar el otro botón fuerza esa acción solo en esa tarjeta, y la elección se guarda. En Avanzado, «Acción» vuelve a **Auto** y explica la decisión, por ejemplo «Auto · Crear (r = 4; umbral 2,5)».
+- Cada tarjeta tiene el selector **[Adaptar | Crear]**. El botón activo en automático lleva la marca «· auto». Pulsar el otro botón fuerza esa acción solo en esa tarjeta, y la elección se guarda. En Avanzado, «Acción» vuelve a **Auto** y explica la decisión, por ejemplo «Auto · Crear (r = 4; umbral 3,5)».
 - En «Crear», la tarjeta muestra las tres recetas (**Tira · Barrido · Rótulo**). El botón de exportar dice «Crear MP4 · N s». El método (recorte, contener o expandir) es de «Adaptar» y queda desactivado; el foco y el zoom siguen contando.
 
 ### Las tres recetas
@@ -487,7 +487,7 @@ La ficha admite `"recetas": {"<formato propio>": "tira" | "barrido" | "rotulo" |
 ### Verificación
 
 - `node --test test/adapter-crear.test.mjs` cubre:
-  - la desproporción y el umbral (incluido r = 2,5 exacto y el caso 9:16);
+  - la desproporción y el umbral (incluido r = 3,5 exacto y el caso 9:16);
   - el saneado de ajustes;
   - la geometría de la tira (sin solapes, pares, separación, número según r, momentos alineados, tramos, zonas dentro del contenido y distintas, cascada);
   - el barrido en 4 destinos × ida/vuelta × sentido × zoom: empieza y acaba en los extremos, es monótono, nunca sale del contenido, y la **expresión FFmpeg evaluada en JS da los mismos recortes que la vista previa en cada fotograma**;

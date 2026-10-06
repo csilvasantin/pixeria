@@ -14,7 +14,7 @@ import {cropWindow, STILL, STILL_PREP, animPrep} from './adapter-core.mjs';
 // Umbral de desproporción: r = max(a_src/a_dst, a_dst/a_src), a = ancho/alto. Con r ≥ UMBRAL_CREAR la
 // tarjeta pasa a «Crear» (salvo que el usuario o la ficha del proyecto fuercen «Adaptar»).
 // Ojo: 16:9 ↔ 9:16 da r ≈ 3,16 y también cruza el umbral. Ver docs/adaptador.md · «Crear».
-export const UMBRAL_CREAR = 2.5;
+export const UMBRAL_CREAR = 3.5;
 export const FPS = 25;
 export const RECETAS = ['tira', 'barrido', 'rotulo'];
 export const RECETA_DEFECTO = 'barrido';

@@ -27,15 +27,18 @@ function evalExpr(expr, n) {
 const exprs = filter => [...filter.matchAll(/(x|y)='([^']+)'/g)].map(m => m[2]);
 
 test('desproporción y umbral: 16:9 → 3840×540 y rascacielos pasan a Crear; 1:1 y 4:5 siguen en Adaptar', () => {
-  assert.equal(UMBRAL_CREAR, 2.5);
+  assert.equal(UMBRAL_CREAR, 3.5);
   assert(Math.abs(desproporcion(SRC, BANNER) - 4) < .01);
   assert(Math.abs(desproporcion(SRC, SKY) - 6.667) < .01);
   assert.equal(desproporcion(SRC, BANNER), desproporcion(BANNER, SRC), 'simétrica');
   assert.equal(accionAuto(SRC, BANNER), 'crear'); assert.equal(accionAuto(SRC, SKY), 'crear');
   assert.equal(accionAuto(SRC, {ancho: 1080, alto: 1080}), 'adaptar'); assert.equal(accionAuto(SRC, {ancho: 1080, alto: 1350}), 'adaptar');
-  assert.equal(accionAuto({ancho: 1000, alto: 1000}, {ancho: 2500, alto: 1000}), 'crear', 'r = 2,5 exacto ya es Crear');
+  assert.equal(accionAuto({ancho: 1000, alto: 1000}, {ancho: 3500, alto: 1000}), 'crear', 'r = 3,5 exacto ya es Crear');
+  // Carlos (6-oct-2026): 16:9 → 9:16 (r ≈ 3,16) sigue en «Adaptar».
+  assert.equal(accionAuto({ancho: 1920, alto: 1080}, {ancho: 1080, alto: 1920}), 'adaptar');
   assert.equal(accionAuto({ancho: 1000, alto: 1000}, {ancho: 2490, alto: 1000}), 'adaptar');
-  assert.equal(accionAuto(SRC, {ancho: 1080, alto: 1920}), 'crear', '16:9 → 9:16 (r ≈ 3,16) cruza el umbral');
+  assert.equal(accionAuto(SRC, {ancho: 1080, alto: 1920}), 'adaptar', '16:9 → 9:16 (r ≈ 3,16) no llega al umbral');
+  assert.equal(accionAuto({ancho: 1000, alto: 1000}, {ancho: 3490, alto: 1000}), 'adaptar');
   assert.equal(accionEfectiva({accion: 'adaptar'}, SRC, BANNER), 'adaptar', 'forzar Adaptar');
   assert.equal(accionEfectiva({accion: 'crear'}, SRC, SRC), 'crear', 'forzar Crear');
   assert.equal(accionEfectiva({accion: 'auto'}, {ancho: 0, alto: 0}, BANNER), 'adaptar', 'sin contenido no hay receta');
