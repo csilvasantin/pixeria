@@ -1,8 +1,8 @@
 {
-  "version": "v.07.10.2026.r9.23:06",
+  "version": "v.07.10.2026.r10.23:30",
   "deployer": "NeoMBP16",
   "agent": "NeoMBP16",
   "machine": "MacBookPro16",
   "signature": "NeoMBP16 · MacBookPro16",
-  "evidence": "Vista por cliente: Alsea es un grupo que vale por Starbucks y Starbucks México; lo marcado con Alsea lo ven ambas cuentas."
+  "evidence": "Ver como: el superusuario ve la web exactamente como una cuenta asignada a un cliente (/marca ver-como starbucks), sin tocar permisos."
 }

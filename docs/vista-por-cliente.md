@@ -27,6 +27,16 @@ cliente aparte sino un **grupo** (`data/clientes-mapeo.json` → `grupos.alsea.m
 
 Para declarar otro grupo basta añadirlo en `grupos` con sus `miembros`, `tags` y `patrones`.
 
+## Ver como · comprobar la vista de un cliente
+
+Carlos, 7-oct-2026. El superusuario puede ver la web **exactamente** como una cuenta asignada a un cliente, sin tocar
+los permisos de nadie:
+
+- `/marca ver-como starbucks` en ⌘ Experto: la página se recarga y queda bloqueada como una cuenta de Starbucks (su
+  contenido y el genérico; ni `/marca`, ni `?cliente=` la sacan de ahí). Junto al logo aparece «Viendo como: Starbucks».
+- Dura toda la pestaña, en cualquier página. `/marca ver-como off` sale y vuelve a verlo todo.
+- Sólo restringe, nunca amplía; sólo vale con sesión de superusuario (lo dice el servidor) y sólo en esa pestaña.
+
 ## De dónde sale la asignación
 
 `GET /auth/session` devuelve `clientes`: `null` (sin restricción) o la lista de ids. La calcula `clientesPermitidos`

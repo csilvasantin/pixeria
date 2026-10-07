@@ -259,10 +259,23 @@
     if (PC && /^off$/i.test(a) && !(PC.listo && PC.listo()) && !(PC.restringido && PC.restringido())) { PC.selector(false); PC.fijar(''); return false; }
     if (!PC || !PC.listo || !PC.listo()) return false;
     var def = PC.porDefecto(), defNombre = def ? def.nombre : 'Admira';
+    // /marca ver-como <cliente> · /marca ver-como off: el superusuario ve la web como una cuenta asignada a ese cliente.
+    var como = /^(?:ver[- ]?como|como|view[- ]?as|as)(?:\s+(.*))?$/i.exec(a);
+    if (como && PC.verComo) {
+      var r = PC.verComo(como[1] || '');
+      if (r.ok && r.cliente) write(t('Viendo como una cuenta asignada a ' + r.cliente.nombre + ': su contenido y el genérico, sin poder cambiar de cliente. Para salir: /marca ver-como off.', 'Viewing as an account assigned to ' + r.cliente.nombre + ': its content plus generic content, unable to switch client. To leave: /marca ver-como off.'));
+      else if (r.ok) write(t('Fuera de «ver como»: vuelves a verlo todo.', 'Left “view as”: you see everything again.'));
+      else write(r.motivo === 'no-superusuario' ? t('Solo el superusuario puede ver como otro cliente.', 'Only the superuser can view as another client.')
+        : r.motivo === 'cliente-desconocido' ? t('No conozco ese cliente. Ejemplo: /marca ver-como starbucks.', 'Unknown client. Example: /marca ver-como starbucks.')
+        : r.motivo === 'no-activo' ? t('No estás en «ver como». Para entrar: /marca ver-como starbucks.', 'You are not in “view as”. To enter: /marca ver-como starbucks.')
+        : t('No se pudo activar «ver como» en esta pestaña.', '“View as” could not be enabled in this tab.'));
+      return true;
+    }
     // Cuenta asignada a un cliente por la identidad central: /marca no la saca de ahí.
     if (PC.restringido && PC.restringido()) {
       var suyos = PC.lista(), elegido = a && !/^(off|todas|todos|all)$/i.test(a) ? PC.resolver(a) : null;
       if (elegido && PC.fijar(elegido.id)) { write(t('Cliente activo: ' + elegido.nombre + '.', 'Active client: ' + elegido.nombre + '.')); return true; }
+      if (PC.simulando && PC.simulando()) { write(t('Estás viendo como ' + (suyos.length ? suyos[0].nombre : 'un cliente') + '. Para salir: /marca ver-como off.', 'You are viewing as ' + (suyos.length ? suyos[0].nombre : 'a client') + '. To leave: /marca ver-como off.')); return true; }
       write(t('Tu cuenta está asignada a ' + (suyos.length ? suyos.map(function (c) { return c.nombre; }).join(', ') : 'ningún cliente') + ': ves su contenido y el genérico. Los clientes de una cuenta se cambian en admiranext.com/usuarios.',
         'Your account is assigned to ' + (suyos.length ? suyos.map(function (c) { return c.nombre; }).join(', ') : 'no client') + ': you see its content plus generic content. An account\'s clients are changed at admiranext.com/usuarios.'));
       return true;
@@ -372,7 +385,8 @@
           t('marca: off (Admira), ', 'brand: off (Admira), ') + brandIds().join(', ') + t(' · o una web para analizarla (starbucks.es)', ' · or a website to analyse (starbucks.es)') + '\n' +
           t('/avatar good abre el calvo (cara 3D, 52 blendshapes) · /avatar better abre la chica (Ready Player Me, gafas) · /avatar best abre a Neo (MetaHuman; si el host de render está apagado, cae a la chica). /avatar sin nivel dice el estado. /avatarON lo muestra y /avatarOFF lo oculta. /avatar reset vuelve al interruptor del proyecto (alias /digitalAvatar, /cli ayudante). /avatarDigital, /avatar Digital o /admirito muestra u oculta a Admirito, la nube. Tu elección se recuerda en este navegador.',
             '/avatar good opens the bald 3D face (facecap, 52 blendshapes) · /avatar better opens the web girl (Ready Player Me, glasses) · /avatar best opens Neo (MetaHuman; if the render host is off, the girl takes over). /avatar alone shows the status. /avatarON shows it and /avatarOFF hides it. /avatar reset follows the project switch (aliases /digitalAvatar, /cli helper). /avatarDigital, /avatar Digital or /admirito shows or hides Admirito, the cloud. Your choice is remembered in this browser.') + '\n' +
-          (window.PixeriaCliente && window.PixeriaCliente.esAdmin() ? t('/marca todas — superusuario: muestra el selector «Cliente» junto al logo; /marca <cliente> (o proyecto<Cliente>) filtra por ese cliente; /marca off lo oculta y vuelve a Admira, que lo ve todo.', '/marca todas — superuser: shows the «Client» selector next to the logo; /marca <client> (or proyecto<Client>) filters by that client; /marca off hides it and returns to Admira, which sees everything.') + '\n' : '') +
+          (window.PixeriaCliente && window.PixeriaCliente.esAdmin() ? t('/marca todas — superusuario: muestra el selector «Cliente» junto al logo; /marca <cliente> (o proyecto<Cliente>) filtra por ese cliente; /marca off lo oculta y vuelve a Admira, que lo ve todo. /marca ver-como <cliente> te deja ver la web exactamente como una cuenta asignada a ese cliente (bloqueada igual); /marca ver-como off sale.', '/marca todas — superuser: shows the «Client» selector next to the logo; /marca <client> (or proyecto<Client>) filters by that client; /marca off hides it and returns to Admira, which sees everything. /marca ver-como <client> lets you see the site exactly as an account assigned to that client (locked the same way); /marca ver-como off leaves.') + '\n' : '') +
+          (window.PixeriaCliente && window.PixeriaCliente.simulando && window.PixeriaCliente.simulando() ? t('/marca ver-como off — sales de «ver como» y vuelves a verlo todo.', '/marca ver-como off — leave “view as” and see everything again.') + '\n' : '') +
           t('↑/↓ historial · Tab completa comandos, marcas y secciones · arrastra el borde superior · doble clic para plegar/desplegar', '↑/↓ history · Tab completes commands, brands and sections · drag the top edge · double-click to collapse/expand'));
         break;
       case 'avatar': case 'avataron': case 'avataroff':

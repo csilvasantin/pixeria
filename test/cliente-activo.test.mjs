@@ -20,8 +20,10 @@ function nodo() {
     insertAdjacentElement(_, c) { c.isConnected = true; return c; }, querySelector() { return nodo(); }, closest() { return null; }};
   return n;
 }
-async function mundo({sesion, search = '', guardado = null, recordado = null} = {}) {
-  const eventos = [], local = almacen(guardado ? {'pixeria:cliente:v2':JSON.stringify(guardado)} : {}), tab = almacen(recordado ? {'pixeria:cliente-fijo':JSON.stringify(recordado)} : {});
+async function mundo({sesion, search = '', guardado = null, recordado = null, como = null, tab = null} = {}) {
+  const eventos = [], local = almacen(guardado ? {'pixeria:cliente:v2':JSON.stringify(guardado)} : {});
+  tab = tab || almacen({...(recordado ? {'pixeria:cliente-fijo':JSON.stringify(recordado)} : {}), ...(como ? {'pixeria:cliente-ver-como':JSON.stringify(como)} : {})});
+  const recargas = [];
   const document = {documentElement:{lang:'es'}, head:nodo(), body:nodo(), createElement:nodo, querySelector:() => nodo(),
     addEventListener() {}, dispatchEvent(e) { eventos.push(e.detail); }};
   const window = {};
@@ -30,12 +32,12 @@ async function mundo({sesion, search = '', guardado = null, recordado = null} = 
     const cuerpo = url.includes('/auth/session') ? sesion : url.includes('/api/clientes') ? CLIENTES : url.includes('clientes-mapeo') ? mapeo : null;
     return {ok:cuerpo != null, status:cuerpo != null ? 200 : 401, json:async () => cuerpo};
   };
-  const ctx = vm.createContext({window, document, fetch, localStorage:local, sessionStorage:tab, location:{search, href:'https://www.pixeria.com/stock.html' + search},
+  const ctx = vm.createContext({window, document, fetch, localStorage:local, sessionStorage:tab, location:{search, href:'https://www.pixeria.com/stock.html' + search, replace(u) { recargas.push(String(u)); }, reload() { recargas.push('reload'); }},
     history:{state:null, replaceState() {}}, URL, URLSearchParams, setTimeout:() => 0, MutationObserver:class { observe() {} }, CustomEvent:class { constructor(_, o) { this.detail = o && o.detail; } }, Promise, Array, JSON, String, Object, RegExp, Error});
   vm.runInContext(fuente, ctx);
   const antes = window.PixeriaCliente.visible({id:'z', tags:['altadis']});
   for (let i = 0; i < 30 && !window.PixeriaCliente.listo(); i++) await new Promise(r => setImmediate(r));
-  return {PC:window.PixeriaCliente, eventos, local, tab, antes};
+  return {PC:window.PixeriaCliente, eventos, local, tab, antes, recargas};
 }
 const pieza = (id, tags, extra = {}) => ({id, tags, ...extra});
 const STOCK = [pieza('s1', ['starbucks', 'bebidas']), pieza('s2', ['starbucks_paseodegracia_103_pantalla1']), pieza('s3', ['StarbucksMexico_AvJuarez_1102_Pantalla_1'.toLowerCase()]),
@@ -104,4 +106,34 @@ test('Alsea no es un cliente aparte: lo marcado con Alsea lo ven las cuentas de 
   assert.deepEqual(otro.PC.filtrar(ALSEA).map(i => i.id), ['al5'], 'otro cliente no ve nada de Alsea (al5 lleva su etiqueta)');
   const todo = await mundo({sesion:{ok:true, email:'c@x', superusuario:true, clientes:null}});
   assert.equal(todo.PC.filtrar(ALSEA).length, ALSEA.length);
+});
+
+// «Ver como» (Carlos, 7-oct-2026): comprobar la vista de un cliente sin tocar los permisos de nadie.
+test('el superusuario puede ver la web como una cuenta asignada a un cliente, y salir', async () => {
+  const jefe = {ok:true, email:'c@x', superusuario:true, clientes:null};
+  const antes = await mundo({sesion:jefe});
+  assert.equal(antes.PC.simulando(), false);
+  assert.equal(antes.PC.verComo('no-existe').motivo, 'cliente-desconocido'); assert.equal(antes.PC.verComo('admira').motivo, 'cliente-desconocido', 'Admira lo ve todo: no hay nada que simular');
+  assert.equal(antes.PC.verComo('off').motivo, 'no-activo');
+  const pedir = antes.PC.verComo('Starbucks');
+  assert.equal(pedir.ok, true); assert.equal(pedir.cliente.id, 'starbucks'); assert.equal(antes.recargas.length, 1, 'recarga para que todo se cargue como esa cuenta');
+  assert.equal(antes.tab.getItem('pixeria:cliente-ver-como'), '["starbucks"]');
+  // La página recargada, con la misma pestaña: bloqueada como una cuenta de Starbucks.
+  const como = await mundo({sesion:jefe, tab:antes.tab});
+  assert.equal(como.antes, false, 'nada ajeno mientras llega la sesión');
+  assert.equal(como.PC.simulando(), true); assert.equal(como.PC.restringido(), true); assert.equal(como.PC.esAdmin(), false);
+  assert.equal(como.PC.actual().id, 'starbucks'); assert.deepEqual(como.PC.filtrar(STOCK).map(i => i.id), ['s1', 's2', 'g1', 'g2']);
+  assert.equal(como.PC.fijar('altadis'), false); assert.equal(como.PC.fijar('todas'), false);
+  assert.equal(como.PC.verComo('').ok, true); assert.equal(como.tab.getItem('pixeria:cliente-ver-como'), null); assert.equal(como.tab.getItem('pixeria:cliente-fijo'), null);
+  const despues = await mundo({sesion:jefe, tab:como.tab});
+  assert.equal(despues.PC.restringido(), false); assert.equal(despues.PC.filtrar(STOCK).length, STOCK.length);
+});
+
+test('«ver como» es sólo del superusuario y nunca amplía lo que ve una cuenta', async () => {
+  const equipo = await mundo({sesion:{ok:true, email:'e@x', superusuario:false, clientes:null}});
+  assert.equal(equipo.PC.verComo('starbucks').motivo, 'no-superusuario'); assert.equal(equipo.recargas.length, 0);
+  // Una cuenta de Altadis que se escribe a mano el ajuste de «ver como Starbucks»: se ignora y se borra.
+  const lista = await mundo({sesion:{ok:true, email:'a@x', superusuario:false, clientes:['altadis']}, como:['starbucks']});
+  assert.equal(lista.PC.simulando(), false); assert.deepEqual(lista.PC.permitidos(), ['altadis']); assert.equal(lista.PC.actual().id, 'altadis');
+  assert.equal(lista.tab.getItem('pixeria:cliente-ver-como'), null);
 });
