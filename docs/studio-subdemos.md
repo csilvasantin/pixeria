@@ -24,6 +24,24 @@ Un minuto por subdemo; cinco minutos para el recorrido completo. El caso común 
 
 El manifest apunta a URLs finales de admira.studio. Esas URLs nuevas estarán disponibles **al incorporar y publicar el pack**. Para el espejo pixeria.com, Neo puede reemplazar el origen por `https://www.pixeria.com`; los paths son idénticos. La preview local resuelve esos paths contra el servidor local, sin depender de que estén publicados.
 
+## Activación en Experto y avatar
+
+Ambas entradas deben enviar el texto al mismo resolvedor, usando la plataforma del host actual. `admira.studio`, `www.admira.studio`, `pixeria.com` y `www.pixeria.com` comparten la plataforma `studio`. Los números son locales a esa plataforma, no índices del catálogo global de la suite.
+
+| Número | Comando por nombre | Clave |
+|---|---|---|
+| `/demo 1` | `/demo locucion` | `studio/voz` |
+| `/demo 2` | `/demo musica` | `studio/musica` |
+| `/demo 3` | `/demo imagen` | `studio/imagen` |
+| `/demo 4` | `/demo video` | `studio/video` |
+| `/demo 5` | `/demo adaptar` | `studio/adaptar` |
+
+`/demo help` lista estas cinco demos, sus números y nombres. `/demo` sin argumento muestra la misma ayuda. Se aceptan mayúsculas, espacios exteriores y tildes (`locución`, `música`, `vídeo`); `voz`, `formatos` y `adaptacion` son aliases adicionales. Una entrada desconocida indica `/demo help` y no inicia otra demo.
+
+`activacion` y `aliases` del manifest contienen este contrato. `demo/studio-comandos.mjs` exporta `resolverDemo(texto, manifest, hostname)`: devuelve ayuda, la clave y el objeto de subdemo, o una entrada desconocida/otra plataforma. Es un módulo de referencia preparado para integrar; no está conectado todavía a la consola o al avatar de producción. El motor de Neo puede reutilizarlo o mantener un resolvedor común equivalente. En otros hosts, cada plataforma aporta su propio catálogo y numeración.
+
+Al incorporar el manifest, conservar `steps`, `muestra`, `guion` y `muestra.variantes` como objetos y listas; no convertirlos a cadenas. El resolvedor selecciona una muestra, no ejecuta `ejecucion_real_opcional`.
+
 ## Ejecución del editor
 
 Usar `muestra` para el ensayo. `steps` opcionales solo consultan muestras ya existentes o calculan un plan técnico; la locución propia ya está en el pack y no requiere llamada MCP. La muestra de adaptación del pack contiene cuatro exportaciones exactas; las muestras genéricas del MCP contienen una pareja 365 anterior con proporciones nominales y no deben reemplazar estos cuatro archivos.
@@ -36,6 +54,7 @@ El motor anterior no sabe renderizar los medios de `muestra`: Neo debe incorpora
 
 ```sh
 python3 scripts/verificar-studio-subdemos.py
+node scripts/verificar-studio-comandos.mjs
 python3 -m http.server 8769 --bind 127.0.0.1
 # Abrir http://127.0.0.1:8769/demo/studio-preview.html
 ```

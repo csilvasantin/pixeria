@@ -78,7 +78,11 @@
           "sin generación durante el ensayo",
           "sin publicación durante el ensayo"
         ]
-      }
+      },
+      "aliases": [
+        "locucion",
+        "voz"
+      ]
     },
     {
       "id": "musica",
@@ -151,7 +155,10 @@
           "sin generación durante el ensayo",
           "sin publicación durante el ensayo"
         ]
-      }
+      },
+      "aliases": [
+        "musica"
+      ]
     },
     {
       "id": "imagen",
@@ -220,7 +227,10 @@
           "sin generación durante el ensayo",
           "sin publicación durante el ensayo"
         ]
-      }
+      },
+      "aliases": [
+        "imagen"
+      ]
     },
     {
       "id": "video",
@@ -304,7 +314,10 @@
           "sin generación durante el ensayo",
           "sin publicación durante el ensayo"
         ]
-      }
+      },
+      "aliases": [
+        "video"
+      ]
     },
     {
       "id": "adaptar",
@@ -452,7 +465,30 @@
           "sin generación durante el ensayo",
           "sin publicación durante el ensayo"
         ]
-      }
+      },
+      "aliases": [
+        "adaptar",
+        "formatos",
+        "adaptacion"
+      ]
     }
-  ]
+  ],
+  "activacion": {
+    "comando": "/demo",
+    "entradas": [
+      "experto",
+      "avatar"
+    ],
+    "help": "/demo help",
+    "alcance": "plataforma_actual",
+    "hosts": [
+      "admira.studio",
+      "www.admira.studio",
+      "pixeria.com",
+      "www.pixeria.com"
+    ],
+    "normalizacion": "minúsculas, espacios exteriores y tildes",
+    "modo": "muestra",
+    "nota": "Contrato preparado para incorporar al motor de Neo; el pack no instala el motor."
+  }
 }

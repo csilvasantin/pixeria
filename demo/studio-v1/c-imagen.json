@@ -65,5 +65,8 @@
       "sin generación durante el ensayo",
       "sin publicación durante el ensayo"
     ]
-  }
+  },
+  "aliases": [
+    "imagen"
+  ]
 }
