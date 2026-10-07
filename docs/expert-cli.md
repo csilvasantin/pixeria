@@ -38,3 +38,7 @@ MCP: https://mcp-pixeria.admira.store/mcp → anonymizer_demo {action:"info"} re
 API: POST https://api.admira.store/twin/spawn with image (8-bit data URL), persona (fictional original), npc16, npc32 (PNG data URLs), demo_id:"visitor-green-v1", name and optional screen. GET /twin/persona?id=… returns demo, ready, style, npc16 and npc32. This allowlisted preset supplies the style without paid generation. /twin/spawn/status?id=… returns consumed. Existing personal-photo generation remains unchanged.
 
 Assets: https://www.pixeria.com/assets/anonymizer-demo/{original.jpg,8-bit.png,16-bit.png,32-bit.png}. Artistic 8/16/32-bit labels describe visual style, not file color depth. Generated with imagegen from a fictional adult, dark wavy hair, forest-green cardigan, ivory T-shirt, charcoal trousers and white sneakers. Source prompt: front-facing full-body studio photo, neutral background, no logos. Variant prompts: same outfit and pose, transparent background; coarse chibi NES sprite, detailed SNES pixel sprite, early PlayStation low-poly 3D character respectively. Generation originals retained locally; optimized assets are checked into Pixeria.
+
+## /marca y la vista por cliente
+
+Una cuenta asignada a un cliente por la identidad central de AdmiraNeXT no cambia de cliente con `/marca`: la orden le dice a qué cliente está asignada. Con varios clientes, `/marca <cliente>` elige entre los suyos. Detalle en `docs/vista-por-cliente.md`.

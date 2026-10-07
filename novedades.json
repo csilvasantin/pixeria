@@ -4,6 +4,11 @@
     "Sello de versión con novedades al pasar el ratón",
     "Marca NUEVO cuando hay una versión que aún no has visto"
   ],
+  "v.07.10.2026.r8.22:26": [
+    "Vista por cliente: una cuenta asignada a un cliente ve su contenido y el genérico, no el de otros clientes",
+    "La asignación sale de la identidad central (admiranext.com/usuarios) y no se cambia con /marca",
+    "El hashtag de un centro o de una pantalla (#starbucks_paseodegracia_103_pantalla1) también marca la pieza como del cliente"
+  ],
   "v.06.10.2026.r2.20:13": [
     "Adaptador: paquete por estanco para los 9 estancos Altadis",
     "ZIP por estanco o de todos, con manifiesto y hash de cada pieza",

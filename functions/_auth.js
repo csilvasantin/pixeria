@@ -28,6 +28,37 @@ export const SUPERUSUARIOS = ['csilvasantin@gmail.com', 'csilva@admira.com'];
 export function esSuperusuario(session) {
   return Boolean(session && (session.agent || SUPERUSUARIOS.includes(normalEmail(session.email))));
 }
+// CLIENTES DEL USUARIO (Carlos, 7-oct-2026: «identidad central de AdmiraNeXT y empieza por la vista»). Quién ve
+// qué cliente lo dice la identidad central (www.admiranext.com/usuarios), que vive en esta misma base de datos:
+// admiranext_users (rol y tipo de cuenta) y admiranext_user_projects (commercial:<id> = cliente asignado).
+//   null  → sin restricción (superusuario, admin, «todos los proyectos», o equipo sin cliente asignado)
+//   [ids] → la cuenta está asignada a esos clientes y no puede salir de ellos; [] = sólo lo genérico
+// Es una VISTA: el índice del Stock sigue siendo público por dirección.
+const CLIENTES_CACHE_MS = 60 * 1000;
+const CLIENTES_CACHE = new Map();
+export async function clientesPermitidos(session, env) {
+  if (!session || esSuperusuario(session)) return null;
+  const email = normalEmail(session.email);
+  const cached = CLIENTES_CACHE.get(email);
+  if (cached && cached.until > Date.now()) return cached.value;
+  let value = cached ? cached.value : null;
+  try {
+    const user = await env.AUTH_DB.prepare('SELECT role, account_kind FROM admiranext_users WHERE lower(email)=?').bind(email).first();
+    const rows = await env.AUTH_DB.prepare('SELECT project_key FROM admiranext_user_projects WHERE lower(user_email)=?').bind(email).all();
+    const keys = ((rows && rows.results) || []).map(row => String(row.project_key || ''));
+    if (!user || user.role === 'admin' || keys.includes('*') || keys.includes('commercial-projects')) value = null;
+    else {
+      const ids = [...new Set(keys.filter(key => key.startsWith('commercial:')).map(key => key.slice(11).toLowerCase()).filter(id => /^[a-z0-9][a-z0-9-]{0,63}$/.test(id)))];
+      // Con clientes asignados, sólo esos. Sin ninguno: el equipo lo ve todo, como hasta ahora; un invitado o
+      // un partner sin cliente asignado ve únicamente lo genérico.
+      value = ids.length ? ids : (!user.account_kind || user.account_kind === 'team' ? null : []);
+    }
+    CLIENTES_CACHE.set(email, {value, until:Date.now() + CLIENTES_CACHE_MS});
+  } catch (_) {
+    // Sin directorio (tabla ausente, base caída) se conserva lo último sabido; si no se sabía nada, no restringe.
+  }
+  return value;
+}
 const AGENT_TOKEN_MIN = 32;
 const API_TOKEN_TTL_SECONDS = 15 * 60;
 const CHALLENGE_TTL_MS = 10 * 60 * 1000;
@@ -551,7 +582,7 @@ export async function handleAuth(request, env, waitUntil = null) {
   }
   if (url.pathname === '/auth/session' && request.method === 'GET') {
     const session = await readSession(request, env);
-    const response = Response.json(session ? {ok:true, email:session.email, superusuario:esSuperusuario(session)} : {ok:false}, {
+    const response = Response.json(session ? {ok:true, email:session.email, superusuario:esSuperusuario(session), clientes:await clientesPermitidos(session, env)} : {ok:false}, {
       status:session ? 200 : 401,
       headers:{'cache-control':'no-store', 'referrer-policy':'no-referrer'}
     });

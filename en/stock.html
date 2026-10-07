@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=07.10.2026.r7.2212';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=07.10.2026.r8.2226';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.07.10.2026.r7.22:12">
+  <meta name="admiranext-version" content="Pixeria v.07.10.2026.r8.22:26">
   <link rel="canonical" href="https://www.pixeria.com/en/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -50,7 +50,7 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="../workspace.css?v=07.10.2026.r7.2212">
+  <link rel="stylesheet" href="../workspace.css?v=07.10.2026.r8.2226">
   <style>
     .stock-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);z-index:30;width:54px;height:84px;display:flex;align-items:center;justify-content:center;
       border:1px solid rgba(118,185,0,.4);border-radius:12px;background:rgba(8,16,8,.72);color:#b8e577;font-size:34px;line-height:1;cursor:pointer;
@@ -103,11 +103,11 @@
     .cat-result.sum{ color:var(--muted); border-style:dashed; }
     .cat-result a{ color:var(--matrix); }
   </style>
-  <script defer src="/assets/site-nav.js?v=07.10.2026.r7.2212"></script>
-  <script defer src="/assets/descarga-local.js?v=07.10.2026.r7.2212"></script>
-  <link rel="stylesheet" href="../assets/xpaces/viewer.css?v=07.10.2026.r7.2212">
+  <script defer src="/assets/site-nav.js?v=07.10.2026.r8.2226"></script>
+  <script defer src="/assets/descarga-local.js?v=07.10.2026.r8.2226"></script>
+  <link rel="stylesheet" href="../assets/xpaces/viewer.css?v=07.10.2026.r8.2226">
 <link rel="stylesheet" href="/assets/furniture/editor.css">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=07.10.2026.r7.2212">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=07.10.2026.r8.2226">
 </head>
 <body data-page="stock">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -298,8 +298,8 @@
     </form>
   </dialog>
 
-  <script defer src="/matrix-rain.js?v=07.10.2026.r7.2212"></script>
-  <script src="../app.js?v=07.10.2026.r7.2212"></script>
+  <script defer src="/matrix-rain.js?v=07.10.2026.r8.2226"></script>
+  <script src="../app.js?v=07.10.2026.r8.2226"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "../assets/xpaces/catalog.mjs";
   import {isFurniture3D} from "../assets/furniture/catalog.mjs";
@@ -325,7 +325,17 @@
     const STOCK_LIST_URL = STOCK_PUBLIC_R2 + '/stock/index.json';
     const STOCK_LIST_FALLBACK = STOCK_BASE + '/stock/list?limit=200';
     const TYPE_ORDER = { xpaces: 4, locucion: 0, audio: 0, music: 1, image: 2, furni: 3, video: 4, animation: 5 };
-    let allItems = [];
+    let allItems = [], allItemsTodo = [];
+    // Cuenta asignada a un cliente (identidad central de AdmiraNeXT → /auth/session): lo que no es suyo ni genérico
+    // no entra en la página, así ninguna vista —rejilla, catálogos, etiquetas, contadores, enlace directo— lo enseña.
+    // Es una vista, no una barrera: el índice del Stock sigue siendo público por dirección.
+    function soloMio(list) {
+      allItemsTodo = Array.isArray(list) ? list : [];
+      const PC = window.PixeriaCliente;
+      if (PC && PC.restringido) return PC.restringido() ? allItemsTodo.filter(it => PC.visible(it)) : allItemsTodo;
+      let fijo = null; try { fijo = sessionStorage.getItem('pixeria:cliente-fijo'); } catch (_) {}
+      return fijo ? [] : allItemsTodo; // se sabe que la cuenta está asignada pero aún no a qué: nada todavía
+    }
     // Suno es un motor oculto (norma de Carlos): en pantalla se ve como Pixeria Music; los datos no cambian.
     const verMotor = m => /suno/i.test(String(m || '')) ? 'Pixeria Music' : String(m || '');
     const verTag = t => /^suno/i.test(String(t)) ? 'pixeria-music' : String(t);
@@ -626,9 +636,10 @@
     let clienteEsperaAgotada = false;
     function clientePendiente() { // ¿hay pedido un cliente que no es Admira? (Admira lo ve todo: no se espera)
       try { const q = new URLSearchParams(location.search).get('cliente'); const g = JSON.parse(localStorage.getItem('pixeria:cliente:v2') || 'null');
+        if (sessionStorage.getItem('pixeria:cliente-fijo')) return true; // cuenta asignada a un cliente
         const id = String(q != null ? q : (g && g.id) || '').toLowerCase(); return !!id && !/^(admira|todos|todas|all|off|ninguno)$/.test(id); } catch (_) { return false; } }
     setTimeout(() => { clienteEsperaAgotada = true; if (allItems.length) applyFilters(); }, 4000);
-    document.addEventListener('pixeria:cliente', () => applyFilters(true));
+    document.addEventListener('pixeria:cliente', () => { allItems = soloMio(allItemsTodo); applyFilters(true); });
     function applyFilters(resetPage) {
       // Vista Catálogos: la rejilla la pinta CATALOGO (piezas del catálogo elegido).
       if (filters.type === 'catalogo') { if (window.CATALOGO) window.CATALOGO.repaint(); return; }
@@ -871,7 +882,7 @@
           status.textContent = `// ERROR ${r.status} borrando: ${body.slice(0, 120)}`;
           return;
         }
-        allItems = allItems.filter(i => i.id !== id);
+        allItemsTodo = allItemsTodo.filter(i => i.id !== id); allItems = allItems.filter(i => i.id !== id);
         applyFilters();
         return;
       }
@@ -1014,8 +1025,8 @@
       empty.hidden = true;
       grid.innerHTML = '';
       try {
-        allItems = await fetchList();
-        writeCache(allItems);
+        allItems = soloMio(await fetchList());
+        writeCache(allItemsTodo);
         buildMotorOptions();
         applyFilters();
         status.textContent = '';
@@ -1024,7 +1035,7 @@
         // Fallo de red/worker: NO es pérdida de datos. Si hay copia guardada, mostrarla.
         const cached = readCache();
         if (cached && cached.items.length) {
-          allItems = cached.items;
+          allItems = soloMio(cached.items);
           buildMotorOptions();
           applyFilters();
           feedMatrix();
@@ -1473,6 +1484,6 @@
     })();
   })();
   </script>
-  <script defer src="/assets/cuadratura.js?v=07.10.2026.r7.2212"></script>
+  <script defer src="/assets/cuadratura.js?v=07.10.2026.r8.2226"></script>
 </body>
 </html>
