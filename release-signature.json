@@ -1,8 +1,8 @@
 {
-  "version": "v.07.10.2026.r2.07:22",
-  "deployer": "MorfeoMacMini",
+  "version": "v.07.10.2026.r3.07:39",
+  "deployer": "GrokBot",
   "machine": "MacMini",
-  "signature": "MorfeoMacMini · MacMini",
-  "agent": "MorfeoMacMini",
-  "evidence": "Anonimizador: reconoce los errores con motivo de pixer-worker (timeout 504 sin reintentar la misma foto; descarga_imagen y red con su mensaje)."
+  "signature": "GrokBot · MacMini",
+  "agent": "GrokBot",
+  "evidence": "Panel del avatar unificado: pastilla de categoría (avatar/human/metahuman) y pines avatar.js/experto.js 20261007-pill-1."
 }
