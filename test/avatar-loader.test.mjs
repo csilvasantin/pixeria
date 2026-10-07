@@ -11,7 +11,7 @@ test('solo páginas HTML servidas, nunca la verja ni el login', () => {
   assert.equal(wantsAvatar(html(), new URL('https://www.pixeria.com/auth/login')), false);
   assert.equal(wantsAvatar(html(302), new URL('https://www.pixeria.com/')), false);
   assert.equal(wantsAvatar(new Response('{}', {headers: {'content-type': 'application/json'}}), new URL('https://www.pixeria.com/avatar-ask')), false);
-  assert.equal(AVATAR_LOADER, 'https://www.admiranext.com/assets/avatar.js?v=20261005-admirito-1');
+  assert.equal(AVATAR_LOADER, 'https://www.admiranext.com/assets/avatar.js?v=20261007-demo-ack-1');
 });
 
 test('el CLI conoce /avatar, /avatarON, /avatarOFF y los alias antiguos', () => {
@@ -25,4 +25,5 @@ test('avatar-digital.js ya no enciende solo: delega en el cargador', () => {
   assert.doesNotMatch(src, /digitalavatar\.ai\/embed\.js/);
   assert.doesNotMatch(src, /if \(storedOn\(\)\) show\(\)/);
   assert.match(src, /admiranext\.com\/assets\/avatar\.js/);
+  assert.ok(src.includes(AVATAR_LOADER), 'legacy CLI fallback loads the same confirmed-demo avatar version');
 });

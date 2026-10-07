@@ -1,8 +1,13 @@
 {
-  "version": "v.07.10.2026.r3.07:39",
-  "deployer": "GrokBot",
-  "machine": "MacMini",
-  "signature": "GrokBot · MacMini",
+  "version": "v.07.10.2026.r5.12:54",
+  "deployer": "TrinityMBP16",
+  "machine": "MBP16",
+  "signature": "TrinityMBP16 · MBP16",
   "agent": "GrokBot",
-  "builtAt": "2026-10-07T05:39:51Z"
+  "builtAt": "2026-10-07T05:39:51Z",
+  "deployedAt": "2026-10-07T10:54:08Z",
+  "novedades": [
+    "Studio/Pixeria carga la versión del avatar con confirmación de las demos locales",
+    "El cargador principal y el fallback del CLI comparten la nueva referencia de caché"
+  ]
 }

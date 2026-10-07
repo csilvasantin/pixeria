@@ -45,5 +45,9 @@
   "v.07.10.2026.r4.10:38": [
     "Las cinco demos usan muestras y pósters del origen publicado www.pixeria.com",
     "Admira Studio puede reproducir las mismas muestras mediante CORS"
+  ],
+  "v.07.10.2026.r5.12:54": [
+    "Studio/Pixeria carga la versión del avatar con confirmación de las demos locales",
+    "El cargador principal y el fallback del CLI comparten la nueva referencia de caché"
   ]
 }

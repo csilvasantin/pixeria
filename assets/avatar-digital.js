@@ -7,7 +7,7 @@
 (function (root) {
   'use strict';
   if (typeof document === 'undefined' || root.AdmiraAvatar) return;
-  var SRC = 'https://www.admiranext.com/assets/avatar.js?v=20261007-pill-1';
+  var SRC = 'https://www.admiranext.com/assets/avatar.js?v=20261007-demo-ack-1';
   var loading = null;
   function cargar() {
     if (root.AdmiraAvatar) return Promise.resolve(root.AdmiraAvatar);
