@@ -1,8 +1,8 @@
 {
-  "version": "v.07.10.2026.r3.07:39",
-  "deployer": "GrokBot",
-  "machine": "MacMini",
-  "signature": "GrokBot · MacMini",
-  "agent": "GrokBot",
-  "evidence": "Panel del avatar unificado: pastilla de categoría (avatar/human/metahuman) y pines avatar.js/experto.js 20261007-pill-1."
+  "version": "v.07.10.2026.r4.10:38",
+  "deployer": "TrinityMBP16",
+  "machine": "MBP16",
+  "signature": "TrinityMBP16 · MBP16",
+  "agent": "TrinityMBP16",
+  "evidence": "Las cinco demos sirven muestras y pósters desde el origen publicado www.pixeria.com, compartido con admira.studio mediante CORS."
 }

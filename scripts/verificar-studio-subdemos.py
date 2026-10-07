@@ -13,7 +13,7 @@ class IDs(HTMLParser):
   a=dict(attrs)
   if 'id' in a:self.ids.add(a['id'])
 for d in manifest['subdemos']:
- assert d['url'].startswith('https://www.admira.studio/') and d['muestra']['url'].startswith('https://')
+ assert d['url'].startswith('https://www.admira.studio/') and d['muestra']['url'].startswith('https://www.pixeria.com/assets/demos/studio-v1/')
  assert d['duracion']==60
  page=urlparse(d['url']).path.strip('/');page=page+'/index.html' if not page.endswith('.html') else page
  parser=IDs();parser.feed((root/page).read_text())
@@ -26,7 +26,7 @@ for d in manifest['subdemos']:
  if d['id']=='adaptar':
   assert [v['formato'] for v in d['muestra']['variantes']]==['1920x1080','1080x1920','1080x1080','1920x540']
   for v in d['muestra']['variantes']:
-   assert v['url'].startswith('https://');f=root/urlparse(v['url']).path.lstrip('/')
+   assert v['url'].startswith('https://www.pixeria.com/assets/demos/studio-v1/');f=root/urlparse(v['url']).path.lstrip('/')
    probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_streams','-of','json',str(f)]));stream=next(s for s in probe['streams'] if s['codec_type']=='video')
    assert f"{stream['width']}x{stream['height']}"==v['formato']
    assert stream['codec_name']=='h264' and stream['pix_fmt']=='yuv420p'
