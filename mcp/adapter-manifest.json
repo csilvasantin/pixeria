@@ -13,5 +13,15 @@
     "en"
   ],
   "render": "web_editor_ffmpeg",
-  "placements": "virtual_demo"
+  "placements": "virtual_demo",
+  "verified": {
+    "date": "2026-10-07",
+    "web": "https://admira.studio/adaptaciones/?proyecto=altadis",
+    "ai_web_generation": true,
+    "portable_contract_download": true,
+    "placement_survives_new_page": true,
+    "browser_wasm_export": "not_verified",
+    "mcp_paid_generation": "not_exercised",
+    "hardware_emission": false
+  }
 }
