@@ -1,10 +1,10 @@
 {
-  "version": "v.07.10.2026.r5.12:54",
-  "deployer": "TrinityMBP16",
-  "machine": "MBP16",
-  "signature": "TrinityMBP16 · MBP16",
-  "agent": "GrokBot",
-  "builtAt": "2026-10-07T05:39:51Z",
+  "version": "v.07.10.2026.r6.13:35",
+  "deployer": "Codex",
+  "machine": "MacBookAirAzul",
+  "signature": "Codex · MacBookAirAzul",
+  "agent": "Codex",
+  "builtAt": "2026-10-07T11:35:31Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
     "Studio/Pixeria carga la versión del avatar con confirmación de las demos locales",

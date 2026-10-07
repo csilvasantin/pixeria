@@ -1,8 +1,8 @@
 {
-  "version": "v.07.10.2026.r5.12:54",
-  "deployer": "TrinityMBP16",
-  "machine": "MBP16",
-  "signature": "TrinityMBP16 · MBP16",
-  "agent": "TrinityMBP16",
-  "evidence": "El cargador HTML y el fallback del CLI cargan avatar.js?v=20261007-demo-ack-1, con el mismo relé de preguntas y configuración."
+  "version": "v.07.10.2026.r6.13:35",
+  "deployer": "Codex",
+  "agent": "Codex",
+  "machine": "MacBookAirAzul",
+  "signature": "Codex · MacBookAirAzul",
+  "evidence": "/demo taza: cámara pública en esquina, cierre, ayuda ES/EN."
 }
