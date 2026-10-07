@@ -25,7 +25,7 @@
   // Habilita /marca todas|<cliente>; filtrar es una vista, no una barrera de seguridad.
   var ADMIN_KEY = 'pixeria:admin';
   var EN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
-  var lista = [], porDefecto = null, actual = null, mapeo = null, listo = false, nombresDe = {};
+  var lista = [], porDefecto = null, actual = null, mapeo = null, listo = false, nombresDe = {}, todosLosClientes = [];
 
   var slug = function (v) { return String(v == null ? '' : v).toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64); };
   var plano = function (v) { return String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ''); };
@@ -40,6 +40,12 @@
   var FIJO_KEY = 'pixeria:cliente-fijo';
   var permitidos = null;
   try { var recordado = JSON.parse(sessionStorage.getItem(FIJO_KEY) || 'null'); if (Array.isArray(recordado)) permitidos = recordado.map(function (x) { return String(x); }); } catch (_) {}
+  // VER COMO (Carlos, 7-oct-2026: comprobar la vista de un cliente sin tocar los permisos de nadie). El superusuario
+  // puede ver la web EXACTAMENTE como una cuenta asignada a un cliente: /marca ver-como starbucks. Queda bloqueado
+  // igual que esa cuenta hasta /marca ver-como off. Sólo restringe, nunca amplía, y sólo dura esta pestaña.
+  var COMO_KEY = 'pixeria:cliente-ver-como';
+  var simulado = null;
+  try { var como = JSON.parse(sessionStorage.getItem(COMO_KEY) || 'null'); if (Array.isArray(como) && como.length) { simulado = como.map(function (x) { return String(x); }); permitidos = simulado.slice(); } } catch (_) {}
   function restringido() { return Array.isArray(permitidos); }
   function esAdmin() { if (restringido()) return false; if (superSesion) return true; try { return localStorage.getItem(ADMIN_KEY) === '1'; } catch (_) { return false; } }
   var pSesion = Promise.resolve(null);
@@ -50,6 +56,9 @@
         if (!j || !j.ok) return null; // sin respuesta no se toca lo recordado
         superSesion = j.superusuario === true;
         permitidos = Array.isArray(j.clientes) ? j.clientes.map(function (x) { return String(x).toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-'); }).filter(Boolean) : null;
+        // «Ver como» sólo vale para el superusuario que lo pidió; para cualquier otra sesión se olvida.
+        if (simulado && superSesion) permitidos = simulado.slice();
+        else if (simulado) { simulado = null; try { sessionStorage.removeItem(COMO_KEY); } catch (_) {} }
         try { if (permitidos) sessionStorage.setItem(FIJO_KEY, JSON.stringify(permitidos)); else sessionStorage.removeItem(FIJO_KEY); } catch (_) {}
         return j;
       })
@@ -96,7 +105,7 @@
     return true;
   }
   function selector(on) {
-    if (restringido()) on = permitidos.length > 1; // con varios clientes elige entre los suyos; no se oculta ni se amplía
+    if (restringido()) on = permitidos.length > 1 || !!simulado; // con varios clientes elige entre los suyos; «ver como» siempre se ve
     try { if (on) sessionStorage.setItem(SEL_KEY, '1'); else sessionStorage.removeItem(SEL_KEY); } catch (_) {}
     if (on) colocar(); else if (label.isConnected) label.remove();
   }
@@ -212,12 +221,14 @@
     mapeo = r[1] || {clientes: {}};
     porDefecto = lista.filter(function (c) { return c.porDefecto; })[0] || porId('admira') || null;
     lista.forEach(function (c) { nombresDe[c.id] = c.nombre; });
+    todosLosClientes = lista.slice();
     listo = true;
     if (restringido()) {
       // Sólo sus clientes (aunque alguno no esté en la lista pública); sin ninguno, «sin cliente» = sólo lo genérico.
       var todos = lista;
       lista = permitidos.map(function (id) { return todos.filter(function (c) { return c.id === id; })[0] || {id: id, nombre: id, global: false}; });
       var suyo = pedido && permitidos.indexOf(pedido) >= 0 ? porId(pedido) : lista[0] || {id: 'sin-cliente', nombre: EN ? 'No client' : 'Sin cliente'};
+      if (simulado) label.querySelector('span').textContent = EN ? 'Viewing as:' : 'Viendo como:';
       selector(true);
       aplicar(suyo);
       return;
@@ -233,12 +244,33 @@
     try { var u = new URL(a.href, location.href); if (!PATAS.test(u.hostname) || u.searchParams.has('cliente')) return; u.searchParams.set('cliente', actual.id); a.href = u.href; } catch (_) {}
   }, true);
 
+  // id o nombre de un cliente → entra en «ver como»; '' / off / salir → sale. Recarga la página: así TODO se carga
+  // como lo cargaría esa cuenta. Devuelve {ok, motivo|cliente}.
+  function verComo(texto) {
+    var t = String(texto == null ? '' : texto).trim();
+    if (!t || /^(off|salir|exit|fuera|no)$/i.test(t)) {
+      if (!simulado) return {ok: false, motivo: 'no-activo'};
+      try { sessionStorage.removeItem(COMO_KEY); sessionStorage.removeItem(FIJO_KEY); sessionStorage.removeItem(SEL_KEY); localStorage.removeItem(KEY); } catch (_) {}
+      try { var u = new URL(location.href); u.searchParams.delete('cliente'); location.replace(u.href); } catch (_) { location.reload(); }
+      return {ok: true, cliente: null};
+    }
+    if (!superSesion) return {ok: false, motivo: 'no-superusuario'};
+    var p = plano(t.replace(/^proyecto/i, ''));
+    var c = todosLosClientes.filter(function (x) { return plano(x.id) === p || plano(x.nombre) === p; })[0];
+    if (!c || (porDefecto && c.id === porDefecto.id)) return {ok: false, motivo: 'cliente-desconocido'};
+    try { sessionStorage.setItem(COMO_KEY, JSON.stringify([c.id])); sessionStorage.setItem(FIJO_KEY, JSON.stringify([c.id])); } catch (_) { return {ok: false, motivo: 'sin-almacen'}; }
+    try { var v = new URL(location.href); v.searchParams.delete('cliente'); location.replace(v.href); } catch (_) { location.reload(); }
+    return {ok: true, cliente: {id: c.id, nombre: c.nombre}};
+  }
+
   window.PixeriaCliente = {
     listo: function () { return listo; },
     actual: function () { return actual ? {id: actual.id, nombre: actual.nombre} : null; },
     lista: function () { return lista.slice(); },
     esAdmin: esAdmin,
     restringido: restringido,
+    simulando: function () { return !!simulado; },
+    verComo: verComo,
     permitidos: function () { return restringido() ? permitidos.slice() : null; },
     filtrar: function (items) { return (Array.isArray(items) ? items : []).filter(visible); },
     porDefecto: function () { return porDefecto ? {id: porDefecto.id, nombre: porDefecto.nombre} : null; },
