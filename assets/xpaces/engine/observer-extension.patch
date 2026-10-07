@@ -1,0 +1,24 @@
+diff --git a/assets/xpaces/engine/life-renderer.mjs b/assets/xpaces/engine/life-renderer.mjs
+index aa853fae..62207486 100644
+--- a/assets/xpaces/engine/life-renderer.mjs
++++ b/assets/xpaces/engine/life-renderer.mjs
+@@ -1,0 +2 @@ import * as T from './premium-three.mjs';
++import {normalizeObservation} from './life-observation.mjs';
+@@ -18 +19,2 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
+-  const camera=new T.OrthographicCamera(-15,15,10,-10,.1,200);
++  const isoCamera=new T.OrthographicCamera(-15,15,10,-10,.1,200),observerCamera=new T.PerspectiveCamera(55,1,.05,200);
++  let camera=isoCamera,observation=null;
+@@ -25,2 +27,2 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
+-  const cameraState=()=>Object.freeze({mode,registration:framing==='mapped'?mappedCameraFrame(model.snapshot,width,height).registration:'room-fit',...desired});
+-  function changeMode(next){if(mode!==next){mode=next;onCameraChange(cameraState());}}
++  const cameraState=()=>Object.freeze({mode,projection:observation?'perspective':'orthographic',observation,registration:framing==='mapped'?mappedCameraFrame(model.snapshot,width,height).registration:'room-fit',...desired});
++  function changeMode(next){if(observation&&next==='free'){observation=null;camera=isoCamera;}if(mode!==next){mode=next;onCameraChange(cameraState());}}
+@@ -28,0 +31 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
++  function setObservation(point){observation=normalizeObservation(point);camera=observation?observerCamera:isoCamera;mode=observation?'observer':'free';frameCamera();onCameraChange(cameraState());}
+@@ -29,0 +33 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
++    if(observation){const {position:p,target:a,fov}=observation;camera.position.set(p.x,p.y,p.z);camera.up.set(0,1,0);camera.lookAt(a.x,a.y,a.z);camera.aspect=width/height;camera.fov=fov;camera.updateProjectionMatrix();camera.updateMatrixWorld(true);return;}
+@@ -121,0 +126 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
++    observation=null;camera=isoCamera;
+@@ -140 +145 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
+-  return {invalidateShadows:()=>{renderer.shadowMap.needsUpdate=true;},frameObject,pick,clearClip,project,get clipping(){return !!clipBox;},resize,update,render,preset,rotate,zoomBy,setLighting,clearSelection,dispose,get bestPeopleCount(){return peopleStatus().ready;},get bestPeopleStatus(){return peopleStatus();},get blenderAssets(){return model.world.children.filter(o=>o.userData.assetStatus==='ready').length;},get blenderCounters(){return model.world.children.filter(o=>o.userData.type==='counter'&&o.userData.assetStatus==='ready').length;},get snapshot(){return model.snapshot;},get cameraState(){return cameraState();}};
++  return {setObservation,invalidateShadows:()=>{renderer.shadowMap.needsUpdate=true;},frameObject,pick,clearClip,project,get clipping(){return !!clipBox;},resize,update,render,preset,rotate,zoomBy,setLighting,clearSelection,dispose,get bestPeopleCount(){return peopleStatus().ready;},get bestPeopleStatus(){return peopleStatus();},get blenderAssets(){return model.world.children.filter(o=>o.userData.assetStatus==='ready').length;},get blenderCounters(){return model.world.children.filter(o=>o.userData.type==='counter'&&o.userData.assetStatus==='ready').length;},get snapshot(){return model.snapshot;},get cameraState(){return cameraState();}};

@@ -129,3 +129,9 @@ on), expert command `itil off`, or the button in the Advanced rail. Remove entir
 delete the `import('./itil.mjs…')` line in `viewer.mjs` (the viewer keeps working).
 Only the asset ids in `ITIL_ASSETS` get the layer; if it fails to load, the viewer
 continues unchanged.
+
+## Studio Better reference / Referencia Better Studio
+
+El adaptador usa directamente `life-renderer.mjs` y `life-scene.mjs` con el GLB Xtanco de Stock `1790370139269-2ty118` (hash del inventario `xtanco-4380.json`). No hay otro renderer. `life-observation.mjs` añade validación de un punto de perspectiva opcional al renderer: `setObservation({position,target,fov})`, `null` vuelve a ortográfica; los presets/órbita vuelven a ortográfica. La vista original de Stock no activa esta opción. Three, sombras, luces, controles y teardown existentes se conservan. Parche incremental: `engine/observer-extension.patch`, después de `stock-extension.patch`.
+
+The adapter directly reuses Better renderer/scene and the Stock Xtanco GLB (inventory hash). Optional `setObservation({position,target,fov})` validates a fixed perspective point; null, presets or orbit return to orthographic. Existing Stock views leave this option inactive. Same Three, shadows, lights, gestures and disposal. Incremental patch follows the existing Stock extension. Studio folds only virtual display surfaces; no inventory/hardware state is changed.

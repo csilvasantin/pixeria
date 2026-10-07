@@ -1,4 +1,5 @@
 import * as T from './premium-three.mjs';
+import {normalizeObservation} from './life-observation.mjs';
 import {createLifeScene} from './life-scene.mjs?v=px-1';
 import {mappedCameraFrame,fitBoxFrame} from './life-camera.mjs?v=ver-libro';
 
@@ -15,18 +16,21 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
     loadFurniture:item=>import('./furniture-asset.mjs').then(m=>m.loadFurniture(item,assetQuality)),
     loadPerson:assetQuality==='best'?actor=>import('./best-person-asset.mjs?v=visitors-24').then(m=>m.loadBestPerson(actor)):null
   });}catch(error){renderer.dispose();renderer.forceContextLoss();throw error;}
-  const camera=new T.OrthographicCamera(-15,15,10,-10,.1,200);
+  const isoCamera=new T.OrthographicCamera(-15,15,10,-10,.1,200),observerCamera=new T.PerspectiveCamera(55,1,.05,200);
+  let camera=isoCamera,observation=null;
   const target=new T.Vector3(),raycaster=new T.Raycaster(),pointers=new Map();
   let width=1,height=1,lastMedia=-Infinity,disposed=false,gesture=null,selected=null,clipBox=null;
   const initial=mappedCameraFrame(model.snapshot);
   const current={zoom:1,angle:initial.angle,elevation:initial.elevation,panX:0,panY:0};let desired={...current},mode='mapped',framing='mapped';
   const angleLimit=value=>stockCamera?value:clamp(value,.10,Math.PI/2-.10);
   const zoomLimit=value=>clamp(value,stockCamera?.25:.7,stockCamera?24:3.2);
-  const cameraState=()=>Object.freeze({mode,registration:framing==='mapped'?mappedCameraFrame(model.snapshot,width,height).registration:'room-fit',...desired});
-  function changeMode(next){if(mode!==next){mode=next;onCameraChange(cameraState());}}
+  const cameraState=()=>Object.freeze({mode,projection:observation?'perspective':'orthographic',observation,registration:framing==='mapped'?mappedCameraFrame(model.snapshot,width,height).registration:'room-fit',...desired});
+  function changeMode(next){if(observation&&next==='free'){observation=null;camera=isoCamera;}if(mode!==next){mode=next;onCameraChange(cameraState());}}
   const haloGeometry=new T.RingGeometry(.55,.59,64),haloMaterial=new T.MeshBasicMaterial({color:'#4d967a',transparent:true,opacity:.85,depthWrite:false,side:T.DoubleSide});
   const halo=new T.Mesh(haloGeometry,haloMaterial);halo.rotation.x=-Math.PI/2;halo.position.y=.035;halo.visible=false;model.scene.add(halo);
+  function setObservation(point){observation=normalizeObservation(point);camera=observation?observerCamera:isoCamera;mode=observation?'observer':'free';frameCamera();onCameraChange(cameraState());}
   function frameCamera(){
+    if(observation){const {position:p,target:a,fov}=observation;camera.position.set(p.x,p.y,p.z);camera.up.set(0,1,0);camera.lookAt(a.x,a.y,a.z);camera.aspect=width/height;camera.fov=fov;camera.updateProjectionMatrix();camera.updateMatrixWorld(true);return;}
     const s=stockCamera==='furniture'?snapshot:model.snapshot,radius=Math.max(Math.hypot(s.cols,s.rows),s.wallHeight)*2.8,{angle,elevation,zoom,panX,panY}=current;
     target.set(s.cols*.5,stockCamera==='furniture'?s.wallHeight/2:.65,s.rows*.5);
     camera.position.set(target.x+Math.cos(angle)*Math.cos(elevation)*radius,target.y+Math.sin(elevation)*radius,target.z+Math.sin(angle)*Math.cos(elevation)*radius);
@@ -119,6 +123,7 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
   };
   for(const [event,handler]of Object.entries(handlers))canvas.addEventListener(event,handler,{passive:false});
   function preset(name){
+    observation=null;camera=isoCamera;
     clipBox=null;desired={zoom:1,angle:Math.PI/4,elevation:.64,panX:0,panY:0};framing=name==='mapped'?'mapped':'room-fit';
     if(name==='mapped'){const mapped=mappedCameraFrame(model.snapshot,width,height);Object.assign(desired,{angle:mapped.angle,elevation:mapped.elevation});Object.assign(current,desired);}
     if(name==='floor')desired.elevation=stockCamera?Math.PI/2-.001:1.12;
@@ -137,5 +142,5 @@ export function createLifeRenderer({canvas,snapshot,getPlayer=()=>null,onSelect=
   function dispose(){if(disposed)return;disposed=true;for(const [event,handler]of Object.entries(handlers))canvas.removeEventListener(event,handler);pointers.clear();haloGeometry.dispose();haloMaterial.dispose();halo.removeFromParent();model.dispose();renderer.dispose();renderer.forceContextLoss();}
   resize(canvas.clientWidth||1000,canvas.clientHeight||700);
   onCameraChange(cameraState());
-  return {invalidateShadows:()=>{renderer.shadowMap.needsUpdate=true;},frameObject,pick,clearClip,project,get clipping(){return !!clipBox;},resize,update,render,preset,rotate,zoomBy,setLighting,clearSelection,dispose,get bestPeopleCount(){return peopleStatus().ready;},get bestPeopleStatus(){return peopleStatus();},get blenderAssets(){return model.world.children.filter(o=>o.userData.assetStatus==='ready').length;},get blenderCounters(){return model.world.children.filter(o=>o.userData.type==='counter'&&o.userData.assetStatus==='ready').length;},get snapshot(){return model.snapshot;},get cameraState(){return cameraState();}};
+  return {setObservation,invalidateShadows:()=>{renderer.shadowMap.needsUpdate=true;},frameObject,pick,clearClip,project,get clipping(){return !!clipBox;},resize,update,render,preset,rotate,zoomBy,setLighting,clearSelection,dispose,get bestPeopleCount(){return peopleStatus().ready;},get bestPeopleStatus(){return peopleStatus();},get blenderAssets(){return model.world.children.filter(o=>o.userData.assetStatus==='ready').length;},get blenderCounters(){return model.world.children.filter(o=>o.userData.type==='counter'&&o.userData.assetStatus==='ready').length;},get snapshot(){return model.snapshot;},get cameraState(){return cameraState();}};
 }

@@ -36,7 +36,9 @@
     "hardware_emission": false,
     "source_modules": [
       "adaptaciones/gemelo-core.mjs",
-      "adaptaciones/gemelo-digital.mjs"
+      "adaptaciones/gemelo-digital.mjs",
+      "adaptaciones/gemelo-better.mjs",
+      "adaptaciones/gemelo-reference.mjs"
     ],
     "guide": "/docs/altadis-ia-estancos.md",
     "visit_button": {
@@ -45,6 +47,29 @@
     },
     "visit_location": "beside_apply_shop_demo",
     "visit_selection": "current_format_and_shop",
-    "requires_saved_placement": false
+    "requires_saved_placement": false,
+    "quality": "better",
+    "default_view": "isometric",
+    "renderer": "assets/xpaces/engine/life-renderer.mjs",
+    "reference_asset": {
+      "id": "1790370139269-2ty118",
+      "url": "https://api.admira.store/stock/asset/1790370139269-2ty118",
+      "sha256": "a6a670ad3edebb9b3a56e22707b4bb89dabb4ad000ced9eec3fc51cbe91b2706",
+      "model": "xtanco-4380"
+    },
+    "scenarios": [
+      "flat",
+      "corner_90_virtual_trial"
+    ],
+    "observation": {
+      "projection": "perspective",
+      "fov_degrees": 55,
+      "adjustable": [
+        "height_m",
+        "distance_m",
+        "lateral_m"
+      ]
+    },
+    "anamorphic_generation": false
   }
 }

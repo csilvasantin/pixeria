@@ -1,77 +1,44 @@
-import {twinGeometry,previewSize,screenCrop} from './gemelo-core.mjs';
+import {twinGeometry} from './gemelo-core.mjs';
 
-// Read-only local preview: source media never leaves the editor. One master
-// frame supplies every screen, sharing the editor's video/GIF clock and AI fill.
+// Same Better renderer/model family as Xpaces. Media belongs to the editor;
+// one master frame supplies the selected physical layout and AI background.
 export function mountTwin(h){
-  const t=h.t,modal=document.createElement('dialog');modal.className='adapter-twin';
-  modal.setAttribute('aria-labelledby','twin-title');
-  modal.innerHTML=`<header><div><h2 id="twin-title">${t('Gemelo digital · Estanco','Digital twin · Shop')}</h2><p id="twin-format"></p></div><button type="button" class="pill twin-close" aria-label="${t('Cerrar gemelo digital','Close digital twin')}">✕</button></header>
-  <div class="twin-tools"><label>${t('Estanco','Shop')} <select id="twin-shop"></select></label><button type="button" class="pill twin-reset">${t('Vista inicial','Reset view')}</button><button type="button" class="pill twin-front">${t('De frente','Front view')}</button><button type="button" class="pill twin-near" aria-label="${t('Acercar','Zoom in')}">＋</button><button type="button" class="pill twin-far" aria-label="${t('Alejar','Zoom out')}">−</button></div>
-  <div class="twin-stage" tabindex="0" role="img" aria-label="${t('Estanco virtual con el formato adaptado en sus pantallas','Virtual shop with adapted content on its screens')}"></div>
-  <p class="twin-status" role="status" aria-live="polite"></p><footer>${t('Arrastra para girar · rueda o botones para acercar · flechas para girar · Esc para volver al editor','Drag to rotate · wheel or buttons to zoom · arrow keys to rotate · Esc to return to the editor')}<br>${t('Simulación de distribución; instalación real pendiente de confirmar.','Layout simulation; real installation requires confirmation.')}</footer>`;
-  document.body.append(modal);
-  const $=s=>modal.querySelector(s),stage=$('.twin-stage'),shop=$('#twin-shop'),status=$('.twin-status');
-  let T,pending,renderer,scene,camera,active=null,panels=[],master=null,geometry=null,yaw=.22,pitch=.12,zoom=1,revision=0,last=0,focus=null,sign=null;
-  const resourceSet=new Set();
-  function clean(){for(const r of resourceSet)r.dispose?.();resourceSet.clear();panels=[];master=null;sign=null;scene=null;geometry=null;active=null;}
-  function close(){revision++;h.end?.();if(modal.open)modal.close();}
-  modal.addEventListener('close',()=>{revision++;h.end?.();clean();if(renderer){renderer.dispose();renderer.forceContextLoss();renderer=null;}stage.replaceChildren();focus?.focus();});
-  $('.twin-close').onclick=close;modal.addEventListener('cancel',()=>h.end?.());
-  function cameraPose(){if(!camera)return;camera.position.set(Math.sin(yaw)*11*zoom,2.9+pitch*8,Math.cos(yaw)*11*zoom);camera.lookAt(0,2.5,-1.9);}
-  $('.twin-reset').onclick=()=>{yaw=.22;pitch=.12;zoom=1;cameraPose();draw(true);};
-  $('.twin-front').onclick=()=>{yaw=0;pitch=0;zoom=.86;cameraPose();draw(true);};
-  function zoomBy(v){zoom=Math.max(.58,Math.min(1.5,zoom*v));cameraPose();draw(true);}
-  $('.twin-near').onclick=()=>zoomBy(.9);$('.twin-far').onclick=()=>zoomBy(1.1);
-  stage.onwheel=e=>{e.preventDefault();zoomBy(e.deltaY>0?1.05:.95);};
-  let pointer=null;
-  stage.onpointerdown=e=>{pointer={id:e.pointerId,x:e.clientX,y:e.clientY};stage.setPointerCapture(e.pointerId);stage.focus();};
-  stage.onpointermove=e=>{if(!pointer||pointer.id!==e.pointerId)return;yaw=Math.max(-.55,Math.min(.55,yaw+(e.clientX-pointer.x)*.004));pitch=Math.max(-.05,Math.min(.35,pitch+(e.clientY-pointer.y)*.002));pointer.x=e.clientX;pointer.y=e.clientY;cameraPose();draw(true);};
-  stage.onpointerup=stage.onpointercancel=()=>{pointer=null;};
-  stage.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();yaw=Math.max(-.55,Math.min(.55,yaw+(e.key==='ArrowLeft'?-.05:.05)));cameraPose();draw(true);}};
-  const observer=new ResizeObserver(()=>{if(!renderer||!camera||!modal.open)return;const {width,height}=stage.getBoundingClientRect();if(width<=0||height<=0)return;renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();draw(true);});observer.observe(stage);
-  shop.onchange=()=>{h.selectShop?.(shop.value);draw(true);};
-  function box(w,height,d,x,y,z,color){const geo=new T.BoxGeometry(w,height,d),mat=new T.MeshStandardMaterial({color,roughness:.8});resourceSet.add(geo);resourceSet.add(mat);const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.receiveShadow=true;m.castShadow=true;scene.add(m);return m;}
-  function build(f){
-    clean();active=f;geometry=twinGeometry(f,h.destino(f));master=document.createElement('canvas');const sz=previewSize(geometry);master.width=sz.ancho;master.height=sz.alto;
-    scene=new T.Scene();scene.background=new T.Color('#101b1d');
-    camera=new T.PerspectiveCamera(40,1,.1,60);
-    scene.add(new T.HemisphereLight(0xf1fff9,0x615744,2));const light=new T.DirectionalLight(0xffead2,2.5);light.position.set(2,7,7);scene.add(light);
-    box(8,.12,7,0,-.06,-.5,0x947b5b);box(8,4.7,.15,0,2.35,-3.1,0xe5dcc8);
-    box(.12,4.7,7,-4,2.35,-.5,0xc4bda9);box(.12,4.7,7,4,2.35,-.5,0xc4bda9);
-    // Counter and neutral retail shelving, not a claimed scan of the real shop.
-    box(5,1.05,.85,0,.53,-.7,0x735039);box(5.15,.12,.96,0,1.12,-.7,0xe6d9bd);
-    for(const side of [-1,1]){
-      box(.12,2.3,2,side*3.85,1.15,-1.5,0x4d3c2a);
-      for(let r=0;r<4;r++){box(.82,.06,2.05,side*3.48,.4+r*.48,-1.5,0xb79969);for(let c=0;c<5;c++)box(.3,.32,.23,side*3.48,.6+r*.48,-2.3+c*.37,[0xb9674c,0xd3be77,0x50786d,0xddd3be][(r+c)%4]);}
-    }
-    const signCanvas=document.createElement('canvas');signCanvas.width=1024;signCanvas.height=96;const signTexture=new T.CanvasTexture(signCanvas);signTexture.colorSpace=T.SRGBColorSpace;resourceSet.add(signTexture);const signGeo=new T.PlaneGeometry(6,.56),signMat=new T.MeshBasicMaterial({map:signTexture,toneMapped:false});resourceSet.add(signGeo);resourceSet.add(signMat);const signMesh=new T.Mesh(signGeo,signMat);signMesh.position.set(0,4.3,-2.98);scene.add(signMesh);sign={cv:signCanvas,texture:signTexture,name:null};
-    const wall=geometry.pared,k=Math.min(6.5/wall.ancho,2.5/wall.alto),W=wall.ancho*k,H=wall.alto*k,centreY=2.7;
-    box(W+.14,H+.14,.08,0,centreY,-2.95,0x142022);
-    for(const seg of geometry.segments){
-      const s=seg.wall,cv=document.createElement('canvas'),crop=screenCrop(s,wall,sz);cv.width=Math.max(1,crop.w);cv.height=Math.max(1,crop.h);
-      const texture=new T.CanvasTexture(cv);texture.colorSpace=T.SRGBColorSpace;texture.minFilter=T.LinearFilter;texture.generateMipmaps=false;resourceSet.add(texture);
-      const geo=new T.PlaneGeometry(s.w*k*.987,s.h*k*.987),mat=new T.MeshBasicMaterial({map:texture,toneMapped:false});resourceSet.add(geo);resourceSet.add(mat);
-      const screen=new T.Mesh(geo,mat);screen.position.set(-W/2+(s.x+s.w/2)*k,centreY+H/2-(s.y+s.h/2)*k,-2.896);scene.add(screen);panels.push({cv,crop,texture});
-    }
-    yaw=.22;pitch=.12;zoom=1;cameraPose();
-    $('#twin-format').textContent=`${f.nombre} · ${wall.ancho}×${wall.alto} · ${panels.length} ${panels.length===1?t('pantalla','screen'):t('pantallas','screens')}`;
-    status.textContent=geometry.warnings.length?geometry.warnings.join(' '):t('Mismo contenido adaptado · distribución virtual','Same adapted content · virtual layout');
-    stage.dataset.format=f.id;stage.dataset.screens=String(panels.length);
+  const t=h.t,modal=document.createElement('dialog');modal.className='adapter-twin';modal.setAttribute('aria-labelledby','twin-title');
+  modal.innerHTML=`<header><div><h2 id="twin-title">${t('Gemelo digital · Estanco · Better','Digital twin · Shop · Better')}</h2><p id="twin-format"></p></div><button type="button" class="pill twin-close" aria-label="${t('Cerrar gemelo digital','Close digital twin')}">✕</button></header>
+  <div class="twin-tools"><label>${t('Estanco','Shop')} <select id="twin-shop"></select></label><label>${t('Escenario','Scenario')} <select id="twin-scenario"><option value="flat">${t('Pared plana','Flat wall')}</option><option value="corner">${t('Esquina 90° · ensayo','90° corner · experiment')}</option></select></label><button type="button" class="pill twin-reset">${t('Isométrica','Isometric')}</button><button type="button" class="pill twin-floor">${t('Planta','Floor plan')}</button><button type="button" class="pill twin-front">${t('De frente','Front view')}</button><button type="button" class="pill twin-observe">${t('Punto de observación','Observation point')}</button><button type="button" class="pill twin-near" aria-label="${t('Acercar','Zoom in')}">＋</button><button type="button" class="pill twin-far" aria-label="${t('Alejar','Zoom out')}">−</button><label>${t('Luz','Light')} <select id="twin-light"><option value="day">${t('Día','Day')}</option><option value="sunset">${t('Atardecer','Sunset')}</option><option value="night">${t('Noche','Night')}</option></select></label></div>
+  <div class="twin-observer" hidden><label>${t('Altura (m)','Height (m)')} <input id="twin-eye" type="number" min="1.2" max="2.2" step=".05" value="1.65"></label><label>${t('Distancia (m)','Distance (m)')} <input id="twin-distance" type="number" min="1.5" max="3.6" step=".1" value="3"></label><label>${t('Lateral (m)','Lateral (m)')} <input id="twin-lateral" type="number" min="-2" max="2" step=".1" value="0"></label><span>${t('Perspectiva · FOV 55° · punto fijo','Perspective · FOV 55° · fixed point')}</span></div>
+  <div class="twin-stage" tabindex="0" role="img" aria-label="${t('Estanco Better isométrico con el formato adaptado en sus pantallas','Isometric Better shop with adapted content on its screens')}"></div>
+  <p class="twin-status" role="status" aria-live="polite"></p><footer>${t('Arrastra para orbitar · rueda/pellizco para acercar · Shift + arrastrar para desplazar · flechas para girar · Esc para volver','Drag to orbit · wheel/pinch to zoom · Shift + drag to pan · arrows to rotate · Esc to return')}<br>${t('Referencia Xtanco de Stock; interior representativo, no levantamiento del estanco elegido. La esquina es un ensayo virtual; no modifica la exportación ni genera una anamorfosis.','Stock Xtanco reference; representative interior, not a scan of the selected shop. The corner is a virtual experiment; it does not change exports or generate an anamorphic warp.')}</footer>`;
+  document.body.append(modal);const $=s=>modal.querySelector(s),stage=$('.twin-stage'),shop=$('#twin-shop'),status=$('.twin-status');
+  let pending,built=null,active=null,geometry=null,revision=0,ctl=null,last=0,focus=null,view='home';
+  const buttons=['.twin-reset','.twin-floor','.twin-front','.twin-observe','.twin-near','.twin-far'];
+  function controls(on){for(const q of [...buttons,'#twin-scenario','#twin-light'])$(q).disabled=!on;}
+  function clean(){ctl?.abort();ctl=null;built?.dispose();built=null;active=null;geometry=null;stage.replaceChildren();controls(false);}
+  function close(){revision++;ctl?.abort();h.end?.();if(modal.open)modal.close();}
+  modal.addEventListener('close',()=>{revision++;h.end?.();clean();focus?.focus();});modal.addEventListener('cancel',()=>{ctl?.abort();h.end?.();});$('.twin-close').onclick=close;
+  function cameraChanged(state){stage.dataset.projection=state.projection;stage.dataset.view=state.mode;$('.twin-observer').hidden=state.mode!=='observer';}
+  function preset(name){if(!built)return;view=name;if(name==='home')built.home();else if(name==='front')built.front();else built.viewer.preset(name);$('.twin-observer').hidden=true;draw(true);}
+  $('.twin-reset').onclick=()=>preset('home');$('.twin-floor').onclick=()=>preset('floor');$('.twin-front').onclick=()=>preset('front');
+  function observe(){if(!built)return;try{built.observe({height:Number($('#twin-eye').value),distance:Number($('#twin-distance').value),lateral:Number($('#twin-lateral').value)});view='observer';draw(true);}catch(_){status.textContent=t('El punto requiere altura 1,2–2,2 m, distancia 1,5–3,6 m y lateral −2–2 m.','Point requires height 1.2–2.2 m, distance 1.5–3.6 m and lateral −2–2 m.');}}
+  $('.twin-observe').onclick=observe;for(const q of ['#twin-eye','#twin-distance','#twin-lateral'])$(q).onchange=observe;
+  $('.twin-near').onclick=()=>{built?.viewer.zoomBy(1.25);draw(true);};$('.twin-far').onclick=()=>{built?.viewer.zoomBy(.8);draw(true);};
+  stage.onkeydown=e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();built?.viewer.rotate(e.key==='ArrowLeft'?1:-1);draw(true);}};
+  const observer=new ResizeObserver(()=>{if(built&&modal.open){built.viewer.resize(stage.clientWidth,stage.clientHeight);draw(true);}});observer.observe(stage);
+  function description(){if(!built)return;const wall=geometry.pared,corner=$('#twin-scenario').value==='corner';$('#twin-format').textContent=`${active.nombre} · ${wall.ancho}×${wall.alto} · ${geometry.segments.length} ${t('pantallas','screens')} · ${t('Better · modelo Xtanco','Better · Xtanco model')}`;
+    status.textContent=[t('Referencia Better · tamaño de ensayo ','Better reference · trial size ')+`${built.placement.width.toFixed(2)}×${built.placement.height.toFixed(2)} m`,corner?t('Pared doblada a 90° para probar el contenido desde el observador; comprueba sus costuras.','Wall folded at 90° to test content from the observer; check its seams.'):'',...geometry.warnings].filter(Boolean).join(' · ');
+    stage.dataset.format=active.id;stage.dataset.screens=String(geometry.segments.length);stage.dataset.surfaces=String(built.surfaces);stage.dataset.scenario=corner?'corner':'flat';stage.dataset.quality='better';stage.dataset.asset=built.reference.assetId;
   }
-  function draw(force=false){if(!modal.open||!renderer||!active||!scene)return;const now=performance.now();if(!force&&now-last<40)return;last=now;
-    const name=shop.selectedOptions[0]?.textContent||'ESTANC';if(sign&&sign.name!==name){sign.name=name;const ctx=sign.cv.getContext('2d');ctx.fillStyle='#18362b';ctx.fillRect(0,0,1024,96);ctx.fillStyle='#fff5e6';ctx.font='600 36px sans-serif';ctx.textAlign='center';ctx.fillText(`ESTANC · ${name}`,512,61,980);sign.texture.needsUpdate=true;}
-    h.draw(master,active,h.background(active)?.el);
-    for(const {cv,crop,texture} of panels){const ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);ctx.drawImage(master,crop.x,crop.y,crop.w,crop.h,0,0,cv.width,cv.height);texture.needsUpdate=true;}
-    renderer.render(scene,camera);
-  }
-  async function open(f){if(!h.ready())return;const mine=++revision;focus=document.activeElement;modal.showModal();h.start?.(f);stage.replaceChildren();status.textContent=t('Abriendo estanco…','Opening shop…');
-    const shops=h.shops()||[];shop.replaceChildren(...(shops.length?shops:[{id:'studio-demo',nombre:t('Estanco · demo','Shop · demo')}]).map(s=>new Option(s.nombre,s.id)));
-    if(shops.some(s=>s.id===h.shop()))shop.value=h.shop();shop.disabled=shops.length<2;
-    try{T=await(pending||=import('./vendor/three-r160.mjs'));if(mine!==revision||!modal.open)return;
-      renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=T.SRGBColorSpace;stage.append(renderer.domElement);
-      build(f);const {width,height}=stage.getBoundingClientRect();renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();draw(true);$('.twin-close').focus();
-    }catch(e){if(mine!==revision)return;h.end?.();clean();renderer?.dispose();renderer=null;stage.replaceChildren();status.textContent=t('No se pudo abrir el gemelo. Comprueba que WebGL está disponible y vuelve a intentarlo.','Could not open the twin. Check WebGL is available and try again.');console.error('Studio twin:',e);}
+  $('#twin-scenario').onchange=()=>{if(!built)return;const previous=view;built.setLayout($('#twin-scenario').value);$('#twin-lateral').value=$('#twin-scenario').value==='corner'?'1':'0';description();if(previous==='observer')observe();else preset('home');};
+  $('#twin-light').onchange=()=>{built?.viewer.setLighting($('#twin-light').value);draw(true);};shop.onchange=()=>h.selectShop?.(shop.value);
+  function draw(force=false){if(!modal.open||!built||!active)return;const now=performance.now();if(!force&&now-last<40)return;last=now;built.draw(cv=>h.draw(cv,active,h.background(active)?.el));}
+  async function open(f){if(!h.ready())return;const mine=++revision;focus=document.activeElement;clean();modal.showModal();h.start?.(f);ctl=new AbortController();const signal=ctl.signal;status.textContent=t('Cargando estanco Better de Stock…','Loading Better shop from Stock…');
+    const shops=h.shops()||[];shop.replaceChildren(...(shops.length?shops:[{id:'studio-demo',nombre:t('Estanco · demo','Shop · demo')}]).map(s=>new Option(s.nombre,s.id)));if(shops.some(s=>s.id===h.shop()))shop.value=h.shop();shop.disabled=shops.length<2;
+    $('#twin-scenario').value='flat';$('#twin-light').value='day';$('#twin-eye').value='1.65';$('#twin-distance').value='3';$('#twin-lateral').value='0';$('.twin-observer').hidden=true;
+    try{const {createBetterTwin}=await(pending||=import('./gemelo-better.mjs'));if(mine!==revision||!modal.open)return;
+      const cv=document.createElement('canvas');cv.tabIndex=0;cv.setAttribute('aria-label',t('Estanco Better 3D interactivo','Interactive Better 3D shop'));stage.append(cv);
+      geometry=twinGeometry(f,h.destino(f));const next=await createBetterTwin({canvas:cv,geometry,signal,onCameraChange:cameraChanged});if(mine!==revision||!modal.open){next.dispose();return;}built=next;active=f;view='home';controls(true);built.viewer.resize(stage.clientWidth,stage.clientHeight);description();draw(true);$('.twin-close').focus();
+    }catch(e){if(mine!==revision||signal.aborted)return;h.end?.();clean();status.textContent=t('No se pudo cargar la referencia Better. Comprueba la conexión y WebGL; cierra y vuelve a abrir.','Could not load Better reference. Check connection and WebGL; close and reopen.');console.error('Studio Better twin:',e);}
   }
   function button(f){const b=document.createElement('button');b.type='button';b.className='pill view-twin';b.textContent=`▣ ${t('Ver en gemelo digital','View in digital twin')}`;b.setAttribute('aria-label',`${t('Ver en gemelo digital','View in digital twin')}: ${f.nombre}`);b.disabled=!h.ready();b.onclick=e=>{e.stopPropagation();open(f);};return b;}
-  return {button,open,draw,close,sync:()=>{document.querySelectorAll('.view-twin').forEach(b=>b.disabled=!h.ready());}};
+  controls(false);return {button,open,draw,close,sync:()=>document.querySelectorAll('.view-twin').forEach(b=>b.disabled=!h.ready())};
 }
