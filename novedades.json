@@ -4,6 +4,10 @@
     "Sello de versión con novedades al pasar el ratón",
     "Marca NUEVO cuando hay una versión que aún no has visto"
   ],
+  "v.07.10.2026.r9.23:06": [
+    "Alsea y Starbucks son lo mismo: lo marcado con Alsea lo ven las cuentas de Starbucks y de Starbucks México",
+    "Una pieza con #starbucks y #alsea es de Starbucks y deja de ser ambigua"
+  ],
   "v.07.10.2026.r8.22:26": [
     "Vista por cliente: una cuenta asignada a un cliente ve su contenido y el genérico, no el de otros clientes",
     "La asignación sale de la identidad central (admiranext.com/usuarios) y no se cambia con /marca",

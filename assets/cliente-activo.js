@@ -128,12 +128,34 @@
     });
     return out;
   }
-  function clienteDe(it) { var l = clientesDe(it); return l.length === 1 ? l[0] : null; }
+  // GRUPOS (Carlos, 7-oct-2026: «Alsea es la propietaria de la marca Starbucks en España y México: son lo mismo»).
+  // Un grupo no es un cliente: es un nombre que vale por varios (mapeo.grupos.alsea.miembros). Lo marcado sólo con
+  // el grupo lo ven las cuentas de cualquiera de sus miembros; si la pieza lleva además un cliente concreto, manda él.
+  function gruposDe(it) {
+    if (!it || !mapeo) return [];
+    var G = mapeo.grupos || {}, ids = Object.keys(G), out = [];
+    if (!ids.length) return out;
+    var fijo = slug((mapeo.asignaciones || {})[it.id] || it.cliente || (it.catalogo && it.catalogo.cliente) || '');
+    var tags = (Array.isArray(it.tags) ? it.tags : []).map(function (x) { return String(x).toLowerCase().trim().replace(/^#/, ''); });
+    var cabezas = tags.map(function (x) { var i = x.indexOf('_'); return i > 0 ? plano(x.slice(0, i)) : ''; }).filter(Boolean);
+    var texto = [it.title, it.name, it.prompt, it.comment].filter(Boolean).join(' \n ');
+    ids.forEach(function (id) {
+      var nombres = [id].concat(G[id].tags || []);
+      var pats = G[id]._re || (G[id]._re = (G[id].patrones || []).map(function (p) { try { return new RegExp(p, 'i'); } catch (_) { return null; } }).filter(Boolean));
+      if (fijo === id || tags.some(function (x) { return nombres.indexOf(x) >= 0; }) || nombres.some(function (n) { return cabezas.indexOf(plano(n)) >= 0; }) || pats.some(function (re) { return re.test(texto); })) out.push(id);
+    });
+    return out;
+  }
+  function miembrosDe(id) { var g = (mapeo && mapeo.grupos || {})[id]; return g && Array.isArray(g.miembros) ? g.miembros : []; }
+  // Un solo cliente → ése. Sólo un grupo → su primer miembro (Alsea → Starbucks). Varios clientes → ambiguo (null).
+  function clienteDe(it) { var l = clientesDe(it); if (l.length === 1) return l[0]; if (l.length) return null; var g = gruposDe(it); return g.length === 1 ? miembrosDe(g[0])[0] || null : null; }
   function visible(it) {
     if (!listo) return !restringido(); // una cuenta asignada no ve nada hasta saber de quién es cada pieza
     if (esDefecto(actual)) return true; // Admira lo ve todo
-    var gen = mapeo.genericos || [];
-    return clientesDe(it).every(function (c) { return c === actual.id || gen.indexOf(c) >= 0; });
+    var gen = mapeo.genericos || [], suyos = clientesDe(it);
+    if (suyos.length) return suyos.every(function (c) { return c === actual.id || gen.indexOf(c) >= 0; });
+    var grupos = gruposDe(it); // sin cliente concreto: vale el grupo, para cualquiera de sus miembros
+    return !grupos.length || grupos.some(function (g) { return miembrosDe(g).indexOf(actual.id) >= 0; });
   }
 
   var style = document.createElement('style');
@@ -225,7 +247,8 @@
     selectorVisible: selectorVisible,
     resolver: resolver,
     fijar: fijar,
-    clienteDe: clienteDe, clientesDe: clientesDe,
+    clienteDe: clienteDe, clientesDe: clientesDe, gruposDe: gruposDe,
+    grupo: function (id) { var g = (mapeo && mapeo.grupos || {})[id]; return g ? {id: id, nombre: g.nombre || id, miembros: miembrosDe(id).slice()} : null; },
     visible: visible
   };
 })();

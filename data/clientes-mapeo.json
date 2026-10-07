@@ -1,8 +1,23 @@
 {
-  "_nota": "Mapeo editable contenido → cliente (Stock, Adaptador). Orden de deducción: 0) «asignaciones» (id del asset → id de cliente), para corregir a mano; 1) campo explícito del asset (cliente o catalogo.cliente); 2) etiquetas iguales al id del cliente o a uno de sus «tags»; 3) sus «patrones» (regex, sin distinguir mayúsculas) en título, prompt o comentario, en orden y consumiendo lo que casa (Starbucks México no cuenta también como Starbucks). Si casan varios clientes, el asset es ambiguo y solo se ve con «Todos». Lo que no casa con nada es genérico de Admira y lo ve cualquier cliente. Los nombres que son palabras corrientes (metro, mango, palacio, liverpool, correos, estancos) solo cuentan por etiqueta o campo, nunca por texto. No se borra ni se reetiqueta nada en el Stock.",
+  "_nota": "Mapeo editable contenido → cliente (Stock, Adaptador). Orden de deducción: 0) «asignaciones» (id del asset → id de cliente), para corregir a mano; 1) campo explícito del asset (cliente o catalogo.cliente); 2) etiquetas iguales al id del cliente o a uno de sus «tags»; 3) sus «patrones» (regex, sin distinguir mayúsculas) en título, prompt o comentario, en orden y consumiendo lo que casa (Starbucks México no cuenta también como Starbucks). Si casan varios clientes, el asset es ambiguo y solo se ve con «Todos». Lo que no casa con nada es genérico de Admira y lo ve cualquier cliente. Los nombres que son palabras corrientes (metro, mango, palacio, liverpool, correos, estancos) solo cuentan por etiqueta o campo, nunca por texto. No se borra ni se reetiqueta nada en el Stock. GRUPOS (7-oct-2026, Carlos: «Alsea es la propietaria de la marca Starbucks en España y México: son lo mismo»): un grupo no es un cliente, es un nombre que vale por varios. Lo marcado sólo con el grupo (#alsea) lo ven las cuentas de cualquiera de sus «miembros»; si además lleva un cliente concreto (#starbucks), manda el cliente.",
   "genericos": [
     "admira"
   ],
+  "grupos": {
+    "alsea": {
+      "nombre": "Alsea",
+      "miembros": [
+        "starbucks",
+        "starbucks-mexico"
+      ],
+      "tags": [
+        "alsea"
+      ],
+      "patrones": [
+        "\\balsea\\b"
+      ]
+    }
+  },
   "asignaciones": {
     "1790932896582-vc9x7t": "jti",
     "1790932802558-6pdss9": "jti",
@@ -39,14 +54,6 @@
       ],
       "patrones": [
         "\\bstarbucks\\b"
-      ]
-    },
-    "alsea": {
-      "tags": [
-        "alsea"
-      ],
-      "patrones": [
-        "\\balsea\\b"
       ]
     },
     "jti": {

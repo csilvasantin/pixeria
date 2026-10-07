@@ -87,3 +87,21 @@ test('si la sesión deja de estar restringida, se olvida lo recordado', async ()
   const {PC, tab} = await mundo({sesion:{ok:true, email:'c@x', superusuario:true, clientes:null}, recordado:['starbucks']});
   assert.equal(PC.restringido(), false); assert.equal(tab.getItem('pixeria:cliente-fijo'), null); assert.equal(PC.filtrar(STOCK).length, STOCK.length);
 });
+
+// «Alsea es la propietaria de la marca Starbucks en España y México: son lo mismo» (Carlos, 7-oct-2026).
+const ALSEA = [pieza('al1', ['alsea', 'pdg103']), pieza('al2', ['starbucks', 'alsea']), pieza('al3', ['música'], {title:'Hilo musical Alsea otoño'}),
+  pieza('al4', ['alsea_paseodegracia_103_pantalla_1']), pieza('al5', ['alsea', 'altadis']), pieza('al6', ['x'], {catalogo:{cliente:'alsea'}}), pieza('al7', ['starbucks-mexico', 'alsea'])];
+test('Alsea no es un cliente aparte: lo marcado con Alsea lo ven las cuentas de Starbucks y de Starbucks México', async () => {
+  assert.equal(mapeo.clientes.alsea, undefined); assert.deepEqual(mapeo.grupos.alsea.miembros, ['starbucks', 'starbucks-mexico']);
+  const sbux = await mundo({sesion:{ok:true, email:'a@x', superusuario:false, clientes:['starbucks']}});
+  assert.deepEqual(sbux.PC.filtrar(ALSEA).map(i => i.id), ['al1', 'al2', 'al3', 'al4', 'al6'], 'lo de Alsea y lo de Starbucks+Alsea; no lo que además es de Altadis ni lo de México');
+  assert.deepEqual([...sbux.PC.clientesDe(ALSEA[1])], ['starbucks'], 'Starbucks + Alsea ya no es ambiguo');
+  assert.deepEqual([...sbux.PC.gruposDe(ALSEA[0])], ['alsea']); assert.equal(sbux.PC.clienteDe(ALSEA[0]), 'starbucks');
+  assert.deepEqual(JSON.parse(JSON.stringify(sbux.PC.grupo('alsea'))), {id:'alsea', nombre:'Alsea', miembros:['starbucks', 'starbucks-mexico']});
+  const mx = await mundo({sesion:{ok:true, email:'m@x', superusuario:false, clientes:['starbucks-mexico']}});
+  assert.deepEqual(mx.PC.filtrar(ALSEA).map(i => i.id), ['al1', 'al3', 'al4', 'al6', 'al7'], 'México ve lo de Alsea y lo suyo, no lo marcado como Starbucks España');
+  const otro = await mundo({sesion:{ok:true, email:'o@x', superusuario:false, clientes:['altadis']}});
+  assert.deepEqual(otro.PC.filtrar(ALSEA).map(i => i.id), ['al5'], 'otro cliente no ve nada de Alsea (al5 lleva su etiqueta)');
+  const todo = await mundo({sesion:{ok:true, email:'c@x', superusuario:true, clientes:null}});
+  assert.equal(todo.PC.filtrar(ALSEA).length, ALSEA.length);
+});

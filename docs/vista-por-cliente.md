@@ -14,6 +14,19 @@ la asignación de cada usuario a su cliente sale de la **identidad central de Ad
 - Una cuenta sin restricción (superusuario, administrador, equipo sin cliente asignado) sigue como siempre: Admira lo ve
   todo y el superusuario cambia de cliente con `/marca`.
 
+## Grupos: Alsea = Starbucks
+
+Carlos, 7-oct-2026: «Alsea es la propietaria de la marca Starbucks en España y México: son lo mismo». Alsea no es un
+cliente aparte sino un **grupo** (`data/clientes-mapeo.json` → `grupos.alsea.miembros = [starbucks, starbucks-mexico]`):
+
+- Lo marcado sólo con Alsea (etiqueta `#alsea`, catálogo de Alsea, «Alsea» en el título) lo ven las cuentas de
+  Starbucks y las de Starbucks México.
+- Si la pieza lleva además un cliente concreto, manda el cliente: `#starbucks #alsea` es de Starbucks (ya no es
+  ambigua) y una cuenta de Starbucks México no la ve.
+- Otro cliente no ve nada de Alsea. En la ficha técnica sale «Alsea · Starbucks y Starbucks México».
+
+Para declarar otro grupo basta añadirlo en `grupos` con sus `miembros`, `tags` y `patrones`.
+
 ## De dónde sale la asignación
 
 `GET /auth/session` devuelve `clientes`: `null` (sin restricción) o la lista de ids. La calcula `clientesPermitidos`
