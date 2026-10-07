@@ -1890,7 +1890,7 @@ emptySource(); loop();
 studio=mountStudio({t,formats:projectFormatList,ficha:()=>FICHA,doc:()=>EST,baseDoc:()=>EST_BASE,applications:()=>estApplications,settings:()=>({...snapshot(state,FORMATOS),crear:state.crear}),
 ready:mediaReady,destino,geometry,reference:(cv,f)=>paint(cv,destino(f),'blur',{fx:.5,fy:.5,zoom:1}),
 draw:(cv,f,bg)=>{if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);},
-changed:()=>buildGrid(),apply:(estanco,formato,on)=>{const next=estApplications.filter(x=>x.estanco!==estanco||x.formato!==formato);if(on)next.push({estanco,formato});
+changed:()=>buildGrid(),visit:f=>twin?.open(f),apply:(estanco,formato,on)=>{const next=estApplications.filter(x=>x.estanco!==estanco||x.formato!==formato);if(on)next.push({estanco,formato});
 const valid=restoreApplications(next,EST_BASE,projectFormatList());try{localStorage.setItem(APPLICATION_KEY(FICHA.id),JSON.stringify(valid));}catch(_){throw new Error('storage');}
 estApplications=valid;EST=applyApplications(EST_BASE,valid,projectFormatList());renderEstancos();}});
 

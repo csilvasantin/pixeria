@@ -5,7 +5,7 @@ export function mountStudio(h) {
   root.innerHTML=`<h3>${t('Adaptación IA · aplicar en Estancos','AI adaptation · apply in Shops')}</h3>
   <div class="studio-controls"><label>${t('Formato','Format')}<select id="studio-formato"></select></label><label>${t('Estanco','Shop')}<select id="studio-estanco"></select></label></div>
   <label class="studio-brief">${t('Ambiente para el fondo IA','AI background atmosphere')}<input id="studio-brief" maxlength="1200" placeholder="${t('Ej. luz cálida, madera y tonos verdes','E.g. warm light, wood and green tones')}"></label>
-  <div class="studio-actions"><button id="studio-ia" type="button" class="pill accent">✦ ${t('Generar fondo IA','Generate AI background')}</button><button id="studio-cancel" type="button" class="pill" hidden>${t('Cancelar','Cancel')}</button><button id="studio-original" type="button" class="pill" hidden>${t('Quitar fondo IA','Remove AI background')}</button><button id="studio-aplicar" type="button" class="pill">▣ ${t('Aplicar demo al estanco','Apply shop demo')}</button><button id="studio-retirar" type="button" class="pill" hidden>${t('Retirar demo','Remove demo')}</button><button id="studio-guardar" type="button" class="pill">↓ ${t('Guardar formatos y aplicaciones','Save formats and placements')}</button><a id="studio-download" class="pill" hidden download="studio-fondo-ia.png">↓ ${t('Guardar fondo IA','Save AI background')}</a></div>
+  <div class="studio-actions"><button id="studio-ia" type="button" class="pill accent">✦ ${t('Generar fondo IA','Generate AI background')}</button><button id="studio-cancel" type="button" class="pill" hidden>${t('Cancelar','Cancel')}</button><button id="studio-original" type="button" class="pill" hidden>${t('Quitar fondo IA','Remove AI background')}</button><button id="studio-aplicar" type="button" class="pill">▣ ${t('Aplicar demo al estanco','Apply shop demo')}</button><button id="studio-visitar" type="button" class="pill">▣ ${t('Visitar demo','Visit demo')}</button><button id="studio-retirar" type="button" class="pill" hidden>${t('Retirar demo','Remove demo')}</button><button id="studio-guardar" type="button" class="pill">↓ ${t('Guardar formatos y aplicaciones','Save formats and placements')}</button><a id="studio-download" class="pill" hidden download="studio-fondo-ia.png">↓ ${t('Guardar fondo IA','Save AI background')}</a></div>
   <p class="muted">${t('La IA genera un fondo estático. El original completo se conserva delante (sin zoom); los cortes del videowall salen de una pared continua. La generación usa el motor de imagen con tu sesión.','AI generates a static background. The entire original stays in front (no zoom); video wall cuts come from one continuous wall. Generation uses the image engine with your session.')}</p>
   <p id="studio-status" role="status" aria-live="polite"></p>
   <figure class="studio-shop"><figcaption id="studio-shop-name"></figcaption><div class="studio-shop-room"><div class="studio-shop-sign">ESTANC</div><div class="studio-shop-wall"><canvas id="studio-preview"></canvas></div><div class="studio-shop-counter"></div></div><figcaption id="studio-size"></figcaption></figure>`;
@@ -32,6 +32,7 @@ export function mountStudio(h) {
     const f=format(),bg=backgrounds.get(f?.id),apps=h.applications();
     appliedName=apps.some(x=>x.estanco===shop.value&&x.formato===f?.id)?`${shop.value}:${f.id}`:'';
     $('#studio-aplicar').disabled=!doc||!shop.value||!!appliedName;
+    $('#studio-visitar').disabled=!h.ready()||!f||!shop.value||!h.visit;
     $('#studio-retirar').hidden=!appliedName;shop.disabled=!doc;
     $('#studio-guardar').disabled=!h.ficha();
     $('#studio-ia').disabled=!h.ready()||!!ctl;
@@ -41,6 +42,7 @@ export function mountStudio(h) {
   }
   sel.onchange=()=>{status.textContent='';sync();};shop.onchange=sync;
   $('#studio-aplicar').onclick=()=>{try{h.apply(shop.value,sel.value,true);}catch(_){status.textContent=t('El navegador no permite guardar la aplicación.','Browser cannot save this placement.');return;}status.textContent=t('Demo guardada en este navegador y añadida al paquete del estanco.','Demo saved in this browser and added to the shop package.');sync();};
+  $('#studio-visitar').onclick=()=>{const f=format();if(f&&h.ready()&&shop.value)h.visit?.(f);};
   $('#studio-retirar').onclick=()=>{try{h.apply(shop.value,sel.value,false);}catch(_){status.textContent=t('No se pudo retirar la demo guardada.','Could not remove the saved demo.');return;}status.textContent=t('Demo retirada; las pantallas originales se conservan.','Demo removed; original screens are preserved.');sync();};
   $('#studio-guardar').onclick=()=>{
     try {const contract=formatContract(h.ficha(),h.formats(),h.baseDoc(),h.applications(),h.settings());

@@ -73,5 +73,5 @@ export function mountTwin(h){
     }catch(e){if(mine!==revision)return;h.end?.();clean();renderer?.dispose();renderer=null;stage.replaceChildren();status.textContent=t('No se pudo abrir el gemelo. Comprueba que WebGL está disponible y vuelve a intentarlo.','Could not open the twin. Check WebGL is available and try again.');console.error('Studio twin:',e);}
   }
   function button(f){const b=document.createElement('button');b.type='button';b.className='pill view-twin';b.textContent=`▣ ${t('Ver en gemelo digital','View in digital twin')}`;b.setAttribute('aria-label',`${t('Ver en gemelo digital','View in digital twin')}: ${f.nombre}`);b.disabled=!h.ready();b.onclick=e=>{e.stopPropagation();open(f);};return b;}
-  return {button,draw,close,sync:()=>{document.querySelectorAll('.view-twin').forEach(b=>b.disabled=!h.ready());}};
+  return {button,open,draw,close,sync:()=>{document.querySelectorAll('.view-twin').forEach(b=>b.disabled=!h.ready());}};
 }

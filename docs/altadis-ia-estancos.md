@@ -59,6 +59,14 @@ Siguiente aceptación de hardware: confirmar las ambigüedades del PDF con Altad
 Validation: 35 adapter tests (real FFmpeg atlas/segments and ZIP), 17 MCP tests, eight image-engine authentication tests. Browser FFmpeg/WASM export was not checked end to end. Public MCP contract and web generation verified; paid MCP generation not exercised separately. Implementation references are listed above. The website rollout for repository `csilvasantin/pixeria` was rejected by automatic review; canonical code is in Git and Studio was published independently. Confirm PDF geometry and installed hardware before real scheduling or synchronized emission.
 
 
+## Visitar demo / Visit demo
+
+ES: «Visitar demo», junto a «Aplicar demo al estanco», abre el gemelo con el formato y estanco seleccionados y reproduce el contenido actual, también el fondo IA. No hace falta guardar la aplicación primero; sigue disponible después de aplicarla.
+
+EN: “Visit demo”, beside “Apply shop demo”, opens the twin with the selected format and shop and plays current content, including the AI background. Saving a placement first is optional; the button remains available after applying it.
+
+Tutorial ES: elegir contenido → Adaptar → seleccionar Formato y Estanco → **Visitar demo** → cerrar/Esc. Tutorial EN: choose content → Adapt → select Format and Shop → **Visit demo** → close/Esc. Vídeo/GIF se reanuda en silencio y al cerrar restaura la pausa previa. Video/GIF resumes silently and closing restores its previous paused state. Sin contenido válido el botón está desactivado / Without valid content the button is disabled.
+
 ## Ver en gemelo digital / View in digital twin
 
 Cada tarjeta adaptada incluye «Ver en gemelo digital». Abre un estanco 3D en un diálogo, con las pantallas de ese formato y el contenido actual (también fondo IA, vídeo y GIF). Elige el estanco, gira la vista o acércate; Esc vuelve al editor. Los videowalls especiales usan la pared física, nunca el atlas de entrega; todas las pantallas comparten un fotograma. Es una simulación local de distribución, no una reproducción del local escaneado ni una programación de players. No envía el contenido, no genera IA ni guarda una aplicación al abrirlo.

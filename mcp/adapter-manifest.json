@@ -38,6 +38,13 @@
       "adaptaciones/gemelo-core.mjs",
       "adaptaciones/gemelo-digital.mjs"
     ],
-    "guide": "/docs/altadis-ia-estancos.md"
+    "guide": "/docs/altadis-ia-estancos.md",
+    "visit_button": {
+      "es": "Visitar demo",
+      "en": "Visit demo"
+    },
+    "visit_location": "beside_apply_shop_demo",
+    "visit_selection": "current_format_and_shop",
+    "requires_saved_placement": false
   }
 }
