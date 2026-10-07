@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createApiToken, esSuperusuario, handleAuth, hasSession, safeReturnTo, verifyApiToken} from '../functions/_auth.js';
+import {clientesPermitidos, createApiToken, esSuperusuario, handleAuth, hasSession, safeReturnTo, verifyApiToken} from '../functions/_auth.js';
 import {onRequest} from '../functions/_middleware.js';
 import {readFile} from 'node:fs/promises';
 
@@ -114,7 +114,7 @@ test('una sesión anterior de 12 h se amplía una sola vez desde el acceso origi
       {headers:{Cookie:cookie}}), bindings);
     assert.equal(revisit.status, 200);
     assert.equal(revisit.headers.get('set-cookie'), null, 'la actividad no prolonga el plazo');
-    assert.deepEqual(await revisit.json(), {ok:true, email:user.email, superusuario:esSuperusuario({email:user.email})}, 'no expone claims internos');
+    assert.deepEqual(await revisit.json(), {ok:true, email:user.email, superusuario:esSuperusuario({email:user.email}), clientes:null}, 'no expone claims internos');
   }
 });
 
@@ -348,4 +348,43 @@ test('superusuario: las cuentas de Carlos y la sesión de agente; nadie más', (
   assert.equal(esSuperusuario({email:'agentes@silicio.admiranext.com', agent:true}), true);
   assert.equal(esSuperusuario({email:'otra@admira.com'}), false);
   assert.equal(esSuperusuario(null), false);
+});
+
+// Vista por cliente (Carlos, 7-oct-2026): a qué clientes está asignada una cuenta lo dice la identidad central.
+function directorioCentral(usuarios, permisos) {
+  return {prepare(sql) { let values = []; return {
+    bind(...next) { values = next; return this; },
+    async first() { if (!sql.includes('FROM admiranext_users')) throw new Error('consulta inesperada'); return usuarios[values[0]] || null; },
+    async all() { if (!sql.includes('FROM admiranext_user_projects')) throw new Error('consulta inesperada'); return {results:(permisos[values[0]] || []).map(project_key => ({project_key}))}; }
+  }; }};
+}
+test('los clientes de una cuenta salen de la identidad central de AdmiraNeXT', async () => {
+  const AUTH_DB = directorioCentral({
+    'ana@starbucks.example':{role:'viewer', account_kind:'guest'},
+    'dos@alsea.example':{role:'editor', account_kind:'partner'},
+    'equipo@admira.example':{role:'editor', account_kind:'team'},
+    'gestora@admira.example':{role:'editor', account_kind:'team'},
+    'jefa@admira.example':{role:'admin', account_kind:'team'},
+    'todo@admira.example':{role:'editor', account_kind:'team'},
+    'invitado@fuera.example':{role:'viewer', account_kind:'guest'}
+  }, {
+    'ana@starbucks.example':['commercial:starbucks', 'pixeria'],
+    'dos@alsea.example':['commercial:starbucks', 'commercial:starbucks-mexico', 'commercial:Starbucks', 'commercial:../x'],
+    'equipo@admira.example':['pixeria', 'xpaceos'],
+    'gestora@admira.example':['commercial:altadis'],
+    'todo@admira.example':['commercial-projects'],
+    'invitado@fuera.example':['xpaceos']
+  });
+  const de = email => clientesPermitidos({email}, {AUTH_DB});
+  assert.deepEqual(await de('Ana@Starbucks.example'), ['starbucks'], 'un invitado ve su cliente');
+  assert.deepEqual(await de('dos@alsea.example'), ['starbucks', 'starbucks-mexico'], 'varios clientes, sin repetir ni ids raros');
+  assert.equal(await de('equipo@admira.example'), null, 'el equipo sin cliente asignado lo ve todo, como hasta ahora');
+  assert.deepEqual(await de('gestora@admira.example'), ['altadis'], 'el equipo con cliente asignado, sólo ése');
+  assert.equal(await de('jefa@admira.example'), null);
+  assert.equal(await de('todo@admira.example'), null, '«todos los proyectos comerciales» no restringe');
+  assert.deepEqual(await de('invitado@fuera.example'), [], 'un invitado sin cliente asignado sólo ve lo genérico');
+  assert.equal(await de('nadie@fuera.example'), null, 'quien no está en el directorio central queda como hasta ahora');
+  for (const email of owners) assert.equal(await clientesPermitidos({email}, {AUTH_DB:null}), null, 'el superusuario no se consulta');
+  assert.equal(await clientesPermitidos({email:'agentes@silicio.admiranext.com', agent:true}, {AUTH_DB:null}), null);
+  assert.equal(await clientesPermitidos({email:'caida@admira.example'}, {AUTH_DB:{prepare() { throw new Error('D1 caída'); }}}), null, 'sin directorio no se inventa una restricción');
 });

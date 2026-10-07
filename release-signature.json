@@ -1,8 +1,8 @@
 {
-  "version": "v.07.10.2026.r7.22:12",
-  "deployer": "OraculoMacMini",
-  "agent": "OraculoMacMini",
-  "machine": "MacMini",
-  "signature": "OraculoMacMini · MacMini",
-  "evidence": "Altadis: fondo IA estático, originales conservados, contratos de 29 formatos y aplicaciones virtuales en Estancos."
+  "version": "v.07.10.2026.r8.22:26",
+  "deployer": "NeoMBP16",
+  "agent": "NeoMBP16",
+  "machine": "MacBookPro16",
+  "signature": "NeoMBP16 · MacBookPro16",
+  "evidence": "Vista por cliente: la cuenta asignada a un cliente en la identidad central de AdmiraNeXT ve lo suyo y lo genérico, y no puede salir de ahí."
 }

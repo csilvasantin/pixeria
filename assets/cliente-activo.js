@@ -25,7 +25,7 @@
   // Habilita /marca todas|<cliente>; filtrar es una vista, no una barrera de seguridad.
   var ADMIN_KEY = 'pixeria:admin';
   var EN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
-  var lista = [], porDefecto = null, actual = null, mapeo = null, listo = false;
+  var lista = [], porDefecto = null, actual = null, mapeo = null, listo = false, nombresDe = {};
 
   var slug = function (v) { return String(v == null ? '' : v).toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64); };
   var plano = function (v) { return String(v == null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ''); };
@@ -33,12 +33,27 @@
   // Superusuario: lo dice el servidor (/auth/session → superusuario, para las cuentas de Carlos y
   // la sesión de agente). El flag local pixeria:admin = 1 queda como respaldo.
   var superSesion = false;
-  function esAdmin() { if (superSesion) return true; try { return localStorage.getItem(ADMIN_KEY) === '1'; } catch (_) { return false; } }
+  // CUENTA ASIGNADA A UN CLIENTE (Carlos, 7-oct-2026). La identidad central de AdmiraNeXT dice a qué clientes está
+  // asignada la cuenta (/auth/session → clientes: null = sin restricción, [ids] = sólo ésos). Una cuenta asignada
+  // no puede cambiar de cliente ni volver a «Admira, todo»: ni con /marca, ni con ?cliente=, ni con el flag local.
+  // Lo último sabido se recuerda en la pestaña para no enseñar nada ajeno mientras llega la sesión.
+  var FIJO_KEY = 'pixeria:cliente-fijo';
+  var permitidos = null;
+  try { var recordado = JSON.parse(sessionStorage.getItem(FIJO_KEY) || 'null'); if (Array.isArray(recordado)) permitidos = recordado.map(function (x) { return String(x); }); } catch (_) {}
+  function restringido() { return Array.isArray(permitidos); }
+  function esAdmin() { if (restringido()) return false; if (superSesion) return true; try { return localStorage.getItem(ADMIN_KEY) === '1'; } catch (_) { return false; } }
+  var pSesion = Promise.resolve(null);
   try {
-    fetch('/auth/session', {credentials: 'include', cache: 'no-store', headers: {Accept: 'application/json'}})
+    pSesion = fetch('/auth/session', {credentials: 'include', cache: 'no-store', headers: {Accept: 'application/json'}})
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { superSesion = !!(j && j.ok && j.superusuario === true); })
-      .catch(function () {});
+      .then(function (j) {
+        if (!j || !j.ok) return null; // sin respuesta no se toca lo recordado
+        superSesion = j.superusuario === true;
+        permitidos = Array.isArray(j.clientes) ? j.clientes.map(function (x) { return String(x).toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-'); }).filter(Boolean) : null;
+        try { if (permitidos) sessionStorage.setItem(FIJO_KEY, JSON.stringify(permitidos)); else sessionStorage.removeItem(FIJO_KEY); } catch (_) {}
+        return j;
+      })
+      .catch(function () { return null; });
   } catch (_) {}
 
   var guardado = null, q = null;
@@ -76,10 +91,12 @@
   function fijar(id) {
     var c = TODOS.test(slug(id)) || !slug(id) ? porDefecto : porId(slug(id)) || resolver(id);
     if (!c) return false;
+    if (restringido() && permitidos.indexOf(c.id) < 0) return false;
     aplicar(c);
     return true;
   }
   function selector(on) {
+    if (restringido()) on = permitidos.length > 1; // con varios clientes elige entre los suyos; no se oculta ni se amplía
     try { if (on) sessionStorage.setItem(SEL_KEY, '1'); else sessionStorage.removeItem(SEL_KEY); } catch (_) {}
     if (on) colocar(); else if (label.isConnected) label.remove();
   }
@@ -93,9 +110,12 @@
     if (fijo && (C[fijo] || (mapeo.genericos || []).indexOf(fijo) >= 0)) return [fijo];
     var out = [];
     var tags = (Array.isArray(it.tags) ? it.tags : []).map(function (x) { return String(x).toLowerCase().trim().replace(/^#/, ''); });
+    // El nombre único de un centro o de una pantalla empieza por su proyecto (starbucks_paseodegracia_103_pantalla1):
+    // esa pieza es del cliente aunque no lleve además la etiqueta «starbucks».
+    var cabezas = tags.map(function (x) { var i = x.indexOf('_'); return i > 0 ? plano(x.slice(0, i)) : ''; }).filter(Boolean);
     ids.forEach(function (id) {
       var nombres = [id].concat(C[id].tags || []);
-      if (tags.some(function (x) { return nombres.indexOf(x) >= 0; })) out.push(id);
+      if (tags.some(function (x) { return nombres.indexOf(x) >= 0; }) || (cabezas.length && [id, nombresDe[id]].concat(C[id].tags || []).some(function (n) { return n && cabezas.indexOf(plano(n)) >= 0; }))) out.push(id);
     });
     // Patrones en orden: lo que casa se consume, para que «Starbucks México» no cuente también como «Starbucks».
     var texto = [it.title, it.name, it.prompt, it.comment].filter(Boolean).join(' \n ');
@@ -110,7 +130,8 @@
   }
   function clienteDe(it) { var l = clientesDe(it); return l.length === 1 ? l[0] : null; }
   function visible(it) {
-    if (!listo || esDefecto(actual)) return true; // Admira lo ve todo
+    if (!listo) return !restringido(); // una cuenta asignada no ve nada hasta saber de quién es cada pieza
+    if (esDefecto(actual)) return true; // Admira lo ve todo
     var gen = mapeo.genericos || [];
     return clientesDe(it).every(function (c) { return c === actual.id || gen.indexOf(c) >= 0; });
   }
@@ -163,12 +184,22 @@
     .catch(function () { return cargar(CLIENTES_RESPALDO, {cache: 'no-store'}).then(normaliza); })
     .catch(function () { return []; });
   var pMapeo = cargar(MAPEO_URL, {cache: 'no-store'}).catch(function () { return {clientes: {}, genericos: ['admira']}; });
-  Promise.all([pLista, pMapeo]).then(function (r) {
+  Promise.all([pLista, pMapeo, pSesion]).then(function (r) {
     // Globales arriba en el orden de admiranext.com; el resto, alfabético.
     lista = r[0].sort(function (a, b) { return (b.global - a.global) || (a.global ? a.orden - b.orden : a.nombre.localeCompare(b.nombre, 'es', {sensitivity: 'base'})); });
     mapeo = r[1] || {clientes: {}};
     porDefecto = lista.filter(function (c) { return c.porDefecto; })[0] || porId('admira') || null;
+    lista.forEach(function (c) { nombresDe[c.id] = c.nombre; });
     listo = true;
+    if (restringido()) {
+      // Sólo sus clientes (aunque alguno no esté en la lista pública); sin ninguno, «sin cliente» = sólo lo genérico.
+      var todos = lista;
+      lista = permitidos.map(function (id) { return todos.filter(function (c) { return c.id === id; })[0] || {id: id, nombre: id, global: false}; });
+      var suyo = pedido && permitidos.indexOf(pedido) >= 0 ? porId(pedido) : lista[0] || {id: 'sin-cliente', nombre: EN ? 'No client' : 'Sin cliente'};
+      selector(true);
+      aplicar(suyo);
+      return;
+    }
     aplicar(pedido ? porId(pedido) || porDefecto : porDefecto);
   });
 
@@ -185,6 +216,9 @@
     actual: function () { return actual ? {id: actual.id, nombre: actual.nombre} : null; },
     lista: function () { return lista.slice(); },
     esAdmin: esAdmin,
+    restringido: restringido,
+    permitidos: function () { return restringido() ? permitidos.slice() : null; },
+    filtrar: function (items) { return (Array.isArray(items) ? items : []).filter(visible); },
     porDefecto: function () { return porDefecto ? {id: porDefecto.id, nombre: porDefecto.nombre} : null; },
     esDefecto: function () { return esDefecto(actual); },
     selector: selector,

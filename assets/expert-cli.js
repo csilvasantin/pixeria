@@ -256,9 +256,17 @@
   function marcaCliente(arg) {
     var PC = window.PixeriaCliente, a = String(arg || '').trim();
     // off oculta el selector aunque la lista de clientes aún no haya llegado.
-    if (PC && /^off$/i.test(a) && !(PC.listo && PC.listo())) { PC.selector(false); PC.fijar(''); return false; }
+    if (PC && /^off$/i.test(a) && !(PC.listo && PC.listo()) && !(PC.restringido && PC.restringido())) { PC.selector(false); PC.fijar(''); return false; }
     if (!PC || !PC.listo || !PC.listo()) return false;
     var def = PC.porDefecto(), defNombre = def ? def.nombre : 'Admira';
+    // Cuenta asignada a un cliente por la identidad central: /marca no la saca de ahí.
+    if (PC.restringido && PC.restringido()) {
+      var suyos = PC.lista(), elegido = a && !/^(off|todas|todos|all)$/i.test(a) ? PC.resolver(a) : null;
+      if (elegido && PC.fijar(elegido.id)) { write(t('Cliente activo: ' + elegido.nombre + '.', 'Active client: ' + elegido.nombre + '.')); return true; }
+      write(t('Tu cuenta está asignada a ' + (suyos.length ? suyos.map(function (c) { return c.nombre; }).join(', ') : 'ningún cliente') + ': ves su contenido y el genérico. Los clientes de una cuenta se cambian en admiranext.com/usuarios.',
+        'Your account is assigned to ' + (suyos.length ? suyos.map(function (c) { return c.nombre; }).join(', ') : 'no client') + ': you see its content plus generic content. An account\'s clients are changed at admiranext.com/usuarios.'));
+      return true;
+    }
     if (/^(todas|todos|all)$/i.test(a)) {
       if (!PC.esAdmin()) { write(t('Solo el superusuario (cuentas de Carlos o sesión de agente) puede mostrar el selector de cliente.', 'Only the superuser (Carlos\'s accounts or an agent session) can show the client selector.')); return true; }
       PC.selector(true);
