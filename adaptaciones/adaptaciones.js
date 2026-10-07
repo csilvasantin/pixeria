@@ -1,7 +1,8 @@
+import {mountTwin} from './gemelo-digital.mjs';
 import {aiJob} from './ia-core.mjs';
 import {APPLICATION_KEY,restoreApplications,applyApplications} from './aplicaciones-core.mjs';
 import {mountStudio} from './studio-adaptaciones.mjs';
-let studio = null;
+let studio = null, twin = null;
 // Pixeria · Adaptaciones (FLT-101349, 2-oct-2026): un vídeo → todas las pantallas.
 // Render en vivo en canvas; las reglas son las del motor de signage de Pixeria.
 // Reutiliza el motor de reglas real de Pixeria: assets/signage-perfiles.js
@@ -430,6 +431,7 @@ function buildGrid() {
     el.querySelector('.export-one').onclick=(e)=>{e.stopPropagation();exportFormats([f]);};
     // Display (no print) from a still image: JPG as well, lighter for ad networks.
     if(f.category==='display'&&f.output==='png'){const j=document.createElement('button');j.type='button';j.className='pill export-one export-jpg';j.textContent='JPG';j.hidden=!isPicture();j.title=t('JPG calidad 90, más ligero para redes de display','JPG quality 90, lighter for display networks');j.onclick=(e)=>{e.stopPropagation();exportFormats([f],'jpg');};el.querySelector('.export-one').after(j);}
+    if(twin)el.append(twin.button(f));
     selectable(el, f);
     g.appendChild(el);
   });
@@ -504,6 +506,7 @@ function especialCard(f) {
   el.querySelector('.export-atlas').onclick = (e) => { e.stopPropagation(); exportFormats([f], 'atlas'); };
   el.querySelector('.export-segments').onclick = (e) => { e.stopPropagation(); exportFormats([f], 'segments'); };
   el.querySelector('.esp-actions').before(crearControls(f));
+  if(twin)el.append(twin.button(f));
   selectable(el, f);
   return el;
 }
@@ -549,7 +552,7 @@ function cardAviso(f) {
     : t('Elige un vídeo o una imagen para calcular el recorte.', 'Choose a video or an image to calculate cropping.');
 }
 function refreshInfo() {
-  studio?.sync();
+  studio?.sync();twin?.sync();
   drawDirty=true;saveSettings();
   const chosen=selectedFormats().length;
   $('#export-all').textContent=t(`Adaptar · ${chosen}`,`Adapt · ${chosen}`);
@@ -1046,7 +1049,7 @@ function loop(now) {
     });
   }
   syncPrevioTodas();
-  studio?.draw();
+  studio?.draw();twin?.draw();
   requestAnimationFrame(loop);
 }
 // «Previsualizar todas» (next to «Adaptar · N»): every «Crear» card from 0, in step; again, pauses them all.
@@ -1101,7 +1104,7 @@ function releaseDerived() {
   derivedURL = null;
 }
 function setSource(url, name, origin = {id:null,title:name}, kind = 'video', ext = 'png', extra = null) {
-  studio?.clear();
+  studio?.clear();twin?.close();
   state.origin = {id:origin.id||null,title:origin.title||name};
   releaseStill(); releaseDerived(); stopAnim(); resetCrearMedia();
   if (svgRasters) { svgRasters.clear(); svgRasters = null; }
@@ -1459,7 +1462,7 @@ const EST_KEY = id => `pixeria.adapter.estancos.${id}`;
 const STOCK_REFS_KEY = 'pixeria.adapter.stock-refs';
 const projectFormatList = () => FORMATOS.filter(f => f.proyecto);
 function setEstancos(doc) {
-  studio?.clear(); EST = null; EST_BASE=null; estApplications=[]; estSel.clear();
+  studio?.clear();twin?.close(); EST = null; EST_BASE=null; estApplications=[]; estSel.clear();
   if (doc && FICHA) {
     const errors = validateEstancos(doc, {formats: projectFormatList(), proyecto: FICHA.id});
     if (errors.length) console.warn('[estancos]', errors); else { EST_BASE=doc;let saved=null;try{saved=JSON.parse(localStorage.getItem(APPLICATION_KEY(FICHA.id)));}catch(_){}estApplications=restoreApplications(saved,doc,projectFormatList());EST=applyApplications(doc,estApplications,projectFormatList()); }
@@ -1890,3 +1893,6 @@ draw:(cv,f,bg)=>{if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,de
 changed:()=>buildGrid(),apply:(estanco,formato,on)=>{const next=estApplications.filter(x=>x.estanco!==estanco||x.formato!==formato);if(on)next.push({estanco,formato});
 const valid=restoreApplications(next,EST_BASE,projectFormatList());try{localStorage.setItem(APPLICATION_KEY(FICHA.id),JSON.stringify(valid));}catch(_){throw new Error('storage');}
 estApplications=valid;EST=applyApplications(EST_BASE,valid,projectFormatList());renderEstancos();}});
+
+twin=mountTwin({t,ready:mediaReady,destino,background:f=>studio?.background(f),shops:()=>EST?.estancos,shop:()=>studio?.shop(),selectShop:id=>studio?.selectShop(id),draw:(cv,f,bg)=>{if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);}});
+buildGrid();

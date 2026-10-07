@@ -61,5 +61,5 @@ export function mountStudio(h) {
     }catch(e){if(mine===turn)status.textContent=e.message==='session'?t('Inicia sesión de nuevo para generar.','Sign in again to generate.'):e.name==='AbortError'?t('Tiempo agotado; puedes reintentar.','Timed out; you can retry.'):t(`No se generó el fondo (${e.message}). El original sigue disponible.`,`Background not generated (${e.message}). Original remains available.`);}
     finally{clearTimeout(timer);if(mine===turn){ctl=null;sync();}}
   };
-  sync();return{sync,draw:redraw,background:f=>backgrounds.get(f.id),clear:release};
+  sync();return{sync,draw:redraw,background:f=>backgrounds.get(f.id),clear:release,shop:()=>shop.value,selectShop:id=>{shop.value=id;sync();}};
 }

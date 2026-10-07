@@ -23,5 +23,21 @@
     "browser_wasm_export": "not_verified",
     "mcp_paid_generation": "not_exercised",
     "hardware_emission": false
+  },
+  "digital_twin": {
+    "button": {
+      "es": "Ver en gemelo digital",
+      "en": "View in digital twin"
+    },
+    "scope": "each_adapted_format",
+    "mode": "local_3d_layout_simulation",
+    "geometry": "physical_wall_not_delivery_atlas",
+    "content": "current_editor_composition_single_frame",
+    "hardware_emission": false,
+    "source_modules": [
+      "adaptaciones/gemelo-core.mjs",
+      "adaptaciones/gemelo-digital.mjs"
+    ],
+    "guide": "/docs/altadis-ia-estancos.md"
   }
 }
