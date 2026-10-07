@@ -32,5 +32,9 @@
     "Anonimizador: si una foto aleatoria no se puede procesar, explica por qué y prueba sola con otra (hasta 5)",
     "Registro plegable de fotos descartadas y botón «Probar otra vez» si fallan todas",
     "Con tu propia foto, dice qué pasó y qué hacer, sin cambiarla por otra"
+  ],
+  "v.07.10.2026.r2.07:22": [
+    "Anonimizador: si el motor agota su tiempo, pasa a otra foto sin esperar minutos",
+    "Mensajes claros cuando falla la descarga de la imagen o la red del motor"
   ]
 }
