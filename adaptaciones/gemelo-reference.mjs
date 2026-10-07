@@ -19,5 +19,9 @@ export function displayPlacement(g,corner=false){
 }
 export function observerPoint(placement,{height=1.65,distance=3,lateral=0}={}){
   if(![height,distance,lateral].every(Number.isFinite)||height<1.2||height>2.2||distance<1.5||distance>3.6||Math.abs(lateral)>2)throw Error('invalid-observer');
+  if(placement.faceCount===2){
+    const target={x:placement.bounds.max.x,y:placement.centre.y,z:placement.bounds.min.z},offset=distance/Math.sqrt(2);
+    return {position:{x:target.x-offset+lateral,y:height,z:target.z+offset},target,fov:55};
+  }
   return {position:{x:placement.centre.x+lateral,y:height,z:placement.centre.z+distance},target:{...placement.centre},fov:55};
 }

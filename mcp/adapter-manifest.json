@@ -38,7 +38,9 @@
       "adaptaciones/gemelo-core.mjs",
       "adaptaciones/gemelo-digital.mjs",
       "adaptaciones/gemelo-better.mjs",
-      "adaptaciones/gemelo-reference.mjs"
+      "adaptaciones/gemelo-reference.mjs",
+      "adaptaciones/gemelo-catalog.mjs",
+      "adaptaciones/gemelo-assets.mjs"
     ],
     "guide": "/docs/altadis-ia-estancos.md",
     "visit_button": {
@@ -48,7 +50,7 @@
     "visit_location": "beside_apply_shop_demo",
     "visit_selection": "current_format_and_shop",
     "requires_saved_placement": false,
-    "quality": "better",
+    "quality": "best",
     "default_view": "isometric",
     "renderer": "assets/xpaces/engine/life-renderer.mjs",
     "reference_asset": {
@@ -59,6 +61,7 @@
     },
     "scenarios": [
       "flat",
+      "four_face_prism_virtual_trial",
       "corner_90_virtual_trial"
     ],
     "observation": {
@@ -68,8 +71,843 @@
         "height_m",
         "distance_m",
         "lateral_m"
+      ],
+      "corner_trial": {
+        "applies_when": "faceCount_2",
+        "target": "fold_vertex",
+        "default_eye_azimuth_degrees": 45,
+        "eye_direction": "negative_x_positive_z",
+        "default_height_m": 1.65,
+        "default_distance_m": 3,
+        "default_lateral_m": 0,
+        "distance_metric": "base_horizontal_radial_metres",
+        "distance_range_m": [
+          1.5,
+          3.6
+        ],
+        "lateral_axis": "x",
+        "calibrated_observer": false
+      },
+      "flat_and_legacy_distance_metric": "z_offset_metres"
+    },
+    "anamorphic_generation": false,
+    "default_quality": "best",
+    "available_qualities": [
+      "best",
+      "better"
+    ],
+    "model_assets": {
+      "better": {
+        "id": "1790370139269-2ty118",
+        "url": "https://api.admira.store/stock/asset/1790370139269-2ty118",
+        "sha256": "a6a670ad3edebb9b3a56e22707b4bb89dabb4ad000ced9eec3fc51cbe91b2706",
+        "model": "xtanco-4380",
+        "quality": "better",
+        "units": "m"
+      },
+      "best": {
+        "id": "1791411065310-v2jraa",
+        "url": "https://api.admira.store/stock/asset/1791411065310-v2jraa",
+        "sha256": "77b4f4c7346c0dacf22c3d8573f1d80536d367d3b64874115443c1b420edbb85",
+        "editable_source": {
+          "id": "1791411076540-afplfh",
+          "url": "https://api.admira.store/stock/asset/1791411076540-afplfh",
+          "sha256": "eda59372a911b37c29cce69c4721205ffa2cd2e304f4d899f2480ca0c4aec3a1",
+          "bytes": 6298649,
+          "format": "blend"
+        },
+        "quality": "best",
+        "units": "m",
+        "model": "xtanco-best-studio-20261008",
+        "bytes": 13035628,
+        "capabilities": {
+          "derived_from": "xtanco-4380",
+          "procedural_pbr_maps": true,
+          "normal_roughness_materials": 8,
+          "normal_maps": 8,
+          "roughness_maps": 8,
+          "colour_map_px": 1024,
+          "normal_map_px": 768,
+          "roughness_map_px": 512,
+          "product_atlas_px": [
+            1536,
+            512
+          ],
+          "refined_bevels_and_curves": true,
+          "generic_illustrative_product_labels": true,
+          "baked_ao": false,
+          "baked_gi": false,
+          "measured_shop": false,
+          "photogrammetry": false,
+          "stable_reference_ids": true,
+          "reference_dimensions_preserved": true,
+          "mesh_quantization": "normals_tangents_only",
+          "triangles": 160842,
+          "nodes": 697,
+          "materials": 41,
+          "images": 15,
+          "reference_ids_preserved": 13
+        },
+        "reference_render": {
+          "id": "1791411162545-wd1dt7",
+          "url": "https://api.admira.store/stock/asset/1791411162545-wd1dt7",
+          "sha256": "aa48d271e48eeb6bd86f6a77d8244f91a17fa45a4068697bf6d784a2da488a98",
+          "mime_type": "image/png",
+          "width": 1600,
+          "height": 1000,
+          "renderer": "Blender Cycles",
+          "kind": "offline_reference_render",
+          "webgl_screenshot": false
+        }
+      }
+    },
+    "reference_selection": {
+      "default": "automatic",
+      "independent_of_shop": true,
+      "automatic_per_format": true
+    },
+    "references": [
+      {
+        "id": "mostrador",
+        "label": {
+          "es": "Estanco · Mostrador",
+          "en": "Shop · Counter"
+        },
+        "trial": true,
+        "definition": {
+          "quality": "best",
+          "room": {
+            "width": 6,
+            "depth": 4.5,
+            "height": 3,
+            "origin": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "units": "m"
+          },
+          "mount": {
+            "topology": "flat",
+            "zone": {
+              "min": {
+                "x": 2.8,
+                "y": 1.05,
+                "z": 3.25
+              },
+              "max": {
+                "x": 4.15,
+                "y": 2.85,
+                "z": 3.65
+              }
+            },
+            "reservedForTrial": true,
+            "clearanceRequired": true,
+            "centreX": 3.475,
+            "front": 3.45,
+            "bottom": 1.12,
+            "maxWidth": 1.2,
+            "maxHeight": 1.55
+          },
+          "supports": {
+            "type": "counter_or_totem_stand",
+            "baseY": 0,
+            "screenBottom": 1.12
+          },
+          "fixturePolicy": {
+            "movableRoots": [
+              "planta",
+              "taburete-1",
+              "taburete-2"
+            ],
+            "adjustablePendantRoots": [
+              "lampara-1",
+              "lampara-2",
+              "lampara-3"
+            ],
+            "preservedRoots": [
+              "mostrador",
+              "vitrina",
+              "expendedora",
+              "tpv",
+              "pantalla-mostrador",
+              "pantalla-escaparate"
+            ],
+            "preservedArchitecture": [
+              "suelo",
+              "pared_fondo",
+              "pared_fachada",
+              "puerta_entrada",
+              "puerta_almacén"
+            ],
+            "replacedDisplayRoot": "pantalla-pared",
+            "relocation": {
+              "trigger": "world_aabb_intersects_reserved_mount_zone",
+              "positionOnly": true,
+              "axes": [
+                "x",
+                "z"
+              ],
+              "preserveIds": true,
+              "preserveScale": true,
+              "preserveRotation": true,
+              "restoreSourceBeforeReferenceChange": true,
+              "moveWholeSemanticRoot": true,
+              "evidenceFields": [
+                "nodeName",
+                "from",
+                "to",
+                "reason"
+              ],
+              "reason": "trial_mount_clearance"
+            },
+            "coordinateOrigin": "architectural_floor_origin_not_decorative_bounding_box_min"
+          },
+          "limits": {
+            "measuredShop": false,
+            "hardwareConfirmed": false,
+            "exportGeometryUnchanged": true,
+            "anamorphicGeneration": false,
+            "metricSize": "representative_trial"
+          }
+        }
+      },
+      {
+        "id": "mural",
+        "label": {
+          "es": "Estanco · Mural videowall",
+          "en": "Shop · Video wall"
+        },
+        "trial": true,
+        "definition": {
+          "quality": "best",
+          "room": {
+            "width": 8,
+            "depth": 4.5,
+            "height": 3,
+            "origin": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "units": "m"
+          },
+          "mount": {
+            "topology": "flat",
+            "zone": {
+              "min": {
+                "x": 0.25,
+                "y": 1,
+                "z": 3.25
+              },
+              "max": {
+                "x": 7.75,
+                "y": 2.96,
+                "z": 3.65
+              }
+            },
+            "reservedForTrial": true,
+            "clearanceRequired": true,
+            "centreX": 4,
+            "front": 3.45,
+            "top": 2.89,
+            "maxWidth": 7.3,
+            "maxHeight": 1.8
+          },
+          "supports": {
+            "type": "gallery_display_rail",
+            "baseY": 0,
+            "extensionAxis": "+X"
+          },
+          "fixturePolicy": {
+            "movableRoots": [
+              "planta",
+              "taburete-1",
+              "taburete-2"
+            ],
+            "adjustablePendantRoots": [
+              "lampara-1",
+              "lampara-2",
+              "lampara-3"
+            ],
+            "preservedRoots": [
+              "mostrador",
+              "vitrina",
+              "expendedora",
+              "tpv",
+              "pantalla-mostrador",
+              "pantalla-escaparate"
+            ],
+            "preservedArchitecture": [
+              "suelo",
+              "pared_fondo",
+              "pared_fachada",
+              "puerta_entrada",
+              "puerta_almacén"
+            ],
+            "replacedDisplayRoot": "pantalla-pared",
+            "relocation": {
+              "trigger": "world_aabb_intersects_reserved_mount_zone",
+              "positionOnly": true,
+              "axes": [
+                "x",
+                "z"
+              ],
+              "preserveIds": true,
+              "preserveScale": true,
+              "preserveRotation": true,
+              "restoreSourceBeforeReferenceChange": true,
+              "moveWholeSemanticRoot": true,
+              "evidenceFields": [
+                "nodeName",
+                "from",
+                "to",
+                "reason"
+              ],
+              "reason": "trial_mount_clearance"
+            },
+            "coordinateOrigin": "architectural_floor_origin_not_decorative_bounding_box_min"
+          },
+          "limits": {
+            "measuredShop": false,
+            "hardwareConfirmed": false,
+            "exportGeometryUnchanged": true,
+            "anamorphicGeneration": false,
+            "metricSize": "representative_trial"
+          }
+        }
+      },
+      {
+        "id": "columna",
+        "label": {
+          "es": "Estanco · Columna y góndola",
+          "en": "Shop · Column and gondola"
+        },
+        "trial": true,
+        "definition": {
+          "quality": "best",
+          "room": {
+            "width": 6,
+            "depth": 4.5,
+            "height": 3,
+            "origin": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "units": "m"
+          },
+          "mount": {
+            "topology": "flat",
+            "zone": {
+              "min": {
+                "x": 3.9,
+                "y": 0.55,
+                "z": 3.25
+              },
+              "max": {
+                "x": 5.9,
+                "y": 2.86,
+                "z": 3.65
+              }
+            },
+            "reservedForTrial": true,
+            "clearanceRequired": true,
+            "centreX": 4.9,
+            "front": 3.45,
+            "bottom": 0.65,
+            "maxWidth": 1.8,
+            "maxHeight": 2.05
+          },
+          "supports": {
+            "type": "vertical_gondola_stand",
+            "baseY": 0,
+            "screenBottom": 0.65
+          },
+          "fixturePolicy": {
+            "movableRoots": [
+              "planta",
+              "taburete-1",
+              "taburete-2"
+            ],
+            "adjustablePendantRoots": [
+              "lampara-1",
+              "lampara-2",
+              "lampara-3"
+            ],
+            "preservedRoots": [
+              "mostrador",
+              "vitrina",
+              "expendedora",
+              "tpv",
+              "pantalla-mostrador",
+              "pantalla-escaparate"
+            ],
+            "preservedArchitecture": [
+              "suelo",
+              "pared_fondo",
+              "pared_fachada",
+              "puerta_entrada",
+              "puerta_almacén"
+            ],
+            "replacedDisplayRoot": "pantalla-pared",
+            "relocation": {
+              "trigger": "world_aabb_intersects_reserved_mount_zone",
+              "positionOnly": true,
+              "axes": [
+                "x",
+                "z"
+              ],
+              "preserveIds": true,
+              "preserveScale": true,
+              "preserveRotation": true,
+              "restoreSourceBeforeReferenceChange": true,
+              "moveWholeSemanticRoot": true,
+              "evidenceFields": [
+                "nodeName",
+                "from",
+                "to",
+                "reason"
+              ],
+              "reason": "trial_mount_clearance"
+            },
+            "coordinateOrigin": "architectural_floor_origin_not_decorative_bounding_box_min"
+          },
+          "limits": {
+            "measuredShop": false,
+            "hardwareConfirmed": false,
+            "exportGeometryUnchanged": true,
+            "anamorphicGeneration": false,
+            "metricSize": "representative_trial"
+          }
+        }
+      },
+      {
+        "id": "superstretch",
+        "label": {
+          "es": "Estanco · Superstretch",
+          "en": "Shop · Superstretch"
+        },
+        "trial": true,
+        "definition": {
+          "quality": "best",
+          "room": {
+            "width": 8,
+            "depth": 4.5,
+            "height": 3,
+            "origin": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "units": "m"
+          },
+          "mount": {
+            "topology": "flat",
+            "zone": {
+              "min": {
+                "x": 0.25,
+                "y": 2,
+                "z": 3.25
+              },
+              "max": {
+                "x": 7.75,
+                "y": 2.99,
+                "z": 3.65
+              }
+            },
+            "reservedForTrial": true,
+            "clearanceRequired": true,
+            "centreX": 4,
+            "front": 3.45,
+            "top": 2.92,
+            "maxWidth": 7.3,
+            "maxHeight": 0.85
+          },
+          "supports": {
+            "type": "overhead_fascia_rail",
+            "baseY": 2,
+            "extensionAxis": "+X"
+          },
+          "fixturePolicy": {
+            "movableRoots": [
+              "planta",
+              "taburete-1",
+              "taburete-2"
+            ],
+            "adjustablePendantRoots": [
+              "lampara-1",
+              "lampara-2",
+              "lampara-3"
+            ],
+            "preservedRoots": [
+              "mostrador",
+              "vitrina",
+              "expendedora",
+              "tpv",
+              "pantalla-mostrador",
+              "pantalla-escaparate"
+            ],
+            "preservedArchitecture": [
+              "suelo",
+              "pared_fondo",
+              "pared_fachada",
+              "puerta_entrada",
+              "puerta_almacén"
+            ],
+            "replacedDisplayRoot": "pantalla-pared",
+            "relocation": {
+              "trigger": "world_aabb_intersects_reserved_mount_zone",
+              "positionOnly": true,
+              "axes": [
+                "x",
+                "z"
+              ],
+              "preserveIds": true,
+              "preserveScale": true,
+              "preserveRotation": true,
+              "restoreSourceBeforeReferenceChange": true,
+              "moveWholeSemanticRoot": true,
+              "evidenceFields": [
+                "nodeName",
+                "from",
+                "to",
+                "reason"
+              ],
+              "reason": "trial_mount_clearance"
+            },
+            "coordinateOrigin": "architectural_floor_origin_not_decorative_bounding_box_min"
+          },
+          "limits": {
+            "measuredShop": false,
+            "hardwareConfirmed": false,
+            "exportGeometryUnchanged": true,
+            "anamorphicGeneration": false,
+            "metricSize": "representative_trial"
+          }
+        }
+      },
+      {
+        "id": "cubo",
+        "label": {
+          "es": "Estanco · Cubo LED (ensayo)",
+          "en": "Shop · LED cube (trial)"
+        },
+        "trial": true,
+        "definition": {
+          "quality": "best",
+          "room": {
+            "width": 6,
+            "depth": 4.5,
+            "height": 3,
+            "origin": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "units": "m"
+          },
+          "mount": {
+            "topology": "four-face-prism-trial",
+            "zone": {
+              "min": {
+                "x": 3.05,
+                "y": 1.05,
+                "z": 2.65
+              },
+              "max": {
+                "x": 4.45,
+                "y": 2.92,
+                "z": 3.95
+              }
+            },
+            "reservedForTrial": true,
+            "clearanceRequired": true,
+            "centreX": 3.75,
+            "front": 3.85,
+            "bottom": 1.15,
+            "maxEdge": 1.05,
+            "maxHeight": 1.65
+          },
+          "supports": {
+            "type": "four_side_led_pedestal",
+            "baseY": 0,
+            "screenBottom": 1.15
+          },
+          "fixturePolicy": {
+            "movableRoots": [
+              "planta",
+              "taburete-1",
+              "taburete-2"
+            ],
+            "adjustablePendantRoots": [
+              "lampara-1",
+              "lampara-2",
+              "lampara-3"
+            ],
+            "preservedRoots": [
+              "mostrador",
+              "vitrina",
+              "expendedora",
+              "tpv",
+              "pantalla-mostrador",
+              "pantalla-escaparate"
+            ],
+            "preservedArchitecture": [
+              "suelo",
+              "pared_fondo",
+              "pared_fachada",
+              "puerta_entrada",
+              "puerta_almacén"
+            ],
+            "replacedDisplayRoot": "pantalla-pared",
+            "relocation": {
+              "trigger": "world_aabb_intersects_reserved_mount_zone",
+              "positionOnly": true,
+              "axes": [
+                "x",
+                "z"
+              ],
+              "preserveIds": true,
+              "preserveScale": true,
+              "preserveRotation": true,
+              "restoreSourceBeforeReferenceChange": true,
+              "moveWholeSemanticRoot": true,
+              "evidenceFields": [
+                "nodeName",
+                "from",
+                "to",
+                "reason"
+              ],
+              "reason": "trial_mount_clearance"
+            },
+            "coordinateOrigin": "architectural_floor_origin_not_decorative_bounding_box_min"
+          },
+          "limits": {
+            "measuredShop": false,
+            "hardwareConfirmed": false,
+            "exportGeometryUnchanged": true,
+            "anamorphicGeneration": false,
+            "metricSize": "representative_trial",
+            "confirmedNet": false,
+            "faces": 4,
+            "faceDefinition": "equal_quarter_width_trial",
+            "note": "Four vertical faces retain native aspect; the prism need not be a mathematical cube. No confirmed PDF cube net."
+          }
+        }
+      },
+      {
+        "id": "esquina",
+        "label": {
+          "es": "Estanco · Esquina anamórfica (ensayo)",
+          "en": "Shop · Anamorphic corner (trial)"
+        },
+        "trial": true,
+        "definition": {
+          "quality": "best",
+          "room": {
+            "width": 6,
+            "depth": 4.5,
+            "height": 3,
+            "origin": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "units": "m"
+          },
+          "mount": {
+            "topology": "corner-90-trial",
+            "zone": {
+              "min": {
+                "x": 1.65,
+                "y": 1.065,
+                "z": 2.1
+              },
+              "max": {
+                "x": 4.15,
+                "y": 2.96,
+                "z": 4.45
+              }
+            },
+            "reservedForTrial": true,
+            "clearanceRequired": true,
+            "left": 1.75,
+            "front": 2.15,
+            "top": 2.89,
+            "maxWidth": 4.4,
+            "maxHeight": 1.8,
+            "interior": true,
+            "observationSide": "negative_x_positive_z",
+            "faceNormals": [
+              {
+                "x": 0,
+                "y": 0,
+                "z": 1
+              },
+              {
+                "x": -1,
+                "y": 0,
+                "z": 0
+              }
+            ]
+          },
+          "supports": {
+            "type": "corner_display_rail",
+            "baseY": 0,
+            "postOffsetZ": 0.24,
+            "footDepth": 0.4
+          },
+          "fixturePolicy": {
+            "movableRoots": [
+              "planta",
+              "taburete-1",
+              "taburete-2"
+            ],
+            "adjustablePendantRoots": [
+              "lampara-1",
+              "lampara-2",
+              "lampara-3"
+            ],
+            "preservedRoots": [
+              "mostrador",
+              "vitrina",
+              "expendedora",
+              "tpv",
+              "pantalla-mostrador",
+              "pantalla-escaparate"
+            ],
+            "preservedArchitecture": [
+              "suelo",
+              "pared_fondo",
+              "pared_fachada",
+              "puerta_entrada",
+              "puerta_almacén"
+            ],
+            "replacedDisplayRoot": "pantalla-pared",
+            "relocation": {
+              "trigger": "world_aabb_intersects_reserved_mount_zone",
+              "positionOnly": true,
+              "axes": [
+                "x",
+                "z"
+              ],
+              "preserveIds": true,
+              "preserveScale": true,
+              "preserveRotation": true,
+              "restoreSourceBeforeReferenceChange": true,
+              "moveWholeSemanticRoot": true,
+              "evidenceFields": [
+                "nodeName",
+                "from",
+                "to",
+                "reason"
+              ],
+              "reason": "trial_mount_clearance"
+            },
+            "coordinateOrigin": "architectural_floor_origin_not_decorative_bounding_box_min"
+          },
+          "limits": {
+            "measuredShop": false,
+            "hardwareConfirmed": false,
+            "exportGeometryUnchanged": true,
+            "anamorphicGeneration": false,
+            "metricSize": "representative_trial",
+            "fold": "native_wall_midpoint",
+            "calibratedObserver": false
+          }
+        }
+      }
+    ],
+    "recommendations": {
+      "cliente-01": "mostrador",
+      "cliente-02": "mostrador",
+      "cliente-04": "mostrador",
+      "cliente-07": "mostrador",
+      "cliente-20": "mostrador",
+      "cliente-03": "mural",
+      "cliente-05": "mural",
+      "cliente-06": "mural",
+      "cliente-14": "mural",
+      "cliente-15": "mural",
+      "cliente-16": "mural",
+      "cliente-17": "mural",
+      "cliente-22": "mural",
+      "cliente-24": "mural",
+      "cliente-esp-1": "mural",
+      "cliente-esp-2": "mural",
+      "cliente-esp-3": "mural",
+      "cliente-esp-4": "mural",
+      "cliente-esp-5": "mural",
+      "cliente-10": "columna",
+      "cliente-11": "columna",
+      "cliente-12": "columna",
+      "cliente-13": "columna",
+      "cliente-21": "columna",
+      "cliente-23": "columna",
+      "cliente-09": "superstretch",
+      "cliente-18": "superstretch",
+      "cliente-19": "superstretch",
+      "cliente-08": "cubo"
+    },
+    "reference_coverage": {
+      "covered": 29,
+      "total": 29,
+      "default_families": 5,
+      "optional_references": [
+        "esquina"
       ]
     },
-    "anamorphic_generation": false
+    "source_catalog": "adaptaciones/gemelo-catalog.mjs",
+    "format_selection": {
+      "format_ids": [
+        "cliente-01",
+        "cliente-02",
+        "cliente-03",
+        "cliente-04",
+        "cliente-05",
+        "cliente-06",
+        "cliente-07",
+        "cliente-08",
+        "cliente-09",
+        "cliente-10",
+        "cliente-11",
+        "cliente-12",
+        "cliente-13",
+        "cliente-14",
+        "cliente-15",
+        "cliente-16",
+        "cliente-17",
+        "cliente-18",
+        "cliente-19",
+        "cliente-20",
+        "cliente-21",
+        "cliente-22",
+        "cliente-23",
+        "cliente-24",
+        "cliente-esp-1",
+        "cliente-esp-2",
+        "cliente-esp-3",
+        "cliente-esp-4",
+        "cliente-esp-5"
+      ],
+      "scope": "current_project",
+      "navigation": [
+        "previous",
+        "next"
+      ],
+      "inside_dialog": true
+    },
+    "tour": {
+      "user_initiated": true,
+      "interval_seconds": 8,
+      "loops": true,
+      "single_model_load": true,
+      "stop_on": [
+        "manual_interaction",
+        "dialog_close"
+      ]
+    },
+    "anamorphic_export": false
   }
 }

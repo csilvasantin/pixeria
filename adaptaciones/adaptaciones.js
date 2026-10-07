@@ -1,4 +1,4 @@
-import {mountTwin} from './gemelo-digital.mjs';
+import {mountTwin} from './gemelo-digital.mjs?v=studio-best-3';
 import {aiJob} from './ia-core.mjs';
 import {APPLICATION_KEY,restoreApplications,applyApplications} from './aplicaciones-core.mjs';
 import {mountStudio} from './studio-adaptaciones.mjs';
@@ -1905,5 +1905,5 @@ function endTwinPlayback(){
   if(twinPlayback.kind===srcKind){if(srcKind==='video'){if(twinPlayback.paused)video.pause();video.muted=twinPlayback.muted;}else if(anim&&twinPlayback.paused)anim.pause();}
   twinPlayback=null;
 }
-twin=mountTwin({t,start:startTwinPlayback,end:endTwinPlayback,ready:mediaReady,destino,background:f=>studio?.background(f),shops:()=>EST?.estancos,shop:()=>studio?.shop(),selectShop:id=>studio?.selectShop(id),draw:(cv,f,bg)=>{if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);}});
+twin=mountTwin({t,start:startTwinPlayback,end:endTwinPlayback,ready:mediaReady,destino,formats:()=>FORMATOS.filter(isProjectFormat),background:f=>studio?.background(f),shops:()=>EST?.estancos,shop:()=>studio?.shop(),selectShop:id=>studio?.selectShop(id),draw:(cv,f,bg)=>{if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);}});
 buildGrid();

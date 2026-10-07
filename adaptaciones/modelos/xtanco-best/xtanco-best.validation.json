@@ -1,0 +1,1602 @@
+{
+  "schema": "studio.xtanco-best-validation/1",
+  "blender_version": "5.2.2 LTS",
+  "checks": [
+    {
+      "check": "original editable source unchanged",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source uses metric units",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source cutaway remains hidden",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source retains editable source camera",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source remains separate derived file",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source PBR maps remain packed/editable",
+      "passed": true,
+      "evidence": [
+        {
+          "name": "best-packaging-atlas.png",
+          "size": [
+            1536,
+            512
+          ],
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "best-metal-roughness.png",
+          "size": [
+            512,
+            512
+          ],
+          "packed": true,
+          "colorspace": "Non-Color"
+        },
+        {
+          "name": "best-metal-normal.png",
+          "size": [
+            768,
+            768
+          ],
+          "packed": true,
+          "colorspace": "Non-Color"
+        },
+        {
+          "name": "oak.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "best-oak-color.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "best-oak-roughness.png",
+          "size": [
+            512,
+            512
+          ],
+          "packed": true,
+          "colorspace": "Non-Color"
+        },
+        {
+          "name": "best-oak-normal.png",
+          "size": [
+            768,
+            768
+          ],
+          "packed": true,
+          "colorspace": "Non-Color"
+        },
+        {
+          "name": "expendedora_display.png",
+          "size": [
+            1024,
+            1378
+          ],
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "pantalla-escaparate.png",
+          "size": [
+            1024,
+            578
+          ],
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "pantalla-mostrador.png",
+          "size": [
+            1024,
+            630
+          ],
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "pantalla-pared.png",
+          "size": [
+            1024,
+            287
+          ],
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "best-stucco-roughness.png",
+          "size": [
+            512,
+            512
+          ],
+          "packed": true,
+          "colorspace": "Non-Color"
+        },
+        {
+          "name": "best-stucco-normal.png",
+          "size": [
+            768,
+            768
+          ],
+          "packed": true,
+          "colorspace": "Non-Color"
+        },
+        {
+          "name": "terrazzo.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "best-terrazzo-color.png",
+          "size": [
+            1024,
+            1024
+          ],
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "best-terrazzo-roughness.png",
+          "size": [
+            512,
+            512
+          ],
+          "packed": true,
+          "colorspace": "Non-Color"
+        },
+        {
+          "name": "best-terrazzo-normal.png",
+          "size": [
+            768,
+            768
+          ],
+          "packed": true,
+          "colorspace": "Non-Color"
+        }
+      ]
+    },
+    {
+      "check": "normal/roughness maps use Non-Color",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source preserves parent mostrador",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension mostrador",
+      "passed": true,
+      "evidence": {
+        "id": "mostrador",
+        "reference_m": [
+          2.0,
+          1.4,
+          0,
+          3.0,
+          0.7,
+          1.05
+        ],
+        "actual_m": [
+          2.0,
+          1.399999976158142,
+          0.0,
+          3.0,
+          0.7069998979568481,
+          1.0499999523162842
+        ],
+        "max_deviation_m": 0.006999897956848189,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent vitrina",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension vitrina",
+      "passed": true,
+      "evidence": {
+        "id": "vitrina",
+        "reference_m": [
+          1.9,
+          0.0,
+          0,
+          3.2,
+          0.45,
+          2.1
+        ],
+        "actual_m": [
+          1.899999976158142,
+          -0.0,
+          0.0,
+          3.1999999284744263,
+          0.44999998807907104,
+          2.0999999046325684
+        ],
+        "max_deviation_m": 9.536743172944284e-08,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent pantalla-pared",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension pantalla-pared",
+      "passed": true,
+      "evidence": {
+        "id": "pantalla-pared",
+        "reference_m": [
+          2.18,
+          0.0,
+          2.18,
+          2.64,
+          0.06,
+          0.74
+        ],
+        "actual_m": [
+          2.179999828338623,
+          -0.0,
+          2.180000066757202,
+          2.640000343322754,
+          0.05999999865889549,
+          0.7400000095367432
+        ],
+        "max_deviation_m": 3.43322753781905e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent pantalla-mostrador",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension pantalla-mostrador",
+      "passed": true,
+      "evidence": {
+        "id": "pantalla-mostrador",
+        "reference_m": [
+          3.24,
+          1.9,
+          1.2,
+          0.52,
+          0.04,
+          0.32
+        ],
+        "actual_m": [
+          3.240000009536743,
+          1.899999976158142,
+          1.2000000476837158,
+          0.5199999809265137,
+          0.039999961853027344,
+          0.31999993324279785
+        ],
+        "max_deviation_m": 6.675720215509884e-08,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent pantalla-escaparate",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension pantalla-escaparate",
+      "passed": true,
+      "evidence": {
+        "id": "pantalla-escaparate",
+        "reference_m": [
+          0.35,
+          1.38,
+          1.2,
+          0.06,
+          1.24,
+          0.7
+        ],
+        "actual_m": [
+          0.3499999940395355,
+          1.3799999952316284,
+          1.2000000476837158,
+          0.06000000238418579,
+          1.2399998903274536,
+          0.7000000476837158
+        ],
+        "max_deviation_m": 1.0967254637783697e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent expendedora",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension expendedora",
+      "passed": true,
+      "evidence": {
+        "id": "expendedora",
+        "reference_m": [
+          0.45,
+          0.0,
+          0,
+          0.9,
+          0.8,
+          1.85
+        ],
+        "actual_m": [
+          0.44999998807907104,
+          -0.0,
+          0.0,
+          0.8999999165534973,
+          0.8100000023841858,
+          1.850000023841858
+        ],
+        "max_deviation_m": 0.010000002384185747,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent taburete-1",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension taburete-1",
+      "passed": true,
+      "evidence": {
+        "id": "taburete-1",
+        "reference_m": [
+          2.45,
+          2.35,
+          0,
+          0.4,
+          0.4,
+          0.75
+        ],
+        "actual_m": [
+          2.450000047683716,
+          2.3499999046325684,
+          0.0,
+          0.40000009536743164,
+          0.40000009536743164,
+          0.75
+        ],
+        "max_deviation_m": 9.536743172944284e-08,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent taburete-2",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension taburete-2",
+      "passed": true,
+      "evidence": {
+        "id": "taburete-2",
+        "reference_m": [
+          4.15,
+          2.35,
+          0,
+          0.4,
+          0.4,
+          0.75
+        ],
+        "actual_m": [
+          4.150000095367432,
+          2.3499999046325684,
+          0.0,
+          0.39999961853027344,
+          0.40000009536743164,
+          0.75
+        ],
+        "max_deviation_m": 3.8146972658470446e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent lampara-1",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension lampara-1",
+      "passed": true,
+      "evidence": {
+        "id": "lampara-1",
+        "reference_m": [
+          2.52,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          2.5199999809265137,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3600001335144043,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 1.3351440431019768e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent lampara-2",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension lampara-2",
+      "passed": true,
+      "evidence": {
+        "id": "lampara-2",
+        "reference_m": [
+          3.32,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          3.319999933242798,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3600001335144043,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 1.3351440431019768e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent lampara-3",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension lampara-3",
+      "passed": true,
+      "evidence": {
+        "id": "lampara-3",
+        "reference_m": [
+          4.12,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          4.12000036239624,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3599996566772461,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 3.623962401277936e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent planta",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension planta",
+      "passed": true,
+      "evidence": {
+        "id": "planta",
+        "reference_m": [
+          5.35,
+          3.75,
+          0,
+          0.5,
+          0.5,
+          1.4
+        ],
+        "actual_m": [
+          5.349999904632568,
+          3.75,
+          0.0,
+          0.5,
+          0.5,
+          0.44999998807907104
+        ],
+        "max_deviation_m": 9.536743128535363e-08,
+        "passed": true
+      }
+    },
+    {
+      "check": "source preserves parent tpv",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "source dimension tpv",
+      "passed": true,
+      "evidence": {
+        "id": "tpv",
+        "reference_m": [
+          4.45,
+          1.62,
+          1.05,
+          0.3,
+          0.25,
+          0.12
+        ],
+        "actual_m": [
+          4.449999809265137,
+          1.6200000047683716,
+          1.0499999523162842,
+          0.3000001907348633,
+          0.25,
+          0.12300002574920654
+        ],
+        "max_deviation_m": 0.0030000257492065474,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent mostrador",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension mostrador",
+      "passed": true,
+      "evidence": {
+        "id": "mostrador",
+        "reference_m": [
+          2.0,
+          1.4,
+          0,
+          3.0,
+          0.7,
+          1.05
+        ],
+        "actual_m": [
+          2.0,
+          1.399999976158142,
+          0.0,
+          3.0,
+          0.7069998979568481,
+          1.0499999523162842
+        ],
+        "max_deviation_m": 0.006999897956848189,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent vitrina",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension vitrina",
+      "passed": true,
+      "evidence": {
+        "id": "vitrina",
+        "reference_m": [
+          1.9,
+          0.0,
+          0,
+          3.2,
+          0.45,
+          2.1
+        ],
+        "actual_m": [
+          1.899999976158142,
+          -0.0,
+          0.0,
+          3.1999999284744263,
+          0.44999998807907104,
+          2.0999999046325684
+        ],
+        "max_deviation_m": 9.536743172944284e-08,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent pantalla-pared",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension pantalla-pared",
+      "passed": true,
+      "evidence": {
+        "id": "pantalla-pared",
+        "reference_m": [
+          2.18,
+          0.0,
+          2.18,
+          2.64,
+          0.06,
+          0.74
+        ],
+        "actual_m": [
+          2.179999828338623,
+          -0.0,
+          2.180000066757202,
+          2.640000343322754,
+          0.05999999865889549,
+          0.7400000095367432
+        ],
+        "max_deviation_m": 3.43322753781905e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent pantalla-mostrador",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension pantalla-mostrador",
+      "passed": true,
+      "evidence": {
+        "id": "pantalla-mostrador",
+        "reference_m": [
+          3.24,
+          1.9,
+          1.2,
+          0.52,
+          0.04,
+          0.32
+        ],
+        "actual_m": [
+          3.240000009536743,
+          1.899999976158142,
+          1.2000000476837158,
+          0.5199999809265137,
+          0.039999961853027344,
+          0.31999993324279785
+        ],
+        "max_deviation_m": 6.675720215509884e-08,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent pantalla-escaparate",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension pantalla-escaparate",
+      "passed": true,
+      "evidence": {
+        "id": "pantalla-escaparate",
+        "reference_m": [
+          0.35,
+          1.38,
+          1.2,
+          0.06,
+          1.24,
+          0.7
+        ],
+        "actual_m": [
+          0.3499999940395355,
+          1.3799999952316284,
+          1.2000000476837158,
+          0.06000000238418579,
+          1.2399998903274536,
+          0.7000000476837158
+        ],
+        "max_deviation_m": 1.0967254637783697e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent expendedora",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension expendedora",
+      "passed": true,
+      "evidence": {
+        "id": "expendedora",
+        "reference_m": [
+          0.45,
+          0.0,
+          0,
+          0.9,
+          0.8,
+          1.85
+        ],
+        "actual_m": [
+          0.44999998807907104,
+          -0.0,
+          0.0,
+          0.8999999165534973,
+          0.8100000023841858,
+          1.850000023841858
+        ],
+        "max_deviation_m": 0.010000002384185747,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent taburete-1",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension taburete-1",
+      "passed": true,
+      "evidence": {
+        "id": "taburete-1",
+        "reference_m": [
+          2.45,
+          2.35,
+          0,
+          0.4,
+          0.4,
+          0.75
+        ],
+        "actual_m": [
+          2.450000047683716,
+          2.3499999046325684,
+          0.0,
+          0.40000009536743164,
+          0.40000009536743164,
+          0.75
+        ],
+        "max_deviation_m": 9.536743172944284e-08,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent taburete-2",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension taburete-2",
+      "passed": true,
+      "evidence": {
+        "id": "taburete-2",
+        "reference_m": [
+          4.15,
+          2.35,
+          0,
+          0.4,
+          0.4,
+          0.75
+        ],
+        "actual_m": [
+          4.150000095367432,
+          2.3499999046325684,
+          0.0,
+          0.39999961853027344,
+          0.40000009536743164,
+          0.75
+        ],
+        "max_deviation_m": 3.8146972658470446e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent lampara-1",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension lampara-1",
+      "passed": true,
+      "evidence": {
+        "id": "lampara-1",
+        "reference_m": [
+          2.52,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          2.5199999809265137,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3600001335144043,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 1.3351440431019768e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent lampara-2",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension lampara-2",
+      "passed": true,
+      "evidence": {
+        "id": "lampara-2",
+        "reference_m": [
+          3.32,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          3.319999933242798,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3600001335144043,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 1.3351440431019768e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent lampara-3",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension lampara-3",
+      "passed": true,
+      "evidence": {
+        "id": "lampara-3",
+        "reference_m": [
+          4.12,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          4.12000036239624,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3599996566772461,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 3.623962401277936e-07,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent planta",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension planta",
+      "passed": true,
+      "evidence": {
+        "id": "planta",
+        "reference_m": [
+          5.35,
+          3.75,
+          0,
+          0.5,
+          0.5,
+          1.4
+        ],
+        "actual_m": [
+          5.349999904632568,
+          3.75,
+          0.0,
+          0.5,
+          0.5,
+          0.44999998807907104
+        ],
+        "max_deviation_m": 9.536743128535363e-08,
+        "passed": true
+      }
+    },
+    {
+      "check": "glb_reimport preserves parent tpv",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "glb_reimport dimension tpv",
+      "passed": true,
+      "evidence": {
+        "id": "tpv",
+        "reference_m": [
+          4.45,
+          1.62,
+          1.05,
+          0.3,
+          0.25,
+          0.12
+        ],
+        "actual_m": [
+          4.449999809265137,
+          1.6200000047683716,
+          1.0499999523162842,
+          0.3000001907348633,
+          0.25,
+          0.12300002574920654
+        ],
+        "max_deviation_m": 0.0030000257492065474,
+        "passed": true
+      }
+    },
+    {
+      "check": "web asset excludes cameras/lights",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "web asset omits cutaway walls",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "wall display remains replaceable",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "five shared-media material IDs remain intact",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "web export includes six normal and roughness material maps",
+      "passed": true,
+      "evidence": {
+        "normal": 8,
+        "roughness": 8
+      }
+    },
+    {
+      "check": "web asset under20MB",
+      "passed": true,
+      "evidence": {
+        "bytes": 13035628,
+        "preferred_under12MB": false
+      }
+    },
+    {
+      "check": "manifest SHA256 matches exported bytes",
+      "passed": true,
+      "evidence": null
+    },
+    {
+      "check": "Best contains more refined geometry than base",
+      "passed": true,
+      "evidence": {
+        "base_triangles": 72142,
+        "best_triangles": 160842
+      }
+    },
+    {
+      "check": "all decoded texture dimensions under2048",
+      "passed": true,
+      "evidence": null
+    }
+  ],
+  "measurements": {
+    "source": [
+      {
+        "id": "mostrador",
+        "reference_m": [
+          2.0,
+          1.4,
+          0,
+          3.0,
+          0.7,
+          1.05
+        ],
+        "actual_m": [
+          2.0,
+          1.399999976158142,
+          0.0,
+          3.0,
+          0.7069998979568481,
+          1.0499999523162842
+        ],
+        "max_deviation_m": 0.006999897956848189,
+        "passed": true
+      },
+      {
+        "id": "vitrina",
+        "reference_m": [
+          1.9,
+          0.0,
+          0,
+          3.2,
+          0.45,
+          2.1
+        ],
+        "actual_m": [
+          1.899999976158142,
+          -0.0,
+          0.0,
+          3.1999999284744263,
+          0.44999998807907104,
+          2.0999999046325684
+        ],
+        "max_deviation_m": 9.536743172944284e-08,
+        "passed": true
+      },
+      {
+        "id": "pantalla-pared",
+        "reference_m": [
+          2.18,
+          0.0,
+          2.18,
+          2.64,
+          0.06,
+          0.74
+        ],
+        "actual_m": [
+          2.179999828338623,
+          -0.0,
+          2.180000066757202,
+          2.640000343322754,
+          0.05999999865889549,
+          0.7400000095367432
+        ],
+        "max_deviation_m": 3.43322753781905e-07,
+        "passed": true
+      },
+      {
+        "id": "pantalla-mostrador",
+        "reference_m": [
+          3.24,
+          1.9,
+          1.2,
+          0.52,
+          0.04,
+          0.32
+        ],
+        "actual_m": [
+          3.240000009536743,
+          1.899999976158142,
+          1.2000000476837158,
+          0.5199999809265137,
+          0.039999961853027344,
+          0.31999993324279785
+        ],
+        "max_deviation_m": 6.675720215509884e-08,
+        "passed": true
+      },
+      {
+        "id": "pantalla-escaparate",
+        "reference_m": [
+          0.35,
+          1.38,
+          1.2,
+          0.06,
+          1.24,
+          0.7
+        ],
+        "actual_m": [
+          0.3499999940395355,
+          1.3799999952316284,
+          1.2000000476837158,
+          0.06000000238418579,
+          1.2399998903274536,
+          0.7000000476837158
+        ],
+        "max_deviation_m": 1.0967254637783697e-07,
+        "passed": true
+      },
+      {
+        "id": "expendedora",
+        "reference_m": [
+          0.45,
+          0.0,
+          0,
+          0.9,
+          0.8,
+          1.85
+        ],
+        "actual_m": [
+          0.44999998807907104,
+          -0.0,
+          0.0,
+          0.8999999165534973,
+          0.8100000023841858,
+          1.850000023841858
+        ],
+        "max_deviation_m": 0.010000002384185747,
+        "passed": true
+      },
+      {
+        "id": "taburete-1",
+        "reference_m": [
+          2.45,
+          2.35,
+          0,
+          0.4,
+          0.4,
+          0.75
+        ],
+        "actual_m": [
+          2.450000047683716,
+          2.3499999046325684,
+          0.0,
+          0.40000009536743164,
+          0.40000009536743164,
+          0.75
+        ],
+        "max_deviation_m": 9.536743172944284e-08,
+        "passed": true
+      },
+      {
+        "id": "taburete-2",
+        "reference_m": [
+          4.15,
+          2.35,
+          0,
+          0.4,
+          0.4,
+          0.75
+        ],
+        "actual_m": [
+          4.150000095367432,
+          2.3499999046325684,
+          0.0,
+          0.39999961853027344,
+          0.40000009536743164,
+          0.75
+        ],
+        "max_deviation_m": 3.8146972658470446e-07,
+        "passed": true
+      },
+      {
+        "id": "lampara-1",
+        "reference_m": [
+          2.52,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          2.5199999809265137,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3600001335144043,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 1.3351440431019768e-07,
+        "passed": true
+      },
+      {
+        "id": "lampara-2",
+        "reference_m": [
+          3.32,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          3.319999933242798,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3600001335144043,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 1.3351440431019768e-07,
+        "passed": true
+      },
+      {
+        "id": "lampara-3",
+        "reference_m": [
+          4.12,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          4.12000036239624,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3599996566772461,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 3.623962401277936e-07,
+        "passed": true
+      },
+      {
+        "id": "planta",
+        "reference_m": [
+          5.35,
+          3.75,
+          0,
+          0.5,
+          0.5,
+          1.4
+        ],
+        "actual_m": [
+          5.349999904632568,
+          3.75,
+          0.0,
+          0.5,
+          0.5,
+          0.44999998807907104
+        ],
+        "max_deviation_m": 9.536743128535363e-08,
+        "passed": true
+      },
+      {
+        "id": "tpv",
+        "reference_m": [
+          4.45,
+          1.62,
+          1.05,
+          0.3,
+          0.25,
+          0.12
+        ],
+        "actual_m": [
+          4.449999809265137,
+          1.6200000047683716,
+          1.0499999523162842,
+          0.3000001907348633,
+          0.25,
+          0.12300002574920654
+        ],
+        "max_deviation_m": 0.0030000257492065474,
+        "passed": true
+      }
+    ],
+    "glb_reimport": [
+      {
+        "id": "mostrador",
+        "reference_m": [
+          2.0,
+          1.4,
+          0,
+          3.0,
+          0.7,
+          1.05
+        ],
+        "actual_m": [
+          2.0,
+          1.399999976158142,
+          0.0,
+          3.0,
+          0.7069998979568481,
+          1.0499999523162842
+        ],
+        "max_deviation_m": 0.006999897956848189,
+        "passed": true
+      },
+      {
+        "id": "vitrina",
+        "reference_m": [
+          1.9,
+          0.0,
+          0,
+          3.2,
+          0.45,
+          2.1
+        ],
+        "actual_m": [
+          1.899999976158142,
+          -0.0,
+          0.0,
+          3.1999999284744263,
+          0.44999998807907104,
+          2.0999999046325684
+        ],
+        "max_deviation_m": 9.536743172944284e-08,
+        "passed": true
+      },
+      {
+        "id": "pantalla-pared",
+        "reference_m": [
+          2.18,
+          0.0,
+          2.18,
+          2.64,
+          0.06,
+          0.74
+        ],
+        "actual_m": [
+          2.179999828338623,
+          -0.0,
+          2.180000066757202,
+          2.640000343322754,
+          0.05999999865889549,
+          0.7400000095367432
+        ],
+        "max_deviation_m": 3.43322753781905e-07,
+        "passed": true
+      },
+      {
+        "id": "pantalla-mostrador",
+        "reference_m": [
+          3.24,
+          1.9,
+          1.2,
+          0.52,
+          0.04,
+          0.32
+        ],
+        "actual_m": [
+          3.240000009536743,
+          1.899999976158142,
+          1.2000000476837158,
+          0.5199999809265137,
+          0.039999961853027344,
+          0.31999993324279785
+        ],
+        "max_deviation_m": 6.675720215509884e-08,
+        "passed": true
+      },
+      {
+        "id": "pantalla-escaparate",
+        "reference_m": [
+          0.35,
+          1.38,
+          1.2,
+          0.06,
+          1.24,
+          0.7
+        ],
+        "actual_m": [
+          0.3499999940395355,
+          1.3799999952316284,
+          1.2000000476837158,
+          0.06000000238418579,
+          1.2399998903274536,
+          0.7000000476837158
+        ],
+        "max_deviation_m": 1.0967254637783697e-07,
+        "passed": true
+      },
+      {
+        "id": "expendedora",
+        "reference_m": [
+          0.45,
+          0.0,
+          0,
+          0.9,
+          0.8,
+          1.85
+        ],
+        "actual_m": [
+          0.44999998807907104,
+          -0.0,
+          0.0,
+          0.8999999165534973,
+          0.8100000023841858,
+          1.850000023841858
+        ],
+        "max_deviation_m": 0.010000002384185747,
+        "passed": true
+      },
+      {
+        "id": "taburete-1",
+        "reference_m": [
+          2.45,
+          2.35,
+          0,
+          0.4,
+          0.4,
+          0.75
+        ],
+        "actual_m": [
+          2.450000047683716,
+          2.3499999046325684,
+          0.0,
+          0.40000009536743164,
+          0.40000009536743164,
+          0.75
+        ],
+        "max_deviation_m": 9.536743172944284e-08,
+        "passed": true
+      },
+      {
+        "id": "taburete-2",
+        "reference_m": [
+          4.15,
+          2.35,
+          0,
+          0.4,
+          0.4,
+          0.75
+        ],
+        "actual_m": [
+          4.150000095367432,
+          2.3499999046325684,
+          0.0,
+          0.39999961853027344,
+          0.40000009536743164,
+          0.75
+        ],
+        "max_deviation_m": 3.8146972658470446e-07,
+        "passed": true
+      },
+      {
+        "id": "lampara-1",
+        "reference_m": [
+          2.52,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          2.5199999809265137,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3600001335144043,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 1.3351440431019768e-07,
+        "passed": true
+      },
+      {
+        "id": "lampara-2",
+        "reference_m": [
+          3.32,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          3.319999933242798,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3600001335144043,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 1.3351440431019768e-07,
+        "passed": true
+      },
+      {
+        "id": "lampara-3",
+        "reference_m": [
+          4.12,
+          1.57,
+          1.8,
+          0.36,
+          0.36,
+          0.3
+        ],
+        "actual_m": [
+          4.12000036239624,
+          1.5699999332427979,
+          1.7999999523162842,
+          0.3599996566772461,
+          0.3600001335144043,
+          0.2999999523162842
+        ],
+        "max_deviation_m": 3.623962401277936e-07,
+        "passed": true
+      },
+      {
+        "id": "planta",
+        "reference_m": [
+          5.35,
+          3.75,
+          0,
+          0.5,
+          0.5,
+          1.4
+        ],
+        "actual_m": [
+          5.349999904632568,
+          3.75,
+          0.0,
+          0.5,
+          0.5,
+          0.44999998807907104
+        ],
+        "max_deviation_m": 9.536743128535363e-08,
+        "passed": true
+      },
+      {
+        "id": "tpv",
+        "reference_m": [
+          4.45,
+          1.62,
+          1.05,
+          0.3,
+          0.25,
+          0.12
+        ],
+        "actual_m": [
+          4.449999809265137,
+          1.6200000047683716,
+          1.0499999523162842,
+          0.3000001907348633,
+          0.25,
+          0.12300002574920654
+        ],
+        "max_deviation_m": 0.0030000257492065474,
+        "passed": true
+      }
+    ]
+  },
+  "passed": 68,
+  "total": 68,
+  "glb": {
+    "bytes": 13035628,
+    "sha256": "77b4f4c7346c0dacf22c3d8573f1d80536d367d3b64874115443c1b420edbb85",
+    "nodes": 697,
+    "meshes": 696,
+    "triangles": 160842,
+    "materials": 41,
+    "images": 15,
+    "normal_maps": 8,
+    "roughness_maps": 8,
+    "base_color_maps": 7,
+    "extensions": [
+      "KHR_materials_transmission",
+      "KHR_materials_emissive_strength",
+      "KHR_materials_specular",
+      "KHR_materials_ior",
+      "KHR_mesh_quantization"
+    ]
+  }
+}

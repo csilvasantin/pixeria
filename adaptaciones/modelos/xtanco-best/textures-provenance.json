@@ -1,0 +1,65 @@
+{
+  "generator": "original deterministic numpy/Pillow artwork",
+  "seed": 436420261008,
+  "maps": [
+    {
+      "file": "best-metal-normal.png",
+      "bytes": 677364,
+      "sha256": "b99a305f49eb09f7657ef41548dca1f4268fab7b5d96cacbed9ce84e2784e386"
+    },
+    {
+      "file": "best-metal-roughness.png",
+      "bytes": 104616,
+      "sha256": "fafe69dd898df1072b18f5dd8cd455b7c31e7a18de9995d7b3c439d734488059"
+    },
+    {
+      "file": "best-oak-color.png",
+      "bytes": 432175,
+      "sha256": "aaec9bd989a089a4d833e4b307a3ed685609423afc55d3e58bbc9e2ffc42e228"
+    },
+    {
+      "file": "best-oak-normal.png",
+      "bytes": 1034457,
+      "sha256": "d8cf97de1c371728ebcb63ccea97dc4f645c86cb551d61f00fdd7ff11e52ce90"
+    },
+    {
+      "file": "best-oak-roughness.png",
+      "bytes": 150961,
+      "sha256": "ffc28170bddcb6612df088013ad09b10afa77a4e0599330a768c5ea079fe83f4"
+    },
+    {
+      "file": "best-packaging-atlas.png",
+      "bytes": 54467,
+      "sha256": "611501f26dfe347f9e83698177066dc8886b9ac428c1695a23976c86608391c5"
+    },
+    {
+      "file": "best-stucco-normal.png",
+      "bytes": 917248,
+      "sha256": "577a1867c33f2bdb12b09526ff23b93af2484f808aff77fc04bb6cb1ad987462"
+    },
+    {
+      "file": "best-stucco-roughness.png",
+      "bytes": 188680,
+      "sha256": "75b552acb5ebd3a6782ba68e4f4c1217f7c7569f966ab28706575adbe8daac24"
+    },
+    {
+      "file": "best-terrazzo-color.png",
+      "bytes": 341525,
+      "sha256": "47d946c75871cdba3f0740c5adf81ad8401baaed1ba94f768c7a853e9b21ea33"
+    },
+    {
+      "file": "best-terrazzo-normal.png",
+      "bytes": 468700,
+      "sha256": "3071568d05763ba08b42b0d5665b29037c91707f12776305b153404d9949f2b5"
+    },
+    {
+      "file": "best-terrazzo-roughness.png",
+      "bytes": 264469,
+      "sha256": "427fd7f9ad02ad8f0c6dc8b86c291020a770110645b7f0aa160bbcabc16e5882"
+    }
+  ],
+  "license": "original procedural artwork authored for this project; no third-party texture assets",
+  "font_used_for_rasterization": "/System/Library/Fonts/Supplemental/Arial.ttf",
+  "labels": "Illustrative generic product references; not actual tobacco SKUs, no fabricated brands",
+  "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9"
+}
