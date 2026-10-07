@@ -391,6 +391,8 @@
       default: write(t('Comando desconocido. Escribe help.', 'Unknown command. Type help.'));
     }
   }
+  // The suite owns slash demos; this camera command belongs to this page.
+  document.addEventListener('submit', function(e){if(e.target===form && /^\/demo\s+taza(?:\s|$)/i.test(input.value.trim()))input.value=input.value.trim().slice(1);},true);
   form.addEventListener('submit', function (ev) {
     ev.preventDefault();
     var command = input.value.trim();
