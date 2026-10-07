@@ -45,7 +45,7 @@ export function mountTwin(h){
       for(let r=0;r<4;r++){box(.82,.06,2.05,side*3.48,.4+r*.48,-1.5,0xb79969);for(let c=0;c<5;c++)box(.3,.32,.23,side*3.48,.6+r*.48,-2.3+c*.37,[0xb9674c,0xd3be77,0x50786d,0xddd3be][(r+c)%4]);}
     }
     const signCanvas=document.createElement('canvas');signCanvas.width=1024;signCanvas.height=96;const signTexture=new T.CanvasTexture(signCanvas);signTexture.colorSpace=T.SRGBColorSpace;resourceSet.add(signTexture);const signGeo=new T.PlaneGeometry(6,.56),signMat=new T.MeshBasicMaterial({map:signTexture,toneMapped:false});resourceSet.add(signGeo);resourceSet.add(signMat);const signMesh=new T.Mesh(signGeo,signMat);signMesh.position.set(0,4.3,-2.98);scene.add(signMesh);sign={cv:signCanvas,texture:signTexture,name:null};
-    const wall=geometry.pared,k=Math.min(6.5/wall.ancho,2.5/wall.alto),W=wall.ancho*k,H=wall.alto*k,centreY=3.0;
+    const wall=geometry.pared,k=Math.min(6.5/wall.ancho,2.5/wall.alto),W=wall.ancho*k,H=wall.alto*k,centreY=2.7;
     box(W+.14,H+.14,.08,0,centreY,-2.95,0x142022);
     for(const seg of geometry.segments){
       const s=seg.wall,cv=document.createElement('canvas'),crop=screenCrop(s,wall,sz);cv.width=Math.max(1,crop.w);cv.height=Math.max(1,crop.h);
