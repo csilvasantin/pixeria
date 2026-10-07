@@ -1,8 +1,8 @@
 {
-  "version": "v.07.10.2026.r10.23:30",
+  "version": "v.07.10.2026.r11.23:39",
   "deployer": "NeoMBP16",
   "agent": "NeoMBP16",
   "machine": "MacBookPro16",
   "signature": "NeoMBP16 · MacBookPro16",
-  "evidence": "Ver como: el superusuario ve la web exactamente como una cuenta asignada a un cliente (/marca ver-como starbucks), sin tocar permisos."
+  "evidence": "Campo de etiquetas al importar y junto a «Publicar en Stock» de todo lo que se crea: cliente, centro o pantalla."
 }
