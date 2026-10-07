@@ -1674,6 +1674,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         // bloquea la carga (p.ej. imgen.x.ai de Grok no manda cabeceras CORS).
         const cors = /admira-imagen\.|imagen\.admira\.store|^data:/.test(res.url || '') ? ' crossorigin="anonymous"' : '';
         cell.innerHTML = `<img${cors} src="${res.url}" alt="${m.label}" data-pixer-title="${safeTitle}" onload="this.parentElement.querySelector('.compare-time')?.remove()" onerror="this.parentElement.innerHTML='<div style=&quot;color:#ff8a5c;font-size:11px;padding:10px;line-height:1.4&quot;>⚠ ${m.label}: sin imagen — el modelo rechazó el prompt (personajes con copyright o marcas) o cuota.</div>'"><span class="compare-time">${(ms/1000).toFixed(1)}s</span>`
+          + pubTagsHTML(true)
           + `<button type="button" class="btn publish-btn compare-pub" data-publish-meta='${cellMeta}' title="Publicar esta imagen en Stock" style="display:block;width:100%;margin-top:6px;font-size:11px;padding:6px 8px">📌 PUBLICAR EN STOCK</button>`;
         // Auto-selecciona la primera imagen que carga (default seleccionada).
         if (!firstSelected && motors.length > 1) {
@@ -2087,6 +2088,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         const cTitle = deriveAssetTitle('video', loadStore());
         const cellMeta = JSON.stringify({ type: 'video', motor: m.model, prompt, costEst: `~$${(dur4or6or8 * m.costPerSec).toFixed(2)}`, url: res.url, mime: 'video/mp4' }).replace(/'/g, '&#39;');
         cell.innerHTML = `<video controls src="${res.url}" data-pixer-title="${escAttr(cTitle)}" style="width:100%;border:1px solid var(--matrix);box-shadow:0 0 12px rgba(0,255,65,.3)"></video><span class="compare-time">${res.elapsed}s</span>`
+          + pubTagsHTML(true)
           + `<button type="button" class="btn publish-btn compare-pub" data-publish-meta='${cellMeta}' title="Publicar este vídeo en Stock" style="display:block;width:100%;margin-top:6px;font-size:11px;padding:6px 8px">📌 PUBLICAR EN STOCK</button>`;
         if (!firstSelected && motors.length > 1) {
           cellWrap.classList.add('selected');
@@ -2996,9 +2998,56 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     DL.item({ type: meta.type, title: meta.title, mime: meta.mime, url });
   });
 
+  // ─── Etiquetas al importar y al crear (Carlos, 7-oct-2026) ─────────────── [ETIQUETAS-INICIO]
+  // Un campo de etiquetas en la ventana de importar y otro junto a «Publicar en Stock» de todo lo que se crea
+  // (locución, música, imagen, vídeo). La etiqueta del cliente (#starbucks) decide quién ve la pieza; la de un
+  // centro o una pantalla (#starbucks_paseodegracia_103_pantalla1) la emite sola allí.
+  // Se separan con comas (así una etiqueta puede llevar espacios) o, sin comas, con espacios; «#» siempre separa.
+  function parseEtiquetas(texto) {
+    const t = String(texto == null ? '' : texto).replace(/[\n;]+/g, ',');
+    const partes = (t.includes(',') ? t.split(',') : t.split(/\s+/)).flatMap(p => p.split('#'));
+    const out = [];
+    for (const p of partes) {
+      const e = p.trim().replace(/^[#·.\s]+|[#·.\s]+$/g, '').slice(0, 80);
+      if (e && !out.some(x => x.toLowerCase() === e.toLowerCase())) out.push(e);
+    }
+    return out.slice(0, 10);
+  }
+  // Con un cliente activo (cuenta asignada, «ver como» o /marca) su etiqueta va por delante: lo que sube es suyo.
+  function etiquetasSugeridas() {
+    try {
+      const PC = window.PixeriaCliente;
+      if (PC && PC.listo && PC.listo() && !PC.esDefecto()) { const a = PC.actual(); if (a && a.id && a.id !== 'sin-cliente') return '#' + a.id + ' '; }
+    } catch (_) {}
+    return '';
+  }
+  // [ETIQUETAS-FIN]
+  const ETIQ_EN = document.documentElement.lang === 'en';
+  const ETIQ_PISTA = ETIQ_EN ? '#tags · #client · #venue or #screen to air it there' : '#etiquetas · #cliente · #centro o #pantalla para emitir allí';
+  const ETIQ_AYUDA = ETIQ_EN
+    ? 'Tags for this piece, separated by commas or spaces. The client tag (#starbucks) decides who sees it; a venue or screen tag (#starbucks_paseodegracia_103_pantalla1) airs it there automatically.'
+    : 'Etiquetas de esta pieza, separadas por comas o espacios. La del cliente (#starbucks) decide quién la ve; la de un centro o una pantalla (#starbucks_paseodegracia_103_pantalla1) la emite sola allí.';
+  function pubTagsHTML(compacto) {
+    return `<input type="text" class="pub-tags" maxlength="400" autocomplete="off" spellcheck="false" value="${escAttr(etiquetasSugeridas())}" placeholder="${escAttr(ETIQ_PISTA)}" title="${escAttr(ETIQ_AYUDA)}" aria-label="${ETIQ_EN ? 'Tags' : 'Etiquetas'}" style="display:block;width:100%;box-sizing:border-box;margin:6px 0 4px;padding:${compacto ? '5px 7px' : '8px 10px'};border:1px solid var(--line-bright);border-radius:0;background:rgba(0,0,0,.55);color:var(--ink);font:inherit;font-size:${compacto ? 11 : 12}px">`;
+  }
+  // El campo de etiquetas de la ventana de importar se crea aquí: la ventana está copiada en 16 páginas.
+  function campoEtiquetasImport() {
+    let campo = document.getElementById('import-tags');
+    const comentario = document.getElementById('import-comment');
+    if (!campo && comentario) {
+      const caja = document.createElement('div');
+      caja.className = 'field';
+      caja.innerHTML = `<label for="import-tags">${ETIQ_EN ? 'Tags' : 'Etiquetas'} <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(${ETIQ_EN ? 'optional · client, venue or screen' : 'opcional · cliente, centro o pantalla'})</small></label><input type="text" id="import-tags" maxlength="400" autocomplete="off" spellcheck="false" placeholder="${escAttr(ETIQ_PISTA)}" title="${escAttr(ETIQ_AYUDA)}">`;
+      (comentario.closest('.field') || comentario).insertAdjacentElement('afterend', caja);
+      campo = caja.querySelector('input');
+    }
+    return campo;
+  }
+  function etiquetasImport() { const e = parseEtiquetas((document.getElementById('import-tags') || {}).value); return e.length ? e : null; }
+
   function publishBtnHTML(meta) {
     const json = JSON.stringify(meta).replace(/'/g, '&#39;');
-    return `<button type="button" class="btn publish-btn" data-publish-meta='${json}' title="Sube este asset al stock público (R2)">📌 PUBLICAR EN STOCK</button>`;
+    return pubTagsHTML() + `<button type="button" class="btn publish-btn" data-publish-meta='${json}' title="Sube este asset al stock público (R2)">📌 PUBLICAR EN STOCK</button>`;
   }
 
   // Calidad (good/better/best) del asset según el badge del motor que lo creó.
@@ -3101,7 +3150,11 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       const data = await r.json();
       showToast('✅ Publicado · ' + (data.id || data.url || 'ok'));
       if (meta.type === 'music') updateMusicStage('publish');
-      if (btn) { btn.textContent = '✅ EN STOCK'; btn.classList.add('done'); }
+      if (btn) {
+        btn.textContent = '✅ EN STOCK'; btn.classList.add('done');
+        const campo = btn.previousElementSibling;
+        if (campo && campo.classList.contains('pub-tags')) { campo.disabled = true; if (Array.isArray(meta.tags) && meta.tags.length) campo.value = meta.tags.map(e => '#' + e).join(' '); }
+      }
       return { ok: true, id: data.id, url: data.url };
     } catch (e) {
       showToast('❌ ' + String(e).slice(0, 100));
@@ -3117,6 +3170,11 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     let meta;
     try { meta = JSON.parse(b.dataset.publishMeta); }
     catch { showToast('❌ meta inválida'); return; }
+    // Etiquetas escritas junto al botón: van delante de las que la pieza ya trajera.
+    const campo = b.previousElementSibling && b.previousElementSibling.classList.contains('pub-tags') ? b.previousElementSibling
+      : (b.closest('.player-card, .compare-cell, .image-gallery-item') || { querySelector() { return null; } }).querySelector('.pub-tags');
+    const escritas = campo ? parseEtiquetas(campo.value) : [];
+    if (escritas.length) meta = Object.assign({}, meta, { tags: [...escritas, ...(Array.isArray(meta.tags) ? meta.tags : [])] });
     publishToStock(meta, b);
   });
 
@@ -3542,6 +3600,11 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
   function bindImportModal() {
     const dlg = document.getElementById('importModal');
     if (!dlg) return;
+    // Campo de etiquetas: se crea al cargar y se vacía CADA VEZ que la ventana se abre, la abra quien la abra (el
+    // Stock la abre por su cuenta). No se arrastran de una importación a otra: una de pantalla emitiría sola lo siguiente.
+    campoEtiquetasImport();
+    new MutationObserver(() => { if (dlg.open) { const etq = campoEtiquetasImport(); if (etq) etq.value = etiquetasSugeridas(); } })
+      .observe(dlg, { attributes: true, attributeFilter: ['open'] });
     // Abridor del modal: cualquier botón #openImport o .js-open-import (hay uno
     // en el paginado de arriba y otro en el de abajo del Stock).
     const openFn = () => {
@@ -3775,6 +3838,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
             prompt: file.name,
             title: file.name.replace(/\.[^.]+$/, ''),
             comment: (document.getElementById('import-comment')?.value || '').trim() || null,
+            tags: etiquetasImport(),
             costEst: `local · ${sizeMB}MB`,
             r2Staged: clave,
             mime: mt || null,
@@ -3803,6 +3867,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
           prompt: file.name,
           title: file.name.replace(/\.[^.]+$/, ''),
           comment: comment || null,
+          tags: etiquetasImport(),
           costEst: `local · ${sizeMB}MB`,
           url: dataUrl,
           mime: mt || null,
@@ -3991,6 +4056,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
             prompt: url,
             title: importedTitle || null,
             comment: comment || null,
+            tags: etiquetasImport(),
             costEst: `gratis · ${sizeMB}MB · ${sec}s`,
             url: blobUrl,
             mime,
