@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "endpoint": "https://mcp-pixeria.admira.store/mcp",
+  "tools": [
+    "altadis_formatos",
+    "fondo_adaptacion_ia",
+    "adaptacion_plan"
+  ],
+  "contract": "/mcp/altadis-formatos.json",
+  "guide": "/docs/altadis-ia-estancos.md",
+  "languages": [
+    "es",
+    "en"
+  ],
+  "render": "web_editor_ffmpeg",
+  "placements": "virtual_demo"
+}

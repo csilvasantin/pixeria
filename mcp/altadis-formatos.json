@@ -1,0 +1,951 @@
+{
+  "version": 1,
+  "proyecto": "altadis-estancos-bcn",
+  "formatos": [
+    {
+      "id": "cliente-01",
+      "nombre": "VERTICAL",
+      "custom": [
+        1080,
+        1920
+      ],
+      "uso": "tótem / escaparate",
+      "useEn": "totem / shop window",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-02",
+      "nombre": "HORIZONTAL",
+      "custom": [
+        1920,
+        1080
+      ],
+      "uso": "mostrador",
+      "useEn": "counter",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-03",
+      "nombre": "VIDEOWALL 2X1 H",
+      "custom": [
+        1920,
+        540
+      ],
+      "uso": "videowall",
+      "useEn": "video wall",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-04",
+      "nombre": "SINCRO LOGO",
+      "custom": [
+        1920,
+        1080
+      ],
+      "uso": "logo sincronizado",
+      "useEn": "synchronised logo",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-05",
+      "nombre": "SINCRO VW",
+      "custom": [
+        1920,
+        540
+      ],
+      "uso": "videowall sincronizado",
+      "useEn": "synchronised video wall",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-06",
+      "nombre": "SINCRO VW 4X1 H",
+      "custom": [
+        3840,
+        540
+      ],
+      "uso": "videowall sincronizado",
+      "useEn": "synchronised video wall",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-07",
+      "nombre": "TABLET",
+      "custom": [
+        768,
+        1024
+      ],
+      "uso": "tablet",
+      "useEn": "tablet",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-08",
+      "nombre": "LED CUBO MADRID-062",
+      "custom": [
+        1600,
+        600
+      ],
+      "uso": "cubo LED",
+      "useEn": "LED cube",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-09",
+      "nombre": "LED GRANADA-021",
+      "custom": [
+        1536,
+        192
+      ],
+      "uso": "barra LED",
+      "useEn": "LED strip",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-10",
+      "nombre": "GONDOLA LED LIMITS-006",
+      "custom": [
+        64,
+        384
+      ],
+      "uso": "góndola LED",
+      "useEn": "LED gondola",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-11",
+      "nombre": "VIDEOWALL 1X2 H",
+      "custom": [
+        1920,
+        2160
+      ],
+      "uso": "videowall",
+      "useEn": "video wall",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-12",
+      "nombre": "VIDEOWALL 1X2 V",
+      "custom": [
+        540,
+        1920
+      ],
+      "uso": "videowall vertical",
+      "useEn": "portrait video wall",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-13",
+      "nombre": "VIDEOWALL 2X1 V",
+      "custom": [
+        2160,
+        1920
+      ],
+      "uso": "videowall",
+      "useEn": "video wall",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-14",
+      "nombre": "VIDEOWALL 3X1 H",
+      "custom": [
+        2880,
+        540
+      ],
+      "uso": "videowall",
+      "useEn": "video wall",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-15",
+      "nombre": "VIDEOWALL 4X1 H",
+      "custom": [
+        3840,
+        540
+      ],
+      "uso": "videowall",
+      "useEn": "video wall",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-16",
+      "nombre": "VIDEOWALL 4X1 V",
+      "custom": [
+        1920,
+        852
+      ],
+      "uso": "videowall",
+      "useEn": "video wall",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-17",
+      "nombre": "VIDEOWALL 8X1 H",
+      "custom": [
+        2880,
+        640
+      ],
+      "uso": "videowall",
+      "useEn": "video wall",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-18",
+      "nombre": "SHUTTLE STRETCH",
+      "custom": [
+        1920,
+        158
+      ],
+      "uso": "sede / stretch",
+      "useEn": "head office / stretch",
+      "fps": 25,
+      "on": false,
+      "cliente": true
+    },
+    {
+      "id": "cliente-19",
+      "nombre": "LG STRETCH MADRID-199",
+      "custom": [
+        3840,
+        600
+      ],
+      "uso": "stretch LG Madrid · MyBlu",
+      "useEn": "LG stretch Madrid · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
+    },
+    {
+      "id": "cliente-20",
+      "nombre": "PANTALLA LED",
+      "custom": [
+        704,
+        300
+      ],
+      "uso": "pantalla LED · MyBlu",
+      "useEn": "LED screen · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
+    },
+    {
+      "id": "cliente-21",
+      "nombre": "VIDEOWALL 1X4 H",
+      "custom": [
+        960,
+        2160
+      ],
+      "uso": "videowall 1×4 H · MyBlu",
+      "useEn": "video wall 1×4 H · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
+    },
+    {
+      "id": "cliente-22",
+      "nombre": "VIDEOWALL 2X3 H",
+      "custom": [
+        2880,
+        1080
+      ],
+      "uso": "videowall 2×3 H · MyBlu",
+      "useEn": "video wall 2×3 H · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
+    },
+    {
+      "id": "cliente-23",
+      "nombre": "VIDEOWALL 3X2 V",
+      "custom": [
+        1620,
+        1920
+      ],
+      "uso": "videowall 3×2 V · MyBlu",
+      "useEn": "video wall 3×2 V · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
+    },
+    {
+      "id": "cliente-24",
+      "nombre": "VIDEOWALL 5X1 V",
+      "custom": [
+        2700,
+        960
+      ],
+      "uso": "videowall 5×1 V · MyBlu",
+      "useEn": "video wall 5×1 V · MyBlu",
+      "fps": 25,
+      "on": false,
+      "cliente": true,
+      "myblu": true
+    }
+  ],
+  "videowalls": [
+    {
+      "id": "cliente-esp-1",
+      "row": 18,
+      "tabla": "VIDEOWALL 5x1 H (1280 X 1080) - ESPECIAL",
+      "nombre": "VIDEOWALL 5x1 H",
+      "slug": "videowall-5x1-h",
+      "observaciones": "Formato especial",
+      "entrega": [
+        1280,
+        1080
+      ],
+      "pantallas": 5,
+      "orientacionPantalla": "H",
+      "celda": [
+        640,
+        360
+      ],
+      "rejilla": {
+        "columnas": 2,
+        "filas": 3
+      },
+      "celdasSinUso": [
+        6
+      ],
+      "pared": {
+        "columnas": 5,
+        "filas": 1
+      },
+      "estructura": {
+        "pagina": 5,
+        "rotulos": [
+          "640x360px",
+          "1080px",
+          "1280px"
+        ],
+        "marcaSinUso": "X"
+      },
+      "uso": "videowall de 5 pantallas apaisadas en fila",
+      "useEn": "video wall of 5 landscape screens in a row",
+      "notas": [
+        "Página 2: foto «Ejemplo VW 5x1 H con formato especial» con cinco pantallas apaisadas en fila."
+      ],
+      "ambiguedades": [
+        "La imagen de ejemplo de la página 5 rotula su primera celda «640x540»; la cuadrícula rotula «640x360px» y 3 × 360 = 1080 px. Se usa 640×360."
+      ]
+    },
+    {
+      "id": "cliente-esp-2",
+      "row": 19,
+      "tabla": "VIDEOWALL 6x1 H (1280 X 1080) - ESPECIAL",
+      "nombre": "VIDEOWALL 6x1 H",
+      "slug": "videowall-6x1-h",
+      "observaciones": "Formato especial",
+      "entrega": [
+        1280,
+        1080
+      ],
+      "pantallas": 6,
+      "orientacionPantalla": "H",
+      "celda": [
+        640,
+        360
+      ],
+      "rejilla": {
+        "columnas": 2,
+        "filas": 3
+      },
+      "celdasSinUso": [],
+      "pared": {
+        "columnas": 6,
+        "filas": 1
+      },
+      "estructura": {
+        "pagina": 5,
+        "rotulos": [
+          "640x360px",
+          "1080px",
+          "1280px"
+        ],
+        "marcaSinUso": null
+      },
+      "uso": "videowall de 6 pantallas apaisadas en fila",
+      "useEn": "video wall of 6 landscape screens in a row",
+      "notas": [],
+      "ambiguedades": [
+        "La imagen de ejemplo de la página 5 rotula su primera celda «640x540»; la cuadrícula rotula «640x360px» y 3 × 360 = 1080 px. Se usa 640×360."
+      ]
+    },
+    {
+      "id": "cliente-esp-3",
+      "row": 20,
+      "tabla": "VIDEOWALL 9x1 H (2880 X 1620) - ESPECIAL",
+      "nombre": "VIDEOWALL 9x1 H",
+      "slug": "videowall-9x1-h",
+      "observaciones": "Formato especial",
+      "entrega": [
+        2880,
+        1620
+      ],
+      "pantallas": 11,
+      "orientacionPantalla": "H",
+      "celda": [
+        720,
+        540
+      ],
+      "rejilla": {
+        "columnas": 4,
+        "filas": 3
+      },
+      "celdasSinUso": [
+        12
+      ],
+      "pared": {
+        "columnas": 11,
+        "filas": 1
+      },
+      "estructura": {
+        "pagina": 6,
+        "titulo": "VIDEOWALL 11x1 H (2880 X 1620) - ESPECIAL",
+        "rotulos": [
+          "720x540px",
+          "1620 px",
+          "2880 px"
+        ],
+        "marcaSinUso": "celda oscura"
+      },
+      "uso": "videowall de pantallas apaisadas en fila",
+      "useEn": "video wall of landscape screens in a row",
+      "notas": [],
+      "ambiguedades": [
+        "La tabla de la página 3 lo llama «9x1 H», pero la página 6 lo titula «VIDEOWALL 11x1 H (2880 X 1620)» y su cuadrícula dibuja 12 celdas de 720×540 con una oscura: 11 pantallas. Se modelan las 11 del diagrama. Hay que confirmar con el cliente antes de emitir."
+      ]
+    },
+    {
+      "id": "cliente-esp-4",
+      "row": 21,
+      "tabla": "CORDOBA-098 (3840 X 2160) - ESPECIAL",
+      "nombre": "CORDOBA-098",
+      "slug": "cordoba-098",
+      "observaciones": "Formato especial",
+      "entrega": [
+        3840,
+        2160
+      ],
+      "pantallas": 15,
+      "orientacionPantalla": "H",
+      "celda": [
+        960,
+        540
+      ],
+      "rejilla": {
+        "columnas": 4,
+        "filas": 4
+      },
+      "celdasSinUso": [
+        16
+      ],
+      "pared": {
+        "columnas": 15,
+        "filas": 1,
+        "inferida": true
+      },
+      "estructura": {
+        "pagina": 5,
+        "rotulos": [
+          "960x540px",
+          "2160px",
+          "3840px"
+        ],
+        "marcaSinUso": "x"
+      },
+      "uso": "emplazamiento CORDOBA-098 (el PDF no lo describe)",
+      "useEn": "CORDOBA-098 site (not described in the PDF)",
+      "notas": [
+        "Página 7: vídeo enlazado «Ejemplo VW 3840 X 2160» con la última celda en negro."
+      ],
+      "ambiguedades": [
+        "El PDF no indica el número de pantallas ni su disposición física. 15 son las 16 celdas de la página 5 menos la marcada con x. La fila única se deduce de la regla de la página 5 y del ejemplo, donde el texto pasa de una fila a la siguiente. Hay que confirmar antes de emitir."
+      ]
+    },
+    {
+      "id": "cliente-esp-5",
+      "row": 22,
+      "tabla": "VIDEOWALL 13x1 V (2160 X 3840) - ESPECIAL",
+      "nombre": "VIDEOWALL 13x1 V",
+      "slug": "videowall-13x1-v",
+      "observaciones": "Formato especial",
+      "entrega": [
+        2160,
+        3840
+      ],
+      "pantallas": 13,
+      "orientacionPantalla": "V",
+      "celda": [
+        540,
+        960
+      ],
+      "rejilla": {
+        "columnas": 4,
+        "filas": 4
+      },
+      "celdasSinUso": [
+        14,
+        15,
+        16
+      ],
+      "pared": {
+        "columnas": 13,
+        "filas": 1
+      },
+      "estructura": {
+        "pagina": 6,
+        "titulo": "VIDEOWALL 13X1 V (2160 X 3840) - ESPECIAL",
+        "rotulos": [
+          "540x960 px",
+          "3840 px",
+          "2160 px"
+        ],
+        "marcaSinUso": "celdas grises"
+      },
+      "uso": "videowall de 13 pantallas verticales en fila",
+      "useEn": "video wall of 13 portrait screens in a row",
+      "notas": [
+        "Página 7: vídeo enlazado «Ejemplo VW 2160 X 3840» con las celdas finales en negro."
+      ],
+      "ambiguedades": []
+    }
+  ],
+  "fuente": {
+    "title": "Perfil de cliente · Resoluciones y formatos",
+    "file": "Resoluciones y formatos especiales .pdf",
+    "page": 3,
+    "structurePages": [
+      5,
+      6
+    ],
+    "examplePages": [
+      2,
+      7
+    ],
+    "sha256": "16a17b2f81c5713d5d0fc676a02d2192fb95ad07ecb13e29dbec1b09da5239f7",
+    "scope": "5 filas marcadas ESPECIAL de la página 3 (filas 18 a 22 de 23), excluidas de perfil-cliente-18.json",
+    "reading": "PDFKit de macOS ejecutado con swift: texto de cada página con PDFPage.string y render PNG a 3x de las 8 páginas; las cuadrículas de las páginas 5 y 6 se comprobaron visualmente y ampliadas.",
+    "specifications": {
+      "tipoDeArchivo": "MP4",
+      "velocidadDeFotograma": "25fps",
+      "codec": "H264"
+    },
+    "rule": "Página 5: «Los formatos especiales se segmentan de forma que cada espacio representa una pantalla y cada fila sea una continuidad de la siguiente.»",
+    "requirements": "La entrega es un único MP4 a la resolución de la tabla, con una celda por pantalla en orden de lectura. «Mismo tiempo de resolución para la correcta sincronización» se aplica en la página 3 a Sincro VW y Sincro LOGO, que están en perfil-cliente-18.json y no son especiales. Esta página no sincroniza players."
+  },
+  "estancos": {
+    "version": 1,
+    "proyecto": "altadis-estancos-bcn",
+    "circuito": "altadis_bcn",
+    "estado": "demo",
+    "fuente": {
+      "titulo": "Circuito altadis_bcn · semilla de admira.app",
+      "archivo": "clearchannel-tv/data/circuitos/circuito-altadis-bcn-9.seed.json",
+      "commit": "3d39ba3",
+      "yokup": "https://api.yokup.com/projects · altadis-estancos-bcn",
+      "nota": "Los 9 estancos son los shop=tobacco de OpenStreetMap más cercanos a Carrer del Planeta 7 (Gràcia), elegidos para la demo de Altadis (FLT-101349, FLT-101401). Cada uno tiene dos pantallas registradas (P1 vertical en el escaparate y P2 horizontal en el mostrador); no hay LED ni videowalls registrados. Altadis no ha confirmado todavía ni el parque real ni las medidas."
+    },
+    "mapa": {
+      "estado": "derivado",
+      "criterio": "Ningún sistema guarda qué formato de la ficha Altadis corresponde a cada pantalla. Se deriva por resolución exacta y uso: P1 1080×1920 escaparate → cliente-01 VERTICAL (tótem / escaparate); P2 1920×1080 mostrador → cliente-02 HORIZONTAL (mostrador). cliente-04 SINCRO LOGO también mide 1920×1080, pero es para logo sincronizado: no se usa. Pendiente de confirmar con Altadis.",
+      "criterioEn": "No system stores which Altadis format belongs to each screen. It is derived from exact resolution and use: P1 1080×1920 shop window → cliente-01 VERTICAL (totem / shop window); P2 1920×1080 counter → cliente-02 HORIZONTAL (counter). cliente-04 SINCRO LOGO is also 1920×1080 but is meant for synchronised logos: not used. Pending confirmation by Altadis."
+    },
+    "estancos": [
+      {
+        "id": "altadis-bcn-001",
+        "orden": 1,
+        "nombre": "Estanc Gran de Gràcia 61",
+        "slug": "altadis-bcn-001-gran-de-gracia-61",
+        "direccion": "Carrer Gran de Gràcia 61 · 08012 Barcelona",
+        "expendeduria": null,
+        "osm": "node/12875861930",
+        "coords": [
+          2.155556,
+          41.3996304
+        ],
+        "pantallas": [
+          {
+            "id": "p1-vertical",
+            "screen": "altadis-bcn-001-p1-vertical",
+            "nombre": "P1 · Vertical escaparate",
+            "nameEn": "P1 · Portrait shop window",
+            "ubicacion": "escaparate",
+            "orientacion": "vertical",
+            "ancho": 1080,
+            "alto": 1920,
+            "formato": "cliente-01"
+          },
+          {
+            "id": "p2-horizontal",
+            "screen": "altadis-bcn-001-p2-horizontal",
+            "nombre": "P2 · Horizontal mostrador",
+            "nameEn": "P2 · Landscape counter",
+            "ubicacion": "pantalla",
+            "orientacion": "horizontal",
+            "ancho": 1920,
+            "alto": 1080,
+            "formato": "cliente-02"
+          }
+        ]
+      },
+      {
+        "id": "altadis-bcn-002",
+        "orden": 2,
+        "nombre": "Moe's Expenedoria",
+        "slug": "altadis-bcn-002-moes-expenedoria",
+        "direccion": "Plaça de la Vila de Gràcia s/n · 08012 Barcelona",
+        "expendeduria": null,
+        "osm": "node/6777658347",
+        "coords": [
+          2.1577654,
+          41.3999081
+        ],
+        "pantallas": [
+          {
+            "id": "p1-vertical",
+            "screen": "altadis-bcn-002-p1-vertical",
+            "nombre": "P1 · Vertical escaparate",
+            "nameEn": "P1 · Portrait shop window",
+            "ubicacion": "escaparate",
+            "orientacion": "vertical",
+            "ancho": 1080,
+            "alto": 1920,
+            "formato": "cliente-01"
+          },
+          {
+            "id": "p2-horizontal",
+            "screen": "altadis-bcn-002-p2-horizontal",
+            "nombre": "P2 · Horizontal mostrador",
+            "nameEn": "P2 · Landscape counter",
+            "ubicacion": "pantalla",
+            "orientacion": "horizontal",
+            "ancho": 1920,
+            "alto": 1080,
+            "formato": "cliente-02"
+          }
+        ]
+      },
+      {
+        "id": "altadis-bcn-003",
+        "orden": 3,
+        "nombre": "Estanc nº 275 · Torrent de l'Olla",
+        "slug": "altadis-bcn-003-n275-torrent-de-l-olla",
+        "direccion": "Carrer del Torrent de l'Olla 24 · 08012 Barcelona",
+        "expendeduria": {
+          "numero": "080275",
+          "fuente": "CMT · expendedurías activas 03-10-2026"
+        },
+        "osm": "node/10761696806",
+        "coords": [
+          2.1607485,
+          41.3991169
+        ],
+        "pantallas": [
+          {
+            "id": "p1-vertical",
+            "screen": "altadis-bcn-003-p1-vertical",
+            "nombre": "P1 · Vertical escaparate",
+            "nameEn": "P1 · Portrait shop window",
+            "ubicacion": "escaparate",
+            "orientacion": "vertical",
+            "ancho": 1080,
+            "alto": 1920,
+            "formato": "cliente-01"
+          },
+          {
+            "id": "p2-horizontal",
+            "screen": "altadis-bcn-003-p2-horizontal",
+            "nombre": "P2 · Horizontal mostrador",
+            "nameEn": "P2 · Landscape counter",
+            "ubicacion": "pantalla",
+            "orientacion": "horizontal",
+            "ancho": 1920,
+            "alto": 1080,
+            "formato": "cliente-02"
+          }
+        ]
+      },
+      {
+        "id": "altadis-bcn-004",
+        "orden": 4,
+        "nombre": "L'Estanc de Còrsega · nº 124",
+        "slug": "altadis-bcn-004-n124-corsega",
+        "direccion": "Carrer de Còrsega 329 (esq. Santa Teresa) · Barcelona",
+        "expendeduria": {
+          "numero": "080124",
+          "fuente": "CMT · expendedurías activas 03-10-2026"
+        },
+        "osm": "node/10769626613",
+        "coords": [
+          2.1602111,
+          41.3973394
+        ],
+        "pantallas": [
+          {
+            "id": "p1-vertical",
+            "screen": "altadis-bcn-004-p1-vertical",
+            "nombre": "P1 · Vertical escaparate",
+            "nameEn": "P1 · Portrait shop window",
+            "ubicacion": "escaparate",
+            "orientacion": "vertical",
+            "ancho": 1080,
+            "alto": 1920,
+            "formato": "cliente-01"
+          },
+          {
+            "id": "p2-horizontal",
+            "screen": "altadis-bcn-004-p2-horizontal",
+            "nombre": "P2 · Horizontal mostrador",
+            "nameEn": "P2 · Landscape counter",
+            "ubicacion": "pantalla",
+            "orientacion": "horizontal",
+            "ancho": 1920,
+            "alto": 1080,
+            "formato": "cliente-02"
+          }
+        ]
+      },
+      {
+        "id": "altadis-bcn-005",
+        "orden": 5,
+        "nombre": "Estanc nº 419 · Via Augusta",
+        "slug": "altadis-bcn-005-n419-via-augusta",
+        "direccion": "Via Augusta 12 · 08006 Barcelona",
+        "expendeduria": {
+          "numero": "080419",
+          "fuente": "CMT · expendedurías activas 03-10-2026"
+        },
+        "osm": "node/11554659567",
+        "coords": [
+          2.1551713,
+          41.3967736
+        ],
+        "pantallas": [
+          {
+            "id": "p1-vertical",
+            "screen": "altadis-bcn-005-p1-vertical",
+            "nombre": "P1 · Vertical escaparate",
+            "nameEn": "P1 · Portrait shop window",
+            "ubicacion": "escaparate",
+            "orientacion": "vertical",
+            "ancho": 1080,
+            "alto": 1920,
+            "formato": "cliente-01"
+          },
+          {
+            "id": "p2-horizontal",
+            "screen": "altadis-bcn-005-p2-horizontal",
+            "nombre": "P2 · Horizontal mostrador",
+            "nameEn": "P2 · Landscape counter",
+            "ubicacion": "pantalla",
+            "orientacion": "horizontal",
+            "ancho": 1920,
+            "alto": 1080,
+            "formato": "cliente-02"
+          }
+        ]
+      },
+      {
+        "id": "altadis-bcn-006",
+        "orden": 6,
+        "nombre": "Estanco nº 003",
+        "slug": "altadis-bcn-006-n003-gala-placidia",
+        "direccion": "Plaça de Gal·la Placídia 26 · 08006 Barcelona",
+        "expendeduria": {
+          "numero": "003",
+          "fuente": "rótulo en OpenStreetMap; sin cruzar con el CMT"
+        },
+        "osm": "node/4755079723",
+        "coords": [
+          2.1526809,
+          41.3997778
+        ],
+        "pantallas": [
+          {
+            "id": "p1-vertical",
+            "screen": "altadis-bcn-006-p1-vertical",
+            "nombre": "P1 · Vertical escaparate",
+            "nameEn": "P1 · Portrait shop window",
+            "ubicacion": "escaparate",
+            "orientacion": "vertical",
+            "ancho": 1080,
+            "alto": 1920,
+            "formato": "cliente-01"
+          },
+          {
+            "id": "p2-horizontal",
+            "screen": "altadis-bcn-006-p2-horizontal",
+            "nombre": "P2 · Horizontal mostrador",
+            "nameEn": "P2 · Landscape counter",
+            "ubicacion": "pantalla",
+            "orientacion": "horizontal",
+            "ancho": 1920,
+            "alto": 1080,
+            "formato": "cliente-02"
+          }
+        ]
+      },
+      {
+        "id": "altadis-bcn-007",
+        "orden": 7,
+        "nombre": "Tabacs M. Àngels · nº 359",
+        "slug": "altadis-bcn-007-n359-tabacs-m-angels",
+        "direccion": "Carrer de Terol 41-43 · 08012 Barcelona",
+        "expendeduria": {
+          "numero": "080359",
+          "fuente": "CMT · expendedurías activas 03-10-2026"
+        },
+        "osm": "node/11741880447",
+        "coords": [
+          2.1587066,
+          41.403443
+        ],
+        "pantallas": [
+          {
+            "id": "p1-vertical",
+            "screen": "altadis-bcn-007-p1-vertical",
+            "nombre": "P1 · Vertical escaparate",
+            "nameEn": "P1 · Portrait shop window",
+            "ubicacion": "escaparate",
+            "orientacion": "vertical",
+            "ancho": 1080,
+            "alto": 1920,
+            "formato": "cliente-01"
+          },
+          {
+            "id": "p2-horizontal",
+            "screen": "altadis-bcn-007-p2-horizontal",
+            "nombre": "P2 · Horizontal mostrador",
+            "nameEn": "P2 · Landscape counter",
+            "ubicacion": "pantalla",
+            "orientacion": "horizontal",
+            "ancho": 1920,
+            "alto": 1080,
+            "formato": "cliente-02"
+          }
+        ]
+      },
+      {
+        "id": "altadis-bcn-008",
+        "orden": 8,
+        "nombre": "Estanc de Gràcia · nº 393",
+        "slug": "altadis-bcn-008-n393-travessera-de-gracia",
+        "direccion": "Travessera de Gràcia 194 · 08012 Barcelona",
+        "expendeduria": {
+          "numero": "080393",
+          "fuente": "CMT · expendedurías activas 03-10-2026"
+        },
+        "osm": "node/11339652076",
+        "coords": [
+          2.1602077,
+          41.4027259
+        ],
+        "pantallas": [
+          {
+            "id": "p1-vertical",
+            "screen": "altadis-bcn-008-p1-vertical",
+            "nombre": "P1 · Vertical escaparate",
+            "nameEn": "P1 · Portrait shop window",
+            "ubicacion": "escaparate",
+            "orientacion": "vertical",
+            "ancho": 1080,
+            "alto": 1920,
+            "formato": "cliente-01"
+          },
+          {
+            "id": "p2-horizontal",
+            "screen": "altadis-bcn-008-p2-horizontal",
+            "nombre": "P2 · Horizontal mostrador",
+            "nameEn": "P2 · Landscape counter",
+            "ubicacion": "pantalla",
+            "orientacion": "horizontal",
+            "ancho": 1920,
+            "alto": 1080,
+            "formato": "cliente-02"
+          }
+        ]
+      },
+      {
+        "id": "altadis-bcn-009",
+        "orden": 9,
+        "nombre": "Estanc Torrijos 8",
+        "slug": "altadis-bcn-009-torrijos-8",
+        "direccion": "Carrer de Torrijos 8 · 08012 Barcelona",
+        "expendeduria": null,
+        "osm": "node/10772906416",
+        "coords": [
+          2.1599081,
+          41.4024557
+        ],
+        "pantallas": [
+          {
+            "id": "p1-vertical",
+            "screen": "altadis-bcn-009-p1-vertical",
+            "nombre": "P1 · Vertical escaparate",
+            "nameEn": "P1 · Portrait shop window",
+            "ubicacion": "escaparate",
+            "orientacion": "vertical",
+            "ancho": 1080,
+            "alto": 1920,
+            "formato": "cliente-01"
+          },
+          {
+            "id": "p2-horizontal",
+            "screen": "altadis-bcn-009-p2-horizontal",
+            "nombre": "P2 · Horizontal mostrador",
+            "nameEn": "P2 · Landscape counter",
+            "ubicacion": "pantalla",
+            "orientacion": "horizontal",
+            "ancho": 1920,
+            "alto": 1080,
+            "formato": "cliente-02"
+          }
+        ]
+      }
+    ]
+  },
+  "urls": {
+    "studio": "https://www.admira.studio/adaptaciones/?proyecto=altadis",
+    "guia": "https://www.admira.studio/docs/altadis-ia-estancos.md"
+  }
+}

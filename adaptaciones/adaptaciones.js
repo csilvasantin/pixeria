@@ -1,3 +1,7 @@
+import {aiJob} from './ia-core.mjs';
+import {APPLICATION_KEY,restoreApplications,applyApplications} from './aplicaciones-core.mjs';
+import {mountStudio} from './studio-adaptaciones.mjs';
+let studio = null;
 // Pixeria · Adaptaciones (FLT-101349, 2-oct-2026): un vídeo → todas las pantallas.
 // Render en vivo en canvas; las reglas son las del motor de signage de Pixeria.
 // Reutiliza el motor de reglas real de Pixeria: assets/signage-perfiles.js
@@ -11,7 +15,7 @@ import { GENERAL, YOKUP_URL, PROJECT_KEY, projectStorageKey, formatRef, resolveR
 import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
 import { sizeGroups, selectionState, toggleSelection, selectionAction } from './format-catalog.mjs';
 import { pngDensity } from './png-density.mjs';
-import { validateEstancos, formatsFor, packagePlan, groupByEstanco, manifest as packageManifest, zipEntries, buildZip, zipName, sourceKey, publishPlan, publishPieces, FFLATE, PROGRAMAR_URL, PROGRAMAR_MAX, programPieces, loteKey } from './estancos-core.mjs';
+import { validateEstancos, formatsFor, packagePlan, groupByEstanco, manifest as packageManifest, zipEntries, buildZip, zipName, sourceKey, publishPlan, publishPieces, FFLATE, PROGRAMAR_URL, PROGRAMAR_MAX, programPieces, loteKey } from './estancos-core.mjs?v=altadis-ia-20261007';
 import { gifPlayer, hasImageDecoder, decodeHEIC, LIBHEIF, rasterSVG, svgCache } from './fuentes-especiales.mjs';
 import { UMBRAL_CREAR, RECETAS, TIRA, ROTULO, crearDefaults, defaultsFicha, crearSettings, desproporcion, accionAuto, accionEfectiva, tiraN, tiraGeometria, tiraMomentos, tiraTramos, tiraRecortes, cascada, alphaCelda, barridoPlan, barridoVentana, rotuloLayout, rotuloVelocidad, rotuloDesplazamiento, crearJob, crearPared, duracionReceta, tiempoRepresentativo, ROTULO_PNG, motivoAccion, relojPrevio, relojT, relojPlay, relojPausa, relojSeek, relojDuracion, relojEnMarcha, previoN, previoFotograma, etiquetaTiempo } from './crear-core.mjs';
 
@@ -115,7 +119,7 @@ function restoreSettings(lists) {
 // kinds applies to special layouts: the client delivery file, one MP4 per screen, or both.
 // Crear: `receta` (crearPared) composes the recipe on the physical wall; the cuts are the same.
 function especialJobs(f,kinds,src=state.src,receta=null) {
-  const tech=especialTech(f),mode=modoEfectivo(f),s=state.fmt[f.id],jobs=[];
+  const tech=especialTech(f),mode=studio?.background(f)?'blur':modoEfectivo(f),s=state.fmt[f.id],jobs=[];
   const tag=receta?{crear:receta.receta,duration:receta.duracion,input:receta.picture?crearInput.name:undefined,extras:receta.extras}:{};
   const rl=receta?` · ${RECETA_CORTA[receta.receta]}`:'';
   if(kinds!=='segments') jobs.push({...atlasJob(src,f.layout,mode,s,tech,receta),...tag,label:`${f.nombre} · ${t('entrega','delivery')}${rl}`});
@@ -208,6 +212,10 @@ async function exportFormats(formats,kinds='both',extra=null) {
   else if(still&&mp4Formats.length&&!svgSrc){({url:sourceURL,input}=await stillSource());}
   crearInput.name=animated?'input.gif':still?(svgSrc?'input.png':input||'input.png'):'input';
   const build=(f,src)=>{
+    const bg=studio?.background(f);
+    if(bg){const out=destino(f),base=f.especial?especialJobs(f,kinds,src):[{...exportJob(src,perfil(f),plan(f), 'blur',state.fmt[f.id],state.srcName,f.id),label:f.nombre}];
+      return base.map(job=>({job:{...aiJob(job,src,out,state.fmt[f.id],bg.url,{wall:!!f.especial}),label:`${job.label} · IA`},f}));}
+
     if(creando(f)){
       if(f.especial) return especialJobs(f,kinds,src,crearPared({...crearArgs(f,src),pared:geometry(f.layout).pared,rotulo:rotuloLayoutDe(f,wallOutput(f))})).map(job=>({job,f}));
       const p=perfil(f);
@@ -516,10 +524,12 @@ function especialInfo(f) {
     try { const receta = crearPared({...crearArgs(f), pared: g.pared, rotulo: rotuloLayoutDe(f, wallOutput(f))}); cmd = `\n\nffmpeg ${atlasJob(state.src, L, m, s, tech, receta).args.map(a => JSON.stringify(a)).join(' ')}`; } catch (_) {}
     return { aviso: `${crearAviso(f)} · ${t('sobre la pared','on the wall')} ${g.pared.ancho}×${g.pared.alto}`, plan: files.join('\n') + cmd };
   }
-  const atlas = state.src.ancho ? atlasJob(state.src, L, m, s, tech) : null;
-  return { aviso, plan: files.join('\n') + (atlas ? `\n\nffmpeg ${pictureJob(atlas).args.map(a => JSON.stringify(a)).join(' ')}` : '') };
+  const rawAtlas=state.src.ancho?atlasJob(state.src,L,studio?.background(f)?'blur':m,s,tech):null;
+  const atlas=rawAtlas&&studio?.background(f)?aiJob(rawAtlas,state.src,wallOutput(f),s,studio.background(f).url,{wall:true}):rawAtlas;
+  return { aviso:studio?.background(f)?cardAviso(f):aviso, plan: files.join('\n') + (atlas ? `\n\nffmpeg ${pictureJob(atlas).args.map(a => JSON.stringify(a)).join(' ')}` : '') };
 }
 function cardAviso(f) {
+  if(studio?.background(f))return t('Fondo IA estático + original conservado · composición sobre la pared completa','Static AI background + original preserved · full wall composition');
   if (f.especial) return especialInfo(f).aviso;
   if (creando(f)) return crearAviso(f);
   const p = plan(f), m = modoEfectivo(f), settings = state.fmt[f.id];
@@ -539,6 +549,7 @@ function cardAviso(f) {
     : t('Elige un vídeo o una imagen para calcular el recorte.', 'Choose a video or an image to calculate cropping.');
 }
 function refreshInfo() {
+  studio?.sync();
   drawDirty=true;saveSettings();
   const chosen=selectedFormats().length;
   $('#export-all').textContent=t(`Adaptar · ${chosen}`,`Adapt · ${chosen}`);
@@ -592,12 +603,13 @@ const secLabel = v => (Math.round(v * 100) / 100).toLocaleString(EN ? 'en-US' : 
 function ffmpegCmd(f) {
   if(!state.src.ancho) return '';
   if(creando(f)) return crearCmd(f);
-  const job=pictureJob(exportJob(state.src,perfil(f),plan(f)||{},modoEfectivo(f),state.fmt[f.id],state.srcName,f.id));
+  const base=exportJob(state.src,perfil(f),plan(f)||{},modoEfectivo(f),state.fmt[f.id],state.srcName,f.id);
+  const job=pictureJob(studio?.background(f)?aiJob(base,state.src,perfil(f),state.fmt[f.id],studio.background(f).url):base);
   return 'ffmpeg ' + job.args.map(arg=>JSON.stringify(arg==='output.mp4'?job.filename:arg)).join(' ');
 }
 
 // ── Render en vivo (canvas) ─────────────────────────────────────────────────
-function drawInto(cv, f, override) { if (creando(f)) return paintCrear(cv, perfil(f), f, null, override); paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id], override); return null; }
+function drawInto(cv, f, override) { if (creando(f)) return paintCrear(cv, perfil(f), f, null, override); paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id], override,studio?.background(f)?.el); return null; }
 // What the preview draws: the media element, or for an SVG a raster at this canvas' needed resolution
 // (cached in √2 steps; the base image is used for the frame or two until it arrives).
 const SVG_PREVIEW = {paso: true, maxLado: 4096, maxPx: 2048 * 2048};
@@ -607,7 +619,7 @@ function drawSource(W, H, mode, s) {
   const c = svgRasters.get(r.ancho, r.alto, () => { drawDirty = true; });
   return c ? {el: c, dims: {ancho: c.width, alto: c.height}} : {el: img, dims: state.src};
 }
-function paint(cv, output, m, s, override) {
+function paint(cv, output, m, s, override, background) {
   const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
   if (!mediaReady()) return;
   const ratio=W/output.ancho;
@@ -615,6 +627,7 @@ function paint(cv, output, m, s, override) {
   const drawRect=(mode,settings)=>{const r=rect(dims,output.ancho,output.alto,mode,settings);return [r.x*ratio,r.y*ratio,r.w*ratio,r.h*ratio];};
   ctx.filter = 'none'; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   const drawCrop=settings=>{const c=cropWindow(dims,output.ancho,output.alto,settings);ctx.drawImage(src,c.x,c.y,c.w,c.h,0,0,W,H);};
+  if (background) { ctx.drawImage(background,0,0,W,H);ctx.drawImage(src,...drawRect('contain',{...s,zoom:1}));return; }
   if (m === 'cover') { drawCrop(s); return; }
   if (m === 'blur') { ctx.filter = `blur(${14*Math.max(output.ancho,output.alto)/384*ratio}px) brightness(0.85)`; drawCrop({zoom:1.1,fx:.5,fy:.5}); ctx.filter = 'none'; }
   ctx.drawImage(src, ...drawRect('contain',s));
@@ -624,7 +637,7 @@ function paint(cv, output, m, s, override) {
 function drawEspecial(el, f) {
   const wall = el.querySelector('canvas.wall'), atlas = el.querySelector('canvas.atlas'); if (!wall || !mediaReady()) return null;
   // Crear: the recipe is painted on the physical wall and the delivery copies its cuts, so both animate.
-  const g = geometry(f.layout); let info = null; if (creando(f)) info = paintCrear(wall, wallOutput(f), f); else paint(wall, wallOutput(f), modoEfectivo(f), state.fmt[f.id]);
+  const g = geometry(f.layout); let info = null; if (creando(f)) info = paintCrear(wall, wallOutput(f), f); else paint(wall, wallOutput(f), modoEfectivo(f), state.fmt[f.id],null,studio?.background(f)?.el);
   const k = wall.width / g.pared.ancho, a = atlas.width / g.entrega.ancho, ctx = atlas.getContext('2d');
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, atlas.width, atlas.height);
   for (const seg of g.segments) ctx.drawImage(wall, seg.wall.x * k, seg.wall.y * k, seg.wall.w * k, seg.wall.h * k, seg.atlas.x * a, seg.atlas.y * a, seg.atlas.w * a, seg.atlas.h * a);
@@ -652,7 +665,7 @@ function destino(f) { if (f.especial) { const g = geometry(f.layout); return {an
 // puede forzar «Adaptar». Ver crear-core · motivoAccion y docs/adaptador.md.
 const recetaFicha = f => RECETAS.includes(f.receta) ? f.receta : null;
 const accionDe = f => accionEfectiva(crearCfg(f), state.src, destino(f), recetaFicha(f));
-const creando = f => !!state.src.ancho && accionDe(f) === 'crear';
+const creando = f => !studio?.background(f) && !!state.src.ancho && accionDe(f) === 'crear';
 const crearZoom = f => { const c = crearCfg(f), s = state.fmt[f.id]; return {fx: .5, fy: .5, zoom: Math.max(s.zoom, c.receta === 'tira' ? c.tira.zoom : 1)}; };
 function crearArgs(f, src = state.src) {
   const kind = srcKindCrear();
@@ -1033,6 +1046,7 @@ function loop(now) {
     });
   }
   syncPrevioTodas();
+  studio?.draw();
   requestAnimationFrame(loop);
 }
 // «Previsualizar todas» (next to «Adaptar · N»): every «Crear» card from 0, in step; again, pauses them all.
@@ -1087,6 +1101,7 @@ function releaseDerived() {
   derivedURL = null;
 }
 function setSource(url, name, origin = {id:null,title:name}, kind = 'video', ext = 'png', extra = null) {
+  studio?.clear();
   state.origin = {id:origin.id||null,title:origin.title||name};
   releaseStill(); releaseDerived(); stopAnim(); resetCrearMedia();
   if (svgRasters) { svgRasters.clear(); svgRasters = null; }
@@ -1436,6 +1451,7 @@ $('#compat').onchange = (e) => { state.compat = e.target.value; buildGrid(); };
 // que lo usa, con manifest.json. La casilla Stock publica una pieza por fuente y formato con las
 // etiquetas del proyecto y un externalRef estable (sin duplicados). Los players se programan desde el
 // servidor (/players-programar): ver docs/adaptador.md · «Programación de players».
+let EST_BASE = null, estApplications = [];
 let EST = null;              // JSON de estancos del proyecto activo (validado) o null
 const estSel = new Set();    // ids elegidos
 let pkg = null, pkgSeq = 0;  // paquete en curso
@@ -1443,10 +1459,10 @@ const EST_KEY = id => `pixeria.adapter.estancos.${id}`;
 const STOCK_REFS_KEY = 'pixeria.adapter.stock-refs';
 const projectFormatList = () => FORMATOS.filter(f => f.proyecto);
 function setEstancos(doc) {
-  EST = null; estSel.clear();
+  studio?.clear(); EST = null; EST_BASE=null; estApplications=[]; estSel.clear();
   if (doc && FICHA) {
     const errors = validateEstancos(doc, {formats: projectFormatList(), proyecto: FICHA.id});
-    if (errors.length) console.warn('[estancos]', errors); else EST = doc;
+    if (errors.length) console.warn('[estancos]', errors); else { EST_BASE=doc;let saved=null;try{saved=JSON.parse(localStorage.getItem(APPLICATION_KEY(FICHA.id)));}catch(_){}estApplications=restoreApplications(saved,doc,projectFormatList());EST=applyApplications(doc,estApplications,projectFormatList()); }
   }
   if (EST) { try { (JSON.parse(localStorage.getItem(EST_KEY(FICHA.id))) || []).forEach(id => { if (EST.estancos.some(e => e.id === id)) estSel.add(id); }); } catch (_) {} }
   renderEstancos();
@@ -1867,3 +1883,10 @@ emptySource(); loop();
 
 // El desplegable y el contador del Stock viven en ./stock-select.js (script clásico aparte): si este
 // módulo falla en un navegador, el Stock se lista igual y avisa si no se puede leer.
+
+studio=mountStudio({t,formats:projectFormatList,ficha:()=>FICHA,doc:()=>EST,baseDoc:()=>EST_BASE,applications:()=>estApplications,settings:()=>({...snapshot(state,FORMATOS),crear:state.crear}),
+ready:mediaReady,destino,geometry,reference:(cv,f)=>paint(cv,destino(f),'blur',{fx:.5,fy:.5,zoom:1}),
+draw:(cv,f,bg)=>{if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);},
+changed:()=>buildGrid(),apply:(estanco,formato,on)=>{const next=estApplications.filter(x=>x.estanco!==estanco||x.formato!==formato);if(on)next.push({estanco,formato});
+const valid=restoreApplications(next,EST_BASE,projectFormatList());try{localStorage.setItem(APPLICATION_KEY(FICHA.id),JSON.stringify(valid));}catch(_){throw new Error('storage');}
+estApplications=valid;EST=applyApplications(EST_BASE,valid,projectFormatList());renderEstancos();}});

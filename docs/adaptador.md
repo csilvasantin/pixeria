@@ -531,7 +531,7 @@ Encargo de Carlos (6-oct-2026): hay que poder ver cómo quedan las animaciones a
 - Las piezas de vídeo se capturan buscando el instante con un `<video>` oculto. Si el origen no es de 25 fps, puede haber un fotograma de diferencia con `-ss`.
 - El GIF animado dura un bucle, también en el barrido: un GIF de 1 s barre en 1 s.
 - Rótulo: el periodo de la tira no tiene por qué dividir la duración, así que el bucle del MP4 puede dar un pequeño salto en el texto. El logo no se guarda al recargar. Una pared muy larga (CORDOBA-098) pinta una tira de unos 17 000 px.
-- No hay IA generativa, maquetación de capas ni zonas seguras automáticas.
+- El flujo opcional de fondo IA estático se documenta en [Altadis · IA y Estancos](altadis-ia-estancos.md). Las recetas Crear siguen siendo locales; no hay expansión temporal generativa ni zonas seguras automáticas.
 - Previo animado:
   - Los fotogramas de la tira con vídeo (momentos) se capturan la primera vez que se piden, así que una pieza puede tardar un instante en aparecer.
   - Con tramos en bucle, cada `<video>` oculto se resincroniza si se desvía más de 0,3 s mientras corre. En pausa o al buscar un instante, se ajusta al fotograma.
@@ -587,3 +587,8 @@ BASE=http://127.0.0.1:9195 SHOTS=/dir PW=/ruta/playwright-core node test/adaptad
 ```
 BASE=http://127.0.0.1:9195 SHOTS=/dir PW=/ruta/playwright-core node test/adaptador-previo.browser.cjs
 ```
+
+
+## Fondo IA y aplicaciones virtuales (7-oct-2026) / AI backgrounds and virtual placements
+
+[Guía y tutorial ES/EN · Altadis IA y Estancos](altadis-ia-estancos.md). El modo desenfocado sigue sin IA; Generar fondo IA utiliza el motor autenticado de imagen y compone el original delante. / Blur remains non-generative; Generate AI background uses the authenticated image engine and composites the original in front.

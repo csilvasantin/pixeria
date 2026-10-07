@@ -49,5 +49,10 @@
   "v.07.10.2026.r5.12:54": [
     "Studio/Pixeria carga la versión del avatar con confirmación de las demos locales",
     "El cargador principal y el fallback del CLI comparten la nueva referencia de caché"
+  ],
+  "v.07.10.2026.r7.22:12": [
+    "Adaptación IA: fondo generado con el contenido original completo delante",
+    "Altadis conserva 29 formatos y videowalls con pared y atlas diferenciados",
+    "Aplicaciones virtuales en Estancos guardadas y contrato portable descargable"
   ]
 }

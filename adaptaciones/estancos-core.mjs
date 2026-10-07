@@ -98,7 +98,7 @@ export function packagePlan(doc, ids, formats) {
   for (const est of pickEstancos(doc, ids)) for (const p of est.pantallas) {
     const f = byId.get(p.formato); if (!f) continue;
     const [w, h] = formatSize(f), ext = extOf(f);
-    plan.push({estanco: est.id, slug: est.slug, nombre: est.nombre, pantalla: p.id, screen: p.screen, pantallaNombre: p.nombre, pantallaNameEn: p.nameEn, formato: f.id, formatoNombre: f.nombre, ancho: w, alto: h, ext, archivo: entryPath(est, p, f.id, w, h, ext)});
+    plan.push({estanco: est.id, slug: est.slug, nombre: est.nombre, pantalla: p.id, screen: p.screen, pantallaNombre: p.nombre, pantallaNameEn: p.nameEn, ...(p.virtual?{virtual:true,estado:p.estado||'demo'}:{}), formato: f.id, formatoNombre: f.nombre, ancho: w, alto: h, ext, archivo: entryPath(est, p, f.id, w, h, ext)});
   }
   return plan;
 }
@@ -135,7 +135,7 @@ export function manifest({doc, plan, files, fuente, generado, scope = null, stoc
     mapa: doc.mapa?.estado || null,
     piezas: rows.map(r => {
       const f = files.get(r.formato) || {};
-      const out = {estanco: r.estanco, estancoNombre: r.nombre, pantalla: r.pantalla, screen: r.screen, formato: r.formato, ancho: r.ancho, alto: r.alto, archivo: r.archivo,
+      const out = {...(r.virtual?{virtual:true,estado:r.estado||'demo'}:{}),estanco: r.estanco, estancoNombre: r.nombre, pantalla: r.pantalla, screen: r.screen, formato: r.formato, ancho: r.ancho, alto: r.alto, archivo: r.archivo,
         duracion: Number.isFinite(f.duracion) ? Math.round(f.duracion * 100) / 100 : null, bytes: f.bytes ?? null, sha256: f.sha256 || null, fuente: fuente?.clave || fuente?.id || null};
       const s = stock?.get?.(r.formato);
       if (s) out.stock = {id: s.id, num: s.num ?? null, externalRef: s.externalRef, reutilizado: !!s.reused};
