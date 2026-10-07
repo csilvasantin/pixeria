@@ -164,3 +164,11 @@ test('ambas páginas cargan el módulo y ya no muestran errores crudos', () => {
     assert.doesNotMatch(html, /No se pudo crear la audiencia \(' \+ e\.message|Could not create the audience \(' \+ e\.message/, f);
   }
 });
+
+// pixer-worker v.07.10.2026.r1.07:20 (límites de espera): sus errores explícitos no son «motor saturado».
+test('errores del worker: 502 descarga_imagen → no-data, 502 red → network, 504 timeout → timeout', () => {
+  assert.equal(AF.classify({ status: 502, reason: 'no-data', message: 'descarga_imagen' }).code, 'no-data');
+  assert.equal(AF.classify({ status: 502, reason: 'network', message: 'red' }).code, 'network');
+  assert.equal(AF.classify({ status: 504, reason: 'timeout', message: 'timeout' }).code, 'timeout');
+  assert.equal(AF.classify({ status: 503, message: 'busy' }).code, 'overload');
+});

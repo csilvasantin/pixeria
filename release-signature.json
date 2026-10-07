@@ -1,8 +1,8 @@
 {
-  "version": "v.07.10.2026.r1.00:12",
+  "version": "v.07.10.2026.r2.07:22",
   "deployer": "MorfeoMacMini",
   "machine": "MacMini",
   "signature": "MorfeoMacMini · MacMini",
   "agent": "MorfeoMacMini",
-  "evidence": "Anonimizador fiable: si una foto aleatoria falla se descarta, se explica el motivo (ES/EN) y se prueba otra, hasta 5; registro plegable de descartes y «Probar otra vez»; la foto propia nunca se sustituye; sesión caducada detectada antes de llamar al motor; timeouts reales en Grok y Gemini. 12 unitarios + 14 escenarios e2e."
+  "evidence": "Anonimizador: reconoce los errores con motivo de pixer-worker (timeout 504 sin reintentar la misma foto; descarga_imagen y red con su mensaje)."
 }
