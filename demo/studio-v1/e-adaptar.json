@@ -1,0 +1,153 @@
+{
+  "id": "adaptar",
+  "letra": "e",
+  "nombre": "Adaptar formatos",
+  "desc": "Una misma pieza en horizontal, vertical, cuadrado y barra.",
+  "url": "https://www.admira.studio/adaptaciones/",
+  "mirror_url": "https://www.pixeria.com/adaptaciones/",
+  "cmd": "/demo 5",
+  "duracion": 60,
+  "steps": [
+    {
+      "tool": "adaptacion_plan",
+      "args": {
+        "source": {
+          "ancho": 1280,
+          "alto": 720,
+          "fps": 24
+        },
+        "formato": "9:16",
+        "compatibilidad": "fhd"
+      },
+      "page": "/adaptaciones/",
+      "selector": "#size-categories"
+    }
+  ],
+  "muestra": {
+    "tipo": "video",
+    "url": "https://www.admira.studio/assets/demos/studio-v1/adaptado-horizontal.mp4",
+    "descripcion": "Resultado preparado; este ensayo no realiza generación ni publicación.",
+    "variantes": [
+      {
+        "nombre": "horizontal",
+        "url": "https://www.admira.studio/assets/demos/studio-v1/adaptado-horizontal.mp4",
+        "ancho": 1920,
+        "alto": 1080,
+        "encaje": "recortar",
+        "duracion": 8.057007,
+        "fps": "30/1",
+        "codec": "h264",
+        "bytes": 1725926,
+        "sha256": "8abb6aa02bdfbe673c1ae678c7521a4138e3d913ea79a7dfd68157c6563e3881",
+        "formato": "1920x1080",
+        "poster": "https://www.admira.studio/assets/demos/studio-v1/adaptado-horizontal.jpg"
+      },
+      {
+        "nombre": "vertical",
+        "url": "https://www.admira.studio/assets/demos/studio-v1/adaptado-vertical.mp4",
+        "ancho": 1080,
+        "alto": 1920,
+        "encaje": "recortar",
+        "duracion": 8.057007,
+        "fps": "30/1",
+        "codec": "h264",
+        "bytes": 1999117,
+        "sha256": "fed4b18cc3f03e40e97d44a9278a0ac958d80f525dcc766c39590dce4e7b1f2e",
+        "formato": "1080x1920",
+        "poster": "https://www.admira.studio/assets/demos/studio-v1/adaptado-vertical.jpg"
+      },
+      {
+        "nombre": "cuadrado",
+        "url": "https://www.admira.studio/assets/demos/studio-v1/adaptado-cuadrado.mp4",
+        "ancho": 1080,
+        "alto": 1080,
+        "encaje": "recortar",
+        "duracion": 8.057007,
+        "fps": "30/1",
+        "codec": "h264",
+        "bytes": 1150973,
+        "sha256": "1caefb82c748f507a179ca1292b7b74eadef37d88bdeaf389effdc5aeaa18e9c",
+        "formato": "1080x1080",
+        "poster": "https://www.admira.studio/assets/demos/studio-v1/adaptado-cuadrado.jpg"
+      },
+      {
+        "nombre": "barra",
+        "url": "https://www.admira.studio/assets/demos/studio-v1/adaptado-barra.mp4",
+        "ancho": 1920,
+        "alto": 540,
+        "encaje": "contener",
+        "duracion": 8.057007,
+        "fps": "30/1",
+        "codec": "h264",
+        "bytes": 560382,
+        "sha256": "18b9545ab7c9b0d9c4ea3f237c41a21f7d0ec8fe2e954865518f86a5b4258983",
+        "formato": "1920x540",
+        "poster": "https://www.admira.studio/assets/demos/studio-v1/adaptado-barra.jpg"
+      }
+    ],
+    "poster": "https://www.admira.studio/assets/demos/studio-v1/adaptado-horizontal.jpg"
+  },
+  "guion": [
+    {
+      "selector": "",
+      "accion": "di",
+      "texto": "Elige una pieza existente y comprueba su ficha técnica."
+    },
+    {
+      "selector": "#stock-pick",
+      "accion": "señala",
+      "texto": "Selecciona el vídeo de café de la biblioteca."
+    },
+    {
+      "selector": "#src-select",
+      "accion": "elige",
+      "texto": "Un anuncio elegante de café recién hecho"
+    },
+    {
+      "selector": "",
+      "accion": "espera",
+      "texto": "3"
+    },
+    {
+      "selector": "#btn-adaptar",
+      "accion": "clic",
+      "texto": "Abrimos los formatos de salida."
+    },
+    {
+      "selector": "#size-categories",
+      "accion": "señala",
+      "texto": "Elige horizontal, vertical, cuadrado o barra. Ajusta el encuadre para proteger el producto."
+    },
+    {
+      "selector": "#export-all",
+      "accion": "señala",
+      "texto": "El adaptador exporta archivos reales en el navegador. Aquí comparamos los cuatro archivos preparados y comprobados."
+    },
+    {
+      "selector": "",
+      "accion": "di",
+      "texto": "Horizontal 1920 por 1080; vertical 1080 por 1920; cuadrado 1080 por 1080; barra 1920 por 540. El vertical y el cuadrado recortan; la barra conserva la imagen completa con bandas laterales."
+    }
+  ],
+  "ejecucion_real_opcional": {
+    "execution": "browser_ffmpeg",
+    "page": "/adaptaciones/",
+    "source": "/assets/demos/studio-v1/video-fuente.mp4",
+    "provider_credit": false,
+    "publishes_to_stock": true,
+    "note": "La exportación de la interfaz actual puede guardar el resultado en Stock. El ensayo del pack solo reproduce archivos ya exportados y no activa ese botón."
+  },
+  "verificacion": {
+    "require_media": true,
+    "checks": [
+      "recurso reproducible",
+      "sin generación durante el ensayo",
+      "sin publicación durante el ensayo"
+    ]
+  },
+  "aliases": [
+    "adaptar",
+    "formatos",
+    "adaptacion"
+  ]
+}

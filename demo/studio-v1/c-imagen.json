@@ -1,0 +1,72 @@
+{
+  "id": "imagen",
+  "letra": "c",
+  "nombre": "Crear imagen",
+  "desc": "Del briefing a una creatividad visual.",
+  "url": "https://www.admira.studio/imagenes.html",
+  "mirror_url": "https://www.pixeria.com/imagenes.html",
+  "cmd": "/demo 3",
+  "duracion": 60,
+  "steps": [
+    {
+      "tool": "demo_muestra",
+      "args": {
+        "id": "image"
+      },
+      "page": "/imagenes.html"
+    }
+  ],
+  "muestra": {
+    "tipo": "image",
+    "url": "https://www.admira.studio/assets/demos/studio-v1/imagen-cafe.jpg",
+    "descripcion": "Resultado preparado; este ensayo no realiza generación ni publicación.",
+    "variantes": []
+  },
+  "guion": [
+    {
+      "selector": "",
+      "accion": "di",
+      "texto": "Describe producto, escenario, estilo e iluminación."
+    },
+    {
+      "selector": "#proj-cliente",
+      "accion": "escribe",
+      "texto": "Cafetería Demo · café y bollería"
+    },
+    {
+      "selector": "#i-prompt",
+      "accion": "escribe",
+      "texto": "Fotografía publicitaria de un café humeante en una taza de cerámica sobre una barra de madera, luz cálida de la mañana, fondo de cafetería desenfocado, sin texto y con el producto centrado."
+    },
+    {
+      "selector": "#playOutput",
+      "accion": "señala",
+      "texto": "Aquí se crea una imagen nueva. Mostramos una creatividad de café preparada."
+    },
+    {
+      "selector": "#imageStage",
+      "accion": "señala",
+      "texto": "Revisa el encuadre y el producto antes de descargar o publicar."
+    }
+  ],
+  "ejecucion_real_opcional": {
+    "tool": "crear_imagen",
+    "args": {
+      "prompt": "Fotografía publicitaria de un café humeante en una taza de cerámica sobre una barra de madera, luz cálida de la mañana, fondo de cafetería desenfocado, sin texto y con el producto centrado.",
+      "aspect_ratio": "16:9"
+    },
+    "requires_auth": true,
+    "provider_credit": true
+  },
+  "verificacion": {
+    "require_media": true,
+    "checks": [
+      "recurso reproducible",
+      "sin generación durante el ensayo",
+      "sin publicación durante el ensayo"
+    ]
+  },
+  "aliases": [
+    "imagen"
+  ]
+}
