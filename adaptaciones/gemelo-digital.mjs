@@ -14,9 +14,9 @@ export function mountTwin(h){
   let T,pending,renderer,scene,camera,active=null,panels=[],master=null,geometry=null,yaw=.22,pitch=.12,zoom=1,revision=0,last=0,focus=null,sign=null;
   const resourceSet=new Set();
   function clean(){for(const r of resourceSet)r.dispose?.();resourceSet.clear();panels=[];master=null;sign=null;scene=null;geometry=null;active=null;}
-  function close(){revision++;if(modal.open)modal.close();}
-  modal.addEventListener('close',()=>{revision++;clean();if(renderer){renderer.dispose();renderer.forceContextLoss();renderer=null;}stage.replaceChildren();focus?.focus();});
-  $('.twin-close').onclick=close;
+  function close(){revision++;h.end?.();if(modal.open)modal.close();}
+  modal.addEventListener('close',()=>{revision++;h.end?.();clean();if(renderer){renderer.dispose();renderer.forceContextLoss();renderer=null;}stage.replaceChildren();focus?.focus();});
+  $('.twin-close').onclick=close;modal.addEventListener('cancel',()=>h.end?.());
   function cameraPose(){if(!camera)return;camera.position.set(Math.sin(yaw)*11*zoom,2.9+pitch*8,Math.cos(yaw)*11*zoom);camera.lookAt(0,2.5,-1.9);}
   $('.twin-reset').onclick=()=>{yaw=.22;pitch=.12;zoom=1;cameraPose();draw(true);};
   $('.twin-front').onclick=()=>{yaw=0;pitch=0;zoom=.86;cameraPose();draw(true);};
@@ -54,7 +54,7 @@ export function mountTwin(h){
       const screen=new T.Mesh(geo,mat);screen.position.set(-W/2+(s.x+s.w/2)*k,centreY+H/2-(s.y+s.h/2)*k,-2.896);scene.add(screen);panels.push({cv,crop,texture});
     }
     yaw=.22;pitch=.12;zoom=1;cameraPose();
-    $('#twin-format').textContent=`${f.nombre} · ${wall.ancho}×${wall.alto} · ${panels.length} ${t('pantallas','screens')}`;
+    $('#twin-format').textContent=`${f.nombre} · ${wall.ancho}×${wall.alto} · ${panels.length} ${panels.length===1?t('pantalla','screen'):t('pantallas','screens')}`;
     status.textContent=geometry.warnings.length?geometry.warnings.join(' '):t('Mismo contenido adaptado · distribución virtual','Same adapted content · virtual layout');
     stage.dataset.format=f.id;stage.dataset.screens=String(panels.length);
   }
@@ -64,13 +64,13 @@ export function mountTwin(h){
     for(const {cv,crop,texture} of panels){const ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);ctx.drawImage(master,crop.x,crop.y,crop.w,crop.h,0,0,cv.width,cv.height);texture.needsUpdate=true;}
     renderer.render(scene,camera);
   }
-  async function open(f){if(!h.ready())return;const mine=++revision;focus=document.activeElement;modal.showModal();stage.replaceChildren();status.textContent=t('Abriendo estanco…','Opening shop…');
+  async function open(f){if(!h.ready())return;const mine=++revision;focus=document.activeElement;modal.showModal();h.start?.(f);stage.replaceChildren();status.textContent=t('Abriendo estanco…','Opening shop…');
     const shops=h.shops()||[];shop.replaceChildren(...(shops.length?shops:[{id:'studio-demo',nombre:t('Estanco · demo','Shop · demo')}]).map(s=>new Option(s.nombre,s.id)));
     if(shops.some(s=>s.id===h.shop()))shop.value=h.shop();shop.disabled=shops.length<2;
     try{T=await(pending||=import('./vendor/three-r160.mjs'));if(mine!==revision||!modal.open)return;
       renderer=new T.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=T.SRGBColorSpace;stage.append(renderer.domElement);
       build(f);const {width,height}=stage.getBoundingClientRect();renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();draw(true);$('.twin-close').focus();
-    }catch(e){if(mine!==revision)return;clean();renderer?.dispose();renderer=null;stage.replaceChildren();status.textContent=t('No se pudo abrir el gemelo. Comprueba que WebGL está disponible y vuelve a intentarlo.','Could not open the twin. Check WebGL is available and try again.');console.error('Studio twin:',e);}
+    }catch(e){if(mine!==revision)return;h.end?.();clean();renderer?.dispose();renderer=null;stage.replaceChildren();status.textContent=t('No se pudo abrir el gemelo. Comprueba que WebGL está disponible y vuelve a intentarlo.','Could not open the twin. Check WebGL is available and try again.');console.error('Studio twin:',e);}
   }
   function button(f){const b=document.createElement('button');b.type='button';b.className='pill view-twin';b.textContent=`▣ ${t('Ver en gemelo digital','View in digital twin')}`;b.setAttribute('aria-label',`${t('Ver en gemelo digital','View in digital twin')}: ${f.nombre}`);b.disabled=!h.ready();b.onclick=e=>{e.stopPropagation();open(f);};return b;}
   return {button,draw,close,sync:()=>{document.querySelectorAll('.view-twin').forEach(b=>b.disabled=!h.ready());}};

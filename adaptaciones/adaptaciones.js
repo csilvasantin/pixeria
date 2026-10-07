@@ -1894,5 +1894,16 @@ changed:()=>buildGrid(),apply:(estanco,formato,on)=>{const next=estApplications.
 const valid=restoreApplications(next,EST_BASE,projectFormatList());try{localStorage.setItem(APPLICATION_KEY(FICHA.id),JSON.stringify(valid));}catch(_){throw new Error('storage');}
 estApplications=valid;EST=applyApplications(EST_BASE,valid,projectFormatList());renderEstancos();}});
 
-twin=mountTwin({t,ready:mediaReady,destino,background:f=>studio?.background(f),shops:()=>EST?.estancos,shop:()=>studio?.shop(),selectShop:id=>studio?.selectShop(id),draw:(cv,f,bg)=>{if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);}});
+let twinPlayback=null;
+function startTwinPlayback(){
+  twinPlayback={kind:srcKind,paused:srcKind==='video'?video.paused:srcKind==='anim'?anim?.paused:true,muted:video.muted};
+  if(srcKind==='video'){video.muted=true;video.play().catch(()=>{});}
+  else if(anim)anim.play();
+}
+function endTwinPlayback(){
+  if(!twinPlayback)return;
+  if(twinPlayback.kind===srcKind){if(srcKind==='video'){if(twinPlayback.paused)video.pause();video.muted=twinPlayback.muted;}else if(anim&&twinPlayback.paused)anim.pause();}
+  twinPlayback=null;
+}
+twin=mountTwin({t,start:startTwinPlayback,end:endTwinPlayback,ready:mediaReady,destino,background:f=>studio?.background(f),shops:()=>EST?.estancos,shop:()=>studio?.shop(),selectShop:id=>studio?.selectShop(id),draw:(cv,f,bg)=>{if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);}});
 buildGrid();
