@@ -452,6 +452,8 @@
     async function imageEditOnce(image, sys, prompt) {
       const { r, d } = await AF.paidFetch(WORKER + '/image/edit', { image, sys, prompt }, AF.config.editTimeoutMs);
       if (r.ok && d && d.ok && d.image) return d.image;
+      // Worker 504 = its own time limit already spent the budget: do not retry the same photo.
+      if (d && d.error === 'timeout') throw AF.fail('timeout', d.detail || 'the engine timed out', { status: r.status });
       const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
       e.reason = (d && d.reason) || null;
       e.finishReason = d && d.finishReason;
@@ -489,7 +491,8 @@
       const item = d && Array.isArray(d.data) && d.data[0];
       if (r.ok && item && item.b64_json) return 'data:' + (item.mime || 'image/jpeg') + ';base64,' + item.b64_json;
       // 200 without b64: the worker could not fetch the x.ai image → not "HTTP 200".
-      if (r.ok) throw AF.fail('no-data', 'the source did not deliver the image', { status: r.status });
+      if (r.ok || (d && d.error === 'descarga_imagen')) throw AF.fail('no-data', 'the source did not deliver the image', { status: r.status });
+      if (d && d.error === 'timeout') throw AF.fail('timeout', d.detail || 'the engine timed out', { status: r.status });
       const e = new Error((d && (d.detail || d.error)) || ('HTTP ' + r.status));
       e.reason = (d && d.reason) || null; e.status = r.status;
       throw e;

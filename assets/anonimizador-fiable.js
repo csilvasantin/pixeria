@@ -75,6 +75,10 @@
     if (reason === 'empty' || /no-image-out/.test(text)) return info('empty', e);
     if (s === 413 || /too-big|too large|demasiado grande/.test(text)) return info('too-big', e);
     if (s === 415 || /unable to process input image|invalid (image|base64)|not-an-image|no es una imagen|decode/.test(text)) return info('bad-image', e);
+    // Errores con motivo explícito del worker (pixer-worker v.07.10.2026.r1.07:20): 502 descarga_imagen y 502 red
+    // no son «motor saturado».
+    if (reason === 'no-data' || /descarga_imagen/.test(text)) return info('no-data', e);
+    if (reason === 'network') return info(isOffline() ? 'offline' : 'network', e);
     if (s === 429 || s >= 500 || /high demand|overload|try again|temporar|unavailable|resource_exhausted|rate.?limit|busy/.test(text)) return info('overload', e);
     if (reason === 'network' || s === 0 && /failed to fetch|networkerror|load failed|network|sin conexión|no connection/.test(text)) {
       return info(isOffline() ? 'offline' : 'network', e);
