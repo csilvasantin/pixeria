@@ -148,7 +148,12 @@
   function clienteDe(it) {
     var PC = window.PixeriaCliente; if (!it || !PC || !PC.listo || !PC.listo() || !PC.clientesDe) return NADA;
     var l = PC.clientesDe(it);
-    if (!l.length) return t('Genérico · sin cliente', 'Generic · no client');
+    if (!l.length) {
+      // Sólo un grupo (Alsea = Starbucks en España y México): se dice el grupo y por quién vale.
+      var gs = PC.gruposDe ? PC.gruposDe(it) : [], g = gs.length === 1 && PC.grupo ? PC.grupo(gs[0]) : null;
+      if (g) return g.nombre + ' · ' + g.miembros.map(function (id) { var c = (PC.lista() || []).filter(function (x) { return x.id === id; })[0]; return c && c.nombre || id; }).join(EN ? ' and ' : ' y ');
+      return t('Genérico · sin cliente', 'Generic · no client');
+    }
     if (l.length > 1) return t('Ambiguo · solo Admira', 'Ambiguous · Admira only');
     var c = (PC.lista() || []).filter(function (x) { return x.id === l[0]; })[0];
     return c && c.nombre || l[0];
