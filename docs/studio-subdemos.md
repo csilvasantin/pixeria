@@ -19,7 +19,7 @@ Un minuto por subdemo; cinco minutos para el recorrido completo. El caso común 
 - `demo/studio-guion.html`: guion compatible con el motor anterior `[data-demo]` y acciones `di`, `espera`, `escribe`, `elige`, `señala`, `clic`. No incorpora ni sustituye el motor.
 - `demo/studio-seleccion.subdemos.json`: selección importable `{proyectos:[...]}` con las cinco claves. Importar **después** de que el editor haya cargado el catálogo; la importación actual solo mueve selecciones.
 - `demo/studio-preview.html`: revisión local de las cinco muestras y sus guiones.
-- `assets/demos/studio-v1/`: ocho medios locales y metadatos con procedencia, medidas y hashes SHA-256.
+- `assets/demos/studio-v1/`: ocho piezas multimedia locales, cinco imágenes de portada y metadatos con procedencia, medidas y hashes SHA-256.
 - `_headers`: CORS público para el manifest y estos medios, para lectura desde el editor de admiranext.com. No contiene credenciales ni modifica la autenticación de las APIs.
 
 El manifest apunta a URLs finales de admira.studio. Esas URLs nuevas estarán disponibles **al incorporar y publicar el pack**. Para el espejo pixeria.com, Neo puede reemplazar el origen por `https://www.pixeria.com`; los paths son idénticos. La preview local resuelve esos paths contra el servidor local, sin depender de que estén publicados.
