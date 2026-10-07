@@ -1,0 +1,72 @@
+{
+  "id": "voz",
+  "letra": "a",
+  "nombre": "Crear locución",
+  "desc": "De un guion breve a una voz lista para escuchar.",
+  "url": "https://www.admira.studio/audio.html",
+  "mirror_url": "https://www.pixeria.com/audio.html",
+  "cmd": "/demo 1",
+  "duracion": 60,
+  "steps": [],
+  "muestra": {
+    "tipo": "audio",
+    "url": "https://www.admira.studio/assets/demos/studio-v1/locucion-es.mp3",
+    "descripcion": "Resultado preparado; este ensayo no realiza generación ni publicación.",
+    "variantes": []
+  },
+  "guion": [
+    {
+      "selector": "",
+      "accion": "di",
+      "texto": "Escribe el mensaje de tu tienda y elige idioma, voz y tono."
+    },
+    {
+      "selector": "#proj-cliente",
+      "accion": "escribe",
+      "texto": "Cafetería Demo · café y bollería"
+    },
+    {
+      "selector": "#a-personaje",
+      "accion": "escribe",
+      "texto": "Voz adulta cálida y cercana"
+    },
+    {
+      "selector": "#a-idioma",
+      "accion": "elige",
+      "texto": "Espanol (ES)"
+    },
+    {
+      "selector": "#a-tono",
+      "accion": "elige",
+      "texto": "Cercano"
+    },
+    {
+      "selector": "#a-guion",
+      "accion": "escribe",
+      "texto": "Bienvenidos a nuestra cafetería. Haz una pausa y disfruta de un café recién hecho. Pregunta por la combinación de café y bollería. Te esperamos."
+    },
+    {
+      "selector": "#playOutput",
+      "accion": "señala",
+      "texto": "Aquí se crea la locución. Escuchamos la muestra preparada en castellano."
+    }
+  ],
+  "ejecucion_real_opcional": {
+    "tool": "crear_locucion",
+    "args": {
+      "text": "Bienvenidos a nuestra cafetería. Haz una pausa y disfruta de un café recién hecho. Pregunta por la combinación de café y bollería. Te esperamos.",
+      "provider": "free",
+      "language_code": "es"
+    },
+    "requires_auth": true,
+    "provider_credit": false
+  },
+  "verificacion": {
+    "require_media": true,
+    "checks": [
+      "recurso reproducible",
+      "sin generación durante el ensayo",
+      "sin publicación durante el ensayo"
+    ]
+  }
+}

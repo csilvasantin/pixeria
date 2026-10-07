@@ -1,0 +1,84 @@
+{
+  "id": "video",
+  "letra": "d",
+  "nombre": "Crear vídeo",
+  "desc": "De una imagen al movimiento de un clip.",
+  "url": "https://www.admira.studio/video.html",
+  "mirror_url": "https://www.pixeria.com/video.html",
+  "cmd": "/demo 4",
+  "duracion": 60,
+  "steps": [
+    {
+      "tool": "demo_muestra",
+      "args": {
+        "id": "video"
+      },
+      "page": "/video.html"
+    }
+  ],
+  "muestra": {
+    "tipo": "video",
+    "url": "https://www.admira.studio/assets/demos/studio-v1/video-fuente.mp4",
+    "descripcion": "Resultado preparado; este ensayo no realiza generación ni publicación.",
+    "variantes": [],
+    "poster": "https://www.admira.studio/assets/demos/studio-v1/video-fuente.jpg"
+  },
+  "guion": [
+    {
+      "selector": "",
+      "accion": "di",
+      "texto": "Partimos de una imagen y describimos el movimiento que queremos."
+    },
+    {
+      "selector": "#clip-stock",
+      "accion": "escribe",
+      "texto": "1791230658801-jnv969"
+    },
+    {
+      "selector": "#clip-prompt",
+      "accion": "escribe",
+      "texto": "La cámara se acerca lentamente al café, el vapor asciende suavemente y la luz de la mañana cambia de forma sutil. Conserva la taza y el fondo, sin texto ni cambios de producto."
+    },
+    {
+      "selector": "#clip-one",
+      "accion": "señala",
+      "texto": "Aquí se solicita un clip nuevo de cinco segundos. Esta demo reproduce un vídeo de café ya preparado, de unos ocho segundos."
+    },
+    {
+      "selector": "#clip-status",
+      "accion": "señala",
+      "texto": "Durante una generación real, esperamos a que termine."
+    },
+    {
+      "selector": "",
+      "accion": "di",
+      "texto": "Revisa el movimiento, el producto y la luz en el resultado preparado."
+    }
+  ],
+  "ejecucion_real_opcional": {
+    "tool": "clip_desde_imagen",
+    "args": {
+      "prompt": "La cámara se acerca lentamente al café, el vapor asciende suavemente y la luz de la mañana cambia de forma sutil. Conserva la taza y el fondo, sin texto ni cambios de producto.",
+      "stock_id": "1791230658801-jnv969",
+      "aspect_ratio": "16:9"
+    },
+    "requires_auth": true,
+    "provider_credit": true,
+    "result": "async",
+    "poll": {
+      "tool": "clip_estado",
+      "args": {
+        "request_id": "$result.request_id"
+      }
+    },
+    "persists_to_library": true
+  },
+  "verificacion": {
+    "require_media": true,
+    "checks": [
+      "recurso reproducible",
+      "sin generación durante el ensayo",
+      "sin publicación durante el ensayo"
+    ]
+  }
+}

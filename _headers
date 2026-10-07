@@ -11,3 +11,10 @@
 /auth/*
   Cache-Control: no-store
   X-Robots-Tag: noindex, nofollow
+
+# Catálogo y medios preparados para el editor de admiranext.com/subdemos.
+/demo/studio.subdemos.json
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=300
+/assets/demos/studio-v1/*
+  Access-Control-Allow-Origin: *

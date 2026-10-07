@@ -1,0 +1,273 @@
+{
+  "fuentes": [
+    {
+      "file": "musica-cafe.mp3",
+      "url": "https://stock.admira.store/stock/1791267855890-mpvmw7/asset.mp3",
+      "kind": "existing_stock"
+    },
+    {
+      "file": "imagen-cafe.jpg",
+      "url": "https://stock.admira.store/stock/1791230658801-jnv969/asset.jpg",
+      "kind": "existing_stock"
+    },
+    {
+      "file": "video-fuente.mp4",
+      "url": "https://stock.admira.store/stock/auto-8985fa5f5f9ec8776256/asset.mp4",
+      "kind": "existing_stock"
+    },
+    {
+      "file": "locucion-es.mp3",
+      "kind": "free_tts",
+      "tool": "crear_locucion",
+      "args": {
+        "text": "Bienvenidos a nuestra cafetería. Haz una pausa y disfruta de un café recién hecho. Pregunta por la combinación de café y bollería. Te esperamos.",
+        "provider": "free",
+        "language_code": "es"
+      }
+    }
+  ],
+  "ficheros_verificados": [
+    {
+      "file": "musica-cafe.mp3",
+      "bytes": 744656,
+      "sha256": "25f76717269ecae325ff6eb197db16b44b31b255911be4c3163a38ca00b6de98",
+      "duration": "30.772167",
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "mp3",
+          "width": null,
+          "height": null,
+          "r_frame_rate": "0/0",
+          "sample_rate": "44100",
+          "channels": 2,
+          "pix_fmt": null
+        }
+      ]
+    },
+    {
+      "file": "video-fuente.mp4",
+      "bytes": 2515174,
+      "sha256": "c484a1005ed52f807c92095ca095161a72f014a73c65062e658ebfb6cca06041",
+      "duration": "8.041667",
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "24/1",
+          "sample_rate": null,
+          "channels": null,
+          "pix_fmt": "yuv420p"
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac",
+          "width": null,
+          "height": null,
+          "r_frame_rate": "0/0",
+          "sample_rate": "44100",
+          "channels": 2,
+          "pix_fmt": null
+        },
+        {
+          "codec_type": "video",
+          "codec_name": "mjpeg",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "90000/1",
+          "sample_rate": null,
+          "channels": null,
+          "pix_fmt": "yuvj420p"
+        }
+      ]
+    },
+    {
+      "file": "adaptado-vertical.mp4",
+      "bytes": 1999117,
+      "sha256": "fed4b18cc3f03e40e97d44a9278a0ac958d80f525dcc766c39590dce4e7b1f2e",
+      "duration": "8.057007",
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "30/1",
+          "sample_rate": null,
+          "channels": null,
+          "pix_fmt": "yuv420p"
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac",
+          "width": null,
+          "height": null,
+          "r_frame_rate": "0/0",
+          "sample_rate": "44100",
+          "channels": 2,
+          "pix_fmt": null
+        }
+      ]
+    },
+    {
+      "file": "imagen-cafe.jpg",
+      "bytes": 199360,
+      "sha256": "13bdafbe3998bccaa14bc69a836db94b9f0e3b9d44206722ce4405a6251f0305",
+      "duration": "0.040000",
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "mjpeg",
+          "width": 1280,
+          "height": 720,
+          "r_frame_rate": "25/1",
+          "sample_rate": null,
+          "channels": null,
+          "pix_fmt": "yuvj420p"
+        }
+      ]
+    },
+    {
+      "file": "adaptado-horizontal.mp4",
+      "bytes": 1725926,
+      "sha256": "8abb6aa02bdfbe673c1ae678c7521a4138e3d913ea79a7dfd68157c6563e3881",
+      "duration": "8.057007",
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1920,
+          "height": 1080,
+          "r_frame_rate": "30/1",
+          "sample_rate": null,
+          "channels": null,
+          "pix_fmt": "yuv420p"
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac",
+          "width": null,
+          "height": null,
+          "r_frame_rate": "0/0",
+          "sample_rate": "44100",
+          "channels": 2,
+          "pix_fmt": null
+        }
+      ]
+    },
+    {
+      "file": "adaptado-barra.mp4",
+      "bytes": 560382,
+      "sha256": "18b9545ab7c9b0d9c4ea3f237c41a21f7d0ec8fe2e954865518f86a5b4258983",
+      "duration": "8.057007",
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1920,
+          "height": 540,
+          "r_frame_rate": "30/1",
+          "sample_rate": null,
+          "channels": null,
+          "pix_fmt": "yuv420p"
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac",
+          "width": null,
+          "height": null,
+          "r_frame_rate": "0/0",
+          "sample_rate": "44100",
+          "channels": 2,
+          "pix_fmt": null
+        }
+      ]
+    },
+    {
+      "file": "locucion-es.mp3",
+      "bytes": 91008,
+      "sha256": "0393aafe7c6a154c860d8eb94d7f26eb7b431d9d668d93eb05e213a006a602b8",
+      "duration": "11.376000",
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "mp3",
+          "width": null,
+          "height": null,
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1,
+          "pix_fmt": null
+        }
+      ]
+    },
+    {
+      "file": "adaptado-cuadrado.mp4",
+      "bytes": 1150973,
+      "sha256": "1caefb82c748f507a179ca1292b7b74eadef37d88bdeaf389effdc5aeaa18e9c",
+      "duration": "8.057007",
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1080,
+          "height": 1080,
+          "r_frame_rate": "30/1",
+          "sample_rate": null,
+          "channels": null,
+          "pix_fmt": "yuv420p"
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac",
+          "width": null,
+          "height": null,
+          "r_frame_rate": "0/0",
+          "sample_rate": "44100",
+          "channels": 2,
+          "pix_fmt": null
+        }
+      ]
+    }
+  ],
+  "paid_generations": 0,
+  "posters": [
+    {
+      "file": "adaptado-cuadrado.jpg",
+      "bytes": 53630,
+      "sha256": "4db5a37b0216cc9e977b2ab8573548e7ca2a6d9899f511383b04738ac6e1f17d",
+      "source_video": "adaptado-cuadrado.mp4",
+      "method": "ffmpeg first frame"
+    },
+    {
+      "file": "adaptado-barra.jpg",
+      "bytes": 39961,
+      "sha256": "e5eb72276b8d33212a8208869e80c2228f8c9f0c992a85041800cff513191f00",
+      "source_video": "adaptado-barra.mp4",
+      "method": "ffmpeg first frame"
+    },
+    {
+      "file": "adaptado-vertical.jpg",
+      "bytes": 64610,
+      "sha256": "8d4aea5ac4f9c7e6d61f2ac27a1d22ca6232e20eed693e29ef4bd1f0cdd022eb",
+      "source_video": "adaptado-vertical.mp4",
+      "method": "ffmpeg first frame"
+    },
+    {
+      "file": "adaptado-horizontal.jpg",
+      "bytes": 90052,
+      "sha256": "f75be35bfa8d2f2baa9b91b8b0576b86eb299a8a6f17c9682648f1c44b5665b4",
+      "source_video": "adaptado-horizontal.mp4",
+      "method": "ffmpeg first frame"
+    },
+    {
+      "file": "video-fuente.jpg",
+      "bytes": 55242,
+      "sha256": "b4e1a188d453d44bae02b3fd24f637d7b2c180c64380c57c64ec9372821844a0",
+      "source_video": "video-fuente.mp4",
+      "method": "ffmpeg first frame"
+    }
+  ]
+}

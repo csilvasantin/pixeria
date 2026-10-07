@@ -1,0 +1,16 @@
+{
+  "proyectos": [
+    {
+      "id": "studio-cafeteria-demo",
+      "nombre": "Cafetería Demo · Admira Studio",
+      "nota": "Cinco subdemos de un minuto con muestras preparadas. Importar después de cargar el catálogo studio.subdemos.json.",
+      "demos": [
+        "studio/voz",
+        "studio/musica",
+        "studio/imagen",
+        "studio/video",
+        "studio/adaptar"
+      ]
+    }
+  ]
+}

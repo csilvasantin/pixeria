@@ -1,0 +1,73 @@
+{
+  "id": "musica",
+  "letra": "b",
+  "nombre": "Crear música",
+  "desc": "Del ambiente de una marca a su hilo musical.",
+  "url": "https://www.admira.studio/musica.html",
+  "mirror_url": "https://www.pixeria.com/musica.html",
+  "cmd": "/demo 2",
+  "duracion": 60,
+  "steps": [
+    {
+      "tool": "demo_muestra",
+      "args": {
+        "id": "music"
+      },
+      "page": "/musica.html"
+    }
+  ],
+  "muestra": {
+    "tipo": "audio",
+    "url": "https://www.admira.studio/assets/demos/studio-v1/musica-cafe.mp3",
+    "descripcion": "Resultado preparado; este ensayo no realiza generación ni publicación.",
+    "variantes": []
+  },
+  "guion": [
+    {
+      "selector": "",
+      "accion": "di",
+      "texto": "Define el ambiente, el estilo y el formato de la música."
+    },
+    {
+      "selector": "#m-versiones",
+      "accion": "elige",
+      "texto": "Loop instrumental ~15s"
+    },
+    {
+      "selector": "#m-style",
+      "accion": "elige",
+      "texto": "Blues"
+    },
+    {
+      "selector": "#m-titulo",
+      "accion": "escribe",
+      "texto": "Una pausa con café"
+    },
+    {
+      "selector": "#m-letra",
+      "accion": "escribe",
+      "texto": "[Instrumental]\nPiano cálido, guitarra suave y contrabajo. Sin voz."
+    },
+    {
+      "selector": "#playOutput",
+      "accion": "señala",
+      "texto": "Aquí se genera música nueva. Escuchamos una pieza de cafetería ya preparada."
+    }
+  ],
+  "ejecucion_real_opcional": {
+    "tool": "crear_musica",
+    "args": {
+      "prompt": "Música instrumental cálida para una cafetería: blues suave, piano, guitarra y contrabajo, ritmo relajado, sin voz ni letra."
+    },
+    "requires_auth": true,
+    "provider_credit": true
+  },
+  "verificacion": {
+    "require_media": true,
+    "checks": [
+      "recurso reproducible",
+      "sin generación durante el ensayo",
+      "sin publicación durante el ensayo"
+    ]
+  }
+}
