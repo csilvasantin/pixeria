@@ -975,6 +975,22 @@
       "not_dlss": true,
       "approval": "per piece",
       "video_gif": "unchanged"
+    },
+    "typography": {
+      "analysis": "optional texts[].typography, split at observed colour/size/style changes",
+      "families": [
+        "condensed",
+        "sans",
+        "serif",
+        "script",
+        "mono"
+      ],
+      "catalogue": "self-hosted OFL Anton/Oswald, Montserrat, Libre Baskerville, Lobster, Roboto Mono",
+      "font_identity": "approximation, never exact identification",
+      "measurement": "await catalogue fonts before layout or export; loading failure blocks",
+      "composition": "full recreated photograph with source colours and hierarchy; no fixed blank cream panel",
+      "legacy": "unstyled documents still valid; analyze again to extract typography",
+      "review": "review typography, exact copy and product per piece"
     }
   }
 }

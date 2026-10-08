@@ -109,5 +109,10 @@
     "Recrear con IA en Avanzados genera el espacio que falta para cada formato",
     "Recompone el texto en una zona libre sin tapar los elementos importantes",
     "Diagnósticos por pieza y revisión antes de exportar"
+  ],
+  "v.08.10.2026.r10.18:31": [
+    "Adapter: recreación con tipografía, colores y jerarquía semejantes al original",
+    "Fuentes locales cargadas antes de medir; copia completa y revisión por pieza",
+    "Texto integrado sobre la escena recreada, sin el panel crema vacío"
   ]
 }

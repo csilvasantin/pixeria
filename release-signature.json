@@ -1,8 +1,8 @@
 {
-  "version": "v.08.10.2026.r9.18:05",
+  "version": "v.08.10.2026.r10.18:31",
   "deployer": "OraculoMacMini",
   "agent": "OraculoMacMini",
   "machine": "MacMini",
   "signature": "OraculoMacMini · MacMini",
-  "evidence": "Adapter: recreación avanzada de escena completa, elementos protegidos y texto medido separado. Verificación de solapes y pruebas de regresión."
+  "evidence": "Adapter: tipografía observada por bloque, fuentes OFL locales y recreación con colores/jerarquía del original sin panel vacío."
 }

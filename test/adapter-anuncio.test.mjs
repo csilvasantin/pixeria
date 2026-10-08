@@ -19,3 +19,26 @@ test('copy reflow blocks when protected elements occupy the whole canvas',()=>{a
 test('videowall copy reflow stays in its physical screen',()=>{const boundary={x:1080,y:0,w:1080,h:1920},z=safeCopyZone(doc,2160,1920,[{label:'coffee',box:[400,650,950,900]}],measure,{boundary});assert.ok(z.x>=1080&&z.x+z.w<=2160);});
 test('immersive reconstruction uses the whole native canvas and exact copy',()=>{const calls=[],ctx={measureText:txt=>({width:measure(txt,20)}),fillRect(){},drawImage(...a){calls.push(a);},fillText(){}};renderAdvertisement({width:1080,height:1920,getContext:()=>ctx},{width:1080,height:1920},doc,{immersive:true});assert.deepEqual(calls[0].slice(1),[0,0,1080,1920]);});
 test('iced-drink steam gets one bounded repair, repeated defects remain blocked',async()=>{for(const repairedOK of [true,false]){let edits=0,reviews=0;const run=()=>makeVisual('data:image/png;base64,YQ==',doc,'reconstruct',{w:1080,h:1920},{fetchImpl:async(url,init)=>{if(url==='/auth/api-token')return Response.json({token:'test'});if(url.endsWith('/image/edit')){edits++;if(edits===2)assert.match(JSON.parse(init.body).prompt,/steam/);return Response.json({ok:true,image:'data:image/png;base64,YQ=='});}reviews++;return Response.json({ok:true,verification:{hasText:false,productPresent:true,issues:reviews===1||!repairedOK?['steam above iced drink']:[],protectedSubjects:[{label:'coffee',box:[400,300,950,700]}],compositionSafe:true}});}});if(repairedOK)await run();else await assert.rejects(run,/visual-review-failed/);assert.equal(edits,2);assert.equal(reviews,2);}});
+
+test('observed typography survives copy edits and reaches the same measurement and paint pipeline',async()=>{
+ const {fontFor,measureCopy}=await import('../adaptaciones/anuncio-core.mjs');
+ const type={family:'condensed',weight:900,color:'#00E8F1',align:'center',italic:false,trackingEm:0,lineHeight:1.05,outlineEm:0,outlineColor:'#102D36',shadow:false};
+ const styled={...doc,texts:[{text:'UN CAFÉ CON HIELO',role:'headline',box:[40,0,120,1000],typography:type},{text:'EN LA PLAYA DE BARCELONA',role:'headline',box:[130,0,190,1000],typography:{...type,color:'#FFF000'}}]};
+ assert.match(fontFor(100,'headline',type),/400 100px "Pixer Anton"/);assert.match(fontFor(100,'headline',{...type,weight:500}),/Pixer Oswald/);
+ assert.equal(editCopy(styled,'UN CAFÉ CON HIELO\n\nEN LA PLAYA DE BARCELONA').texts[1].typography.color,'#FFF000');
+ const paints=[],fills=[],seen=[],ctx={letterSpacing:'0px',measureText(txt){seen.push(this.font);return{width:txt.length*parseFloat(this.font.match(/(\d+(?:\.\d+)?)px/)[1])*.42,actualBoundingBoxAscent:75};},fillRect(...r){fills.push([this.fillStyle,...r]);},drawImage(){},strokeText(){},fillText(txt,x,y){paints.push({text:txt,font:this.font,color:this.fillStyle,x,y});}};
+ const layout=renderAdvertisement({width:1080,height:1920,getContext:()=>ctx},{width:1080,height:1920},styled,{immersive:true});
+ assert.equal(layout.valid,true);assert.ok(seen.every(f=>f.includes('Pixer Anton')));assert.ok(paints.some(p=>p.color==='#00E8F1'));assert.ok(paints.some(p=>p.color==='#FFF000'));assert.equal(fills.length,1,'no opaque blank headline panel on a styled recreated scene');
+ assert.equal(paints.map(p=>p.text).join('').replace(/\s/g,''),styled.texts.map(t=>t.text).join('').replace(/\s/g,''));assert.ok(layout.blocks[1].px<layout.blocks[0].px,'observed size hierarchy');
+ assert.ok(measureCopy(ctx,'CAFÉ',100,'headline',type)>0);
+});
+test('font selection is bounded and unavailable catalogue fonts block composition',async()=>{
+ const {fontFor,loadDocumentFonts}=await import('../adaptaciones/anuncio-core.mjs');
+ const s={family:'url(https://untrusted.test/font)',color:'#FFFFFF',weight:900};assert.doesNotMatch(fontFor(40,'headline',s),/untrusted/);
+ await loadDocumentFonts(doc,{Font:null,fontSet:null});
+ await assert.rejects(()=>loadDocumentFonts({...doc,texts:[{text:'TEST',role:'headline',typography:{family:'condensed',color:'#00FFFF',weight:900}}]},{Font:null,fontSet:null}),/font-unavailable/);
+});
+test('old unstyled copy uses a compact backplate ending at the copy bounds',()=>{
+ const fills=[],ctx={measureText:t=>({width:measure(t,20)}),drawImage(){},fillText(){},fillRect(...r){fills.push(r);}};
+ const l=renderAdvertisement({width:1080,height:1920,getContext:()=>ctx},{width:1080,height:1920},doc,{immersive:true});assert.ok(fills[1][3]<l.panel.h);assert.ok(fills[1][3]>=l.blocks.at(-1).y+l.blocks.at(-1).h);
+});
