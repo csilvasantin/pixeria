@@ -656,3 +656,5 @@ Si un elemento importante invade el área prevista, el editor busca otra zona li
 If an important element overlaps the planned copy area, the editor finds another free area and reflows all copy there. It blocks only when no readable space remains without covering those elements.
 
 Coordinates from verification are mapped to the actual contained image in the native canvas before choosing a safe rectangle. Copy stays inside the designated physical screen for segmented walls. The final rectangle is checked against all returned protected boxes and measured copy; no fit means export remains blocked.
+
+ES: Si la comprobación detecta vapor en un café frío, intenta corregirlo una sola vez dentro del mismo tiempo límite. Un segundo defecto queda bloqueado; se muestra el borrador rechazado con la causa, sin aprobación ni descarga. EN: If review detects steam above an iced drink, one bounded correction is attempted within the same deadline. A second failure remains blocked; the rejected draft and reason are shown without approval or download.

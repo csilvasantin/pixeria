@@ -424,3 +424,5 @@ body.adapt-page{overflow-x:clip;overflow-y:visible}
 .ad-card{padding:8px 0}.ad-card-status{font-size:12px;margin:4px 0 8px}.ad-card .pill{margin:3px 4px 3px 0;font-size:11px}
 
 .ad-reconstruction{border:1px solid var(--ln-hi);padding:10px;margin-bottom:12px}.ad-reconstruction label{display:block;margin:8px 0}.ad-reconstruction select,.ad-reconstruction textarea{width:100%;box-sizing:border-box;background:var(--field-2);color:var(--tx);border:1px solid var(--ln-hi);font:inherit;padding:7px}.ad-reconstruction p{font-size:12px;line-height:1.5}.ad-reconstruction [hidden]{display:none!important}
+
+#ad-rejected img{max-height:320px;max-width:100%;object-fit:contain}#ad-rejected figcaption{font-size:12px;color:var(--mu)}
