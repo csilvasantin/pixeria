@@ -3009,7 +3009,7 @@
     // si la API no responde, se derivan de las etiquetas del índice ya cargado.
     const CATALOGO = (function () {
       const $ = id => document.getElementById(id);
-      const T = {"sinAsignar": "sin asignar", "asignadoA": "Asignado a", "pantallas": "pantallas", "fallos": "fallo(s)", "vigente": "VIGENTE", "caducado": "CADUCADO", "piezas": "piezas", "pieza": "pieza", "ultimo": "última", "volver": "Todos los catálogos", "asignar": "Asignar al circuito…", "cargando": "// cargando catálogos…", "cargandoPiezas": "// cargando piezas del catálogo…", "sinCatalogos": "// No hay catálogos en el Stock. Se crean desde admira.tv/contentcatalogue.", "sinResultados": "// ningún catálogo coincide con la búsqueda.", "sinPiezas": "// este catálogo no tiene piezas reproducibles.", "fuenteIndice": "derivados de las etiquetas #catalogo del índice (la API /stock/catalogos no responde)", "fuenteApi": "fuente: api.admira.store/stock/catalogos", "sinPantallas": "Este proyecto no tiene pantallas registradas en /grid/screens.", "piezasAhora": "piezas ahora", "sinPlaylist": "sin playlist (o sin acceso)", "verCanal": "ver canal", "asignarTitulo": "📡 ASIGNAR AL CIRCUITO", "segCadaUna": "s cada una", "notaPlaylist": "se escribe la playlist por defecto de cada pantalla marcada (admira.tv la relee en ≤30 s).", "cargandoPantallas": "cargando proyectos y pantallas…", "asignarBtn": "Asignar", "sinProyectos": "— sin proyectos —", "pagina": "página", "eligePantalla": "Marca al menos una pantalla.", "asignando": "Asignando…", "errorRed": "error de red", "claveMala": "clave del Stock incorrecta (401)", "sinClave": "cancelado: sin clave del Stock no se asigna.", "releen": "las pantallas releen la playlist en ≤30 s.", "catalogo": "Catálogo"};
+      const T = {"sinAsignar": "sin asignar", "asignadoA": "Asignado a", "pantallas": "pantallas", "fallos": "fallo(s)", "vigente": "VIGENTE", "caducado": "CADUCADO", "piezas": "piezas", "pieza": "pieza", "ultimo": "última", "volver": "Todos los catálogos", "asignar": "Asignar al circuito…", "cargando": "// cargando catálogos…", "cargandoPiezas": "// cargando piezas del catálogo…", "sinCatalogos": "// No hay catálogos en el Stock. Se crean desde admira.tv/contentcatalogue.", "sinResultados": "// ningún catálogo coincide con la búsqueda.", "sinPiezas": "// este catálogo no tiene piezas reproducibles.", "fuenteIndice": "derivados de las etiquetas #catalogo del índice (la API /stock/catalogos no responde)", "fuenteApi": "fuente: api.admira.store/stock/catalogos", "sinPantallas": "Este proyecto no tiene pantallas registradas en /grid/screens.", "piezasAhora": "piezas ahora", "sinPlaylist": "sin playlist (o sin acceso)", "verCanal": "ver canal", "asignarTitulo": "📡 ASIGNAR AL CIRCUITO", "segCadaUna": "s cada una", "notaPlaylist": "se escribe la playlist por defecto de cada pantalla marcada (admira.tv la relee en ≤30 s).", "cargandoPantallas": "cargando proyectos y pantallas…", "asignarBtn": "Asignar", "sinProyectos": "— sin proyectos —", "pagina": "página", "eligePantalla": "Marca al menos una pantalla.", "asignando": "Asignando…", "errorRed": "error de red", "claveMala": "clave del Stock incorrecta (401)", "sinClave": "cancelado: sin clave del Stock no se asigna.", "releen": "las pantallas releen la playlist en ≤30 s.", "automatica": "automática", "seguia": "seguía", "ahoraPropia": "ahora tiene lista propia", "sinLeer": "no se pudo leer su lista; no se ha tocado", "catalogo": "Catálogo"};
       const localOverride = name => {
         try { const o = new URLSearchParams(location.search).get(name); return (o && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o)) ? o : ''; } catch { return ''; }
       };
@@ -3189,7 +3189,7 @@
         if (!lst.length) { box.innerHTML = `<p class="cat-empty">${T.sinPantallas}</p>`; return; }
         box.innerHTML = lst.map(s => {
           const lv = live[s.screen];
-          const now = lv ? `${(lv.items || []).length} ${T.piezasAhora}${lv.updatedBy ? ` · ${esc(String(lv.updatedBy).slice(0, 40))}` : ''}` : (lv === null ? T.sinPlaylist : '…');
+          const now = lv ? `${(lv.items || []).length} ${T.piezasAhora}${lv.synthetic ? ` · <span title="${esc(lv.name || '')}">${T.automatica}</span>` : ''}${lv.updatedBy ? ` · ${esc(String(lv.updatedBy).slice(0, 40))}` : ''}` : (lv === null ? T.sinPlaylist : '…');
           return `<label class="dist-screen cat-screen${tsel.has(s.screen) ? ' sel' : ''}" data-sid="${esc(s.screen)}">
             <input type="checkbox" ${tsel.has(s.screen) ? 'checked' : ''} aria-label="${esc(s.name || s.screen)}">
             <span class="sid">${esc(s.name || s.screen)}</span><span class="srole">${esc(s.screen)} · ${esc(s.circuit || '')}</span>
@@ -3247,16 +3247,24 @@
         for (const s of targets) {
           let line = '';
           for (let intento = 0; intento < 2 && key; intento++) {
-            let list = items;
-            if (!replace) { const lv = live[s.screen] || await livePlaylist(s.screen); const prev = (lv && lv.items || []).filter(x => !(x.tags || []).includes(c.id)); list = prev.concat(items).slice(0, 200); }
+            let list = items, rev, lv = live[s.screen];
+            // Sin lista guardada, admira.tv devuelve un borrador SINTÉTICO (synthetic:true + origin, admira-tv #54):
+            // lo componen al vuelo las playlists vivas o el hashtag. No es de la pantalla: «Añadir» no lo congela en
+            // la lista guardada, sólo conserva lo guardado. Se manda la `rev` leída (la de lo guardado, 0 si nada)
+            // para el bloqueo optimista; si otro escribió entretanto (409) se relee una vez. «Reemplazar» no cambia.
+            // Si la lista actual no se puede leer, «Añadir» acabaría pisándola: se salta la pantalla sin escribir.
+            if (!replace) { lv = lv || await livePlaylist(s.screen); if (!lv) { line = `✗ ${esc(s.name || s.screen)} · ${T.sinLeer}`; break; }
+              const prev = (!lv.synthetic && lv.items || []).filter(x => !(x.tags || []).includes(c.id)); list = prev.concat(items).slice(0, 200); rev = Number(lv.rev) || 0; }
+            const viva = lv && lv.synthetic ? ` · ${T.seguia} «${esc(lv.name || T.automatica)}» (${T.automatica}); ${T.ahoraPropia}` : '';
             let r, d = {};
             try {
               r = await fetch(`${TV}/api/playlist`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ screen: s.screen, items: list, secret: key, name: `${T.catalogo} ${c.nombre || c.id}`.slice(0, 80), source: `catalogo ${c.id}` }) });
+                body: JSON.stringify({ screen: s.screen, items: list, rev, secret: key, name: `${T.catalogo} ${c.nombre || c.id}`.slice(0, 80), source: `catalogo ${c.id}` }) });
               d = await r.json().catch(() => ({}));
             } catch (e) { line = `✗ ${esc(s.name || s.screen)} · ${T.errorRed}`; break; }
             if (r.status === 401) { forgetStockNotifyKey(); key = stockNotifyKey(true); line = `✗ ${esc(s.name || s.screen)} · ${T.claveMala}`; continue; }
-            if (r.ok && d.ok) { ok++; okScreens.push(s.screen); live[s.screen] = d.draft || null; line = `✓ ${esc(s.name || s.screen)} · ${list.length} ${T.piezas} · rev ${esc(d.rev)} · <a href="${canalUrl(s)}" target="_blank" rel="noopener">${T.verCanal} ↗</a>`; }
+            if (r.status === 409 && !replace) { live[s.screen] = d.draft || null; line = `✗ ${esc(s.name || s.screen)} · HTTP 409 ${esc(d.error || '')}`; continue; }
+            if (r.ok && d.ok) { ok++; okScreens.push(s.screen); live[s.screen] = d.draft || null; line = `✓ ${esc(s.name || s.screen)} · ${list.length} ${T.piezas} · rev ${esc(d.rev)}${viva} · <a href="${canalUrl(s)}" target="_blank" rel="noopener">${T.verCanal} ↗</a>`; }
             else line = `✗ ${esc(s.name || s.screen)} · HTTP ${r.status} ${esc(d.error || '')}`;
             break;
           }
