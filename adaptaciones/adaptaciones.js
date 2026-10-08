@@ -11,7 +11,7 @@ import { perfilDeSalida, planificar } from '/assets/signage-perfiles.js';
 import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob, STILL, stillSeconds, stillJob, animJob, animPreviewJob } from './adapter-core.mjs?v=adapter-detail-1';
 import { createEngine, MAX_SOURCE_BYTES } from './adapter-export.js';
 import { createExportQueue } from './export-queue.js';
-import { publishAdaptation, shortFormat, adaptationTitle } from './stock-publish.mjs';
+import { publishAdaptation, shortFormat, adaptationTitle, MAX_STOCK_BYTES } from './stock-publish.mjs';
 import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily, isProjectFormat, isLibrarySize, applyCampaign, setGroupSelected, groupSelection, selectAllSizes } from './format-catalog.mjs';
 import { GENERAL, YOKUP_URL, PROJECT_KEY, projectStorageKey, formatRef, resolveRef, projectLibrary, projectCampaigns, parseYokup, mergeProjects, migrateStorage, initialProject } from './proyectos-core.mjs';
 import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs?v=adapter-detail-1';
@@ -146,13 +146,15 @@ async function saveOne(item,file) {
   item.stock=item.stock||{ok:0,fail:0,ids:[]};
   queue.note(item,t('Guardando en el Stock…','Saving to Stock…'));
   let result;
-  try {result=await publishAdaptation(file.blob,{title,originId:item.origin.id,client:item.client,format,width:file.output.W,height:file.output.H,duration:item.duration,still:!!item.still,receta:item.receta||null});}
+  // Los MP4 grandes suben por partes: la nota de la cola enseña el porcentaje.
+  const onProgress=(hecho,bytes)=>queue.note(item,`${t('Guardando en el Stock…','Saving to Stock…')} ${Math.floor(hecho/bytes*100)} %`);
+  try {result=await publishAdaptation(file.blob,{title,originId:item.origin.id,client:item.client,format,width:file.output.W,height:file.output.H,duration:item.duration,still:!!item.still,receta:item.receta||null},null,{onProgress});}
   catch(_) {result={ok:false,error:'network'};}
   if(result.ok){item.stock.ok++;item.stock.ids.push(result.num?`#${result.num}`:result.id);}else item.stock.fail++;
   const done=item.stock.ok+item.stock.fail;
   if(done<total){queue.note(item,`${t('Guardando en el Stock…','Saving to Stock…')} ${done}/${total}`);return;}
   queue.note(item,item.stock.fail
-    ?(result.error==='too-big'?t('Supera 70 MB: no se guardó en el Stock; descárgalo.','Over 70 MB: not saved to Stock; download it.'):t('No se pudo guardar en el Stock; descárgalo.','Could not save to Stock; download it.'))
+    ?(result.error==='too-big'?t(`Supera ${MAX_STOCK_BYTES/1048576} MB: no se guardó en el Stock; descárgalo.`,`Over ${MAX_STOCK_BYTES/1048576} MB: not saved to Stock; download it.`):t('No se pudo guardar en el Stock; descárgalo.','Could not save to Stock; download it.'))
     :`${t('En el Stock','In Stock')} ${item.stock.ids.join(' ')}`.trim());
   item.stockTitle=title;
 }
@@ -1660,7 +1662,9 @@ async function publishPackage() {
   if (!pieces.every(piece => piece.externalRef)) { p.log.push({formato: '—', estado: 'error', error: t('fuente sin referencia estable', 'source without a stable reference')}); p.publishing = false; renderPackage(); return; }
   const upload = async piece => {
     const f = p.files.get(piece.formato), fmt = fmtById(piece.formato), size = fmt ? (fmt.layout?.entrega || fmt.custom) : [0, 0];
-    return publishAdaptation(f.blob, {title: adaptationTitle(p.fuente.titulo, {nombre: FICHA?.nombre || EST.proyecto}, fmt?.nombre || piece.formato), originId: p.fuente.id, client: null, format: piece.formato, width: size[0], height: size[1], duration: f.duracion, still: !!f.item?.still}, {tags: piece.tags, externalRef: piece.externalRef, comment: piece.comment});
+    // Progreso de la subida por partes de cada pieza grande; al terminar el lote se pinta «Stock: x/y piezas».
+    const onProgress = (hecho, bytes) => { $('#estancos-status').textContent = t(`Stock: subiendo ${piece.formato} · ${Math.floor(hecho / bytes * 100)} %`, `Stock: uploading ${piece.formato} · ${Math.floor(hecho / bytes * 100)} %`); };
+    return publishAdaptation(f.blob, {title: adaptationTitle(p.fuente.titulo, {nombre: FICHA?.nombre || EST.proyecto}, fmt?.nombre || piece.formato), originId: p.fuente.id, client: null, format: piece.formato, width: size[0], height: size[1], duration: f.duracion, still: !!f.item?.still}, {tags: piece.tags, externalRef: piece.externalRef, comment: piece.comment}, {onProgress});
   };
   const base = p.log.slice();
   const log = await publishPieces(mp4, {upload, known, onStep: l => { p.log = [...base, ...l]; renderPackage(); }});

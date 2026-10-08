@@ -311,7 +311,7 @@ Encargo de Carlos (6-oct-2026) para los 9 estancos Altadis de Barcelona. Hay dos
 ### Publicar al Stock
 
 - Con la casilla marcada, el lote se publica al terminar. El botón «Publicar en el Stock» lo repite o lo reintenta.
-- Va por el mismo `/stock-publish` de las adaptaciones (`publishAdaptation` con `extra`).
+- Va por el mismo `/stock-publish` de las adaptaciones (`publishAdaptation` con `extra`). Las piezas de más de 8 MB suben antes por partes (ver «Subida por partes al Stock»); mientras suben, el estado del panel dice «Stock: subiendo <formato> · N %».
 - Se publica **una pieza por fuente y formato**:
   - El mismo MP4 sirve a la misma pantalla de todos los estancos del lote.
   - El Stock ya deduplica por contenido (SHA-256): si se suben bytes iguales, devuelve la pieza existente sin cambiarle las etiquetas.
@@ -326,6 +326,24 @@ Encargo de Carlos (6-oct-2026) para los 9 estancos Altadis de Barcelona. Hay dos
   - Si ya está, se anota «ya estaba» y no se sube.
   - El registro del panel distingue publicada, ya estaba, reutilizada (mismo contenido) y error.
 - El Stock solo acepta MP4 desde el Adaptador. Los PNG van únicamente en el ZIP.
+
+### Subida por partes al Stock (8-oct-2026)
+
+Un MP4 de 30 s a ~18 Mbps (el bitrate lo marcan las especificaciones de Altadis y no se toca) pesa ~70 MB. En base64 dentro del JSON de `/stock-publish` eran ~97 MB que la función parseaba y volvía a serializar: el isolate pasaba de 128 MB y Cloudflare respondía 503 «Worker exceeded resource limits». Fallaba todo lo que pasaba de unos 40 MB.
+
+- Hasta 8 MB (`PARTS_THRESHOLD`) se sigue publicando en base64, como siempre.
+- Por encima, `publishAdaptation` sube el MP4 **crudo y en trozos** y después publica con `r2Staged` en vez de `base64`. El Stock guarda la misma entrada por los dos caminos (metadatos, etiquetas, motor, título, comentario, póster, `validacion`, `quality`, `dimensions`, `externalRef` y la URL `https://stock.admira.store/stock/<id>/asset.mp4`).
+- Rutas (`functions/stock-upload/[accion].js`, que reenvía a `api.admira.store/stock/upload/*` con las mismas cabeceras que `/stock-publish`):
+  - `POST /stock-upload/start` `{type:'video', motor, mime:'video/mp4', size}` → `{ok, key, uploadId, partSize, maxParts}`. Solo MP4 de los motores del Adaptador (`adaptador`, `yt-dlp`, `import`), `size` entero hasta 500 MB.
+  - `PUT /stock-upload/part?key=&uploadId=&n=` con el trozo crudo y `Content-Length` (≤ 25 MB) → `{ok, partNumber, etag}`. La función lo reenvía como stream: nunca lo lee a memoria.
+  - `POST /stock-upload/complete` `{key, uploadId, parts:[{partNumber, etag}]}` → `{ok, key, size}`. El Worker comprueba que el fichero mide lo anunciado en `start` (400 `size-mismatch` si no).
+  - `POST /stock-upload/abort` `{key, uploadId}`.
+  - Después, `POST /stock-publish` con los metadatos de siempre y `r2Staged: key`.
+- El cliente (`adaptaciones/stock-publish.mjs`, `uploadInParts`) sube 2 trozos a la vez y reintenta cada uno hasta 3 veces si falla la red o responde 408, 429 o 5xx. Si un trozo o el cierre fallan, aborta la subida.
+- Mientras sube, la nota de la cola dice «Guardando en el Stock… N %».
+- Mismo perímetro que `/stock-publish`: nada de `externalId`, `catalogo` ni claves fuera de `uploads/`.
+- Lo que se cierra y no llega a publicarse lo borra el Worker a las 24 h.
+- Pruebas: `node --test test/stock-subida-partes.test.mjs`. Cubren los trozos, los reintentos, el abort, la función que reenvía el trozo sin leerlo y `/stock-publish` con `r2Staged`.
 
 ### Programación de players
 
