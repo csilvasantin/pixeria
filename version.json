@@ -1,10 +1,10 @@
 {
-  "version": "v.08.10.2026.r13.19:28",
-  "deployer": "OraculoMacMini",
+  "version": "v.08.10.2026.r14.19:39",
+  "deployer": "MorfeoMacMini",
   "machine": "MacMini",
-  "signature": "OraculoMacMini · MacMini",
-  "agent": "OraculoMacMini",
-  "builtAt": "2026-10-08T17:28:44Z",
+  "signature": "MorfeoMacMini · MacMini",
+  "agent": "MorfeoMacMini",
+  "builtAt": "2026-10-08T17:39:29Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
     "Studio/Pixeria carga la versión del avatar con confirmación de las demos locales",
