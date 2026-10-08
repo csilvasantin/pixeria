@@ -1,12 +1,14 @@
 {
   "version": "v.08.10.2026.r14.19:39",
-  "deployer": "MorfeoMacMini",
+  "deployer": "OraculoMacMini",
   "machine": "MacMini",
-  "signature": "MorfeoMacMini · MacMini",
-  "agent": "MorfeoMacMini",
-  "builtAt": "2026-10-08T17:39:29Z",
+  "signature": "OraculoMacMini · MacMini",
+  "agent": "OraculoMacMini",
+  "builtAt": "2026-10-08T17:49:32Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
+    "Adapter: ocho comparativas con originales y descargas, cuatro por dirección",
+    "Revisión por bloque de familia tipográfica, color y contorno; copia con palabras completas",
     "Studio/Pixeria carga la versión del avatar con confirmación de las demos locales",
     "El cargador principal y el fallback del CLI comparten la nueva referencia de caché"
   ]

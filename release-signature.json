@@ -1,8 +1,8 @@
 {
-  "version": "v.08.10.2026.r13.19:28",
-  "deployer": "MorfeoMacMini",
-  "agent": "MorfeoMacMini",
+  "version": "v.08.10.2026.r14.19:39",
+  "deployer": "OraculoMacMini",
+  "agent": "OraculoMacMini",
   "machine": "MacMini",
-  "signature": "MorfeoMacMini · MacMini",
-  "evidence": "Stock: «Añadir» al circuito conserva sólo la lista guardada (no congela el borrador sintético de admira.tv), manda rev y no pisa si no puede leer."
+  "signature": "OraculoMacMini · MacMini",
+  "evidence": "Adapter: ocho pares revisados, cuatro landscape a portrait y cuatro portrait a landscape; tipografía redondeada, revisión manual y copia completa. MS-DOS/OSX sigue pendiente de análisis."
 }
