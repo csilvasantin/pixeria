@@ -93,5 +93,11 @@
     "Elementos importantes editables y texto completo recompuesto por separado",
     "Comprobación de solapes entre producto y texto antes de aprobar y exportar",
     "Los bloqueos indican si queda texto generado, falta el producto o invade el titular"
+  ],
+  "v.08.10.2026.r7.18:02": [
+    "Adapter: Recrear con IA en Avanzados genera el espacio que falta para cada formato",
+    "Elementos importantes editables y texto completo recompuesto por separado",
+    "Comprobación de solapes entre producto y texto antes de aprobar y exportar",
+    "Los bloqueos indican si queda texto generado, falta el producto o invade el titular"
   ]
 }
