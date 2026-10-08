@@ -1,8 +1,8 @@
 {
-  "version": "v.08.10.2026.r16.22:20",
+  "version": "v.09.10.2026.r1.00:12",
   "deployer": "MorfeoMacMini",
   "agent": "MorfeoMacMini",
   "machine": "MacMini",
   "signature": "MorfeoMacMini · MacMini",
-  "evidence": "Republicado para activar STOCK_NOTIFY_KEY en el proyecto Pages: el Adaptador ya puede programar los players de admira.tv en modo real."
+  "evidence": "Adaptador: los MP4 de más de 8 MB suben al Stock por partes en streaming (/stock-upload/*); se acaba el 503 «Worker exceeded resource limits» con vídeos de ~70 MB."
 }

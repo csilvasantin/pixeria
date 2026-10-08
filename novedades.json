@@ -127,5 +127,9 @@
   "v.08.10.2026.r16.22:20": [
     "Adaptador → Programar players: el modo real ya escribe en las pantallas de admira.tv (clave del Stock activa en el servidor).",
     "El modo prueba sigue sin escribir nada y enseña el plan exacto antes de programar."
+  ],
+  "v.09.10.2026.r1.00:12": [
+    "Adaptador → Publicar al Stock: los vídeos grandes (más de 8 MB) suben por partes y ya no fallan con 503; hasta 500 MB por fichero.",
+    "Cada parte se reintenta hasta tres veces y el panel del paquete enseña el porcentaje de subida."
   ]
 }
