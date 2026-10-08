@@ -977,7 +977,7 @@
       "video_gif": "unchanged"
     },
     "typography": {
-      "analysis": "optional texts[].typography, split at observed colour/size/style changes",
+      "analysis": "required texts[].typography in new analyses; optional in legacy documents; split at observed colour/size/style changes",
       "families": [
         "condensed",
         "sans",

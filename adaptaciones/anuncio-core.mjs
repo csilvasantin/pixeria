@@ -39,7 +39,8 @@ export function textLayout(doc,W,H,measure,textZone=null){
  for(let step=0;step<=40;step++){
   const factor=1-step*.018,blocks=[];let y=b.y,valid=true;
   doc.texts.forEach((x,i)=>{const px=Math.max(minimum[i],base[i]*factor),lines=wrapCopy(x.text,b.w,px,(txt,size)=>measure(txt,size,x.role,x.typography)),lh=px*typographyFor(x.role,x.typography).lineHeight;
-   if(lines.some(line=>measure(line,px,x.role,x.typography)>b.w+.1))valid=false;
+   // Shrink before wrapping inside words; a fitting column of fragments is not usable copy.
+   if(lines.some(line=>measure(line,px,x.role,x.typography)>b.w+.1)||String(x.text).split(/\s+/).some(word=>measure(word,px,x.role,x.typography)>b.w+.1))valid=false;
    const height=lines.length*lh;blocks.push({...x,x:b.x,y,w:b.w,h:height,px,lh,lines});y+=height+short*(x.typography?.012:.018);
   });
   const end=blocks.length?blocks.at(-1).y+blocks.at(-1).h:b.y;

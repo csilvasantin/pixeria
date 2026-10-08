@@ -42,3 +42,11 @@ test('old unstyled copy uses a compact backplate ending at the copy bounds',()=>
  const fills=[],ctx={measureText:t=>({width:measure(t,20)}),drawImage(){},fillText(){},fillRect(...r){fills.push(r);}};
  const l=renderAdvertisement({width:1080,height:1920,getContext:()=>ctx},{width:1080,height:1920},doc,{immersive:true});assert.ok(fills[1][3]<l.panel.h);assert.ok(fills[1][3]>=l.blocks.at(-1).y+l.blocks.at(-1).h);
 });
+
+test('narrow free zones shrink whole words instead of producing stacked word fragments',()=>{
+ const d={...doc,texts:[{text:'UNA TAZA DE CAFÉ DE STARBUCKS HUMEANTE',role:'headline',typography:{family:'sans',weight:900,color:'#FFFFFF',align:'center',lineHeight:1.08}}]};
+ const l=textLayout(d,1080,1920,measure,{x:790,y:0,w:290,h:1920});
+ if(l.valid){assert.ok(l.blocks[0].lines.includes('STARBUCKS'));assert.ok(!l.blocks[0].lines.includes('STA'));}
+ const z=safeCopyZone(d,1080,1920,[{label:'cup',box:[450,250,850,720]}],measure);
+ const full=textLayout(d,1080,1920,measure,z);assert.ok(full.valid);assert.ok(full.blocks[0].lines.join(' ').includes('STARBUCKS'));
+});
