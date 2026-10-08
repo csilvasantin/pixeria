@@ -909,5 +909,31 @@
       ]
     },
     "anamorphic_export": false
+  },
+  "export_quality": {
+    "preset": "veryfast",
+    "resize_flags": "lanczos+accurate_rnd",
+    "canvas_smoothing": "high",
+    "profile_limits": "unchanged",
+    "tradeoff": {
+      "es": "Más detalle por bitrate; exportación más lenta. Sin reconstrucción de detalle ausente.",
+      "en": "More detail per bitrate; slower export. No reconstruction of missing detail."
+    },
+    "guide": "/docs/adaptador.md#calidad-de-adaptación--adaptation-quality--8-oct-2026",
+    "verified": {
+      "native_tests": 65,
+      "stock_fixture_test": "skipped_without_saved_index",
+      "wasm": "local_browser_export_download_and_ffprobe",
+      "sample": {
+        "width": 1080,
+        "height": 1920,
+        "fps": 25,
+        "frames": 50,
+        "duration_seconds": 2,
+        "codec": "h264",
+        "pix_fmt": "yuv420p"
+      },
+      "stock_publication": "not_retested"
+    }
   }
 }

@@ -1,4 +1,7 @@
 // Shared by the canvas preview, MP4 encoder and persistence validation.
+// Final exports favour detail at the existing bitrate; GIF playback proxies stay ultrafast.
+export const EXPORT_PRESET = 'veryfast';
+export const SCALE_FLAGS = 'lanczos+accurate_rnd';
 export const STORAGE_KEY = 'pixeria.adapter.v1';
 export const defaults = () => ({modo:'auto',fx:.5,fy:.5,zoom:1});
 const modes = ['auto','cover','contain','blur'];
@@ -58,19 +61,19 @@ export function exportBudget(duration,jobs) {
 // The special layouts compose one master wall here and cut every screen from it.
 export function composeFilter(source,W,H,mode,s,label='out',input='0:v') {
   const r=rect(source,W,H,mode,s);
-  if(mode==='cover') {const c=cropWindow(source,W,H,s);return `[${input}]crop=${c.w}:${c.h}:${c.x}:${c.y},scale=${W}:${H},setsar=1[${label}]`;}
+  if(mode==='cover') {const c=cropWindow(source,W,H,s);return `[${input}]crop=${c.w}:${c.h}:${c.x}:${c.y},scale=${W}:${H}:flags=${SCALE_FLAGS},setsar=1[${label}]`;}
   const b=cropWindow(source,W,H,{fx:.5,fy:.5,zoom:1.1});
   const background=mode==='blur'
-    ? `crop=${b.w}:${b.h}:${b.x}:${b.y},scale=${W}:${H},gblur=sigma=${(14*Math.max(W,H)/384).toFixed(3)},lutrgb=r=val*0.85:g=val*0.85:b=val*0.85`
-    : `scale=${W}:${H},drawbox=c=black:t=fill`;
-  return `[${input}]split[a][b];[a]${background},setsar=1[bg];[b]scale=${r.w}:${r.h},setsar=1[fg];[bg][fg]overlay=x=${r.x}:y=${r.y}:format=auto,setsar=1[${label}]`;
+    ? `crop=${b.w}:${b.h}:${b.x}:${b.y},scale=${W}:${H}:flags=${SCALE_FLAGS},gblur=sigma=${(14*Math.max(W,H)/384).toFixed(3)},lutrgb=r=val*0.85:g=val*0.85:b=val*0.85`
+    : `scale=${W}:${H}:flags=${SCALE_FLAGS},drawbox=c=black:t=fill`;
+  return `[${input}]split[a][b];[a]${background},setsar=1[bg];[b]scale=${r.w}:${r.h}:flags=${SCALE_FLAGS},setsar=1[fg];[bg][fg]overlay=x=${r.x}:y=${r.y}:format=auto,setsar=1[${label}]`;
 }
 export function exportJob(source,profile,technical,mode,s,name,id) {
   const W=profile.ancho,H=profile.alto,filter=composeFilter(source,W,H,mode,s);
   const fps=technical.fps||25,rate=technical.bitrateKbps||profile.techoKbps;
   const filename=`${(name||'video').replace(/\.[^.]+$/,'').replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,80)}-${id.replace(/[^a-zA-Z0-9_-]/g,'x')}-${W}x${H}.mp4`;
   return {filename,W,H,bitrateKbps:rate,args:['-i','input','-filter_complex',filter,'-map','[out]','-map','0:a?',
-    '-c:v','libx264','-preset','ultrafast','-threads','1','-profile:v',technical.h264Perfil||profile.h264.split('@')[0],
+    '-c:v','libx264','-preset',EXPORT_PRESET,'-threads','1','-profile:v',technical.h264Perfil||profile.h264.split('@')[0],
     '-level:v',technical.h264Nivel||profile.h264.split('@')[1],'-pix_fmt','yuv420p','-r',String(fps),
     '-b:v',`${rate}k`,'-maxrate',`${rate}k`,'-bufsize',`${rate*2}k`,'-g',String(Math.round(fps*(technical.gopSegundos||2))),
     '-c:a','aac','-b:a','128k','-movflags','+faststart','-fs',String(128*1048576),'output.mp4']};
@@ -126,6 +129,6 @@ export function animJob(job,seconds,input='input.gif') {
 // size (rounded up to even) that the <video> plays in a loop. Exports never use it: they read the GIF.
 export function animPreviewJob(seconds,W,H) {
   const w=Math.max(2,Math.ceil(W/2)*2),h=Math.max(2,Math.ceil(H/2)*2);
-  return {filename:'gif-preview.mp4',W:w,H:h,bitrateKbps:0,input:'input.gif',args:['-ignore_loop','1','-i','input.gif','-filter_complex',`[0:v]${animPrep(seconds)},scale=${w}:${h},setsar=1[out]`,
+  return {filename:'gif-preview.mp4',W:w,H:h,bitrateKbps:0,input:'input.gif',args:['-ignore_loop','1','-i','input.gif','-filter_complex',`[0:v]${animPrep(seconds)},scale=${w}:${h}:flags=${SCALE_FLAGS},setsar=1[out]`,
     '-map','[out]','-an','-c:v','libx264','-preset','ultrafast','-threads','1','-crf','18','-pix_fmt','yuv420p','-r',String(STILL.fps),'-movflags','+faststart','output.mp4']};
 }

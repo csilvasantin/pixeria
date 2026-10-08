@@ -1,8 +1,8 @@
 {
-  "version": "v.07.10.2026.r11.23:39",
-  "deployer": "NeoMBP16",
-  "agent": "NeoMBP16",
-  "machine": "MacBookPro16",
-  "signature": "NeoMBP16 · MacBookPro16",
-  "evidence": "Campo de etiquetas al importar y junto a «Publicar en Stock» de todo lo que se crea: cliente, centro o pantalla."
+  "version": "v.08.10.2026.r2.15:11",
+  "deployer": "OraculoMacMini",
+  "agent": "OraculoMacMini",
+  "machine": "MacMini",
+  "signature": "OraculoMacMini · MacMini",
+  "evidence": "Adapter: prioridad al detalle, Lanczos y H264 eficiente. Pruebas nativas y MP4 WASM descargado y verificado."
 }

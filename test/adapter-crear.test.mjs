@@ -158,7 +158,7 @@ test('planes FFmpeg: entradas, filtros, audio y duración de cada receta y fuent
   const bucle = job('tira', 'video', {tira: {bucle: true}});
   assert.equal(bucle.duration, .48); assert.deepEqual(bucle.args.slice(0, 6), ['-ss', '0', '-t', '0.48', '-i', 'input']);
   assert.match(job('tira', 'still').args.join(' '), /split=4\[z0\]\[z1\]\[z2\]\[z3\]/);
-  assert.match(job('barrido', 'video').args.join(' '), /\[0:v\]fps=25\[src\];\[src\]crop=w=\d+:h=\d+:x='[^']+':y='[^']+',scale=\d+:\d+,crop=w=3840:h=540/);
+  assert.match(job('barrido', 'video').args.join(' '), /\[0:v\]fps=25\[src\];\[src\]crop=w=\d+:h=\d+:x='[^']+':y='[^']+',scale=\d+:\d+:flags=lanczos\+accurate_rnd,crop=w=3840:h=540/);
   assert.match(job('rotulo', 'video', {rotulo: {fondo: 'solido', fondoColor: '#102030'}}).args.join(' '), /color=c=0x102030:s=3840x540:r=25:d=2/);
   assert.match(job('rotulo', 'video').args.join(' '), /gblur=sigma=/);
 });

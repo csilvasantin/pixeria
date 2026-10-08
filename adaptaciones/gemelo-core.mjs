@@ -1,4 +1,4 @@
-import {geometry} from './especiales-core.mjs';
+import {geometry} from './especiales-core.mjs?v=adapter-detail-1';
 
 // Preview geometry is the PHYSICAL wall, never the delivery atlas. Standard
 // names are demo grid hints, not installed-hardware metadata. 2X3 H has an

@@ -9,7 +9,7 @@
 // Módulo puro (sin DOM): lo usan la vista previa en canvas, el plan FFmpeg (WASM y nativo) y los tests.
 // La vista previa y el MP4 salen de las MISMAS funciones: geometría, trayectoria y desplazamiento
 // se calculan aquí y el filtro FFmpeg repite las mismas operaciones con los mismos números.
-import {cropWindow, STILL, STILL_PREP, animPrep} from './adapter-core.mjs';
+import {cropWindow, STILL, STILL_PREP, animPrep, EXPORT_PRESET, SCALE_FLAGS} from './adapter-core.mjs?v=adapter-detail-1';
 
 // Umbral de desproporción: r = max(a_src/a_dst, a_dst/a_src), a = ancho/alto. Con r ≥ UMBRAL_CREAR la
 // tarjeta pasa a «Crear» (salvo que el usuario o la ficha del proyecto fuercen «Adaptar»).
@@ -203,7 +203,7 @@ export function barridoFiltro(p, input, label) {
   const X1 = `min(2*floor((${PX})/2),${p.sw - p.cw1})`, Y1 = `min(2*floor((${PY})/2),${p.sh - p.ch1})`;
   const X2 = `max(0,min(${p.S2w - p.W},2*floor(((${PX})-(${X1}))*${num(p.k2x)}/2)))`;
   const Y2 = `max(0,min(${p.S2h - p.H},2*floor(((${PY})-(${Y1}))*${num(p.k2y)}/2)))`;
-  return `[${input}]crop=w=${p.cw1}:h=${p.ch1}:x='${X1}':y='${Y1}',scale=${p.S2w}:${p.S2h},crop=w=${p.W}:h=${p.H}:x='${X2}':y='${Y2}',setsar=1[${label}]`;
+  return `[${input}]crop=w=${p.cw1}:h=${p.ch1}:x='${X1}':y='${Y1}',scale=${p.S2w}:${p.S2h}:flags=${SCALE_FLAGS},crop=w=${p.W}:h=${p.H}:x='${X2}':y='${Y2}',setsar=1[${label}]`;
 }
 
 // ── Rótulo en movimiento (ticker) ───────────────────────────────────────────
@@ -297,7 +297,7 @@ export function crearGrafo({kind, src, W, H, s, cfg, seconds, input = 'input', l
     out.inputs = [...entrada(kind, input, seconds), '-loop', '1', '-framerate', String(FPS), '-i', ROTULO_PNG];
     const bg = cfg.rotulo.fondo === 'solido'
       ? `color=c=0x${cfg.rotulo.fondoColor.slice(1)}:s=${W}x${H}:r=${FPS}:d=${num(dur)},format=yuv420p[bg]`
-      : (() => { const b = cropWindow(src, W, H, {fx: .5, fy: .5, zoom: 1.1}); return `[0:v]${prep(kind, seconds)},${crop(b)},scale=${W}:${H},gblur=sigma=${(14 * Math.max(W, H) / 384).toFixed(3)},lutrgb=r=val*0.85:g=val*0.85:b=val*0.85,setsar=1[bg]`; })();
+      : (() => { const b = cropWindow(src, W, H, {fx: .5, fy: .5, zoom: 1.1}); return `[0:v]${prep(kind, seconds)},${crop(b)},scale=${W}:${H}:flags=${SCALE_FLAGS},gblur=sigma=${(14 * Math.max(W, H) / 384).toFixed(3)},lutrgb=r=val*0.85:g=val*0.85:b=val*0.85,setsar=1[bg]`; })();
     const pos = rotuloExpr(v, rotulo.P);
     const xy = rotulo.eje === 'x' ? `x='${pos}':y=0` : `x=0:y='${pos}'`;
     out.graph = `${bg};[1:v]format=rgba[st];[bg][st]overlay=${xy}:format=auto:shortest=1,setsar=1[${label}]`;
@@ -308,7 +308,7 @@ export function crearGrafo({kind, src, W, H, s, cfg, seconds, input = 'input', l
   const n = tiraN(src, {ancho: W, alto: H}, cfg.tira.n), g = tiraGeometria(W, H, n, cfg.tira.sep), c = cascada(dur, n);
   const recortes = tiraRecortes(src, g.celdas, kind, s, cfg);
   const parts = [`color=c=black:s=${W}x${H}:r=${FPS}:d=${num(dur)},format=yuv420p[b0]`];
-  const cell = (i, head) => `${head},${crop(recortes[i])},scale=${g.celdas[i].w}:${g.celdas[i].h},setsar=1,format=yuva420p,fade=t=in:st=${num(i * c.paso)}:d=${num(c.fundido)}:alpha=1[c${i}]`;
+  const cell = (i, head) => `${head},${crop(recortes[i])},scale=${g.celdas[i].w}:${g.celdas[i].h}:flags=${SCALE_FLAGS},setsar=1,format=yuva420p,fade=t=in:st=${num(i * c.paso)}:d=${num(c.fundido)}:alpha=1[c${i}]`;
   if (kind === 'video') {
     const inputs = [];
     if (cfg.tira.bucle) {
@@ -341,7 +341,7 @@ export function crearJob({src, profile, technical = {}, kind, s, cfg, seconds, n
   const base = (name || 'video').replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 80);
   const filename = `${base}-${String(id).replace(/[^a-zA-Z0-9_-]/g, 'x')}-crear-${cfg.receta}-${W}x${H}.mp4`;
   const args = [...g.inputs, '-filter_complex', g.graph, '-map', '[out]', ...(g.audio ? ['-map', '0:a?'] : ['-an']),
-    '-c:v', 'libx264', '-preset', 'ultrafast', '-threads', '1', '-profile:v', technical.h264Perfil || profile.h264.split('@')[0],
+    '-c:v', 'libx264', '-preset', EXPORT_PRESET, '-threads', '1', '-profile:v', technical.h264Perfil || profile.h264.split('@')[0],
     '-level:v', technical.h264Nivel || profile.h264.split('@')[1], '-pix_fmt', 'yuv420p', ...(g.picture ? ['-color_range', 'tv'] : []), '-r', String(FPS),
     '-b:v', `${rate}k`, '-maxrate', `${rate}k`, '-bufsize', `${rate * 2}k`, '-g', String(Math.round(FPS * (technical.gopSegundos || 2))),
     ...(g.audio ? ['-c:a', 'aac', '-b:a', '128k'] : []), '-movflags', '+faststart', '-fs', String(128 * 1048576), 'output.mp4'];

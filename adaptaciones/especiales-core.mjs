@@ -3,7 +3,7 @@
 // to right and top to bottom, where each row continues the next. The continuous
 // picture is the physical wall: every screen side by side. We compose that wall
 // once and cut every cell from the same master, so the image flows across screens.
-import {composeFilter} from './adapter-core.mjs';
+import {composeFilter, EXPORT_PRESET} from './adapter-core.mjs?v=adapter-detail-1';
 
 export const FPS = 25;
 // Mosaics loop each tile on its own player: a short forced GOP avoids the visible
@@ -44,7 +44,7 @@ export function segmentKbps(layout, atlasKbps) {
   return Math.max(500, Math.round(atlasKbps * w * h / (W * H)));
 }
 
-const encode = (rate, perfil, nivel) => ['-c:v', 'libx264', '-preset', 'ultrafast', '-threads', '1',
+const encode = (rate, perfil, nivel) => ['-c:v', 'libx264', '-preset', EXPORT_PRESET, '-threads', '1',
   '-profile:v', perfil, '-level:v', nivel, '-pix_fmt', 'yuv420p', '-r', String(FPS),
   '-b:v', `${rate}k`, '-maxrate', `${rate}k`, '-bufsize', `${rate * 2}k`, '-g', String(FPS * GOP_SECONDS)];
 const crop = r => `crop=${r.w}:${r.h}:${r.x}:${r.y},setsar=1`;

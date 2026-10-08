@@ -592,3 +592,21 @@ BASE=http://127.0.0.1:9195 SHOTS=/dir PW=/ruta/playwright-core node test/adaptad
 ## Fondo IA y aplicaciones virtuales (7-oct-2026) / AI backgrounds and virtual placements
 
 [Guía y tutorial ES/EN · Altadis IA y Estancos](altadis-ia-estancos.md). El modo desenfocado sigue sin IA; Generar fondo IA utiliza el motor autenticado de imagen y compone el original delante. / Blur remains non-generative; Generate AI background uses the authenticated image engine and composites the original in front.
+
+## Calidad de adaptación / Adaptation quality · 8-oct-2026
+
+ES: El editor prioriza el detalle de exportación. Reescala con Lanczos y redondeo preciso; todos los MP4 finales usan H.264 `veryfast` en vez de `ultrafast`, con los mismos límites de bitrate, resolución, FPS, GOP y memoria del perfil. Se aplica a Adaptar, Crear, entrega de videowall, archivos por pantalla y fondo IA. Los previos y las salidas PNG/JPG solicitan suavizado de alta calidad al navegador; el algoritmo de canvas depende del navegador y no es idéntico a FFmpeg. El proxy de reproducción de GIF sigue priorizando velocidad: no se usa como origen de la exportación.
+
+EN: The editor prioritises export detail. Resizing uses Lanczos with accurate rounding; every final MP4 uses H.264 `veryfast` instead of `ultrafast`, retaining the profile's bitrate, resolution, FPS, GOP and memory limits. This covers Adapt, Create, videowall delivery, per-screen files and AI backgrounds. Previews and PNG/JPG output request high-quality browser smoothing; the browser chooses its canvas algorithm, which is not identical to FFmpeg. GIF playback proxies still prioritise speed and are never the export source.
+
+ES: Puede tardar más. No añade resolución real a una fuente pequeña, no recupera texto perdido por un recorte y no cambia el foco ni los ajustes guardados. Para conservar una pieza completa, elige Contener o fondo desenfocado/IA y comprueba el previo de cada formato.
+
+EN: Export may take longer. It cannot restore missing detail in a small source or text removed by cropping; focus and saved settings are retained. To preserve the whole original, use Contain or a blurred/AI background and inspect each format's preview.
+
+Tutorial ES: Contenido → Adaptar → elegir tarjeta → Avanzado para encaje, foco, zoom y compatibilidad → revisar previo → exportar → descargar desde la cola. Experto muestra la orden que ejecuta esa exportación.
+
+Tutorial EN: Content → Adapt → select a card → Advanced for fit, focus, zoom and compatibility → review preview → export → download from the queue. Expert shows the command used for that export.
+
+Prueba reproducible / Reproducible test: `ADAPTER_FFMPEG_TEST=1 node --test test/adapter-quality.test.mjs`. Muestra sintética / synthetic fixture, 960×540 → 360×640, 4 s, 25 fps, 400 kbps: SSIM 0.991792 → 0.997361 frente a la referencia sin pérdidas / against a lossless reference. Es evidencia de esa muestra, no una garantía universal ni una medición de velocidad WASM / Evidence for this sample, not a universal guarantee or WASM speed measurement.
+
+Validación / Validation: 65 pruebas pasan; una dependiente de una copia local del índice Stock se omite. FFmpeg nativo comprueba medidas, duración, audio, recetas, segmentos, imágenes y GIF. El navegador FFmpeg WASM exportó y descargó una muestra vertical H.264, 1080×1920, yuv420p, 25 fps, 50 fotogramas y 2,000 s. La revisión local no dispone de sesión Stock; guardar la muestra en Stock no se verificó. No se ha cambiado el publicador. / 65 tests pass; one requiring a saved Stock index is skipped. Native FFmpeg checks dimensions, duration, audio, recipes, segments, pictures and GIFs. Browser FFmpeg WASM exported and downloaded a vertical H.264 sample at 1080×1920, yuv420p, 25 fps, 50 frames, 2.000 s. Local review has no Stock session; publishing that sample to Stock was not verified. The publisher is unchanged.

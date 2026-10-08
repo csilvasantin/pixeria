@@ -46,3 +46,5 @@ Assets: https://www.pixeria.com/assets/anonymizer-demo/{original.jpg,8-bit.png,1
 ## Stock · Megafonía / Public announcements
 ES: Las locuciones ElevenLabs creadas en admira.store se archivan automáticamente como tipo locucion en el Stock compartido. Stock → Megafonía permite leer su ficha y escuchar el MP3; el enlace ?highlight=<id> abre el visor y selecciona Megafonía, incluso fuera de la primera página. La voz gratuita del navegador no crea un archivo.
 EN: ElevenLabs announcements created in admira.store are automatically archived as type locucion in the shared Stock. Stock → Public announcements shows their metadata and MP3 player; ?highlight=<id> opens the viewer and selects Public announcements, even outside the first page. The free browser voice does not create a file.
+
+Adapter export / Exportación: final MP4s use H.264 veryfast and Lanczos+accurate_rnd within existing profile limits; slower export, no recovered detail. Guide ES/EN: https://www.pixeria.com/docs/adaptador.md. MCP adaptacion_plan remains plan-only; the browser renders.

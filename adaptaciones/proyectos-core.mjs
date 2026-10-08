@@ -2,8 +2,8 @@
 // generales (la biblioteca de 42 tamaños, sin cliente) más los suyos propios, que viven en
 // una ficha JSON versionada: adaptaciones/proyectos/<id-yokup>.json. Sin ficha, el proyecto
 // usa solo la biblioteca general. Módulo puro: lo usan el navegador, los tests y el generador.
-import {settings} from './adapter-core.mjs';
-import {RECETAS} from './crear-core.mjs';
+import {settings} from './adapter-core.mjs?v=adapter-detail-1';
+import {RECETAS} from './crear-core.mjs?v=adapter-detail-1';
 
 export const GENERAL = 'general';
 export const YOKUP_URL = 'https://api.yokup.com/projects';

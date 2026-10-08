@@ -1,4 +1,4 @@
-import {referenceSize,generateBackground} from './ia-core.mjs';
+import {referenceSize,generateBackground} from './ia-core.mjs?v=adapter-detail-1';
 import {formatContract} from './aplicaciones-core.mjs';
 export function mountStudio(h) {
   const t=h.t,root=document.createElement('section');root.className='studio-adaptaciones';root.id='studio-adaptaciones';

@@ -1,5 +1,5 @@
 // AI background + untouched source, composed on the physical wall before segmentation.
-import {rect, composeFilter} from './adapter-core.mjs';
+import {rect, composeFilter, SCALE_FLAGS} from './adapter-core.mjs?v=adapter-detail-1';
 export const AI_ENDPOINT = 'https://api.admira.store/image/edit';
 export const AI_SYS = 'Create a photorealistic environmental background for digital signage, guided by the reference image. Extend the atmosphere and lighting across the canvas. No text, no logos, no products, no people. The original content will be composited separately and must not be recreated.';
 export function referenceSize({ancho,alto}) {
@@ -12,7 +12,7 @@ export function aiPrompt(output, brief='') {
 }
 export function aiGraph(source,output,s,label='out',input='0:v') {
   const r=rect(source,output.ancho,output.alto,'contain',{...s,zoom:1});
-  return `[1:v]scale=${output.ancho}:${output.alto},setsar=1[ai_bg];[${input}]scale=${r.w}:${r.h},setsar=1[ai_fg];[ai_bg][ai_fg]overlay=x=${r.x}:y=${r.y}:shortest=1:format=auto,setsar=1[${label}]`;
+  return `[1:v]scale=${output.ancho}:${output.alto}:flags=${SCALE_FLAGS},setsar=1[ai_bg];[${input}]scale=${r.w}:${r.h}:flags=${SCALE_FLAGS},setsar=1[ai_fg];[ai_bg][ai_fg]overlay=x=${r.x}:y=${r.y}:shortest=1:format=auto,setsar=1[${label}]`;
 }
 export function aiJob(job,source,output,s,url,{wall=false}={}) {
   const args=[...job.args],at=args.indexOf('-filter_complex');

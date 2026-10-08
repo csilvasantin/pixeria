@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=07.10.2026.r11.2339';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=08.10.2026.r2.1511';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -36,17 +36,17 @@
 <meta charset="utf-8">
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.07.10.2026.r11.23:39">
+  <meta name="admiranext-version" content="Pixeria v.08.10.2026.r2.15:11">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Adapter · One piece of content, every format | Pixeria</title>
   <meta name="description" content="Adaptaciones de Pixeria: coge un vídeo y lo adapta a vertical 9:16, horizontal 16:9, cuadrado 1:1 y 4:5 con encuadre ajustable, listo para cada pantalla del circuito.">
   <link rel="canonical" href="https://www.pixeria.com/adaptaciones/">
   <!-- Tema Matrix compartido con /video.html y el resto del sitio (tokens, mono, CRT y lluvia) -->
-  <link rel="stylesheet" href="/workspace.css?v=07.10.2026.r11.2339">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=07.10.2026.r11.2339">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=07.10.2026.r11.2339">
-  <script defer src="/assets/site-nav.js?v=07.10.2026.r11.2339"></script>
+  <link rel="stylesheet" href="/workspace.css?v=08.10.2026.r2.1511">
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=08.10.2026.r2.1511">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=08.10.2026.r2.1511">
+  <script defer src="/assets/site-nav.js?v=08.10.2026.r2.1511"></script>
 </head>
 <body class="adapt-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
@@ -142,6 +142,7 @@
         <label>Compatibility
           <select id="compat"><option value="universal">Universal players</option><option value="fhd" selected>Full HD players</option><option value="uhd">4K players</option></select>
         </label>
+      <p class="muted" id="adapter-quality-note">Detail first: high-precision resizing and more efficient compression within the same resolution and bitrate limits. Export may take longer; enlarging a small source cannot recover missing detail.</p>
       <details class="export-limits"><summary>Output types and limits</summary><p class="muted">Export MP4 with your settings and the original audio, when present. Every export joins the queue in the bottom-right corner and runs in the background in this browser, one variant at a time: keep working or switch video. Source limit 100 MB; 4K can take several minutes. Large batches must be split to stay within the memory budget. The first export downloads the engine (about 32 MB). Expand uses a blurred background without AI; blur may look slightly different from the preview. Input FPS and bitrate are estimates.</p><p class="muted output-note">Social and digital: MP4. Display and print: PNG of the current frame; pause the video to choose it. Print: RGB at 150 ppi, without bleed or CMYK. Sizes are references: check file weight, safe areas and destination requirements. Compatibility affects the four aspect-ratio formats; sized presets keep their resolution.</p><p class="muted output-note output-note-image" hidden>Still image: display and print come out as PNG (display also as JPG); social, digital, project formats and video walls as H.264 MP4 at 25 fps with the length you choose (1–60 s, 10 by default), no audio. Reframing is the same as for video. An SVG is rasterised at each format's resolution. An animated GIF becomes an H.264 MP4 at 25 fps lasting one loop; PNG and JPG take the current frame.</p><p class="muted output-note">Create: when the format is very different from the content (disproportion r ≥ 3.5, e.g. a 16:9 on a 3840×540 banner), the card switches to «Create» and offers three local recipes: moments strip, pan sweep and moving ticker. If the project ficha sets a recipe for a format, that format always creates, even with a lower r. You can force «Adapt» or «Create» on any card; recipe settings live in Advanced. ▶ Preview animation shows the movement before exporting (also with a still image or a paused video), and the time bar jumps to any instant.</p></details>
         <button id="reset-settings" class="pill" type="button">Reset settings</button>
       <p id="settings-status" class="muted"></p>
@@ -151,14 +152,14 @@
       <details class="plan"><summary>Encoding plan by format (resolution, H.264, bitrate and ffmpeg command)</summary><div id="plan-tecnico"></div></details>
     </div>
   </main>
-  <script defer src="/adaptaciones/formatos-entrada.js?v=07.10.2026.r11.2339"></script>
-  <script defer src="/adaptaciones/stock-fuentes.js?v=07.10.2026.r11.2339"></script>
-  <script defer src="/adaptaciones/stock-select.js?v=07.10.2026.r11.2339"></script>
-  <script defer src="/adaptaciones/ficha-tecnica.js?v=07.10.2026.r11.2339"></script>
-  <script defer src="/adaptaciones/importar.js?v=07.10.2026.r11.2339"></script>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=07.10.2026.r11.2339"></script>
-  <script defer src="/matrix-rain.js?v=07.10.2026.r11.2339"></script>
-  <script defer src="/assets/cuadratura.js?v=07.10.2026.r11.2339"></script>
+  <script defer src="/adaptaciones/formatos-entrada.js?v=08.10.2026.r2.1511"></script>
+  <script defer src="/adaptaciones/stock-fuentes.js?v=08.10.2026.r2.1511"></script>
+  <script defer src="/adaptaciones/stock-select.js?v=08.10.2026.r2.1511"></script>
+  <script defer src="/adaptaciones/ficha-tecnica.js?v=08.10.2026.r2.1511"></script>
+  <script defer src="/adaptaciones/importar.js?v=08.10.2026.r2.1511"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=08.10.2026.r2.1511"></script>
+  <script defer src="/matrix-rain.js?v=08.10.2026.r2.1511"></script>
+  <script defer src="/assets/cuadratura.js?v=08.10.2026.r2.1511"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>

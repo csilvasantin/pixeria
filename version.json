@@ -1,10 +1,10 @@
 {
-  "version": "v.07.10.2026.r11.23:39",
-  "deployer": "NeoMBP16",
-  "machine": "MacBookPro16",
-  "signature": "NeoMBP16 · MacBookPro16",
-  "agent": "NeoMBP16",
-  "builtAt": "2026-10-07T21:39:36Z",
+  "version": "v.08.10.2026.r2.15:11",
+  "deployer": "OraculoMacMini",
+  "machine": "MacMini",
+  "signature": "OraculoMacMini · MacMini",
+  "agent": "OraculoMacMini",
+  "builtAt": "2026-10-08T13:12:03Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
     "Studio/Pixeria carga la versión del avatar con confirmación de las demos locales",

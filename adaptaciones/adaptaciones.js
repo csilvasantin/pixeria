@@ -1,5 +1,5 @@
 import {mountTwin} from './gemelo-digital.mjs?v=studio-best-3';
-import {aiJob} from './ia-core.mjs';
+import {aiJob} from './ia-core.mjs?v=adapter-detail-1';
 import {APPLICATION_KEY,restoreApplications,applyApplications} from './aplicaciones-core.mjs';
 import {mountStudio} from './studio-adaptaciones.mjs';
 let studio = null, twin = null;
@@ -7,18 +7,18 @@ let studio = null, twin = null;
 // Render en vivo en canvas; las reglas son las del motor de signage de Pixeria.
 // Reutiliza el motor de reglas real de Pixeria: assets/signage-perfiles.js
 import { perfilDeSalida, planificar } from '/assets/signage-perfiles.js';
-import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob, STILL, stillSeconds, stillJob, animJob, animPreviewJob } from './adapter-core.mjs';
+import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob, STILL, stillSeconds, stillJob, animJob, animPreviewJob } from './adapter-core.mjs?v=adapter-detail-1';
 import { createEngine, MAX_SOURCE_BYTES } from './adapter-export.js';
 import { createExportQueue } from './export-queue.js';
 import { publishAdaptation, shortFormat, adaptationTitle } from './stock-publish.mjs';
 import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily, isProjectFormat, isLibrarySize, applyCampaign, setGroupSelected, groupSelection, selectAllSizes } from './format-catalog.mjs';
 import { GENERAL, YOKUP_URL, PROJECT_KEY, projectStorageKey, formatRef, resolveRef, projectLibrary, projectCampaigns, parseYokup, mergeProjects, migrateStorage, initialProject } from './proyectos-core.mjs';
-import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs';
+import { geometry, segmentsJob, atlasJob, atlasFilename, segmentFilename, segmentKbps } from './especiales-core.mjs?v=adapter-detail-1';
 import { sizeGroups, selectionState, toggleSelection, selectionAction } from './format-catalog.mjs';
 import { pngDensity } from './png-density.mjs';
 import { validateEstancos, formatsFor, packagePlan, groupByEstanco, manifest as packageManifest, zipEntries, buildZip, zipName, sourceKey, publishPlan, publishPieces, FFLATE, PROGRAMAR_URL, PROGRAMAR_MAX, programPieces, loteKey } from './estancos-core.mjs?v=altadis-ia-20261007';
 import { gifPlayer, hasImageDecoder, decodeHEIC, LIBHEIF, rasterSVG, svgCache } from './fuentes-especiales.mjs';
-import { UMBRAL_CREAR, RECETAS, TIRA, ROTULO, crearDefaults, defaultsFicha, crearSettings, desproporcion, accionAuto, accionEfectiva, tiraN, tiraGeometria, tiraMomentos, tiraTramos, tiraRecortes, cascada, alphaCelda, barridoPlan, barridoVentana, rotuloLayout, rotuloVelocidad, rotuloDesplazamiento, crearJob, crearPared, duracionReceta, tiempoRepresentativo, ROTULO_PNG, motivoAccion, relojPrevio, relojT, relojPlay, relojPausa, relojSeek, relojDuracion, relojEnMarcha, previoN, previoFotograma, etiquetaTiempo } from './crear-core.mjs';
+import { UMBRAL_CREAR, RECETAS, TIRA, ROTULO, crearDefaults, defaultsFicha, crearSettings, desproporcion, accionAuto, accionEfectiva, tiraN, tiraGeometria, tiraMomentos, tiraTramos, tiraRecortes, cascada, alphaCelda, barridoPlan, barridoVentana, rotuloLayout, rotuloVelocidad, rotuloDesplazamiento, crearJob, crearPared, duracionReceta, tiempoRepresentativo, ROTULO_PNG, motivoAccion, relojPrevio, relojT, relojPlay, relojPausa, relojSeek, relojDuracion, relojEnMarcha, previoN, previoFotograma, etiquetaTiempo } from './crear-core.mjs?v=adapter-detail-1';
 
 const EN = document.documentElement.lang === 'en';
 const t = (es, en) => EN ? en : es;
@@ -624,6 +624,7 @@ function drawSource(W, H, mode, s) {
 }
 function paint(cv, output, m, s, override, background) {
   const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   if (!mediaReady()) return;
   const ratio=W/output.ancho;
   const {el: src, dims} = override || drawSource(W, H, m, s);
@@ -642,6 +643,7 @@ function drawEspecial(el, f) {
   // Crear: the recipe is painted on the physical wall and the delivery copies its cuts, so both animate.
   const g = geometry(f.layout); let info = null; if (creando(f)) info = paintCrear(wall, wallOutput(f), f); else paint(wall, wallOutput(f), modoEfectivo(f), state.fmt[f.id],null,studio?.background(f)?.el);
   const k = wall.width / g.pared.ancho, a = atlas.width / g.entrega.ancho, ctx = atlas.getContext('2d');
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, atlas.width, atlas.height);
   for (const seg of g.segments) ctx.drawImage(wall, seg.wall.x * k, seg.wall.y * k, seg.wall.w * k, seg.wall.h * k, seg.atlas.x * a, seg.atlas.y * a, seg.atlas.w * a, seg.atlas.h * a);
   const label = (c, x, y, text, size) => { c.font = `700 ${size}px ui-monospace,monospace`; const w = c.measureText(text).width + size * .8; c.fillStyle = 'rgba(6,13,20,.82)'; c.fillRect(x + 3, y + 3, w, size * 1.5); c.fillStyle = '#71f4dc'; c.fillText(text, x + 3 + size * .4, y + 3 + size * 1.13); };
@@ -797,6 +799,7 @@ async function prepararCrear(f, out) {
 // window, offset and alphas the FFmpeg plan computes. Returns {t, dur, modo, corre} for the time bar.
 function paintCrear(cv, output, f, tFixed = null, override = null) {
   const ctx = cv.getContext('2d'), W = cv.width, H = cv.height, ratio = W / output.ancho;
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   if (!mediaReady()) return null;
   const cfg = crearCfg(f), s = state.fmt[f.id], kind = srcKindCrear(), seconds = recetaSeconds() || 1, dur = duracionReceta(cfg, {kind, seconds, src: state.src, dst: output});
