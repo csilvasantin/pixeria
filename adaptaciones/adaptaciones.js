@@ -1,4 +1,4 @@
-import {mountAdvertisement} from './anuncio-studio.mjs?v=semantic-ad-2';
+import {mountAdvertisement} from './anuncio-studio.mjs?v=semantic-ad-3';
 import {mountTwin} from './gemelo-digital.mjs?v=studio-best-3';
 import {aiJob} from './ia-core.mjs?v=adapter-detail-1';
 import {APPLICATION_KEY,restoreApplications,applyApplications} from './aplicaciones-core.mjs';
@@ -1925,7 +1925,7 @@ buildGrid();
 async function exportAdvertisements(formats,kinds,extra){
  const frozen=formats.map(f=>({f,a:advertisement.entry(f)}));if(frozen.some(x=>!x.a?.approved))return;
  const seconds=stillSec,ctx={origin:{...state.origin},client:window.PixeriaCliente?.actual?.()||null,duration:seconds,still:true,...(extra||{})};
- const bundles=frozen.map(({f,a})=>{const src={ancho:a.canvas.width,alto:a.canvas.height,fps:25,bitrateKbps:0},label=`${f.nombre} · ${a.action==='recreate'?t('Recreación','Recreation'):t('Recomposición','Recomposition')}`;
+ const bundles=frozen.map(({f,a})=>{const src={ancho:a.canvas.width,alto:a.canvas.height,fps:25,bitrateKbps:0},label=`${f.nombre} · ${['recreate','reconstruct'].includes(a.action)?t('Recreación','Recreation'):t('Recomposición','Recomposition')}`;
   const jobs=f.output==='png'?[]:f.especial?[...(kinds!=='segments'?[atlasJob(src,f.layout,'contain',defaults(),especialTech(f))]:[]),...(kinds!=='atlas'?[segmentsJob(src,f.layout,'contain',defaults(),especialTech(f))]:[])]:[exportJob(src,perfil(f),plan(f)||{},'contain',defaults(),state.srcName,f.id)];
   return{f,a,label,jobs:jobs.map(job=>({...stillJob(job,seconds,'input.png'),label,input:'input.png'}))};});
  const budget=exportBudget(seconds,bundles.flatMap(b=>b.jobs));if(budget){$('#export-status').textContent=t('El lote supera el presupuesto local. Exporta menos formatos o reduce la duración.','Batch exceeds the local budget. Export fewer sizes or reduce duration.');return;}

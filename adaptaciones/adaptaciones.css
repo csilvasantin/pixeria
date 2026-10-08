@@ -422,3 +422,5 @@ body.adapt-page{overflow-x:clip;overflow-y:visible}
 .advertisement-studio label{display:block;margin:12px 0 8px}.advertisement-studio textarea{display:block;width:100%;min-height:100px;padding:10px;margin-top:6px;font:inherit;color:inherit;background:var(--bg,#030a05);border:1px solid var(--line,#37574a)}
 .advertisement-studio progress{width:180px;max-width:100%;margin:8px;accent-color:var(--accent,#48e58d)}
 .ad-card{padding:8px 0}.ad-card-status{font-size:12px;margin:4px 0 8px}.ad-card .pill{margin:3px 4px 3px 0;font-size:11px}
+
+.ad-reconstruction{border:1px solid var(--ln-hi);padding:10px;margin-bottom:12px}.ad-reconstruction label{display:block;margin:8px 0}.ad-reconstruction select,.ad-reconstruction textarea{width:100%;box-sizing:border-box;background:var(--field-2);color:var(--tx);border:1px solid var(--ln-hi);font:inherit;padding:7px}.ad-reconstruction p{font-size:12px;line-height:1.5}.ad-reconstruction [hidden]{display:none!important}

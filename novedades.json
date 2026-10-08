@@ -82,5 +82,10 @@
     "Adapter extrae el texto completo y lo recompone sin recortarlo",
     "Recreación de escena cuando cambiar el encuadre no permite un anuncio válido",
     "Revisión por pieza antes de exportar; bloqueos por texto dudoso, residual o ilegible"
+  ],
+  "v.08.10.2026.r5.17:46": [
+    "Adapter: Recrear con IA en Avanzados genera el espacio que falta para cada formato",
+    "Elementos importantes editables y texto completo recompuesto por separado",
+    "Comprobación de solapes entre producto y texto antes de aprobar y exportar"
   ]
 }

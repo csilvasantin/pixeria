@@ -1,8 +1,8 @@
 {
-  "version": "v.08.10.2026.r4.15:38",
+  "version": "v.08.10.2026.r5.17:46",
   "deployer": "OraculoMacMini",
   "agent": "OraculoMacMini",
   "machine": "MacMini",
   "signature": "OraculoMacMini · MacMini",
-  "evidence": "Adapter: OCR de textos, recomposición determinista, recreación de escena y revisión obligatoria por pieza. Pruebas del compositor, backend y regresiones."
+  "evidence": "Adapter: recreación avanzada de escena completa, elementos protegidos y texto medido separado. Verificación de solapes y pruebas de regresión."
 }
