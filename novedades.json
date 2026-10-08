@@ -99,5 +99,10 @@
     "Elementos importantes editables y texto completo recompuesto por separado",
     "Comprobación de solapes entre producto y texto antes de aprobar y exportar",
     "Los bloqueos indican si queda texto generado, falta el producto o invade el titular"
+  ],
+  "v.08.10.2026.r8.18:06": [
+    "Recrear con IA en Avanzados genera el espacio que falta para cada formato",
+    "Recompone el texto en una zona libre sin tapar los elementos importantes",
+    "Diagnósticos por pieza y revisión antes de exportar"
   ]
 }

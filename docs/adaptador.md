@@ -648,3 +648,11 @@ ES: Reconstruye las zonas ausentes mediante IA con el original como referencia d
 EN: Reconstructs missing surroundings with AI using the original scene, perspective, lighting and product as reference. This is not DLSS or evidence of recovered true detail. Generation may alter identity: always review. Copy is never delegated to image generation; it is typeset completely and measured in the native canvas. The visual occupies the full format, with a translucent copy panel. For copy-bearing images, verification returns normalized product/logo/requested-element boxes; the server computes overlap with the reserved area. Missing/malformed boxes or overlap block the piece. Every piece still requires approval. Images without copy get no empty panel. Cancellation invalidates late responses.
 
 Contract: editor treatment `adapt | reconstruct` (default `adapt`); generation action `reconstruct`; optional important elements and direction, each ≤1000 characters. `POST /image/analyze` action `verify-visual` accepts optional `reservedTextZone: {x,y,w,h}` in target pixels plus `target: {width,height}`. Returns `protectedSubjects: [{label,box:[ymin,xmin,ymax,xmax]}]` normalized 0..1000, and computed `compositionSafe`. Endpoint authentication unchanged. MCP `adaptacion_plan` documents this workflow but remains plan_only, rendered:false; it does not execute reconstruction.
+
+### Recomposición alrededor de elementos / Reflow around elements
+
+Si un elemento importante invade el área prevista, el editor busca otra zona libre y recompone allí el texto completo. Sólo bloquea si no queda espacio legible sin tapar esos elementos.
+
+If an important element overlaps the planned copy area, the editor finds another free area and reflows all copy there. It blocks only when no readable space remains without covering those elements.
+
+Coordinates from verification are mapped to the actual contained image in the native canvas before choosing a safe rectangle. Copy stays inside the designated physical screen for segmented walls. The final rectangle is checked against all returned protected boxes and measured copy; no fit means export remains blocked.

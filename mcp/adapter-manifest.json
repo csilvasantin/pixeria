@@ -971,7 +971,7 @@
         "optional recreation direction"
       ],
       "visual": "full target scene inferred from reference; copy typeset separately",
-      "verification": "normalized protected subject boxes must not intersect reserved copy zone",
+      "verification": "map protected subject boxes to native canvas; reflow copy into a free rectangle; block when none fits readable copy",
       "not_dlss": true,
       "approval": "per piece",
       "video_gif": "unchanged"
