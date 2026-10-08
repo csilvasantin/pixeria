@@ -48,3 +48,5 @@ ES: Las locuciones ElevenLabs creadas en admira.store se archivan automáticamen
 EN: ElevenLabs announcements created in admira.store are automatically archived as type locucion in the shared Stock. Stock → Public announcements shows their metadata and MP3 player; ?highlight=<id> opens the viewer and selects Public announcements, even outside the first page. The free browser voice does not create a file.
 
 Adapter export / Exportación: final MP4s use H.264 veryfast and Lanczos+accurate_rnd within existing profile limits; slower export, no recovered detail. Guide ES/EN: https://www.pixeria.com/docs/adaptador.md. MCP adaptacion_plan remains plan-only; the browser renders.
+
+Adapter still advertisements: anuncio_analizar extracts authenticated verbatim OCR. Web /adaptaciones/ recomposes full editable copy or recreates the scene when a crop is not acceptable. Review and approve each draft before PNG/H264 export. Block uncertain OCR, residual text, missing product and unreadable overflow. Video/GIF do not gain temporal OCR. ES/EN guide: https://www.pixeria.com/docs/adaptador.md#anuncios-reales

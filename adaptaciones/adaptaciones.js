@@ -1,8 +1,9 @@
+import {mountAdvertisement} from './anuncio-studio.mjs?v=semantic-ad-1';
 import {mountTwin} from './gemelo-digital.mjs?v=studio-best-3';
 import {aiJob} from './ia-core.mjs?v=adapter-detail-1';
 import {APPLICATION_KEY,restoreApplications,applyApplications} from './aplicaciones-core.mjs';
 import {mountStudio} from './studio-adaptaciones.mjs';
-let studio = null, twin = null;
+let studio = null, twin = null, advertisement = null;
 // Pixeria · Adaptaciones (FLT-101349, 2-oct-2026): un vídeo → todas las pantallas.
 // Render en vivo en canvas; las reglas son las del motor de signage de Pixeria.
 // Reutiliza el motor de reglas real de Pixeria: assets/signage-perfiles.js
@@ -206,6 +207,7 @@ const pngBlob=canvas=>new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
 async function exportFormats(formats,kinds='both',extra=null) {
   if(!state.src.ancho || !formats.length) return;
   const status=$('#export-status');status.textContent='';
+  if(advertisement?.enabled()){if(await advertisement.prepare(formats))await exportAdvertisements(formats,kinds,extra);return;}
   const still=isImage(),animated=isAnim(),seconds=stillSec,duration=animated?animSeconds:still?seconds:video.duration;
   const pngFormats=formats.filter(f=>f.output==='png'),mp4Formats=formats.filter(f=>f.output!=='png');
   let sourceURL=video.currentSrc||video.src,input=null;
@@ -284,7 +286,7 @@ $('#export-all').onclick=()=>exportFormats(selectedFormats());
 // Back to the active project's defaults (General: the four ratios and the standard library).
 $('#reset-settings').onclick=()=>{ resetState(); syncControls(); buildGrid(); };
 // Closing the tab mid-export loses the work: the browser asks first.
-window.addEventListener('beforeunload',event=>{if(!queue.busy()&&!savingToStock)return;event.preventDefault();event.returnValue=t('Hay exportaciones en curso','Exports are in progress');return event.returnValue;});
+window.addEventListener('beforeunload',event=>{if(!queue.busy()&&!savingToStock&&!advertisement?.busy())return;event.preventDefault();event.returnValue=t('Hay exportaciones en curso','Exports are in progress');return event.returnValue;});
 window.addEventListener('pagehide',event=>{if(event.persisted)return;queue.cancelAll();queue.clear();if(sourceObjectURL)URL.revokeObjectURL(sourceObjectURL);if(derivedURL)URL.revokeObjectURL(derivedURL);});
 
 // ── Perfil + plan (motor Pixeria) ───────────────────────────────────────────
@@ -475,6 +477,7 @@ function buildCardSettings() {
   const box = $('#card-settings'); if (!box) return;
   const f = FORMATOS.find(x => x.id === state.sel && x.on);
   if (!f) { box.innerHTML = `<p class="muted">${t('Elige una tarjeta para ajustar su método, foco y zoom.','Select a card to adjust its method, focus and zoom.')}</p>`; return; }
+  if(advertisement?.enabled()){box.textContent=`${f.nombre} · ${advertisement.description(f)}`;return;}
   const L = f.layout, size = f.especial ? `${L.entrega[0]}×${L.entrega[1]}` : `${perfil(f).ancho}×${perfil(f).alto}`;
   box.innerHTML = `<div class="card-sel-hd">${t('Tarjeta seleccionada','Selected card')}: <b>${f.nombre}</b> · ${size}</div>${crearHTML()}${controlsHTML()}<div class="aviso"></div>`
     + (f.especial && L.ambiguedades.length ? `<ul class="esp-warn">${L.ambiguedades.map(a => `<li>${t('Ambigüedad en el PDF','PDF ambiguity')}: ${a}</li>`).join('')}</ul>` : '');
@@ -532,6 +535,7 @@ function especialInfo(f) {
   return { aviso:studio?.background(f)?cardAviso(f):aviso, plan: files.join('\n') + (atlas ? `\n\nffmpeg ${pictureJob(atlas).args.map(a => JSON.stringify(a)).join(' ')}` : '') };
 }
 function cardAviso(f) {
+  if(advertisement?.enabled())return advertisement.description(f);
   if(studio?.background(f))return t('Fondo IA estático + original conservado · composición sobre la pared completa','Static AI background + original preserved · full wall composition');
   if (f.especial) return especialInfo(f).aviso;
   if (creando(f)) return crearAviso(f);
@@ -565,6 +569,7 @@ function refreshInfo() {
   const selF = FORMATOS.find((x) => x.id === state.sel && x.on), selAviso = $('#card-settings .aviso');
   if (selF && selAviso) selAviso.textContent = cardAviso(selF);
   const rows = selectedFormats().map((f) => {
+    if(advertisement?.enabled())return `<div class="fmt"><h3>${escHTML(f.nombre)}</h3><pre>${escHTML(JSON.stringify({state:advertisement.description(f),output:destino(f),copy:advertisement.entry(f)?.copy||[],approved:advertisement.ready(f),render:'native composition PNG → H264 still, no source crop'},null,2))}</pre></div>`;
     if (f.especial) return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${f.layout.entrega[0]}×${f.layout.entrega[1]}</h3><pre style="white-space:pre-wrap;font-size:11px;color:var(--link)">${especialInfo(f).plan.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])}</pre></div>`;
     const p = plan(f); if(f.output==='png')return `<p>${f.nombre} · ${perfil(f).ancho}×${perfil(f).alto} · PNG${f.print?' · 150 ppp':''}${isPicture()&&f.category==='display'?' · JPG':''}${creando(f)?` · ${t('Crear','Create')} ${RECETA_NOMBRE[crearCfg(f).receta]} (${t('fotograma representativo','representative frame')})`:''}</p>`; if (!p || p.error) return `<p>${f.nombre}: ${p ? p.error : t('sin contenido','no content')}</p>`;
     if (creando(f)) return `<div class="fmt${f.id===state.sel?' sel':''}" data-plan="${f.id}" style="margin-bottom:8px"><h3>${f.nombre} · ${p.ancho}×${p.alto} · ${t('Crear','Create')} · ${RECETA_NOMBRE[crearCfg(f).receta]}</h3><div class="dims">H.264 ${p.h264Perfil}@${p.h264Nivel} · ${p.bitrateKbps} kbps · 25 fps · GOP ${p.gopSegundos}s</div><div class="aviso">${escHTML(crearAviso(f))}</div><pre style="white-space:pre-wrap;font-size:11px;color:var(--link)">${escHTML(crearCmd(f))}</pre></div>`;
@@ -574,6 +579,7 @@ function refreshInfo() {
       <div class="aviso">${(p.avisos || []).map(a=>/generativ|imagina/i.test(a)?t('Fondo desenfocado derivado del original; sin expansión IA.','Blurred background derived from the original; no AI expansion.'):a).join(' · ')}</div><pre style="white-space:pre-wrap;font-size:11px;color:var(--link)">${ffmpegCmd(f)}</pre></div>`;
   });
   $('#plan-tecnico').innerHTML = rows.join('');
+  advertisement?.sync();
 }
 // Every export button says what will come out: PNG/JPG, or MP4 (with its length for a still image).
 function labelExports() {
@@ -612,7 +618,7 @@ function ffmpegCmd(f) {
 }
 
 // ── Render en vivo (canvas) ─────────────────────────────────────────────────
-function drawInto(cv, f, override) { if (creando(f)) return paintCrear(cv, perfil(f), f, null, override); paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id], override,studio?.background(f)?.el); return null; }
+function drawInto(cv, f, override) { if(advertisement?.draw(cv,f))return null; if (creando(f)) return paintCrear(cv, perfil(f), f, null, override); paint(cv, perfil(f), modoEfectivo(f), state.fmt[f.id], override,studio?.background(f)?.el); return null; }
 // What the preview draws: the media element, or for an SVG a raster at this canvas' needed resolution
 // (cached in √2 steps; the base image is used for the frame or two until it arrives).
 const SVG_PREVIEW = {paso: true, maxLado: 4096, maxPx: 2048 * 2048};
@@ -641,7 +647,7 @@ function paint(cv, output, m, s, override, background) {
 function drawEspecial(el, f) {
   const wall = el.querySelector('canvas.wall'), atlas = el.querySelector('canvas.atlas'); if (!wall || !mediaReady()) return null;
   // Crear: the recipe is painted on the physical wall and the delivery copies its cuts, so both animate.
-  const g = geometry(f.layout); let info = null; if (creando(f)) info = paintCrear(wall, wallOutput(f), f); else paint(wall, wallOutput(f), modoEfectivo(f), state.fmt[f.id],null,studio?.background(f)?.el);
+  const g = geometry(f.layout); let info = null; if(advertisement?.draw(wall,f)){} else if (creando(f)) info = paintCrear(wall, wallOutput(f), f); else paint(wall, wallOutput(f), modoEfectivo(f), state.fmt[f.id],null,studio?.background(f)?.el);
   const k = wall.width / g.pared.ancho, a = atlas.width / g.entrega.ancho, ctx = atlas.getContext('2d');
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, atlas.width, atlas.height);
@@ -670,7 +676,7 @@ function destino(f) { if (f.especial) { const g = geometry(f.layout); return {an
 // puede forzar «Adaptar». Ver crear-core · motivoAccion y docs/adaptador.md.
 const recetaFicha = f => RECETAS.includes(f.receta) ? f.receta : null;
 const accionDe = f => accionEfectiva(crearCfg(f), state.src, destino(f), recetaFicha(f));
-const creando = f => !studio?.background(f) && !!state.src.ancho && accionDe(f) === 'crear';
+const creando = f => !advertisement?.enabled() && !studio?.background(f) && !!state.src.ancho && accionDe(f) === 'crear';
 const crearZoom = f => { const c = crearCfg(f), s = state.fmt[f.id]; return {fx: .5, fy: .5, zoom: Math.max(s.zoom, c.receta === 'tira' ? c.tira.zoom : 1)}; };
 function crearArgs(f, src = state.src) {
   const kind = srcKindCrear();
@@ -1107,7 +1113,7 @@ function releaseDerived() {
   derivedURL = null;
 }
 function setSource(url, name, origin = {id:null,title:name}, kind = 'video', ext = 'png', extra = null) {
-  studio?.clear();twin?.close();
+  advertisement?.clear();studio?.clear();twin?.close();
   state.origin = {id:origin.id||null,title:origin.title||name};
   releaseStill(); releaseDerived(); stopAnim(); resetCrearMedia();
   if (svgRasters) { svgRasters.clear(); svgRasters = null; }
@@ -1311,7 +1317,7 @@ $('#src-select').onchange = (e) => {
     clase: o.dataset.type === 'video' ? 'video' : undefined, mime: item?.mime, ext: window.PixeriaStockFuentes?.extension(item) || item?.ext});
 };
 // Sin vídeo por defecto (ninguna marca): estado vacío hasta que el usuario elige uno.
-function emptySource() { cargaTurno++; releaseStill(); releaseDerived(); stopAnim(); resetCrearMedia(); if (svgRasters) { svgRasters.clear(); svgRasters = null; } svgSrc = null; fuente = null; publicarFuente('inicio'); srcKind = 'video'; img.removeAttribute('src'); syncKind(); video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
+function emptySource() { advertisement?.clear();cargaTurno++; releaseStill(); releaseDerived(); stopAnim(); resetCrearMedia(); if (svgRasters) { svgRasters.clear(); svgRasters = null; } svgSrc = null; fuente = null; publicarFuente('inicio'); srcKind = 'video'; img.removeAttribute('src'); syncKind(); video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
 $('#src-file').onchange = (e) => {
   const f = e.target.files[0]; if (!f) return;
   if (f.size>MAX_SOURCE_BYTES) {$('#src-msg').textContent=t('El límite local es 100 MB. Elige un archivo más pequeño.','The local limit is 100 MB. Choose a smaller file.');e.target.value='';return;}
@@ -1429,6 +1435,7 @@ function pausePaso1() {
 }
 window.addEventListener('pagehide', pausePaso1);
 function goStep(n) {
+  if(n===2&&advertisement?.enabled())void advertisement.analyze();
   if (n === 2 && !state.src.ancho) return;
   if (n !== 1) pausePaso1();
   $('#paso-1').hidden = n !== 1; $('#paso-2').hidden = n !== 2; document.body.dataset.paso = String(n);
@@ -1892,7 +1899,7 @@ emptySource(); loop();
 
 studio=mountStudio({t,formats:projectFormatList,ficha:()=>FICHA,doc:()=>EST,baseDoc:()=>EST_BASE,applications:()=>estApplications,settings:()=>({...snapshot(state,FORMATOS),crear:state.crear}),
 ready:mediaReady,destino,geometry,reference:(cv,f)=>paint(cv,destino(f),'blur',{fx:.5,fy:.5,zoom:1}),
-draw:(cv,f,bg)=>{if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);},
+draw:(cv,f,bg)=>{if(advertisement?.draw(cv,f))return;if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);},
 changed:()=>buildGrid(),visit:f=>twin?.open(f),apply:(estanco,formato,on)=>{const next=estApplications.filter(x=>x.estanco!==estanco||x.formato!==formato);if(on)next.push({estanco,formato});
 const valid=restoreApplications(next,EST_BASE,projectFormatList());try{localStorage.setItem(APPLICATION_KEY(FICHA.id),JSON.stringify(valid));}catch(_){throw new Error('storage');}
 estApplications=valid;EST=applyApplications(EST_BASE,valid,projectFormatList());renderEstancos();}});
@@ -1908,5 +1915,23 @@ function endTwinPlayback(){
   if(twinPlayback.kind===srcKind){if(srcKind==='video'){if(twinPlayback.paused)video.pause();video.muted=twinPlayback.muted;}else if(anim&&twinPlayback.paused)anim.pause();}
   twinPlayback=null;
 }
-twin=mountTwin({t,start:startTwinPlayback,end:endTwinPlayback,ready:mediaReady,destino,formats:()=>FORMATOS.filter(isProjectFormat),background:f=>studio?.background(f),shops:()=>EST?.estancos,shop:()=>studio?.shop(),selectShop:id=>studio?.selectShop(id),draw:(cv,f,bg)=>{if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);}});
+twin=mountTwin({t,start:startTwinPlayback,end:endTwinPlayback,ready:mediaReady,destino,formats:()=>FORMATOS.filter(isProjectFormat),background:f=>studio?.background(f),shops:()=>EST?.estancos,shop:()=>studio?.shop(),selectShop:id=>studio?.selectShop(id),draw:(cv,f,bg)=>{if(advertisement?.draw(cv,f))return;if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);}});
+advertisement=mountAdvertisement({t,formats:()=>FORMATOS,selected:selectedFormats,source:()=>({kind:srcKind,image:img,src:state.src}),destino,seconds:()=>stillSec,
+textZone:f=>{if(!f.especial)return null;const seg=geometry(f.layout).segments.reduce((a,b)=>a.wall.w*a.wall.h>=b.wall.w*b.wall.h?a:b);return {...seg.wall};},
+changed:()=>{buildCardSettings();refreshInfo();drawDirty=true;}});
+
 buildGrid();
+
+async function exportAdvertisements(formats,kinds,extra){
+ const frozen=formats.map(f=>({f,a:advertisement.entry(f)}));if(frozen.some(x=>!x.a?.approved))return;
+ const seconds=stillSec,ctx={origin:{...state.origin},client:window.PixeriaCliente?.actual?.()||null,duration:seconds,still:true,...(extra||{})};
+ const bundles=frozen.map(({f,a})=>{const src={ancho:a.canvas.width,alto:a.canvas.height,fps:25,bitrateKbps:0},label=`${f.nombre} · ${a.action==='recreate'?t('Recreación','Recreation'):t('Recomposición','Recomposition')}`;
+  const jobs=f.output==='png'?[]:f.especial?[...(kinds!=='segments'?[atlasJob(src,f.layout,'contain',defaults(),especialTech(f))]:[]),...(kinds!=='atlas'?[segmentsJob(src,f.layout,'contain',defaults(),especialTech(f))]:[])]:[exportJob(src,perfil(f),plan(f)||{},'contain',defaults(),state.srcName,f.id)];
+  return{f,a,label,jobs:jobs.map(job=>({...stillJob(job,seconds,'input.png'),label,input:'input.png'}))};});
+ const budget=exportBudget(seconds,bundles.flatMap(b=>b.jobs));if(budget){$('#export-status').textContent=t('El lote supera el presupuesto local. Exporta menos formatos o reduce la duración.','Batch exceeds the local budget. Export fewer sizes or reduce duration.');return;}
+ batchIds=new Set();batchTotal=bundles.reduce((n,b)=>n+(b.jobs.length||1),0);$('#export-status').textContent=`0/${batchTotal}`;
+ for(const {f,a,label,jobs} of bundles){let blob=await new Promise(resolve=>a.canvas.toBlob(resolve,kinds==='jpg'?'image/jpeg':'image/png',.94));if(!blob)continue;
+  if(!jobs.length){if(f.print&&kinds!=='jpg')blob=new Blob([pngDensity(new Uint8Array(await blob.arrayBuffer()))],{type:'image/png'});const jpg=kinds==='jpg';queue.addReady({label,sub:t('Texto completo recompuesto','Complete typeset copy'),sourceURL:null,format:f,...ctx,receta:a.action},[{blob,filename:`${f.id}-${a.action}-${a.canvas.width}x${a.canvas.height}.${jpg?'jpg':'png'}`}]);}
+  else {const sourceURL=URL.createObjectURL(blob);for(const job of jobs)queue.add({label,sub:t('Composición aprobada · texto completo','Approved composition · complete copy'),sourceURL,job,format:f,...ctx,receta:a.action});}
+ }
+}

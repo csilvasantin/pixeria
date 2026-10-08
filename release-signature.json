@@ -1,8 +1,8 @@
 {
-  "version": "v.08.10.2026.r2.15:11",
+  "version": "v.08.10.2026.r3.15:31",
   "deployer": "OraculoMacMini",
   "agent": "OraculoMacMini",
   "machine": "MacMini",
   "signature": "OraculoMacMini · MacMini",
-  "evidence": "Adapter: prioridad al detalle, Lanczos y H264 eficiente. Pruebas nativas y MP4 WASM descargado y verificado."
+  "evidence": "Adapter: OCR de textos, recomposición determinista, recreación de escena y revisión obligatoria por pieza. Pruebas del compositor, backend y regresiones."
 }

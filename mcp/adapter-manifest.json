@@ -935,5 +935,32 @@
       },
       "stock_publication": "not_retested"
     }
+  },
+  "still_advertisement": {
+    "schema": "pixeria.advertisement.v1",
+    "analysis_endpoint": "https://api.admira.store/image/analyze",
+    "analysis_tool": "anuncio_analizar",
+    "authentication": "existing Pixeria/Studio session or fleet key",
+    "copy": "verbatim editable OCR; typeset complete copy with measured wrapping; no generated lettering",
+    "recreate_when": [
+      "ratio change greater than 2",
+      "billboard/screen within source",
+      "recomposition visual fails checks"
+    ],
+    "export_requires": "per-piece approval after copy/product review",
+    "blocking": [
+      "uncertain OCR",
+      "residual advertising text",
+      "incomplete product",
+      "text overflow at readable minimum",
+      "provider failure/timeout"
+    ],
+    "render": "one native canvas for preview, PNG and still MP4; same canvas cut for wall atlas/segments",
+    "limits": [
+      "AI identity must be reviewed",
+      "no temporal video/GIF OCR",
+      "no hardware proof"
+    ],
+    "guide": "https://www.pixeria.com/docs/adaptador.md#anuncios-reales"
   }
 }
