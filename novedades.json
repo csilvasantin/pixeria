@@ -114,5 +114,10 @@
     "Adapter: recreación con tipografía, colores y jerarquía semejantes al original",
     "Fuentes locales cargadas antes de medir; copia completa y revisión por pieza",
     "Texto integrado sobre la escena recreada, sin el panel crema vacío"
+  ],
+  "v.08.10.2026.r13.19:28": [
+    "Stock: «Añadir» al circuito ya no congela la playlist viva que seguía la pantalla; sólo conserva su lista propia",
+    "Si no puede leer la lista actual de una pantalla, la salta en vez de pisarla",
+    "El modal marca «automática» las pantallas que siguen una playlist viva"
   ]
 }

@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=08.10.2026.r12.1918';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=08.10.2026.r13.1928';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,15 +35,15 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.08.10.2026.r12.19:18">
+  <meta name="admiranext-version" content="Pixeria v.08.10.2026.r13.19:28">
   <title>Pixeria × Clear Channel · Demo audio + contenidos segmentados</title>
   <meta name="description" content="Demo interna Pixeria para Clear Channel: hilo musical con Eleven Music, megafonia con ElevenLabs y contenidos automaticos y segmentados. Un solo proveedor de audio.">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="theme-color" content="#0b1117">
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
-  <link rel="stylesheet" href="../assets/styles.css?v=08.10.2026.r12.1918">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=08.10.2026.r12.1918">
+  <link rel="stylesheet" href="../assets/styles.css?v=08.10.2026.r13.1928">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=08.10.2026.r13.1928">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <style>
     /* ---- Demo Clear Channel: componentes propios sobre el design system Pixeria ---- */
@@ -141,7 +141,7 @@
 
     .cc-docs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
   </style>
-  <script defer src="/assets/site-nav.js?v=08.10.2026.r12.1918"></script>
+  <script defer src="/assets/site-nav.js?v=08.10.2026.r13.1928"></script>
 </head>
 <body>
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -517,7 +517,7 @@
       render();
     })();
   </script>
-  <script defer src="/assets/matrix-rain.js?v=08.10.2026.r12.1918"></script>
-  <script defer src="/assets/cuadratura.js?v=08.10.2026.r12.1918"></script>
+  <script defer src="/assets/matrix-rain.js?v=08.10.2026.r13.1928"></script>
+  <script defer src="/assets/cuadratura.js?v=08.10.2026.r13.1928"></script>
 </body>
 </html>

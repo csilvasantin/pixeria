@@ -1,8 +1,8 @@
 {
-  "version": "v.08.10.2026.r10.18:31",
-  "deployer": "OraculoMacMini",
-  "agent": "OraculoMacMini",
+  "version": "v.08.10.2026.r13.19:28",
+  "deployer": "MorfeoMacMini",
+  "agent": "MorfeoMacMini",
   "machine": "MacMini",
-  "signature": "OraculoMacMini · MacMini",
-  "evidence": "Adapter: tipografía observada por bloque, fuentes OFL locales y recreación con colores/jerarquía del original sin panel vacío."
+  "signature": "MorfeoMacMini · MacMini",
+  "evidence": "Stock: «Añadir» al circuito conserva sólo la lista guardada (no congela el borrador sintético de admira.tv), manda rev y no pisa si no puede leer."
 }
