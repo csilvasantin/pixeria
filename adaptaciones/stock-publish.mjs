@@ -5,8 +5,17 @@
 // = resolución, y etiquetas «adaptación», formato y cliente (id).
 // Imagen fija (5-oct-2026): el MP4 hecho desde una imagen se publica igual, como vídeo, con la
 // etiqueta «imagen-fija», «imagen fija · N s» en el prompt y la duración elegida en validacion.
+// Subida por partes (8-oct-2026): un MP4 de 30 s a ~18 Mbps (Altadis) pesa ~70 MB y en base64
+// eran ~97 MB de JSON que /stock-publish no podía tener en memoria (503 «Worker exceeded resource
+// limits»). Por encima de PARTS_THRESHOLD el MP4 viaja crudo, en trozos, por /stock-upload/*
+// (functions/stock-upload/[accion].js) y se publica con `r2Staged` en vez de base64. El Stock
+// guarda la misma entrada por los dos caminos. El bitrate no se toca: lo fijan las especificaciones.
 export const STOCK_PUBLISH_URL = '/stock-publish';
-export const MAX_STOCK_BYTES = 70 * 1024 * 1024; // base64 +33 % y el borde corta en 100 MB
+export const STOCK_UPLOAD_URL = '/stock-upload';
+export const PARTS_THRESHOLD = 8 * 1024 * 1024;    // hasta aquí, base64 como siempre
+export const MAX_STOCK_BYTES = 500 * 1024 * 1024;  // tope del Adaptador en /stock-upload/start
+export const PART_CONCURRENCY = 2;                 // trozos en vuelo a la vez
+export const PART_ATTEMPTS = 3;                    // intentos por trozo (1 + 2 reintentos)
 export const ADAPTATION_TAG = 'adaptación';
 export const STILL_TAG = 'imagen-fija';
 const RATIO = /^\d+:\d+$/;
@@ -39,17 +48,84 @@ const toBase64 = blob => new Promise((resolve, reject) => {
   reader.onerror = () => reject(reader.error || new Error('read'));
   reader.readAsDataURL(blob);
 });
+// Trozos de la subida: todos de `partSize` menos el último, como exige R2. n empieza en 1.
+export function planParts(size, partSize) {
+  const parts = [];
+  for (let n = 1, start = 0; start < size; n++, start += partSize) parts.push({n, start, end: Math.min(start + partSize, size)});
+  return parts;
+}
+const pausa = ms => new Promise(resolve => setTimeout(resolve, ms));
+const leerJSON = async response => { try { return await response.json(); } catch (_) { return {}; } };
+// Sube el MP4 crudo a uploads/ del Stock: start → trozos (PART_CONCURRENCY a la vez, PART_ATTEMPTS
+// intentos cada uno ante red caída, 408, 429 o 5xx) → complete. Si algo falla, abort: no deja
+// trozos colgando. Devuelve {ok, key} para publicar con r2Staged, o {ok:false, error}.
+// onProgress(bytesSubidos, total) tras cada trozo.
+export async function uploadInParts(blob, {fetch: f = (...a) => fetch(...a), motor = 'adaptador', onProgress = null, concurrency = PART_CONCURRENCY, attempts = PART_ATTEMPTS, wait = pausa} = {}) {
+  const post = (accion, body) => f(`${STOCK_UPLOAD_URL}/${accion}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  let ini;
+  try {
+    const r = await post('start', {type: 'video', motor, mime: 'video/mp4', size: blob.size});
+    ini = await leerJSON(r);
+    if (!r.ok || !ini.ok) return {ok: false, error: ini.error || `HTTP ${r.status}`};
+  } catch (_) { return {ok: false, error: 'network'}; }
+  const {key, uploadId, partSize} = ini;
+  if (!key || !uploadId || !(partSize > 0)) return {ok: false, error: 'bad-start'};
+  const cola = planParts(blob.size, partSize), parts = [];
+  let subido = 0, fallo = null;
+  const subirTrozo = async ({n, start, end}) => {
+    for (let intento = 1; ; intento++) {
+      let r = null, d = {};
+      try {
+        r = await f(`${STOCK_UPLOAD_URL}/part?${new URLSearchParams({key, uploadId, n: String(n)})}`, {method: 'PUT', headers: {'Content-Type': 'application/octet-stream'}, body: blob.slice(start, end)});
+        d = await leerJSON(r);
+      } catch (_) { r = null; }
+      if (r && r.ok && d.etag) return {partNumber: d.partNumber || n, etag: d.etag};
+      const reintentable = !r || r.status === 408 || r.status === 429 || r.status >= 500;
+      if (!reintentable || intento >= attempts) throw new Error(d.error || (r ? `HTTP ${r.status}` : 'network'));
+      await wait(800 * intento);
+    }
+  };
+  const obrero = async () => {
+    while (!fallo && cola.length) {
+      const trozo = cola.shift();
+      try {
+        parts[trozo.n - 1] = await subirTrozo(trozo);
+        subido += trozo.end - trozo.start;
+        if (onProgress) onProgress(subido, blob.size);
+      } catch (e) { fallo = fallo || e; }
+    }
+  };
+  await Promise.all(Array.from({length: Math.min(concurrency, cola.length)}, obrero));
+  let error = fallo ? String(fallo.message || fallo) : null;
+  if (!error) {
+    try {
+      const r = await post('complete', {key, uploadId, parts});
+      const d = await leerJSON(r);
+      if (r.ok && d.ok) return {ok: true, key, size: d.size};
+      error = d.error || `HTTP ${r.status}`;
+    } catch (_) { error = 'network'; }
+  }
+  try { await post('abort', {key, uploadId}); } catch (_) {}
+  return {ok: false, error};
+}
 // `extra` (paquete por estanco) sustituye tags, externalRef y comment del payload.
-export async function publishAdaptation(blob, meta, extra = null) {
+// `opts.onProgress(bytes, total)` informa de la subida por partes (solo por encima de PARTS_THRESHOLD).
+export async function publishAdaptation(blob, meta, extra = null, {onProgress = null, fetch: f = (...a) => fetch(...a)} = {}) {
   if (blob.size > MAX_STOCK_BYTES) return {ok: false, error: 'too-big'};
-  const body = {...stockPayload({...meta, size: blob.size, base64: await toBase64(blob)}), ...(extra || {})};
+  let body;
+  if (blob.size > PARTS_THRESHOLD) {
+    const subida = await uploadInParts(blob, {fetch: f, onProgress});
+    if (!subida.ok) return {ok: false, error: subida.error};
+    const {base64: _, ...payload} = stockPayload({...meta, size: blob.size});
+    body = {...payload, ...(extra || {}), r2Staged: subida.key};
+  } else body = {...stockPayload({...meta, size: blob.size, base64: await toBase64(blob)}), ...(extra || {})};
   // Miniatura real del vídeo exportado (fotograma ~10 %): nada llega al Stock sin imagen.
   try {
     const {posterFromVideo} = await import('/assets/poster-frame.mjs');
     const url = URL.createObjectURL(blob);
     try { const poster = await posterFromVideo(url); if (poster) body.poster = poster; } finally { URL.revokeObjectURL(url); }
   } catch (_) {}
-  const response = await fetch(STOCK_PUBLISH_URL, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+  const response = await f(STOCK_PUBLISH_URL, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
   let data = {};
   try { data = await response.json(); } catch (_) {}
   if (!response.ok || data.ok === false || data.error) return {ok: false, error: data.error || `HTTP ${response.status}`};
