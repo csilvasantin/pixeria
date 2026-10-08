@@ -123,5 +123,9 @@
   "v.08.10.2026.r15.20:06": [
     "Etiquetas automáticas al importar: vertical + portrait u horizontal + landscape",
     "Dimensiones reales de imágenes y vídeos; conserva tus otras etiquetas"
+  ],
+  "v.08.10.2026.r16.22:20": [
+    "Adaptador → Programar players: el modo real ya escribe en las pantallas de admira.tv (clave del Stock activa en el servidor).",
+    "El modo prueba sigue sin escribir nada y enseña el plan exacto antes de programar."
   ]
 }

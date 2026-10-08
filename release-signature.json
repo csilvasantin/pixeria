@@ -1,8 +1,8 @@
 {
-  "version": "v.08.10.2026.r15.20:06",
-  "deployer": "OraculoMacMini",
-  "agent": "OraculoMacMini",
+  "version": "v.08.10.2026.r16.22:20",
+  "deployer": "MorfeoMacMini",
+  "agent": "MorfeoMacMini",
   "machine": "MacMini",
-  "signature": "OraculoMacMini · MacMini",
-  "evidence": "Importador: orientación medida y etiquetas vertical/portrait u horizontal/landscape; conservación de etiquetas e historial."
+  "signature": "MorfeoMacMini · MacMini",
+  "evidence": "Republicado para activar STOCK_NOTIFY_KEY en el proyecto Pages: el Adaptador ya puede programar los players de admira.tv en modo real."
 }
