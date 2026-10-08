@@ -7,3 +7,5 @@ Anton: condensed heavy display. Oswald: condensed lighter weights. Montserrat: g
 The image analysis estimates visual traits; these are licensed approximations, not claims of identifying the original proprietary font. Fonts must finish loading before text layout or export. Only fonts actually used by an advertisement are loaded. No remote font request, arbitrary CSS family, or silent substitution on loading failure.
 
 El análisis estima rasgos visuales y elige una aproximación libre: no identifica ni garantiza la fuente exacta del original. Se conservan copia, colores, jerarquía y proporciones; se recompone para el formato. Las fuentes se cargan antes de medir y exportar; si fallan, se bloquea la creación.
+
+Fredoka: rounded display; Fredoka-Variable.ttf (300-700), Fredoka-OFL.txt. Source: https://github.com/google/fonts/tree/main/ofl/fredoka

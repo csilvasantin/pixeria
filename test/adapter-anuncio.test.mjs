@@ -50,3 +50,8 @@ test('narrow free zones shrink whole words instead of producing stacked word fra
  const z=safeCopyZone(d,1080,1920,[{label:'cup',box:[450,250,850,720]}],measure);
  const full=textLayout(d,1080,1920,measure,z);assert.ok(full.valid);assert.ok(full.blocks[0].lines.join(' ').includes('STARBUCKS'));
 });
+
+test('rounded lettering uses its own local display family',async()=>{
+ const {fontChoice,fontFor}=await import('../adaptaciones/anuncio-type.mjs');
+ const s={family:'rounded',weight:700,color:'#F339A7'};assert.equal(fontChoice('headline',s),'rounded');assert.match(fontFor(80,'headline',s),/Pixer Fredoka/);
+});

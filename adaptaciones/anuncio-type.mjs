@@ -2,6 +2,7 @@
 export const FONT_CATALOG={
  anton:{family:'Pixer Anton',file:'Anton-Regular.ttf',weight:'400'},
  oswald:{family:'Pixer Oswald',file:'Oswald-Variable.ttf',weight:'200 700'},
+ rounded:{family:'Pixer Fredoka',file:'Fredoka-Variable.ttf',weight:'300 700'},
  sans:{family:'Pixer Montserrat',file:'Montserrat-Variable.ttf',weight:'100 900'},
  serif:{family:'Pixer Baskerville',file:'LibreBaskerville-Variable.ttf',weight:'400 700'},
  script:{family:'Pixer Lobster',file:'Lobster-Regular.ttf',weight:'400'},
@@ -9,7 +10,7 @@ export const FONT_CATALOG={
 };
 const loaded=new Map();
 export function typographyFor(role,s){
- const observed=!!s&&['condensed','sans','serif','script','mono'].includes(s.family)&&/^#[0-9a-f]{6}$/i.test(s.color||'');
+ const observed=!!s&&['condensed','rounded','sans','serif','script','mono'].includes(s.family)&&/^#[0-9a-f]{6}$/i.test(s.color||'');
  if(!observed)return{observed:false,family:'sans',weight:['headline','brand'].includes(role)?800:500,color:role==='headline'?'#073e3a':'#162b29',align:'left',italic:false,trackingEm:0,lineHeight:1.18,outlineEm:0,outlineColor:'#102d36',shadow:false};
  const bounded=(x,a,b,f)=>Number.isFinite(x)?Math.min(b,Math.max(a,x)):f;
  return{observed:true,family:s.family,weight:bounded(s.weight,300,900,700),color:s.color,align:['left','center','right'].includes(s.align)?s.align:'left',italic:!!s.italic,trackingEm:bounded(s.trackingEm,-.04,.12,0),lineHeight:bounded(s.lineHeight,1,1.5,1.08),outlineEm:bounded(s.outlineEm,0,.06,0),outlineColor:/^#[0-9a-f]{6}$/i.test(s.outlineColor||'')?s.outlineColor:'#102d36',shadow:!!s.shadow};
