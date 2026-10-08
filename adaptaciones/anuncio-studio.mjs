@@ -1,4 +1,4 @@
-import {extractAdvertisement,makeVisual,semanticAction,editCopy,adRegions,renderAdvertisement,textLayout,fontFor} from './anuncio-core.mjs?v=semantic-ad-1';
+import {extractAdvertisement,makeVisual,semanticAction,editCopy,adRegions,renderAdvertisement,textLayout,fontFor} from './anuncio-core.mjs?v=semantic-ad-2';
 export function mountAdvertisement(h){
  const t=h.t,root=document.createElement('section');root.id='advertisement-studio';root.className='advertisement-studio';root.hidden=true;
  root.innerHTML=`<h3>${t('Anuncio · textos y composición','Advertisement · copy and composition')}</h3><p>${t('Extraemos el texto completo y lo recomponemos para cada tamaño. Si el original no permite un anuncio válido, recreamos la imagen. Revisa el texto y el producto antes de aprobar cada pieza.','We extract the complete copy and recompose it for each size. When the original cannot make a usable ad, we recreate the visual. Review the copy and product before approving each piece.')}</p><button type="button" class="pill" id="ad-analyze">${t('Analizar anuncio','Analyze advertisement')}</button> <button type="button" class="pill" id="ad-cancel" hidden>${t('Cancelar','Cancel')}</button><progress id="ad-progress" hidden></progress><p id="ad-status" role="status" aria-live="polite"></p><div id="ad-copy-wrap" hidden><label>${t('Texto extraído · separa los bloques con una línea en blanco','Extracted copy · separate blocks with a blank line')}<textarea id="ad-copy" rows="4" maxlength="20000"></textarea></label><button type="button" id="ad-confirm-copy" class="pill">${t('Confirmar texto completo','Confirm complete copy')}</button><p class="muted">${t('La IA puede equivocarse al leer. No traducimos ni inventamos precios o mensajes. Cambiar el texto invalida las piezas anteriores.','AI can misread text. We do not translate or invent prices or claims. Editing the copy invalidates previous pieces.')}</p></div>`;
@@ -29,7 +29,7 @@ export function mountAdvertisement(h){
    controls.querySelector('.ad-card-status').textContent=a?`${label} · ${a.approved?t('aprobada','approved'):t('revisa texto y producto','review copy and product')}`:label;
    const approve=controls.querySelector('.ad-approve');approve.hidden=!a;approve.disabled=!!controller||!!a?.approved;
    const again=controls.querySelector('.ad-recreate');again.hidden=!doc;again.disabled=!!controller||!copyConfirmed;
-   const png=controls.querySelector('.ad-png');png.hidden=!a;if(a){png.href=a.url;png.download=`${f.id}-${a.action}-${a.canvas.width}x${a.canvas.height}.png`;}
+   const png=controls.querySelector('.ad-png');png.hidden=!a?.approved;if(a){png.href=a.url;png.download=`${f.id}-${a.action}-${a.canvas.width}x${a.canvas.height}.png`;}
    const tag=el.querySelector('.accion-tag');if(tag){tag.hidden=false;tag.textContent=label;tag.title=t('El texto se compone como capas completas; no se recorta.','Copy is typeset as complete layers; it is not cropped.');}
    el.classList.remove('fmt-crear');
    const exp=el.querySelector('.export-one:not(.export-jpg)');if(exp){exp.textContent=!a?t('Crear anuncio','Create advertisement'):!a.approved?t('Revisar pieza','Review piece'):f.output==='png'?t('Exportar PNG','Export PNG'):`${t('Exportar MP4','Export MP4')} · ${h.seconds()} s`;exp.disabled=!!controller;}
@@ -51,9 +51,9 @@ export function mountAdvertisement(h){
   if(!copyConfirmed||doc.uncertain){say(t('Corrige y confirma el texto extraído antes de crear.','Correct and confirm the extracted copy before creating.'));return false;}
   const todo=formats.filter(f=>!entry(f));if(!todo.length){const ready=formats.every(f=>entry(f)?.approved);if(!ready)say(t('Revisa texto y producto y aprueba cada pieza antes de exportar.','Review copy and product and approve each piece before exporting.'));return ready;}
   const mine=++turn;controller=new AbortController();const active=controller;$('#ad-progress').max=todo.length;$('#ad-progress').value=0;sync();
-  const ref=reference(),source=h.source().src;let clean=null;
+  const ref=reference(),source=h.source().src;let clean=null;const failures=[];
   try{for(let i=0;i<todo.length;i++){
-   const f=todo[i],dst=h.destino(f),zone=h.textZone?.(f)||null,cv=document.createElement('canvas');cv.width=dst.ancho;cv.height=dst.alto;
+   const f=todo[i];try{const dst=h.destino(f),zone=h.textZone?.(f)||null,cv=document.createElement('canvas');cv.width=dst.ancho;cv.height=dst.alto;
    if(cv.width*cv.height>16777216)throw Error('canvas-budget');
    const measure=(text,size,role)=>{const ctx=cv.getContext('2d');ctx.font=fontFor(size,role);return ctx.measureText(text).width;};if(!textLayout(doc,cv.width,cv.height,measure,zone).valid)throw Error('text-overflow');
    let a=semanticAction(doc,source,dst,forces.get(f.id)).action;
@@ -64,7 +64,8 @@ export function mountAdvertisement(h){
    if(mine!==turn)return false;
    const image=new Image();image.src=visual.url;await image.decode();if(mine!==turn)return false;
    const layout=renderAdvertisement(cv,image,doc,{textZone:zone}),url=cv.toDataURL('image/png');entries.set(key(f),{canvas:cv,url,action:a,approved:false,layout,copy:doc.texts.map(x=>x.text),verification:visual.verification});$('#ad-progress').value=i+1;changed();
-  }say(t('Piezas listas para revisar. Comprueba texto y producto y pulsa Aprobar pieza en cada formato.','Pieces ready for review. Check the copy and product, then click Approve piece on each format.'));return false;
+   }catch(e){if(active.signal.aborted||mine!==turn)throw e;failures.push(`${f.nombre}: ${errorText(e)}`);$('#ad-progress').value=i+1;}
+  }if(failures.length){say(failures.join(' · '));return false;}say(t('Piezas listas para revisar. Comprueba texto y producto y pulsa Aprobar pieza en cada formato.','Pieces ready for review. Check the copy and product, then click Approve piece on each format.'));return false;
   }catch(e){if(mine===turn)say(errorText(e));return false;}finally{if(mine===turn){controller=null;changed();}}
  }
  $('#ad-analyze').onclick=()=>void analyze(true);$('#ad-cancel').onclick=()=>{turn++;controller?.abort();controller=null;analysisPromise=null;say(t('Cancelado; conservamos el original.','Cancelled; original retained.'));changed();};

@@ -1,4 +1,4 @@
-import {mountAdvertisement} from './anuncio-studio.mjs?v=semantic-ad-1';
+import {mountAdvertisement} from './anuncio-studio.mjs?v=semantic-ad-2';
 import {mountTwin} from './gemelo-digital.mjs?v=studio-best-3';
 import {aiJob} from './ia-core.mjs?v=adapter-detail-1';
 import {APPLICATION_KEY,restoreApplications,applyApplications} from './aplicaciones-core.mjs';
