@@ -55,3 +55,20 @@ test('rounded lettering uses its own local display family',async()=>{
  const {fontChoice,fontFor}=await import('../adaptaciones/anuncio-type.mjs');
  const s={family:'rounded',weight:700,color:'#F339A7'};assert.equal(fontChoice('headline',s),'rounded');assert.match(fontFor(80,'headline',s),/Pixer Fredoka/);
 });
+
+test('text-free recreation has no phantom reserved rectangle',()=>{
+ const prompt=visualPrompt('reconstruct',{...doc,texts:[]},{w:1920,h:1080},{textZone:null});
+ assert.match(prompt,/no reserved text zone/);assert.ok(!prompt.includes('Reserve the rectangle null'));
+});
+test('copy zones prioritize readable headline size over raw rectangle area',()=>{
+ const d={...doc,texts:[{text:'BURSTING WITH FUN!',role:'headline',typography:{family:'rounded',weight:700,color:'#FF00AA',lineHeight:1.08}},{text:'100% real fruit flavors',role:'body'}]};
+ const z=safeCopyZone(d,1920,1080,[{label:'bag',box:[150,400,840,950]}],measure);
+ const l=textLayout(d,1920,1080,measure,z);assert.ok(l.valid);assert.ok(l.blocks[0].px>60);assert.ok(z.x+z.w<=1920*.4||z.y+z.h<=1080*.15);
+});
+
+test('human type review preserves words and rejects arbitrary style values',async()=>{
+ const {editTypography}=await import('../adaptaciones/anuncio-type.mjs');
+ const d=editTypography(doc,0,{family:'rounded',color:'#169FB0',outlineColor:'#8C2675'});
+ assert.equal(d.texts[0].text,doc.texts[0].text);assert.equal(d.texts[0].typography.color,'#169FB0');assert.equal(doc.texts[0].typography,undefined);
+ for(const patch of [{family:'url(x)'},{color:'red'},{fontSize:1000}])assert.throws(()=>editTypography(doc,0,patch));
+});

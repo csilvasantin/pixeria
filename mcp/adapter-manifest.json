@@ -991,7 +991,26 @@
       "measurement": "await catalogue fonts before layout or export; loading failure blocks",
       "composition": "full recreated photograph with source colours and hierarchy; no fixed blank cream panel",
       "legacy": "unstyled documents still valid; analyze again to extract typography",
-      "review": "review typography, exact copy and product per piece"
+      "review": "review typography, exact copy and product per piece",
+      "packaging": "optional packageLabels[]: tiny copy fully inside a detected package, ≤15% of package area, stays on product; legal blocks excluded from this rule",
+      "manual_review": {
+        "location": "Advanced > Review type and colours",
+        "fields": [
+          "family",
+          "color",
+          "outlineColor"
+        ],
+        "on_change": "invalidate pieces, regenerate, review and approve"
+      }
+    },
+    "examples": {
+      "url": "https://www.pixeria.com/adaptaciones/ensayos/2026-10-08/",
+      "manifest": "https://www.pixeria.com/adaptaciones/ensayos/2026-10-08/manifest.json",
+      "landscape_to_portrait": 4,
+      "portrait_to_landscape": 4,
+      "model_weights_trained": false,
+      "review": "initial visual review, not campaign approval",
+      "blocked_regression": "1420 MS-DOS/OSX analysis-invalid; replacement 1380 latte"
     }
   }
 }

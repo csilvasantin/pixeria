@@ -25,3 +25,11 @@ export async function loadDocumentFonts(doc,{signal,Font=globalThis.FontFace,fon
  let timer,abort;const stop=new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('font-unavailable')),timeout);abort=()=>reject(new DOMException('Cancelled','AbortError'));if(signal?.aborted)abort();else signal?.addEventListener('abort',abort,{once:true});});
  try{await Promise.race([Promise.all(ids.map(id=>{if(!loaded.has(id)){const f=FONT_CATALOG[id],face=new Font(f.family,`url("${new URL('./fonts/'+f.file,import.meta.url)}")`,{weight:f.weight,style:'normal'});const p=face.load().then(v=>{fontSet.add(v);return v;}).catch(()=>{loaded.delete(id);throw Error('font-unavailable');});loaded.set(id,p);}return loaded.get(id);})),stop]);}finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
 }
+// Human review corrects observed traits without modifying copy or allowing arbitrary CSS.
+export function editTypography(doc,index,patch){
+ if(!Number.isInteger(index)||!doc?.texts?.[index])throw Error('invalid-type-block');
+ const allowed=['family','color','outlineColor'];
+ if(Object.keys(patch).some(k=>!allowed.includes(k))||('family'in patch&&!['condensed','rounded','sans','serif','script','mono'].includes(patch.family))||['color','outlineColor'].some(k=>k in patch&&!/^#[0-9a-f]{6}$/i.test(patch[k])))throw Error('invalid-type-style');
+ const base=typographyFor(doc.texts[index].role,doc.texts[index].typography),{observed,...style}=base;
+ return {...doc,texts:doc.texts.map((x,i)=>i===index?{...x,typography:{...style,...patch}}:x)};
+}
