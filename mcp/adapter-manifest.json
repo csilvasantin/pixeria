@@ -1012,5 +1012,27 @@
       "review": "initial visual review, not campaign approval",
       "blocked_regression": "1420 MS-DOS/OSX analysis-invalid; replacement 1380 latte"
     }
+  },
+  "import_orientation": {
+    "dimensions": {
+      "width": "positive integer <=65535",
+      "height": "positive integer <=65535"
+    },
+    "endpoint": "https://api.admira.store/stock/publish",
+    "portrait": [
+      "vertical",
+      "portrait"
+    ],
+    "landscape": [
+      "horizontal",
+      "landscape"
+    ],
+    "square": [
+      "cuadrado"
+    ],
+    "unknown": [],
+    "preserve_other_tags": true,
+    "quality_validation": false,
+    "guide": "https://www.pixeria.com/docs/etiquetas-al-importar-y-crear.md"
   }
 }

@@ -126,6 +126,7 @@
     var cli = clienteActivo();
     var body = {type: 'video', motor: res.motor, mime: 'video/mp4', base64: await base64(file), title: res.titulo || null, prompt: url,
       tags: cli ? [cli.id] : [], costEst: (res.motor === 'yt-dlp' ? 'gratis · ' : 'import · ') + (file.size / 1048576).toFixed(2) + 'MB · adaptador'};
+    try { var orientation = await import('/assets/content-orientation.mjs?v=orientation-1'); body.dimensions = await orientation.readMediaDimensions(file, 'video'); } catch (_) {}
     try { var m = await import('/assets/poster-frame.mjs'); var u = URL.createObjectURL(file); try { var p = await m.posterFromVideo(u); if (p) body.poster = p; } finally { URL.revokeObjectURL(u); } } catch (_) {}
     var r = await fetch('/stock-publish', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
     var d = {}; try { d = await r.json(); } catch (_) {}

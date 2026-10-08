@@ -33,3 +33,12 @@ comentario, el título o el texto sigue funcionando: el Stock también los lee d
 
 Código: `app.js` (`parseEtiquetas`, `etiquetasSugeridas`, `pubTagsHTML`, `campoEtiquetasImport`). Pruebas:
 `node --test test/etiquetas-campo.test.mjs`.
+
+
+## Orientación automática al importar / Automatic import orientation
+
+ES: El importador mide cada imagen o vídeo y añade vertical + portrait cuando alto > ancho, u horizontal + landscape cuando ancho > alto. Vale para archivos locales, subidas por partes, vídeos importados por URL y la caja de importación del Adapter. Conserva las otras etiquetas; corrige las de orientación incompatibles. Cuadrados: cuadrado, sin portrait/landscape. Audio y metadatos ilegibles: sin clasificación automática de orientación. Reimportar el mismo contenido conserva identidad e historial y completa la orientación medida; no migra el catálogo entero.
+
+EN: The importer measures each image or video and adds vertical + portrait when height > width, or horizontal + landscape when width > height. Covers local files, multipart uploads, URL-imported videos and the Adapter import box. Other tags stay; conflicting orientation tags are corrected. Square media: cuadrado, without portrait/landscape. Audio and unreadable metadata receive no automatic orientation. Reimporting identical content preserves identity and history and enriches measured orientation; the whole catalogue is not migrated.
+
+Contrato / Contract: `POST https://api.admira.store/stock/publish`, `dimensions: {width, height}` (enteros positivos, máximo 65535). Se guarda como `ancho`, `alto`, `orientacion` y etiquetas en Stock. `validacion.ancho/alto` del máster tiene prioridad. La medición no es una validación de calidad y no genera `validacion.ok`. No requiere un comando CLI. / No CLI command required; measurement does not assert media quality.

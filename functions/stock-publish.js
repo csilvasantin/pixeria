@@ -14,7 +14,7 @@
 const UPSTREAM = 'https://api.admira.store/stock/publish';
 const MAX_BODY = 95 * 1024 * 1024; // el borde corta en 100 MB
 const MOTORES = ['adaptador', 'yt-dlp', 'import'];
-const CAMPOS = ['type', 'motor', 'prompt', 'title', 'comment', 'tags', 'costEst', 'mime', 'base64', 'externalRef', 'validacion', 'quality'];
+const CAMPOS = ['type', 'motor', 'prompt', 'title', 'comment', 'tags', 'costEst', 'mime', 'base64', 'externalRef', 'validacion', 'quality', 'dimensions'];
 
 export async function onRequestPost({ request }) {
   if (+request.headers.get('content-length') > MAX_BODY) return error(413, 'too-big');

@@ -119,5 +119,9 @@
     "Stock: «Añadir» al circuito ya no congela la playlist viva que seguía la pantalla; sólo conserva su lista propia",
     "Si no puede leer la lista actual de una pantalla, la salta en vez de pisarla",
     "El modal marca «automática» las pantallas que siguen una playlist viva"
+  ],
+  "v.08.10.2026.r15.20:06": [
+    "Etiquetas automáticas al importar: vertical + portrait u horizontal + landscape",
+    "Dimensiones reales de imágenes y vídeos; conserva tus otras etiquetas"
   ]
 }

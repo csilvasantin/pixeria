@@ -3110,6 +3110,13 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         thumbnail: meta.thumbnail || null,
         quality: meta.quality || motorQuality(meta.motor),  // good/better/best (default good)
       };
+      // All import paths converge here; staged files carry dimensions measured before upload.
+      if (meta.type === 'image' || meta.type === 'video') {
+        try {
+          const {readMediaDimensions} = await import('/assets/content-orientation.mjs?v=orientation-1');
+          payload.dimensions = meta.dimensions || await readMediaDimensions(meta.url, meta.type);
+        } catch (_) { /* Keep the import available if its metadata cannot be decoded. */ }
+      }
       // Fichero ya subido por partes a uploads/: el Worker lo recoge de R2 y no
       // viaja nada en este JSON. Es lo que permite pasar de los ~74 MB.
       if (meta.r2Staged) {
@@ -3153,9 +3160,9 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       if (btn) {
         btn.textContent = '✅ EN STOCK'; btn.classList.add('done');
         const campo = btn.previousElementSibling;
-        if (campo && campo.classList.contains('pub-tags')) { campo.disabled = true; if (Array.isArray(meta.tags) && meta.tags.length) campo.value = meta.tags.map(e => '#' + e).join(' '); }
+        if (campo && campo.classList.contains('pub-tags')) { campo.disabled = true; const savedTags = Array.isArray(data.tags) ? data.tags : meta.tags; if (Array.isArray(savedTags)) campo.value = savedTags.map(e => '#' + e).join(' '); }
       }
-      return { ok: true, id: data.id, url: data.url };
+      return { ok: true, id: data.id, url: data.url, tags: data.tags || [] };
     } catch (e) {
       showToast('❌ ' + String(e).slice(0, 100));
       if (btn) { btn.disabled = false; btn.textContent = '📌 REINTENTAR'; }
@@ -3603,6 +3610,13 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     // Campo de etiquetas: se crea al cargar y se vacía CADA VEZ que la ventana se abre, la abra quien la abra (el
     // Stock la abre por su cuenta). No se arrastran de una importación a otra: una de pantalla emitiría sola lo siguiente.
     campoEtiquetasImport();
+    const orientationHelp = document.createElement('p');
+    orientationHelp.id = 'import-orientation-help';
+    orientationHelp.className = 'muted';
+    orientationHelp.textContent = ETIQ_EN
+      ? 'Automatic tags for images and videos: vertical + portrait or horizontal + landscape, based on actual dimensions. Your other tags stay. Square media stays square; unreadable metadata adds no orientation.'
+      : 'Etiquetas automáticas en imágenes y vídeos: vertical + portrait u horizontal + landscape, según sus dimensiones. Se conservan tus otras etiquetas. Las piezas cuadradas siguen como cuadrado; sin dimensiones legibles no se añade orientación.';
+    campoEtiquetasImport()?.insertAdjacentElement('afterend', orientationHelp);
     new MutationObserver(() => { if (dlg.open) { const etq = campoEtiquetasImport(); if (etq) etq.value = etiquetasSugeridas(); } })
       .observe(dlg, { attributes: true, attributeFilter: ['open'] });
     // Abridor del modal: cualquier botón #openImport o .js-open-import (hay uno
@@ -3807,6 +3821,10 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       const progress = importProgressStart(type === 'video' ? 'video' : 'audio');
       try {
         const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+        let dimensions = null;
+        if (type === 'image' || type === 'video') {
+          try { const m = await import('/assets/content-orientation.mjs?v=orientation-1'); dimensions = await m.readMediaDimensions(file, type); } catch (_) {}
+        }
         // Por encima del tope del cuerpo, se sube por partes a R2. Si el Worker
         // todavía no tiene esos endpoints, subirPorPartes devuelve null y se
         // explica el porqué en vez de fallar con un error de red opaco.
@@ -3834,6 +3852,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
             return { ok: false, error: msg };
           }
           const metaPartes = {
+            dimensions,
             type, motor: 'local',
             prompt: file.name,
             title: file.name.replace(/\.[^.]+$/, ''),
@@ -3863,6 +3882,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         });
         const comment = (document.getElementById('import-comment')?.value || '').trim();
         const meta = {
+          dimensions,
           type, motor: 'local',
           prompt: file.name,
           title: file.name.replace(/\.[^.]+$/, ''),

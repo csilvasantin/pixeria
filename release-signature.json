@@ -1,8 +1,8 @@
 {
-  "version": "v.08.10.2026.r14.19:39",
+  "version": "v.08.10.2026.r15.20:06",
   "deployer": "OraculoMacMini",
   "agent": "OraculoMacMini",
   "machine": "MacMini",
   "signature": "OraculoMacMini · MacMini",
-  "evidence": "Adapter: ocho pares revisados, cuatro landscape a portrait y cuatro portrait a landscape; tipografía redondeada, revisión manual y copia completa. MS-DOS/OSX sigue pendiente de análisis."
+  "evidence": "Importador: orientación medida y etiquetas vertical/portrait u horizontal/landscape; conservación de etiquetas e historial."
 }
