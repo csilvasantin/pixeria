@@ -490,5 +490,52 @@
     "normalizacion": "minúsculas, espacios exteriores y tildes",
     "modo": "muestra",
     "nota": "Contrato preparado para incorporar al motor de Neo; el pack no instala el motor."
+  },
+  "creator_demo_contract": {
+    "schema": "admira.creator-demo.v1",
+    "command": "/demo creador",
+    "alias": "/demo creator",
+    "url": "https://admira.studio/creador/?demo=creador",
+    "guide": "https://admira.studio/docs/demo-creador.md",
+    "steps": [
+      "brief",
+      "concept",
+      "creative",
+      "adapt",
+      "twin"
+    ],
+    "controls": [
+      "new",
+      "pause",
+      "resume",
+      "next",
+      "status",
+      "stop"
+    ],
+    "history": "admira.creator-demo.history.v1",
+    "historyLimit": 30,
+    "seed": "32 lowercase hex characters",
+    "composition": "new local recipe; reused NEXT STEP product artwork",
+    "formats": 7,
+    "screens": 13,
+    "exports": [
+      "PNG",
+      "JSON"
+    ],
+    "renderedMP4": false,
+    "physicalDelivery": false,
+    "remoteLaunch": false,
+    "mcp": {
+      "endpoint": "https://mcp-pixeria.admira.store/mcp",
+      "tool": "creador_demo",
+      "execution": "plan_only"
+    },
+    "twin": {
+      "url": "https://www.admira.store/xpacios/sneakerstore/?creator=<seed>",
+      "views": [
+        "360",
+        "3D"
+      ]
+    }
   }
 }

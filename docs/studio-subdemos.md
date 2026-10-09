@@ -72,3 +72,8 @@ El verificador comprueba contrato, orden, campos/selecciones actuales, rutas, pa
 ## NEXT STEP
 
 /demo en Creador o /demo sneakers abre /campanas/next-step/. /demo sneakers pausa|reiniciar|recorrer|parar. /demo in Creator or /demo sneakers opens /campanas/next-step/. /demo sneakers pause|restart|tour|stop. [Tutorial ES/EN](/docs/next-step.md). No hardware scheduling or draft/playlist writes.
+
+
+## Demo Creador / Creator demo
+
+/demo creador crea otra campaña Sneaker Xtore y muestra todos los pasos hasta el gemelo 360/3D. /demo creator makes a new Sneaker Xtore campaign and shows the full process. [Tutorial y contrato ES/EN](https://admira.studio/docs/demo-creador.md).

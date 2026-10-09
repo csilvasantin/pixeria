@@ -29,3 +29,8 @@ Published deliverables and the twin demo do not schedule physical hardware, edit
 ## Asset provenance / Procedencia
 
 Original generated product: product.png, optimised delivery product.webp. Built-in image generation tool, transparent output, 9 October 2026. Prompt: one photorealistic floating unbranded designer sneaker, ivory technical mesh, sculpted graphite sole, ice-blue translucent heel, acid-lime accents and silver laces, cyan/lavender fashion studio lighting, whole shoe, isolated transparent background, no text/logo/watermark. Programmatic typography and motion added by render.mjs. Font: Montserrat Variable, SIL OFL; licence /adaptaciones/fonts/montserrat-OFL.txt. No third-party commercial sneaker images used.
+
+
+## Demo Creador / Creator demo
+
+/demo creador crea otra campaña Sneaker Xtore y muestra todos los pasos hasta el gemelo 360/3D. /demo creator makes a new Sneaker Xtore campaign and shows the full process. [Tutorial y contrato ES/EN](https://admira.studio/docs/demo-creador.md).
