@@ -29,7 +29,7 @@ function ui({full=false,en=false}={}){
  const context=vm.createContext({document,URL,URLSearchParams,Blob,Option:class{constructor(text,value){this.textContent=text;this.value=value;}},orientationPair,createCreatorCampaign,creatorTwinURL,retainCampaign,CREATOR_HISTORY,STEPS,INSTALLATIONS,newFull,
   drawCreatorCampaign:(canvas,installation,source,seconds,campaign)=>{drawings.push({canvas,installation,source,seconds,campaign});return drawCreatorCampaign(canvas,installation,source,seconds,campaign);},
   createClock:clock,loadNextStepAssets:async()=>product,startCreatorFull:()=>assert.fail('orientation previews never start AI'),runFull:()=>assert.fail('render never starts the paid pipeline'),saveFull:()=>assert.fail('render never changes a saved job'),
-  mountAdmiritoWork:({host})=>({update(state){workStates.push({...state,host:host()});},destroy(){assert.fail('a reusable workshop hides its companion on stop');}}),
+  mountAdmiritoWork:({host})=>{const companion=element('aside');companion.className='admirito-work';return{update(state){const target=host();workStates.push({...state,host:target});companion.remove();companion.hidden=!state.busy;if(state.busy)target.append(companion);},destroy(){assert.fail('a reusable workshop hides its companion on stop');}};},
   localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)},location:{href:'https://admira.studio/creador/',origin:'https://admira.studio',search:''},
   window:{addEventListener(){},history:{replaceState(){}}},setTimeout:()=>1,clearTimeout(){},requestAnimationFrame:()=>1,cancelAnimationFrame(){},
   fetch:()=>assert.fail('previews do not call providers'),fixture:createCreatorCampaign(seed,en)
@@ -57,6 +57,7 @@ test('full Creator renders the orientation pair before media and reuses the sing
  assert.deepEqual(pair.querySelectorAll('canvas[data-installation]').map(cv=>cv.dataset.installation),['landscape','portrait']);
  const original=plain(w.run('job'));
  assert.equal(w.workStates.at(-1).busy,false,'brief previews do not pretend a provider is working');
+ assert.equal(pair.children.length,2,'idle previews have no empty work container');
  w.run("job.image={id:'image-123',url:'https://api.admira.store/stock/asset/image-123'};job.phase='image-archived';step=2;render();");
  const source=w.stage.querySelector('#creator-full-source');source.naturalWidth=1280;source.naturalHeight=720;source.onload();
  pair=w.stage.querySelector('.creator-orientation-pair');
@@ -72,11 +73,22 @@ test('full Creator companion follows actual image/video jobs and hides on errors
  for(const phase of ['image-requested','video-requested','video-pending']){
   w.context.phase=phase;w.run('job.phase=phase;busy=true;render();');
   assert.equal(w.workStates.at(-1).busy,true);assert.equal(w.workStates.at(-1).phase,'create');
-  assert.equal(w.workStates.at(-1).host,w.stage.querySelector('.creator-full-work'));
+  const pair=w.stage.querySelector('.creator-orientation-pair');
+  assert.equal(w.workStates.at(-1).host,pair);
+  assert.deepEqual(pair.children.map(node=>node.tagName),['FIGURE','FIGURE','ASIDE'],'companion sits beside previews, outside their canvases');
+  assert.equal(w.stage.querySelector('.creator-full-work'),null,'no persistent empty sidecar wrapper');
  }
  w.run("job.error='request-result-unknown';paintStatus();");assert.equal(w.workStates.at(-1).busy,false);
+ assert.equal(w.stage.querySelector('.creator-orientation-pair').children.length,2,'error removes the companion and restores the pair');
  w.run("job.error=null;job.phase='media-ready';paintStatus();");assert.equal(w.workStates.at(-1).busy,false);
  w.run("job.phase='video-pending';busy=false;paintStatus();");assert.equal(w.workStates.at(-1).busy,false);
  w.run("busy=true;paintStatus();");assert.equal(w.workStates.at(-1).busy,true);
  w.context.window.CreatorFull.stop();assert.equal(w.workStates.at(-1).busy,false);
+ assert.equal(w.stage.querySelector('.creator-orientation-pair').children.length,2);
+});
+
+test('the full-demo pair adds a side column only while Admirito is present and stacks it below previews on mobile',()=>{
+ const css=read('adaptaciones/adaptaciones.css');
+ assert.match(css,/\.creator-full \.creator-orientation-pair:has\(>\.admirito-work:not\(\[hidden\]\)\)\{grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\) auto;align-items:center\}/);
+ assert.match(css,/@media\(max-width:680px\)\{\.creator-full \.creator-orientation-pair:has\(>\.admirito-work:not\(\[hidden\]\)\)\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)\}\.creator-full \.creator-orientation-pair>\.admirito-work\{grid-column:1\/-1;justify-self:center;width:auto\}\}/);
 });
