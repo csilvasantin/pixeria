@@ -6,9 +6,9 @@
     "Volver atrás: sello v.09.10.2026.r10.08:40."
   ],
   "default": [
-    "Original y resultados primero; texto, composición y tratamiento debajo",
-    "Las nuevas generaciones piden creatividad final sin marcos ni pantallas de exposición",
-    "Creador publica PNG y MP4 con sus capas; Adaptador recupera texto guardado completo, y mantiene OCR para importaciones y piezas sin capas"
+    "Creador recupera interfaz y controles compatibles",
+    "Regeneración mantiene demo y ruta de idioma Creador",
+    "Conserva publicación PNG con texto y composición y aprobación manual"
   ],
   "v.07.10.2026.r11.23:39": [
     "Campo de etiquetas al importar (URL o ficheros) y junto a «Publicar en Stock» de lo que creas",
@@ -227,5 +227,10 @@
     "Original y resultados primero; texto, composición y tratamiento debajo",
     "Las nuevas generaciones piden creatividad final sin marcos ni pantallas de exposición",
     "Creador publica PNG y MP4 con sus capas; Adaptador recupera texto guardado completo, y mantiene OCR para importaciones y piezas sin capas"
+  ],
+  "v.09.10.2026.r22.13:31": [
+    "Creador recupera interfaz y controles compatibles",
+    "Regeneración mantiene demo y ruta de idioma Creador",
+    "Conserva publicación PNG con texto y composición y aprobación manual"
   ]
 }
