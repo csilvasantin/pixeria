@@ -331,6 +331,33 @@ test('uncertain OCR pauses the automatic flow, and human confirmation resumes th
  assert.deepEqual(plain(request[2].packageLabels),uncertainCopy().packageLabels);assert.equal(w.api.ready(f),false);
 });
 
+test('high-confidence classic OCR still requires an explicit human copy decision before any visual request',async()=>{
+ for(const decision of ['confirm','no-copy']){
+  const doc={...uncertainCopy(),texts:[{role:'brand',text:'BIGODIN',confidence:.99}],uncertain:false};
+  const w=advertisementWorld({doc,classicId:'9:16'}),f=w.formats[0];
+  await w.api.prepareClassic(f);
+  assert.equal(w.calls.filter(c=>c[0]==='visual').length,0,'provider confidence is not human confirmation');
+  assert.equal(w.api.entry(f),undefined);assert.equal(w.root.querySelector('#ad-copy-wrap').hidden,false);
+  assert.match(w.status(),/Revisa y confirma el texto/);
+  await w.api.prepare([f]);
+  assert.equal(w.calls.filter(c=>c[0]==='visual').length,0,'manual create/export cannot bypass classic copy review');
+  w.root.querySelector(decision==='confirm'?'#ad-confirm-copy':'#ad-no-copy').onclick();
+  await until(()=>!!w.api.entry(f));
+  const request=w.calls.find(c=>c[0]==='visual');
+  assert.deepEqual(plain(request[2].texts.map(t=>t.text)),decision==='confirm'?['BIGODIN']:[]);
+  assert.equal(w.calls.filter(c=>c[0]==='extract').length,1);assert.equal(w.calls.filter(c=>c[0]==='visual').length,1);
+  assert.equal(w.api.ready(f),false,'copy confirmation never approves the generated piece');
+ }
+});
+
+test('high-confidence special-format copy retains the existing preparation flow',async()=>{
+ const doc={...uncertainCopy(),texts:[{role:'headline',text:'RETAIL CAMPAIGN',confidence:.99}],uncertain:false};
+ const w=advertisementWorld({doc});
+ await w.api.prepare(w.formats);
+ assert.equal(w.calls.filter(c=>c[0]==='visual').length,1);
+ assert.ok(w.api.entry(w.formats[0]));assert.equal(w.api.ready(w.formats[0]),false);
+});
+
 test('confirming copy after leaving or changing the target cannot generate the old pending classic',async()=>{
  for(const next of [null,'16:9']){
   const w=advertisementWorld({doc:uncertainCopy(),classicId:'9:16'}),f=w.formats[0];
@@ -414,6 +441,8 @@ test('without advertising copy is an explicit immutable transformation that reta
  const prompt=visualPrompt('reconstruct',clean,{w:1080,h:1920},{textZone:null});assert.match(prompt,/SOL/);
  assert.match(prompt,/UNCONFIRMED OCR/);assert.match(prompt,/Preserve actual product markings, signs and graffiti/);
  assert.doesNotMatch(prompt,/Remove all advertising typography/);assert.match(prompt,/packaging/);assert.match(prompt,/brand/);
+ assert.match(prompt,/Return only the extended photograph, without added advertising overlays/);
+ assert.doesNotMatch(prompt,/text-free visual|Exact original copy will be added/);
  const duplicated={...before,texts:[{text:' SOL '},{text:' MURAL '},{text:'MURAL'},{text:'  '}]};
  const once=adCore.withoutAdvertisingCopy(duplicated);
  assert.deepEqual(once.packageLabels.map(x=>x.text),['SOL','MURAL']);assert.equal(once.packageLabels.at(-1).kind,'scene-marking');

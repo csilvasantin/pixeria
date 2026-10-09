@@ -207,5 +207,10 @@
     "El botón clásico analiza y genera el entorno que falta antes de revisar y aprobar",
     "Sin texto publicitario permite conservar marcas y grafitis de la fotografía por decisión explícita",
     "Las proporciones incompatibles bloquean el resultado en lugar de añadir bandas"
+  ],
+  "v.09.10.2026.r18.12:07": [
+    "El clásico pide confirmar cualquier texto detectado, aunque la lectura de IA parezca segura",
+    "Sin texto publicitario permite conservar grafitis y marcas de la fotografía por decisión humana",
+    "La comprobación visual recibe la fotografía original y la conserva durante la reparación de la imagen"
   ]
 }
