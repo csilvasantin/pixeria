@@ -117,6 +117,9 @@
         </details>
       </aside>
       <div id="special-host"><div class="adapter-variants">
+      <div class="variants-heading"><h2 id="selected-count"></h2><button id="clear-formats" class="pill" type="button">Remove all</button></div>
+      <p id="empty-formats" class="muted" hidden>Choose sizes in the library to create your adaptations.</p>
+      <div id="grid" class="grid"></div>
       <div class="variant-playback"><button id="btn-play-2" class="pill" type="button">⏯</button><label id="still-wrap" class="still-dur" title="Length of the MP4 made from the still image: 1 to 60 seconds, 25 fps, no audio" hidden>MP4 · still image <input id="still-seconds" type="number" min="1" max="60" step="1" value="10" inputmode="numeric" aria-label="MP4 length in seconds"> s</label></div>
       <details id="ad-adjustments" hidden><summary>Image treatment and typography</summary><div id="ad-options"></div></details>
       <div class="export-toolbar">
@@ -131,9 +134,6 @@
         <details id="paquete-stock" class="paquete-log" hidden><summary>Stock · log</summary><ol id="paquete-stock-log"></ol></details>
         <details id="programar" class="paquete-log paquete-programacion" open><summary>Player scheduling</summary><p id="programar-nota" class="muted">Schedules the admira.tv default playlist each screen plays (<code>canal.html?screen=…</code>). First a test run that changes nothing; then the real run, after confirmation. The admira.tv key is added by the server: it is never asked for here.</p><div class="paquete-acciones"><button type="button" id="programar-probar" class="pill" disabled>Test scheduling (no changes)</button><button type="button" id="programar-real" class="pill accent" disabled>Schedule players</button></div><p id="programar-status" class="muted" role="status" aria-live="polite"></p><ul id="programar-plan" class="programar-plan" hidden></ul><details id="programar-registro" class="paquete-log" hidden><summary>Scheduling log</summary><ol id="programar-log"></ol></details></details>
       </section>
-      <div class="variants-heading"><h2 id="selected-count"></h2><button id="clear-formats" class="pill" type="button">Remove all</button></div>
-      <p id="empty-formats" class="muted" hidden>Choose sizes in the library to create your adaptations.</p>
-      <div id="grid" class="grid"></div>
       </div></div></div>
       </div>
     </section>

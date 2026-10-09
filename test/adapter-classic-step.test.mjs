@@ -218,6 +218,8 @@ test('ES and EN keep one workspace, one control group and no duplicated editor I
   assert.doesNotMatch(html,/<details\b[^>]*id="ad-adjustments"[^>]*\bopen\b/);
   assert.ok(html.indexOf('id="classic-host"')<html.indexOf('id="paso-2"'));
   assert.ok(html.indexOf('id="special-host"')>html.indexOf('id="paso-2"'));
+  assert.ok(html.indexOf('id="grid"')<html.indexOf('id="ad-adjustments"'),path+' previews precede image and type treatment');
+  assert.ok(html.indexOf('id="ad-adjustments"')<html.indexOf('id="export-all"'),path+' export follows review controls');
  }
 });
 
@@ -242,7 +244,7 @@ function advertisementWorld({extract,make,doc,classicId=null,classicTarget,forma
  const globals=new Map(),nodes=[],calls=[],noCopy={texts:[],subjects:[{label:'product',box:[100,100,900,900]}],scene:'package',uncertain:false};
  function element(tag='section'){
   const children=new Map(),el={tagName:tag.toUpperCase(),hidden:false,value:'',dataset:{},textContent:'',width:0,height:0,
-   append(){},before(){},replaceChildren(){},removeAttribute(name){delete this[name];},
+   append(){},before(){},after(child){calls.push(['insert-after',child.id]);},replaceChildren(){},removeAttribute(name){delete this[name];},
    focus(options){calls.push(['focus',el.selector,options]);},scrollIntoView(options){calls.push(['scroll',el.selector,options]);},
    querySelector(selector){if(!children.has(selector)){const child=element();child.selector=selector;children.set(selector,child);}return children.get(selector);},
    querySelectorAll:()=>[],getContext:()=>({drawImage(){},fillRect(){},strokeText(){},fillText(text){calls.push(['paint',text,this.font,this.fillStyle]);},
@@ -263,6 +265,7 @@ function advertisementWorld({extract,make,doc,classicId=null,classicTarget,forma
   destino:()=>({ancho:1080,alto:1920}),selected:()=>formats,formats:()=>formats,seconds:()=>6,
   changed:()=>calls.push(['changed']),textZone:()=>{assert.ok((doc?.texts?.length||0)>0,'text-free media never requests a copy zone');return null;}});
  const root=nodes.find(n=>n.id==='advertisement-studio');assert.ok(root);
+ assert.ok(calls.some(c=>c[0]==='insert-after'&&c[1]==='advertisement-studio'),'copy review follows the result previews');
  const advanced=nodes.find(n=>n.className==='ad-reconstruction');assert.ok(advanced);
  return {api,formats,calls,noCopy,root,advanced,nodes,context,setClassic:id=>activeClassicId=id,status:()=>root.querySelector('#ad-status').textContent};
 }

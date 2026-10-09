@@ -117,6 +117,9 @@
         </details>
       </aside>
       <div id="special-host"><div class="adapter-variants">
+      <div class="variants-heading"><h2 id="selected-count"></h2><button id="clear-formats" class="pill" type="button">Quitar todos</button></div>
+      <p id="empty-formats" class="muted" hidden>Elige tamaños en el panel de la izquierda para crear tus adaptaciones.</p>
+      <div id="grid" class="grid"></div>
       <div class="variant-playback"><button id="btn-play-2" class="pill" type="button">⏯</button><label id="still-wrap" class="still-dur" title="Duración del MP4 hecho con la imagen fija: de 1 a 60 segundos, 25 fps, sin audio" hidden>MP4 · imagen fija <input id="still-seconds" type="number" min="1" max="60" step="1" value="10" inputmode="numeric" aria-label="Duración del MP4 en segundos"> s</label></div>
       <details id="ad-adjustments" hidden><summary>Tratamiento de imagen y tipografía</summary><div id="ad-options"></div></details>
       <div class="export-toolbar">
@@ -131,9 +134,6 @@
         <details id="paquete-stock" class="paquete-log" hidden><summary>Stock · registro</summary><ol id="paquete-stock-log"></ol></details>
         <details id="programar" class="paquete-log paquete-programacion" open><summary>Programación de players</summary><p id="programar-nota" class="muted">Programa la lista por defecto de admira.tv que reproduce cada pantalla (<code>canal.html?screen=…</code>). Primero se prueba sin cambiar nada; después se programa con confirmación. La clave de admira.tv la pone el servidor: aquí no se pide.</p><div class="paquete-acciones"><button type="button" id="programar-probar" class="pill" disabled>Probar programación (sin cambios)</button><button type="button" id="programar-real" class="pill accent" disabled>Programar players</button></div><p id="programar-status" class="muted" role="status" aria-live="polite"></p><ul id="programar-plan" class="programar-plan" hidden></ul><details id="programar-registro" class="paquete-log" hidden><summary>Registro de programación</summary><ol id="programar-log"></ol></details></details>
       </section>
-      <div class="variants-heading"><h2 id="selected-count"></h2><button id="clear-formats" class="pill" type="button">Quitar todos</button></div>
-      <p id="empty-formats" class="muted" hidden>Elige tamaños en el panel de la izquierda para crear tus adaptaciones.</p>
-      <div id="grid" class="grid"></div>
       </div></div></div>
       </div>
     </section>
