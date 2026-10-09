@@ -18,11 +18,20 @@ Si el Worker todavía no tiene esos endpoints, cae al plan B de antes:
 RECODIFICAR con ffmpeg hasta que quepa. Pierde calidad, pero entra. El original
 no se toca en ninguno de los dos casos.
 
+Desde el 9-oct-2026 va por partes todo lo que pasa de 8 MB (--max-mb), no solo
+lo que no cabe en 100 MB: en base64 dentro del JSON, desde unos 40 MB el Worker
+se quedaba sin memoria (503 «Worker exceeded resource limits»). Cada trozo se
+lee del disco a bloques de 1 MB mientras se envía (nunca el fichero ni el trozo
+entero en memoria), se reintenta hasta 3 veces si falla la red o el Worker
+responde 408, 429 o 5xx, y si no hay manera se aborta la subida. Tope: 2 GB, el
+del Worker. Lo de 8 MB o menos sigue en base64, como siempre.
+
 Uso
 ---
     ./stock-subir.py episodio1.mp4 episodio2.mp4 ...
     ./stock-subir.py --comentario "Animatrix · interno" ~/Downloads/*.mp4
     ./stock-subir.py --dry-run fichero.mp4     # sin publicar, dice qué haría
+    ./stock-subir.py --max-mb 70 fichero.mp4   # base64 hasta 70 MB (no recomendado)
 
 Opciones útiles: --tipo, --motor, --titulo, --comentario, --max-mb, --sin-recodificar.
 STOCK_API en el entorno apunta a otro Worker (para probar contra `wrangler dev`).
@@ -36,6 +45,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -43,10 +53,22 @@ import urllib.request
 API = os.environ.get("STOCK_API", "https://api.admira.store")
 PUBLISH = API + "/stock/publish"
 
-# Tope de FICHERO. El cuerpo de la petición no puede pasar de 100 MB (413 del
-# borde, comprobado) y base64 multiplica por 4/3, así que 74 MB es el máximo
-# teórico. 70 deja aire para el resto del JSON y para reintentos.
-MAX_MB_DEF = 70
+# Hasta aquí, base64 en una sola petición; por encima, por partes (como el
+# Adaptador y el Stock de pixeria.com: PARTS_THRESHOLD de adaptaciones/stock-publish.mjs).
+# Era 70 MB y en base64 el Worker ya se caía desde unos 40.
+MAX_MB_DEF = 8
+
+# Lo más que cabe en UNA petición base64: el borde corta el cuerpo en 100 MB (413,
+# comprobado) y base64 multiplica por 4/3. Solo cuenta en el plan B, si el Worker
+# no tuviera la subida por partes: entonces se recodifica hasta caber aquí.
+BASE64_MAX_MB = 70
+
+# Tope de fichero: el del Worker para la subida por partes (STOCK_STAGED_MAX).
+TOPE_MB = 2048
+
+# Subida por partes: intentos por trozo (1 + 2 reintentos) y bloque de lectura.
+INTENTOS_TROZO = 3
+BLOQUE = 1024 * 1024
 
 # Sin User-Agent de navegador, Cloudflare responde 403 «error code: 1010»
 # (Browser Integrity Check) y la petición no llega ni al Worker.
@@ -123,22 +145,52 @@ def recodificar(origen, destino, objetivo_bytes, altura_max=720):
     return True, "%d kbps de vídeo · alto máx %dp" % (video_kbps, altura_max)
 
 
-def pedir(path, obj, metodo="POST", crudo=None, timeout=600):
-    """POST/PUT contra el Worker. Devuelve (ok, dict|str)."""
-    datos = crudo if crudo is not None else json.dumps(obj).encode("utf-8")
+class TrozoFichero:
+    """El trozo [inicio, inicio+largo) de un fichero abierto, para mandarlo SIN cargarlo.
+
+    urllib lo va leyendo a bloques mientras envía (con el Content-Length puesto a
+    mano, así no cae en chunked). Nunca devuelve más de BLOQUE de una vez.
+    """
+
+    def __init__(self, f, inicio, largo):
+        self.f = f
+        self.resta = largo
+        f.seek(inicio)
+
+    def read(self, n=-1):
+        if self.resta <= 0:
+            return b""
+        if n is None or n < 0 or n > self.resta:
+            n = self.resta
+        b = self.f.read(min(n, BLOQUE))
+        self.resta -= len(b)
+        return b
+
+
+def peticion(path, datos, metodo="POST", tipo="application/json", largo=None, timeout=600):
+    """Una petición al Worker. Devuelve (estado HTTP o None si no hubo respuesta, dict|str)."""
     cab = dict(CABECERAS)
-    cab["Content-Type"] = "application/octet-stream" if crudo is not None else "application/json"
+    cab["Content-Type"] = tipo
+    if largo is not None:
+        cab["Content-Length"] = str(largo)
     req = urllib.request.Request(API + path, data=datos, method=metodo, headers=cab)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
-            return True, json.loads(r.read().decode("utf-8"))
+            return r.status, json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
-        return False, "HTTP %s · %s" % (e.code, e.read().decode("utf-8", "replace")[:200])
+        with e:
+            return e.code, "HTTP %s · %s" % (e.code, e.read().decode("utf-8", "replace")[:200])
     except Exception as e:
-        return False, str(e)
+        return None, str(e)
 
 
-def subir_por_partes(path, mime):
+def pedir(path, obj, metodo="POST", timeout=600):
+    """POST JSON contra el Worker. Devuelve (ok, dict|str)."""
+    estado, d = peticion(path, json.dumps(obj).encode("utf-8"), metodo=metodo, timeout=timeout)
+    return estado is not None and 200 <= estado < 300, d
+
+
+def subir_por_partes(path, mime, abrir=open, esperar=time.sleep):
     """Sube el fichero entero a uploads/ troceándolo. Devuelve (clave, detalle).
 
     clave None + detalle 'sin-soporte' = este Worker todavía no tiene los
@@ -154,21 +206,27 @@ def subir_por_partes(path, mime):
     trozo_max = int(ini.get("partSize") or 25 * 1024 * 1024)
     if not key or not up:
         return None, "sin-soporte"
-    partes, n, hecho = [], 0, 0
-    with open(path, "rb") as f:
-        while True:
-            trozo = f.read(trozo_max)
-            if not trozo:
-                break
-            n += 1
+    partes, hecho = [], 0
+    total = max(1, -(-tam // trozo_max))
+    with abrir(path, "rb") as f:
+        for n in range(1, total + 1):
+            inicio = (n - 1) * trozo_max
+            largo = min(trozo_max, tam - inicio)
             q = "?key=%s&uploadId=%s&n=%d" % (
                 urllib.parse.quote(key, safe=""), urllib.parse.quote(up, safe=""), n)
-            ok, d = pedir("/stock/upload/part" + q, None, crudo=trozo)
-            if not ok:
-                pedir("/stock/upload/abort", {"key": key, "uploadId": up})
-                return None, "trozo %d: %s" % (n, d)
-            partes.append({"partNumber": d["partNumber"], "etag": d["etag"]})
-            hecho += len(trozo)
+            for intento in range(1, INTENTOS_TROZO + 1):
+                estado, d = peticion("/stock/upload/part" + q, TrozoFichero(f, inicio, largo),
+                                     metodo="PUT", tipo="application/octet-stream", largo=largo)
+                if estado is not None and 200 <= estado < 300 and isinstance(d, dict) and d.get("etag"):
+                    break
+                reintentable = estado is None or estado in (408, 429) or estado >= 500
+                if not reintentable or intento == INTENTOS_TROZO:
+                    pedir("/stock/upload/abort", {"key": key, "uploadId": up})
+                    return None, "trozo %d: %s" % (n, d)
+                sys.stdout.write("\r      … trozo %d falló (%s); reintento %d\n" % (n, d, intento))
+                esperar(intento)
+            partes.append({"partNumber": d.get("partNumber") or n, "etag": d["etag"]})
+            hecho += largo
             sys.stdout.write("\r      … %d de %d MB en %d trozos" % (hecho // 1048576, tam // 1048576, n))
             sys.stdout.flush()
     sys.stdout.write("\r" + " " * 60 + "\r")
@@ -176,12 +234,14 @@ def subir_por_partes(path, mime):
     if not ok:
         pedir("/stock/upload/abort", {"key": key, "uploadId": up})
         return None, "cierre: %s" % d
-    return key, "%d trozos · %.1f MB" % (n, mb(d.get("size") or tam))
+    return key, "%d trozos · %.1f MB" % (len(partes), mb(d.get("size") or tam))
 
 
-def publicar_staged(key, tipo, mime, motor, titulo, comentario, prompt):
+def publicar_staged(key, tipo, mime, motor, titulo, comentario, prompt, tam=0):
+    # Los mismos campos que el camino base64 (publicar): la entrada del Stock sale igual.
     ok, d = pedir("/stock/publish", {
         "type": tipo, "motor": motor, "mime": mime, "r2Staged": key,
+        "costEst": "local · %.1fMB" % mb(tam),
         "title": (titulo or "")[:120] or None,
         "comment": (comentario or "")[:500] or None,
         "prompt": (prompt or "")[:500] or None,
@@ -244,13 +304,15 @@ def main():
     ap.add_argument("--motor", default="local")
     ap.add_argument("--titulo", default=None, help="por defecto, el nombre del fichero sin extensión")
     ap.add_argument("--comentario", default=None, help="indexable por búsqueda en el Stock")
-    ap.add_argument("--max-mb", type=float, default=MAX_MB_DEF)
+    ap.add_argument("--max-mb", type=float, default=MAX_MB_DEF,
+                    help="hasta aquí, base64 en una petición; por encima, por partes (por defecto 8)")
     ap.add_argument("--sin-recodificar", action="store_true",
                     help="no llamar a ffmpeg: si no cabe, se salta")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 
-    tope = int(a.max_mb * 1024 * 1024)
+    umbral = int(a.max_mb * 1024 * 1024)
+    tope_base64 = BASE64_MAX_MB * 1024 * 1024   # solo en el plan B (Worker sin subida por partes)
     total = len(a.ficheros)
     ok = 0
     tmpdir = tempfile.mkdtemp(prefix="stock-subir-")
@@ -270,16 +332,25 @@ def main():
         subir = path
         nota = ""
         print("%s %s · %.1f MB" % (pre, os.path.basename(path), mb(tam)))
+        if tam > TOPE_MB * 1024 * 1024:
+            print("      ✗ pasa del tope del Stock (%d MB)" % TOPE_MB)
+            continue
 
-        if tam > tope and not a.dry_run:
-            # Primero, subida por partes: entra ENTERO y sin perder calidad.
-            # Recodificar era el plan B de cuando el Worker no sabía trocear.
-            print("      … no cabe en una petición: subiendo por partes")
+        if tam > umbral:
+            if a.dry_run:
+                trozos = max(1, -(-tam // (25 * 1024 * 1024)))
+                print("      ✓ DRY-RUN · por partes: %d trozos de 25 MB como mucho" % trozos)
+                ok += 1
+                continue
+            # Por partes: entra ENTERO y sin perder calidad, y el Worker nunca
+            # tiene el fichero en memoria. Recodificar es el plan B de cuando el
+            # Worker no sabía trocear.
+            print("      … más de %g MB: subiendo por partes" % a.max_mb)
             clave, det = subir_por_partes(path, mime)
             if clave:
                 bien, det2 = publicar_staged(clave, tipo, mime, a.motor,
                                              a.titulo or os.path.splitext(os.path.basename(path))[0],
-                                             a.comentario, os.path.basename(path))
+                                             a.comentario, os.path.basename(path), tam)
                 print("      %s %s (%s)" % ("✓" if bien else "✗", det2, det))
                 if bien:
                     ok += 1
@@ -287,24 +358,24 @@ def main():
             if det != "sin-soporte":
                 print("      ✗ subida por partes: %s" % det)
                 continue
-            print("      … este Stock aún no trocea; se recodifica para que quepa")
+            print("      … este Stock aún no trocea; va en una sola petición")
 
-        if tam > tope:
+        if tam > tope_base64:
             if a.sin_recodificar or tipo != "video":
-                print("      ✗ se pasa del tope de %.0f MB y no se recodifica" % a.max_mb)
+                print("      ✗ se pasa del tope de %.0f MB y no se recodifica" % mb(tope_base64))
                 continue
             destino = os.path.join(tmpdir, "cabe-%d.mp4" % i)
             print("      … no cabe: recodificando con ffmpeg para que quepa (el original no se toca)")
-            bien, det = recodificar(path, destino, tope)
+            bien, det = recodificar(path, destino, tope_base64)
             if not bien:
                 print("      ✗ no se pudo recodificar: %s" % det)
                 continue
             nuevo = os.path.getsize(destino)
-            if nuevo > tope:
+            if nuevo > tope_base64:
                 print("      … sigue en %.1f MB, segundo intento a 480p" % mb(nuevo))
-                bien, det = recodificar(path, destino, tope, altura_max=480)
+                bien, det = recodificar(path, destino, tope_base64, altura_max=480)
                 nuevo = os.path.getsize(destino) if bien else nuevo
-            if nuevo > tope:
+            if nuevo > tope_base64:
                 print("      ✗ ni así cabe (%.1f MB). Pártelo en trozos." % mb(nuevo))
                 continue
             print("      ✓ %.1f MB (%s)" % (mb(nuevo), det))
