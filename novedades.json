@@ -6,10 +6,9 @@
     "Volver atrás: sello v.09.10.2026.r10.08:40."
   ],
   "default": [
-    "Demo Creador todo: imagen y vídeo IA originales bajo petición.",
-    "Proceso visible con estados reales y recuperación sin repetir solicitudes.",
-    "Nuevos medios aplicados a las siete composiciones del gemelo 360 y 3D.",
-    "Ayuda y MCP bilingües; biblioteca, PNG y contrato, sin programación física."
+    "Ayuda orientada a Creador, Adaptador, demos y biblioteca, con índice de temas",
+    "Catálogo MCP compartido actualizado desde el servicio; distingue consulta, planes y generación",
+    "Guía de las cinco subdemos alineada con los manifiestos publicados"
   ],
   "v.07.10.2026.r11.23:39": [
     "Campo de etiquetas al importar (URL o ficheros) y junto a «Publicar en Stock» de lo que creas",
@@ -183,5 +182,10 @@
     "Proceso visible con estados reales y recuperación sin repetir solicitudes.",
     "Nuevos medios aplicados a las siete composiciones del gemelo 360 y 3D.",
     "Ayuda y MCP bilingües; biblioteca, PNG y contrato, sin programación física."
+  ],
+  "v.09.10.2026.r13.10:12": [
+    "Ayuda orientada a Creador, Adaptador, demos y biblioteca, con índice de temas",
+    "Catálogo MCP compartido actualizado desde el servicio; distingue consulta, planes y generación",
+    "Guía de las cinco subdemos alineada con los manifiestos publicados"
   ]
 }
