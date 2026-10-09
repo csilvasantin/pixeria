@@ -1,5 +1,5 @@
 import {classicTargets,isClassicFormat,extraFormats} from './classic-step.mjs?v=20261009-classic-step-1';
-import {mountAdvertisement} from './anuncio-studio.mjs?v=classic-auto-3';
+import {mountAdvertisement} from './anuncio-studio.mjs?v=classic-auto-4';
 import {mountCampaign} from './campaign-studio.mjs?v=creator-full-3';
 let campaignWorkshop=null;
 import {mountTwin} from './gemelo-digital.mjs?v=installation-20261009';

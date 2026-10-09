@@ -79,8 +79,9 @@ export function fullBleedPlacement(W,H,iw,ih,subjects=[]){
  if(![W,H,iw,ih].every(x=>Number.isFinite(x)&&x>0)||Math.abs(iw/ih/(W/H)-1)>.02)throw Error('visual-ratio');
  const k=Math.max(W/iw,H/ih),x=(W-iw*k)/2,y=(H-ih*k)/2;
  for(const subject of subjects||[]){
-  const b=subject.box;if(!Array.isArray(b)||b.length!==4||!b.every(Number.isFinite))throw Error('visual-product-crop');
-  if(x+b[1]/1000*iw*k<-.01||y+b[0]/1000*ih*k<-.01||x+b[3]/1000*iw*k>W+.01||y+b[2]/1000*ih*k>H+.01)throw Error('visual-product-crop');
+  const cropError=()=>{const e=Error('visual-product-crop');if(typeof subject.label==='string')e.protectedElement=subject.label.trim().slice(0,160);return e;};
+  const b=subject.box;if(!Array.isArray(b)||b.length!==4||!b.every(Number.isFinite))throw cropError();
+  if(x+b[1]/1000*iw*k<-.01||y+b[0]/1000*ih*k<-.01||x+b[3]/1000*iw*k>W+.01||y+b[2]/1000*ih*k>H+.01)throw cropError();
  }
  return {x,y,w:iw*k,h:ih*k};
 }
