@@ -24,6 +24,7 @@ async function guardedRequest(context) {
 
   // Pregunta del avatar (FLT-101350). Solo llega a la función /avatar-ask, que
   // devuelve JSON. No abre ninguna página del estudio.
+  if (url.pathname.startsWith('/creator-ai/')) return context.next(); // Each action verifies the existing session.
   if (url.pathname === '/avatar-ask') return context.next();
 
   // La verja NO puede depender de lo que diga el cliente. Hasta el 1-sep-2026

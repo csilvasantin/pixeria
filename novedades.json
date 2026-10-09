@@ -1,10 +1,10 @@
 {
   "_como": "Novedades del sello (2-4 líneas, español). Clave = sello exacto (v.DD.MM.AAAA.rN.HH:MM); .default si el sello aún no tiene entrada. El deploy las escribe en /version.json.novedades[] y el cargador común https://www.admiranext.com/assets/sello-novedades.js las enseña al pasar el ratón por el sello.",
   "default": [
-    "NEXT STEP: campaña original para todas las superficies de SneakerStore.",
-    "Demo desde Experto, siete configuraciones y trece vídeos nativos.",
-    "Jordan, LCD, LED con puerta, entrada, columna e iPad con reloj compartido.",
-    "Pausa y parada conservan borradores, mobiliario y playlists."
+    "Demo Creador todo: imagen y vídeo IA originales bajo petición.",
+    "Proceso visible con estados reales y recuperación sin repetir solicitudes.",
+    "Nuevos medios aplicados a las siete composiciones del gemelo 360 y 3D.",
+    "Ayuda y MCP bilingües; biblioteca, PNG y contrato, sin programación física."
   ],
   "v.07.10.2026.r11.23:39": [
     "Campo de etiquetas al importar (URL o ficheros) y junto a «Publicar en Stock» de lo que creas",
@@ -149,5 +149,11 @@
     "Proceso completo visible y controles de pausa, siguiente e historial.",
     "Trece PNG nativos y la misma campaña en gemelo 360 y 3D.",
     "Contrato y ayuda MCP bilingües; composición local sin gasto de IA."
+  ],
+  "v.09.10.2026.r9.08:35": [
+    "Demo Creador todo: imagen y vídeo IA originales bajo petición.",
+    "Proceso visible con estados reales y recuperación sin repetir solicitudes.",
+    "Nuevos medios aplicados a las siete composiciones del gemelo 360 y 3D.",
+    "Ayuda y MCP bilingües; biblioteca, PNG y contrato, sin programación física."
   ]
 }

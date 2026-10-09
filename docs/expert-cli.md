@@ -70,3 +70,33 @@ EN: `/campaign` opens Sneakers Store workshop: editable elements, three directio
 ## Demo Creador / Creator demo
 
 /demo creador crea otra campaña Sneaker Xtore y muestra todos los pasos hasta el gemelo 360/3D. /demo creator makes a new Sneaker Xtore campaign and shows the full process. [Tutorial y contrato ES/EN](https://admira.studio/docs/demo-creador.md).
+
+## Modo completo con IA
+
+Escribe **`/demo creador todo`** (alias `/demo creator full`) o pulsa **Crear campaña completa con IA** en https://admira.studio/creador/?demo=creador&mode=full&lang=es . Cada petición explícita crea una identidad nueva y genera **una imagen original con Imagen 4** y **un vídeo nuevo de cinco segundos con Grok Imagine Video a partir de esa misma imagen**. Los originales se guardan en la biblioteca/Stock. Necesita la sesión existente de Studio/Pixeria y utiliza crédito de sus proveedores.
+
+Brief → Concepto → Imagen + vídeo IA → Adaptación → Gemelo 360. Se muestran instrucciones IA, imagen recibida, estado real del proveedor, request_id y registro con horas. No se avanza por un porcentaje simulado: el vídeo sólo está listo cuando `archived:true` devuelve su URL de biblioteca. El gemelo sólo se anuncia aplicado después de cargar ambos medios y recibir `admira:creator-ready`.
+
+La fotografía y el vídeo alternan en las composiciones de las siete instalaciones y trece pantallas. Texto independiente, maestro Jordan y hueco LED conservados. Los recortes PNG se exportan a dimensiones nativas. El MP4 original IA se puede abrir desde **Vídeo IA · 5 s**; este modo no exporta trece MP4 adaptados. Las adaptaciones animadas se reproducen en canvas dentro del gemelo 360/3D. No cambia playlists, programación ni emisión física.
+
+`pausa`, `reanudar`, `estado`, `stop` y Escape controlan el recorrido. Una petición ya enviada puede terminar aunque se pause o detenga la demo. El historial recupera una campaña y sus resultados sin generar otra; recargar tampoco inicia otra generación. Los trabajos viven en IndexedDB `admira.creator-full`, registro de campañas en `admira.creator-demo.history.v1`, separados de borradores. Si se pierde la respuesta de un POST, se muestra `request-result-unknown` y no se repite automáticamente. Un request_id conocido permite reanudar consultas. **Nueva campaña con IA** solicita otra generación y otra semilla; no sustituye los medios de una anterior.
+
+Contrato `admira.creator-full.v1`: semilla, prompts, modelos, IDs/URLs de imagen y vídeo, request_id, fases y eventos. El enlace 360 incorpora `creator=<seed>&mode=full&image=<stock_id>&video=<stock_id>`; medios ausentes o que no decodifican bloquean la aplicación. Las URLs aceptadas pertenecen a la biblioteca Admira, sin claves en URLs ni en contratos. El modo gratuito `/demo creador` conserva su composición local y su producto NEXT STEP reutilizado.
+
+API web autenticada del mismo origen: POST `/creator-ai/image`, POST `/creator-ai/archive`, POST `/creator-ai/video`, GET `/creator-ai/status?request_id=…`. Verifica la sesión y firma un token corto en servidor con la identidad real de la sesión. Sólo admite estas acciones y parámetros limitados; no expone secretos de proveedor/flota. Reutiliza `/imagen/generate`, `/stock/publish` y `/xai/video` existentes.
+
+MCP real: `creador_demo({mode:"full",language:"es"})` **planifica**, no genera ni abre navegador. Para agentes, ejecución explícita autenticada: `crear_imagen` → `creador_imagen_guardar` (data URL recibida, semilla y título) → `clip_desde_imagen` (stock_id recién devuelto) → `clip_estado` hasta `archived:true`. Ni el plan ni un request_id prueban generación completa o emisión física.
+
+## Full AI mode
+
+Run **`/demo creator full`** (alias `/demo creador todo`) or click **Create full campaign with AI** at https://admira.studio/creador/?demo=creador&mode=full&lang=en . Each explicit request creates a new identity and generates **one original Imagen 4 image** and **one new five-second Grok Imagine Video clip from that exact image**. Originals are archived in the library/Stock. Uses the existing Studio/Pixeria session and provider credit.
+
+Brief → Concept → AI image + video → Adaptation → 360 twin. Prompts, received image, actual provider state, request_id and timestamped events are visible. Video completion requires `archived:true` and a library URL. Twin application is confirmed only after both media decode and the `admira:creator-ready` acknowledgement arrives.
+
+The image and video alternate across seven shared compositions and thirteen screens, with independent copy, the Jordan master and LED doorway retained. Native PNG crops and the original five-second AI MP4 are available. Animated adaptations play in canvas in the 360/3D twin; this mode does not export thirteen adapted MP4s. Physical scheduling and playlists remain unchanged.
+
+Pause/resume/status/stop and Escape control the walkthrough. Issued provider requests may continue while paused or stopped. History and reload recover results without generating again. Jobs use IndexedDB `admira.creator-full`, metadata uses separate demo history. Lost POST replies show `request-result-unknown` without automatic repetition; known request_id resumes polling. New AI campaign explicitly requests new assets and a new seed.
+
+Contract `admira.creator-full.v1` includes seed, prompts, models, source asset IDs/URLs, request_id, phases and timestamped events. Twin links carry `creator=<seed>&mode=full&image=<stock_id>&video=<stock_id>`. Missing/undecodable media block application. Authenticated same-origin `/creator-ai/{image,archive,video,status}` reuses existing Imagen/Stock/xAI APIs, signing a short server token for the current session identity. Provider/fleet secrets never reach the browser or contract.
+
+Real MCP `creador_demo({mode:"full",language:"en"})` is **plan only**. Explicit authenticated execution: `crear_imagen` → `creador_imagen_guardar` → `clip_desde_imagen` with the freshly returned stock_id → `clip_estado` until `archived:true`. A plan or request_id is not a completed render or physical delivery. Free `/demo creator` retains its local composition and reused NEXT STEP artwork.

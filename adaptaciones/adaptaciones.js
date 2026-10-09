@@ -1,5 +1,5 @@
 import {mountAdvertisement} from './anuncio-studio.mjs?v=semantic-ad-13';
-import {mountCampaign} from './campaign-studio.mjs?v=creator-demo-1';
+import {mountCampaign} from './campaign-studio.mjs?v=creator-full-1';
 let campaignWorkshop=null;
 import {mountTwin} from './gemelo-digital.mjs?v=installation-20261009';
 import {aiJob} from './ia-core.mjs?v=adapter-detail-1';
