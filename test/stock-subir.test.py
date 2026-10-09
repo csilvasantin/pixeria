@@ -22,6 +22,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
+sys.dont_write_bytecode = True  # no dejar scripts/__pycache__ en el repo
 MB = 1024 * 1024
 
 
