@@ -1,14 +1,14 @@
 {
-  "version": "v.09.10.2026.r18.12:07",
+  "version": "v.09.10.2026.r19.12:33",
   "deployer": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
   "agent": "TrinityMBP16",
-  "builtAt": "2026-10-09T10:07:58Z",
+  "builtAt": "2026-10-09T10:33:04Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
-    "El clásico pide confirmar cualquier texto detectado, aunque la lectura de IA parezca segura",
-    "Sin texto publicitario permite conservar grafitis y marcas de la fotografía por decisión humana",
-    "La comprobación visual recibe la fotografía original y la conserva durante la reparación de la imagen"
+    "El clásico genera automáticamente borradores con texto OCR seguro, en horizontal ↔ vertical",
+    "Titulares, precios y condiciones se recomponen completos; cada pieza requiere aprobación manual",
+    "Texto dudoso o editado muestra la corrección antes de generar y nunca se descarta automáticamente"
   ]
 }

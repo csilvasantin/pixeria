@@ -1,8 +1,8 @@
 {
-  "version": "v.09.10.2026.r18.12:07",
+  "version": "v.09.10.2026.r19.12:33",
   "deployer": "TrinityMBP16",
   "agent": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
-  "evidence": "Revisión humana del texto clásico independiente de la confianza OCR; referencia original en comprobación y reparación. 61 pruebas Node con proveedores simulados, sintaxis y sello verificados; no acredita generación real."
+  "evidence": "Borrador clásico automático con OCR seguro; texto dudoso o editado exige confirmación y foco sin carreras. Pruebas Node con proveedores simulados y render real de titulares, precio y condiciones; aprobación manual conservada. No acredita generación real."
 }
