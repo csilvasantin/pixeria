@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r13.1012';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r14.1031';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r13.10:12">
+  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r14.10:31">
   <link rel="canonical" href="https://www.pixeria.com/musica.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/musica.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/musica.html">
@@ -50,10 +50,10 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=09.10.2026.r13.1012">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=09.10.2026.r13.1012">
-  <script defer src="/assets/site-nav.js?v=09.10.2026.r13.1012"></script>
-  <script defer src="/assets/descarga-local.js?v=09.10.2026.r13.1012"></script>
+  <link rel="stylesheet" href="workspace.css?v=09.10.2026.r14.1031">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=09.10.2026.r14.1031">
+  <script defer src="/assets/site-nav.js?v=09.10.2026.r14.1031"></script>
+  <script defer src="/assets/descarga-local.js?v=09.10.2026.r14.1031"></script>
 </head>
 <body data-page="musica" class="quad-ui">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -102,17 +102,11 @@
   </header>
 
   <section class="module cap-hilo" aria-label="Capacidad · Hilo musical para espacios">
-    <div class="module-head"><h3><span class="accent" style="background: var(--music);"></span>Hilo musical para espacios</h3><small>Eleven Music · música continua por ambiente, marca y franja</small></div>
-    <p style="color:var(--muted);line-height:1.55;max-width:820px">Además de crear piezas sueltas, Música genera el <strong>hilo musical</strong> de un espacio: una playlist continua y renovable, ajustada por ambiente, marca y franja horaria para retail y redes de pantallas. No es una radio genérica compartida entre miles de locales: cada zona suena distinta y coherente con su identidad. Se produce con <strong>Eleven Music</strong> (modelo Music v2 de ElevenLabs).</p>
-    <div class="cap-flow" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0;font-size:13px;color:var(--muted)">
-      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">1 · Prompt de marca</span><span>→</span>
-      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">2 · Eleven Music <code>POST /v1/music</code> (Music v2)</span><span>→</span>
-      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">3 · Cola / curación</span><span>→</span>
-      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">4 · Pantalla / altavoces</span>
-    </div>
-    <p style="color:var(--muted);line-height:1.5;max-width:820px"><strong style="color:var(--ink)">Licencias — el argumento clave:</strong> Eleven Music se entrena sobre un catálogo licenciado con discográficas y editores. Es música <strong>apta para difusión en espacios públicos</strong> y uso comercial, sin las zonas grises de derechos de una IA sin acuerdos.</p>
-    
-    <p style="margin-top:8px"><a class="btn" href="/clearchannel/#hilo">▶ Ver la demo en vivo · Clear Channel</a></p>
+    <div class="module-head"><h3><span class="accent" style="background: var(--music);"></span>Hilo musical para espacios</h3><small>Generación Suno · propuesta Eleven Music pendiente</small></div>
+    <p style="color:var(--muted);line-height:1.55;max-width:820px">Los selectores actuales generan pistas mediante el proxy configurado de <strong>Suno</strong>, con crédito del proveedor. Una playlist para un espacio necesita selección, curación y distribución autorizada. El hilo continuo renovable es una propuesta, no el resultado automático de generar una pista.</p>
+    <p style="color:var(--muted);line-height:1.5;max-width:820px"><strong>Eleven Music:</strong> integración propuesta y pendiente, no el proveedor de estos selectores. La página de Clear Channel reproduce muestras locales preparadas; no llama a Eleven Music ni emite a un local.</p>
+    <p style="color:var(--muted);line-height:1.5;max-width:820px"><strong>Derechos de uso:</strong> comprobar las condiciones de la cuenta del proveedor y el uso comercial o en espacios públicos previsto antes de distribuir. Esta demo no certifica esos derechos.</p>
+    <p style="margin-top:8px"><a class="btn" href="/clearchannel/#hilo">▶ Escuchar muestras preparadas · Clear Channel</a></p>
   </section>
 
   <main>
@@ -198,7 +192,7 @@
             </div>
             <label class="suno-ver-wrap">Versión
               <select id="sunoVersion" class="suno-ver" name="musica.suno.version" aria-label="Versión Suno">
-                <option value="v6" selected>v6</option>
+                <option value="v6" selected>Suno v5.5 (chirp-v5-5)</option>
                 <option value="v5">v5</option>
                 <option value="v4.5">v4.5</option>
               </select>
@@ -347,9 +341,9 @@
       </div>
     </form>
   </dialog>
-  <script defer src="/matrix-rain.js?v=09.10.2026.r13.1012"></script>
-  <script src="app.js?v=09.10.2026.r13.1012"></script>
-  <script defer src="/assets/cuadratura.js?v=09.10.2026.r13.1012"></script>
+  <script defer src="/matrix-rain.js?v=09.10.2026.r14.1031"></script>
+  <script src="app.js?v=09.10.2026.r14.1031"></script>
+  <script defer src="/assets/cuadratura.js?v=09.10.2026.r14.1031"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>

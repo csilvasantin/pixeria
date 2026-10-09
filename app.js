@@ -37,7 +37,7 @@
     const k = loadKeys();
     if (motorId === 'elevenlabs-v2') return true; // proxied vía worker pixer-eleven
     if (motorId === 'elevenlabs-flash-v2-5') return true; // proxied vía worker pixer-eleven
-    if (motorId === 'elevenlabs-v3') return true; // proxied vía worker pixer-eleven
+    if (motorId === 'elevenlabs-v3' || motorId === 'grok-voice') return true; // ruta ElevenLabs vía proxy; no verifica sesión ni saldo
     if (motorId === 'grok-imagine-image-pro') return true; // proxied vía worker
     if (motorId === 'grok-imagine-video') return true; // xAI vídeo · proxied vía worker (/xai/video)
     if (motorId === 'imagen-4.0-ultra-generate-001') return true; // Gemini API key
@@ -49,7 +49,7 @@
     if (motorId === 'suno-local-v45') return true; // depende del proxy local, se chequea aparte
     if (motorId === 'suno-local-v5') return true; // depende del proxy local, se chequea aparte
     if (motorId === 'suno-web') return true; // cola /api/suno-queue + suno-local execute
-    if (motorId === 'lyria-3-pro-preview') return true; // proxied vía worker
+    if (motorId === 'lyria-3-pro-preview' || motorId === 'pixer-loop') return true; // rutas Suno configuradas; no verifica sesión ni saldo
     if (motorId === 'runway-gen3' || motorId === 'openai-tts-hd' || motorId === 'openai-sora') return false;
     return true;
   }
@@ -159,19 +159,21 @@
     if (changed) saveStore(store);
   }
 
-  // Catálogo de motores IA por sección.
-  // Default = primer elemento (siempre el gratuito).
+  // Texto de proveedor según el idioma de la página; los IDs guardados no cambian.
+  function providerCopy(es, en) { return document.documentElement.lang === 'en' ? en : es; }
+
+  // Catálogo de motores por sección. Default = primer elemento; no implica gratuidad.
   const MOTORES = {
     audio: [
-      { id: 'web-speech',    nombre: 'Web Speech API', tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',     desc: 'TTS del sistema operativo' },
-      { id: 'grok-voice',    nombre: 'Grok (xAI)',     tipo: 'pro',  badge: 'Better', coste: 'vía worker',             desc: 'voz expresiva de xAI' },
-      { id: 'elevenlabs-v3', nombre: 'ElevenLabs v3',  tipo: 'pro',  badge: 'Best',   coste: '$300 / 1M caracteres',   desc: 'máxima expresividad · tags emocionales' },
+      { id: 'web-speech', nombre: 'Google TTS', tipo: 'free', badge: 'Good', coste: providerCopy('TTS gratuito vía proxy', 'Free TTS via proxy'), desc: providerCopy('MP3 de Google TTS; respaldo Web Speech local sin fichero', 'Google TTS MP3; local Web Speech fallback without a file') },
+      { id: 'grok-voice', nombre: 'ElevenLabs Flash v2.5', tipo: 'pro', badge: 'Better', coste: providerCopy('crédito ElevenLabs · vía proxy', 'ElevenLabs credit · via proxy'), desc: 'eleven_flash_v2_5' },
+      { id: 'elevenlabs-v3', nombre: 'ElevenLabs v3', tipo: 'pro', badge: 'Best', coste: providerCopy('crédito ElevenLabs · vía proxy', 'ElevenLabs credit · via proxy'), desc: providerCopy('expresividad · etiquetas emocionales', 'Expressiveness · emotion tags') },
     ],
     musica: [
-      { id: 'pixer-loop',           nombre: 'Pixer Loop (Web Audio)', tipo: 'free', badge: 'Good',   coste: 'gratis · navegador',  desc: 'preview rápido para probar intención', use: 'Borrador' },
-      { id: 'lyria-3-pro-preview',  nombre: 'Gemini (Google)',        tipo: 'pro',  badge: 'Better', coste: 'paid tier Gemini',    desc: '~2min con voz cantando la letra', use: 'Alternativa' },
-      { id: 'suno-local-v5',        nombre: 'Pixeria Music',          tipo: 'pro',  badge: 'Best',   coste: '~10 créditos / canción · cuenta loguead.', desc: 'calidad final · motor de música', use: 'Master' },
-      { id: 'suno-web',             nombre: 'Suno',                   tipo: 'pro',  badge: 'Suno',  coste: 'créditos Suno · csilva@admira.com', desc: 'UI Suno · ESP/ENG · execute → Stock', use: 'Cápsula' },
+      { id: 'pixer-loop', nombre: 'Suno v4.5', tipo: 'pro', badge: 'Good', coste: providerCopy('créditos Suno · cuenta Pro', 'Suno credits · Pro account'), desc: 'chirp-v4-5 · '+providerCopy('generación vía proxy Suno', 'Generation via Suno proxy'), use: providerCopy('Borrador', 'Draft') },
+      { id: 'lyria-3-pro-preview', nombre: 'Suno v5', tipo: 'pro', badge: 'Better', coste: providerCopy('créditos Suno · cuenta Pro', 'Suno credits · Pro account'), desc: 'chirp-v5 · '+providerCopy('generación vía proxy Suno', 'Generation via Suno proxy'), use: providerCopy('Alternativa', 'Alternative') },
+      { id: 'suno-local-v5', nombre: 'Suno v5.5', tipo: 'pro', badge: 'Best', coste: providerCopy('créditos Suno · cuenta Pro', 'Suno credits · Pro account'), desc: 'chirp-v5-5 · '+providerCopy('generación vía proxy Suno', 'Generation via Suno proxy'), use: 'Master' },
+      { id: 'suno-web', nombre: 'Suno', tipo: 'pro', badge: 'Suno', coste: providerCopy('créditos Suno · cuenta Pro', 'Suno credits · Pro account'), desc: providerCopy('cola Suno · ESP/ENG · ejecutar → Stock', 'Suno queue · ESP/ENG · execute → Stock'), use: providerCopy('Cápsula', 'Capsule') },
     ],
     imagenes: [
       { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Good',   coste: 'gratis (free tier)',   desc: 'generación + edición · Gemini 2.5 Flash Image' },
@@ -289,8 +291,8 @@
       host.innerHTML = `
         <div class="motor-section" data-section="${seccion}">
           <div class="motor-head">
-            <span class="motor-title">Motor IA · ${seccion}${titleHint}</span>
-            <span class="motor-disclaimer">Costes orientativos a ${COSTES_FECHA}</span>
+            <span class="motor-title">${providerCopy('Motor', 'Engine')} · ${providerCopy(seccion, ({ audio: 'audio', musica: 'music' })[seccion] || seccion)}${titleHint}</span>
+            <span class="motor-disclaimer">${seccion === 'audio' || seccion === 'musica' ? providerCopy('Crédito según cuenta del proveedor', 'Credit depends on provider account') : 'Costes orientativos a ' + COSTES_FECHA}</span>
           </div>
           <div class="motor-grid" data-count="${opciones.length}">${opts}</div>
           <div class="motor-warning" data-warning hidden></div>
@@ -301,18 +303,21 @@
         const motor = opciones.find(o => o.id === ((loadStore()[seccion] && loadStore()[seccion].motor) || opciones[0].id));
         if (!motor || motor.tipo !== 'pro') { wrap.hidden = true; wrap.innerHTML = ''; return; }
         const ok = hasKeyFor(motor.id);
-        const keyLabel = motor.id.startsWith('elevenlabs-') ? 'WORKER pixer-eleven'
+        const keyLabel = motor.id === 'grok-voice' || motor.id.startsWith('elevenlabs-') ? 'PROXY ElevenLabs · /tts'
                        : motor.id === 'grok-imagine-image-pro' ? 'WORKER pixer-eleven'
                        : motor.id === 'grok-imagine-video' ? 'WORKER pixer-eleven (xAI)'
-                       : motor.id.startsWith('suno-local-') ? 'PROXY motor de música'
+                       : motor.id.startsWith('suno-local-') || motor.id === 'pixer-loop' || motor.id === 'lyria-3-pro-preview' ? 'PROXY Suno · /generate'
                        : motor.id === 'suno-web' ? 'COLA /api/suno-queue + suno-local'
-                       : motor.id === 'lyria-3-pro-preview' ? 'WORKER pixer-eleven (GCP)'
                        : motor.id === 'nano-banana' ? 'WORKER pixer-eleven (Gemini)'
                        : (motor.id.startsWith('imagen-') || motor.id.startsWith('veo-')) ? 'WORKER pixer-eleven (Gemini)'
                        : (motor.id === 'runway-gen3' || motor.id === 'openai-tts-hd' || motor.id === 'openai-sora') ? 'BACKEND_REQUERIDO'
                        : 'API_KEY';
+        const routedProvider = seccion === 'audio' || seccion === 'musica';
         wrap.hidden = false;
-        wrap.innerHTML = `
+        wrap.innerHTML = routedProvider ? `
+          <span class="warn-icon">⚠</span>
+          <strong>${motor.nombre}</strong> · ${motor.coste}.
+          <span class="warn-ok">${providerCopy('Ruta configurada', 'Configured route')}: ${keyLabel}. ${providerCopy('Requiere sesión y crédito del proveedor; disponibilidad y saldo no verificados.', 'Requires a session and provider credit; availability and balance are not verified.')}</span>` : `
           <span class="warn-icon">⚠</span>
           <strong>${motor.nombre}</strong> es de pago — consume tokens (${motor.coste}).
           ${ok
@@ -628,12 +633,12 @@
       'elevenlabs-v2':         { label: 'ElevenLabs v2',         model_id: 'eleven_multilingual_v2', pricePer1k: 0.30 },
       'elevenlabs-flash-v2-5': { label: 'ElevenLabs Flash v2.5', model_id: 'eleven_flash_v2_5',      pricePer1k: 0.15 },
       'elevenlabs-v3':         { label: 'ElevenLabs v3',         model_id: 'eleven_v3',              pricePer1k: 0.30 },
-      // TEMP: "Grok" usa por ahora ElevenLabs Flash bajo la etiqueta Grok (xAI no tiene TTS aun). Cambiar cuando exista endpoint de voz Grok.
-      'grok-voice':            { label: 'Grok (xAI)',            model_id: 'eleven_flash_v2_5',      pricePer1k: 0.15 },
+      // Alias histórico guardado; la ruta actual es ElevenLabs Flash v2.5.
+      'grok-voice':            { label: 'ElevenLabs Flash v2.5',            model_id: 'eleven_flash_v2_5',      pricePer1k: 0.15 },
     };
     if (ELEVEN_MODELS[motor]) {
       const { label, model_id, pricePer1k } = ELEVEN_MODELS[motor];
-      const shownModel = (motor === 'grok-voice') ? 'grok-voice' : model_id; // mantener la etiqueta Grok en la salida
+      const shownModel = model_id;
       if (!(await confirmPro(label, `$${(pricePer1k * 1000).toFixed(0)} / 1M caracteres · vía worker pixer-eleven`))) return;
       const voiceId = keys.elevenlabs_voice || 'EXAVITQu4vr4xnSDxMaL';
       showPlayer(`
@@ -695,8 +700,8 @@
     const lang = (LANG_MAP[s.idioma] || 'es-ES').slice(0, 2);
     showPlayer(`
       <div class="player-card">
-        <div class="player-head">▶ MEGAFONÍA · gratis (Google TTS) · ${lang}</div>
-        ${progressHtml('Generando megafonía gratis...', 'gtts', 8000)}
+        <div class="player-head">▶ ${providerCopy('MEGAFONÍA · Google TTS gratuito', 'ANNOUNCEMENT · Free Google TTS')} · ${lang}</div>
+        ${progressHtml(providerCopy('Generando MP3 con Google TTS...', 'Generating MP3 with Google TTS...'), 'gtts', 8000)}
       </div>`);
     const stopGtts = startProgress('gtts');
     try {
@@ -713,12 +718,12 @@
       const pubMeta = { type: 'locucion', motor: 'web-speech-free', prompt: text, costEst: 'gratis', url, mime: 'audio/mpeg', thumbnail: audioCover || null };
       showPlayer(`
         <div class="player-card">
-          <div class="player-head">▶ MEGAFONÍA · gratis (Google TTS) · ${lang}</div>
+          <div class="player-head">▶ ${providerCopy('MEGAFONÍA · Google TTS gratuito', 'ANNOUNCEMENT · Free Google TTS')} · ${lang}</div>
           <pre class="player-body">"${text.replace(/</g,'&lt;')}"</pre>
           <audio controls autoplay src="${url}" data-pixer-title="${escAttr(audioTitle)}" style="width:100%;"></audio>
           ${downloadBtnHTML({ ...pubMeta, title: audioTitle }, 'Descargar MP3')}
           ${publishBtnHTML(pubMeta)}
-          <small class="player-foot">// TTS libre · gratis · se puede guardar en Stock</small>
+          <small class="player-foot">// ${providerCopy('Google TTS · MP3 · se puede guardar en Stock', 'Google TTS · MP3 · can be saved to Stock')}</small>
         </div>`);
       return;
     } catch (e) {
@@ -737,9 +742,9 @@
       if (v) u.voice = v;
       showPlayer(`
         <div class="player-card">
-          <div class="player-head">▶ MEGAFONÍA · Web Speech (local) · ${u.lang}${v ? ' · ' + v.name : ''}</div>
+          <div class="player-head">▶ ${providerCopy('MEGAFONÍA · respaldo Web Speech local', 'ANNOUNCEMENT · local Web Speech fallback')} · ${u.lang}${v ? ' · ' + v.name : ''}</div>
           <pre class="player-body">"${text.replace(/</g,'&lt;')}"</pre>
-          <small class="player-foot">⚠ TTS libre no disponible — reproducción local; NO se puede guardar en Stock. Usa ElevenLabs para un fichero.</small>
+          <small class="player-foot">⚠ ${providerCopy('Google TTS no disponible — reproducción Web Speech local, sin fichero para guardar en Stock.', 'Google TTS unavailable — local Web Speech playback, without a file to save to Stock.')}</small>
         </div>`);
       speechSynthesis.speak(u);
       return;
@@ -922,7 +927,7 @@
     else setDefaultMatrixCover();   // sin carátula real → vuelve al Matrix por defecto
   }
 
-  // ── Cápsula Suno (fase 1): UI espejo + cola dry-run; NO gasta créditos ──
+  // ── Cápsula Suno: cola y ejecución con crédito; dry-run solo si se solicita ──
   const SUNO_JOBS_KEY = 'pixer_suno_jobs_v1';
   function loadSunoJobs() {
     try { return JSON.parse(localStorage.getItem(SUNO_JOBS_KEY) || '[]'); }
@@ -1210,14 +1215,14 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     // sleeping:true / ready:false = proxy vivo (Chrome se despierta en /generate)
     if (!(health && (health.ok === true || health.sleeping === true))) {
       updateMusicStage('engine');
-      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · el motor no responde</div><pre class="player-body">${(health && health.error) || JSON.stringify(health)}</pre></div>`);
+      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · el motor no responde</div><pre class="player-body">${(health && health.error) || JSON.stringify(health)}</pre></div>`);
       return;
     }
     // Sin password PRO / confirm: admira.studio ya autenticado con Google (miembros Admira).
 
     showPlayer(`
       <div class="player-card">
-        <div class="player-head">▶ MÚSICA · Pixeria Music · ${prompt.slice(0,60)}</div>
+        <div class="player-head">▶ MÚSICA · Suno · ${prompt.slice(0,60)}</div>
         ${progressHtml('Enviando prompt al motor de música...', 'suno', 60000)}
       </div>`);
     const stop = startProgress('suno');
@@ -1230,7 +1235,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       if (!r.ok) {
         stop(false);
         const err = await r.text();
-        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · ERROR ${r.status}</div><pre class="player-body">${err.slice(0,500)}</pre></div>`);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · ERROR ${r.status}</div><pre class="player-body">${err.slice(0,500)}</pre></div>`);
         return;
       }
       const data = await r.json();
@@ -1242,7 +1247,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       }
       if (!clipIds.length) {
         stop(false);
-        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · sin clips</div><pre class="player-body">${JSON.stringify(data).slice(0,400)}</pre></div>`);
+        showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · sin clips</div><pre class="player-body">${JSON.stringify(data).slice(0,400)}</pre></div>`);
         return;
       }
       setProgressLabel('suno', `Generando · clips ${clipIds.map(id=>id.slice(0,6)).join(', ')}`);
@@ -1254,7 +1259,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         const pollR = await fetch(`${SUNO_LOCAL_URL}/status?ids=${clipIds.join(',')}`);
         const clips = await pollR.json();
         const ready = clips.filter(c => (c.audio_url || c.video_url) && (c.status === 'streaming' || c.status === 'complete'));
-        setProgressLabel('suno', `Pixeria Music · intento ${attempt} · ${ready.length}/${clips.length} listos`);
+        setProgressLabel('suno', `Suno · intento ${attempt} · ${ready.length}/${clips.length} listos`);
         if (ready.length >= 1) {
           stop(true);
           updateMusicStage('review');
@@ -1265,7 +1270,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
           showPlayer(`
             <div class="player-card music-result-card">
               <div class="player-head music-result-head">
-                <span>▶ HILO MUSICAL · Pixeria Music</span>
+                <span>▶ HILO MUSICAL · Suno</span>
                 <span>${ready.length}/${clips.length} versiones listas</span>
               </div>
               <div class="music-result-grid">
@@ -1313,21 +1318,21 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
               }).join('')}
               </div>
               ${lyrics ? `<details open class="music-result-lyrics"><summary>Letra de producción</summary><pre class="brief">${escAttr(lyrics)}</pre></details>` : ''}
-              <small class="player-foot">// Admira TV · ${prompt.slice(0,80)} · revisa una versión y publícala en Stock</small>
+              <small class="player-foot">// Suno · model_id ${model} · ${providerCopy('revisa una versión antes de publicar en Stock', 'review a version before saving to Stock')}</small>
             </div>`);
           return;
         }
         if (attempt > 60) { // 5 min cap
           stop(false);
           updateMusicStage('engine');
-          showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · TIMEOUT</div><pre class="player-body">clips: ${clipIds.join(', ')}</pre></div>`);
+          showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · TIMEOUT</div><pre class="player-body">clips: ${clipIds.join(', ')}</pre></div>`);
           return;
         }
       }
     } catch (e) {
       stop(false);
       updateMusicStage('engine');
-      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Pixeria Music · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);
+      showPlayer(`<div class="player-card"><div class="player-head">▶ MÚSICA · Suno · ERROR</div><pre class="player-body">${String(e)}</pre></div>`);
     }
   }
 
@@ -1423,10 +1428,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
   function playMusica() {
     const s = loadStore().musica || {};
     const motor = s.motor || 'pixer-loop';
-    // Carlos 2026-06-12 (cuenta Pro csilva@admira.com, sin cambiar los textos de las tarjetas):
-    //   Good (Pixer Loop)  → Suno v4.5
-    //   Better (Gemini)    → Suno v5.0
-    //   Best (Suno local)  → Suno v5.5
+    // IDs históricos conservados: Good → Suno v4.5; Better → Suno v5; Best → Suno v5.5.
     if (motor === 'pixer-loop')           return playSunoLocal(s, 'chirp-v4-5');
     if (motor === 'lyria-3-pro-preview')  return playSunoLocal(s, 'chirp-v5');
     if (motor === 'suno-local-v5')        return playSunoLocal(s, 'chirp-v5-5');

@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r13.1012';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r14.1031';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r13.10:12">
+  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r14.10:31">
   <link rel="canonical" href="https://www.pixeria.com/en/audio.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/audio.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/audio.html">
@@ -50,10 +50,10 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="../workspace.css?v=09.10.2026.r13.1012">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=09.10.2026.r13.1012">
-  <script defer src="/assets/site-nav.js?v=09.10.2026.r13.1012"></script>
-  <script defer src="/assets/descarga-local.js?v=09.10.2026.r13.1012"></script>
+  <link rel="stylesheet" href="../workspace.css?v=09.10.2026.r14.1031">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=09.10.2026.r14.1031">
+  <script defer src="/assets/site-nav.js?v=09.10.2026.r14.1031"></script>
+  <script defer src="/assets/descarga-local.js?v=09.10.2026.r14.1031"></script>
 </head>
 <body data-page="audio">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -104,18 +104,12 @@
     <p class="lead">Spoken assets for assistants, narratives, guides, ads, interactive experiences and product responses. Define speaker, language, tone and script; the brief exports ready for Pixeria and Admira XP.</p>
   </header>
 
-  <section class="module cap-megafonia" aria-label="Capability · Public Address">
-    <div class="module-head"><h3><span class="accent" style="background: var(--audio);"></span>PA · Public Address <small style="opacity:.7">(Megafonía)</small></h3><small>ElevenLabs TTS · instant voice announcements</small></div>
-    <p style="color:var(--muted);line-height:1.55;max-width:820px">A voice-announcement composer: type the message and it plays in the venue. Opening, closing, promo or safety — <strong>multilingual</strong> and with a <strong>consistent brand voice</strong> across every site, with no need for someone to grab the mic. Text → voice instantly with ElevenLabs.</p>
-    <div class="cap-flow" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0;font-size:13px;color:var(--muted)">
-      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">1 · Announcement text</span><span>→</span>
-      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">2 · Worker proxy <em style="color:var(--cyan);font-style:normal">(key stays server-side, never in the browser)</em></span><span>→</span>
-      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">3 · ElevenLabs TTS</span><span>→</span>
-      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">4 · Per-zone PA queue</span><span>→</span>
-      <span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">5 · Speakers / screen</span>
-    </div>
-    <p style="color:var(--muted);line-height:1.5;max-width:820px;font-size:13px"><strong style="color:var(--ink)">Production:</strong> the ElevenLabs key lives in the secrets vault; a Cloudflare worker proxy renders the MP3 and enqueues it in the right PA zone. The key never travels to the front end.</p>
-    <p style="margin-top:8px"><a class="btn" href="/clearchannel/#megafonia">▶ See the live demo · Clear Channel</a></p>
+  <section class="module cap-megafonia" aria-label="Voice announcements">
+    <div class="module-head"><h3><span class="accent" style="background: var(--audio);"></span>Voice announcements</h3><small>Google TTS or ElevenLabs · local fallback</small></div>
+    <p style="color:var(--muted);line-height:1.55;max-width:820px">Write a script and choose the voice engine. Google TTS generates an MP3 through the proxy; ElevenLabs uses the selected model and provider credit. If Google TTS fails, local Web Speech can read the text without producing a file.</p>
+    <div class="cap-flow" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0;font-size:13px;color:var(--muted)"><span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">1 · Script</span><span>→</span><span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">2 · Proxy</span><span>→</span><span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">3 · Google TTS / ElevenLabs</span><span>→</span><span style="border:1px solid var(--line);border-radius:6px;padding:6px 12px">4 · MP3 · download / Stock</span></div>
+    <p style="color:var(--muted);line-height:1.5;max-width:820px;font-size:13px">Generating or saving audio does not certify delivery to a PA zone or physical playback. Distribution requires its own authorised workflow. Local Web Speech playback cannot be saved as an MP3.</p>
+    <p style="margin-top:8px"><a class="btn" href="/clearchannel/#megafonia">▶ Hear prepared samples · Clear Channel</a></p>
   </section>
 
   <main>
@@ -237,8 +231,8 @@
       </div>
     </form>
   </dialog>
-  <script defer src="/matrix-rain.js?v=09.10.2026.r13.1012"></script>
-  <script src="../app.js?v=09.10.2026.r13.1012"></script>
-  <script defer src="/assets/cuadratura.js?v=09.10.2026.r13.1012"></script>
+  <script defer src="/matrix-rain.js?v=09.10.2026.r14.1031"></script>
+  <script src="../app.js?v=09.10.2026.r14.1031"></script>
+  <script defer src="/assets/cuadratura.js?v=09.10.2026.r14.1031"></script>
 </body>
 </html>
