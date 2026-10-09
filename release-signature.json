@@ -1,8 +1,8 @@
 {
-  "version": "v.09.10.2026.r2.06:03",
-  "deployer": "MorfeoMacMini",
-  "agent": "MorfeoMacMini",
+  "version": "v.09.10.2026.r3.06:11",
+  "deployer": "OraculoMacMini",
+  "agent": "OraculoMacMini",
   "machine": "MacMini",
-  "signature": "MorfeoMacMini · MacMini",
-  "evidence": "Stock: importar.js, app.js (Archivos locales, importación por URL, reintento) y stock-subir.py suben por partes desde 8 MB; se acaban los 503 entre 40 y 70 MB."
+  "signature": "OraculoMacMini · MacMini",
+  "evidence": "Taller de campañas Sneakers Store: 3 direcciones, 5 instalaciones, 29 perfiles Altadis seleccionables y salida por pantalla."
 }

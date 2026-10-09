@@ -1,10 +1,10 @@
 {
-  "version": "v.09.10.2026.r2.06:03",
-  "deployer": "MorfeoMacMini",
+  "version": "v.09.10.2026.r3.06:11",
+  "deployer": "OraculoMacMini",
   "machine": "MacMini",
-  "signature": "MorfeoMacMini · MacMini",
-  "agent": "MorfeoMacMini",
-  "builtAt": "2026-10-09T04:03:58Z",
+  "signature": "OraculoMacMini · MacMini",
+  "agent": "OraculoMacMini",
+  "builtAt": "2026-10-09T04:11:18Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
     "Adapter: ocho comparativas con originales y descargas, cuatro por dirección",

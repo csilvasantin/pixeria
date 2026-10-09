@@ -135,5 +135,11 @@
   "v.09.10.2026.r2.06:03": [
     "Stock: «Archivos locales», las importaciones por URL y la caja 2 del Adaptador suben por partes los ficheros de más de 8 MB; ya no fallan con 503.",
     "El script stock-subir.py también sube por partes, leyendo del disco sin cargar el fichero entero, con tres intentos por parte."
+  ],
+  "v.09.10.2026.r3.06:11": [
+    "Taller Sneakers Store: producto, logo y copia separados; tres propuestas editables.",
+    "Cinco configuraciones con zonas seguras, juntas y puerta; selección de destinos y catálogo Altadis.",
+    "Revisión por pieza, campaña JSON portátil y PNG/MP4 nativo por pantalla.",
+    "Tutorial ES/EN y contratos MCP; publicación explícita en Stock."
   ]
 }
