@@ -35,7 +35,7 @@ test('con un cliente activo su etiqueta va por delante; sin cliente, el campo na
 
 test('el campo existe al importar y junto a «Publicar en Stock», y sus etiquetas viajan al Stock', () => {
   assert.match(app, /id="import-tags"/, 'campo de la ventana de importar');
-  assert.equal((app.match(/tags: etiquetasImport\(\),/g) || []).length, 3, 'fichero por partes, fichero directo e importación por URL');
+  assert.equal((app.match(/tags: etiquetasImport\(\),/g) || []).length, 2, 'fichero local (base64 o por partes, un solo camino desde el 9-oct-2026) e importación por URL');
   assert.match(app, /return pubTagsHTML\(\) \+ `<button type="button" class="btn publish-btn"/, 'todo lo creado lleva el campo junto al botón');
   assert.equal((app.match(/\+ pubTagsHTML\(true\)\n/g) || []).length, 2, 'también los comparadores de imagen y de vídeo');
   assert.match(app, /if \(escritas\.length\) meta = Object\.assign\(\{\}, meta, \{ tags: \[\.\.\.escritas,/, 'lo escrito va delante de lo que la pieza ya trajera');
