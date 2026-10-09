@@ -1112,5 +1112,38 @@
       "englishRoute": "/en/adaptaciones/"
     },
     "legacyAdvertising": "/publicidad.html"
+  },
+  "navigation": {
+    "primaryOrder": [
+      "creator",
+      "adapter",
+      "audio",
+      "music",
+      "images",
+      "video",
+      "assets",
+      "stock"
+    ],
+    "es": [
+      "Creador",
+      "Adaptador",
+      "Audio",
+      "Música",
+      "Imágenes",
+      "Video",
+      "Assets",
+      "Stock"
+    ],
+    "en": [
+      "Creator",
+      "Adapter",
+      "Audio",
+      "Music",
+      "Images",
+      "Video",
+      "Assets",
+      "Stock"
+    ],
+    "additionalTools": "Options panel; existing routes retained"
   }
 }

@@ -65,3 +65,10 @@ Measured store geometry and player routing, hardware sync/colour acceptance, cal
 **EN. Creator** replaces Advertising in the main categories. Open [/en/creador/](https://www.pixeria.com/en/creador/) to create a campaign from scratch using independent product, logo and copy. **New campaign** uses neutral placeholders and three generic screen profiles; replace the assets and write the message. **Example · Sneakers Store** opens the five-map pilot. Compare layouts, review each destination and export. Its draft is separate from the legacy workshop; saved JSON and history remain available. Save JSON before starting another campaign to preserve previous changes. Editing the example survives reload; an explicit example URL resets to the sample.
 
 **EN. Adapter** starts with an existing or third-party image/video: Stock/upload/import → formats → adjustments → export. `/adaptaciones/` and its English route remain. The old workshop URL and draft, Assets, campaign buying/activation and audience creatives remain accessible. CLI `/creador`, `/creator`, `/campana`, `/campaign` opens Creator; `open creator` and `open adapter` select each workflow. MCP `campana_instalacion` keeps its name and schema: validates contracts/plans, never renders or publishes; no new remote write operation.
+
+
+### Navegación principal / Main navigation
+
+ES: Creador → Adaptador → Audio → Música → Imágenes → Video → Assets → Stock. El mismo orden se aplica a la home, las páginas interiores y el menú móvil. Anonimizador, Ideas y otras herramientas conservan sus accesos en Opciones.
+
+EN: Creator → Adapter → Audio → Music → Images → Video → Assets → Stock. The home, interior pages and mobile menu share this order. Anonymizer, Ideas and other tools retain their existing routes in Options.

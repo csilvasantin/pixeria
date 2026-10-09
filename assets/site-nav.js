@@ -1,6 +1,6 @@
 /* Navegacion superior canonica de Pixeria.
  * La home conserva Idioma y Contacto. Las paginas interiores reutilizan las
- * mismas diez secciones, en el mismo orden, sin esos dos controles.
+ * mismas ocho secciones principales, en el mismo orden, sin esos dos controles.
  */
 (function () {
   // Pixeria is English; Admira Studio keeps the Spanish source routes.
@@ -124,28 +124,22 @@
   })();
 
   var ES = [
+    ['/creador/', 'Creador'],
+    ['/adaptaciones/', 'Adaptador'],
     ['/audio.html', 'Audio'],
     ['/musica.html', 'Música'],
     ['/imagenes.html', 'Imágenes'],
     ['/video.html', 'Video'],
-    ['/creador/', 'Creador'],
-    ['/adaptaciones/', 'Adaptador'],
-    ['/anonimizador.html', 'Anonimizador'],
-    ['/ideas.html', 'Ideas'],
     ['/crear/', 'Assets'],
     ['/stock.html', 'Stock']
   ];
   var EN = [
+    ['/en/creador/', 'Creator'],
+    ['/en/adaptaciones/', 'Adapter'],
     ['/en/audio.html', 'Audio'],
     ['/en/musica.html', 'Music'],
     ['/en/imagenes.html', 'Images'],
     ['/en/video.html', 'Video'],
-    ['/en/creador/', 'Creator'],
-    ['/en/adaptaciones/', 'Adapter'],
-    ['/en/anonimizador.html', 'Anonymizer'],
-    // Ideas todavía no tiene versión inglesa: se apunta a la española antes que
-    // dejar un enlace roto o esconder la categoría a quien navega en inglés.
-    ['/ideas.html', 'Ideas'],
     ['/en/crear/', 'Assets'],
     ['/en/stock.html', 'Stock']
   ];
@@ -374,18 +368,18 @@
   }
 
   var HOME_RAIL_SECTIONS = [
-    ['/crear/', 'Studio · Crear', 'Generar assets: video, imagen, audio, texto, mobiliario'],
-    ['/musica.html', 'Música', 'Bandas sonoras, jingles y marca sonora'],
-    ['/audio.html', 'Audio · Megafonía', 'Voces, locución y megafonía de marca'],
-    ['/video.html', 'Vídeo', 'Storyboards, generación, edición y loops'],
     ['/creador/', 'Creador', 'Crea campañas desde cero para tus pantallas'],
     ['/adaptaciones/', 'Adaptador', 'Adapta contenidos existentes a cada pantalla'],
+    ['/audio.html', 'Audio · Megafonía', 'Voces, locución y megafonía de marca'],
+    ['/musica.html', 'Música', 'Bandas sonoras, jingles y marca sonora'],
     ['/imagenes.html', 'Imágenes', 'Dirección de arte, producto y estilo'],
+    ['/video.html', 'Vídeo', 'Storyboards, generación, edición y loops'],
+    ['/crear/', 'Assets', 'Generar assets: video, imagen, audio, texto, mobiliario'],
+    ['/stock.html', 'Stock', 'Galería pública de assets desplegados'],
     ['/avatar.html', 'Avatar 3D', 'Presentadores y avatares generativos'],
     ['/anonimizador.html', 'Anonimizador', 'Privacidad en imagen y vídeo'],
     ['/ideas.html', 'Ideas', 'Mapas del tesoro del Consejo: ideas para debatir'],
     ['/plataforma.html', 'Plataforma', 'Mapa de capas, motores y salida a XpaceOS'],
-    ['/stock.html', 'Stock', 'Galería pública de assets desplegados'],
     ['/crear-campana/', 'Campañas', 'Compra y activación en puntos y pantallas'],
     ['/clearchannel/', 'Demo Clear Channel', 'Pixer Feed en vivo sobre pantallas reales']
   ];

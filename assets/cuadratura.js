@@ -20,17 +20,17 @@
 (function () {
   // ── Fuente ÚNICA de las secciones del raíl OPCIONES (mismo orden que la home) ──
   var SECTIONS = [
-    { href: '/crear/',            t: 'Studio · Crear',    d: 'Generar assets: video, imagen, audio, texto, mobiliario' },
-    { href: '/musica.html',       t: 'Música',            d: 'Bandas sonoras, jingles y marca sonora' },
-    { href: '/audio.html',        t: 'Audio · Megafonía', d: 'Voces, locución y megafonía de marca' },
-    { href: '/video.html',        t: 'Vídeo',             d: 'Storyboards, generación, edición y loops' },
     { href: '/creador/',          t: 'Creador',           d: 'Crea campañas desde cero para tus pantallas' },
     { href: '/adaptaciones/', t: 'Adaptador', d: 'Adapta contenidos existentes a cada pantalla' },
+    { href: '/audio.html',        t: 'Audio · Megafonía', d: 'Voces, locución y megafonía de marca' },
+    { href: '/musica.html',       t: 'Música',            d: 'Bandas sonoras, jingles y marca sonora' },
     { href: '/imagenes.html',     t: 'Imágenes',          d: 'Dirección de arte, producto y estilo' },
+    { href: '/video.html',        t: 'Vídeo',             d: 'Storyboards, generación, edición y loops' },
+    { href: '/crear/',            t: 'Assets',    d: 'Generar assets: video, imagen, audio, texto, mobiliario' },
+    { href: '/stock.html',        t: 'Stock',             d: 'Galería pública de assets desplegados' },
     { href: '/avatar.html',       t: 'Avatar 3D',         d: 'Presentadores y avatares generativos' },
     { href: '/anonimizador.html', t: 'Anonimizador',      d: 'Privacidad en imagen y vídeo' },
     { href: '/plataforma.html',   t: 'Plataforma',        d: 'Mapa de capas, motores y salida a XpaceOS' },
-    { href: '/stock.html',        t: 'Stock',             d: 'Galería pública de assets desplegados' },
     { href: '/crear-campana/',    t: 'Campañas',          d: 'Compra y activación en puntos y pantallas' },
     { href: '/clearchannel/',     t: 'Demo Clear Channel', d: 'Pixer Feed en vivo sobre pantallas reales' }
   ];

@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r4.0632';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r5.0645';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -38,7 +38,7 @@
   <title>Pixeria · Referencia en creación de contenidos con IA</title>
   <meta name="description" content="Pixeria es la referencia para crear contenido con IA y operarlo en producción real: radar de modelos, método, pipelines y Pixer Feed (signage IA para pantallas y directo en eventos).">
   <meta name="theme-color" content="#020602">
-  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r4.06:32">
+  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r5.06:45">
   <meta property="og:title" content="Pixeria · Creación de contenidos con IA">
   <meta property="og:description" content="Radar de modelos, método de producción y Pixer Feed: el sistema que empuja contenido IA generado a pantallas y directo en eventos en vivo.">
   <meta property="og:type" content="website">
@@ -59,8 +59,8 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="assets/styles.css?v=09.10.2026.r4.0632">
-  <link rel="stylesheet" href="assets/cuadratura.css?v=09.10.2026.r4.0632">
+  <link rel="stylesheet" href="assets/styles.css?v=09.10.2026.r5.0645">
+  <link rel="stylesheet" href="assets/cuadratura.css?v=09.10.2026.r5.0645">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -92,7 +92,7 @@
     }
   }
   </script>
-  <script defer src="/assets/site-nav.js?v=09.10.2026.r4.0632"></script>
+  <script defer src="/assets/site-nav.js?v=09.10.2026.r5.0645"></script>
 </head>
 <body>
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -119,13 +119,12 @@
       <span>Pixeria</span>
     </a>
     <nav class="nav" aria-label="Navegación principal">
+      <a href="/creador/">Creador</a>
+      <a href="/adaptaciones/">Adaptador</a>
       <a href="/audio.html">Audio</a>
       <a href="/musica.html">Música</a>
       <a href="/imagenes.html">Imágenes</a>
       <a href="/video.html">Video</a>
-      <a href="/adaptaciones/">Adaptador</a>
-      <a href="/creador/">Creador</a>
-      <a href="/anonimizador.html">Anonimizador</a>
       <a href="/crear/">Assets</a>
       <a href="/stock.html">Stock</a>
     </nav>
@@ -141,21 +140,19 @@
   </header>
 
   <nav class="mobile-nav" id="mobileNav" aria-label="Navegación móvil">
-    <a href="/audio.html">Audio</a>
-    <a href="/musica.html">Música</a>
-    <a href="/imagenes.html">Imágenes</a>
-    <a href="/video.html">Video</a>
-    <a href="/adaptaciones/">Adaptador</a>
-    <a href="/creador/">Creador</a>
-    <a href="/avatar.html">Avatar 3D</a>
-      <a href="/anonimizador.html">Anonimizador</a>
-    <a href="/crear/">Assets</a>
-    <a href="/stock.html">Stock</a>
-    <div class="mobile-language-switcher" aria-label="Selección de idioma">
+      <a href="/creador/">Creador</a>
+      <a href="/adaptaciones/">Adaptador</a>
+      <a href="/audio.html">Audio</a>
+      <a href="/musica.html">Música</a>
+      <a href="/imagenes.html">Imágenes</a>
+      <a href="/video.html">Video</a>
+      <a href="/crear/">Assets</a>
+      <a href="/stock.html">Stock</a>
+        <div class="mobile-language-switcher" aria-label="Selección de idioma">
       <a class="lang-toggle" href="/en/" aria-label="Cambiar a inglés">ENG</a>
     </div>
     <a class="mobile-cta" href="#contact" data-admira-contact>Contacto</a>
-  </nav>
+    </nav>
 
   <main id="top">
   <div class="cuad">
@@ -163,21 +160,21 @@
     <aside class="rail rail-left" aria-label="Opciones · secciones de Pixeria">
       <div class="rail-hd">🔍 Opciones</div>
       <nav class="rail-nav" aria-label="Secciones de Pixeria">
-        <a href="/crear/"><b>Studio · Crear</b><small>Generar assets: video, imagen, audio, texto, mobiliario</small></a>
-        <a href="/musica.html"><b>Música</b><small>Bandas sonoras, jingles y marca sonora</small></a>
+        <a href="/creador/"><b>Creador</b><small>Crea campañas desde cero para tus pantallas</small></a>
         <a href="/audio.html"><b>Audio · Megafonía</b><small>Voces, locución y megafonía de marca</small></a>
-        <a href="/video.html"><b>Vídeo</b><small>Storyboards, generación, edición y loops</small></a>
+        <a href="/musica.html"><b>Música</b><small>Bandas sonoras, jingles y marca sonora</small></a>
         <a href="/imagenes.html"><b>Imágenes</b><small>Dirección de arte, producto y estilo</small></a>
+        <a href="/video.html"><b>Vídeo</b><small>Storyboards, generación, edición y loops</small></a>
+        <a href="/crear/"><b>Studio · Crear</b><small>Generar assets: video, imagen, audio, texto, mobiliario</small></a>
+        <a href="/stock.html"><b>Stock</b><small>Galería pública de assets desplegados</small></a>
         <a href="/avatar.html"><b>Avatar 3D</b><small>Presentadores y avatares generativos</small></a>
         <a href="/anonimizador.html"><b>Anonimizador</b><small>Privacidad en imagen y vídeo</small></a>
         <a href="/plataforma.html"><b>Plataforma</b><small>Mapa de capas, motores y salida a XpaceOS</small></a>
-        <a href="/stock.html"><b>Stock</b><small>Galería pública de assets desplegados</small></a>
         <a href="/crear-campana/"><b>Campañas</b><small>Compra y activación en puntos y pantallas</small></a>
-        <a href="/creador/"><b>Creador</b><small>Crea campañas desde cero para tus pantallas</small></a>
         <a href="/clearchannel/"><b>Demo Clear Channel</b><small>Pixer Feed en vivo sobre pantallas reales</small></a>
       </nav>
       <div class="rail-options-meta" aria-label="Release de Pixeria">
-        <span class="rail-ver">Pixeria v.09.10.2026.r4.06:32</span>
+        <span class="rail-ver">Pixeria v.09.10.2026.r5.06:45</span>
       </div>
     </aside>
     <!-- ══ CENTRO · lo importante: hero + radar + formatos ══ -->
@@ -603,10 +600,10 @@
       targets.forEach(el => io.observe(el));
     })();
   </script>
-  <script defer src="/assets/radar.js?v=09.10.2026.r4.0632"></script>
-  <script defer src="/assets/matrix-rain.js?v=09.10.2026.r4.0632"></script>
-  <script defer src="/assets/newsletter.js?v=09.10.2026.r4.0632"></script>
-  <script defer src="/assets/cuadratura.js?v=09.10.2026.r4.0632"></script>
+  <script defer src="/assets/radar.js?v=09.10.2026.r5.0645"></script>
+  <script defer src="/assets/matrix-rain.js?v=09.10.2026.r5.0645"></script>
+  <script defer src="/assets/newsletter.js?v=09.10.2026.r5.0645"></script>
+  <script defer src="/assets/cuadratura.js?v=09.10.2026.r5.0645"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>
