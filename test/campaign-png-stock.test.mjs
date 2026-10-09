@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import * as core from '../adaptaciones/campaign-core.mjs';
-import {CREATOR_KEY,newCampaign} from '../adaptaciones/campaign-entry.mjs';
+import {CREATOR_KEY,newCampaign,orientationPair} from '../adaptaciones/campaign-entry.mjs';
 import {campaignComposition} from '../adaptaciones/campaign-composition.mjs';
 import {publishAdaptation,PARTS_THRESHOLD} from '../adaptaciones/stock-publish.mjs';
 
@@ -15,17 +15,18 @@ globalThis.FileReader??=class{
 };
 
 // Run the actual workshop handlers and canvas renderer with a small DOM, never a provider.
-async function workshop({two=false}={}){
- const published=[],queued=[],elements=[],campaign=plain(core.DEFAULT_CAMPAIGN);
+async function workshop({two=false,creator=true,fresh=false,saved=null,en=false}={}){
+ const published=[],queued=[],elements=[],stored=new Map(),campaign=plain(core.DEFAULT_CAMPAIGN);
  campaign.headline='CAFÉ CON HIELO · 1,99 €';campaign.cta='DISFRUTA HOY';campaign.price='1,99 €';
  campaign.installations=campaign.installations.slice(0,two?2:1);
  campaign.installations[0].screens[0].rotation=90;
+ if(saved)Object.assign(campaign,plain(saved));
  function element(tag='div'){
   const nodes=new Map(),children=[];
   const e={tagName:tag.toUpperCase(),children,dataset:{},hidden:false,disabled:false,value:'',checked:true,width:300,height:150,
    classList:{add(){},remove(){}},append(...items){children.push(...items);},after(){},before(){},setAttribute(k,v){this[k]=v;},scrollIntoView(){},click(){},
    replaceChildren(...items){children.splice(0,children.length,...items);},
-   querySelector(selector){if(!nodes.has(selector))nodes.set(selector,element(selector.includes('canvas')?'canvas':'div'));return nodes.get(selector);},
+   querySelector(selector){if(e.id==='campaign-workshop'&&selector==='#campaign-close'&&!e.innerHTML.includes('id="campaign-close"'))return null;if(!nodes.has(selector))nodes.set(selector,element(selector.includes('canvas')?'canvas':'div'));return nodes.get(selector);},
    querySelectorAll(selector){
     if(e.className!=='campaign-options'||!['[data-field]','input,textarea,select'].includes(selector))return[];
     return e.fields??= ['name','headline','cta','price','background','accent','foreground','seconds'].map(field=>{const input=element('input');input.dataset.field=field;return input;});
@@ -35,21 +36,56 @@ async function workshop({two=false}={}){
   const context=new Proxy({measureText(text){const px=Number(this.font?.match(/ (\d+(?:\.\d+)?)px/)?.[1]||20);return{width:[...text].length*px*.5};},createLinearGradient(){return{addColorStop(){}};}},{get:(o,k)=>k in o?o[k]:()=>{}});
   elements.push(e);return e;
  }
- const main=new Map(),document={documentElement:{lang:'es'},body:element(),fonts:{add(){}},createElement:element,querySelector(s){if(!main.has(s))main.set(s,element());return main.get(s);}};
- const context=vm.createContext({...core,CREATOR_KEY,newCampaign,campaignComposition,document,URL,URLSearchParams,Blob,TextEncoder,
-  location:{pathname:'/creador/',search:''},window:{history:{replaceState(){}}},
-  localStorage:{getItem:key=>key===CREATOR_KEY?JSON.stringify(campaign):null,setItem(){}},
+ const main=new Map(),document={documentElement:{lang:en?'en':'es'},body:element(),fonts:{add(){}},createElement:element,querySelector(s){if(!main.has(s))main.set(s,element());return main.get(s);}};
+ const storageKey=creator?CREATOR_KEY:'pixeria.installation-campaign.v1';
+ const context=vm.createContext({...core,CREATOR_KEY,newCampaign,orientationPair,campaignComposition,document,URL,URLSearchParams,Blob,TextEncoder,
+  location:{pathname:creator?'/creador/':'/adaptaciones/',search:creator?'':'?taller=sneakers-store'},window:{history:{replaceState(){}}},
+  localStorage:{getItem:key=>key===storageKey&&!fresh?JSON.stringify(campaign):null,setItem(key,value){stored.set(key,JSON.parse(value));}},
   Image:class{naturalWidth=800;naturalHeight=600;async decode(){}},FontFace:class{async load(){}},Option:class{},
   geometry:()=>assert.fail('no special installation request'),FFLATE:{},setTimeout:callback=>callback(),
   publishAdaptation:(blob,meta,extra)=>publishAdaptation(blob,meta,extra,{fetch:async(url,init)=>{assert.equal(url,'/stock-publish');published.push(JSON.parse(init.body));return json({ok:true,id:'png-'+published.length,num:100+published.length});}})
  });
  vm.runInContext(source('adaptaciones/campaign-render.mjs').replaceAll('export function ','function '),context);
  vm.runInContext(source('adaptaciones/campaign-studio.mjs').replace(/^import .*;\n/gm,'').replace('export function mountCampaign','function mountCampaign'),context);
- context.mountCampaign({t:es=>es,queue:{add:item=>{queued.push(item);return item;},note(){}}});
+ const api=context.mountCampaign({t:(es,english)=>en?english:es,queue:{add:item=>{queued.push(item);return item;},note(){}}});
  await new Promise(resolve=>setImmediate(resolve));
  const root=elements.find(e=>e.id==='campaign-workshop'),options=elements.find(e=>e.className==='campaign-options');
- return{root,options,published,queued,campaign,context,elements};
+ return{root,options,published,queued,campaign,context,elements,stored,api};
 }
+
+for(const en of [false,true])test(`fresh ${en?'EN':'ES'} Creator shows both local orientations without duplicate navigation or automatic publication`,async()=>{
+ const w=await workshop({fresh:true,en}),pair=w.root.querySelector('#campaign-pair');
+ assert.equal(w.api.ready(),true);assert.equal(pair.hidden,false);
+ assert.deepEqual(pair.children.map(card=>card.dataset.installation),['landscape','portrait']);
+ assert.equal(w.root.querySelector('#campaign-close'),null);assert.doesNotMatch(w.root.innerHTML,/id="campaign-close"/);
+ assert.deepEqual(w.root.querySelector('#campaign-overview').children.map(card=>card.dataset.installation),['strip']);
+ assert.equal(w.published.length,0);assert.equal(w.queued.length,0);
+ const original=plain(w.stored.get(CREATOR_KEY));
+ pair.children[0].onclick();w.root.querySelector('#campaign-approve').onclick();
+ pair.children[1].onclick();w.root.querySelector('#campaign-approve').onclick();
+ assert.match(w.root.querySelector('#campaign-package-status').textContent,/2\/3/);
+ assert.ok(pair.children.every(card=>card.children[1].textContent.includes('✓')),'switching preview retains both reviews');
+ assert.deepEqual(w.stored.get(CREATOR_KEY),original,'reviewing a second orientation does not change campaign preferences or revision');
+ assert.equal(w.root.querySelector('#campaign-publish-png').disabled,true,'the third included destination still needs manual review');
+});
+
+test('saved Creator destinations, exclusions and placements remain intact without injecting a missing orientation',async()=>{
+ const saved=plain(core.DEFAULT_CAMPAIGN);saved.revision=7;saved.direction='editorial';saved.seconds=18;saved.installations=saved.installations.slice(0,2);saved.installations[1].enabled=false;
+ const w=await workshop({saved}),pair=w.root.querySelector('#campaign-pair');
+ assert.deepEqual(w.stored.get(CREATOR_KEY),saved);assert.equal(w.api.formats().length,2);
+ assert.match(pair.children[1].children[1].textContent,/fuera del paquete/);
+ pair.children[1].onclick();assert.deepEqual(w.stored.get(CREATOR_KEY),saved);
+ saved.installations=saved.installations.slice(0,1);
+ const only=await workshop({saved});assert.deepEqual(only.root.querySelector('#campaign-pair').children.map(card=>card.dataset.installation),['landscape']);
+ assert.equal(only.api.formats().length,1);assert.deepEqual(only.stored.get(CREATOR_KEY),saved);
+});
+
+test('the embedded Adapter workshop retains its close control and existing overview',async()=>{
+ const w=await workshop({creator:false,two:true}),close=w.root.querySelector('#campaign-close');
+ assert.equal(typeof close.onclick,'function');assert.equal(w.root.querySelector('#campaign-pair').hidden,true);
+ assert.equal(w.root.querySelector('#campaign-overview').children.length,2);
+ close.onclick();assert.equal(w.api.active(),false);assert.equal(w.context.document.querySelector('#sec-adapt').hidden,false);
+});
 
 test('manual approved Creator PNG reaches Stock as an image with native rotated dimensions and exact composition',async()=>{
  const w=await workshop(),button=w.root.querySelector('#campaign-publish-png');
