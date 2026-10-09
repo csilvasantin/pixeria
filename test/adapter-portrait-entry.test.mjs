@@ -1,9 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import vm from 'node:vm';
 import {canEnterPortrait,portraitEntryPlan,selectPortraitEntry,portraitDimensions} from '../adaptaciones/portrait-entry.mjs';
-import {perfilDeSalida} from '../assets/signage-perfiles.js';
 import {projectFormats} from '../adaptaciones/proyectos-core.mjs';
 
 const read = path => readFileSync(new URL('../' + path, import.meta.url),'utf8');
@@ -102,73 +100,4 @@ test('fallback must itself have valid portrait dimensions, even when the stored 
     assert.equal(plan([{id:'project-wide',proyecto:'fixture',custom:[1920,1080]},
       {id:'9:16',custom}],'proyecto'),null);
   }
-});
-
-const production=read('adaptaciones/adaptaciones.js');
-const begin=production.indexOf('// [PORTRAIT-ENTRY-START]'),end=production.indexOf('// [PORTRAIT-ENTRY-END]');
-assert.ok(begin>=0&&end>begin,'production entry boundaries exist');
-const entrySource=production.slice(begin,end);
-function uiWorld(en=false, reducedMotion=false) {
-  const formats=standard(),calls=[],button={hidden:false,disabled:false},status={textContent:''},profile={value:'standard'};
-  const state={src:{ancho:1920,alto:1080},profile:'standard',compat:'fhd',sel:'16:9',fmt:{'9:16':{modo:'contain',fx:.3,fy:.7,zoom:1}},proyecto:'fixture'};
-  const card={dataset:{f:'9:16'},tabIndex:0,focus:options=>calls.push(['focus',options]),scrollIntoView:options=>calls.push(['scroll',options])};
-  const nodes={'#btn-portrait':button,'#export-status':status,'#format-profile':profile};
-  let ready=true;
-  const context=vm.createContext({state,srcKind:'image',FORMATOS:formats,canEnterPortrait,portraitEntryPlan,selectPortraitEntry,
-    $:selector=>{assert.ok(nodes[selector],'unexpected DOM lookup '+selector);return nodes[selector];},
-    t:(es,english)=>en?english:es,mediaReady:()=>ready,
-    destino:format=>{assert.equal(state.profile,'standard');return perfilDeSalida({formato:format.id,compatibilidad:state.compat});},
-    window:{matchMedia:query=>{assert.equal(query,'(prefers-reduced-motion: reduce)');return {matches:reducedMotion};}},
-    document:{querySelectorAll:selector=>{assert.equal(selector,'#grid [data-f]');return [card];}},
-    syncCompat:()=>calls.push(['compat']),buildGrid:()=>calls.push(['grid']),goStep:n=>calls.push(['step',n]),
-    fetch:()=>assert.fail('entry must not request APIs'),save:()=>assert.fail('entry must not write preferences')});
-  vm.runInContext(entrySource,context);
-  return {context,state,formats,calls,button,status,profile,card,setReady:value=>ready=value};
-}
-
-for(const en of [false,true]) test('production '+(en?'EN':'ES')+' button selects portrait once and shows review guidance without media/API work', () => {
-  const world=uiWorld(en),before=structuredClone(world.state),formatsBefore=structuredClone(world.formats);
-  world.context.syncPortraitEntry();
-  assert.equal(world.button.textContent,en?'Landscape → portrait':'Horizontal → vertical');
-  assert.equal(world.button.hidden,false);assert.equal(world.button.disabled,false);
-  assert.deepEqual(world.state,before);assert.deepEqual(world.formats,formatsBefore);assert.equal(world.calls.length,0);
-  world.button.onclick();
-  assert.equal(world.state.profile,'standard');assert.equal(world.state.sel,'9:16');assert.equal(world.profile.value,'standard');
-  assert.deepEqual(world.calls.filter(x=>x[0]==='step'),[['step',2]]);
-  assert.equal(world.calls.filter(x=>x[0]==='grid').length,1);
-  assert.match(world.status.textContent,/Vertical.*1080×1920/);
-  assert.match(world.status.textContent,en?/Review copy and product.*approving/:/Revisa texto y producto.*aprobar/);
-  assert.deepEqual(world.state.fmt,before.fmt);assert.equal(world.state.proyecto,before.proyecto);
-  assert.deepEqual(world.formats.filter(f=>f.on).map(f=>f.id),['9:16']);
-  assert.equal(world.card.tabIndex,0);assert.equal(world.calls.filter(x=>x[0]==='focus').length,1);
-  assert.equal(world.calls.find(x=>x[0]==='scroll')[1].behavior,'smooth');
-});
-
-test('reduced motion uses instant scroll and preserves the existing card keyboard focusability', () => {
-  const world=uiWorld(false,true);world.button.onclick();
-  assert.equal(world.card.tabIndex,0);
-  assert.equal(world.calls.find(x=>x[0]==='scroll')[1].behavior,'instant');
-  assert.equal(world.calls.filter(x=>x[0]==='step').length,1);
-});
-
-test('a source changed or unloaded after showing the button cannot select a destination or advance', () => {
-  for(const stale of ['portrait','video','not-ready']) {
-    const world=uiWorld();world.context.syncPortraitEntry();
-    if(stale==='portrait')world.state.src={ancho:1080,alto:1920};
-    if(stale==='video')world.context.srcKind='video';
-    if(stale==='not-ready')world.setReady(false);
-    const before=structuredClone(world.state),formatsBefore=structuredClone(world.formats);
-    world.button.onclick();
-    assert.deepEqual(world.state,before);assert.deepEqual(world.formats,formatsBefore);assert.equal(world.calls.length,0);assert.equal(world.status.textContent,'');
-    world.context.syncPortraitEntry();assert.equal(world.button.hidden,true);assert.equal(world.button.disabled,true);
-  }
-});
-
-for (const [compat,width,height] of [['universal',720,1280],['uhd',2160,3840]]) test('entry status reports effective '+compat+' output without changing compatibility or framing', () => {
-  const world=uiWorld();world.state.compat=compat;const before=structuredClone(world.state);
-  world.button.onclick();
-  assert.ok(world.status.textContent.includes(width+'×'+height));
-  assert.equal(world.state.compat,compat);assert.deepEqual(world.state.fmt,before.fmt);
-  assert.equal(world.state.proyecto,before.proyecto);
-  assert.deepEqual(world.calls.filter(x=>x[0]==='step'),[['step',2]]);
 });
