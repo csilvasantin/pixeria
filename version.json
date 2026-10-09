@@ -1,10 +1,10 @@
 {
-  "version": "v.09.10.2026.r7.07:15",
+  "version": "v.09.10.2026.r8.08:07",
   "deployer": "OraculoMacMini",
   "machine": "MacMini",
   "signature": "OraculoMacMini · MacMini",
   "agent": "OraculoMacMini",
-  "builtAt": "2026-10-09T05:15:50Z",
+  "builtAt": "2026-10-09T06:07:00Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
     "Adapter: ocho comparativas con originales y descargas, cuatro por dirección",
