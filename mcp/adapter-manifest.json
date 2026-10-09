@@ -1209,5 +1209,41 @@
         "3D"
       ]
     }
+  },
+  "creator_full_contract": {
+    "schema": "admira.creator-full.v1",
+    "commands": {
+      "es": "/demo creador todo",
+      "en": "/demo creator full"
+    },
+    "url": "https://admira.studio/creador/?demo=creador&mode=full",
+    "guide": "https://admira.studio/docs/demo-creador.md",
+    "generation": "one new Grok Imagine Image and one new Grok Imagine Video 5-second clip per explicit request",
+    "steps": [
+      "brief",
+      "concept",
+      "ai-image-video",
+      "adapt",
+      "twin360"
+    ],
+    "status": "actual provider status; archived:true plus library URL; twin ready acknowledgement",
+    "authentication": "existing session; server-signed API token; provider credit",
+    "history": "IndexedDB admira.creator-full; demo metadata separate from drafts",
+    "reload": "restore or poll known request_id; never repeat uncertain POST",
+    "exports": [
+      "13 native still PNGs",
+      "source AI MP4 5 s",
+      "JSON"
+    ],
+    "physicalDelivery": false,
+    "mcp": {
+      "plan": "creador_demo mode full",
+      "explicitExecution": [
+        "creador_imagen_generar",
+        "creador_imagen_guardar",
+        "clip_desde_imagen",
+        "clip_estado"
+      ]
+    }
   }
 }

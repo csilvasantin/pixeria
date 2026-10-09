@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {onRequest} from '../functions/creator-ai/[action].js';
+import {handleAuth,verifyApiToken} from '../functions/_auth.js';
+test('creator endpoints reject missing sessions before any generation',async()=>{const original=globalThis.fetch;let calls=0;globalThis.fetch=async()=>{calls++;throw Error('unexpected-fetch');};try{for(const action of ['image','archive','video','status']){const r=await onRequest({request:new Request('https://admira.studio/creator-ai/'+action,{method:action==='status'?'GET':'POST'}),env:{},params:{action}});assert.equal(r.status,401);}assert.equal(calls,0);}finally{globalThis.fetch=original;}});
+test('creator proxy uses the signed session identity and fixed provider parameters',async()=>{
+ const env={PIXERIA_SIGNING_KEY:'fixture-signing-key-only',ADMIRA_AGENT_LOGIN_TOKEN:'t'.repeat(64)};
+ const session=await handleAuth(new Request('https://admira.studio/auth/agente',{method:'POST',headers:{Authorization:'Bearer '+env.ADMIRA_AGENT_LOGIN_TOKEN}}),env);const cookie=session.headers.get('set-cookie').split(';')[0];
+ const original=globalThis.fetch;let calls=0;globalThis.fetch=async(url,options)=>{calls++;assert.equal(url,'https://api.admira.store/xai/image');const identity=await verifyApiToken(options.headers.Authorization.slice(7),env);assert.equal(identity.email,'agentes@silicio.admiranext.com');const body=JSON.parse(options.body);assert.equal(body.n,1);assert.equal(body.model,'grok-imagine-image-pro');assert.equal(body.b64,true);return Response.json({data:[{b64_json:'aW1hZ2U=',mime:'image/png'}]});};
+ try{const make=origin=>new Request('https://admira.studio/creator-ai/image',{method:'POST',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({prompt:'original sneakers',model:'other',numberOfImages:99})});const blocked=await onRequest({request:make('https://attacker.example'),env,params:{action:'image'}});assert.equal(blocked.status,403);assert.equal(calls,0);const good=await onRequest({request:make('https://admira.studio'),env,params:{action:'image'}});assert.equal(good.status,200);assert.equal(calls,1);}finally{globalThis.fetch=original;}
+});

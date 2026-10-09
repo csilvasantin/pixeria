@@ -1,15 +1,8 @@
 {
-  "version": "v.09.10.2026.r9.08:45",
+  "version": "v.09.10.2026.r11.08:50",
   "deployer": "SmithMacMini",
   "machine": "MacMini",
   "signature": "SmithMacMini · MacMini",
   "agent": "SmithMacMini",
-  "builtAt": "2026-10-09T06:40:02Z",
-  "deployedAt": "2026-10-07T10:54:08Z",
-  "novedades": [
-    "Adapter: ocho comparativas con originales y descargas, cuatro por dirección",
-    "Revisión por bloque de familia tipográfica, color y contorno; copia con palabras completas",
-    "Studio/Pixeria carga la versión del avatar con confirmación de las demos locales",
-    "El cargador principal y el fallback del CLI comparten la nueva referencia de caché"
-  ]
+  "builtAt": "2026-10-09T06:42:35Z"
 }
