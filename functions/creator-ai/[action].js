@@ -1,4 +1,5 @@
 import {sessionInfo,createApiToken} from '../_auth.js';
+async function clipTable(env){if(!env.AUTH_DB)throw Error('clip-storage-unavailable');await env.AUTH_DB.prepare('CREATE TABLE IF NOT EXISTS pixeria_creator_clips (request_id TEXT PRIMARY KEY,email TEXT NOT NULL,result TEXT,created_at INTEGER NOT NULL)').run();}
 const API='https://api.admira.store';
 const json=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 export async function onRequest({request,env,params}){
@@ -17,10 +18,15 @@ export async function onRequest({request,env,params}){
   }else return json({error:'invalid-input'},400);
  }else return json({error:'invalid-action'},405);
  // A short-lived, server-signed token uses the existing paid API perimeter.
+ if(action==='video'||action==='status'){try{await clipTable(env);}catch{return json({error:'clip-storage-unavailable'},503);}}
  const token=await createApiToken(env,session.email);
  try{
+  const clipId=action==='status'?new URL(request.url).searchParams.get('request_id'):null;
+  if(clipId){const saved=await env.AUTH_DB.prepare('SELECT email,result FROM pixeria_creator_clips WHERE request_id=?').bind(clipId).first();if(saved&&saved.email!==session.email)return json({error:'clip-owner-mismatch'},403);if(saved?.result)return json(JSON.parse(saved.result));}
   const response=await fetch(API+path,{method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token.token,'User-Agent':'Mozilla/5.0','Origin':'https://www.pixeria.com'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(130000)});
   const data=await response.json().catch(()=>({error:'invalid-provider-response'}));
+  if(response.ok&&action==='video'&&data.request_id)await env.AUTH_DB.prepare('INSERT OR IGNORE INTO pixeria_creator_clips(request_id,email,result,created_at) VALUES(?,?,NULL,?)').bind(data.request_id,session.email,Date.now()).run();
+  if(response.ok&&clipId&&data.archived===true&&data.url)await env.AUTH_DB.prepare('INSERT INTO pixeria_creator_clips(request_id,email,result,created_at) VALUES(?,?,?,?) ON CONFLICT(request_id) DO UPDATE SET result=excluded.result').bind(clipId,session.email,JSON.stringify(data),Date.now()).run();
   if(action==='image'&&response.ok){const image=data.data?.[0];if(!image?.b64_json)return json({error:'no-ai-image-returned'},502);return json({image:'data:'+(image.mime||'image/jpeg')+';base64,'+image.b64_json,model:'grok-imagine-image-pro'});}return json(data,response.status);
  }catch{return json({error:'upstream-connection-unknown'},502);}
 }
