@@ -723,3 +723,12 @@ ES: Cuatro imágenes horizontales pasan a 1080×1920 y cuatro verticales a 1920�
 EN: Four landscape images become 1080×1920 and four portrait images become 1920×1080. [Compare originals and recreations; download both sets](https://www.pixeria.com/adaptaciones/ensayos/2026-10-08/). Initial visual review, not campaign approval or model-weight training. One MS-DOS/OSX source remains blocked by invalid analysis and was replaced with latte.
 
 Contract: optional `packageLabels[]` retains complete observed tiny copy wholly inside a detected package (area ≤15% of package box; legal copy stays separate). It remains in scene/product context and is not typeset as a duplicate external headline. Every extraction still validates its original style and boxes.
+
+
+## Campañas por instalación / Installation campaigns
+
+ES: `/campana` abre el taller Sneakers Store: elementos editables, tres direcciones, cinco mapas con juntas/puerta, revisión y exportación nativa por pantalla. Guardar/abrir JSON conserva el diseño y exige nueva revisión al importar.
+
+EN: `/campaign` opens Sneakers Store workshop: editable elements, three directions, five maps with joints/doorway, review and native screen exports. Saved JSON preserves design and requires fresh review on import.
+
+[Tutorial y contrato ES/EN · ES/EN tutorial and contract](/docs/campanas-instalacion.md). MCP real: `campana_instalacion` calcula planes, no render ni publicación / returns plans, no render or publication.

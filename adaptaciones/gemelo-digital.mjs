@@ -1,5 +1,5 @@
-import {twinGeometry,localizedTwinWarnings} from './gemelo-core.mjs?v=studio-best-3';
-import {TWIN_REFERENCES,recommendedReferenceId,referenceById} from './gemelo-catalog.mjs?v=studio-best-3';
+import {twinGeometry,localizedTwinWarnings} from './gemelo-core.mjs?v=installation-20261009';
+import {TWIN_REFERENCES,recommendedReferenceId,referenceById} from './gemelo-catalog.mjs?v=installation-20261009';
 
 // Editor owns media/time. A single loaded model serves all preview formats.
 export function mountTwin(h){
@@ -50,7 +50,7 @@ export function mountTwin(h){
   $('#twin-light').onchange=()=>{stopTour();built?.viewer.setLighting($('#twin-light').value);draw(true);};shop.onchange=()=>{stopTour();h.selectShop?.(shop.value);};
   function draw(force=false){if(!modal.open||!built||!active)return;const now=performance.now();if(!force&&now-last<40)return;last=now;built.draw(cv=>h.draw(cv,active,h.background?.(active)?.el));}
   async function load(){startMedia();const mine=++revision,f=active;clean();ctl=new AbortController();const signal=ctl.signal;status.textContent=t('Cargando modelo de Stock · ','Loading Stock model · ')+quality.value;
-    try{const {createRetailTwin}=await(pending||=import('./gemelo-better.mjs?v=studio-best-3'));if(mine!==revision||!modal.open)return;
+    try{const {createRetailTwin}=await(pending||=import('./gemelo-better.mjs?v=installation-20261009'));if(mine!==revision||!modal.open)return;
       const cv=document.createElement('canvas');cv.tabIndex=0;cv.setAttribute('aria-label',t('Estanco 3D interactivo','Interactive 3D shop'));stage.append(cv);const g=twinGeometry(f,h.destino(f));
       const next=await createRetailTwin({canvas:cv,geometry:g,formatId:f.id,referenceId:referenceId(),quality:quality.value,signal,onCameraChange:cameraChanged});if(mine!==revision||!modal.open){next.dispose();return;}built=next;active=f;geometry=g;view='home';controls(true);built.viewer.resize(stage.clientWidth,stage.clientHeight);built.home();built.viewer.setLighting($('#twin-light').value);description();draw(true);$('.twin-close').focus();
     }catch(e){if(mine!==revision||signal.aborted)return;clean();endMedia();status.textContent=t('No se pudo cargar el modelo seleccionado. Comprueba la conexión/WebGL o elige Better.','Could not load the selected model. Check connection/WebGL or choose Better.');quality.disabled=false;console.error('Studio retail twin:',e);}}

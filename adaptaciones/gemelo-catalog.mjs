@@ -97,7 +97,8 @@ function validatedGeometry(g) {
     ids.add(segment.n);
   }
   const areaTolerance=Math.max(1e-7,width*height*1e-9);
-  if(Math.abs(g.segments.reduce((area,s)=>area+s.wall.w*s.wall.h,0)-width*height)>areaTolerance) throw new Error('incomplete-wall');
+  const covered=g.segments.reduce((area,s)=>area+s.wall.w*s.wall.h,0);
+  if(covered>width*height+areaTolerance||(!(g.source==='installation_layout'&&g.allowGaps===true)&&Math.abs(covered-width*height)>areaTolerance))throw new Error('incomplete-wall');
   for(let i=0;i<g.segments.length;i++) for(let j=i+1;j<g.segments.length;j++) {
     const a=g.segments[i].wall,b=g.segments[j].wall,
       overlapX=Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x),

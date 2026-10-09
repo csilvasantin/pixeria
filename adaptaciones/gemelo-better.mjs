@@ -1,12 +1,12 @@
 import * as T from '../assets/xpaces/engine/premium-three.mjs';
 import {createLifeScene} from '../assets/xpaces/engine/life-scene.mjs?v=px-1';
-import {createLifeRenderer} from '../assets/xpaces/engine/life-renderer.mjs?v=studio-best-3';
+import {createLifeRenderer} from '../assets/xpaces/engine/life-renderer.mjs?v=installation-20261009';
 import {GLTFLoader} from '../assets/xpaces/engine/vendor/GLTFLoader.mjs';
 import {mergeGeometries} from '../assets/xpaces/engine/vendor/BufferGeometryUtils.mjs';
-import {TWIN_REFERENCE,observerPoint} from './gemelo-reference.mjs?v=studio-best-3';
-import {TWIN_BEST_REFERENCE} from './gemelo-assets.mjs?v=studio-best-3';
-import {displayPlacementForReference,recommendedReferenceId} from './gemelo-catalog.mjs?v=studio-best-3';
-import {previewSize,screenCrop} from './gemelo-core.mjs?v=studio-best-3';
+import {TWIN_REFERENCE,observerPoint} from './gemelo-reference.mjs?v=installation-20261009';
+import {TWIN_BEST_REFERENCE} from './gemelo-assets.mjs?v=installation-20261009';
+import {displayPlacementForReference,recommendedReferenceId} from './gemelo-catalog.mjs?v=installation-20261009';
+import {previewSize,screenCrop} from './gemelo-core.mjs?v=installation-20261009';
 
 function resources(root){const set=new Set();root.traverse(n=>{if(n.geometry)set.add(n.geometry);for(const m of [n.material].flat().filter(Boolean)){set.add(m);for(const v of Object.values(m))if(v?.isTexture)set.add(v);}});return set;}
 function release(root){for(const r of resources(root)){r.source?.data?.close?.();r.dispose();}}

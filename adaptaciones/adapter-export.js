@@ -64,9 +64,12 @@ export function createEngine() {
         // Crear (6-oct-2026): extra inputs of a recipe (the ticker strip PNG), written for this job only.
         for(const x of job.extraFiles||[]){const bytes=await readSource(x.url,signal);alive();await engine.writeFile(x.name,bytes);}
         const progress=({progress})=>{if(mine===generation)onStatus({phase:'encoding',progress:Math.min(.99,Math.max(0,progress))});};
-        engine.on('progress',progress);progress({progress:0});
+        // Looping still inputs report unknown duration to FFmpeg; use its encoded clock
+        // against the explicit output duration so campaign progress does not stay at 0%.
+        const clock=({message})=>{const m=/time=(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(message);if(m&&Number.isFinite(job.durationSeconds)&&job.durationSeconds>0)progress({progress:(+m[1]*3600 + +m[2]*60 + +m[3])/job.durationSeconds});};
+        engine.on('progress',progress);engine.on('log',clock);progress({progress:0});
         let code;
-        try {code=await engine.exec(job.args);} finally {engine.off('progress',progress);for(const x of job.extraFiles||[])await engine.deleteFile(x.name).catch(()=>{});}
+        try {code=await engine.exec(job.args);} finally {engine.off('progress',progress);engine.off('log',clock);for(const x of job.extraFiles||[])await engine.deleteFile(x.name).catch(()=>{});}
         alive();
         if(code!==0) throw new Error('encoding');
         for(const output of job.outputs||[{...job,file:'output.mp4'}]) {

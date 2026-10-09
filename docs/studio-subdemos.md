@@ -62,3 +62,8 @@ python3 -m http.server 8769 --bind 127.0.0.1
 El verificador comprueba contrato, orden, campos/selecciones actuales, rutas, pasos sin gasto, CORS, códecs, medidas exactas y hashes de las variantes. Las ocho piezas se midieron con ffprobe. La preview se comprueba en escritorio y móvil, con metadatos de audio/vídeo disponibles y sin errores JavaScript.
 
 `scripts/preparar-studio-formatos.py` reproduce las cuatro exportaciones desde `video-fuente.mp4`, sin proveedor de IA. Preserva audio AAC, H.264, yuv420p, 30 fps y píxeles cuadrados. Vertical y cuadrado recortan al centro; la barra contiene la imagen completa con bandas laterales. El original es 1280×720: el escalado a 1920 no crea detalle nuevo. Si se regeneran ficheros con otra versión de ffmpeg, revisar hashes y refrescar los metadatos del manifest.
+
+
+## Campañas por instalación / Installation campaigns
+
+[Taller, tutorial y contrato ES/EN](/docs/campanas-instalacion.md). Abrir Adaptador → Abrir taller Sneakers Store / Adapter → Open Sneakers Store workshop. MCP `campana_instalacion {campaign_json?,direction?}` valida y calcula planes; no renderiza ni publica / validates and plans; no render or publication. La CLI anterior sigue disponible / Existing CLI remains available.

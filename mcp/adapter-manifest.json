@@ -1034,5 +1034,66 @@
     "preserve_other_tags": true,
     "quality_validation": false,
     "guide": "https://www.pixeria.com/docs/etiquetas-al-importar-y-crear.md"
+  },
+  "installation_campaign": {
+    "schema": "pixeria.installation-campaign.v1",
+    "pilot": "sneakers-store",
+    "tool": "campana_instalacion",
+    "directions": [
+      "hero",
+      "editorial",
+      "sequence"
+    ],
+    "configurations": [
+      "landscape",
+      "portrait",
+      "strip",
+      "jordan",
+      "rear"
+    ],
+    "native_files": 11,
+    "guide": "/docs/campanas-instalacion.md",
+    "cli": [
+      "/campana",
+      "/campaign"
+    ],
+    "editable": [
+      "product",
+      "logo",
+      "headline",
+      "cta",
+      "price",
+      "colours",
+      "geometry",
+      "placements"
+    ],
+    "delivery": {
+      "png": true,
+      "mp4": "H264 yuv420p, 25fps, GOP25, silent, 1-60s",
+      "requires_review": true,
+      "native_rotation_compensated": true
+    },
+    "limits": {
+      "mcp_rendered": false,
+      "remote_save": false,
+      "hardwareVerified": false,
+      "measuredGeometry": false,
+      "anamorphicExport": false
+    },
+    "seed": "/adaptaciones/campanas/sneakers-store.json",
+    "editor": "/adaptaciones/?taller=sneakers-store",
+    "pilotInstallations": 5,
+    "pilotScreens": 11,
+    "altadisProfiles": 29,
+    "exports": [
+      "portable-json",
+      "native-screen-png-zip",
+      "native-screen-still-mp4"
+    ],
+    "fps": 25,
+    "approval": "per-piece-per-direction-per-revision; cleared on edit/import",
+    "hardwareVerified": false,
+    "measuredGeometry": false,
+    "anamorphicExport": false
   }
 }

@@ -1,0 +1,335 @@
+{
+  "schema": "pixeria.installation-campaign.v1",
+  "campaign": {
+    "schema": "pixeria.installation-campaign.v1",
+    "id": "sneakers-store",
+    "revision": 1,
+    "name": "Sneakers Store",
+    "headline": "ESTRENA TU PRÓXIMO PASO.",
+    "cta": "DESCUBRE LA COLECCIÓN",
+    "price": "",
+    "background": "#081614",
+    "accent": "#47f795",
+    "foreground": "#f5fff9",
+    "direction": "hero",
+    "placements": {},
+    "seconds": 10,
+    "product": "/adaptaciones/campanas/sneaker-demo.svg",
+    "logo": "/adaptaciones/campanas/sneakers-wordmark.svg",
+    "productLabel": "Sneaker · ilustración de ejemplo",
+    "installations": [
+      {
+        "id": "landscape",
+        "name": {
+          "es": "Horizontal",
+          "en": "Landscape"
+        },
+        "width": 1920,
+        "height": 1080,
+        "screens": [
+          {
+            "id": "lcd",
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "rotation": 0
+          }
+        ]
+      },
+      {
+        "id": "portrait",
+        "name": {
+          "es": "Vertical",
+          "en": "Portrait"
+        },
+        "width": 1080,
+        "height": 1920,
+        "screens": [
+          {
+            "id": "entrance",
+            "x": 0,
+            "y": 0,
+            "w": 1080,
+            "h": 1920,
+            "rotation": 0
+          }
+        ]
+      },
+      {
+        "id": "strip",
+        "name": {
+          "es": "Tira panorámica",
+          "en": "Panoramic strip"
+        },
+        "width": 3840,
+        "height": 600,
+        "screens": [
+          {
+            "id": "strip",
+            "x": 0,
+            "y": 0,
+            "w": 3840,
+            "h": 600,
+            "rotation": 0
+          }
+        ]
+      },
+      {
+        "id": "jordan",
+        "name": {
+          "es": "Jordan · cinco paneles",
+          "en": "Jordan · five panels"
+        },
+        "width": 2780,
+        "height": 1280,
+        "approximate": true,
+        "screens": [
+          {
+            "id": "jordan-1",
+            "x": 0,
+            "y": 320,
+            "w": 540,
+            "h": 960,
+            "rotation": 0
+          },
+          {
+            "id": "jordan-2",
+            "x": 560,
+            "y": 160,
+            "w": 540,
+            "h": 1120,
+            "rotation": 0
+          },
+          {
+            "id": "jordan-3",
+            "x": 1120,
+            "y": 0,
+            "w": 540,
+            "h": 1280,
+            "rotation": 0
+          },
+          {
+            "id": "jordan-4",
+            "x": 1680,
+            "y": 160,
+            "w": 540,
+            "h": 1120,
+            "rotation": 0
+          },
+          {
+            "id": "jordan-5",
+            "x": 2240,
+            "y": 320,
+            "w": 540,
+            "h": 960,
+            "rotation": 0
+          }
+        ]
+      },
+      {
+        "id": "rear",
+        "name": {
+          "es": "LED con puerta",
+          "en": "LED with doorway"
+        },
+        "width": 2880,
+        "height": 1620,
+        "approximate": true,
+        "screens": [
+          {
+            "id": "rear-left",
+            "x": 0,
+            "y": 0,
+            "w": 1120,
+            "h": 1620,
+            "rotation": 0
+          },
+          {
+            "id": "rear-top",
+            "x": 1120,
+            "y": 0,
+            "w": 640,
+            "h": 540,
+            "rotation": 0
+          },
+          {
+            "id": "rear-right",
+            "x": 1760,
+            "y": 0,
+            "w": 1120,
+            "h": 1620,
+            "rotation": 0
+          }
+        ],
+        "masks": [
+          {
+            "id": "door",
+            "x": 1120,
+            "y": 540,
+            "w": 640,
+            "h": 1080
+          }
+        ]
+      }
+    ]
+  },
+  "delivery": {
+    "fps": 25,
+    "gopFrames": 25,
+    "audio": false,
+    "kind": "still-composition",
+    "hardwareVerified": false
+  },
+  "approvals": {},
+  "limits": {
+    "measuredGeometry": false,
+    "anamorphicExport": false,
+    "automaticVideoLayerExtraction": false
+  },
+  "derived": [
+    {
+      "installation": "landscape",
+      "screen": "lcd",
+      "width": 1920,
+      "height": 1080,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-store",
+        "installation:landscape",
+        "screen:lcd",
+        "direction:hero"
+      ]
+    },
+    {
+      "installation": "portrait",
+      "screen": "entrance",
+      "width": 1080,
+      "height": 1920,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-store",
+        "installation:portrait",
+        "screen:entrance",
+        "direction:hero"
+      ]
+    },
+    {
+      "installation": "strip",
+      "screen": "strip",
+      "width": 3840,
+      "height": 600,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-store",
+        "installation:strip",
+        "screen:strip",
+        "direction:hero"
+      ]
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-1",
+      "width": 540,
+      "height": 960,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-store",
+        "installation:jordan",
+        "screen:jordan-1",
+        "direction:hero"
+      ]
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-2",
+      "width": 540,
+      "height": 1120,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-store",
+        "installation:jordan",
+        "screen:jordan-2",
+        "direction:hero"
+      ]
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-3",
+      "width": 540,
+      "height": 1280,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-store",
+        "installation:jordan",
+        "screen:jordan-3",
+        "direction:hero"
+      ]
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-4",
+      "width": 540,
+      "height": 1120,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-store",
+        "installation:jordan",
+        "screen:jordan-4",
+        "direction:hero"
+      ]
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-5",
+      "width": 540,
+      "height": 960,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-store",
+        "installation:jordan",
+        "screen:jordan-5",
+        "direction:hero"
+      ]
+    },
+    {
+      "installation": "rear",
+      "screen": "rear-left",
+      "width": 1120,
+      "height": 1620,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-store",
+        "installation:rear",
+        "screen:rear-left",
+        "direction:hero"
+      ]
+    },
+    {
+      "installation": "rear",
+      "screen": "rear-top",
+      "width": 640,
+      "height": 540,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-store",
+        "installation:rear",
+        "screen:rear-top",
+        "direction:hero"
+      ]
+    },
+    {
+      "installation": "rear",
+      "screen": "rear-right",
+      "width": 1120,
+      "height": 1620,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-store",
+        "installation:rear",
+        "screen:rear-right",
+        "direction:hero"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 import {mountAdvertisement} from './anuncio-studio.mjs?v=semantic-ad-13';
-import {mountTwin} from './gemelo-digital.mjs?v=studio-best-3';
+import {mountCampaign} from './campaign-studio.mjs?v=campaign-1';
+let campaignWorkshop=null;
+import {mountTwin} from './gemelo-digital.mjs?v=installation-20261009';
 import {aiJob} from './ia-core.mjs?v=adapter-detail-1';
 import {APPLICATION_KEY,restoreApplications,applyApplications} from './aplicaciones-core.mjs';
 import {mountStudio} from './studio-adaptaciones.mjs';
@@ -9,7 +11,7 @@ let studio = null, twin = null, advertisement = null;
 // Reutiliza el motor de reglas real de Pixeria: assets/signage-perfiles.js
 import { perfilDeSalida, planificar } from '/assets/signage-perfiles.js';
 import { STORAGE_KEY, defaults, restore, snapshot, rect, cropWindow, exportBudget, exportJob, STILL, stillSeconds, stillJob, animJob, animPreviewJob } from './adapter-core.mjs?v=adapter-detail-1';
-import { createEngine, MAX_SOURCE_BYTES } from './adapter-export.js';
+import { createEngine, MAX_SOURCE_BYTES } from './adapter-export.js?v=installation-20261009';
 import { createExportQueue } from './export-queue.js';
 import { publishAdaptation, shortFormat, adaptationTitle, MAX_STOCK_BYTES } from './stock-publish.mjs';
 import { createCatalog, CATEGORIES, CAMPAIGNS, matchingFormats, customFormat, restoreCustomFormats, formatFamily, isProjectFormat, isLibrarySize, applyCampaign, setGroupSelected, groupSelection, selectAllSizes } from './format-catalog.mjs';
@@ -136,6 +138,7 @@ function especialJobs(f,kinds,src=state.src,receta=null) {
 // Every finished MP4 is also saved to the Stock as a new video: «<title> · <client> · <format>».
 let savingToStock=0;
 async function saveToStock(item,file) {
+  if(item.campaign)return; // Workshop exports publish only via its explicit Stock control.
   if(item.paquete){onPackageFile(item,file);return;} // el paquete por estanco publica con sus propias etiquetas
   if(file.blob.type!=='video/mp4') return;
   savingToStock++;try {await saveOne(item,file);} finally {savingToStock--;}
@@ -166,7 +169,7 @@ function paintBatch(rows) {
   if (status) status.textContent = `${finished}/${batchTotal}`;
 }
 const queue = createExportQueue({
-  engine:createEngine(),t,onChange:rows=>{paintBatch(rows);paintPackageRows(rows);},
+  engine:createEngine(),t,onChange:rows=>{paintBatch(rows);paintPackageRows(rows);campaignWorkshop?.exportChanged();},
   onCreate(item){ if (batchIds) batchIds.add(item.id); if (item.paquete && pkg && item.paquete === pkg.id && item.format) pkg.items.set(item.id, item.format.id); },
   onComplete:saveToStock,
   onRelease:url=>{if(url!==sourceObjectURL&&url!==stillInput.url&&url!==derivedURL&&url.startsWith('blob:'))URL.revokeObjectURL(url);}
@@ -1887,6 +1890,7 @@ if (savedList.length) { yokupSource = 'saved'; yokupDate = String(yokupJSON.actu
 PROJECTS = mergeProjects(savedList, INDEX);
 // Altadis preferences saved before the fichas move to their project once; nothing is deleted.
 let migratedTo = null; try { migratedTo = migrateStorage(localStorage, STORAGE_KEY); } catch (_) {}
+campaignWorkshop=mountCampaign({t,queue,openTwin:f=>twin?.open(f)});
 let query = null, lastProject = null;
 try { query = new URLSearchParams(location.search).get('proyecto'); } catch (_) {}
 try { lastProject = localStorage.getItem(PROJECT_KEY) || migratedTo; } catch (_) { lastProject = migratedTo; }
@@ -1903,13 +1907,14 @@ emptySource(); loop();
 
 studio=mountStudio({t,formats:projectFormatList,ficha:()=>FICHA,doc:()=>EST,baseDoc:()=>EST_BASE,applications:()=>estApplications,settings:()=>({...snapshot(state,FORMATOS),crear:state.crear}),
 ready:mediaReady,destino,geometry,reference:(cv,f)=>paint(cv,destino(f),'blur',{fx:.5,fy:.5,zoom:1}),
-draw:(cv,f,bg)=>{if(advertisement?.draw(cv,f))return;if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);},
+draw:(cv,f,bg)=>{if(campaignWorkshop?.draw(cv,f))return;if(advertisement?.draw(cv,f))return;if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);},
 changed:()=>buildGrid(),visit:f=>twin?.open(f),apply:(estanco,formato,on)=>{const next=estApplications.filter(x=>x.estanco!==estanco||x.formato!==formato);if(on)next.push({estanco,formato});
 const valid=restoreApplications(next,EST_BASE,projectFormatList());try{localStorage.setItem(APPLICATION_KEY(FICHA.id),JSON.stringify(valid));}catch(_){throw new Error('storage');}
 estApplications=valid;EST=applyApplications(EST_BASE,valid,projectFormatList());renderEstancos();}});
 
 let twinPlayback=null;
 function startTwinPlayback(){
+  if(campaignWorkshop?.active())return;
   twinPlayback={kind:srcKind,paused:srcKind==='video'?video.paused:srcKind==='anim'?anim?.paused:true,muted:video.muted};
   if(srcKind==='video'){video.muted=true;video.play().catch(()=>{});}
   else if(anim)anim.play();
@@ -1919,7 +1924,7 @@ function endTwinPlayback(){
   if(twinPlayback.kind===srcKind){if(srcKind==='video'){if(twinPlayback.paused)video.pause();video.muted=twinPlayback.muted;}else if(anim&&twinPlayback.paused)anim.pause();}
   twinPlayback=null;
 }
-twin=mountTwin({t,start:startTwinPlayback,end:endTwinPlayback,ready:mediaReady,destino,formats:()=>FORMATOS.filter(isProjectFormat),background:f=>studio?.background(f),shops:()=>EST?.estancos,shop:()=>studio?.shop(),selectShop:id=>studio?.selectShop(id),draw:(cv,f,bg)=>{if(advertisement?.draw(cv,f))return;if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);}});
+twin=mountTwin({t,start:startTwinPlayback,end:endTwinPlayback,ready:()=>campaignWorkshop?.active()?campaignWorkshop.ready():mediaReady(),destino:f=>f.installation?{ancho:f.installation.width,alto:f.installation.height}:destino(f),formats:()=>campaignWorkshop?.active()?campaignWorkshop.formats():FORMATOS.filter(isProjectFormat),background:f=>studio?.background(f),shops:()=>EST?.estancos,shop:()=>studio?.shop(),selectShop:id=>studio?.selectShop(id),draw:(cv,f,bg)=>{if(campaignWorkshop?.draw(cv,f))return;if(advertisement?.draw(cv,f))return;if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);}});
 advertisement=mountAdvertisement({t,formats:()=>FORMATOS,selected:selectedFormats,source:()=>({kind:srcKind,image:img,src:state.src}),destino,seconds:()=>stillSec,
 textZone:f=>{if(!f.especial)return null;const seg=geometry(f.layout).segments.reduce((a,b)=>a.wall.w*a.wall.h>=b.wall.w*b.wall.h?a:b);return {...seg.wall};},
 changed:()=>{buildCardSettings();refreshInfo();drawDirty=true;}});
