@@ -734,3 +734,9 @@ EN: `/campaign` opens Sneakers Store workshop: editable elements, three directio
 [Tutorial y contrato ES/EN · ES/EN tutorial and contract](/docs/campanas-instalacion.md). MCP real: `campana_instalacion` calcula planes, no render ni publicación / returns plans, no render or publication.
 
 Creador / Creator: categoría independiente en `/creador/` y `/en/creador/` para campañas desde cero. Adaptador / Adapter conserva las imágenes y vídeos existentes o de terceros. Guía ES/EN: [Creador y Adaptador](campanas-instalacion.md).
+
+## Imagen horizontal → vertical / Landscape image → portrait
+
+ES: En el paso 1, con una imagen fija horizontal cargada, **Horizontal → vertical** abre un solo destino vertical existente del perfil actual, dando prioridad a 9:16. Si ese perfil no tiene verticales, usa 9:16 de la biblioteca. Conserva el proyecto, los ajustes y las selecciones fuera del perfil de destino. Después puedes añadir tamaños desde la biblioteca. Revisa y confirma el texto; crear y aprobar piezas conserva el flujo habitual de imágenes. El botón no genera una variante ni certifica una entrega física.
+
+EN: In step 1, with a loaded landscape still image, **Landscape → portrait** opens one existing portrait destination in the current profile, preferring 9:16. If that profile has none, it uses the library’s 9:16. The project, settings and selections outside the destination profile are preserved. Add sizes from the library afterwards. Review and confirm the copy; creating and approving pieces follows the existing image workflow. The button does not generate a variant or certify physical delivery.
