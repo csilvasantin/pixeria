@@ -1,4 +1,4 @@
-import {CREATOR_KEY,newCampaign,orientationPair} from './campaign-entry.mjs?v=creator-1';
+import {CREATOR_KEY,newCampaign,orientationPair} from './campaign-entry.mjs?v=creator-full-5';
 import {DEFAULT_CAMPAIGN,DIRECTIONS,restoreCampaign,planCampaign,validateInstallation,campaignContract,campaignJob} from './campaign-core.mjs?v=campaign-1';
 import {drawCampaign,panelCanvas} from './campaign-render.mjs?v=campaign-1';
 import {geometry} from './especiales-core.mjs?v=adapter-detail-1';
