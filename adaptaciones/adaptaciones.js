@@ -1463,8 +1463,8 @@ function enterPortrait() {
   if(!selectPortraitEntry(FORMATOS,entry))return;
   state.profile=entry.profile;state.sel=entry.id;
   $('#format-profile').value=entry.profile;syncCompat();buildGrid();goStep(2);
-  const target=FORMATOS.find(f=>f.id===entry.id);
-  $('#export-status').textContent=t(`Destino inicial: ${target.nombre} · ${entry.ancho}×${entry.alto}. Revisa texto y producto antes de crear y aprobar; puedes añadir más tamaños.`,`Initial destination: ${target.nombre} · ${entry.ancho}×${entry.alto}. Review copy and product before creating and approving; you can add more sizes.`);
+  const target=FORMATOS.find(f=>f.id===entry.id), output=destino(target);
+  $('#export-status').textContent=t(`Destino inicial: ${target.nombre} · ${output.ancho}×${output.alto}. Revisa texto y producto antes de crear y aprobar; puedes añadir más tamaños.`,`Initial destination: ${target.nombre} · ${output.ancho}×${output.alto}. Review copy and product before creating and approving; you can add more sizes.`);
   const card=Array.from(document.querySelectorAll('#grid [data-f]')).find(el=>el.dataset.f===entry.id);
   if(card){card.focus({preventScroll:true});card.scrollIntoView({block:'nearest',behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'instant':'smooth'});}
 }

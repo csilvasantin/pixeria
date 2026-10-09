@@ -9,6 +9,6 @@
   "novedades": [
     "Entrada Horizontal → vertical para imágenes cargadas, con un destino inicial existente y preferencia por 9:16",
     "Conserva proyecto, encuadre y selecciones fuera del perfil elegido; después permite añadir más tamaños",
-    "Mantiene revisión de texto y aprobación de piezas; la validación específica del modelo de Sol queda pendiente"
+    "Mantiene revisión de texto y aprobación de cada variante antes de exportar"
   ]
 }

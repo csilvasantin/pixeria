@@ -8,7 +8,7 @@
   "default": [
     "Entrada Horizontal → vertical para imágenes cargadas, con un destino inicial existente y preferencia por 9:16",
     "Conserva proyecto, encuadre y selecciones fuera del perfil elegido; después permite añadir más tamaños",
-    "Mantiene revisión de texto y aprobación de piezas; la validación específica del modelo de Sol queda pendiente"
+    "Mantiene revisión de texto y aprobación de cada variante antes de exportar"
   ],
   "v.07.10.2026.r11.23:39": [
     "Campo de etiquetas al importar (URL o ficheros) y junto a «Publicar en Stock» de lo que creas",
@@ -196,6 +196,6 @@
   "v.09.10.2026.r15.10:49": [
     "Entrada Horizontal → vertical para imágenes cargadas, con un destino inicial existente y preferencia por 9:16",
     "Conserva proyecto, encuadre y selecciones fuera del perfil elegido; después permite añadir más tamaños",
-    "Mantiene revisión de texto y aprobación de piezas; la validación específica del modelo de Sol queda pendiente"
+    "Mantiene revisión de texto y aprobación de cada variante antes de exportar"
   ]
 }

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {canEnterPortrait,portraitEntryPlan,selectPortraitEntry,portraitDimensions} from '../adaptaciones/portrait-entry.mjs';
+import {perfilDeSalida} from '../assets/signage-perfiles.js';
 import {projectFormats} from '../adaptaciones/proyectos-core.mjs';
 
 const read = path => readFileSync(new URL('../' + path, import.meta.url),'utf8');
@@ -109,13 +110,14 @@ assert.ok(begin>=0&&end>begin,'production entry boundaries exist');
 const entrySource=production.slice(begin,end);
 function uiWorld(en=false, reducedMotion=false) {
   const formats=standard(),calls=[],button={hidden:false,disabled:false},status={textContent:''},profile={value:'standard'};
-  const state={src:{ancho:1920,alto:1080},profile:'standard',sel:'16:9',fmt:{'9:16':{modo:'contain',fx:.3,fy:.7,zoom:1}},proyecto:'fixture'};
+  const state={src:{ancho:1920,alto:1080},profile:'standard',compat:'fhd',sel:'16:9',fmt:{'9:16':{modo:'contain',fx:.3,fy:.7,zoom:1}},proyecto:'fixture'};
   const card={dataset:{f:'9:16'},tabIndex:0,focus:options=>calls.push(['focus',options]),scrollIntoView:options=>calls.push(['scroll',options])};
   const nodes={'#btn-portrait':button,'#export-status':status,'#format-profile':profile};
   let ready=true;
   const context=vm.createContext({state,srcKind:'image',FORMATOS:formats,canEnterPortrait,portraitEntryPlan,selectPortraitEntry,
     $:selector=>{assert.ok(nodes[selector],'unexpected DOM lookup '+selector);return nodes[selector];},
     t:(es,english)=>en?english:es,mediaReady:()=>ready,
+    destino:format=>{assert.equal(state.profile,'standard');return perfilDeSalida({formato:format.id,compatibilidad:state.compat});},
     window:{matchMedia:query=>{assert.equal(query,'(prefers-reduced-motion: reduce)');return {matches:reducedMotion};}},
     document:{querySelectorAll:selector=>{assert.equal(selector,'#grid [data-f]');return [card];}},
     syncCompat:()=>calls.push(['compat']),buildGrid:()=>calls.push(['grid']),goStep:n=>calls.push(['step',n]),
@@ -160,4 +162,13 @@ test('a source changed or unloaded after showing the button cannot select a dest
     assert.deepEqual(world.state,before);assert.deepEqual(world.formats,formatsBefore);assert.equal(world.calls.length,0);assert.equal(world.status.textContent,'');
     world.context.syncPortraitEntry();assert.equal(world.button.hidden,true);assert.equal(world.button.disabled,true);
   }
+});
+
+for (const [compat,width,height] of [['universal',720,1280],['uhd',2160,3840]]) test('entry status reports effective '+compat+' output without changing compatibility or framing', () => {
+  const world=uiWorld();world.state.compat=compat;const before=structuredClone(world.state);
+  world.button.onclick();
+  assert.ok(world.status.textContent.includes(width+'×'+height));
+  assert.equal(world.state.compat,compat);assert.deepEqual(world.state.fmt,before.fmt);
+  assert.equal(world.state.proyecto,before.proyecto);
+  assert.deepEqual(world.calls.filter(x=>x[0]==='step'),[['step',2]]);
 });
