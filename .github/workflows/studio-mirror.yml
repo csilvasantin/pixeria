@@ -1,0 +1,49 @@
+name: Publish verified Admira Studio mirror
+on:
+  workflow_dispatch:
+    inputs:
+      studio_ref:
+        description: Verified signed Studio commit
+        required: true
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate immutable reference
+        env:
+          STUDIO_REF: ${{ inputs.studio_ref }}
+        run: '[[ "$STUDIO_REF" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@v4
+        with:
+          repository: csilvasantin/admira-studio
+          ref: ${{ inputs.studio_ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Publish signed mirror with existing deployment credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          TMP="$(mktemp -d)"
+          git archive HEAD | tar -x -C "$TMP"
+          export STUDIO_PACKAGE="$TMP"
+          export STUDIO_COMMIT="$(git rev-parse HEAD)"
+          python3 - <<'PY'
+          import os,json,re,datetime
+          from pathlib import Path
+          root=Path(os.environ['STUDIO_PACKAGE']);sha=os.environ['STUDIO_COMMIT']
+          version=json.loads((root/'version.json').read_text());signature=json.loads((root/'release-signature.json').read_text())
+          assert version['version']==signature['version'] and version['signature']==signature['signature']
+          for d in [version,signature]:d.update(git=sha,gitFull=sha,gitShort=sha[:7],dirty=False)
+          version['deployedAt']=datetime.datetime.now(datetime.timezone.utc).isoformat()
+          (root/'version.json').write_text(json.dumps(version,ensure_ascii=False,indent=2)+'\n')
+          (root/'release-signature.json').write_text(json.dumps(signature,ensure_ascii=False,indent=2)+'\n')
+          for page in root.rglob('*.html'):
+              text=page.read_text();text=re.sub(r'(<span[^>]*data-release-signature[^>]*>[^<]* · )[0-9a-f]{7,40}( · clean</span>)',lambda m:m[1]+sha[:7]+m[2],text);page.write_text(text)
+          PY
+          npx --yes wrangler@4 pages deploy "$TMP" --project-name admira-studio --branch main --commit-hash "$STUDIO_COMMIT"
