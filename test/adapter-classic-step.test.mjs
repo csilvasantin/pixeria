@@ -238,13 +238,15 @@ test('a text-free advertisement fills the full canvas instead of reserving an em
 });
 
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
-function advertisementWorld({extract,make,doc,classicId=null,classicTarget,formats:providedFormats}={}){
+function advertisementWorld({extract,make,doc,classicId=null,classicTarget,formats:providedFormats,realRendering=false}={}){
  const globals=new Map(),nodes=[],calls=[],noCopy={texts:[],subjects:[{label:'product',box:[100,100,900,900]}],scene:'package',uncertain:false};
  function element(tag='section'){
   const children=new Map(),el={tagName:tag.toUpperCase(),hidden:false,value:'',dataset:{},textContent:'',width:0,height:0,
    append(){},before(){},replaceChildren(){},removeAttribute(name){delete this[name];},
-   querySelector(selector){if(!children.has(selector))children.set(selector,element());return children.get(selector);},
-   querySelectorAll:()=>[],getContext:()=>({drawImage(){},measureText:()=>({width:0})}),toDataURL:()=> 'data:image/png;base64,fixture'};
+   focus(options){calls.push(['focus',el.selector,options]);},scrollIntoView(options){calls.push(['scroll',el.selector,options]);},
+   querySelector(selector){if(!children.has(selector)){const child=element();child.selector=selector;children.set(selector,child);}return children.get(selector);},
+   querySelectorAll:()=>[],getContext:()=>({drawImage(){},fillRect(){},strokeText(){},fillText(text){calls.push(['paint',text,this.font,this.fillStyle]);},
+    measureText(text){const px=Number(/([\d.]+)px/.exec(this.font||'')?.[1]||20);return {width:realRendering?Array.from(text).length*px*.57:0};}}),toDataURL:()=> 'data:image/png;base64,fixture'};
   nodes.push(el);return el;
  }
  const get=selector=>{if(!globals.has(selector))globals.set(selector,element());return globals.get(selector);};
@@ -253,8 +255,8 @@ function advertisementWorld({extract,make,doc,classicId=null,classicTarget,forma
   document:{createElement:element,querySelector:get,querySelectorAll:()=>[]},AbortController,setTimeout,clearTimeout,
   Image:class {naturalWidth=1080;naturalHeight=1920;async decode(){}},
   extractAdvertisement:async(...args)=>{calls.push(['extract',...args]);return extract?extract(...args):structuredClone(doc||noCopy);},loadDocumentFonts:async()=>{},
-  makeVisual:async(...args)=>{calls.push(['visual',...args]);return make?make(...args):{url:'data:image/png;base64,fixture',verification:{protectedSubjects:noCopy.subjects}};},
-  renderAdvertisement:()=>({valid:true}),fetch:()=>assert.fail('mock engine never calls providers')});
+  makeVisual:async(...args)=>{calls.push(['visual',...args]);return make?make(...args):{url:'data:image/png;base64,fixture',verification:{protectedSubjects:realRendering?doc.subjects:noCopy.subjects}};},
+  renderAdvertisement:realRendering?adCore.renderAdvertisement:()=>({valid:true}),fetch:()=>assert.fail('mock engine never calls providers')});
  const source=read('adaptaciones/anuncio-studio.mjs');
  vm.runInContext(source.slice(source.indexOf('export function mountAdvertisement')).replace('export function','function'),context);
  const api=context.mountAdvertisement({t:es=>es,source:()=>({kind:'image',image:{},src:{ancho:1920,alto:1080}}),classicTarget:classicTarget||(()=>activeClassicId),
@@ -304,6 +306,13 @@ async function until(predicate){for(let i=0;i<80;i++){if(predicate())return;awai
 const uncertainCopy=()=>({texts:[{role:'headline',text:'UNCONFIRMED OCR',confidence:.2}],
  subjects:[{label:'product',box:[200,400,900,900]}],scene:'package on table',uncertain:true,
  packageLabels:[{text:'SOL',box:[400,500,500,600]}]});
+const confidentAdvertisement=()=>({
+ texts:[
+  {role:'headline',text:'UN CAFÉ CON HIELO EN BARCELONA',confidence:.99,typography:{family:'condensed',weight:900,color:'#FFFFFF',align:'center',lineHeight:1.08}},
+  {role:'body',text:'2,50 €',confidence:.99,typography:{family:'sans',weight:700,color:'#00DDEE',align:'left',lineHeight:1.08}},
+  {role:'legal',text:'Hasta agotar existencias · Promoción válida hasta el 31/10/2026.',confidence:.99,typography:{family:'sans',weight:400,color:'#FFFFFF',align:'left',lineHeight:1.08}}
+ ],subjects:[{label:'iced coffee glass',box:[400,300,950,700]}],scene:'Iced coffee on the Barcelona beach',uncertain:false,needsRecreation:false
+});
 
 test('production classic click performs OCR and full-canvas reconstruction automatically without export',async()=>{
  const ui=uiWorld(),f=ui.formats.find(f=>isClassicFormat(f)&&f.id==='9:16'),before=snapshot(ui.state,ui.formats);
@@ -323,6 +332,9 @@ test('uncertain OCR pauses the automatic flow, and human confirmation resumes th
  const w=advertisementWorld({doc:uncertainCopy(),classicId:'9:16'}),f=w.formats[0];
  await w.api.prepareClassic(f);assert.equal(w.calls.filter(c=>c[0]==='visual').length,0);
  assert.equal(w.api.entry(f),undefined);assert.equal(w.root.querySelector('#ad-copy-wrap').hidden,false);
+ assert.equal(w.calls.filter(c=>c[0]==='focus'&&c[1]==='#ad-copy').length,1,'the blocked action brings the editable copy into view');
+ w.api.sync();w.api.sync();
+ assert.equal(w.calls.filter(c=>c[0]==='focus').length,1,'routine updates never repeatedly steal focus');
  w.root.querySelector('#ad-copy').value='HUMAN VERIFIED COPY';w.root.querySelector('#ad-confirm-copy').onclick();
  await until(()=>!!w.api.entry(f));
  assert.equal(w.calls.filter(c=>c[0]==='extract').length,1);assert.equal(w.calls.filter(c=>c[0]==='visual').length,1);
@@ -331,22 +343,46 @@ test('uncertain OCR pauses the automatic flow, and human confirmation resumes th
  assert.deepEqual(plain(request[2].packageLabels),uncertainCopy().packageLabels);assert.equal(w.api.ready(f),false);
 });
 
-test('high-confidence classic OCR still requires an explicit human copy decision before any visual request',async()=>{
- for(const decision of ['confirm','no-copy']){
-  const doc={...uncertainCopy(),texts:[{role:'brand',text:'BIGODIN',confidence:.99}],uncertain:false};
-  const w=advertisementWorld({doc,classicId:'9:16'}),f=w.formats[0];
-  await w.api.prepareClassic(f);
-  assert.equal(w.calls.filter(c=>c[0]==='visual').length,0,'provider confidence is not human confirmation');
-  assert.equal(w.api.entry(f),undefined);assert.equal(w.root.querySelector('#ad-copy-wrap').hidden,false);
-  assert.match(w.status(),/Revisa y confirma el texto/);
-  await w.api.prepare([f]);
-  assert.equal(w.calls.filter(c=>c[0]==='visual').length,0,'manual create/export cannot bypass classic copy review');
-  w.root.querySelector(decision==='confirm'?'#ad-confirm-copy':'#ad-no-copy').onclick();
-  await until(()=>!!w.api.entry(f));
-  const request=w.calls.find(c=>c[0]==='visual');
-  assert.deepEqual(plain(request[2].texts.map(t=>t.text)),decision==='confirm'?['BIGODIN']:[]);
-  assert.equal(w.calls.filter(c=>c[0]==='extract').length,1);assert.equal(w.calls.filter(c=>c[0]==='visual').length,1);
-  assert.equal(w.api.ready(f),false,'copy confirmation never approves the generated piece');
+test('a horizontal advertisement automatically becomes a portrait draft with complete styled headline, price and legal copy',async()=>{
+ const doc=confidentAdvertisement(),ui=uiWorld(),f=ui.formats.find(f=>isClassicFormat(f)&&f.id==='9:16');
+ const w=advertisementWorld({doc,formats:ui.formats,realRendering:true,classicTarget:()=>ui.run('classicActive()?classicTargetId:null')});
+ Object.assign(ui.advertisement,w.api);ui.node('#btn-portrait').onclick();
+ await until(()=>!!w.api.entry(f));
+ assert.deepEqual(w.calls.filter(c=>['extract','visual'].includes(c[0])).map(c=>c[0]),['extract','visual']);
+ const request=w.calls.find(c=>c[0]==='visual'),result=w.api.entry(f);
+ assert.equal(request[3],'reconstruct');assert.deepEqual(plain(request[4]),{w:1080,h:1920});
+ assert.deepEqual(plain(request[2].texts),doc.texts,'copy and observed typography stay exact');
+ assert.ok(request[5].textZone,'the reconstruction reserves a safe copy zone');
+ assert.equal(result.layout.valid,true);assert.deepEqual(plain(result.copy),doc.texts.map(t=>t.text));
+ const painted=w.calls.filter(c=>c[0]==='paint');
+ assert.equal(painted.map(c=>c[1]).join('').replace(/\s/g,''),doc.texts.map(t=>t.text).join('').replace(/\s/g,''));
+ assert.ok(painted.some(c=>c[2].includes('Pixer Anton')),'headline keeps its observed condensed family');
+ assert.ok(painted.some(c=>c[3]==='#00DDEE'),'price keeps its observed colour');
+ for(const b of result.layout.blocks)assert.ok(b.y+b.h<=1920*.4,'copy stays above the complete protected product');
+ assert.equal(result.approved,false);assert.equal(w.api.ready(f),false);assert.equal(w.calls.filter(c=>c[0]==='focus').length,0);
+ await w.api.prepare([f]);assert.equal(w.calls.filter(c=>c[0]==='visual').length,1,'an existing draft is reviewed, not regenerated or exported');
+});
+
+test('editing confident classic copy pauses generation until the edited blocks are explicitly confirmed',async()=>{
+ const doc=confidentAdvertisement(),w=advertisementWorld({doc,classicId:'9:16'}),f=w.formats[0];
+ await w.api.analyze();
+ w.root.querySelector('#ad-copy').value=doc.texts.map((t,i)=>i===1?'2,75 €':t.text).join('\n\n');
+ w.root.querySelector('#ad-copy').oninput();
+ await w.api.prepareClassic(f);await w.api.prepare([f]);
+ assert.equal(w.calls.filter(c=>c[0]==='visual').length,0);assert.equal(w.api.entry(f),undefined);
+ w.root.querySelector('#ad-confirm-copy').onclick();await until(()=>!!w.api.entry(f));
+ assert.deepEqual(plain(w.api.entry(f).copy),[doc.texts[0].text,'2,75 €',doc.texts[2].text]);
+ assert.equal(w.calls.filter(c=>c[0]==='visual').length,1);assert.equal(w.api.ready(f),false);
+});
+
+test('a queued classic copy focus is discarded after cancellation, source clear or a destination change',async()=>{
+ for(const abandon of ['cancel','clear','destination']){
+  const w=advertisementWorld({doc:uncertainCopy(),classicId:'9:16'}),f=w.formats[0];
+  await w.api.analyze();const pending=w.api.prepareClassic(f);
+  if(abandon==='cancel')w.root.querySelector('#ad-cancel').onclick();else if(abandon==='clear')w.api.clear();else w.setClassic('16:9');
+  await pending;
+  assert.equal(w.calls.filter(c=>c[0]==='focus').length,0,abandon+' does not focus abandoned copy');
+  assert.equal(w.calls.filter(c=>c[0]==='visual').length,0);assert.equal(w.api.entry(f),undefined);
  }
 });
 
