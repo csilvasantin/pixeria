@@ -9,6 +9,7 @@ import {snapshot,defaults} from '../adaptaciones/adapter-core.mjs';
 import {perfilDeSalida} from '../assets/signage-perfiles.js';
 import {renderAdvertisement,visualPrompt} from '../adaptaciones/anuncio-core.mjs';
 import * as adCore from '../adaptaciones/anuncio-core.mjs';
+import {withSystemComposition,bindComposition} from '../assets/content-composition.mjs';
 
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const json=path=>JSON.parse(read(path));
@@ -240,7 +241,7 @@ test('a text-free advertisement fills the full canvas instead of reserving an em
 });
 
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
-function advertisementWorld({extract,make,doc,classicId=null,classicTarget,formats:providedFormats,realRendering=false,imageSize={ancho:1080,alto:1920}}={}){
+function advertisementWorld({extract,make,doc,classicId=null,classicTarget,formats:providedFormats,realRendering=false,imageSize={ancho:1080,alto:1920},composition=null}={}){
  const globals=new Map(),nodes=[],calls=[],noCopy={texts:[],subjects:[{label:'product',box:[100,100,900,900]}],scene:'package',uncertain:false};
  function element(tag='section'){
   const children=new Map(),el={tagName:tag.toUpperCase(),hidden:false,value:'',dataset:{},textContent:'',width:0,height:0,
@@ -253,7 +254,7 @@ function advertisementWorld({extract,make,doc,classicId=null,classicTarget,forma
  }
  const get=selector=>{if(!globals.has(selector))globals.set(selector,element());return globals.get(selector);};
  let activeClassicId=classicId;
- const formats=providedFormats||[{id:'9:16',nombre:'Vertical',on:false}],context=vm.createContext({...adCore,
+ const formats=providedFormats||[{id:'9:16',nombre:'Vertical',on:false}],context=vm.createContext({...adCore,withSystemComposition,
   document:{createElement:element,querySelector:get,querySelectorAll:()=>[]},AbortController,setTimeout,clearTimeout,
   Image:class {naturalWidth=imageSize.ancho;naturalHeight=imageSize.alto;async decode(){}},
   extractAdvertisement:async(...args)=>{calls.push(['extract',...args]);return extract?extract(...args):structuredClone(doc||noCopy);},loadDocumentFonts:async()=>{},
@@ -261,7 +262,7 @@ function advertisementWorld({extract,make,doc,classicId=null,classicTarget,forma
   renderAdvertisement:realRendering?adCore.renderAdvertisement:()=>({valid:true}),fetch:()=>assert.fail('mock engine never calls providers')});
  const source=read('adaptaciones/anuncio-studio.mjs');
  vm.runInContext(source.slice(source.indexOf('export function mountAdvertisement')).replace('export function','function'),context);
- const api=context.mountAdvertisement({t:es=>es,source:()=>({kind:'image',image:{},src:{ancho:1920,alto:1080}}),classicTarget:classicTarget||(()=>activeClassicId),
+ const api=context.mountAdvertisement({t:es=>es,source:()=>({kind:'image',image:{},src:{ancho:1920,alto:1080},composition}),classicTarget:classicTarget||(()=>activeClassicId),
   destino:()=>({ancho:1080,alto:1920}),selected:()=>formats,formats:()=>formats,seconds:()=>6,
   changed:()=>calls.push(['changed']),textZone:()=>{assert.ok((doc?.texts?.length||0)>0,'text-free media never requests a copy zone');return null;}});
  const root=nodes.find(n=>n.id==='advertisement-studio');assert.ok(root);
@@ -278,6 +279,23 @@ test('detected product, spoon and billboard remain context without becoming expl
  const request=w.calls.find(c=>c[0]==='visual');assert.ok(request);assert.equal(request[5].important,'');
  assert.deepEqual(plain(request[2].subjects),doc.subjects,'the original context and product detection stay intact');
  assert.equal(w.api.ready(f),false);
+});
+
+test('the image engine recovers exact system composition but still pauses for imported or incomplete copy',async()=>{
+ const doc={texts:[{text:'CAFE ILEGIBLE',role:'headline',box:[10,10,200,900],confidence:.4}],subjects:[{label:'coffee',box:[400,300,950,700]}],scene:'coffee on beach',uncertain:true};
+ const declared={schema:'admira.composition.v1',producer:'admira.studio',renderer:'campaign-canvas.v1',mediaType:'image',width:1920,height:1080,complete:true,copy:[{text:'CAFÉ FRÍO · 1,99 €',role:'headline',box:[10,10,200,900],typography:{family:'sans',weight:900,color:'#00DDEE',align:'left'}}]};
+ const composition=bindComposition(declared,'a'.repeat(64));
+ const own=advertisementWorld({doc,classicId:'9:16',composition});
+ await own.api.prepareClassic(own.formats[0]);
+ const call=own.calls.find(c=>c[0]==='visual');assert.ok(call);
+ assert.equal(call[2].copySource,'system-composition');assert.deepEqual(plain(call[2].texts.map(x=>x.text)),['CAFÉ FRÍO · 1,99 €']);
+ assert.equal(own.api.ready(own.formats[0]),false,'recovered copy never approves the image');
+ for(const metadata of [null,{...composition,complete:false},{...composition,width:1280}]){
+  const imported=advertisementWorld({doc,classicId:'9:16',composition:metadata});
+  await imported.api.prepareClassic(imported.formats[0]);
+  assert.equal(imported.calls.filter(c=>c[0]==='visual').length,0,'uncertain OCR must be confirmed');
+  assert.match(imported.status(),/Revisa y confirma el texto/);
+ }
 });
 
 test('user additional elements survive reanalysis and cancellation but source clear removes them',async()=>{
