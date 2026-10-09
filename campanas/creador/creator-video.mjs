@@ -1,6 +1,6 @@
-import {drawCreatorCampaign} from './creator-render.mjs?v=creator-tools-1';
-import {loadCreatorMedia} from './creator-media.mjs?v=creator-tools-1';
-import {createEngine} from '../../adaptaciones/adapter-export.js?v=creator-tools-1';
+import {drawCreatorCampaign} from './creator-render.mjs?v=creator-tools-2';
+import {loadCreatorMedia} from './creator-media.mjs?v=creator-tools-2';
+import {createEngine} from '../../adaptaciones/adapter-export.js?v=creator-tools-2';
 export function animatedJob(c,i){
  if(i.screens.some(s=>s.w%2||s.h%2||s.rotation))throw Error('video-screen-geometry');
  const outputs=i.screens.map((s,n)=>({file:'screen-'+n+'.mp4',filename:`${c.id}-${s.id}-${s.w}x${s.h}.mp4`,W:s.w,H:s.h,screen:s.id}));

@@ -8,7 +8,7 @@ export function drawCreatorCampaign(canvas,i,product,seconds,c,background=null){
  else if(c.motif===1){for(let n=0;n<16;n++){const xx=(n*w/12+time*w*.009)%w;x.beginPath();x.moveTo(xx-h*.4,0);x.lineTo(xx,h);x.stroke();}}
  else {for(let n=0;n<13;n++){const yy=(n*h/10+time*h*.012)%h;x.beginPath();x.moveTo(0,yy);x.bezierCurveTo(w*.25,yy-h*.2,w*.75,yy+h*.2,w,yy);x.stroke();}}
  x.restore();
- function fit(text,xx,yy,max,px,color=c.foreground,align='left'){px*=c.titleScale||1;x.font=`900 ${px}px "NextStep",sans-serif`;px=Math.min(px,px*max/Math.max(x.measureText(text).width,1));x.font=`900 ${px}px "NextStep",sans-serif`;x.fillStyle=color;x.textAlign=align;x.textBaseline='top';x.fillText(text,xx,yy);}
+ function fit(text,xx,yy,max,px,color=c.foreground,align='left'){if(text===c.headline||text===c.name||c.name.split(' ').includes(text))px*=c.titleScale||1;x.font=`900 ${px}px "NextStep",sans-serif`;px=Math.min(px,px*max/Math.max(x.measureText(text).width,1));x.font=`900 ${px}px "NextStep",sans-serif`;x.fillStyle=color;x.textAlign=align;x.textBaseline='top';x.fillText(text,xx,yy);}
  function shoe(xx,yy,ww,hh){if(!product)return;const pw=product.videoWidth||product.naturalWidth||product.width,ph=product.videoHeight||product.naturalHeight||product.height;if(!pw||!ph)return;const r=Math.min(ww/pw,hh/ph);if(c.mode==='full'){x.drawImage(product,xx+(ww-pw*r)/2,yy+(hh-ph*r)/2,pw*r,ph*r);return;}x.save();x.translate(xx+ww/2,yy+hh/2+Math.sin(time*.6)*short*.015);x.rotate(c.angle+Math.sin(time*.2)*.04);x.drawImage(product,-product.width*r/2,-product.height*r/2,product.width*r,product.height*r);x.restore();}
  const words=c.name.split(' '),title=phase%2===0?c.name:c.headline;
  if(i.id==='jordan'){
