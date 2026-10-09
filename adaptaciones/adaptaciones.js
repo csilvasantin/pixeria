@@ -1,5 +1,5 @@
 import {classicTargets,isClassicFormat,extraFormats} from './classic-step.mjs?v=20261009-classic-step-1';
-import {mountAdvertisement} from './anuncio-studio.mjs?v=classic-step-1';
+import {mountAdvertisement} from './anuncio-studio.mjs?v=classic-auto-1';
 import {mountCampaign} from './campaign-studio.mjs?v=creator-full-3';
 let campaignWorkshop=null;
 import {mountTwin} from './gemelo-digital.mjs?v=installation-20261009';
@@ -1506,7 +1506,7 @@ function enterClassic(id) {
   placeWorkspace();buildGrid();
   const output=destino(target);
   $('#export-status').textContent=t(`Destino clásico: ${target.nombre} · ${output.ancho}×${output.alto}. Revisa texto y producto antes de aprobar y exportar.`,`Classic destination: ${target.nombre} · ${output.ancho}×${output.alto}. Review copy and product before approving and exporting.`);
-  void advertisement?.analyze();
+  void advertisement?.prepareClassic(target);
   const card=Array.from(document.querySelectorAll('#grid [data-f]')).find(el=>el.dataset.f===id);
   if(card){card.focus({preventScroll:true});card.scrollIntoView({block:'nearest',behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'instant':'smooth'});}
 }
@@ -1990,7 +1990,7 @@ function endTwinPlayback(){
   twinPlayback=null;
 }
 twin=mountTwin({t,start:startTwinPlayback,end:endTwinPlayback,ready:()=>campaignWorkshop?.active()?campaignWorkshop.ready():mediaReady(),destino:f=>f.installation?{ancho:f.installation.width,alto:f.installation.height}:destino(f),formats:()=>campaignWorkshop?.active()?campaignWorkshop.formats():FORMATOS.filter(isProjectFormat),background:f=>studio?.background(f),shops:()=>EST?.estancos,shop:()=>studio?.shop(),selectShop:id=>studio?.selectShop(id),draw:(cv,f,bg)=>{if(campaignWorkshop?.draw(cv,f))return;if(advertisement?.draw(cv,f))return;if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);}});
-advertisement=mountAdvertisement({t,formats:()=>FORMATOS,selected:selectedFormats,source:()=>({kind:srcKind,image:img,src:state.src}),destino,seconds:()=>stillSec,
+advertisement=mountAdvertisement({t,formats:()=>FORMATOS,selected:selectedFormats,classicTarget:()=>classicActive()?classicTargetId:null,source:()=>({kind:srcKind,image:img,src:state.src}),destino,seconds:()=>stillSec,
 textZone:f=>{if(!f.especial)return null;const seg=geometry(f.layout).segments.reduce((a,b)=>a.wall.w*a.wall.h>=b.wall.w*b.wall.h?a:b);return {...seg.wall};},
 changed:()=>{buildCardSettings();refreshInfo();drawDirty=true;}});
 
