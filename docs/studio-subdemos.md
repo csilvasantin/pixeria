@@ -1,6 +1,6 @@
-# Cinco subdemos preparadas para Neo
+# Cinco subdemos de Studio / Pixeria
 
-Pack de Admira Studio / Pixeria, contrato **version 1** acordado con Neo por MCP (#5301 y #5303). Está preparado para incorporar; no se ha publicado en la web ni sustituye el editor de Neo.
+Pack de Admira Studio / Pixeria, contrato **version 1** acordado con Neo por MCP (#5301 y #5303). Los catálogos públicos de ambos sitios están publicados: verificados el 9 de octubre de 2026 con las cinco claves de esta guía. El editor de admiranext.com consume el catálogo; esta documentación describe recursos y contratos, no una generación nueva.
 
 | Orden | Clave del editor | Contenido | Resultado del ensayo |
 |---|---|---|---|
@@ -10,19 +10,19 @@ Pack de Admira Studio / Pixeria, contrato **version 1** acordado con Neo por MCP
 | d | `studio/video` | Imagen de entrada, movimiento, creación y espera | Vídeo IA de café del Stock, 8.04 s; el flujo opcional nuevo crea 5 s |
 | e | `studio/adaptar` | Fuente, elección de formatos, encuadre y exportación | Cuatro MP4 exportados localmente y medidos: 1920×1080, 1080×1920, 1080×1080, 1920×540 |
 
-Un minuto por subdemo; cinco minutos para el recorrido completo. El caso común es una cafetería ficticia, con muestras identificadas como preparadas. Las piezas reutilizadas no se atribuyen a una generación nueva ni a un prompt que no las produjo.
+La duración depende del guion, las muestras y los controles del recorrido; no es un plazo de generación. El caso común es una cafetería ficticia, con muestras identificadas como preparadas. Las piezas reutilizadas no se atribuyen a una generación nueva ni a un prompt que no las produjo.
 
-## Ficheros para incorporar
+## Ficheros publicados y fuentes
 
 - `demo/studio.subdemos.json`: catálogo versionado `{version:1, plataforma:"studio", subdemos:[...]}`. IDs `voz`, `musica`, `imagen`, `video`, `adaptar`; letras a–e. `url`, `muestra.url` y `variantes[].url` son HTTPS absolutos. Variantes `{formato:"1080x1920",url,...}`.
 - `demo/studio-v1/`: las cinco subdemos por separado, para revisar o versionar individualmente.
 - `demo/studio-guion.html`: guion compatible con el motor anterior `[data-demo]` y acciones `di`, `espera`, `escribe`, `elige`, `señala`, `clic`. No incorpora ni sustituye el motor.
-- `demo/studio-seleccion.subdemos.json`: selección importable `{proyectos:[...]}` con las cinco claves. Importar **después** de que el editor haya cargado el catálogo; la importación actual solo mueve selecciones.
+- `demo/studio-seleccion.subdemos.json`: selección importable `{proyectos:[...]}` con las cinco claves. Importar después de cargar el catálogo. Este archivo transporta las cinco selecciones; no crea medios ni ejecuta generación.
 - `demo/studio-preview.html`: revisión local de las cinco muestras y sus guiones.
 - `assets/demos/studio-v1/`: ocho piezas multimedia locales, cinco imágenes de portada y metadatos con procedencia, medidas y hashes SHA-256.
 - `_headers`: CORS público para el manifest y estos medios, para lectura desde el editor de admiranext.com. No contiene credenciales ni modifica la autenticación de las APIs.
 
-El manifest apunta a URLs finales de admira.studio. Esas URLs nuevas estarán disponibles **al incorporar y publicar el pack**. Para el espejo pixeria.com, Neo puede reemplazar el origen por `https://www.pixeria.com`; los paths son idénticos. La preview local resuelve esos paths contra el servidor local, sin depender de que estén publicados.
+Los catálogos están disponibles en https://www.admira.studio/demo/studio.subdemos.json y https://www.pixeria.com/demo/studio.subdemos.json. Comparten claves y paths; el origen refleja cada sitio. La preview local resuelve esos paths contra el servidor local. La página de preview requiere el acceso normal del sitio.
 
 ## Activación en Experto y avatar
 
@@ -38,7 +38,7 @@ Ambas entradas deben enviar el texto al mismo resolvedor, usando la plataforma d
 
 `/demo help` lista estas cinco demos, sus números y nombres. `/demo` sin argumento muestra la misma ayuda. Se aceptan mayúsculas, espacios exteriores y tildes (`locución`, `música`, `vídeo`); `voz`, `formatos` y `adaptacion` son aliases adicionales. Una entrada desconocida indica `/demo help` y no inicia otra demo.
 
-`activacion` y `aliases` del manifest contienen este contrato. `demo/studio-comandos.mjs` exporta `resolverDemo(texto, manifest, hostname)`: devuelve ayuda, la clave y el objeto de subdemo, o una entrada desconocida/otra plataforma. Es un módulo de referencia preparado para integrar; no está conectado todavía a la consola o al avatar de producción. El motor de Neo puede reutilizarlo o mantener un resolvedor común equivalente. En otros hosts, cada plataforma aporta su propio catálogo y numeración.
+`activacion` y `aliases` del manifest contienen este contrato. `demo/studio-comandos.mjs` exporta `resolverDemo(texto, manifest, hostname)`: devuelve ayuda, la clave y el objeto de subdemo, o una entrada desconocida/otra plataforma. Es un módulo de referencia del contrato; el frontend carga el motor común de Experto desde `assets/site-nav.js`. La activación compartida y el editor usan su resolvedor equivalente; no se debe confundir este archivo de referencia con el motor cargado. En otros hosts, cada plataforma aporta su propio catálogo y numeración.
 
 Al incorporar el manifest, conservar `steps`, `muestra`, `guion` y `muestra.variantes` como objetos y listas; no convertirlos a cadenas. El resolvedor selecciona una muestra, no ejecuta `ejecucion_real_opcional`.
 
@@ -48,9 +48,11 @@ Usar `muestra` para el ensayo. `steps` opcionales solo consultan muestras ya exi
 
 `ejecucion_real_opcional` guarda los ejemplos para explicar o hacer una creación real a petición. **No ejecutarlo al importar ni al reproducir el ensayo.** Música/imagen/vídeo pueden consumir crédito; el vídeo es asíncrono con `request_id` y `clip_estado`, y su flujo existente archiva el resultado en la biblioteca. La exportación MP4 de la interfaz `/adaptaciones/` también guarda archivos en Stock: el ensayo solo señala `#export-all` y reproduce las exportaciones locales preparadas. El único clic del guion abre la elección de formatos (`#btn-adaptar`).
 
-El motor anterior no sabe renderizar los medios de `muestra`: Neo debe incorporarlos a su panel de resultados. El HTML conserva las acciones existentes; no inventa una acción MCP sin soporte.
+El guion HTML conserva las acciones del motor anterior. El recorrido compartido y el editor consumen las muestras y los guiones del catálogo; no convierten el ensayo en una llamada de generación.
 
 ## Verificación y reproducción
+
+Ejecutar estas herramientas desde el repositorio fuente `csilvasantin/pixeria`; el espejo `admira-studio` no incluye estos scripts.
 
 ```sh
 python3 scripts/verificar-studio-subdemos.py
@@ -107,3 +109,7 @@ Pause/resume/status/stop and Escape control the walkthrough. Issued provider req
 Contract `admira.creator-full.v1` includes seed, prompts, models, source asset IDs/URLs, request_id, phases and timestamped events. Twin links carry `creator=<seed>&mode=full&image=<stock_id>&video=<stock_id>`. Missing/undecodable media block application. Authenticated same-origin `/creator-ai/{image,archive,video,status}` reuses existing Grok Image/Stock/Video APIs, signing a short server token for the current session identity. Provider/fleet secrets never reach the browser or contract.
 
 Real MCP `creador_demo({mode:"full",language:"en"})` is **plan only**. Explicit authenticated execution: `creador_imagen_generar` → `creador_imagen_guardar` → `clip_desde_imagen` with the freshly returned stock_id → `clip_estado` until `archived:true`. A plan or request_id is not a completed render or physical delivery. Free `/demo creator` retains its local composition and reused NEXT STEP artwork.
+
+## Catálogo MCP actual / Current MCP catalogue
+
+[Herramientas, efectos y ejemplos seguros / Tools, effects and safe examples](/mcp/). El catálogo consulta el servidor compartido y ofrece un respaldo fechado si no puede verificarlo. `demos_listar`, `demo_muestra` y los planes no generan medios; las herramientas de creación autenticadas pueden consumir crédito. / The catalogue checks the shared server and labels its dated fallback when it cannot verify it. Listing, prepared samples and plans do not generate media; authenticated creation may use provider credit.

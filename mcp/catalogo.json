@@ -1,0 +1,251 @@
+{
+  "version": 1,
+  "verifiedAt": "2026-10-09",
+  "serverVersion": "v.09.10.2026.r10.08:48",
+  "source": "https://mcp-pixeria.admira.store/",
+  "schemaSource": "https://mcp-pixeria.admira.store/mcp",
+  "tools": [
+    {
+      "name": "search_stock",
+      "category": "library",
+      "mode": "read",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Busca contenido existente por texto y tipo.",
+        "en": "Search existing media by text and type."
+      }
+    },
+    {
+      "name": "stock_stats",
+      "category": "library",
+      "mode": "read",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Resume tipos y etiquetas del Stock.",
+        "en": "Summarise Stock types and tags."
+      }
+    },
+    {
+      "name": "get_asset",
+      "category": "library",
+      "mode": "read",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Consulta los metadatos de un asset por su ID.",
+        "en": "Read asset metadata by ID."
+      }
+    },
+    {
+      "name": "demos_listar",
+      "category": "plans",
+      "mode": "read",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Consulta las cinco demos y los recorridos extra con sus contratos.",
+        "en": "Read five demos and extra walkthrough contracts."
+      }
+    },
+    {
+      "name": "creador_demo",
+      "category": "plans",
+      "mode": "plan",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Devuelve plan y enlaces de Creador; incluso mode full no genera medios.",
+        "en": "Return Creator plans and links; full mode does not generate media."
+      }
+    },
+    {
+      "name": "campana_instalacion",
+      "category": "plans",
+      "mode": "plan",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Valida campañas y calcula composiciones y planes de exportación.",
+        "en": "Validate campaigns and calculate layouts and export plans."
+      }
+    },
+    {
+      "name": "altadis_formatos",
+      "category": "plans",
+      "mode": "read",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Consulta 29 formatos y referencias de estancos de ensayo.",
+        "en": "Read 29 formats and trial shop references."
+      }
+    },
+    {
+      "name": "adaptacion_plan",
+      "category": "plans",
+      "mode": "plan",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Calcula un plan técnico de adaptación; no devuelve un archivo renderizado.",
+        "en": "Calculate a technical adaptation plan; no rendered file is returned."
+      }
+    },
+    {
+      "name": "demo_muestra",
+      "category": "samples",
+      "mode": "sample",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Devuelve muestras preparadas existentes; no es una generación nueva.",
+        "en": "Return existing prepared samples, not newly generated media."
+      }
+    },
+    {
+      "name": "voces_catalogo",
+      "category": "library",
+      "mode": "read",
+      "auth": "fleet",
+      "cost": "none",
+      "description": {
+        "es": "Consulta voces y modelos; no crea una locución.",
+        "en": "Read available voices and models; no voiceover is created."
+      }
+    },
+    {
+      "name": "crear_locucion",
+      "category": "generation",
+      "mode": "generate_sync",
+      "auth": "fleet",
+      "cost": "mixed",
+      "description": {
+        "es": "Devuelve audio: proveedor free por defecto o ElevenLabs. No publica en Stock.",
+        "en": "Return audio: free provider by default or ElevenLabs. Does not publish to Stock."
+      }
+    },
+    {
+      "name": "crear_musica",
+      "category": "generation",
+      "mode": "generate_sync",
+      "auth": "fleet",
+      "cost": "provider",
+      "description": {
+        "es": "Genera música con Lyria 3; devuelve audio sin publicarlo.",
+        "en": "Generate Lyria 3 music; return audio without publishing it."
+      }
+    },
+    {
+      "name": "crear_imagen",
+      "category": "generation",
+      "mode": "generate_sync",
+      "auth": "fleet",
+      "cost": "provider",
+      "description": {
+        "es": "Genera una imagen con Imagen 4 sin publicación automática.",
+        "en": "Generate an Imagen 4 image without automatic publication."
+      }
+    },
+    {
+      "name": "creador_imagen_generar",
+      "category": "generation",
+      "mode": "generate_sync",
+      "auth": "fleet",
+      "cost": "provider",
+      "description": {
+        "es": "Genera una imagen original de Creador con Grok Imagine Image.",
+        "en": "Generate a fresh Creator image with Grok Imagine Image."
+      }
+    },
+    {
+      "name": "adaptar_imagen",
+      "category": "generation",
+      "mode": "generate_sync",
+      "auth": "fleet",
+      "cost": "provider",
+      "description": {
+        "es": "Recompone una imagen con Gemini; el ratio solicitado no certifica dimensiones.",
+        "en": "Recompose an image with Gemini; the requested ratio does not certify dimensions."
+      }
+    },
+    {
+      "name": "fondo_adaptacion_ia",
+      "category": "generation",
+      "mode": "generate_sync",
+      "auth": "fleet",
+      "cost": "provider",
+      "description": {
+        "es": "Genera un fondo estático; composición y render quedan en el editor.",
+        "en": "Generate a still background; composition and rendering remain in the editor."
+      }
+    },
+    {
+      "name": "anuncio_analizar",
+      "category": "generation",
+      "mode": "read",
+      "auth": "fleet",
+      "cost": "provider",
+      "description": {
+        "es": "Extrae texto y rasgos visuales con IA; requiere revisar el OCR y no renderiza.",
+        "en": "Extract copy and visual traits with AI; review OCR, no render is produced."
+      }
+    },
+    {
+      "name": "clip_desde_imagen",
+      "category": "generation",
+      "mode": "generate_async",
+      "auth": "fleet",
+      "cost": "provider",
+      "description": {
+        "es": "Solicita un clip de 5 s desde una imagen; devuelve request_id, no un vídeo terminado.",
+        "en": "Request a 5-second image-based clip; receive a request_id, not a finished video."
+      }
+    },
+    {
+      "name": "clip_guion",
+      "category": "generation",
+      "mode": "generate_async",
+      "auth": "fleet",
+      "cost": "provider",
+      "description": {
+        "es": "Genera clips de 1–6 escenas recibidas, de 5 s cada una; consultar después el estado real.",
+        "en": "Generate clips from 1–6 supplied scenes, five seconds each; query actual status afterwards."
+      }
+    },
+    {
+      "name": "clip_estado",
+      "category": "archive",
+      "mode": "query_archive",
+      "auth": "fleet",
+      "cost": "none",
+      "description": {
+        "es": "Consulta el trabajo; el flujo archiva el vídeo terminado y devuelve la URL de biblioteca.",
+        "en": "Query a job; the pipeline archives the completed video and returns its library URL."
+      }
+    },
+    {
+      "name": "creador_imagen_guardar",
+      "category": "archive",
+      "mode": "save",
+      "auth": "fleet",
+      "cost": "none",
+      "description": {
+        "es": "Guarda la imagen recibida en Stock; no genera otra imagen ni programa pantallas.",
+        "en": "Save the received image to Stock; no new image or screen scheduling."
+      }
+    },
+    {
+      "name": "anonymizer_demo",
+      "category": "visitors",
+      "mode": "mixed",
+      "auth": "mixed",
+      "cost": "none",
+      "description": {
+        "es": "info consulta muestras; send encola un visitante con clave; status consulta su ACK, no emisión física.",
+        "en": "info reads samples; authenticated send queues a visitor; status reads its ACK, not physical playback."
+      }
+    }
+  ]
+}
