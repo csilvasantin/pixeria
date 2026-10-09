@@ -1,12 +1,12 @@
-import {mountCampaignCloud} from './creator-cloud.mjs?v=creator-tools-3';
-import {planInstruction,presentation} from './creator-instructions.mjs?v=creator-tools-3';
-import {exportAnimatedCampaign} from './creator-video.mjs?v=creator-tools-3';
+import {mountCampaignCloud} from './creator-cloud.mjs?v=creator-tools-4';
+import {planInstruction,presentation} from './creator-instructions.mjs?v=creator-tools-4';
+import {exportAnimatedCampaign} from './creator-video.mjs?v=creator-tools-4';
 import {INSTALLATIONS} from '../next-step/render.mjs';
-import {drawCreatorCampaign} from './creator-render.mjs?v=creator-tools-3';
-import {generateBackground} from '../../adaptaciones/ia-core.mjs?v=creator-tools-3';
-import {creatorRequest} from './creator-ai.mjs?v=creator-tools-3';
+import {drawCreatorCampaign} from './creator-render.mjs?v=creator-tools-4';
+import {generateBackground} from '../../adaptaciones/ia-core.mjs?v=creator-tools-4';
+import {creatorRequest} from './creator-ai.mjs?v=creator-tools-4';
 import {FFLATE} from '../../adaptaciones/estancos-core.mjs?v=altadis-ia-20261007';
-import {publishAdaptation} from '../../adaptaciones/stock-publish.mjs?v=creator-tools-3';
+import {publishAdaptation} from '../../adaptaciones/stock-publish.mjs?v=creator-tools-4';
 export function mountCreatorTools({get,getMedia,restore,apply,t,locked}){
  const section=document.createElement('section');section.className='creator-tools';let busy=false,controller=null,files=[],plans=[],selected=-1;
  const heading=document.createElement('h2');heading.textContent=t('Mejorar y preparar esta campaña','Improve and prepare this campaign');section.append(heading);

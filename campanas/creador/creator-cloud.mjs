@@ -1,4 +1,4 @@
-import {cloudIdentity,compareCampaigns} from './creator-cloud-core.mjs?v=creator-tools-3';
+import {cloudIdentity,compareCampaigns} from './creator-cloud-core.mjs?v=creator-tools-4';
 export async function cloudRequest(query='',body){const response=await fetch('/creator-campaigns'+query,{method:body?'POST':'GET',credentials:'include',cache:'no-store',headers:{'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});const data=await response.json();if(!response.ok)throw Error(data.error||'cloud-error');return data;}
 export function mountCampaignCloud({host,get,restore,t,locked=()=>false}){
  const section=document.createElement('details'),summary=document.createElement('summary');summary.textContent=t('Campañas en la nube','Cloud campaigns');section.className='creator-cloud';section.append(summary);

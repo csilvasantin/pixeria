@@ -1,8 +1,8 @@
 {
-  "version": "v.09.10.2026.r26.16:19",
+  "version": "v.09.10.2026.r27.16:27",
   "deployer": "OraculoMacMini",
   "agent": "OraculoMacMini",
   "machine": "MacMini",
   "signature": "OraculoMacMini · MacMini",
-  "evidence": "37 focused tests and 6 colour-range checks pass; public restore v1/v2, reviewed AI backgrounds and source identity verified. Native full-range to limited H264 conversion checked."
+  "evidence": "Focused tests pass. Public cloud restore and ES/EN editor verified. H264 exports normalize limited colour range and pad short browser capture tails to a common 32s / 800 frames."
 }
