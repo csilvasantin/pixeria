@@ -217,5 +217,10 @@
     "El clásico genera automáticamente borradores con texto OCR seguro, en horizontal ↔ vertical",
     "Titulares, precios y condiciones se recomponen completos; cada pieza requiere aprobación manual",
     "Texto dudoso o editado muestra la corrección antes de generar y nunca se descarta automáticamente"
+  ],
+  "v.09.10.2026.r20.12:49": [
+    "Los elementos adicionales empiezan vacíos; el producto se protege automáticamente",
+    "Tu indicación se conserva al reanalizar o cancelar y se borra al cambiar la fuente",
+    "Un rechazo por proporción o recorte muestra el borrador bloqueado, dimensiones y elemento protegido"
   ]
 }

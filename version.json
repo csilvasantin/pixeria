@@ -1,14 +1,14 @@
 {
-  "version": "v.09.10.2026.r19.12:33",
+  "version": "v.09.10.2026.r20.12:49",
   "deployer": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
   "agent": "TrinityMBP16",
-  "builtAt": "2026-10-09T10:33:04Z",
+  "builtAt": "2026-10-09T10:49:01Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
-    "El clásico genera automáticamente borradores con texto OCR seguro, en horizontal ↔ vertical",
-    "Titulares, precios y condiciones se recomponen completos; cada pieza requiere aprobación manual",
-    "Texto dudoso o editado muestra la corrección antes de generar y nunca se descarta automáticamente"
+    "Los elementos adicionales empiezan vacíos; el producto se protege automáticamente",
+    "Tu indicación se conserva al reanalizar o cancelar y se borra al cambiar la fuente",
+    "Un rechazo por proporción o recorte muestra el borrador bloqueado, dimensiones y elemento protegido"
   ]
 }

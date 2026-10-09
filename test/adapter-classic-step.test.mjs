@@ -238,7 +238,7 @@ test('a text-free advertisement fills the full canvas instead of reserving an em
 });
 
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
-function advertisementWorld({extract,make,doc,classicId=null,classicTarget,formats:providedFormats,realRendering=false}={}){
+function advertisementWorld({extract,make,doc,classicId=null,classicTarget,formats:providedFormats,realRendering=false,imageSize={ancho:1080,alto:1920}}={}){
  const globals=new Map(),nodes=[],calls=[],noCopy={texts:[],subjects:[{label:'product',box:[100,100,900,900]}],scene:'package',uncertain:false};
  function element(tag='section'){
   const children=new Map(),el={tagName:tag.toUpperCase(),hidden:false,value:'',dataset:{},textContent:'',width:0,height:0,
@@ -253,7 +253,7 @@ function advertisementWorld({extract,make,doc,classicId=null,classicTarget,forma
  let activeClassicId=classicId;
  const formats=providedFormats||[{id:'9:16',nombre:'Vertical',on:false}],context=vm.createContext({...adCore,
   document:{createElement:element,querySelector:get,querySelectorAll:()=>[]},AbortController,setTimeout,clearTimeout,
-  Image:class {naturalWidth=1080;naturalHeight=1920;async decode(){}},
+  Image:class {naturalWidth=imageSize.ancho;naturalHeight=imageSize.alto;async decode(){}},
   extractAdvertisement:async(...args)=>{calls.push(['extract',...args]);return extract?extract(...args):structuredClone(doc||noCopy);},loadDocumentFonts:async()=>{},
   makeVisual:async(...args)=>{calls.push(['visual',...args]);return make?make(...args):{url:'data:image/png;base64,fixture',verification:{protectedSubjects:realRendering?doc.subjects:noCopy.subjects}};},
   renderAdvertisement:realRendering?adCore.renderAdvertisement:()=>({valid:true}),fetch:()=>assert.fail('mock engine never calls providers')});
@@ -263,8 +263,44 @@ function advertisementWorld({extract,make,doc,classicId=null,classicTarget,forma
   destino:()=>({ancho:1080,alto:1920}),selected:()=>formats,formats:()=>formats,seconds:()=>6,
   changed:()=>calls.push(['changed']),textZone:()=>{assert.ok((doc?.texts?.length||0)>0,'text-free media never requests a copy zone');return null;}});
  const root=nodes.find(n=>n.id==='advertisement-studio');assert.ok(root);
- return {api,formats,calls,noCopy,root,nodes,context,setClassic:id=>activeClassicId=id,status:()=>root.querySelector('#ad-status').textContent};
+ const advanced=nodes.find(n=>n.className==='ad-reconstruction');assert.ok(advanced);
+ return {api,formats,calls,noCopy,root,advanced,nodes,context,setClassic:id=>activeClassicId=id,status:()=>root.querySelector('#ad-status').textContent};
 }
+
+test('detected product, spoon and billboard remain context without becoming explicit additional preservation requests',async()=>{
+ const doc={texts:[],subjects:[{label:'iced coffee glass',box:[350,300,900,700]},{label:'spoon',box:[500,700,900,750]},{label:'billboard',box:[0,0,1000,1000]}],scene:'Coffee photograph inside an advertising billboard',uncertain:false,needsRecreation:true};
+ const w=advertisementWorld({doc,classicId:'9:16'}),f=w.formats[0];
+ await w.api.prepareClassic(f);
+ assert.equal(w.advanced.querySelector('#ad-important').value,'');
+ const request=w.calls.find(c=>c[0]==='visual');assert.ok(request);assert.equal(request[5].important,'');
+ assert.deepEqual(plain(request[2].subjects),doc.subjects,'the original context and product detection stay intact');
+ assert.equal(w.api.ready(f),false);
+});
+
+test('user additional elements survive reanalysis and cancellation but source clear removes them',async()=>{
+ const pending=deferred();let analyses=0;
+ const doc={texts:[],subjects:[{label:'coffee glass',box:[200,200,900,900]},{label:'billboard',box:[0,0,1000,1000]}],scene:'Coffee',uncertain:false};
+ const w=advertisementWorld({extract:()=>++analyses===3?pending.promise:structuredClone(doc)});
+ await w.api.analyze();const field=w.advanced.querySelector('#ad-important');
+ field.value='La cuchara naranja que aparece junto al vaso';field.oninput();
+ await w.api.analyze(true);assert.equal(field.value,'La cuchara naranja que aparece junto al vaso');
+ const cancelled=w.api.analyze(true);w.root.querySelector('#ad-cancel').onclick();
+ pending.resolve(structuredClone(doc));assert.equal(await cancelled,null);
+ assert.equal(field.value,'La cuchara naranja que aparece junto al vaso');
+ w.api.clear();assert.equal(field.value,'');assert.equal(w.api.entry(w.formats[0]),undefined);
+});
+
+test('ratio and protected-product crop failures show the real blocked candidate and distinct dimensions without creating an exportable piece',async()=>{
+ for(const [imageSize,expected] of [[{ancho:1920,alto:1080},/proporción.*no coincide/],[{ancho:768,alto:1344},/recortaría.*protegido/]]){
+  const doc={texts:[],subjects:[{label:'complete product',box:[0,0,1000,1000]}],scene:'Product',uncertain:false};
+  const w=advertisementWorld({doc,classicId:'9:16',realRendering:true,imageSize}),f=w.formats[0];
+  assert.equal(await w.api.prepareClassic(f),false);
+  assert.equal(w.root.querySelector('#ad-rejected').hidden,false);assert.equal(w.root.querySelector('#ad-rejected img').src,'data:image/png;base64,fixture');
+  assert.match(w.status(),expected);assert.ok(w.status().includes(`${imageSize.ancho}×${imageSize.alto}`));assert.match(w.status(),/1080×1920/);
+  if(imageSize.ancho===768)assert.match(w.status(),/Elemento protegido: complete product\./);
+  assert.match(w.status(),/no se puede aprobar ni exportar/);assert.equal(w.api.entry(f),undefined);assert.equal(w.api.ready(f),false);
+ }
+});
 
 test('real advertisement preparation uses a full text-free region and requires approval before export',async()=>{
  const w=advertisementWorld();assert.deepEqual(plain(await w.api.analyze()),w.noCopy);
@@ -500,7 +536,7 @@ test('classic full bleed covers a rounded provider ratio proportionally and pres
  assert.ok(p.x<=0&&p.y<=0);assert.ok(p.x+p.w>=1920&&p.y+p.h>=1080);
  assert.ok(Math.abs(p.w/p.h-1344/768)<1e-10,'the photograph is never stretched');
  assert.throws(()=>adCore.fullBleedPlacement(1920,1080,1080,1920),/visual-ratio/);
- assert.throws(()=>adCore.fullBleedPlacement(1920,1080,1344,768,[{box:[0,0,1000,1000]}]),/visual-product-crop/);
+ assert.throws(()=>adCore.fullBleedPlacement(1920,1080,1344,768,[{label:'whole product',box:[0,0,1000,1000]}]),e=>e.message==='visual-product-crop'&&e.protectedElement==='whole product');
  for(const dims of [[0,1080,1344,768],[1920,1080,Infinity,768]])assert.throws(()=>adCore.fullBleedPlacement(...dims),/visual-ratio/);
  const draws=[],ctx={fillRect(){},drawImage:(_image,...rect)=>draws.push(rect),measureText:()=>({width:0})},doc={texts:[],subjects:[]};
  const canvas={width:1920,height:1080,getContext:()=>ctx},visual={width:1344,height:768};
