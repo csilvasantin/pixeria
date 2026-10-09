@@ -1,8 +1,8 @@
 {
-  "version": "v.09.10.2026.r10.08:40",
-  "deployer": "OraculoMacMini",
-  "agent": "OraculoMacMini",
+  "version": "v.09.10.2026.r11.08:50",
+  "deployer": "SmithMacMini",
+  "agent": "SmithMacMini",
   "machine": "MacMini",
-  "signature": "OraculoMacMini · MacMini",
-  "evidence": "Demo Creador todo: imagen y video IA nuevos con estado real hasta el gemelo 360"
+  "signature": "SmithMacMini · MacMini",
+  "evidence": "Idioma en demo: el mismo paso sigue, sin recargar a /en/"
 }
