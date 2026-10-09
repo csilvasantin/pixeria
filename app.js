@@ -1707,7 +1707,8 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     };
     const [w, h] = sizeMap[s.encuadre] || [768, 768];
     const styleHints = [s.realismo, s.luz, s.paleta].filter(Boolean).join(', ');
-    const fullPrompt = styleHints ? `${prompt}, ${styleHints}` : prompt;
+    const {finalArtworkPrompt} = await import('/assets/final-artwork.mjs?v=artwork-1');
+    const fullPrompt = finalArtworkPrompt(styleHints ? `${prompt}, ${styleHints}` : prompt);
     const keys = loadKeys();
 
     // 2+ motores seleccionados → grid comparativa.
@@ -1821,10 +1822,11 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     const meta = VEO_MODELS[model] || VEO_MODELS['veo-3.0-fast-generate-001'];
     return { model, resolution, costPerSec: meta.costPerSec, label: meta.label + (resTag ? ` · ${resTag}` : '') };
   }
-  function buildVeoPrompt(s) {
+  async function buildVeoPrompt(s) {
     const guion = [s.hook, s.desarrollo, s.cierre, s.cta && `CTA: ${s.cta}`].filter(Boolean).join(' · ');
     const palette = (loadStore().imagenes && loadStore().imagenes.paleta) || 'cinematic';
-    return `${guion}, ${palette}, cinematic, with appropriate ambient sound and music`;
+    const {finalArtworkPrompt} = await import('/assets/final-artwork.mjs?v=artwork-1');
+    return finalArtworkPrompt(`${guion}, ${palette}, cinematic, with appropriate ambient sound and music`, {video:true});
   }
   function veoDuration(s) {
     const dur = Math.max(4, Math.min(8, parseSeconds(s.duracion)));
@@ -1874,7 +1876,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     const { model, resolution, costPerSec, label } = parseVeoMotor(modelOverride || 'veo-3.0-fast-generate-001');
     const aspect = ASPECT_VEO[s.canal] || '16:9';
     const dur4or6or8 = veoDuration(s);
-    const prompt = buildVeoPrompt(s);
+    const prompt = await buildVeoPrompt(s);
     const cost = `~$${(dur4or6or8 * costPerSec).toFixed(2)} (${dur4or6or8}s × $${costPerSec})`;
     if (!(await confirmPro(label + ' (Google)', cost + ' · paid tier Gemini · audio nativo'))) return;
 
@@ -1949,7 +1951,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     const aspect = ASPECT_VEO[s.canal] || '16:9';
     const dur = veoDuration(s);
     const resolution = '720p'; // el tier xAI de la cuenta no tiene 1080p (gen 400 "not available for your team")
-    const prompt = buildVeoPrompt(s);
+    const prompt = await buildVeoPrompt(s);
     if (!(await confirmPro('Grok Imagine Video (xAI)', `${dur}s · ${resolution} · vía worker xAI`))) return;
 
     showPlayer(`
@@ -1986,7 +1988,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
   async function playPollinationsVideo(s) {
     const aspect = ASPECT_VEO[s.canal] || '16:9';
     const dur = veoDuration(s);
-    const prompt = buildVeoPrompt(s);
+    const prompt = await buildVeoPrompt(s);
     const qs = new URLSearchParams({ prompt, model: 'wan-fast', duration: String(dur), aspect, audio: 'true' });
 
     showPlayer(`
@@ -2047,7 +2049,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
   async function compareSelectedVideos(motorIds, s) {
     const aspect = ASPECT_VEO[s.canal] || '16:9';
     const dur4or6or8 = veoDuration(s);
-    const prompt = buildVeoPrompt(s);
+    const prompt = await buildVeoPrompt(s);
     const motors = [...new Set(motorIds)].map(id => Object.assign({ id }, parseVeoMotor(id)));
     if (!motors.length) return;
     const total = motors.reduce((a, m) => a + dur4or6or8 * m.costPerSec, 0);
