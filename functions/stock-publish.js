@@ -21,6 +21,8 @@
  * ningún campo que el Worker trate como privilegiado (externalId, catalogo…).
  */
 import {MOTORES, STAGED_KEY, tipoMimeOk, stockBase, cabeceras, error, respuesta} from './_stock-proxy.js';
+import {sessionInfo,createApiToken} from './_auth.js';
+import {validateComposition} from '../assets/content-composition.mjs';
 
 const MAX_BODY = 95 * 1024 * 1024; // el borde corta en 100 MB
 const CAMPOS = ['type', 'motor', 'prompt', 'title', 'comment', 'tags', 'costEst', 'mime', 'externalRef', 'validacion', 'quality', 'dimensions'];
@@ -37,6 +39,13 @@ export async function onRequestPost({ request, env }) {
   }
   const limpio = {};
   for (const k of CAMPOS) if (body[k] != null) limpio[k] = body[k];
+  let compositionToken=null;
+  if(body.composition!=null){
+    try{limpio.composition=validateComposition(body.composition,{type:body.type,width:body.validacion?.ancho||body.dimensions?.width,height:body.validacion?.alto||body.dimensions?.height});}catch{return error(400,'invalid-composition');}
+    const origin=request.headers.get('Origin');if(origin&&origin!==new URL(request.url).origin)return error(403,'invalid-origin');
+    const session=await sessionInfo(request,env);if(!session)return error(401,'session-required');
+    compositionToken=await createApiToken(env,session.email);
+  }
   if (conBase64) limpio.base64 = body.base64; else limpio.r2Staged = body.r2Staged;
   // Miniatura generada en el navegador (assets/poster-frame.mjs): el vídeo llega al Stock con imagen.
   if (typeof body.poster === 'string' && /^data:image\/(jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(body.poster) && body.poster.length < 400 * 1024) limpio.poster = body.poster;
@@ -46,7 +55,8 @@ export async function onRequestPost({ request, env }) {
   try {
     r = await fetch(`${stockBase(env)}/stock/publish`, {
       method: 'POST',
-      headers: cabeceras({'Content-Type': 'application/json'}),
+      // The canonical proxy Origin also works on previews and follows Studio's generated domain.
+      headers: cabeceras({'Content-Type': 'application/json',...(compositionToken?{Authorization:'Bearer '+compositionToken.token}: {})}),
       body: JSON.stringify(limpio),
     });
   } catch (e) {

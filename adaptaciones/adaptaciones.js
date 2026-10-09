@@ -1,6 +1,7 @@
 import {classicTargets,isClassicFormat,extraFormats} from './classic-step.mjs?v=20261009-classic-step-1';
-import {mountAdvertisement} from './anuncio-studio.mjs?v=classic-auto-4';
-import {mountCampaign} from './campaign-studio.mjs?v=creator-full-3';
+import {mountAdvertisement} from './anuncio-studio.mjs?v=classic-auto-5';
+import {compositionFromStock} from '../assets/content-composition.mjs?v=composition-1';
+import {mountCampaign} from './campaign-studio.mjs?v=creator-full-4';
 let campaignWorkshop=null;
 import {mountTwin} from './gemelo-digital.mjs?v=installation-20261009';
 import {aiJob} from './ia-core.mjs?v=adapter-detail-1';
@@ -1130,7 +1131,7 @@ function releaseDerived() {
 }
 function setSource(url, name, origin = {id:null,title:name}, kind = 'video', ext = 'png', extra = null) {
   resetClassic();studio?.clear();twin?.close();
-  state.origin = {id:origin.id||null,title:origin.title||name};
+  state.origin = {id:origin.id||null,title:origin.title||name,composition:origin.composition||null};
   releaseStill(); releaseDerived(); stopAnim(); resetCrearMedia();
   if (svgRasters) { svgRasters.clear(); svgRasters = null; }
   svgSrc = extra?.svgTexto ? {texto: extra.svgTexto, medidas: extra.svg} : null;
@@ -1329,7 +1330,7 @@ video.addEventListener('loadedmetadata', () => {
 $('#src-select').onchange = (e) => {
   const o = e.target.selectedOptions[0]; if (!o.value) { emptySource(); return; }
   const item = window.PixeriaStock?.item(o.value) || null;
-  cargarFuente({url: o.value, nombre: o.textContent.replace(/^Stock · /, ''), origin: {id: o.dataset.id, title: o.dataset.title}, origen: 'stock',
+  cargarFuente({url: o.value, nombre: o.textContent.replace(/^Stock · /, ''), origin: {id: o.dataset.id, title: o.dataset.title,composition:compositionFromStock(item)}, origen: 'stock',
     clase: o.dataset.type === 'video' ? 'video' : undefined, mime: item?.mime, ext: window.PixeriaStockFuentes?.extension(item) || item?.ext});
 };
 // Sin vídeo por defecto (ninguna marca): estado vacío hasta que el usuario elige uno.
@@ -1990,7 +1991,7 @@ function endTwinPlayback(){
   twinPlayback=null;
 }
 twin=mountTwin({t,start:startTwinPlayback,end:endTwinPlayback,ready:()=>campaignWorkshop?.active()?campaignWorkshop.ready():mediaReady(),destino:f=>f.installation?{ancho:f.installation.width,alto:f.installation.height}:destino(f),formats:()=>campaignWorkshop?.active()?campaignWorkshop.formats():FORMATOS.filter(isProjectFormat),background:f=>studio?.background(f),shops:()=>EST?.estancos,shop:()=>studio?.shop(),selectShop:id=>studio?.selectShop(id),draw:(cv,f,bg)=>{if(campaignWorkshop?.draw(cv,f))return;if(advertisement?.draw(cv,f))return;if(creando(f)&&!bg)paintCrear(cv,destino(f),f);else paint(cv,destino(f),modoEfectivo(f),state.fmt[f.id],null,bg);}});
-advertisement=mountAdvertisement({t,formats:()=>FORMATOS,selected:selectedFormats,classicTarget:()=>classicActive()?classicTargetId:null,source:()=>({kind:srcKind,image:img,src:state.src}),destino,seconds:()=>stillSec,
+advertisement=mountAdvertisement({t,formats:()=>FORMATOS,selected:selectedFormats,classicTarget:()=>classicActive()?classicTargetId:null,source:()=>({kind:srcKind,image:img,src:state.src,composition:state.origin?.composition||null}),destino,seconds:()=>stillSec,
 textZone:f=>{if(!f.especial)return null;const seg=geometry(f.layout).segments.reduce((a,b)=>a.wall.w*a.wall.h>=b.wall.w*b.wall.h?a:b);return {...seg.wall};},
 changed:()=>{buildCardSettings();refreshInfo();drawDirty=true;}});
 

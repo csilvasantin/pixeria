@@ -26,6 +26,8 @@
   }
 
   async function startOne(h, prompt, image, stockId) {
+    var {finalArtworkPrompt} = await import('/assets/final-artwork.mjs?v=artwork-1');
+    prompt = finalArtworkPrompt(prompt, {video:true});
     var body = { prompt: prompt, duration: 5, aspect_ratio: '16:9', resolution: '720p' };
     if (image) body.image = image;
     else body.stock_id = stockId;
@@ -82,11 +84,12 @@
       var file = document.getElementById('clip-file').files[0];
       var shared = file ? await fileToDataUrl(file) : '';
       if (!lines.length) return say('Escribe de 1 a 6 escenas, una por línea.');
+      var {finalArtworkPrompt} = await import('/assets/final-artwork.mjs?v=artwork-1');
       var scenes = lines.map(function (line) {
         var parts = line.split('||');
         var text = parts[0].trim();
         var stock = (parts[1] || '').trim() || (document.getElementById('clip-stock').value || '').trim();
-        var scene = { text: text, duration: 5 };
+        var scene = { text: finalArtworkPrompt(text, {video:true}), duration: 5 };
         if (shared && !parts[1]) scene.image = shared;
         else scene.stock_id = stock;
         return scene;

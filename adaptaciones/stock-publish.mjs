@@ -12,6 +12,7 @@
 // guarda la misma entrada por los dos caminos. El bitrate no se toca: lo fijan las especificaciones.
 // Cliente común (9-oct-2026): uploadInParts y stockSource los usan también la caja 2 del Adaptador
 // (importar.js) y el Stock de pixeria.com (app.js · publishToStock), cada uno con su tipo, mime y motor.
+// Creador: meta.type='image' publica el PNG nativo y conserva ese tipo también al subir por partes.
 export const STOCK_PUBLISH_URL = '/stock-publish';
 export const STOCK_UPLOAD_URL = '/stock-upload';
 export const PARTS_THRESHOLD = 8 * 1024 * 1024;    // hasta aquí, base64 como siempre
@@ -31,16 +32,17 @@ export function adaptationTitle(title, client, format) {
 }
 // Crear (6-oct-2026): un MP4 hecho con una receta lleva además su etiqueta (crear-tira, crear-barrido, crear-rotulo).
 export const recipeTag = receta => ['tira', 'barrido', 'rotulo'].includes(receta) ? `crear-${receta}` : null;
-export function stockPayload({base64, size, title, originId, client, format, width, height, duration, still, receta}) {
+export function stockPayload({base64, size, title, originId, client, format, width, height, duration, still, receta, type = 'video'}) {
   const resolution = `${width}×${height}`;
   const tags = [ADAPTATION_TAG, RATIO.test(format) ? format : null, still ? STILL_TAG : null, recipeTag(receta), client?.id].filter(Boolean);
   return {
-    type: 'video', motor: 'adaptador', mime: 'video/mp4', base64, quality: 'good',
+    type, motor: 'adaptador', mime: type === 'image' ? 'image/png' : 'video/mp4', base64, quality: 'good',
     title,
-    prompt: [`Adaptación · origen ${originId || 'archivo local'}`, recipeTag(receta) ? `crear · receta ${receta}` : null, still ? `imagen fija · ${Math.round(duration)} s` : null, `formato ${format}`, resolution, client ? `cliente ${client.id}` : null].filter(Boolean).join(' · '),
+    prompt: [`Adaptación · origen ${originId || 'archivo local'}`, recipeTag(receta) ? `crear · receta ${receta}` : null, still && type === 'video' ? `imagen fija · ${Math.round(duration)} s` : null, `formato ${format}`, resolution, client ? `cliente ${client.id}` : null].filter(Boolean).join(' · '),
     tags,
     externalRef: originId || null,
     validacion: {ok: true, ancho: width, alto: height, duracion: Number.isFinite(duration) ? Math.round(duration * 100) / 100 : null, por: 'adaptador'},
+    ...(type === 'image' ? {dimensions: {width, height}} : {}),
     costEst: `adaptador · ${(size / 1048576).toFixed(2)}MB`
   };
 }
@@ -123,12 +125,13 @@ export async function stockSource(blob, {maxBytes = MAX_STOCK_BYTES, ...opts} = 
 // `extra` (paquete por estanco) sustituye tags, externalRef y comment del payload.
 // `opts.onProgress(bytes, total)` informa de la subida por partes (solo por encima de PARTS_THRESHOLD).
 export async function publishAdaptation(blob, meta, extra = null, {onProgress = null, fetch: f = (...a) => fetch(...a)} = {}) {
-  const fuente = await stockSource(blob, {fetch: f, onProgress});
-  if (!fuente.ok) return fuente;
   const {base64: _, ...payload} = stockPayload({...meta, size: blob.size});
-  const body = {...payload, ...(extra || {}), ...fuente.fields};
+  const media = {...payload, ...(extra || {})};
+  const fuente = await stockSource(blob, {fetch: f, onProgress, type: media.type, mime: media.mime, motor: media.motor});
+  if (!fuente.ok) return fuente;
+  const body = {...media, ...fuente.fields};
   // Miniatura real del vídeo exportado (fotograma ~10 %): nada llega al Stock sin imagen.
-  try {
+  if (body.type === 'video') try {
     const {posterFromVideo} = await import('/assets/poster-frame.mjs');
     const url = URL.createObjectURL(blob);
     try { const poster = await posterFromVideo(url); if (poster) body.poster = poster; } finally { URL.revokeObjectURL(url); }
