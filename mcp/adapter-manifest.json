@@ -1145,5 +1145,22 @@
       "Stock"
     ],
     "additionalTools": "Options panel; existing routes retained"
+  },
+  "nextStepCampaign": {
+    "id": "sneakers-next-step",
+    "demo": "/campanas/next-step/",
+    "command": "/demo sneakers",
+    "creatorCommand": "/demo",
+    "contract": "/campanas/next-step/campaign.json",
+    "delivery": "/campanas/next-step/delivery.json",
+    "guide": "/docs/next-step.md",
+    "twin": "https://www.admira.store/xpacios/sneakerstore/?campaign=next-step&view=jordan",
+    "duration": 32,
+    "fps": 25,
+    "configurations": 7,
+    "outputs": 13,
+    "physicalControl": false,
+    "draftChanges": false,
+    "playlistChanges": false
   }
 }

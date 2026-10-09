@@ -60,3 +60,8 @@ ES: `/campana` abre el taller Sneakers Store: elementos editables, tres direccio
 EN: `/campaign` opens Sneakers Store workshop: editable elements, three directions, five maps with joints/doorway, review and native screen exports. Saved JSON preserves design and requires fresh review on import.
 
 [Tutorial y contrato ES/EN · ES/EN tutorial and contract](/docs/campanas-instalacion.md). MCP real: `campana_instalacion` calcula planes, no render ni publicación / returns plans, no render or publication.
+
+
+## NEXT STEP
+
+/demo en Creador o /demo sneakers abre /campanas/next-step/. /demo sneakers pausa|reiniciar|recorrer|parar. /demo in Creator or /demo sneakers opens /campanas/next-step/. /demo sneakers pause|restart|tour|stop. [Tutorial ES/EN](/docs/next-step.md). No hardware scheduling or draft/playlist writes.

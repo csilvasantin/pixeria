@@ -1,0 +1,245 @@
+{
+  "schema": "admira.screen-campaign-delivery.v1",
+  "campaign": "sneakers-next-step",
+  "revision": 1,
+  "duration": 32,
+  "fps": 25,
+  "audio": false,
+  "clock": "one authored timeline; hardware synchronisation unverified",
+  "files": [
+    {
+      "installation": "landscape",
+      "screen": "lcd",
+      "width": 1920,
+      "height": 1080,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/lcd.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:landscape",
+        "screen:lcd",
+        "landscape",
+        "horizontal",
+        "ratio:1920:1080"
+      ],
+      "bytes": 11750767
+    },
+    {
+      "installation": "portrait",
+      "screen": "entrance",
+      "width": 1080,
+      "height": 1920,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/entrance.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:portrait",
+        "screen:entrance",
+        "portrait",
+        "vertical",
+        "ratio:1080:1920"
+      ],
+      "bytes": 10624241
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-1",
+      "width": 540,
+      "height": 1360,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/jordan-1.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:jordan",
+        "screen:jordan-1",
+        "portrait",
+        "vertical",
+        "ratio:540:1360"
+      ],
+      "bytes": 1268839
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-2",
+      "width": 540,
+      "height": 1706,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/jordan-2.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:jordan",
+        "screen:jordan-2",
+        "portrait",
+        "vertical",
+        "ratio:540:1706"
+      ],
+      "bytes": 4749527
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-3",
+      "width": 540,
+      "height": 2066,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/jordan-3.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:jordan",
+        "screen:jordan-3",
+        "portrait",
+        "vertical",
+        "ratio:540:2066"
+      ],
+      "bytes": 6708985
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-4",
+      "width": 540,
+      "height": 1706,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/jordan-4.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:jordan",
+        "screen:jordan-4",
+        "portrait",
+        "vertical",
+        "ratio:540:1706"
+      ],
+      "bytes": 4629232
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-5",
+      "width": 540,
+      "height": 1360,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/jordan-5.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:jordan",
+        "screen:jordan-5",
+        "portrait",
+        "vertical",
+        "ratio:540:1360"
+      ],
+      "bytes": 1807904
+    },
+    {
+      "installation": "rear",
+      "screen": "rear-left",
+      "width": 1080,
+      "height": 2304,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/rear-left.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:rear",
+        "screen:rear-left",
+        "portrait",
+        "vertical",
+        "ratio:1080:2304"
+      ],
+      "bytes": 4420206
+    },
+    {
+      "installation": "rear",
+      "screen": "rear-top",
+      "width": 720,
+      "height": 756,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/rear-top.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:rear",
+        "screen:rear-top",
+        "portrait",
+        "vertical",
+        "ratio:720:756"
+      ],
+      "bytes": 1416204
+    },
+    {
+      "installation": "rear",
+      "screen": "rear-right",
+      "width": 1080,
+      "height": 2304,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/rear-right.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:rear",
+        "screen:rear-right",
+        "portrait",
+        "vertical",
+        "ratio:1080:2304"
+      ],
+      "bytes": 10503235
+    },
+    {
+      "installation": "strip",
+      "screen": "strip",
+      "width": 3840,
+      "height": 600,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/strip.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:strip",
+        "screen:strip",
+        "landscape",
+        "horizontal",
+        "ratio:3840:600"
+      ],
+      "bytes": 12529632
+    },
+    {
+      "installation": "column",
+      "screen": "column",
+      "width": 320,
+      "height": 1920,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/column.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:column",
+        "screen:column",
+        "portrait",
+        "vertical",
+        "ratio:320:1920"
+      ],
+      "bytes": 3336206
+    },
+    {
+      "installation": "tablet",
+      "screen": "tablet",
+      "width": 1080,
+      "height": 1440,
+      "duration": 32,
+      "fps": 25,
+      "url": "https://www.pixeria.com/campanas/next-step/media/tablet.mp4",
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:tablet",
+        "screen:tablet",
+        "portrait",
+        "vertical",
+        "ratio:1080:1440"
+      ],
+      "bytes": 9639588
+    }
+  ]
+}

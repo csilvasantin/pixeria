@@ -1,0 +1,23 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="admiranext-version" content="Pixeria v.09.10.2026.r6.07:09"><title>NEXT STEP · Sneakers Store | Pixeria</title>  <!-- GATE-INICIO -->
+  <meta name="robots" content="noindex, nofollow">
+  <script>
+  (function(){
+    var GATE_DEFAULT = 'on';                       // verja activa — sitio cerrado
+    var on = GATE_DEFAULT;
+    try{
+      var q = new URLSearchParams(location.search).get('gate');
+      if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
+    }catch(e){}
+    if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r6.0709';
+    (document.head||document.documentElement).appendChild(s);
+    // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
+    // origen aún no esté autorizado en Google → mensaje claro en pantalla.
+    setTimeout(function(){
+      if(!document.documentElement.classList.contains('gate-locked')) return;
+      var el=document.getElementById('admira-err');
+      if(el && !el.textContent) el.textContent='\u2716 SI EL LOGIN NO ABRE: ORIGEN www.pixeria.com PENDIENTE DE AUTORIZAR EN GOOGLE CLOUD';
+    }, 10000);
+  })();
+  </script>
+  <!-- GATE-FIN --><link rel="stylesheet" href="/workspace.css"><link rel="stylesheet" href="/assets/cuadratura.css"><link rel="stylesheet" href="./demo.css"><script defer src="/assets/site-nav.js"></script></head><body><script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script><header class="site-header"><a class="brand" href="/"><span>Pixeria</span></a><nav class="nav" aria-label="Secciones"></nav></header><main class="next-demo"><p class="next-eyebrow">CREADOR / SNEAKER STORE / NEXT STEP</p><div class="next-heading"><div><h1 id="demo-title">Una tienda. Un pulso.</h1><p id="demo-subtitle"></p></div><span id="demo-state" class="next-live" role="status">Preparando campaña…</span></div><div class="next-actions"><a class="primary" id="twin-link">Ver en la tienda ↗</a><a id="creator-link">Volver a Creador</a><a id="contract-link" href="./campaign.json" download>Campaña y mapa ↓</a></div><nav id="demo-tabs" aria-label="Pantallas / Screens"></nav><section id="demo-stage"><canvas id="demo-hero" role="img" aria-label="NEXT STEP · campaña / campaign"></canvas></section><div class="next-toolbar"><h2 id="demo-current"></h2><div><button id="demo-pause" type="button"></button> <button id="demo-restart" type="button"></button> <button id="demo-tour" type="button" aria-pressed="false"></button></div></div><div class="next-progress"><span id="demo-cue">NEXT STEP</span><progress id="demo-progress" max="32" value="0" aria-label="Secuencia / Sequence"></progress><span id="demo-clock">00 / 32</span></div><div id="demo-overview"></div><details class="next-delivery"><summary id="download-label">Piezas listas para reproducir</summary><div id="demo-files"></div></details><p id="demo-note" class="next-footnote"></p></main><template id="cuad-avanzado"><h2>NEXT STEP</h2><p>32 s · 25 fps · 7 configuraciones / configurations · 13 piezas / pieces</p><p>Un reloj compartido / One shared clock</p><a href="./campaign.json">Contrato / Contract</a><a href="/docs/next-step.md">Tutorial ES / EN</a></template><script type="module" src="./demo.mjs"></script><script defer src="/assets/cuadratura.js"></script><script defer src="/assets/admira-version-watch.js"></script></body></html>

@@ -67,3 +67,8 @@ El verificador comprueba contrato, orden, campos/selecciones actuales, rutas, pa
 ## Campañas por instalación / Installation campaigns
 
 [Taller, tutorial y contrato ES/EN](/docs/campanas-instalacion.md). Abrir Creador → Ejemplo Sneakers Store / Adapter → Open Sneakers Store workshop. MCP `campana_instalacion {campaign_json?,direction?}` valida y calcula planes; no renderiza ni publica / validates and plans; no render or publication. La CLI anterior sigue disponible / Existing CLI remains available.
+
+
+## NEXT STEP
+
+/demo en Creador o /demo sneakers abre /campanas/next-step/. /demo sneakers pausa|reiniciar|recorrer|parar. /demo in Creator or /demo sneakers opens /campanas/next-step/. /demo sneakers pause|restart|tour|stop. [Tutorial ES/EN](/docs/next-step.md). No hardware scheduling or draft/playlist writes.

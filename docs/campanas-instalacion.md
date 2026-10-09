@@ -72,3 +72,9 @@ Measured store geometry and player routing, hardware sync/colour acceptance, cal
 ES: Creador → Adaptador → Audio → Música → Imágenes → Video → Assets → Stock. El mismo orden se aplica a la home, las páginas interiores y el menú móvil. Anonimizador, Ideas y otras herramientas conservan sus accesos en Opciones.
 
 EN: Creator → Adapter → Audio → Music → Images → Video → Assets → Stock. The home, interior pages and mobile menu share this order. Anonymizer, Ideas and other tools retain their existing routes in Options.
+
+## NEXT STEP · demo de campaña / campaign demo
+
+ES: Creador → NEXT STEP · Demo en tienda, o /demo en Creador; /demo sneakers desde otras páginas. Campaña animada de 32 s para siete configuraciones y 13 salidas nativas. Ver en la tienda aplica todas las composiciones al gemelo de SneakerStore. Pausa/reiniciar/parar; detener restaura las playlists y texturas anteriores. Sin cambios de borradores, Stock o hardware físico. Tutorial https://admira.studio/docs/next-step.md.
+
+EN: Creator → NEXT STEP · Store demo, or /demo in Creator; /demo sneakers elsewhere. A 32-second animated campaign, seven configurations and 13 native outputs. View in the store applies every composition to the SneakerStore twin. Pause/restart/stop; stop restores prior playlists/textures. No draft, Stock or physical hardware changes. Tutorial https://admira.studio/docs/next-step.md.

@@ -1,0 +1,485 @@
+{
+  "schema": "pixeria.installation-campaign.v1",
+  "campaign": {
+    "schema": "pixeria.installation-campaign.v1",
+    "id": "sneakers-next-step",
+    "revision": 1,
+    "name": "Sneaker Store · NEXT STEP",
+    "headline": "NEXT STEP",
+    "cta": "ENTRA Y DESCUBRE",
+    "price": "",
+    "background": "#080a0e",
+    "accent": "#d9ff43",
+    "foreground": "#f4f3ec",
+    "direction": "sequence",
+    "placements": {},
+    "seconds": 32,
+    "product": "/campanas/next-step/product.webp",
+    "logo": "/adaptaciones/campanas/sneakers-wordmark.svg",
+    "productLabel": "Original AI concept sneaker · NEXT STEP",
+    "installations": [
+      {
+        "id": "landscape",
+        "name": {
+          "es": "LCD gigante",
+          "en": "Giant LCD"
+        },
+        "width": 1920,
+        "height": 1080,
+        "screens": [
+          {
+            "id": "lcd",
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "rotation": 0
+          }
+        ]
+      },
+      {
+        "id": "portrait",
+        "name": {
+          "es": "Entrada",
+          "en": "Entrance"
+        },
+        "width": 1080,
+        "height": 1920,
+        "screens": [
+          {
+            "id": "entrance",
+            "x": 0,
+            "y": 0,
+            "w": 1080,
+            "h": 1920,
+            "rotation": 0
+          }
+        ]
+      },
+      {
+        "id": "jordan",
+        "name": {
+          "es": "Videowall Jordan",
+          "en": "Jordan videowall"
+        },
+        "width": 2892,
+        "height": 2066,
+        "approximate": true,
+        "screens": [
+          {
+            "id": "jordan-1",
+            "x": 0,
+            "y": 0,
+            "w": 540,
+            "h": 1360,
+            "rotation": 0
+          },
+          {
+            "id": "jordan-2",
+            "x": 588,
+            "y": 0,
+            "w": 540,
+            "h": 1706,
+            "rotation": 0
+          },
+          {
+            "id": "jordan-3",
+            "x": 1176,
+            "y": 0,
+            "w": 540,
+            "h": 2066,
+            "rotation": 0
+          },
+          {
+            "id": "jordan-4",
+            "x": 1764,
+            "y": 0,
+            "w": 540,
+            "h": 1706,
+            "rotation": 0
+          },
+          {
+            "id": "jordan-5",
+            "x": 2352,
+            "y": 0,
+            "w": 540,
+            "h": 1360,
+            "rotation": 0
+          }
+        ]
+      },
+      {
+        "id": "rear",
+        "name": {
+          "es": "LED del fondo",
+          "en": "Rear LED"
+        },
+        "width": 2880,
+        "height": 2304,
+        "approximate": true,
+        "screens": [
+          {
+            "id": "rear-left",
+            "x": 0,
+            "y": 0,
+            "w": 1080,
+            "h": 2304,
+            "rotation": 0
+          },
+          {
+            "id": "rear-top",
+            "x": 1080,
+            "y": 0,
+            "w": 720,
+            "h": 756,
+            "rotation": 0
+          },
+          {
+            "id": "rear-right",
+            "x": 1800,
+            "y": 0,
+            "w": 1080,
+            "h": 2304,
+            "rotation": 0
+          }
+        ],
+        "masks": [
+          {
+            "id": "door",
+            "x": 1080,
+            "y": 756,
+            "w": 720,
+            "h": 1548
+          }
+        ]
+      },
+      {
+        "id": "strip",
+        "name": {
+          "es": "Tira panorámica",
+          "en": "Panoramic strip"
+        },
+        "width": 3840,
+        "height": 600,
+        "approximate": true,
+        "screens": [
+          {
+            "id": "strip",
+            "x": 0,
+            "y": 0,
+            "w": 3840,
+            "h": 600,
+            "rotation": 0
+          }
+        ]
+      },
+      {
+        "id": "column",
+        "name": {
+          "es": "Columna LED",
+          "en": "LED column"
+        },
+        "width": 320,
+        "height": 1920,
+        "approximate": true,
+        "screens": [
+          {
+            "id": "column",
+            "x": 0,
+            "y": 0,
+            "w": 320,
+            "h": 1920,
+            "rotation": 0
+          }
+        ]
+      },
+      {
+        "id": "tablet",
+        "name": {
+          "es": "iPad de entrada",
+          "en": "Entrance iPad"
+        },
+        "width": 1080,
+        "height": 1440,
+        "approximate": true,
+        "screens": [
+          {
+            "id": "tablet",
+            "x": 0,
+            "y": 0,
+            "w": 1080,
+            "h": 1440,
+            "rotation": 0
+          }
+        ]
+      }
+    ]
+  },
+  "delivery": {
+    "fps": 25,
+    "gopFrames": 25,
+    "audio": false,
+    "kind": "animated-authored-campaign",
+    "duration": 32,
+    "hardwareVerified": false
+  },
+  "approvals": {},
+  "limits": {
+    "measuredGeometry": false,
+    "anamorphicExport": false,
+    "automaticVideoLayerExtraction": false
+  },
+  "derived": [
+    {
+      "installation": "landscape",
+      "screen": "lcd",
+      "width": 1920,
+      "height": 1080,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:landscape",
+        "screen:lcd",
+        "direction:sequence",
+        "horizontal",
+        "landscape",
+        "ratio:1920:1080"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/lcd.mp4"
+    },
+    {
+      "installation": "portrait",
+      "screen": "entrance",
+      "width": 1080,
+      "height": 1920,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:portrait",
+        "screen:entrance",
+        "direction:sequence",
+        "vertical",
+        "portrait",
+        "ratio:1080:1920"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/entrance.mp4"
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-1",
+      "width": 540,
+      "height": 1360,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:jordan",
+        "screen:jordan-1",
+        "direction:sequence",
+        "vertical",
+        "portrait",
+        "ratio:540:1360"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/jordan-1.mp4"
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-2",
+      "width": 540,
+      "height": 1706,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:jordan",
+        "screen:jordan-2",
+        "direction:sequence",
+        "vertical",
+        "portrait",
+        "ratio:540:1706"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/jordan-2.mp4"
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-3",
+      "width": 540,
+      "height": 2066,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:jordan",
+        "screen:jordan-3",
+        "direction:sequence",
+        "vertical",
+        "portrait",
+        "ratio:540:2066"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/jordan-3.mp4"
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-4",
+      "width": 540,
+      "height": 1706,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:jordan",
+        "screen:jordan-4",
+        "direction:sequence",
+        "vertical",
+        "portrait",
+        "ratio:540:1706"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/jordan-4.mp4"
+    },
+    {
+      "installation": "jordan",
+      "screen": "jordan-5",
+      "width": 540,
+      "height": 1360,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:jordan",
+        "screen:jordan-5",
+        "direction:sequence",
+        "vertical",
+        "portrait",
+        "ratio:540:1360"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/jordan-5.mp4"
+    },
+    {
+      "installation": "rear",
+      "screen": "rear-left",
+      "width": 1080,
+      "height": 2304,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:rear",
+        "screen:rear-left",
+        "direction:sequence",
+        "vertical",
+        "portrait",
+        "ratio:1080:2304"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/rear-left.mp4"
+    },
+    {
+      "installation": "rear",
+      "screen": "rear-top",
+      "width": 720,
+      "height": 756,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:rear",
+        "screen:rear-top",
+        "direction:sequence",
+        "vertical",
+        "portrait",
+        "ratio:720:756"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/rear-top.mp4"
+    },
+    {
+      "installation": "rear",
+      "screen": "rear-right",
+      "width": 1080,
+      "height": 2304,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:rear",
+        "screen:rear-right",
+        "direction:sequence",
+        "vertical",
+        "portrait",
+        "ratio:1080:2304"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/rear-right.mp4"
+    },
+    {
+      "installation": "strip",
+      "screen": "strip",
+      "width": 3840,
+      "height": 600,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:strip",
+        "screen:strip",
+        "direction:sequence",
+        "horizontal",
+        "landscape",
+        "ratio:3840:600"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/strip.mp4"
+    },
+    {
+      "installation": "column",
+      "screen": "column",
+      "width": 320,
+      "height": 1920,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:column",
+        "screen:column",
+        "direction:sequence",
+        "vertical",
+        "portrait",
+        "ratio:320:1920"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/column.mp4"
+    },
+    {
+      "installation": "tablet",
+      "screen": "tablet",
+      "width": 1080,
+      "height": 1440,
+      "rotation": 0,
+      "tags": [
+        "campaign:sneakers-next-step",
+        "installation:tablet",
+        "screen:tablet",
+        "direction:sequence",
+        "vertical",
+        "portrait",
+        "ratio:1080:1440"
+      ],
+      "url": "https://www.pixeria.com/campanas/next-step/media/tablet.mp4"
+    }
+  ],
+  "demo": {
+    "url": "https://admira.studio/campanas/next-step/?lang=es",
+    "twin": "https://www.admira.store/xpacios/sneakerstore/?campaign=next-step&view=jordan&lang=es",
+    "command": "/demo sneakers",
+    "draftChanges": false,
+    "playlistChanges": false,
+    "physicalControl": false
+  },
+  "clock": {
+    "duration": 32,
+    "cues": [
+      {
+        "from": 0,
+        "title": "NEXT STEP"
+      },
+      {
+        "from": 8,
+        "title": "DEFY GRAVITY"
+      },
+      {
+        "from": 16,
+        "title": "FIND YOUR PACE"
+      },
+      {
+        "from": 24,
+        "title": "DA EL PASO",
+        "en": "MAKE YOUR MOVE"
+      }
+    ]
+  }
+}

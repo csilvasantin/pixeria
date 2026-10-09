@@ -1,10 +1,10 @@
 {
   "_como": "Novedades del sello (2-4 líneas, español). Clave = sello exacto (v.DD.MM.AAAA.rN.HH:MM); .default si el sello aún no tiene entrada. El deploy las escribe en /version.json.novedades[] y el cargador común https://www.admiranext.com/assets/sello-novedades.js las enseña al pasar el ratón por el sello.",
   "default": [
-    "Creador y Adaptador pasan al principio del menú.",
-    "Orden: Creador, Adaptador, Audio, Música, Imágenes, Video, Assets y Stock.",
-    "Home, páginas interiores y menú móvil alineados en español e inglés.",
-    "Las herramientas adicionales siguen disponibles en Opciones."
+    "NEXT STEP: campaña original para todas las superficies de SneakerStore.",
+    "Demo desde Experto, siete configuraciones y trece vídeos nativos.",
+    "Jordan, LCD, LED con puerta, entrada, columna e iPad con reloj compartido.",
+    "Pausa y parada conservan borradores, mobiliario y playlists."
   ],
   "v.07.10.2026.r11.23:39": [
     "Campo de etiquetas al importar (URL o ficheros) y junto a «Publicar en Stock» de lo que creas",
