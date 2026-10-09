@@ -1,8 +1,8 @@
-import {createCreatorCampaign,creatorTwinURL,retainCampaign,CREATOR_HISTORY} from './creator-core.mjs?v=creator-full-3';
-import {drawCreatorCampaign} from './creator-render.mjs?v=creator-full-3';
+import {createCreatorCampaign,creatorTwinURL,retainCampaign,CREATOR_HISTORY} from './creator-core.mjs?v=creator-full-4';
+import {drawCreatorCampaign} from './creator-render.mjs?v=creator-full-4';
 import {INSTALLATIONS,loadNextStepAssets,createClock} from '../next-step/render.mjs';
-import {newFull,readFull,saveFull,runFull} from './creator-ai.mjs?v=creator-full-3';
-import {loadCreatorMedia} from './creator-media.mjs?v=creator-full-3';
+import {newFull,readFull,saveFull,runFull} from './creator-ai.mjs?v=creator-full-4';
+import {loadCreatorMedia} from './creator-media.mjs?v=creator-full-4';
 const en=new URLSearchParams(location.search).get('lang')==='en'||document.documentElement.lang==='en',t=(a,b)=>en?b:a;
 const names=[t('Brief','Brief'),t('Concepto','Concept'),t('Imagen + vídeo IA','AI image + video'),t('Adaptación','Adaptation'),t('Gemelo 360','360 twin')];
 const phases={brief:0,concept:1,'image-requested':2,'image-ready':2,'archive-requested':2,'image-archived':2,'video-requested':2,'video-pending':2,'media-ready':3,adapted:3,twin:4};
@@ -13,7 +13,7 @@ const btn=(text,fn,id)=>{const x=el('button',text,'pill');x.type='button';x.oncl
 function rows(){try{return JSON.parse(localStorage.getItem(CREATOR_HISTORY)||'[]');}catch{return [];}}
 function campaign(){const localized=createCreatorCampaign(job.seed,en);return {...job.campaign,headline:localized.headline,cta:localized.cta,language:en?'en':'es',product:job.image?.url||null,image:job.image,video:job.video,fullPhase:job.phase,request_id:job.request_id};}
 function remember(){try{localStorage.setItem(CREATOR_HISTORY,JSON.stringify(retainCampaign(rows(),campaign())));}catch{}}
-function mount(){if(root)return;root=el('section',null,'creator-demo creator-full');root.id='creator-full';root.hidden=true;root.setAttribute('aria-label',t('Demo Creador completo','Full Creator demo'));document.querySelector('.adapt-main').prepend(root);const css=el('link');css.rel='stylesheet';css.href='/campanas/creador/demo.css?v=creator-full-3';document.head.append(css);}
+function mount(){if(root)return;root=el('section',null,'creator-demo creator-full');root.id='creator-full';root.hidden=true;root.setAttribute('aria-label',t('Demo Creador completo','Full Creator demo'));document.querySelector('.adapt-main').prepend(root);const css=el('link');css.rel='stylesheet';css.href='/campanas/creador/demo.css?v=creator-full-4';document.head.append(css);}
 function state(){if(!active)return t('Sin demo completa activa','No active full demo');if(!job)return t('Preparando campaña completa','Preparing full campaign');if(job.error){if(job.error==='request-result-unknown')return t('Resultado pendiente de confirmar. Esta solicitud no se repetirá automáticamente.','Result awaiting confirmation. This request will not be repeated automatically.');if(job.error==='video-polling-paused')return t('Seguimiento pausado. Pulsa Continuar para consultar el mismo vídeo.','Tracking paused. Click Resume to check the same video.');return t('No se pudo completar este paso: ','This step could not complete: ')+job.error;}if(paused)return t('Recorrido pausado. Las solicitudes enviadas al proveedor pueden terminar.','Walkthrough paused. Requests already sent to the provider may finish.');if(ready&&step===4)return t('Imagen y vídeo IA aplicados en el gemelo 360','AI image and video applied in the 360 twin');return messages[job.phase]+(job.providerStatus?' · '+job.providerStatus:'');}
 function paintStatus(){const x=root?.querySelector('#creator-full-state');if(x)x.textContent=state();const p=root?.querySelector('#creator-full-pause');if(p)p.textContent=paused?t('▶ Continuar','▶ Resume'):t('Ⅱ Pausar','Ⅱ Pause');}
 function tell(action){if(ready&&iframe?.contentWindow)iframe.contentWindow.postMessage({type:'admira:creator-control',seed:job.seed,action},'https://www.admira.store');}

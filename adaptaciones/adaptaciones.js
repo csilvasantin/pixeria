@@ -1,7 +1,7 @@
 import {classicTargets,isClassicFormat,extraFormats} from './classic-step.mjs?v=20261009-classic-step-1';
-import {mountAdvertisement} from './anuncio-studio.mjs?v=classic-auto-4';
+import {mountAdvertisement} from './anuncio-studio.mjs?v=classic-auto-5';
 import {compositionFromStock} from '../assets/content-composition.mjs?v=composition-1';
-import {mountCampaign} from './campaign-studio.mjs?v=creator-full-3';
+import {mountCampaign} from './campaign-studio.mjs?v=creator-full-4';
 let campaignWorkshop=null;
 import {mountTwin} from './gemelo-digital.mjs?v=installation-20261009';
 import {aiJob} from './ia-core.mjs?v=adapter-detail-1';
