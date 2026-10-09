@@ -79,5 +79,11 @@
         "clip_estado"
       ]
     }
-  }
+  },
+  "toolsGuide": "https://admira.studio/docs/creator-tools.md",
+  "reviewedTools": [
+    "animated MP4 destinations",
+    "private cloud versions",
+    "bounded ES/EN instruction editing"
+  ]
 }

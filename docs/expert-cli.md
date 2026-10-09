@@ -100,3 +100,7 @@ Pause/resume/status/stop and Escape control the walkthrough. Issued provider req
 Contract `admira.creator-full.v1` includes seed, prompts, models, source asset IDs/URLs, request_id, phases and timestamped events. Twin links carry `creator=<seed>&mode=full&image=<stock_id>&video=<stock_id>`. Missing/undecodable media block application. Authenticated same-origin `/creator-ai/{image,archive,video,status}` reuses existing Grok Image/Stock/Video APIs, signing a short server token for the current session identity. Provider/fleet secrets never reach the browser or contract.
 
 Real MCP `creador_demo({mode:"full",language:"en"})` is **plan only**. Explicit authenticated execution: `creador_imagen_generar` → `creador_imagen_guardar` → `clip_desde_imagen` with the freshly returned stock_id → `clip_estado` until `archived:true`. A plan or request_id is not a completed render or physical delivery. Free `/demo creator` retains its local composition and reused NEXT STEP artwork.
+
+## Creador / Creator
+
+`/demo creador todo` / `/demo creator full`: abre la campaña IA con edición por instrucciones, nube y exportación animada tras revisión. No genera de nuevo al abrir historial. / AI campaign with reviewed instruction editing, cloud snapshots and animated export; history does not regenerate assets. [Tutorial ES/EN](creator-tools.md).

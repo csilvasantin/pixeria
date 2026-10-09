@@ -1,8 +1,8 @@
 {
-  "version": "v.09.10.2026.r23.13:50",
-  "deployer": "TrinityMBP16",
-  "agent": "TrinityMBP16",
-  "machine": "MacBookPro16",
-  "signature": "TrinityMBP16 · MacBookPro16",
-  "evidence": "133 pruebas pertinentes pasan: pareja local H/V, guardados y aprobaciones, ciclo real de Admirito, cancelación/respuestas tardías, cierre embebido y shell ES/EN, contrato standalone-artwork sin relajar producto/texto/cajas. QA local del SVG y retirada completada; publicación y QA web se verifican después del despliegue."
+  "version": "v.09.10.2026.r24.15:55",
+  "deployer": "OraculoMacMini",
+  "agent": "OraculoMacMini",
+  "machine": "MacMini",
+  "signature": "OraculoMacMini · MacMini",
+  "evidence": "37 focused tests pass; real animated column MP4 320x1920 H264 25fps 32s with 32 different sampled frames. Cloud/ES-EN contracts tested; public deployment verification follows."
 }

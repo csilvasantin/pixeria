@@ -1,0 +1,47 @@
+name: Publish Creator companion MCP services
+on:
+  workflow_dispatch:
+    inputs:
+      pixeria_ref:
+        description: Verified Pixeria MCP commit
+        required: true
+      xpaceos_ref:
+        description: Verified XpaceOS MCP commit
+        required: true
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate immutable references
+        env:
+          PIXERIA_REF: ${{ inputs.pixeria_ref }}
+          XPACEOS_REF: ${{ inputs.xpaceos_ref }}
+        run: |
+          [[ "$PIXERIA_REF" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$XPACEOS_REF" =~ ^[0-9a-f]{40}$ ]]
+      - uses: actions/checkout@v4
+        with:
+          repository: csilvasantin/pixeria-mcp
+          ref: ${{ inputs.pixeria_ref }}
+          path: pixeria-mcp
+      - uses: actions/checkout@v4
+        with:
+          repository: csilvasantin/xpaceos-mcp
+          ref: ${{ inputs.xpaceos_ref }}
+          path: xpaceos-mcp
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Deploy verified companion services
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          cd pixeria-mcp
+          npx --yes wrangler@4 deploy
+          cd ../xpaceos-mcp
+          npx --yes wrangler@4 deploy

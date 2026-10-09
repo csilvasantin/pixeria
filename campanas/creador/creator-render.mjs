@@ -1,14 +1,14 @@
 // Native, authored compositions. The same seed and clock drive every wall and preview.
-export function drawCreatorCampaign(canvas,i,product,seconds,c){
+export function drawCreatorCampaign(canvas,i,product,seconds,c,background=null){
  const x=canvas.getContext('2d'),w=i.width,h=i.height,k=canvas.width/w,short=Math.min(w,h),time=seconds%32,phase=Math.floor(time/8);
- const ht=Math.round(h*k);if(canvas.height!==ht)canvas.height=ht;x.save();x.scale(k,k);x.fillStyle=c.background;x.fillRect(0,0,w,h);
- const glow=x.createRadialGradient(w*.7,h*.45,0,w*.7,h*.45,w*.8);glow.addColorStop(0,c.accent+'48');glow.addColorStop(1,c.background);x.fillStyle=glow;x.fillRect(0,0,w,h);
+ const ht=Math.round(h*k);if(canvas.height!==ht)canvas.height=ht;x.save();x.scale(k,k);x.fillStyle=c.background;x.fillRect(0,0,w,h);if(background)x.drawImage(background,0,0,w,h);
+ const glow=x.createRadialGradient(w*.7,h*.45,0,w*.7,h*.45,w*.8);glow.addColorStop(0,c.accent+'48');glow.addColorStop(1,background?c.background+'55':c.background);x.fillStyle=glow;x.fillRect(0,0,w,h);
  x.save();x.strokeStyle=c.secondary+'30';x.lineWidth=Math.max(2,short*.003);
  if(c.motif===0){for(let n=0;n<11;n++){x.beginPath();x.ellipse(w*.68,h*.5,(n+2)*w*.055,(n+2)*h*.065,-.2+time*.008,0,Math.PI*2);x.stroke();}}
  else if(c.motif===1){for(let n=0;n<16;n++){const xx=(n*w/12+time*w*.009)%w;x.beginPath();x.moveTo(xx-h*.4,0);x.lineTo(xx,h);x.stroke();}}
  else {for(let n=0;n<13;n++){const yy=(n*h/10+time*h*.012)%h;x.beginPath();x.moveTo(0,yy);x.bezierCurveTo(w*.25,yy-h*.2,w*.75,yy+h*.2,w,yy);x.stroke();}}
  x.restore();
- function fit(text,xx,yy,max,px,color=c.foreground,align='left'){x.font=`900 ${px}px "NextStep",sans-serif`;px=Math.min(px,px*max/Math.max(x.measureText(text).width,1));x.font=`900 ${px}px "NextStep",sans-serif`;x.fillStyle=color;x.textAlign=align;x.textBaseline='top';x.fillText(text,xx,yy);}
+ function fit(text,xx,yy,max,px,color=c.foreground,align='left'){px*=c.titleScale||1;x.font=`900 ${px}px "NextStep",sans-serif`;px=Math.min(px,px*max/Math.max(x.measureText(text).width,1));x.font=`900 ${px}px "NextStep",sans-serif`;x.fillStyle=color;x.textAlign=align;x.textBaseline='top';x.fillText(text,xx,yy);}
  function shoe(xx,yy,ww,hh){if(!product)return;const pw=product.videoWidth||product.naturalWidth||product.width,ph=product.videoHeight||product.naturalHeight||product.height;if(!pw||!ph)return;const r=Math.min(ww/pw,hh/ph);if(c.mode==='full'){x.drawImage(product,xx+(ww-pw*r)/2,yy+(hh-ph*r)/2,pw*r,ph*r);return;}x.save();x.translate(xx+ww/2,yy+hh/2+Math.sin(time*.6)*short*.015);x.rotate(c.angle+Math.sin(time*.2)*.04);x.drawImage(product,-product.width*r/2,-product.height*r/2,product.width*r,product.height*r);x.restore();}
  const words=c.name.split(' '),title=phase%2===0?c.name:c.headline;
  if(i.id==='jordan'){

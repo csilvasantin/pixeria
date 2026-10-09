@@ -42,7 +42,7 @@ Escribe **`/demo creador todo`** (alias `/demo creator full`) o pulsa **Crear ca
 
 Brief → Concepto → Imagen + vídeo IA → Adaptación → Gemelo 360. Se muestran instrucciones IA, imagen recibida, estado real del proveedor, request_id y registro con horas. No se avanza por un porcentaje simulado: el vídeo sólo está listo cuando `archived:true` devuelve su URL de biblioteca. El gemelo sólo se anuncia aplicado después de cargar ambos medios y recibir `admira:creator-ready`.
 
-La fotografía y el vídeo alternan en las composiciones de las siete instalaciones y trece pantallas. Texto independiente, maestro Jordan y hueco LED conservados. Los recortes PNG se exportan a dimensiones nativas. El MP4 original IA se puede abrir desde **Vídeo IA · 5 s**; este modo no exporta trece MP4 adaptados. Las adaptaciones animadas se reproducen en canvas dentro del gemelo 360/3D. No cambia playlists, programación ni emisión física.
+La fotografía y el vídeo alternan en las composiciones de las siete instalaciones y trece pantallas. Texto independiente, maestro Jordan y hueco LED conservados. Los recortes PNG se exportan a dimensiones nativas. El MP4 original IA se puede abrir desde **Vídeo IA · 5 s**; las salidas MP4 animadas se preparan ahora de forma explícita tras revisar las instalaciones; véase [Creador: vídeos, nube e instrucciones](creator-tools.md). Las adaptaciones animadas se reproducen en canvas dentro del gemelo 360/3D. No cambia playlists, programación ni emisión física.
 
 `pausa`, `reanudar`, `estado`, `stop` y Escape controlan el recorrido. Una petición ya enviada puede terminar aunque se pause o detenga la demo. El historial recupera una campaña y sus resultados sin generar otra; recargar tampoco inicia otra generación. Los trabajos viven en IndexedDB `admira.creator-full`, registro de campañas en `admira.creator-demo.history.v1`, separados de borradores. Si se pierde la respuesta de un POST, se muestra `request-result-unknown` y no se repite automáticamente. Un request_id conocido permite reanudar consultas. **Nueva campaña con IA** solicita otra generación y otra semilla; no sustituye los medios de una anterior.
 
@@ -58,7 +58,7 @@ Run **`/demo creator full`** (alias `/demo creador todo`) or click **Create full
 
 Brief → Concept → AI image + video → Adaptation → 360 twin. Prompts, received image, actual provider state, request_id and timestamped events are visible. Video completion requires `archived:true` and a library URL. Twin application is confirmed only after both media decode and the `admira:creator-ready` acknowledgement arrives.
 
-The image and video alternate across seven shared compositions and thirteen screens, with independent copy, the Jordan master and LED doorway retained. Native PNG crops and the original five-second AI MP4 are available. Animated adaptations play in canvas in the 360/3D twin; this mode does not export thirteen adapted MP4s. Physical scheduling and playlists remain unchanged.
+The image and video alternate across seven shared compositions and thirteen screens, with independent copy, the Jordan master and LED doorway retained. Native PNG crops and the original five-second AI MP4 are available. Animated adaptations play in canvas in the 360/3D twin; reviewed animated MP4 destinations can now be prepared explicitly; see [Creator tools](creator-tools.md). Physical scheduling and playlists remain unchanged.
 
 Pause/resume/status/stop and Escape control the walkthrough. Issued provider requests may continue while paused or stopped. History and reload recover results without generating again. Jobs use IndexedDB `admira.creator-full`, metadata uses separate demo history. Lost POST replies show `request-result-unknown` without automatic repetition; known request_id resumes polling. New AI campaign explicitly requests new assets and a new seed.
 
@@ -69,3 +69,7 @@ Real MCP `creador_demo({mode:"full",language:"en"})` is **plan only**. Explicit 
 El servidor conserva el resultado archivado del vídeo en `pixeria_creator_clips` de la base de sesiones, asociado a la identidad que lo pidió. Las consultas posteriores devuelven la misma URL sin volver a archivar el clip. La imagen del contrato apunta al original IA guardado. Cambiar ESP/ENG traduce el titular y la llamada de la misma campaña sin regenerar medios.
 
 The server retains the archived clip result in the session database table `pixeria_creator_clips`, scoped to the requesting identity. Later polls return the same URL without re-archiving. The contract product points to the stored AI original. Switching ESP/ENG translates copy for the same seed without generating media again.
+
+## Mejoras / Improvements
+
+[Vídeos animados por pantalla, versiones privadas en nube y edición por instrucciones · tutorial y contratos ES/EN](creator-tools.md). El historial local sigue disponible; guardar en la nube es explícito. / Local history remains; saving to cloud is explicit.

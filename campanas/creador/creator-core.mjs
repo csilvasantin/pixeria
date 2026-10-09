@@ -1,3 +1,4 @@
+import {presentation,EDIT_FIELDS} from './creator-instructions.mjs?v=creator-tools-1';
 export const CREATOR_SCHEMA='admira.creator-demo.v1';
 export const CREATOR_HISTORY='admira.creator-demo.history.v1';
 export const STEPS=['brief','concept','creative','adapt','twin'];
@@ -13,6 +14,8 @@ export function createCreatorCampaign(seed,en=false){
  return {schema:CREATOR_SCHEMA,id:'creator-'+seed,seed,name,headline,cta:en?'COME IN. FIND YOUR PAIR.':'ENTRA. ENCUENTRA TU PAR.',background:color(hue,.3,.055),accent:color(hue,.9,.66),secondary:color((hue+80)%360,.8,.75),foreground:'#f5f4ee',hue,motif:nums[4]%3,angle:(nums[5]%18-9)/50,seconds:32,language:en?'en':'es',store:'sneakers-store-santa-rosa-19',demo:true,generatedBy:'local composition',product:'/campanas/next-step/product.webp',productProvenance:'Existing NEXT STEP concept artwork, reused; not newly AI-generated',published:false,physicalDelivery:false};
 }
 export function creatorTwinURL(c,{en=c.language==='en',view='360',origin='https://www.admira.store'}={}){
- const u=new URL('/xpacios/sneakerstore/',origin);u.searchParams.set('creator',c.seed);if(c.mode==='full'){if(!/^[a-zA-Z0-9_-]{6,100}$/.test(c.image?.id||'')||!/^[a-zA-Z0-9_-]{6,100}$/.test(c.video?.id||''))throw Error('creator-full-media');u.searchParams.set('mode','full');u.searchParams.set('image',c.image.id);u.searchParams.set('video',c.video.id);}u.searchParams.set('lang',en?'en':'es');u.searchParams.set('embed','1');if(view==='3d')u.searchParams.set('view','jordan');else u.searchParams.set('scene','entrada');return u.href;
+ const u=new URL('/xpacios/sneakerstore/',origin);u.searchParams.set('creator',c.seed);if(c.mode==='full'){if(!/^[a-zA-Z0-9_-]{6,100}$/.test(c.image?.id||'')||!/^[a-zA-Z0-9_-]{6,100}$/.test(c.video?.id||''))throw Error('creator-full-media');u.searchParams.set('mode','full');u.searchParams.set('image',c.image.id);u.searchParams.set('video',c.video.id);}const edits=Object.fromEntries(EDIT_FIELDS.filter(k=>c[k]!==undefined).map(k=>[k,c[k]]));u.searchParams.set('art',JSON.stringify(presentation(edits)));u.searchParams.set('lang',en?'en':'es');u.searchParams.set('embed','1');if(view==='3d')u.searchParams.set('view','jordan');else u.searchParams.set('scene','entrada');return u.href;
 }
 export function retainCampaign(rows,c){if(!Array.isArray(rows))rows=[];return [{...c,createdAt:new Date().toISOString()},...rows.filter(r=>r.id!==c.id)].slice(0,30);}
+
+export function applyCreatorPresentation(c,params){const raw=params.get('art');if(!raw)return c;if(raw.length>2400)throw Error('presentation-size');return {...c,...presentation(JSON.parse(raw))};}

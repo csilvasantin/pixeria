@@ -84,3 +84,7 @@ EN: Creator → Adapter → Audio → Music → Images → Video → Assets → 
 ES: Creador → NEXT STEP · Demo en tienda, o /demo en Creador; /demo sneakers desde otras páginas. Campaña animada de 32 s para siete configuraciones y 13 salidas nativas. Ver en la tienda aplica todas las composiciones al gemelo de SneakerStore. Pausa/reiniciar/parar; detener restaura las playlists y texturas anteriores. Sin cambios de borradores, Stock o hardware físico. Tutorial https://admira.studio/docs/next-step.md.
 
 EN: Creator → NEXT STEP · Store demo, or /demo in Creator; /demo sneakers elsewhere. A 32-second animated campaign, seven configurations and 13 native outputs. View in the store applies every composition to the SneakerStore twin. Pause/restart/stop; stop restores prior playlists/textures. No draft, Stock or physical hardware changes. Tutorial https://admira.studio/docs/next-step.md.
+
+## Nube / Cloud
+
+Creador incorpora versiones privadas por cuenta con comparación/restauración y detección de conflictos. Los JSON y versiones locales siguen disponibles. / Creator adds private account-scoped cloud snapshots with compare/restore and conflict detection while retaining JSON/local versions. [Tutorial ES/EN](creator-tools.md).

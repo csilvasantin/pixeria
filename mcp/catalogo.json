@@ -1,7 +1,7 @@
 {
   "version": 1,
   "verifiedAt": "2026-10-09",
-  "serverVersion": "v.09.10.2026.r10.08:48",
+  "serverVersion": "v.09.10.2026.r11.16:00",
   "source": "https://mcp-pixeria.admira.store/",
   "schemaSource": "https://mcp-pixeria.admira.store/mcp",
   "tools": [
@@ -245,6 +245,28 @@
       "description": {
         "es": "info consulta muestras; send encola un visitante con clave; status consulta su ACK, no emisión física.",
         "en": "info reads samples; authenticated send queues a visitor; status reads its ACK, not physical playback."
+      }
+    },
+    {
+      "name": "creador_mejoras",
+      "category": "plans",
+      "mode": "plan",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Contrato de vídeos, nube e instrucciones.",
+        "en": "Contract for video, cloud and instruction editing."
+      }
+    },
+    {
+      "name": "creador_editar_plan",
+      "category": "plans",
+      "mode": "plan",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Plan acotado de cambios; sin aplicar ni generar.",
+        "en": "Bounded edit plan; never applies or generates."
       }
     }
   ]
