@@ -128,3 +128,8 @@ test('large PNG uses image/png for multipart staging as well as the final Stock 
  assert.equal(result.ok,true);assert.deepEqual(calls[0].body,{type:'image',mime:'image/png',motor:'adaptador',size:blob.size});
  const body=calls.at(-1).body;assert.equal(body.type,'image');assert.equal(body.mime,'image/png');assert.equal(body.r2Staged,key);assert.equal('base64' in body,false);
 });
+
+
+test('Creator loads the PNG-capable publisher with a fresh module URL',()=>{
+ assert.match(source('adaptaciones/campaign-studio.mjs'),/stock-publish\.mjs\?v=composition-1/);
+});

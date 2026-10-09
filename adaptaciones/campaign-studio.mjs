@@ -3,7 +3,7 @@ import {DEFAULT_CAMPAIGN,DIRECTIONS,restoreCampaign,planCampaign,validateInstall
 import {drawCampaign,panelCanvas} from './campaign-render.mjs?v=campaign-1';
 import {geometry} from './especiales-core.mjs?v=adapter-detail-1';
 import {FFLATE} from './estancos-core.mjs?v=altadis-ia-20261007';
-import {publishAdaptation} from './stock-publish.mjs';
+import {publishAdaptation} from './stock-publish.mjs?v=composition-1';
 import {campaignComposition} from './campaign-composition.mjs?v=composition-1';
 let zipLoading=null;
 function loadZip(){
