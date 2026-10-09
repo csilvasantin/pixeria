@@ -12,13 +12,44 @@ test('AI visual is verified and rejected when text remains or product is missing
 test('final renderer uses contain for the entire visual and draws each exact text line',()=>{const calls=[],ctx={measureText:txt=>({width:measure(txt,20)}),fillRect(){},drawImage(...args){calls.push(['image',...args]);},fillText(...args){calls.push(['text',...args]);}};const canvas={width:1080,height:1920,getContext:()=>ctx};const l=renderAdvertisement(canvas,{width:1920,height:1080},doc);assert.equal(l.valid,true);assert.equal(calls.filter(x=>x[0]==='text').map(x=>x[1]).join('').replace(/\s/g,''),doc.texts.map(x=>x.text).join('').replace(/\s/g,''));const im=calls.find(x=>x[0]==='image');assert.equal(im.length,6);assert.ok(im[4]<=1080);});
 
 test('recreation preserves iced drink properties and verification receives product and exact copy',async()=>{assert.match(visualPrompt('recreate',doc,{w:100,h:200}),/never steam/);const bodies=[];await makeVisual('data:image/png;base64,YQ==',doc,'recreate',{w:100,h:200},{fetchImpl:async(url,init)=>{if(url==='/auth/api-token')return Response.json({token:'test'});bodies.push(JSON.parse(init.body));return url.endsWith('/image/edit')?Response.json({ok:true,image:'data:image/png;base64,YQ=='}):Response.json({ok:true,verification:{hasText:false,productPresent:true,issues:[]}});}});const expected=JSON.parse(bodies[1].scene);assert.deepEqual(expected.subjects,['coffee']);assert.equal(expected.copy[0],doc.texts[0].text);});
+test('visual verification receives the exact original reference separately from the generated image',async()=>{
+ const source='data:image/jpeg;base64,YQ==',generated='data:image/png;base64,Yg==';
+ for(const referenceImage of [undefined,'data:image/webp;base64,Yw==']){
+  const bodies=[];
+  await makeVisual(source,doc,'reconstruct',{w:1080,h:1920},{referenceImage,fetchImpl:async(url,init)=>{
+   if(url==='/auth/api-token')return Response.json({token:'test'});
+   bodies.push(JSON.parse(init.body));
+   return url.endsWith('/image/edit')?Response.json({ok:true,image:generated}):Response.json({ok:true,verification:{hasText:false,productPresent:true,issues:[]}});
+  }});
+  assert.equal(bodies[0].image,source);assert.equal(bodies[1].image,generated);
+  assert.equal(bodies[1].referenceImage,referenceImage||source);
+ }
+});
 test('advanced reconstruction is explicit even for matching ratios; uncertain OCR still blocks',()=>{assert.equal(semanticAction(doc,src,src,'reconstruct').action,'reconstruct');assert.equal(semanticAction({...doc,uncertain:true},src,src,'reconstruct').action,'blocked');});
 test('reconstruction requests missing surroundings, protected elements and reserved copy separately',()=>{const prompt=visualPrompt('reconstruct',doc,{w:1080,h:1920},{textZone:{x:0,y:0,w:1080,h:614},important:'entire glass and spoon',brief:'extend Barcelona beach'});assert.match(prompt,/Infer missing surroundings/);assert.match(prompt,/entire glass and spoon/);assert.match(prompt,/614/);assert.match(prompt,/Do not render any headline/);});
 test('reconstruction retains detected boxes for deterministic safe copy reflow',async()=>{const v=await makeVisual('data:image/png;base64,YQ==',doc,'reconstruct',{w:1080,h:1920},{textZone:{x:0,y:0,w:1080,h:614},fetchImpl:async(url)=>url==='/auth/api-token'?Response.json({token:'test'}):url.endsWith('/image/edit')?Response.json({ok:true,image:'data:image/png;base64,YQ=='}):Response.json({ok:true,verification:{hasText:false,productPresent:true,issues:[],compositionSafe:false,protectedSubjects:[{label:'coffee',box:[280,300,950,700]}]}})});assert.equal(v.verification.compositionSafe,false);const z=safeCopyZone(doc,1080,1920,v.verification.protectedSubjects,measure,{preferred:{x:0,y:0,w:1080,h:614}});assert.ok(z.y+z.h<=1920*.28||z.y>=1920*.95||z.x+z.w<=1080*.3||z.x>=1080*.7);assert.equal(textLayout(doc,1080,1920,measure,z).valid,true);});
 test('copy reflow blocks when protected elements occupy the whole canvas',()=>{assert.throws(()=>safeCopyZone(doc,1080,1920,[{label:'product',box:[0,0,1000,1000]}],measure),/copy-product-overlap/);});
 test('videowall copy reflow stays in its physical screen',()=>{const boundary={x:1080,y:0,w:1080,h:1920},z=safeCopyZone(doc,2160,1920,[{label:'coffee',box:[400,650,950,900]}],measure,{boundary});assert.ok(z.x>=1080&&z.x+z.w<=2160);});
 test('immersive reconstruction uses the whole native canvas and exact copy',()=>{const calls=[],ctx={measureText:txt=>({width:measure(txt,20)}),fillRect(){},drawImage(...a){calls.push(a);},fillText(){}};renderAdvertisement({width:1080,height:1920,getContext:()=>ctx},{width:1080,height:1920},doc,{immersive:true});assert.deepEqual(calls[0].slice(1),[0,0,1080,1920]);});
-test('iced-drink steam gets one bounded repair, repeated defects remain blocked',async()=>{for(const repairedOK of [true,false]){let edits=0,reviews=0;const run=()=>makeVisual('data:image/png;base64,YQ==',doc,'reconstruct',{w:1080,h:1920},{fetchImpl:async(url,init)=>{if(url==='/auth/api-token')return Response.json({token:'test'});if(url.endsWith('/image/edit')){edits++;if(edits===2)assert.match(JSON.parse(init.body).prompt,/steam/);return Response.json({ok:true,image:'data:image/png;base64,YQ=='});}reviews++;return Response.json({ok:true,verification:{hasText:false,productPresent:true,issues:reviews===1||!repairedOK?['steam above iced drink']:[],protectedSubjects:[{label:'coffee',box:[400,300,950,700]}],compositionSafe:true}});}});if(repairedOK)await run();else await assert.rejects(run,/visual-review-failed/);assert.equal(edits,2);assert.equal(reviews,2);}});
+test('iced-drink steam gets one bounded repair using the original comparison reference, repeated defects remain blocked',async()=>{
+ const source='data:image/jpeg;base64,YQ==',generated='data:image/png;base64,Yg==';
+ for(const repairedOK of [true,false]){
+  let edits=0,reviews=0;
+  const run=()=>makeVisual(source,doc,'reconstruct',{w:1080,h:1920},{fetchImpl:async(url,init)=>{
+   if(url==='/auth/api-token')return Response.json({token:'test'});
+   const body=JSON.parse(init.body);
+   if(url.endsWith('/image/edit')){
+    edits++;
+    if(edits===2){assert.match(body.prompt,/steam/);assert.equal(body.image,generated,'repair edits the rejected candidate');}
+    return Response.json({ok:true,image:generated});
+   }
+   reviews++;assert.equal(body.image,generated);assert.equal(body.referenceImage,source,'every review compares with the original source');
+   return Response.json({ok:true,verification:{hasText:false,productPresent:true,issues:reviews===1||!repairedOK?['steam above iced drink']:[],protectedSubjects:[{label:'coffee',box:[400,300,950,700]}],compositionSafe:true}});
+  }});
+  if(repairedOK)await run();else await assert.rejects(run,/visual-review-failed/);
+  assert.equal(edits,2);assert.equal(reviews,2);
+ }
+});
 
 test('observed typography survives copy edits and reaches the same measurement and paint pipeline',async()=>{
  const {fontFor,measureCopy}=await import('../adaptaciones/anuncio-core.mjs');

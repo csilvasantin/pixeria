@@ -1,14 +1,14 @@
 {
-  "version": "v.09.10.2026.r17.11:58",
+  "version": "v.09.10.2026.r18.12:07",
   "deployer": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
   "agent": "TrinityMBP16",
-  "builtAt": "2026-10-09T09:58:58Z",
+  "builtAt": "2026-10-09T10:07:58Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
-    "El botón clásico analiza y genera el entorno que falta antes de revisar y aprobar",
-    "Sin texto publicitario permite conservar marcas y grafitis de la fotografía por decisión explícita",
-    "Las proporciones incompatibles bloquean el resultado en lugar de añadir bandas"
+    "El clásico pide confirmar cualquier texto detectado, aunque la lectura de IA parezca segura",
+    "Sin texto publicitario permite conservar grafitis y marcas de la fotografía por decisión humana",
+    "La comprobación visual recibe la fotografía original y la conserva durante la reparación de la imagen"
   ]
 }
