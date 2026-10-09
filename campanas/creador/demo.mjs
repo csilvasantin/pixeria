@@ -1,6 +1,7 @@
-import {startCreatorFull} from './full-demo.mjs?v=creator-full-4';
-import {createCreatorCampaign,creatorTwinURL,retainCampaign,CREATOR_HISTORY,STEPS} from './creator-core.mjs?v=creator-full-4';
-import {drawCreatorCampaign} from './creator-render.mjs?v=creator-full-4';
+import {orientationPair} from '../../adaptaciones/campaign-entry.mjs?v=creator-full-5';
+import {startCreatorFull} from './full-demo.mjs?v=creator-full-5';
+import {createCreatorCampaign,creatorTwinURL,retainCampaign,CREATOR_HISTORY,STEPS} from './creator-core.mjs?v=creator-full-5';
+import {drawCreatorCampaign} from './creator-render.mjs?v=creator-full-5';
 import {INSTALLATIONS,loadNextStepAssets,createClock} from '../next-step/render.mjs';
 const en=new URLSearchParams(location.search).get('lang')==='en'||document.documentElement.lang==='en',t=(a,b)=>en?b:a;
 const labels=[t('Brief','Brief'),t('Concepto','Concept'),t('Creatividades','Creatives'),t('Adaptación','Adaptation'),t('Gemelo digital','Digital twin')];
@@ -11,7 +12,7 @@ function element(tag,text,className){const el=document.createElement(tag);if(tex
 function button(text,fn,id){const b=element('button',text,'pill');b.type='button';b.onclick=fn;if(id)b.id=id;return b;}
 function rows(){try{const r=JSON.parse(localStorage.getItem(CREATOR_HISTORY)||'[]');return Array.isArray(r)?r:[];}catch{return [];}}
 function remember(){try{localStorage.setItem(CREATOR_HISTORY,JSON.stringify(retainCampaign(rows(),{...c,step:STEPS[step]})));return true;}catch{return false;}}
-function mount(){if(root)return;root=element('section',null,'creator-demo');root.id='creator-demo';root.hidden=true;root.setAttribute('aria-label',t('Demo Creador','Creator demo'));document.querySelector('.adapt-main').prepend(root);const style=element('link');style.rel='stylesheet';style.href='/campanas/creador/demo.css?v=creator-full-4';document.head.append(style);}
+function mount(){if(root)return;root=element('section',null,'creator-demo');root.id='creator-demo';root.hidden=true;root.setAttribute('aria-label',t('Demo Creador','Creator demo'));document.querySelector('.adapt-main').prepend(root);const style=element('link');style.rel='stylesheet';style.href='/campanas/creador/demo.css?v=creator-full-5';document.head.append(style);}
 function tellTwin(action){if(iframe?.contentWindow&&ready)iframe.contentWindow.postMessage({type:'admira:creator-control',seed:c.seed,action},'https://www.admira.store');}
 function pause(){clock.pause();tellTwin('pause');updateControls();}
 function resume(){clock.play();tellTwin('resume');updateControls();}
@@ -19,7 +20,7 @@ function updateControls(){if(!root)return;const b=root.querySelector('#creator-p
 function download(blob,name){const u=URL.createObjectURL(blob),a=element('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),60000);}
 function contract(){return {...c,installations:INSTALLATIONS,exportedMedia:'PNG still compositions only; no newly rendered MP4',review:'demo-preview; not approved for physical delivery',web:{studio:location.origin+'/creador/?demo=creador&seed='+c.seed+'&lang='+(en?'en':'es'),twin:creatorTwinURL(c)},steps:STEPS.map((id,n)=>({id,status:n<=step?'shown':'pending'}))};}
 function select(i){selected=i.id;renderPreview();}
-function renderPreview(){if(!active||!product||step===4)return;const cv=root.querySelector('#creator-preview');if(cv)drawCreatorCampaign(cv,INSTALLATIONS.find(i=>i.id===selected),product,clock.time(),c);root.querySelectorAll('canvas[data-installation]').forEach(cv=>drawCreatorCampaign(cv,INSTALLATIONS.find(i=>i.id===cv.dataset.installation),product,clock.time(),c));}
+function renderPreview(){if(!active||!product||step===4)return;const seconds=clock.time(),cv=root.querySelector('#creator-preview');if(cv)drawCreatorCampaign(cv,INSTALLATIONS.find(i=>i.id===selected),product,seconds,c);root.querySelectorAll('canvas[data-installation]').forEach(cv=>drawCreatorCampaign(cv,INSTALLATIONS.find(i=>i.id===cv.dataset.installation),product,seconds,c));}
 function openTwin(view='360'){
  if(iframe)iframe.remove();ready=false;iframe=element('iframe');iframe.id='creator-twin';iframe.title=t('Campaña en Sneaker Xtore · gemelo digital','Campaign in Sneaker Xtore · digital twin');iframe.src=creatorTwinURL(c,{view});root.querySelector('#creator-twin-stage').append(iframe);root.querySelector('#creator-open-twin').href=creatorTwinURL(c,{view});updateControls();
 }
@@ -31,7 +32,9 @@ function render(){
  root.append(element('h2',titles[step]),element('p',texts[step],'creator-explanation'));
  if(step<4){
  const stage=element('div',null,'creator-demo-stage'),info=element('aside',null,'creator-demo-brief');info.append(element('p',t('CAMPAÑA','CAMPAIGN'),'campaign-kicker'),element('h3',c.name),element('p',c.headline),element('p',c.cta));
- const palette=element('div',null,'creator-palette');for(const color of [c.background,c.accent,c.secondary,c.foreground]){const swatch=element('span');swatch.style.background=color;swatch.title=color;palette.append(swatch);}info.append(palette,element('p',t('7 configuraciones · 13 pantallas','7 configurations · 13 screens')));const cv=element('canvas');cv.id='creator-preview';cv.width=1100;cv.setAttribute('role','img');cv.setAttribute('aria-label',c.name+' · '+INSTALLATIONS.find(i=>i.id===selected).name[en?'en':'es']);stage.append(info,cv);root.append(stage);
+ const palette=element('div',null,'creator-palette');for(const color of [c.background,c.accent,c.secondary,c.foreground]){const swatch=element('span');swatch.style.background=color;swatch.title=color;palette.append(swatch);}info.append(palette,element('p',t('7 configuraciones · 13 pantallas','7 configurations · 13 screens')));stage.append(info);
+ if(step<2){const pair=element('div',null,'creator-orientation-pair');pair.setAttribute('aria-label',t('Horizontal y vertical','Landscape and portrait'));for(const i of orientationPair(INSTALLATIONS)){const figure=element('figure'),cv=element('canvas');cv.width=640;cv.dataset.installation=i.id;cv.setAttribute('role','img');const caption=`${i.id==='portrait'?t('Vertical','Portrait'):t('Horizontal','Landscape')} · ${i.width}×${i.height}`;cv.setAttribute('aria-label',c.name+' · '+caption);figure.append(cv,element('figcaption',caption));pair.append(figure);}stage.append(pair);}
+ else{const cv=element('canvas');cv.id='creator-preview';cv.width=1100;cv.setAttribute('role','img');cv.setAttribute('aria-label',c.name+' · '+INSTALLATIONS.find(i=>i.id===selected).name[en?'en':'es']);stage.append(cv);}root.append(stage);
  if(step>=2){const tabs=element('div',null,'creator-format-tabs');INSTALLATIONS.forEach(i=>tabs.append(button(i.name[en?'en':'es'],()=>{select(i);tabs.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.textContent===i.name[en?'en':'es'])));})));root.append(tabs);}
  if(step===3){const grid=element('div',null,'creator-demo-grid');for(const i of INSTALLATIONS){const card=element('article'),mini=element('canvas');mini.width=480;mini.dataset.installation=i.id;card.append(mini,element('h3',i.name[en?'en':'es']),element('p',`${i.width} × ${i.height} · ${i.screens.length} ${t('salidas','outputs')}`));for(const s of i.screens)card.append(button('↓ '+s.id,()=>exportPNG(i,s)));grid.append(card);}root.append(grid);}
  }else{

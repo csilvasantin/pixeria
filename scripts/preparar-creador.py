@@ -4,7 +4,7 @@ import re
 
 # Creator shares the Adapter shell and runtime. Its demo entry belongs here too,
 # so regenerating either language never removes the Creator demo controls.
-DEMO_ENTRY = '<script type="module" src="/campanas/creador/demo.mjs?v=creator-full-4"></script>'
+DEMO_ENTRY = '<script type="module" src="/campanas/creador/demo.mjs?v=creator-full-5"></script>'
 root=Path(__file__).resolve().parents[1]
 for lang in ('es','en'):
  source=root/('en/adaptaciones/index.html' if lang=='en' else 'adaptaciones/index.html')
