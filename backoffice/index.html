@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r6.0709';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r7.0715';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r6.07:09">
+  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r7.07:15">
   <title>Pixeria · Referencia en creación de contenidos con IA</title>
   <meta name="description" content="Pixeria es la referencia para crear contenido con IA y operarlo en producción real: radar de modelos, método, pipelines y Pixer Feed (signage IA para pantallas y directo en eventos).">
   <meta name="theme-color" content="#0b1117">
@@ -49,8 +49,8 @@
   <link rel="preload" href="assets/hero-pixeria.jpg" as="image">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="assets/styles.css?v=09.10.2026.r6.0709">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=09.10.2026.r6.0709">
+  <link rel="stylesheet" href="assets/styles.css?v=09.10.2026.r7.0715">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=09.10.2026.r7.0715">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -65,7 +65,7 @@
     }
   }
   </script>
-  <script defer src="/assets/site-nav.js?v=09.10.2026.r6.0709"></script>
+  <script defer src="/assets/site-nav.js?v=09.10.2026.r7.0715"></script>
 </head>
 <body>
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -394,9 +394,9 @@
       sections.forEach(s => io.observe(s));
     })();
   </script>
-  <script src="backoffice-auth.js?v=09.10.2026.r6.0709"></script>
+  <script src="backoffice-auth.js?v=09.10.2026.r7.0715"></script>
   <script src="backoffice-mode.js"></script>
-  <script defer src="/assets/matrix-rain.js?v=09.10.2026.r6.0709"></script>
-  <script defer src="/assets/cuadratura.js?v=09.10.2026.r6.0709"></script>
+  <script defer src="/assets/matrix-rain.js?v=09.10.2026.r7.0715"></script>
+  <script defer src="/assets/cuadratura.js?v=09.10.2026.r7.0715"></script>
 </body>
 </html>
