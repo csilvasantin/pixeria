@@ -1,4 +1,4 @@
-import {presentation,EDIT_FIELDS} from './creator-instructions.mjs?v=creator-tools-2';
+import {presentation,EDIT_FIELDS} from './creator-instructions.mjs?v=creator-tools-3';
 export const CREATOR_SCHEMA='admira.creator-demo.v1';
 export const CREATOR_HISTORY='admira.creator-demo.history.v1';
 export const STEPS=['brief','concept','creative','adapt','twin'];

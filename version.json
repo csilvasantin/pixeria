@@ -1,10 +1,10 @@
 {
-  "version": "v.09.10.2026.r25.15:57",
+  "version": "v.09.10.2026.r26.16:19",
   "deployer": "OraculoMacMini",
   "machine": "MacMini",
   "signature": "OraculoMacMini · MacMini",
   "agent": "OraculoMacMini",
-  "builtAt": "2026-10-09T13:55:46Z",
+  "builtAt": "2026-10-09T14:19:33Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
     "Creador muestra horizontal y vertical desde las mismas capas, sin añadir generaciones de IA ni cambiar destinos guardados.",
