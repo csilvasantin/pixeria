@@ -1,8 +1,8 @@
 {
-  "version": "v.09.10.2026.r16.11:39",
+  "version": "v.09.10.2026.r17.11:58",
   "deployer": "TrinityMBP16",
   "agent": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
-  "evidence": "Clásico bidireccional en paso 1 con un único motor; regresiones de aprobación, cancelación, compatibilidad y conservación de selección sin generación real."
+  "evidence": "Clásico con generación automática y aprobación manual; regresiones VM de OCR, decisión sin copy, cancelaciones y proporción, sin llamadas de generación real."
 }

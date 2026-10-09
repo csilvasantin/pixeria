@@ -6,9 +6,9 @@
     "Volver atrás: sello v.09.10.2026.r10.08:40."
   ],
   "default": [
-    "Adaptación clásica de imágenes horizontal ↔ vertical completa en el paso 1",
-    "Original y resultado comparten análisis, revisión, aprobación y exportación",
-    "El paso 2 conserva formatos propios, videowalls y otros tamaños sin perder selecciones"
+    "El botón clásico analiza y genera el entorno que falta antes de revisar y aprobar",
+    "Sin texto publicitario permite conservar marcas y grafitis de la fotografía por decisión explícita",
+    "Las proporciones incompatibles bloquean el resultado en lugar de añadir bandas"
   ],
   "v.07.10.2026.r11.23:39": [
     "Campo de etiquetas al importar (URL o ficheros) y junto a «Publicar en Stock» de lo que creas",
@@ -202,5 +202,10 @@
     "Adaptación clásica de imágenes horizontal ↔ vertical completa en el paso 1",
     "Original y resultado comparten análisis, revisión, aprobación y exportación",
     "El paso 2 conserva formatos propios, videowalls y otros tamaños sin perder selecciones"
+  ],
+  "v.09.10.2026.r17.11:58": [
+    "El botón clásico analiza y genera el entorno que falta antes de revisar y aprobar",
+    "Sin texto publicitario permite conservar marcas y grafitis de la fotografía por decisión explícita",
+    "Las proporciones incompatibles bloquean el resultado en lugar de añadir bandas"
   ]
 }

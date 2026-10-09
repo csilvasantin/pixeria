@@ -64,7 +64,8 @@ function uiWorld({en=false,reduced=false,source={ancho:1920,alto:1080},kind='ima
  const cards=['9:16','16:9'].map(id=>({dataset:{f:id},tabIndex:0,
   focus:options=>calls.push(['focus',id,options]),scrollIntoView:options=>calls.push(['scroll',id,options])}));
  let ready=true,busy=false;
- const advertisement={busy:()=>busy,enabled:()=>kind==='image',analyze:()=>{calls.push(['analyze']);return Promise.resolve(null);},clear:()=>calls.push(['clear'])};
+ const advertisement={busy:()=>busy,enabled:()=>kind==='image',analyze:()=>{calls.push(['analyze']);return Promise.resolve(null);},
+  prepareClassic:f=>{calls.push(['prepareClassic',f.id]);return Promise.resolve(false);},clear:()=>calls.push(['clear'])};
  const context=vm.createContext({state,FORMATOS:formats,srcKind:kind,FICHA:{id:state.proyecto},classicTargets,isClassicFormat,extraFormats,formatFamily,isProjectFormat,
   $:node,t:(es,english)=>en?english:es,isImage:()=>context.srcKind==='image',mediaReady:()=>ready,advertisement,
   buildGrid:()=>calls.push(['grid']),pausePaso1:()=>calls.push(['pause']),
@@ -98,7 +99,8 @@ for(const en of [false,true])test('production '+(en?'EN':'ES')+' classic entry r
  assert.equal(w.node('#compat').disabled,false);
  assert.match(w.node('#export-status').textContent,/1080×1920/);
  assert.match(w.node('#export-status').textContent,en?/Review copy and product.*approving/:/Revisa texto y producto.*aprobar/);
- assert.equal(w.calls.filter(x=>x[0]==='analyze').length,1);assert.equal(w.calls.filter(x=>x[0]==='grid').length,1);
+ assert.deepEqual(w.calls.filter(x=>x[0]==='prepareClassic'),[['prepareClassic','9:16']]);
+ assert.equal(w.calls.filter(x=>x[0]==='analyze').length,0);assert.equal(w.calls.filter(x=>x[0]==='grid').length,1);
  assert.equal(w.cards[0].tabIndex,0);assert.equal(w.calls.find(x=>x[0]==='scroll')[2].behavior,'smooth');
 });
 
@@ -236,7 +238,7 @@ test('a text-free advertisement fills the full canvas instead of reserving an em
 });
 
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
-function advertisementWorld({extract,make}={}){
+function advertisementWorld({extract,make,doc,classicId=null,classicTarget,formats:providedFormats}={}){
  const globals=new Map(),nodes=[],calls=[],noCopy={texts:[],subjects:[{label:'product',box:[100,100,900,900]}],scene:'package',uncertain:false};
  function element(tag='section'){
   const children=new Map(),el={tagName:tag.toUpperCase(),hidden:false,value:'',dataset:{},textContent:'',width:0,height:0,
@@ -246,19 +248,20 @@ function advertisementWorld({extract,make}={}){
   nodes.push(el);return el;
  }
  const get=selector=>{if(!globals.has(selector))globals.set(selector,element());return globals.get(selector);};
- const formats=[{id:'9:16',nombre:'Vertical',on:false}],context=vm.createContext({...adCore,
+ let activeClassicId=classicId;
+ const formats=providedFormats||[{id:'9:16',nombre:'Vertical',on:false}],context=vm.createContext({...adCore,
   document:{createElement:element,querySelector:get,querySelectorAll:()=>[]},AbortController,setTimeout,clearTimeout,
   Image:class {naturalWidth=1080;naturalHeight=1920;async decode(){}},
-  extractAdvertisement:extract||(async()=>structuredClone(noCopy)),loadDocumentFonts:async()=>{},
-  makeVisual:make||(async(...args)=>{calls.push(['visual',...args]);return {url:'data:image/png;base64,fixture',verification:{protectedSubjects:[]}};}),
+  extractAdvertisement:async(...args)=>{calls.push(['extract',...args]);return extract?extract(...args):structuredClone(doc||noCopy);},loadDocumentFonts:async()=>{},
+  makeVisual:async(...args)=>{calls.push(['visual',...args]);return make?make(...args):{url:'data:image/png;base64,fixture',verification:{protectedSubjects:noCopy.subjects}};},
   renderAdvertisement:()=>({valid:true}),fetch:()=>assert.fail('mock engine never calls providers')});
  const source=read('adaptaciones/anuncio-studio.mjs');
  vm.runInContext(source.slice(source.indexOf('export function mountAdvertisement')).replace('export function','function'),context);
- const api=context.mountAdvertisement({t:es=>es,source:()=>({kind:'image',image:{},src:{ancho:1920,alto:1080}}),
+ const api=context.mountAdvertisement({t:es=>es,source:()=>({kind:'image',image:{},src:{ancho:1920,alto:1080}}),classicTarget:classicTarget||(()=>activeClassicId),
   destino:()=>({ancho:1080,alto:1920}),selected:()=>formats,formats:()=>formats,seconds:()=>6,
-  changed:()=>calls.push(['changed']),textZone:()=>{assert.fail('text-free media never requests a copy zone');}});
+  changed:()=>calls.push(['changed']),textZone:()=>{assert.ok((doc?.texts?.length||0)>0,'text-free media never requests a copy zone');return null;}});
  const root=nodes.find(n=>n.id==='advertisement-studio');assert.ok(root);
- return {api,formats,calls,noCopy,root,status:()=>root.querySelector('#ad-status').textContent};
+ return {api,formats,calls,noCopy,root,nodes,context,setClassic:id=>activeClassicId=id,status:()=>root.querySelector('#ad-status').textContent};
 }
 
 test('real advertisement preparation uses a full text-free region and requires approval before export',async()=>{
@@ -295,4 +298,148 @@ test('clear aborts generation and a late visual cannot become a result or approv
  assert.equal(await preparation,false);assert.equal(w.api.entry(w.formats[0]),undefined);assert.equal(w.api.ready(w.formats[0]),false);
  assert.equal(w.api.action(w.formats[0]).action,'pending');assert.equal(w.status(),'');assert.equal(w.api.busy(),false);
  assert.equal(w.calls.filter(c=>c[0]==='changed').length,changes);
+});
+
+async function until(predicate){for(let i=0;i<80;i++){if(predicate())return;await Promise.resolve();}assert.ok(predicate(),'expected async stage was not reached');}
+const uncertainCopy=()=>({texts:[{role:'headline',text:'UNCONFIRMED OCR',confidence:.2}],
+ subjects:[{label:'product',box:[200,400,900,900]}],scene:'package on table',uncertain:true,
+ packageLabels:[{text:'SOL',box:[400,500,500,600]}]});
+
+test('production classic click performs OCR and full-canvas reconstruction automatically without export',async()=>{
+ const ui=uiWorld(),f=ui.formats.find(f=>isClassicFormat(f)&&f.id==='9:16'),before=snapshot(ui.state,ui.formats);
+ const w=advertisementWorld({formats:ui.formats,classicTarget:()=>ui.run('classicActive()?classicTargetId:null')});
+ Object.assign(ui.advertisement,w.api);
+ ui.node('#btn-portrait').onclick();
+ await until(()=>!!w.api.entry(f));
+ assert.deepEqual(w.calls.filter(c=>['extract','visual'].includes(c[0])).map(c=>c[0]),['extract','visual']);
+ const visual=w.calls.find(c=>c[0]==='visual');assert.equal(visual[3],'reconstruct');
+ assert.deepEqual(plain(visual[4]),{w:1080,h:1920});assert.equal(visual[5].textZone,null);
+ assert.equal(w.api.entry(f).approved,false);assert.equal(w.api.ready(f),false);
+ assert.deepEqual(snapshot(ui.state,ui.formats),before,'automatic generation does not select a saved project format');
+ assert.equal(ui.workspace.parentNode,ui.node('#classic-host'));
+});
+
+test('uncertain OCR pauses the automatic flow, and human confirmation resumes the same active classic target',async()=>{
+ const w=advertisementWorld({doc:uncertainCopy(),classicId:'9:16'}),f=w.formats[0];
+ await w.api.prepareClassic(f);assert.equal(w.calls.filter(c=>c[0]==='visual').length,0);
+ assert.equal(w.api.entry(f),undefined);assert.equal(w.root.querySelector('#ad-copy-wrap').hidden,false);
+ w.root.querySelector('#ad-copy').value='HUMAN VERIFIED COPY';w.root.querySelector('#ad-confirm-copy').onclick();
+ await until(()=>!!w.api.entry(f));
+ assert.equal(w.calls.filter(c=>c[0]==='extract').length,1);assert.equal(w.calls.filter(c=>c[0]==='visual').length,1);
+ const request=w.calls.find(c=>c[0]==='visual');assert.equal(request[3],'reconstruct');
+ assert.deepEqual(plain(request[2].texts.map(t=>t.text)),['HUMAN VERIFIED COPY']);
+ assert.deepEqual(plain(request[2].packageLabels),uncertainCopy().packageLabels);assert.equal(w.api.ready(f),false);
+});
+
+test('confirming copy after leaving or changing the target cannot generate the old pending classic',async()=>{
+ for(const next of [null,'16:9']){
+  const w=advertisementWorld({doc:uncertainCopy(),classicId:'9:16'}),f=w.formats[0];
+  await w.api.prepareClassic(f);w.setClassic(next);
+  w.root.querySelector('#ad-copy').value='VERIFIED COPY';w.root.querySelector('#ad-confirm-copy').onclick();
+  for(let i=0;i<30;i++)await Promise.resolve();
+  assert.equal(w.calls.filter(c=>c[0]==='visual').length,0);assert.equal(w.api.entry(f),undefined);
+ }
+});
+
+test('same classic request while OCR is pending is deduplicated into one visual',async()=>{
+ const pending=deferred(),w=advertisementWorld({classicId:'9:16',extract:()=>pending.promise}),f=w.formats[0];
+ const first=w.api.prepareClassic(f),second=w.api.prepareClassic(f);
+ assert.equal(w.calls.filter(c=>c[0]==='extract').length,1);
+ pending.resolve(structuredClone(w.noCopy));await Promise.all([first,second]);
+ await until(()=>!!w.api.entry(f));assert.equal(w.calls.filter(c=>c[0]==='visual').length,1);
+ assert.equal(w.api.entry(f).approved,false);
+ await w.api.prepareClassic(f);assert.equal(w.calls.filter(c=>c[0]==='visual').length,1,'another click does not regenerate an existing unapproved piece');
+});
+
+test('leaving the classic view during OCR never starts generation for its late response',async()=>{
+ const pending=deferred(),w=advertisementWorld({classicId:'9:16',extract:()=>pending.promise}),f=w.formats[0];
+ const job=w.api.prepareClassic(f);w.setClassic(null);pending.resolve(structuredClone(w.noCopy));await job;
+ assert.equal(w.calls.filter(c=>c[0]==='visual').length,0);assert.equal(w.api.entry(f),undefined);assert.equal(w.api.ready(f),false);
+});
+
+for(const cancel of ['clear','cancel-button'])test(cancel+' during automatic OCR prevents generation when OCR resolves late',async()=>{
+ const pending=deferred();let signal;
+ const w=advertisementWorld({classicId:'9:16',extract:(_image,options)=>{signal=options.signal;return pending.promise;}}),f=w.formats[0];
+ const job=w.api.prepareClassic(f);assert.ok(signal);
+ if(cancel==='clear')w.api.clear();else w.root.querySelector('#ad-cancel').onclick();
+ assert.equal(signal.aborted,true);const status=w.status();pending.resolve(structuredClone(w.noCopy));await job;
+ assert.equal(w.calls.filter(c=>c[0]==='visual').length,0);assert.equal(w.api.entry(f),undefined);assert.equal(w.status(),status);
+});
+
+test('a reconstruction already started may finish unapproved without changing the special selection after leaving',async()=>{
+ const ui=uiWorld(),pending=deferred(),f=ui.formats.find(f=>isClassicFormat(f)&&f.id==='9:16');
+ const before=snapshot(ui.state,ui.formats),w=advertisementWorld({formats:ui.formats,make:()=>pending.promise,
+  classicTarget:()=>ui.run('classicActive()?classicTargetId:null')});
+ Object.assign(ui.advertisement,w.api);ui.node('#btn-portrait').onclick();await until(()=>w.calls.some(c=>c[0]==='visual'));
+ ui.context.goStep(2);pending.resolve({url:'data:image/png;base64,background',verification:{protectedSubjects:[]}});
+ await until(()=>!!w.api.entry(f));assert.equal(w.api.entry(f).approved,false);assert.equal(w.api.ready(f),false);
+ assert.equal(ui.state.sel,'cliente-01');assert.ok(ui.selected().every(f=>f.proyecto));assert.equal(ui.workspace.parentNode,ui.node('#special-host'));
+ assert.deepEqual(snapshot(ui.state,ui.formats),before);assert.equal(w.calls.filter(c=>c[0]==='visual').length,1);
+});
+
+test('the no-copy button reclassifies detected markings and resumes the active target while retaining package labels',async()=>{
+ const doc=uncertainCopy(),before=structuredClone(doc),w=advertisementWorld({doc,classicId:'9:16'}),f=w.formats[0];
+ await w.api.prepareClassic(f);assert.equal(w.calls.filter(c=>c[0]==='visual').length,0);
+ w.root.querySelector('#ad-no-copy').onclick();await until(()=>!!w.api.entry(f));
+ const request=w.calls.find(c=>c[0]==='visual');assert.equal(request[3],'reconstruct');
+ assert.deepEqual(plain(request[2].texts),[]);assert.equal(request[2].uncertain,false);
+ assert.deepEqual(plain(request[2].packageLabels.slice(0,before.packageLabels.length)),before.packageLabels);
+ assert.deepEqual(plain(request[2].packageLabels.at(-1)),{...before.texts[0],kind:'scene-marking'});assert.deepEqual(doc,before);
+ assert.equal(request[5].textZone,null);assert.deepEqual(plain(w.api.entry(f).copy),[]);assert.equal(w.api.ready(f),false);
+ assert.equal(w.root.querySelector('#ad-copy').value,'');assert.match(w.root.querySelector('#ad-type-status').textContent,/indicación tuya/);
+});
+
+test('no-copy after changing the classic target cannot generate an abandoned pending target',async()=>{
+ const w=advertisementWorld({doc:uncertainCopy(),classicId:'9:16'}),f=w.formats[0];
+ await w.api.prepareClassic(f);w.setClassic(null);w.root.querySelector('#ad-no-copy').onclick();
+ for(let i=0;i<30;i++)await Promise.resolve();assert.equal(w.calls.filter(c=>c[0]==='visual').length,0);assert.equal(w.api.entry(f),undefined);
+});
+
+for(const cancel of ['clear','cancel-button'])test(cancel+' during automatic reconstruction discards its late visual',async()=>{
+ const pending=deferred();let signal;
+ const w=advertisementWorld({classicId:'9:16',make:(_image,_doc,_action,_region,options)=>{signal=options.signal;return pending.promise;}}),f=w.formats[0];
+ const job=w.api.prepareClassic(f);await until(()=>!!signal);
+ if(cancel==='clear')w.api.clear();else w.root.querySelector('#ad-cancel').onclick();
+ assert.equal(signal.aborted,true);const status=w.status();pending.resolve({url:'data:image/png;base64,stale',verification:{protectedSubjects:[]}});await job;
+ assert.equal(w.api.entry(f),undefined);assert.equal(w.api.ready(f),false);assert.equal(w.status(),status);
+});
+
+test('without advertising copy is an explicit immutable transformation that retains the package identity',()=>{
+ const original=uncertainCopy(),before=structuredClone(original);Object.freeze(original);Object.freeze(original.texts);
+ const clean=adCore.withoutAdvertisingCopy(original);
+ assert.deepEqual(clean.texts,[]);assert.equal(clean.uncertain,false);
+ assert.deepEqual(clean.packageLabels.slice(0,before.packageLabels.length),before.packageLabels);
+ assert.deepEqual(clean.packageLabels.at(-1),{...before.texts[0],kind:'scene-marking'});
+ assert.deepEqual(clean.subjects,before.subjects);assert.equal(clean.scene,before.scene);assert.deepEqual(original,before);
+ const prompt=visualPrompt('reconstruct',clean,{w:1080,h:1920},{textZone:null});assert.match(prompt,/SOL/);
+ assert.match(prompt,/UNCONFIRMED OCR/);assert.match(prompt,/Preserve actual product markings, signs and graffiti/);
+ assert.doesNotMatch(prompt,/Remove all advertising typography/);assert.match(prompt,/packaging/);assert.match(prompt,/brand/);
+ const duplicated={...before,texts:[{text:' SOL '},{text:' MURAL '},{text:'MURAL'},{text:'  '}]};
+ const once=adCore.withoutAdvertisingCopy(duplicated);
+ assert.deepEqual(once.packageLabels.map(x=>x.text),['SOL','MURAL']);assert.equal(once.packageLabels.at(-1).kind,'scene-marking');
+});
+
+test('reanalysis resumes an uncertain pending classic, while an independent analysis does not autogenerate',async()=>{
+ for(const pending of [false,true]){
+  let count=0;const w=advertisementWorld({classicId:'9:16',extract:async()=>++count===1?uncertainCopy():structuredClone(w.noCopy)}),f=w.formats[0];
+  if(pending)await w.api.prepareClassic(f);else await w.api.analyze();
+  w.root.querySelector('#ad-analyze').onclick();
+  if(pending){await until(()=>!!w.api.entry(f));assert.equal(w.calls.filter(c=>c[0]==='visual').length,1);}
+  else{for(let i=0;i<30;i++)await Promise.resolve();assert.equal(w.calls.filter(c=>c[0]==='visual').length,0);assert.equal(w.api.entry(f),undefined);}
+  assert.equal(count,2);
+ }
+});
+
+test('classic full bleed covers a rounded provider ratio proportionally and preserves protected products',()=>{
+ const p=adCore.fullBleedPlacement(1920,1080,1344,768,[{box:[100,100,900,900]}]);
+ assert.ok(p.x<=0&&p.y<=0);assert.ok(p.x+p.w>=1920&&p.y+p.h>=1080);
+ assert.ok(Math.abs(p.w/p.h-1344/768)<1e-10,'the photograph is never stretched');
+ assert.throws(()=>adCore.fullBleedPlacement(1920,1080,1080,1920),/visual-ratio/);
+ assert.throws(()=>adCore.fullBleedPlacement(1920,1080,1344,768,[{box:[0,0,1000,1000]}]),/visual-product-crop/);
+ for(const dims of [[0,1080,1344,768],[1920,1080,Infinity,768]])assert.throws(()=>adCore.fullBleedPlacement(...dims),/visual-ratio/);
+ const draws=[],ctx={fillRect(){},drawImage:(_image,...rect)=>draws.push(rect),measureText:()=>({width:0})},doc={texts:[],subjects:[]};
+ const canvas={width:1920,height:1080,getContext:()=>ctx},visual={width:1344,height:768};
+ renderAdvertisement(canvas,visual,doc);assert.deepEqual(draws.at(-1),[15,0,1890,1080],'ordinary formats keep contain');
+ renderAdvertisement(canvas,visual,doc,{immersive:true,fullBleed:true,protectedSubjects:[{box:[100,100,900,900]}]});
+ assert.deepEqual(draws.at(-1),[p.x,p.y,p.w,p.h]);
 });
