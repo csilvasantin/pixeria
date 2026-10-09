@@ -1,14 +1,14 @@
 {
-  "version": "v.09.10.2026.r13.10:12",
+  "version": "v.09.10.2026.r14.10:31",
   "deployer": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
   "agent": "TrinityMBP16",
-  "builtAt": "2026-10-09T08:12:41Z",
+  "builtAt": "2026-10-09T08:31:07Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
-    "Ayuda orientada a Creador, Adaptador, demos y biblioteca, con índice de temas",
-    "Catálogo MCP compartido actualizado desde el servicio; distingue consulta, planes y generación",
-    "Guía de las cinco subdemos alineada con los manifiestos publicados"
+    "Voz identifica Google TTS con respaldo local y ElevenLabs Flash v2.5 según el motor real",
+    "Música identifica Suno v4.5, v5 y v5.5 con crédito del proveedor, conservando selecciones guardadas",
+    "Ayuda de audio e hilo musical distingue generación, muestras locales y propuestas pendientes"
   ]
 }

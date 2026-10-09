@@ -1,8 +1,8 @@
 {
-  "version": "v.09.10.2026.r13.10:12",
+  "version": "v.09.10.2026.r14.10:31",
   "deployer": "TrinityMBP16",
   "agent": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
-  "evidence": "Revisión independiente de ayuda y catálogo MCP; sin cambios de generación o permisos."
+  "evidence": "Etiquetas de proveedores contrastadas con rutas/modelos existentes; pruebas VM sin red ni generación."
 }

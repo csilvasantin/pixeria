@@ -6,9 +6,9 @@
     "Volver atrás: sello v.09.10.2026.r10.08:40."
   ],
   "default": [
-    "Ayuda orientada a Creador, Adaptador, demos y biblioteca, con índice de temas",
-    "Catálogo MCP compartido actualizado desde el servicio; distingue consulta, planes y generación",
-    "Guía de las cinco subdemos alineada con los manifiestos publicados"
+    "Voz identifica Google TTS con respaldo local y ElevenLabs Flash v2.5 según el motor real",
+    "Música identifica Suno v4.5, v5 y v5.5 con crédito del proveedor, conservando selecciones guardadas",
+    "Ayuda de audio e hilo musical distingue generación, muestras locales y propuestas pendientes"
   ],
   "v.07.10.2026.r11.23:39": [
     "Campo de etiquetas al importar (URL o ficheros) y junto a «Publicar en Stock» de lo que creas",
@@ -187,5 +187,10 @@
     "Ayuda orientada a Creador, Adaptador, demos y biblioteca, con índice de temas",
     "Catálogo MCP compartido actualizado desde el servicio; distingue consulta, planes y generación",
     "Guía de las cinco subdemos alineada con los manifiestos publicados"
+  ],
+  "v.09.10.2026.r14.10:31": [
+    "Voz identifica Google TTS con respaldo local y ElevenLabs Flash v2.5 según el motor real",
+    "Música identifica Suno v4.5, v5 y v5.5 con crédito del proveedor, conservando selecciones guardadas",
+    "Ayuda de audio e hilo musical distingue generación, muestras locales y propuestas pendientes"
   ]
 }

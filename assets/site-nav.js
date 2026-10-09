@@ -695,41 +695,7 @@
     try { ['pixeria_pf_left', 'pixeria_pf_right', 'pixeria_pf_bottom'].forEach(function (k) { localStorage.removeItem(k); }); } catch (_) {}
   }
 
-  // Suno es un motor oculto (norma de Carlos, 5-oct-2026): nunca se ve en la interfaz. Los textos
-  // del sitio ya no lo nombran; esto cubre lo que llega de datos (títulos, comentarios y prompts del
-  // Stock): en pantalla se lee «Pixeria Music». Solo cambia lo que se ve, no los datos.
-  var SUNO_RE = /\bsuno(?:[ -]?local)?(?:[ -]?v?\d+(?:[.-]\d+)?)?(?:\.ai)?\b/gi;
-  var SUNO_TEST = /suno/i;
-  var SUNO_SKIP = {SCRIPT: 1, STYLE: 1, TEXTAREA: 1, INPUT: 1, NOSCRIPT: 1};
-  function ocultarSunoEn(rootNode) {
-    if (!rootNode) return;
-    if (rootNode.nodeType === 3) {
-      var par = rootNode.parentNode;
-      if (par && !SUNO_SKIP[par.nodeName] && !(par.isContentEditable) && SUNO_TEST.test(rootNode.nodeValue)) rootNode.nodeValue = rootNode.nodeValue.replace(SUNO_RE, 'Pixeria Music');
-      return;
-    }
-    if (rootNode.nodeType !== 1 || SUNO_SKIP[rootNode.nodeName] || rootNode.isContentEditable) return;
-    ['title', 'alt', 'placeholder', 'aria-label'].forEach(function (at) {
-      var v = rootNode.getAttribute(at);
-      if (v && SUNO_TEST.test(v)) rootNode.setAttribute(at, v.replace(SUNO_RE, 'Pixeria Music'));
-    });
-    if (!SUNO_TEST.test(rootNode.textContent) && !rootNode.querySelector('[title],[alt],[placeholder],[aria-label]')) return;
-    for (var c = rootNode.firstChild; c; c = c.nextSibling) ocultarSunoEn(c);
-  }
-  function vigilarSuno() {
-    ocultarSunoEn(document.body);
-    if (/suno/i.test(document.title)) document.title = document.title.replace(SUNO_RE, 'Pixeria Music');
-    new MutationObserver(function (muts) {
-      muts.forEach(function (m) {
-        if (m.type === 'characterData') ocultarSunoEn(m.target);
-        else if (m.type === 'attributes') ocultarSunoEn(m.target);
-        else for (var i = 0; i < m.addedNodes.length; i++) ocultarSunoEn(m.addedNodes[i]);
-      });
-    }).observe(document.body, {childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['title', 'alt', 'placeholder', 'aria-label']});
-  }
-
   function start() {
-    try { vigilarSuno(); } catch (_) {}
     forgetOpenPanels();
     normalizeInternalNav();
     syncRailVersion();
