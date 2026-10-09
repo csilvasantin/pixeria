@@ -747,7 +747,7 @@
       css.rel = 'stylesheet'; css.href = '/assets/expert-cli.css' + (STAMP || '?v=4663');
       document.head.appendChild(css);
       var cli = document.createElement('script');
-      cli.src = '/assets/expert-cli.js?v=creator-demo-1';
+      cli.src = '/assets/expert-cli.js?v=20261009-idioma-demo-1';
       document.body.appendChild(cli);
       // ⌘ EXPERTO · CLI con el look de digitalavatar.ai (Carlos, 4-oct-2026): piel compartida de la
       // suite (www.admiranext.com/suite) sobre la consola de expert-cli.js; los comandos no cambian.
@@ -755,7 +755,7 @@
       axCss.rel = 'stylesheet'; axCss.href = 'https://www.admiranext.com/suite/experto.css?v=20261005-experto-idioma-2';
       document.head.appendChild(axCss);
       var ax = document.createElement('script');
-      ax.src = 'https://www.admiranext.com/suite/experto.js?v=20261007-pill-1';
+      ax.src = 'https://www.admiranext.com/suite/experto.js?v=20261009-idioma-demo-1';
       ax.setAttribute('data-panel', '.pf-cli');
       ax.setAttribute('data-body', '');
       ax.setAttribute('data-form', '.pf-cli-form');

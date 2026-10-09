@@ -345,17 +345,28 @@
     var qs = q.toString();
     return target.pathname + (qs ? '?' + qs : '') + location.hash;
   }
+  function demoEnCurso() {
+    try { if (document.getElementById('ax-demo-muestra') || document.getElementById('admira-native-demo')) return true; } catch (_) {}
+    try {
+      var n = window.AdmiraDemoControl && window.AdmiraDemoControl.state && window.AdmiraDemoControl.state();
+      if (n && n.activo) return true;
+    } catch (_) {}
+    try { if (new URLSearchParams(location.search).get('ax_demo')) return true; } catch (_) {}
+    return false;
+  }
   function applyExpertLang(next) {
     var l = next === 'en' ? 'en' : 'es';
     try { localStorage.setItem(LANG_KEY, l); } catch (_) {}
     document.documentElement.lang = l;
     // La suite (si está) aplica el idioma y puede navegar ella misma, a la misma URL que calculamos aquí.
     try { if (typeof window.AdmiraSetLanguage === 'function') window.AdmiraSetLanguage(l); } catch (_) {}
-    try {
+    // Con demo viva no recargamos: /en/ tiraba el paso. El idioma se queda en la página.
+    if (!demoEnCurso()) try {
       var url = expertLangUrl(l);
       if (url) { location.assign(url); return l; }
     } catch (_) {}
     try { document.dispatchEvent(new CustomEvent('admiranext:lang', {detail: {lang: l}})); } catch (_) {}
+    try { if (window.AdmiraDemoControl && typeof window.AdmiraDemoControl.idioma === 'function') window.AdmiraDemoControl.idioma(l); } catch (_) {}
     return l;
   }
   function execute(command) {

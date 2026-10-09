@@ -1,8 +1,8 @@
 {
-  "version": "v.09.10.2026.r8.08:07",
-  "deployer": "OraculoMacMini",
-  "agent": "OraculoMacMini",
+  "version": "v.09.10.2026.r9.08:45",
+  "deployer": "SmithMacMini",
+  "agent": "SmithMacMini",
   "machine": "MacMini",
-  "signature": "OraculoMacMini · MacMini",
-  "evidence": "Demo Creador: campaña nueva, proceso visible, historial separado y gemelo 360/3D"
+  "signature": "SmithMacMini · MacMini",
+  "evidence": "Idioma en demo: el mismo paso sigue, sin recargar a /en/"
 }
