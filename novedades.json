@@ -1,5 +1,10 @@
 {
   "_como": "Novedades del sello (2-4 líneas, español). Clave = sello exacto (v.DD.MM.AAAA.rN.HH:MM); .default si el sello aún no tiene entrada. El deploy las escribe en /version.json.novedades[] y el cargador común https://www.admiranext.com/assets/sello-novedades.js las enseña al pasar el ratón por el sello.",
+  "v.09.10.2026.r11.08:50": [
+    "/idioma con una demo en curso se queda en el mismo paso y no salta a /en/.",
+    "La consola de la página comparte esa guarda con la suite.",
+    "Volver atrás: sello v.09.10.2026.r10.08:40."
+  ],
   "default": [
     "Demo Creador todo: imagen y vídeo IA originales bajo petición.",
     "Proceso visible con estados reales y recuperación sin repetir solicitudes.",
@@ -144,6 +149,11 @@
     "Revisión por pieza, campaña JSON portátil y PNG/MP4 nativo por pantalla.",
     "Tutorial ES/EN y contratos MCP; publicación explícita en Stock."
   ],
+  "v.09.10.2026.r9.08:45": [
+    "/idioma con una demo en curso se queda en el mismo paso y no salta a /en/.",
+    "La suite y la consola de la página comparten esa guarda.",
+    "Volver atrás: el sello anterior es v.09.10.2026.r8.08:07."
+  ],
   "v.09.10.2026.r8.08:07": [
     "Demo Creador: campaña nueva de Sneaker Xtore en cada ejecución.",
     "Proceso completo visible y controles de pausa, siguiente e historial.",
@@ -163,6 +173,12 @@
     "Ayuda y MCP bilingües; biblioteca, PNG y contrato, sin programación física."
   ],
   "v.09.10.2026.r11.08:48": [
+    "Demo Creador todo: imagen y vídeo IA originales bajo petición.",
+    "Proceso visible con estados reales y recuperación sin repetir solicitudes.",
+    "Nuevos medios aplicados a las siete composiciones del gemelo 360 y 3D.",
+    "Ayuda y MCP bilingües; biblioteca, PNG y contrato, sin programación física."
+  ],
+  "v.09.10.2026.r12.08:50": [
     "Demo Creador todo: imagen y vídeo IA originales bajo petición.",
     "Proceso visible con estados reales y recuperación sin repetir solicitudes.",
     "Nuevos medios aplicados a las siete composiciones del gemelo 360 y 3D.",
