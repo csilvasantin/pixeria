@@ -1,14 +1,14 @@
 {
-  "version": "v.09.10.2026.r14.10:31",
+  "version": "v.09.10.2026.r15.10:49",
   "deployer": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
   "agent": "TrinityMBP16",
-  "builtAt": "2026-10-09T08:31:07Z",
+  "builtAt": "2026-10-09T08:49:24Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
-    "Voz identifica Google TTS con respaldo local y ElevenLabs Flash v2.5 según el motor real",
-    "Música identifica Suno v4.5, v5 y v5.5 con crédito del proveedor, conservando selecciones guardadas",
-    "Ayuda de audio e hilo musical distingue generación, muestras locales y propuestas pendientes"
+    "Entrada Horizontal → vertical para imágenes cargadas, con un destino inicial existente y preferencia por 9:16",
+    "Conserva proyecto, encuadre y selecciones fuera del perfil elegido; después permite añadir más tamaños",
+    "Mantiene revisión de texto y aprobación de cada variante antes de exportar"
   ]
 }

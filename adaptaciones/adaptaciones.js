@@ -1,3 +1,4 @@
+import {canEnterPortrait,portraitEntryPlan,selectPortraitEntry} from './portrait-entry.mjs?v=20261009-portrait-entry-1';
 import {mountAdvertisement} from './anuncio-studio.mjs?v=semantic-ad-13';
 import {mountCampaign} from './campaign-studio.mjs?v=creator-full-3';
 let campaignWorkshop=null;
@@ -561,6 +562,7 @@ function cardAviso(f) {
     : t('Elige un vídeo o una imagen para calcular el recorte.', 'Choose a video or an image to calculate cropping.');
 }
 function refreshInfo() {
+  syncPortraitEntry();
   studio?.sync();twin?.sync();
   drawDirty=true;saveSettings();
   const chosen=selectedFormats().length;
@@ -1448,6 +1450,26 @@ function goStep(n) {
   if (n === 2) { drawDirty = true; buildCardSettings(); refreshInfo(); }
   window.scrollTo({top: 0});
 }
+// [PORTRAIT-ENTRY-START]
+function portraitSource() { return {...state.src,kind:srcKind}; }
+function syncPortraitEntry() {
+  const button=$('#btn-portrait');
+  button.textContent=t('Horizontal → vertical','Landscape → portrait');
+  button.hidden=!canEnterPortrait(portraitSource(),mediaReady());
+  button.disabled=button.hidden;
+}
+function enterPortrait() {
+  const entry=portraitEntryPlan({source:portraitSource(),ready:mediaReady(),formats:FORMATOS,profile:state.profile});
+  if(!selectPortraitEntry(FORMATOS,entry))return;
+  state.profile=entry.profile;state.sel=entry.id;
+  $('#format-profile').value=entry.profile;syncCompat();buildGrid();goStep(2);
+  const target=FORMATOS.find(f=>f.id===entry.id), output=destino(target);
+  $('#export-status').textContent=t(`Destino inicial: ${target.nombre} · ${output.ancho}×${output.alto}. Revisa texto y producto antes de crear y aprobar; puedes añadir más tamaños.`,`Initial destination: ${target.nombre} · ${output.ancho}×${output.alto}. Review copy and product before creating and approving; you can add more sizes.`);
+  const card=Array.from(document.querySelectorAll('#grid [data-f]')).find(el=>el.dataset.f===entry.id);
+  if(card){card.focus({preventScroll:true});card.scrollIntoView({block:'nearest',behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'instant':'smooth'});}
+}
+$('#btn-portrait').onclick=enterPortrait;
+// [PORTRAIT-ENTRY-END]
 document.querySelectorAll('.steps .step').forEach(b => b.onclick = () => goStep(+b.dataset.go));
 $('#btn-adaptar').onclick = () => goStep(2);
 $('#btn-volver').onclick = () => goStep(1);
