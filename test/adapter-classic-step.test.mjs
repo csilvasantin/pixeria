@@ -254,7 +254,7 @@ function advertisementWorld({extract,make,doc,classicId=null,classicTarget,forma
  }
  const get=selector=>{if(!globals.has(selector))globals.set(selector,element());return globals.get(selector);};
  let activeClassicId=classicId;
- const formats=providedFormats||[{id:'9:16',nombre:'Vertical',on:false}],context=vm.createContext({...adCore,withSystemComposition,
+ const formats=providedFormats||[{id:'9:16',nombre:'Vertical',on:false}],context=vm.createContext({...adCore,withSystemComposition,mountAdmiritoWork:()=>({update:state=>calls.push(['companion',{...state}])}),
   document:{createElement:element,querySelector:get,querySelectorAll:()=>[]},AbortController,setTimeout,clearTimeout,
   Image:class {naturalWidth=imageSize.ancho;naturalHeight=imageSize.alto;async decode(){}},
   extractAdvertisement:async(...args)=>{calls.push(['extract',...args]);return extract?extract(...args):structuredClone(doc||noCopy);},loadDocumentFonts:async()=>{},
@@ -564,4 +564,30 @@ test('classic full bleed covers a rounded provider ratio proportionally and pres
  renderAdvertisement(canvas,visual,doc);assert.deepEqual(draws.at(-1),[15,0,1890,1080],'ordinary formats keep contain');
  renderAdvertisement(canvas,visual,doc,{immersive:true,fullBleed:true,protectedSubjects:[{box:[100,100,900,900]}]});
  assert.deepEqual(draws.at(-1),[p.x,p.y,p.w,p.h]);
+});
+
+test('Admirito follows actual OCR and recreation, disappears for review, errors, cancel and clear',async()=>{
+ const readState=w=>w.calls.filter(c=>c[0]==='companion').at(-1)[1];
+ const ocr=deferred(),visual=deferred(),w=advertisementWorld({extract:()=>ocr.promise,make:()=>visual.promise,classicId:'9:16'});
+ const job=w.api.prepareClassic(w.formats[0]);assert.equal(readState(w).busy,true);assert.equal(readState(w).phase,'analyze');
+ ocr.resolve(structuredClone(w.noCopy));for(let i=0;i<40&&!w.calls.some(c=>c[0]==='visual');i++)await Promise.resolve();
+ const generating=readState(w);
+ visual.resolve({url:'data:image/png;base64,fixture',verification:{protectedSubjects:[]}});await job;
+ assert.equal(generating.busy,true);assert.equal(generating.phase,'recreate');
+ assert.equal(readState(w).busy,false);assert.equal(w.api.ready(w.formats[0]),false,'mascot disappearance never approves a draft');
+ const uncertain=advertisementWorld({doc:{...w.noCopy,uncertain:true},classicId:'9:16'});await uncertain.api.prepareClassic(uncertain.formats[0]);assert.equal(readState(uncertain).busy,false);
+ const failed=advertisementWorld({make:async()=>{throw Error('provider');},classicId:'9:16'});await failed.api.prepareClassic(failed.formats[0]);assert.equal(readState(failed).busy,false);
+ for(const action of ['cancel','clear']){
+  const pending=deferred(),active=advertisementWorld({extract:()=>pending.promise});const analysis=active.api.analyze();assert.equal(readState(active).busy,true);
+  if(action==='cancel')active.root.querySelector('#ad-cancel').onclick();else active.api.clear();
+  assert.equal(readState(active).busy,false);pending.resolve(structuredClone(active.noCopy));await analysis;assert.equal(readState(active).busy,false);
+ }
+});
+
+test('a late cancelled OCR cannot hide Admirito during a new operation',async()=>{
+ const first=deferred(),second=deferred();let n=0;const w=advertisementWorld({extract:()=>++n===1?first.promise:second.promise});
+ const old=w.api.analyze();w.api.clear();const current=w.api.analyze();
+ first.resolve(structuredClone(w.noCopy));await old;
+ assert.equal(w.api.busy(),true);assert.equal(w.calls.filter(c=>c[0]==='companion').at(-1)[1].busy,true);
+ second.resolve(structuredClone(w.noCopy));await current;assert.equal(w.calls.filter(c=>c[0]==='companion').at(-1)[1].busy,false);
 });

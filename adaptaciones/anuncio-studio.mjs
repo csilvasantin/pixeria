@@ -1,3 +1,4 @@
+import {mountAdmiritoWork} from '../assets/admirito-work.mjs?v=admirito-work-1';
 import {withSystemComposition} from '../assets/content-composition.mjs?v=composition-1';
 import {extractAdvertisement,makeVisual,semanticAction,editCopy,withoutAdvertisingCopy,adRegions,renderAdvertisement,textLayout,safeCopyZone,loadDocumentFonts,measureCopy,editTypography} from './anuncio-core.mjs?v=classic-auto-5';
 export function mountAdvertisement(h){
@@ -10,7 +11,8 @@ export function mountAdvertisement(h){
  document.querySelector('#ad-options').append(advanced);
  const advancedField=id=>advanced.querySelector(id),reconstruct=()=>advancedField('#ad-treatment').value==='reconstruct';
 
- const $=s=>root.querySelector(s),entries=new Map(),forces=new Map();let doc=null,copyConfirmed=false,version=0,turn=0,controller=null,analysisPromise=null,message='',classicRequest=0,pendingClassicId='';
+ const $=s=>root.querySelector(s),entries=new Map(),forces=new Map();let doc=null,copyConfirmed=false,version=0,turn=0,controller=null,analysisPromise=null,message='',classicRequest=0,pendingClassicId='',workPhase='create',workFormatId='';
+ const companion=mountAdmiritoWork({t,host:()=>{const cards=Array.from(document.querySelectorAll('#grid .fmt[data-f]'));return (cards.find(el=>el.dataset.f===workFormatId)||cards[0])?.querySelector('.stage,.esp-stage')||document.querySelector('#grid .fmt-original .stage')||root;}});
  const activeClassic=id=>!!id&&h.classicTarget?.()===id;
  // Safe OCR may create a draft; uncertain or edited copy still needs a person's decision.
  const classicCopyReviewRequired=()=>!!doc&&(!copyConfirmed||doc.uncertain);
@@ -50,6 +52,7 @@ export function mountAdvertisement(h){
  function clear(){dropClassic();typeEditor.hidden=true;typeEditor.replaceChildren();$('#ad-type-status').textContent='';$('#ad-rejected').hidden=true;$('#ad-rejected img').removeAttribute('src');turn++;controller?.abort();controller=null;analysisPromise=null;doc=null;copyConfirmed=false;version++;entries.clear();forces.clear();$('#ad-copy-wrap').hidden=true;$('#ad-copy').value='';advancedField('#ad-important').value='';advancedField('#ad-brief').value='';say('');sync();}
  function invalidate(){classicRequest++;turn++;controller?.abort();controller=null;entries.clear();version++;copyConfirmed=false;changed();}
  function sync(){
+  companion.update({busy:!!controller&&enabled(),phase:workPhase});
   root.hidden=!enabled();advanced.hidden=!enabled();document.querySelector('#ad-adjustments').hidden=!enabled();advancedField('#ad-reconstruct-options').hidden=!reconstruct()&&!h.classicTarget?.();advancedField('#ad-treatment').closest?.('label')?.toggleAttribute('hidden',!!h.classicTarget?.());advanced.querySelectorAll('input,select,textarea').forEach(x=>x.disabled=!!controller);$('#ad-analyze').disabled=!!controller||!enabled();$('#ad-analyze').textContent=doc?t('Volver a analizar','Analyze again'):t('Analizar anuncio','Analyze advertisement');$('#ad-cancel').hidden=!controller;$('#ad-progress').hidden=!controller;
   $('#ad-copy-wrap').hidden=!doc;$('#ad-confirm-copy').disabled=!!controller||!doc;$('#ad-no-copy').disabled=!!controller||!doc;$('#ad-copy').disabled=!!controller;
   if(doc&&!controller&&h.classicTarget?.()&&classicCopyReviewRequired())requestClassicCopyReview();
@@ -59,7 +62,7 @@ export function mountAdvertisement(h){
    const f=h.formats().find(x=>x.id===el.dataset.f);if(!f)return;
    const old=el.querySelector('.crear-ctl');if(old)old.hidden=enabled();
    let controls=el.querySelector('.ad-card');if(!enabled()){controls?.remove();return;}
-   if(!controls){controls=document.createElement('div');controls.className='ad-card';controls.innerHTML=`<p class="ad-card-status" role="status"></p><button class="pill ad-approve" type="button">${t('Aprobar pieza','Approve piece')}</button> <button class="pill ad-recreate" type="button">${t('Recrear de nuevo','Recreate again')}</button> <a class="pill ad-png" download hidden>↓ PNG</a>`;el.querySelector('.stage,.esp-stage')?.after(controls);if(!controls.isConnected)el.append(controls);
+   if(!controls){controls=document.createElement('div');controls.className='ad-card';controls.innerHTML=`<p class="ad-card-status" role="status"></p><button class="pill ad-approve" type="button">${t('Aprobar pieza','Approve piece')}</button> <button class="pill ad-recreate" type="button">${t('Recrear de nuevo','Recreate again')}</button> <a class="pill ad-png" download hidden>↓ PNG</a>`;el.querySelector('.admirito-preview-row,.stage,.esp-stage')?.after(controls);if(!controls.isConnected)el.append(controls);
     controls.querySelector('.ad-approve').onclick=e=>{e.stopPropagation();const a=entry(f);if(a){a.approved=true;say(t('Pieza aprobada. Ya puedes exportarla.','Piece approved. You can now export it.'));changed();}};
     controls.querySelector('.ad-recreate').onclick=e=>{e.stopPropagation();entries.delete(key(f));if(activeClassic(f.id))void prepareClassic(f);else{forces.set(f.id,'recreate');void prepare([f]);}};
    }
@@ -79,6 +82,7 @@ export function mountAdvertisement(h){
   if(analysisPromise)return analysisPromise;
   if(!enabled())return null;
   if(force){doc=null;typeEditor.hidden=true;typeEditor.replaceChildren();copyConfirmed=false;entries.clear();version++;$('#ad-copy').value='';$('#ad-type-status').textContent='';}
+  workPhase='analyze';workFormatId=h.classicTarget?.()||h.selected()[0]?.id||'';
   const mine=++turn;controller?.abort();controller=new AbortController();const active=controller,timer=setTimeout(()=>active.abort(),60000);
   say(t('Leyendo texto, producto y composición…','Reading copy, product and composition…'));sync();
   analysisPromise=(async()=>{try{const result=await extractAdvertisement(reference(),{signal:active.signal});if(mine!==turn)return null;const source=h.source();doc=withSystemComposition(result,source.composition,{type:source.kind,width:source.src.ancho,height:source.src.alto});renderTypeEditor();$('#ad-type-status').textContent=doc.copySource==='system-composition'?t('Texto y rasgos tipográficos guardados por el compositor de Studio. Revisa la pieza antes de aprobar.','Copy and type traits saved by the Studio compositor. Review the piece before approving.'):doc.texts.some(x=>x.typography)?t('Tipografía aproximada al original: proporciones, peso, colores y jerarquía por bloque. Revisa la fidelidad antes de aprobar. No identifica la fuente exacta.','Typography approximates the original: proportions, weight, colours and hierarchy per block. Review fidelity before approval. The exact font is not identified.'):doc.texts.length?t('Análisis sin estilo tipográfico. Vuelve a analizar para conservar los rasgos del original.','Analysis has no typography. Analyze again to preserve the original traits.'):t('Sin texto publicitario externo. Conservamos las etiquetas en el producto.','No external advertising copy. Package labels stay on the product.');copyConfirmed=!doc.uncertain;entries.clear();version++;$('#ad-copy').value=doc.texts.map(x=>x.text).join('\n\n');say(doc.copySource==='system-composition'?t(`Recuperados ${doc.texts.length} bloques de la composición guardada. Revisa el producto y la pieza.`,`Recovered ${doc.texts.length} blocks from the saved composition. Review the product and the piece.`):doc.texts.length?t(`Extraídos ${doc.texts.length} bloques. Revisa que la copia esté completa; después crea las piezas.`,`Extracted ${doc.texts.length} blocks. Check that the copy is complete, then create the pieces.`):t('Sin texto publicitario detectado. Revisa el producto antes de aprobar las piezas.','No advertising copy detected. Review the product before approving pieces.'));return doc;}catch(e){if(mine===turn)say(errorText(e));return null;}finally{clearTimeout(timer);if(mine===turn){controller=null;analysisPromise=null;changed();}}})();return analysisPromise;
@@ -109,17 +113,18 @@ export function mountAdvertisement(h){
   if(classic&&classicCopyReviewRequired()){pendingClassicId=classic.id;requestClassicCopyReview(classic.id);return false;}
   if(!copyConfirmed||doc.uncertain){say(t('Corrige y confirma el texto extraído antes de crear.','Correct and confirm the extracted copy before creating.'));return false;}
   const todo=formats.filter(f=>!entry(f));if(!todo.length){const ready=formats.every(f=>entry(f)?.approved);if(!ready)say(t('Revisa texto y producto y aprueba cada pieza antes de exportar.','Review copy and product and approve each piece before exporting.'));return ready;}
+  workPhase='create';workFormatId=todo[0]?.id||'';
   $('#ad-rejected').hidden=true;const mine=++turn;controller=new AbortController();const active=controller;$('#ad-progress').max=todo.length;$('#ad-progress').value=0;sync();
   const ref=reference(),source=h.source().src;let clean=null;const failures=[];
   try{say(t('Cargando fuentes del anuncio…','Loading advertisement fonts…'));await loadDocumentFonts(doc,{signal:active.signal});if(mine!==turn)return false;for(let i=0;i<todo.length;i++){
    const f=todo[i];let renderedCandidate=null;try{const dst=h.destino(f),zone=doc.texts.length?(h.textZone?.(f)||null):null,cv=document.createElement('canvas');cv.width=dst.ancho;cv.height=dst.alto;
    if(cv.width*cv.height>16777216)throw Error('canvas-budget');
    const measure=(text,size,role,style)=>measureCopy(cv.getContext('2d'),text,size,role,style);if(!textLayout(doc,cv.width,cv.height,measure,zone).valid)throw Error('text-overflow');
-   let a=action(f).action;
+   let a=action(f).action;workFormatId=f.id;workPhase=['recreate','reconstruct'].includes(a)?'recreate':'create';sync();
    say(`${i+1}/${todo.length} · ${f.nombre} · ${['recreate','reconstruct'].includes(a)?t('recreando la escena','recreating the scene'):t('separando texto y fotografía','separating copy and photograph')}…`);
    const regions=adRegions(dst.ancho,dst.alto,zone),region=a==='reconstruct'||!doc.texts.length?{w:dst.ancho,h:dst.alto}:regions.hero,visualOptions={signal:active.signal,textZone:doc.texts.length?regions.panel:null,important:advancedField('#ad-important').value,brief:advancedField('#ad-brief').value};
    const timer=setTimeout(()=>active.abort(),155000);let visual;
-   try{try{visual=a==='recompose'&&clean?clean:await makeVisual(ref,doc,a,a==='recompose'?{w:source.ancho,h:source.alto}:region,visualOptions);if(a==='recompose')clean=visual;}catch(e){if(e.message!=='visual-review-failed'||a!=='recompose')throw e;a='recreate';say(`${f.nombre} · ${t('la adaptación no es válida; recreando','adaptation is not usable; recreating')}…`);visual=await makeVisual(ref,doc,a,region,{signal:active.signal});}}finally{clearTimeout(timer);}
+   try{try{visual=a==='recompose'&&clean?clean:await makeVisual(ref,doc,a,a==='recompose'?{w:source.ancho,h:source.alto}:region,visualOptions);if(a==='recompose')clean=visual;}catch(e){if(e.message!=='visual-review-failed'||a!=='recompose')throw e;a='recreate';workPhase='recreate';sync();say(`${f.nombre} · ${t('la adaptación no es válida; recreando','adaptation is not usable; recreating')}…`);visual=await makeVisual(ref,doc,a,region,{signal:active.signal});}}finally{clearTimeout(timer);}
    if(mine!==turn)return false;
    const image=new Image();image.src=visual.url;await image.decode();if(mine!==turn)return false;
    renderedCandidate={url:visual.url,receivedSize:{ancho:image.naturalWidth,alto:image.naturalHeight},targetSize:{ancho:dst.ancho,alto:dst.alto}};
