@@ -10,10 +10,12 @@
 // limits»). Por encima de PARTS_THRESHOLD el MP4 viaja crudo, en trozos, por /stock-upload/*
 // (functions/stock-upload/[accion].js) y se publica con `r2Staged` en vez de base64. El Stock
 // guarda la misma entrada por los dos caminos. El bitrate no se toca: lo fijan las especificaciones.
+// Cliente común (9-oct-2026): uploadInParts y stockSource los usan también la caja 2 del Adaptador
+// (importar.js) y el Stock de pixeria.com (app.js · publishToStock), cada uno con su tipo, mime y motor.
 export const STOCK_PUBLISH_URL = '/stock-publish';
 export const STOCK_UPLOAD_URL = '/stock-upload';
 export const PARTS_THRESHOLD = 8 * 1024 * 1024;    // hasta aquí, base64 como siempre
-export const MAX_STOCK_BYTES = 500 * 1024 * 1024;  // tope del Adaptador en /stock-upload/start
+export const MAX_STOCK_BYTES = 500 * 1024 * 1024;  // tope del Adaptador y de su caja 2 (importar.js)
 export const PART_CONCURRENCY = 2;                 // trozos en vuelo a la vez
 export const PART_ATTEMPTS = 3;                    // intentos por trozo (1 + 2 reintentos)
 export const ADAPTATION_TAG = 'adaptación';
@@ -56,15 +58,16 @@ export function planParts(size, partSize) {
 }
 const pausa = ms => new Promise(resolve => setTimeout(resolve, ms));
 const leerJSON = async response => { try { return await response.json(); } catch (_) { return {}; } };
-// Sube el MP4 crudo a uploads/ del Stock: start → trozos (PART_CONCURRENCY a la vez, PART_ATTEMPTS
+// Sube el fichero crudo a uploads/ del Stock: start → trozos (PART_CONCURRENCY a la vez, PART_ATTEMPTS
 // intentos cada uno ante red caída, 408, 429 o 5xx) → complete. Si algo falla, abort: no deja
 // trozos colgando. Devuelve {ok, key} para publicar con r2Staged, o {ok:false, error}.
-// onProgress(bytesSubidos, total) tras cada trozo.
-export async function uploadInParts(blob, {fetch: f = (...a) => fetch(...a), motor = 'adaptador', onProgress = null, concurrency = PART_CONCURRENCY, attempts = PART_ATTEMPTS, wait = pausa} = {}) {
+// onProgress(bytesSubidos, total) tras cada trozo. Por defecto, el MP4 del Adaptador; quien suba
+// otra cosa pasa su type ('video'|'audio'|'image'), su mime y su motor.
+export async function uploadInParts(blob, {fetch: f = (...a) => fetch(...a), motor = 'adaptador', type = 'video', mime = 'video/mp4', onProgress = null, concurrency = PART_CONCURRENCY, attempts = PART_ATTEMPTS, wait = pausa} = {}) {
   const post = (accion, body) => f(`${STOCK_UPLOAD_URL}/${accion}`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
   let ini;
   try {
-    const r = await post('start', {type: 'video', motor, mime: 'video/mp4', size: blob.size});
+    const r = await post('start', {type, motor, mime, size: blob.size});
     ini = await leerJSON(r);
     if (!r.ok || !ini.ok) return {ok: false, error: ini.error || `HTTP ${r.status}`};
   } catch (_) { return {ok: false, error: 'network'}; }
@@ -108,17 +111,22 @@ export async function uploadInParts(blob, {fetch: f = (...a) => fetch(...a), mot
   try { await post('abort', {key, uploadId}); } catch (_) {}
   return {ok: false, error};
 }
+// Cómo viaja el fichero a /stock-publish: {base64} hasta PARTS_THRESHOLD, o subido antes por partes y
+// {r2Staged}. Devuelve {ok, fields} para mezclar con los metadatos, o {ok:false, error} ('too-big' si
+// pasa de maxBytes). Las mismas opciones que uploadInParts.
+export async function stockSource(blob, {maxBytes = MAX_STOCK_BYTES, ...opts} = {}) {
+  if (blob.size > maxBytes) return {ok: false, error: 'too-big'};
+  if (blob.size <= PARTS_THRESHOLD) return {ok: true, fields: {base64: await toBase64(blob)}};
+  const subida = await uploadInParts(blob, opts);
+  return subida.ok ? {ok: true, fields: {r2Staged: subida.key}} : {ok: false, error: subida.error};
+}
 // `extra` (paquete por estanco) sustituye tags, externalRef y comment del payload.
 // `opts.onProgress(bytes, total)` informa de la subida por partes (solo por encima de PARTS_THRESHOLD).
 export async function publishAdaptation(blob, meta, extra = null, {onProgress = null, fetch: f = (...a) => fetch(...a)} = {}) {
-  if (blob.size > MAX_STOCK_BYTES) return {ok: false, error: 'too-big'};
-  let body;
-  if (blob.size > PARTS_THRESHOLD) {
-    const subida = await uploadInParts(blob, {fetch: f, onProgress});
-    if (!subida.ok) return {ok: false, error: subida.error};
-    const {base64: _, ...payload} = stockPayload({...meta, size: blob.size});
-    body = {...payload, ...(extra || {}), r2Staged: subida.key};
-  } else body = {...stockPayload({...meta, size: blob.size, base64: await toBase64(blob)}), ...(extra || {})};
+  const fuente = await stockSource(blob, {fetch: f, onProgress});
+  if (!fuente.ok) return fuente;
+  const {base64: _, ...payload} = stockPayload({...meta, size: blob.size});
+  const body = {...payload, ...(extra || {}), ...fuente.fields};
   // Miniatura real del vídeo exportado (fotograma ~10 %): nada llega al Stock sin imagen.
   try {
     const {posterFromVideo} = await import('/assets/poster-frame.mjs');

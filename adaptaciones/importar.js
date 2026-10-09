@@ -5,6 +5,10 @@
  * subido del equipo (#src-file → setSource), pasa solo a «Adaptar» y se guarda en el Stock como las
  * importaciones del Stock (POST /stock-publish → /stock/publish), con la etiqueta del cliente activo.
  * Un mp4 directo se descarga desde el navegador (si su servidor lo permite por CORS).
+ * Subida por partes (9-oct-2026): con el mismo cliente que las exportaciones del Adaptador
+ * (stock-publish.mjs · stockSource). Hasta 8 MB va en base64; por encima sube crudo y en trozos por
+ * /stock-upload/* y se publica con r2Staged. En base64, desde unos 40 MB el Worker se quedaba sin
+ * memoria (503). Tope: 500 MB, el del Adaptador.
  */
 (function () {
   var EN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
@@ -14,7 +18,8 @@
     {kind: 'admira-tube', base: 'https://macmini.tail48b61c.ts.net/admira/tube'},
     {kind: 'admira-tube-backup', base: 'https://macbook-pro-16.tail48b61c.ts.net/admira/tube'}
   ];
-  var MAX_BYTES = 100 * 1024 * 1024, MAX_STOCK = 70 * 1024 * 1024, MAX_MS = 6 * 60 * 1000;
+  var MAX_BYTES = 100 * 1024 * 1024, MAX_MS = 6 * 60 * 1000;
+  var CLIENTE_STOCK = '/adaptaciones/stock-publish.mjs'; // el mismo módulo que importa adaptaciones.js
   var DIRECTO = /\.(mp4|m4v|mov|webm)(?:[?#]|$)/i;
   var enCurso = false;
 
@@ -117,15 +122,19 @@
     try { var PC = window.PixeriaCliente; if (PC && PC.listo && PC.listo() && !PC.esDefecto()) return PC.actual(); } catch (_) {}
     return null;
   }
-  function base64(blob) {
-    return new Promise(function (ok, ko) { var fr = new FileReader(); fr.onload = function () { ok(String(fr.result).replace(/^data:[^,]*,/, '')); }; fr.onerror = function () { ko(fr.error); }; fr.readAsDataURL(blob); });
-  }
   // Guardado en el Stock, como las importaciones del Stock; con el cliente activo como etiqueta.
-  async function alStock(res, url, file) {
-    if (file.size > MAX_STOCK) return {ok: false, error: t('pesa más de 70 MB (tope de subida al Stock)', 'over 70 MB (Stock upload limit)')};
+  // onProgress(bytes, total) informa de la subida por partes (solo por encima de 8 MB).
+  async function alStock(res, url, file, onProgress) {
+    var SP = await import(CLIENTE_STOCK);
+    var fuente = await SP.stockSource(file, {motor: res.motor, type: 'video', mime: 'video/mp4', onProgress: onProgress || null});
+    if (!fuente.ok) {
+      return {ok: false, error: fuente.error === 'too-big'
+        ? t('pesa más de ' + (SP.MAX_STOCK_BYTES / 1048576) + ' MB (tope de subida al Stock)', 'over ' + (SP.MAX_STOCK_BYTES / 1048576) + ' MB (Stock upload limit)')
+        : fuente.error};
+    }
     var cli = clienteActivo();
-    var body = {type: 'video', motor: res.motor, mime: 'video/mp4', base64: await base64(file), title: res.titulo || null, prompt: url,
-      tags: cli ? [cli.id] : [], costEst: (res.motor === 'yt-dlp' ? 'gratis · ' : 'import · ') + (file.size / 1048576).toFixed(2) + 'MB · adaptador'};
+    var body = Object.assign({type: 'video', motor: res.motor, mime: 'video/mp4', title: res.titulo || null, prompt: url,
+      tags: cli ? [cli.id] : [], costEst: (res.motor === 'yt-dlp' ? 'gratis · ' : 'import · ') + (file.size / 1048576).toFixed(2) + 'MB · adaptador'}, fuente.fields);
     try { var orientation = await import('/assets/content-orientation.mjs?v=orientation-1'); body.dimensions = await orientation.readMediaDimensions(file, 'video'); } catch (_) {}
     try { var m = await import('/assets/poster-frame.mjs'); var u = URL.createObjectURL(file); try { var p = await m.posterFromVideo(u); if (p) body.poster = p; } finally { URL.revokeObjectURL(u); } } catch (_) {}
     var r = await fetch('/stock-publish', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
@@ -142,7 +151,8 @@
       barra(100);
       var file = elegir(res);
       estado(t('✓ Importado (' + mb(file.size) + '): pasando a Adaptar… · guardando en el Stock…', '✓ Imported (' + mb(file.size) + '): moving to Adapt… · saving to the Stock…'), 'ok');
-      alStock(res, url, file).then(function (s) {
+      var guardando = t('✓ Importado (' + mb(file.size) + '): pasando a Adaptar… · guardando en el Stock…', '✓ Imported (' + mb(file.size) + '): moving to Adapt… · saving to the Stock…');
+      alStock(res, url, file, function (hecho, total) { estado(guardando + ' ' + Math.floor(hecho / total * 100) + ' %', 'ok'); }).then(function (s) {
         estado(s.ok ? t('✓ Importado (' + mb(file.size) + ') y guardado en el Stock' + (s.cliente ? ' · ' + s.cliente.nombre : '') + (s.id ? ' · ' + s.id : '') + '.', '✓ Imported (' + mb(file.size) + ') and saved to the Stock' + (s.cliente ? ' · ' + s.cliente.nombre : '') + (s.id ? ' · ' + s.id : '') + '.')
           : t('✓ Importado (' + mb(file.size) + '). No se ha guardado en el Stock: ' + s.error + '.', '✓ Imported (' + mb(file.size) + '). Not saved to the Stock: ' + s.error + '.'), s.ok ? 'ok' : 'warn');
       }, function (e) { estado(t('✓ Importado. No se ha guardado en el Stock: ', '✓ Imported. Not saved to the Stock: ') + (e && e.message || e), 'warn'); });
@@ -164,6 +174,6 @@
     // Pegar una URL ya la importa (como en el Stock al pulsar 📥), sin tener que pulsar Enter.
     inp.addEventListener('paste', function () { setTimeout(function () { if (/^https?:\/\/\S+$/i.test((inp.value || '').trim())) form.requestSubmit(); }, 0); });
   }
-  window.PixeriaImportar = {importar: importar};
+  window.PixeriaImportar = {importar: importar, alStock: alStock};
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
