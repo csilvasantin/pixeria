@@ -16,10 +16,11 @@
  *   exceeded resource limits», 8-oct-2026).
  *
  * No abre nada nuevo: el endpoint de arriba ya es público. Aun así solo reenvía lo que
- * produce el Adaptador (type video, motor del Adaptador, MP4) y ningún otro campo
- * que el Worker trate como privilegiado (externalId, catalogo…).
+ * producen el Adaptador, su caja 2 y el Stock de pixeria.com (ficheros locales e importaciones,
+ * desde el 9-oct-2026): vídeo, audio o imagen con su mime, de los motores de _stock-proxy.js, y
+ * ningún campo que el Worker trate como privilegiado (externalId, catalogo…).
  */
-import {MOTORES, STAGED_KEY, stockBase, cabeceras, error, respuesta} from './_stock-proxy.js';
+import {MOTORES, STAGED_KEY, tipoMimeOk, stockBase, cabeceras, error, respuesta} from './_stock-proxy.js';
 
 const MAX_BODY = 95 * 1024 * 1024; // el borde corta en 100 MB
 const CAMPOS = ['type', 'motor', 'prompt', 'title', 'comment', 'tags', 'costEst', 'mime', 'externalRef', 'validacion', 'quality', 'dimensions'];
@@ -28,10 +29,10 @@ export async function onRequestPost({ request, env }) {
   if (+request.headers.get('content-length') > MAX_BODY) return error(413, 'too-big');
   let body;
   try { body = await request.json(); } catch { return error(400, 'bad-json'); }
-  // Exportaciones del Adaptador e importaciones por URL de su caja 2 (yt-dlp o mp4 directo), solo vídeo MP4.
+  // Tipo, mime y motor admitidos (_stock-proxy.js) y exactamente una fuente.
   const conBase64 = typeof body?.base64 === 'string' && body.base64 !== '';
   const conStaged = typeof body?.r2Staged === 'string' && STAGED_KEY.test(body.r2Staged);
-  if (!body || body.type !== 'video' || !MOTORES.includes(body.motor) || body.mime !== 'video/mp4' || conBase64 === conStaged) {
+  if (!body || !MOTORES.includes(body.motor) || !tipoMimeOk(body.type, body.mime) || conBase64 === conStaged) {
     return error(400, 'solo-adaptaciones');
   }
   const limpio = {};
@@ -39,6 +40,8 @@ export async function onRequestPost({ request, env }) {
   if (conBase64) limpio.base64 = body.base64; else limpio.r2Staged = body.r2Staged;
   // Miniatura generada en el navegador (assets/poster-frame.mjs): el vídeo llega al Stock con imagen.
   if (typeof body.poster === 'string' && /^data:image\/(jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(body.poster) && body.poster.length < 400 * 1024) limpio.poster = body.poster;
+  // Miniatura por URL (p. ej. la de YouTube en las importaciones del Stock): solo https y corta.
+  if (typeof body.thumbnail === 'string' && /^https:\/\/[^\s"'<>]+$/.test(body.thumbnail) && body.thumbnail.length <= 500) limpio.thumbnail = body.thumbnail;
   let r;
   try {
     r = await fetch(`${stockBase(env)}/stock/publish`, {

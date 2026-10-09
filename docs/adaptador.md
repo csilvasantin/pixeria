@@ -334,16 +334,45 @@ Un MP4 de 30 s a ~18 Mbps (el bitrate lo marcan las especificaciones de Altadis 
 - Hasta 8 MB (`PARTS_THRESHOLD`) se sigue publicando en base64, como siempre.
 - Por encima, `publishAdaptation` sube el MP4 **crudo y en trozos** y después publica con `r2Staged` en vez de `base64`. El Stock guarda la misma entrada por los dos caminos (metadatos, etiquetas, motor, título, comentario, póster, `validacion`, `quality`, `dimensions`, `externalRef` y la URL `https://stock.admira.store/stock/<id>/asset.mp4`).
 - Rutas (`functions/stock-upload/[accion].js`, que reenvía a `api.admira.store/stock/upload/*` con las mismas cabeceras que `/stock-publish`):
-  - `POST /stock-upload/start` `{type:'video', motor, mime:'video/mp4', size}` → `{ok, key, uploadId, partSize, maxParts}`. Solo MP4 de los motores del Adaptador (`adaptador`, `yt-dlp`, `import`), `size` entero hasta 500 MB.
+  - `POST /stock-upload/start` `{type, motor, mime, size}` → `{ok, key, uploadId, partSize, maxParts}`.
+    - `type` es `video`, `audio` o `image`, y `mime` es de la misma familia (`video/*`, `audio/*`, `image/*`) o `application/octet-stream`.
+    - `motor` es `adaptador`, `yt-dlp`, `import` o `local`.
+    - `size` es un entero de hasta 2 GB, el tope del Worker. Cada cliente aplica el suyo (ver abajo).
   - `PUT /stock-upload/part?key=&uploadId=&n=` con el trozo crudo y `Content-Length` (≤ 25 MB) → `{ok, partNumber, etag}`. La función lo reenvía como stream: nunca lo lee a memoria.
   - `POST /stock-upload/complete` `{key, uploadId, parts:[{partNumber, etag}]}` → `{ok, key, size}`. El Worker comprueba que el fichero mide lo anunciado en `start` (400 `size-mismatch` si no).
   - `POST /stock-upload/abort` `{key, uploadId}`.
   - Después, `POST /stock-publish` con los metadatos de siempre y `r2Staged: key`.
 - El cliente (`adaptaciones/stock-publish.mjs`, `uploadInParts`) sube 2 trozos a la vez y reintenta cada uno hasta 3 veces si falla la red o responde 408, 429 o 5xx. Si un trozo o el cierre fallan, aborta la subida.
 - Mientras sube, la nota de la cola dice «Guardando en el Stock… N %».
-- Mismo perímetro que `/stock-publish`: nada de `externalId`, `catalogo` ni claves fuera de `uploads/`.
+- Mismo perímetro que `/stock-publish`: nada de `externalId`, `catalogo` ni claves fuera de `uploads/`. `/stock-publish` admite además `thumbnail`, solo si es una URL `https` de hasta 500 caracteres (la miniatura de YouTube de las importaciones).
 - Lo que se cierra y no llega a publicarse lo borra el Worker a las 24 h.
 - Pruebas: `node --test test/stock-subida-partes.test.mjs`. Cubren los trozos, los reintentos, el abort, la función que reenvía el trozo sin leerlo y `/stock-publish` con `r2Staged`.
+
+#### Los demás caminos al Stock (9-oct-2026)
+
+Las otras tres subidas en base64 pasan a la misma regla: base64 hasta 8 MB y, por encima, por partes. Las del navegador usan el cliente común de `adaptaciones/stock-publish.mjs` (`uploadInParts` y `stockSource`); no hay una segunda copia.
+
+| Camino | Por encima de 8 MB | Tope |
+|---|---|---|
+| Caja 2 del Adaptador (`adaptaciones/importar.js`, `alStock`) | `stockSource` → `/stock-upload/*` → `/stock-publish {r2Staged}` | 500 MB, como el Adaptador |
+| Stock de pixeria.com (`app.js`, `publishToStock`): «Archivos locales → Stock», importación por URL (yt-dlp) y el botón 📌 de reintento | `subirPorPartesSiToca` → `uploadInParts` → `/stock-publish {r2Staged}`, por el proxy del propio dominio | 2 GB, el del Worker. Ya subía episodios de ese tamaño y no se baja |
+| CLI `scripts/stock-subir.py` | `/stock/upload/init·part·complete` y `/stock/publish {r2Staged}`, directo al Worker | 2 GB, el del Worker |
+
+- **app.js.**
+  - Va por partes solo con los motores `local` y `yt-dlp`, y con un fichero en el navegador (`blob:` o `meta.blob`).
+  - El resto (generaciones de otros motores, `data:` pequeñas, `sourceUrl`) sigue igual: hasta 8 MB, base64 directo al Worker.
+  - Ya no queda la subida por partes directa al Worker (28-ago), que solo entraba por encima de 70 MB.
+  - El progreso sigue en la barra del diálogo de importar, en el texto de estado y en el botón 📌 («⏳ subiendo… N %»).
+  - Si el sitio no tiene `/stock-upload`, el error lo dice y remite a `scripts/stock-subir.py`.
+- **admira.studio.**
+  - El espejo publica estas mismas Pages Functions. `sync.sh` cambia `www.pixeria.com` por `www.admira.studio`, así que su proxy manda `Origin: https://www.admira.studio`.
+  - El Worker no mira `Origin` en `/stock/upload/*` ni en `/stock/publish`; solo lo mira en `/stock/site-capsule`, que es de admira.academy. Además, admira.studio está en su lista de CORS. Funciona igual que en pixeria.com y en los previews.
+- **stock-subir.py.**
+  - Cada trozo se lee del disco a bloques de 1 MB mientras se envía, con `Content-Length` y sin chunked. Nunca tiene en memoria el fichero ni el trozo entero.
+  - Reintenta cada trozo hasta 3 veces (esperas de 1 s y 2 s) si falla la red o el Worker responde 408, 429 o 5xx; si no, aborta. Mantiene la cabecera de navegador (sin ella, Cloudflare responde 403 1010).
+  - `--max-mb` (8 por defecto) marca dónde empieza la subida por partes.
+  - Si un Worker no tuviera la subida por partes, cae al plan B de siempre: base64 hasta 70 MB y, por encima, recodificar el vídeo con ffmpeg.
+- Pruebas: `node --test test/stock-subida-partes-callers.test.mjs` (cliente común, `publishToStock` de app.js e `importar.js`, ejecutados en `vm`) y `python3 test/stock-subir.test.py` (Worker falso en 127.0.0.1; `test/stock-subir-py.test.mjs` lo lanza dentro de `node --test`).
 
 ### Programación de players
 

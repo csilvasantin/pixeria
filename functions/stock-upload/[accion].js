@@ -18,12 +18,17 @@
  * /stock-publish. El trozo se reenvía como STREAM: aquí nunca se llama a arrayBuffer(),
  * text() ni json() sobre él.
  *
- * Mismo perímetro que /stock-publish: solo vídeo MP4 de los motores del Adaptador, solo claves
- * de uploads/ y ningún campo privilegiado (externalId, catalogo…), que además aquí ni existen.
+ * Mismo perímetro que /stock-publish: vídeo, audio o imagen con su mime de los motores admitidos
+ * (_stock-proxy.js: Adaptador, importaciones y ficheros locales del Stock de pixeria.com), solo
+ * claves de uploads/ y ningún campo privilegiado (externalId, catalogo…), que aquí ni existen.
+ * Desde el 9-oct-2026 también suben por aquí la caja 2 del Adaptador (importar.js) y el Stock de
+ * pixeria.com (app.js), así que funciona igual en pixeria.com, en admira.studio y en los previews.
  */
-import {MOTORES, STAGED_KEY, stockBase, cabeceras, error, respuesta} from '../_stock-proxy.js';
+import {MOTORES, STAGED_KEY, tipoMimeOk, stockBase, cabeceras, error, respuesta} from '../_stock-proxy.js';
 
-export const MAX_SIZE = 500 * 1024 * 1024;   // tope por fichero del Adaptador (el Worker admite 2 GB)
+// Tope de la ruta = el del Worker (STOCK_STAGED_MAX, 2 GB): el Stock de pixeria.com ya subía episodios
+// de ese tamaño. Cada cliente pone el suyo (el Adaptador y su caja 2, 500 MB: MAX_STOCK_BYTES).
+export const MAX_SIZE = 2 * 1024 * 1024 * 1024;
 export const PART_MAX = 25 * 1024 * 1024;     // = STOCK_PART_MAX del Worker
 export const PARTS_MAX = 400;                 // = STOCK_PARTS_MAX del Worker
 const JSON_MAX = 64 * 1024;                   // start/complete/abort son JSON pequeños (400 partes ≈ 30 KB)
@@ -47,11 +52,12 @@ export async function onRequestPut({request, env, params}) {
 async function start(request, env) {
   const body = await leerJSON(request);
   if (body instanceof Response) return body;
-  if (body.type !== 'video' || !MOTORES.includes(body.motor) || body.mime !== 'video/mp4') return error(400, 'solo-adaptaciones');
+  // «solo-adaptaciones» es el nombre histórico del error de perímetro; se conserva por compatibilidad.
+  if (!MOTORES.includes(body.motor) || !tipoMimeOk(body.type, body.mime)) return error(400, 'solo-adaptaciones');
   const size = body.size;
   if (!Number.isSafeInteger(size) || size <= 0) return error(400, 'bad-size');
   if (size > MAX_SIZE) return error(413, 'too-big', {max: MAX_SIZE});
-  return reenviarJSON(env, '/stock/upload/init', {mime: 'video/mp4', size});
+  return reenviarJSON(env, '/stock/upload/init', {mime: body.mime, size});
 }
 
 async function parte(request, env) {

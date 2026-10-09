@@ -2956,6 +2956,53 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
   const STOCK_PUBLISH_URL = ELEVEN_WORKER_URL + '/stock/publish';
   const STOCK_LIST_URL    = ELEVEN_WORKER_URL + '/stock/list';
 
+  // [STOCK-PARTES-INICIO] (test/stock-subida-partes-callers.test.mjs ejecuta este trozo y publishToStock)
+  // ─── SUBIDA POR PARTES (Carlos, 9-oct-2026) ────────────────────────────────
+  // Un fichero en base64 dentro del JSON de /stock/publish se come la memoria del Worker: desde
+  // unos 40 MB respondía 503 «Worker exceeded resource limits» (y el borde corta en 100 MB). Por
+  // encima de 8 MB el fichero sube CRUDO y en trozos con el mismo cliente que el Adaptador
+  // (adaptaciones/stock-publish.mjs · uploadInParts: 2 trozos a la vez, reintentos y abort) por el
+  // proxy del propio dominio, /stock-upload/* y después /stock-publish con r2Staged. Así funciona
+  // igual en pixeria.com, en admira.studio y en los previews. Lo pequeño sigue en base64 directo al
+  // Worker, como siempre. Sustituye a la subida por partes directa al Worker (28-ago), que solo
+  // entraba por encima de 70 MB.
+  const STOCK_PARTES_PUBLISH_URL = '/stock-publish';
+  const STOCK_PARTES_MOTORES = ['local', 'yt-dlp'];        // ficheros locales e importaciones por URL
+  const STOCK_PARTES_MAX = 2 * 1024 * 1024 * 1024;         // tope del Worker (STOCK_STAGED_MAX): caben episodios
+  const STOCK_PARTES_DESDE = 8 * 1024 * 1024;              // = PARTS_THRESHOLD del cliente; aquí solo para los textos
+  // {key, mime} si el fichero se ha subido por partes; null si va por el camino de siempre (pequeño,
+  // sin fichero en el navegador o de otro motor). Si la subida por partes falla, lanza el motivo.
+  async function subirPorPartesSiToca(meta, opts, btn) {
+    if (!STOCK_PARTES_MOTORES.includes(meta.motor) || !['video', 'audio', 'image'].includes(meta.type)) return null;
+    let blob = meta.blob || null;
+    if (!blob && meta.url && meta.url.startsWith('blob:')) {
+      try { blob = await (await fetch(meta.url)).blob(); } catch (_) { return null; }
+    }
+    if (!blob) return null;
+    let cliente;
+    try { cliente = await import('/adaptaciones/stock-publish.mjs'); } catch (_) { return null; }
+    if (blob.size <= cliente.PARTS_THRESHOLD) return null;
+    if (blob.size > STOCK_PARTES_MAX) {
+      throw new Error(`pesa ${(blob.size / 1048576).toFixed(0)} MB y el tope del Stock es ${STOCK_PARTES_MAX / 1048576} MB`);
+    }
+    const mime = String(meta.mime || blob.type || 'application/octet-stream').split(';')[0].trim().toLowerCase();
+    const up = await cliente.uploadInParts(blob, {
+      motor: meta.motor, type: meta.type, mime,
+      onProgress: (hecho, total) => {
+        if (opts && opts.onProgress) opts.onProgress(hecho, total);
+        if (btn) btn.textContent = `⏳ subiendo… ${Math.floor(hecho / total * 100)} %`;
+      },
+    });
+    if (!up.ok) {
+      throw new Error(up.error === 'no-existe' || up.error === 'HTTP 404'
+        ? 'este sitio no tiene la subida por partes (/stock-upload); mientras tanto: scripts/stock-subir.py'
+        : 'subida por partes: ' + up.error);
+    }
+    if (btn) btn.textContent = '⏳ publicando…';
+    return { key: up.key, mime };
+  }
+  // [STOCK-PARTES-FIN]
+
   // ⬇ DESCARGAR A ESTE ORDENADOR
   // Antes esto era `<a href="https://…" download>`: el atributo `download` lo
   // ignoran los navegadores cuando el href es de otro origen, así que el clic
@@ -3064,7 +3111,9 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     return 'good';
   }
 
-  async function publishToStock(meta, btn) {
+  // [PUBLICAR-INICIO]
+  // opts.onProgress(bytes, total): avance de la subida por partes (solo ficheros de más de 8 MB).
+  async function publishToStock(meta, btn, opts = {}) {
     if (btn) { btn.disabled = true; btn.dataset.origLabel = btn.textContent; btn.textContent = '⏳ subiendo...'; }
     try {
       // Imágenes con URL externa (Nano Banana): captura el <img> ya mostrado a
@@ -3119,13 +3168,22 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       }
       // Fichero ya subido por partes a uploads/: el Worker lo recoge de R2 y no
       // viaja nada en este JSON. Es lo que permite pasar de los ~74 MB.
+      let publishUrl = STOCK_PUBLISH_URL;
       if (meta.r2Staged) {
         payload.r2Staged = meta.r2Staged;
         payload.mime = meta.mime || null;
       } else if (meta.url && (meta.url.startsWith('data:') || meta.url.startsWith('blob:'))) {
-        const { mime, base64 } = await urlToBase64(meta.url);
-        payload.mime = mime;
-        payload.base64 = base64;
+        // Más de 8 MB: por partes y por el proxy del dominio (ver subirPorPartesSiToca).
+        const partes = await subirPorPartesSiToca(meta, opts, btn);
+        if (partes) {
+          payload.r2Staged = partes.key;
+          payload.mime = partes.mime;
+          publishUrl = STOCK_PARTES_PUBLISH_URL;
+        } else {
+          const { mime, base64 } = await urlToBase64(meta.url);
+          payload.mime = mime;
+          payload.base64 = base64;
+        }
       } else if (meta.url) {
         payload.sourceUrl = meta.url;
         payload.mime = meta.mime || null;
@@ -3143,7 +3201,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       if (meta.type === 'video' && !payload.thumbnail && meta.url) {
         try { const { posterFromVideo } = await import('/assets/poster-frame.mjs'); const poster = await posterFromVideo(meta.url); if (poster) payload.poster = poster; } catch (_) {}
       }
-      const r = await fetch(STOCK_PUBLISH_URL, {
+      const r = await fetch(publishUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -3169,6 +3227,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       return { ok: false, error: String(e) };
     }
   }
+  // [PUBLICAR-FIN]
 
   document.addEventListener('click', (e) => {
     const b = e.target.closest('.publish-btn');
@@ -3754,65 +3813,6 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       localInput.value = '';
     });
 
-    // ── SUBIDA POR PARTES ────────────────────────────────────────────────────
-    // El asset viaja normalmente en base64 dentro del JSON de /stock/publish, y
-    // el borde de Cloudflare corta el cuerpo en 100 MB (413 medido) → techo de
-    // ~74 MB. Con R2 multipart cada trozo es su propia petición y ese techo
-    // desaparece. Devuelve la clave de uploads/, o null si el Worker todavía no
-    // tiene los endpoints (entonces se sigue por el camino de siempre).
-    const STOCK_UPLOAD_BASE = ELEVEN_WORKER_URL + '/stock/upload';
-    async function subirPorPartes(file, onProgress) {
-      let ini;
-      try {
-        const r = await fetch(STOCK_UPLOAD_BASE + '/init', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mime: file.type || 'application/octet-stream', size: file.size }),
-        });
-        if (!r.ok) return null;                 // 404: Worker sin la subida por partes
-        ini = await r.json();
-      } catch { return null; }
-      if (!ini || !ini.ok || !ini.key || !ini.uploadId) return null;
-      const partSize = ini.partSize || 25 * 1024 * 1024;
-      const parts = [];
-      let subido = 0;
-      try {
-        for (let n = 1, off = 0; off < file.size; n++, off += partSize) {
-          const trozo = file.slice(off, Math.min(off + partSize, file.size));
-          const pr = await fetch(`${STOCK_UPLOAD_BASE}/part?key=${encodeURIComponent(ini.key)}`
-            + `&uploadId=${encodeURIComponent(ini.uploadId)}&n=${n}`, { method: 'POST', body: trozo });
-          if (!pr.ok) throw new Error(`trozo ${n}: ${await errorLegible(pr)}`);
-          const pd = await pr.json();
-          parts.push({ partNumber: pd.partNumber, etag: pd.etag });
-          subido += trozo.size;
-          if (onProgress) onProgress(subido, file.size);
-        }
-        const cr = await fetch(STOCK_UPLOAD_BASE + '/complete', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: ini.key, uploadId: ini.uploadId, parts }),
-        });
-        if (!cr.ok) throw new Error('cierre: ' + await errorLegible(cr));
-        return ini.key;
-      } catch (e) {
-        // Si nos quedamos a medias, se aborta: si no, los trozos ocupan sitio
-        // en el bucket para siempre.
-        try {
-          await fetch(STOCK_UPLOAD_BASE + '/abort', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key: ini.key, uploadId: ini.uploadId }),
-          });
-        } catch {}
-        throw e;
-      }
-    }
-
-    // TOPE POR FICHERO. El asset viaja a /stock/publish como data: URL dentro de
-    // un JSON, y base64 infla un 33%: con el límite de 100 MB de cuerpo que tiene
-    // un Worker de Cloudflare, por encima de ~70 MB el POST se cae. Antes eso
-    // salía como un error de red sin explicación después de leer el fichero
-    // entero. El asset más grande que hay hoy en el Stock son 56,5 MB, así que
-    // el tope es real, no teórico. (Carlos, 28-ago-2026.)
-    const MAX_LOCAL = 70 * 1024 * 1024;
-
     // Publica UN archivo del dispositivo directo al Stock, sin pasar por el Mac.
     // Devuelve {ok, id, error}; no navega (de eso se encarga el lote).
     async function publicarUnLocal(file, stat, prefijo) {
@@ -3825,62 +3825,12 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         if (type === 'image' || type === 'video') {
           try { const m = await import('/assets/content-orientation.mjs?v=orientation-1'); dimensions = await m.readMediaDimensions(file, type); } catch (_) {}
         }
-        // Por encima del tope del cuerpo, se sube por partes a R2. Si el Worker
-        // todavía no tiene esos endpoints, subirPorPartes devuelve null y se
-        // explica el porqué en vez de fallar con un error de red opaco.
-        if (file.size > MAX_LOCAL) {
-          stat.textContent = `${prefijo}${file.name} · ${sizeMB} MB · subiendo por partes…`;
-          let clave = null;
-          try {
-            clave = await subirPorPartes(file, (hecho, total) => {
-              progress?.update(hecho, total, 0);
-              stat.textContent = `${prefijo}${file.name} · subiendo por partes… `
-                + `${(hecho / 1048576).toFixed(0)} de ${sizeMB} MB`;
-            });
-          } catch (e) {
-            progress?.error('falló la subida por partes');
-            const msg = `${file.name}: ${String(e && e.message || e)}`;
-            stat.textContent = `${prefijo}❌ ${msg}`;
-            return { ok: false, error: msg };
-          }
-          if (!clave) {
-            progress?.error('demasiado grande');
-            const msg = `${file.name} pesa ${sizeMB} MB y este Stock todavía no admite `
-              + `subida por partes (tope ${(MAX_LOCAL / 1048576).toFixed(0)} MB: el asset viaja en base64 `
-              + `y el borde corta el cuerpo en 100 MB). Mientras tanto: scripts/stock-subir.py ${file.name}`;
-            stat.textContent = `${prefijo}❌ ${msg}`;
-            return { ok: false, error: msg };
-          }
-          const metaPartes = {
-            dimensions,
-            type, motor: 'local',
-            prompt: file.name,
-            title: file.name.replace(/\.[^.]+$/, ''),
-            comment: (document.getElementById('import-comment')?.value || '').trim() || null,
-            tags: etiquetasImport(),
-            costEst: `local · ${sizeMB}MB`,
-            r2Staged: clave,
-            mime: mt || null,
-          };
-          const res = await publishToStock(metaPartes, null);
-          if (res && res.ok) {
-            progress?.done(file.size, 0);
-            stat.textContent = `${prefijo}✓ ${file.name} · ${sizeMB} MB · ✅ en Stock`;
-            return { ok: true, id: res.id || '' };
-          }
-          progress?.error('fallo al publicar');
-          const fallo = (res && res.error || 'fallo').slice(0, 140);
-          stat.textContent = `${prefijo}❌ Stock: ${fallo}`;
-          return { ok: false, error: 'Stock: ' + fallo };
-        }
-        stat.textContent = `${prefijo}${file.name} · ${sizeMB} MB · subiendo al Stock…`;
-        const dataUrl = await new Promise((res, rej) => {
-          const fr = new FileReader();
-          fr.onload = () => res(fr.result);
-          fr.onerror = () => rej(fr.error || new Error('no se pudo leer el archivo'));
-          fr.readAsDataURL(file);
-        });
+        // Un solo camino para todos los tamaños: publishToStock decide. Hasta 8 MB, base64 directo
+        // al Worker; por encima, por partes (subirPorPartesSiToca), con la barra y el texto de avance.
+        const porPartes = file.size > STOCK_PARTES_DESDE;
+        stat.textContent = `${prefijo}${file.name} · ${sizeMB} MB · ${porPartes ? 'subiendo por partes…' : 'subiendo al Stock…'}`;
         const comment = (document.getElementById('import-comment')?.value || '').trim();
+        const blobUrl = URL.createObjectURL(file);
         const meta = {
           dimensions,
           type, motor: 'local',
@@ -3889,10 +3839,18 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
           comment: comment || null,
           tags: etiquetasImport(),
           costEst: `local · ${sizeMB}MB`,
-          url: dataUrl,
+          url: blobUrl,
+          blob: file,
           mime: mt || null,
         };
-        const result = await publishToStock(meta, null);
+        const onProgress = (hecho, total) => {
+          progress?.update(hecho, total, 0);
+          stat.textContent = `${prefijo}${file.name} · subiendo por partes… `
+            + `${(hecho / 1048576).toFixed(0)} de ${sizeMB} MB`;
+        };
+        let result;
+        try { result = await publishToStock(meta, null, { onProgress }); }
+        finally { URL.revokeObjectURL(blobUrl); }
         if (result && result.ok) {
           progress?.done(file.size, 0);
           stat.textContent = `${prefijo}✓ ${file.name} · ✅ en Stock`;
@@ -4098,7 +4056,10 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
           stat.textContent = `${prefijo}✓ Importado (${sizeMB} MB en ${sec}s) · subiendo a Stock…`;
           // Auto-publicar en Stock al finalizar la importación
           const publishBtn = player?.querySelector('.publish-btn');
-          const result = await publishToStock(importMeta, publishBtn);
+          // Más de 8 MB: sube por partes; el texto de estado enseña el avance.
+          const result = await publishToStock(importMeta, publishBtn, {
+            onProgress: (hecho, total) => { stat.textContent = `${prefijo}✓ Importado (${sizeMB} MB en ${sec}s) · subiendo a Stock… ${Math.floor(hecho / total * 100)} %`; },
+          });
           if (result && result.ok) {
             stat.textContent = `${prefijo}✓ Importado (${sizeMB} MB en ${sec}s) · ✅ en Stock`;
             return { ok: true, id: result.id || '' };
