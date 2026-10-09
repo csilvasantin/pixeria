@@ -1,14 +1,14 @@
 {
-  "version": "v.09.10.2026.r21.13:20",
+  "version": "v.09.10.2026.r22.13:31",
   "deployer": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
   "agent": "TrinityMBP16",
-  "builtAt": "2026-10-09T11:19:52Z",
+  "builtAt": "2026-10-09T11:31:42Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
-    "Los elementos adicionales empiezan vacíos; el producto se protege automáticamente",
-    "Tu indicación se conserva al reanalizar o cancelar y se borra al cambiar la fuente",
-    "Un rechazo por proporción o recorte muestra el borrador bloqueado, dimensiones y elemento protegido"
+    "Creador vuelve a iniciar correctamente en español e inglés con el shell actual del Adaptador",
+    "Regenerar Creador conserva la demo y todos los controles compartidos, incluidos horizontal y vertical",
+    "Regresión automática verifica los IDs del runtime, sus eventos y la generación repetible de ambas páginas"
   ]
 }

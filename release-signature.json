@@ -1,8 +1,8 @@
 {
-  "version": "v.09.10.2026.r21.13:20",
+  "version": "v.09.10.2026.r22.13:31",
   "deployer": "TrinityMBP16",
   "agent": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
-  "evidence": "Previos antes de texto/composición/tratamiento en ES/EN. Publicación PNG explícita con revisión vigente, tipo MIME y medidas nativas giradas; copia de compositor autenticada y vinculada a hash del asset. Importaciones/contratos incompletos conservan OCR. Guardias de arte final en rutas imagen/vídeo. 110 pruebas distintas pertinentes y revisión independiente; proveedores/publicación simulados en estas pruebas. Sello81 y diffcheck pasan."
+  "evidence": "Creador ES/EN regenerado desde el shell vigente del Adaptador: incluye los controles y hosts clásicos que requiere el runtime. El generador conserva la entrada demo.mjs y produce páginas repetibles. 63 pruebas pertinentes pasan, incluidos los 80 IDs compartidos, los bindings reales del fallo, publicación PNG, aprobación y demos con proveedores simulados. Sin generaciones ni publicación de assets reales."
 }
