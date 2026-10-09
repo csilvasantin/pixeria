@@ -1,8 +1,8 @@
 {
-  "version": "v.09.10.2026.r15.10:49",
+  "version": "v.09.10.2026.r16.11:39",
   "deployer": "TrinityMBP16",
   "agent": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
-  "evidence": "Entrada explícita de imagen horizontal a destino vertical existente; regresiones de selección, proyectos y revisión semántica sin generación real."
+  "evidence": "Clásico bidireccional en paso 1 con un único motor; regresiones de aprobación, cancelación, compatibilidad y conservación de selección sin generación real."
 }

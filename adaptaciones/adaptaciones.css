@@ -432,3 +432,20 @@ body.adapt-page{overflow-x:clip;overflow-y:visible}
 @media(max-width:680px){.campaign-launch,.campaign-heading,.campaign-review{flex-direction:column;align-items:stretch}.campaign-directions{grid-template-columns:1fr}.campaign-direction:before{display:inline;margin-right:16px}.campaign-stage-head{align-items:flex-start;flex-direction:column}.campaign-stage{padding:12px}.campaign-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .campaign-direction canvas{display:block;width:100%;height:120px;object-fit:contain;margin-top:15px}.campaign-direction:before{display:none}.campaign-direction:disabled{opacity:.5}
+
+/* One shared workspace: classic image review stays beside its original in step 1. */
+.adapt-main #classic-host{width:100%;margin-top:16px}
+.adapt-main #special-host{min-width:0}
+.adapt-main .variant-playback{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:12px}
+.adapt-main #ad-adjustments{border:1px solid var(--ln);padding:10px;margin-bottom:12px}
+.adapt-main #ad-adjustments>summary{cursor:pointer;font-weight:700}
+.adapt-main #ad-options .ad-reconstruction{border:0;margin:8px 0 0;padding:0}
+body.classic-active #grid .remove-format,
+body.classic-active #clear-formats,
+body.classic-active .variants-heading,
+body.classic-active #paquete,
+body.classic-active #previo-todas,
+body.classic-active #cuad-avanzado-live .profile-label,
+body.image-source[data-paso="1"] #cuad-opciones,
+body.image-source[data-paso="1"] #cuad-avanzado-live .profile-label{display:none!important}
+@media(min-width:700px){body.classic-active #grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

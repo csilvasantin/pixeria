@@ -1,5 +1,5 @@
-import {canEnterPortrait,portraitEntryPlan,selectPortraitEntry} from './portrait-entry.mjs?v=20261009-portrait-entry-1';
-import {mountAdvertisement} from './anuncio-studio.mjs?v=semantic-ad-13';
+import {classicTargets,isClassicFormat,extraFormats} from './classic-step.mjs?v=20261009-classic-step-1';
+import {mountAdvertisement} from './anuncio-studio.mjs?v=classic-step-1';
 import {mountCampaign} from './campaign-studio.mjs?v=creator-full-3';
 let campaignWorkshop=null;
 import {mountTwin} from './gemelo-digital.mjs?v=installation-20261009';
@@ -72,9 +72,16 @@ let stillSec = STILL.default;
 try { stillSec = stillSeconds(localStorage.getItem(STILL_KEY)); } catch (_) {}
 let srcExt = 'png';
 let initialized = false;
-const selectedFormats = () => FORMATOS.filter(f => f.on && (state.profile === 'proyecto' ? isProjectFormat(f) : formatFamily(f) === state.profile));
+// [CLASSIC-SELECTION-START]
+let classicTargetId = '', specialSelectedId = '', currentStep = 1, specialStepVisited = false;
+const classicActive = () => isImage() && currentStep === 1 && !!classicTargetId;
+const selectedFormats = () => classicActive()
+  ? FORMATOS.filter(f => isClassicFormat(f) && f.id === classicTargetId)
+  : extraFormats(FORMATOS,isImage()).filter(f => f.on && (state.profile === 'proyecto' ? isProjectFormat(f) : formatFamily(f) === state.profile));
+const currentSelected = () => selectedFormats().find(f => f.id === state.sel);
+// [CLASSIC-SELECTION-END]
 // Biblioteca uses the compatibility selector; project formats keep native resolutions.
-const syncCompat = () => { $('#compat').disabled = state.profile !== 'standard'; };
+const syncCompat = () => { $('#compat').disabled = !classicActive() && state.profile !== 'standard'; };
 // Persistence is separated by project (and, inside, by format id): General keeps the historic key
 // pixeria.adapter.v1; each project uses pixeria.adapter.v1.proyecto.<id>. Custom sizes belong to
 // the general library, so they are shared and always live in the General record.
@@ -351,11 +358,12 @@ function selectionControl(members, name, key, filtered, input = document.createE
   return {state: s, action, input};
 }
 function buildPicker() {
-  const visible=matchingFormats(FORMATOS,{query:picker.query,orientation:picker.orientation,profile:state.profile});
+  const available=extraFormats(FORMATOS,isImage());
+  const visible=matchingFormats(available,{query:picker.query,orientation:picker.orientation,profile:state.profile});
   const shown=new Set(visible),filtered=pickerFiltered();
   const focusKey=document.activeElement?.dataset?.selectKey||null;
   const container=$('#size-categories');container.replaceChildren();
-  for(const group of sizeGroups(FORMATOS,state.profile)){
+  for(const group of sizeGroups(available,state.profile)){
     const formats=group.members.filter(f=>shown.has(f));if(!formats.length)continue;
     const name=EN?group.en:group.es;
     const detail=document.createElement('details');detail.className='size-category';detail.dataset.group=group.id;detail.open=!!picker.query||picker.open.has(group.id)||state.profile!=='standard';
@@ -401,7 +409,7 @@ function renderCampaigns() {
     const count=document.createElement('span');count.className='campaign-count';
     const description=document.createElement('small');description.textContent=EN?c.descriptionEn:c.descriptionEs;
     b.append(heading,count,description);
-    b.onclick=()=>{const profile=c.profile||'standard';state.profile=profile;$('#format-profile').value=profile;syncCompat();applyCampaign(FORMATOS,c.id,campaigns);buildGrid();};return b;
+    b.onclick=()=>{const profile=c.profile||'standard';state.profile=profile;$('#format-profile').value=profile;syncCompat();applyCampaign(extraFormats(FORMATOS,isImage()),c.id,campaigns);buildGrid();};return b;
   }));
 }
 $('#size-search').oninput=e=>{picker.query=e.target.value;buildPicker();};
@@ -439,7 +447,7 @@ function buildGrid() {
     el.querySelector('.export-one').onclick=(e)=>{e.stopPropagation();exportFormats([f]);};
     // Display (no print) from a still image: JPG as well, lighter for ad networks.
     if(f.category==='display'&&f.output==='png'){const j=document.createElement('button');j.type='button';j.className='pill export-one export-jpg';j.textContent='JPG';j.hidden=!isPicture();j.title=t('JPG calidad 90, más ligero para redes de display','JPG quality 90, lighter for display networks');j.onclick=(e)=>{e.stopPropagation();exportFormats([f],'jpg');};el.querySelector('.export-one').after(j);}
-    if(twin)el.append(twin.button(f));
+    if(twin&&!classicActive())el.append(twin.button(f));
     selectable(el, f);
     g.appendChild(el);
   });
@@ -481,7 +489,7 @@ function markSelected() {
 }
 function buildCardSettings() {
   const box = $('#card-settings'); if (!box) return;
-  const f = FORMATOS.find(x => x.id === state.sel && x.on);
+  const f = currentSelected();
   if (!f) { box.innerHTML = `<p class="muted">${t('Elige una tarjeta para ajustar su método, foco y zoom.','Select a card to adjust its method, focus and zoom.')}</p>`; return; }
   if(advertisement?.enabled()){box.textContent=`${f.nombre} · ${advertisement.description(f)}`;return;}
   const L = f.layout, size = f.especial ? `${L.entrega[0]}×${L.entrega[1]}` : `${perfil(f).ancho}×${perfil(f).alto}`;
@@ -515,7 +523,7 @@ function especialCard(f) {
   el.querySelector('.export-atlas').onclick = (e) => { e.stopPropagation(); exportFormats([f], 'atlas'); };
   el.querySelector('.export-segments').onclick = (e) => { e.stopPropagation(); exportFormats([f], 'segments'); };
   el.querySelector('.esp-actions').before(crearControls(f));
-  if(twin)el.append(twin.button(f));
+  if(twin&&!classicActive())el.append(twin.button(f));
   selectable(el, f);
   return el;
 }
@@ -562,7 +570,7 @@ function cardAviso(f) {
     : t('Elige un vídeo o una imagen para calcular el recorte.', 'Choose a video or an image to calculate cropping.');
 }
 function refreshInfo() {
-  syncPortraitEntry();
+  syncClassicEntry();
   studio?.sync();twin?.sync();
   drawDirty=true;saveSettings();
   const chosen=selectedFormats().length;
@@ -573,7 +581,7 @@ function refreshInfo() {
   const allLabel=$('#all-sizes .all-sizes-count');if(allLabel)allLabel.textContent=String(allCount);
   document.querySelectorAll('.export-one').forEach(el=>el.disabled=!state.src.ancho);
   labelExports(); syncCrearCards(); syncPrevioTodas();
-  const selF = FORMATOS.find((x) => x.id === state.sel && x.on), selAviso = $('#card-settings .aviso');
+  const selF = currentSelected(), selAviso = $('#card-settings .aviso');
   if (selF && selAviso) selAviso.textContent = cardAviso(selF);
   const rows = selectedFormats().map((f) => {
     if(advertisement?.enabled())return `<div class="fmt"><h3>${escHTML(f.nombre)}</h3><pre>${escHTML(JSON.stringify({state:advertisement.description(f),output:destino(f),copy:advertisement.entry(f)?.copy||[],approved:advertisement.ready(f),render:'native composition PNG → H264 still, no source crop'},null,2))}</pre></div>`;
@@ -990,7 +998,7 @@ function bindCrear(box, f) {
 // Values and visible fieldsets of the Avanzado recipe form (except the field being typed in).
 function syncCrearSettings(skip = null) {
   const box = $('#card-settings .crear-set'); if (!box) return;
-  const f = FORMATOS.find(x => x.id === state.sel && x.on); if (!f) return;
+  const f = currentSelected(); if (!f) return;
   const c = crearCfg(f), crea = creando(f), r = state.src.ancho ? desproporcion(state.src, destino(f)) : 0;
   const auto = box.querySelector('[data-c="accion"] option[value="auto"]');
   const mot = motivoAccion({accion: 'auto'}, state.src, destino(f), recetaFicha(f));
@@ -1105,6 +1113,7 @@ function corsURL(url) {
 }
 // La fuente activa, para ficha-tecnica.js: evento pixeria:fuente (fase 'inicio' y 'listo').
 function publicarFuente(fase) {
+  if(fase==='inicio')resetClassic();
   window.PixeriaAdaptador.fuente = fuente;
   try { document.dispatchEvent(new CustomEvent('pixeria:fuente', {detail: {fase, fuente}})); } catch (_) {}
 }
@@ -1120,7 +1129,7 @@ function releaseDerived() {
   derivedURL = null;
 }
 function setSource(url, name, origin = {id:null,title:name}, kind = 'video', ext = 'png', extra = null) {
-  advertisement?.clear();studio?.clear();twin?.close();
+  resetClassic();studio?.clear();twin?.close();
   state.origin = {id:origin.id||null,title:origin.title||name};
   releaseStill(); releaseDerived(); stopAnim(); resetCrearMedia();
   if (svgRasters) { svgRasters.clear(); svgRasters = null; }
@@ -1324,7 +1333,7 @@ $('#src-select').onchange = (e) => {
     clase: o.dataset.type === 'video' ? 'video' : undefined, mime: item?.mime, ext: window.PixeriaStockFuentes?.extension(item) || item?.ext});
 };
 // Sin vídeo por defecto (ninguna marca): estado vacío hasta que el usuario elige uno.
-function emptySource() { advertisement?.clear();cargaTurno++; releaseStill(); releaseDerived(); stopAnim(); resetCrearMedia(); if (svgRasters) { svgRasters.clear(); svgRasters = null; } svgSrc = null; fuente = null; publicarFuente('inicio'); srcKind = 'video'; img.removeAttribute('src'); syncKind(); video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
+function emptySource() { resetClassic();cargaTurno++; releaseStill(); releaseDerived(); stopAnim(); resetCrearMedia(); if (svgRasters) { svgRasters.clear(); svgRasters = null; } svgSrc = null; fuente = null; publicarFuente('inicio'); srcKind = 'video'; img.removeAttribute('src'); syncKind(); video.removeAttribute('src'); video.load(); state.srcName = ''; state.src = {ancho:0,alto:0,fps:25,bitrateKbps:0}; $('#src-info').textContent = ''; $('#src-msg').textContent = ''; $('#src-preview').hidden = true; $('#btn-adaptar').disabled = true; $('.step[data-go="2"]').disabled = true; goStep(1); refreshInfo(); drawDirty = true; document.querySelectorAll('.fmt canvas').forEach((c) => c.getContext('2d').clearRect(0, 0, c.width, c.height)); }
 $('#src-file').onchange = (e) => {
   const f = e.target.files[0]; if (!f) return;
   if (f.size>MAX_SOURCE_BYTES) {$('#src-msg').textContent=t('El límite local es 100 MB. Elige un archivo más pequeño.','The local limit is 100 MB. Choose a smaller file.');e.target.value='';return;}
@@ -1441,38 +1450,72 @@ function pausePaso1() {
   renderSound();
 }
 window.addEventListener('pagehide', pausePaso1);
+// [CLASSIC-STEP-START]
+function classicSource() { return {...state.src,kind:srcKind}; }
+function syncClassicEntry() {
+  const targets=classicTargets(classicSource(),mediaReady());
+  const portrait=$('#btn-portrait'),landscape=$('#btn-landscape');
+  portrait.textContent=t('Horizontal → vertical','Landscape → portrait');
+  landscape.textContent=t('Vertical → horizontal','Portrait → landscape');
+  $('#btn-adaptar').hidden=isImage();
+  $('#btn-adaptar').textContent=t('Adaptar →','Adapt →');
+  if(state.src.ancho===state.src.alto){portrait.textContent=t('Crear vertical 9:16','Create portrait 9:16');landscape.textContent=t('Crear horizontal 16:9','Create landscape 16:9');}
+  for(const [button,id] of [[portrait,'9:16'],[landscape,'16:9']]){button.hidden=!targets.includes(id);button.disabled=button.hidden||!!advertisement?.busy();}
+  const host=$('#classic-host');host.hidden=!classicActive();
+  document.body.classList.toggle('classic-active',classicActive());
+  document.body.classList.toggle('image-source',isImage());
+  document.body.dataset.paso=String(currentStep);syncCompat();
+  $('#special-project-note').hidden=!isImage()||!!FICHA;
+}
+function placeWorkspace() {
+  const workspace=document.querySelector('.adapter-variants');
+  (classicActive()?$('#classic-host'):$('#special-host')).append(workspace);
+  syncClassicEntry();
+}
+function resetClassic({keepStep=false,keepAnalysis=false}={}) {
+  if(classicActive())state.sel=specialSelectedId;
+  classicTargetId='';specialSelectedId='';
+  if(!keepStep){currentStep=1;specialStepVisited=false;}
+  $('#paso-1').hidden=currentStep!==1;$('#paso-2').hidden=currentStep!==2;
+  document.querySelectorAll('.steps .step').forEach(b=>{if(+b.dataset.go===currentStep)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
+  if(!keepAnalysis)advertisement?.clear();placeWorkspace();
+}
 function goStep(n) {
+  if(n===2&&!state.src.ancho)return;
+  const wasClassic=classicActive();
+  if(wasClassic&&n===2)state.sel=specialSelectedId;
+  if(currentStep===2&&n===1&&classicTargetId)specialSelectedId=state.sel;
+  currentStep=n;
+  if(classicActive())state.sel=classicTargetId;
+  if(n===2&&!specialStepVisited&&isImage()&&state.profile==='standard'&&FORMATOS.some(isProjectFormat)){
+    state.profile='proyecto';$('#format-profile').value=state.profile;syncCompat();
+  }
+  if(n===2)specialStepVisited=true;
+  if(n!==1)pausePaso1();
+  $('#paso-1').hidden=n!==1;$('#paso-2').hidden=n!==2;document.body.dataset.paso=String(n);
+  document.querySelectorAll('.steps .step').forEach(b=>{if(+b.dataset.go===n)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
+  placeWorkspace();buildGrid();
   if(n===2&&advertisement?.enabled())void advertisement.analyze();
-  if (n === 2 && !state.src.ancho) return;
-  if (n !== 1) pausePaso1();
-  $('#paso-1').hidden = n !== 1; $('#paso-2').hidden = n !== 2; document.body.dataset.paso = String(n);
-  document.querySelectorAll('.steps .step').forEach(b => { if (+b.dataset.go === n) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
-  if (n === 2) { drawDirty = true; buildCardSettings(); refreshInfo(); }
-  window.scrollTo({top: 0});
+  window.scrollTo({top:0});
 }
-// [PORTRAIT-ENTRY-START]
-function portraitSource() { return {...state.src,kind:srcKind}; }
-function syncPortraitEntry() {
-  const button=$('#btn-portrait');
-  button.textContent=t('Horizontal → vertical','Landscape → portrait');
-  button.hidden=!canEnterPortrait(portraitSource(),mediaReady());
-  button.disabled=button.hidden;
-}
-function enterPortrait() {
-  const entry=portraitEntryPlan({source:portraitSource(),ready:mediaReady(),formats:FORMATOS,profile:state.profile});
-  if(!selectPortraitEntry(FORMATOS,entry))return;
-  state.profile=entry.profile;state.sel=entry.id;
-  $('#format-profile').value=entry.profile;syncCompat();buildGrid();goStep(2);
-  const target=FORMATOS.find(f=>f.id===entry.id), output=destino(target);
-  $('#export-status').textContent=t(`Destino inicial: ${target.nombre} · ${output.ancho}×${output.alto}. Revisa texto y producto antes de crear y aprobar; puedes añadir más tamaños.`,`Initial destination: ${target.nombre} · ${output.ancho}×${output.alto}. Review copy and product before creating and approving; you can add more sizes.`);
-  const card=Array.from(document.querySelectorAll('#grid [data-f]')).find(el=>el.dataset.f===entry.id);
+function enterClassic(id) {
+  if(!classicTargets(classicSource(),mediaReady()).includes(id)||advertisement?.busy())return;
+  const target=FORMATOS.find(f=>isClassicFormat(f)&&f.id===id);if(!target)return;
+  if(!classicActive())specialSelectedId=state.sel;
+  classicTargetId=id;currentStep=1;state.sel=id;
+  placeWorkspace();buildGrid();
+  const output=destino(target);
+  $('#export-status').textContent=t(`Destino clásico: ${target.nombre} · ${output.ancho}×${output.alto}. Revisa texto y producto antes de aprobar y exportar.`,`Classic destination: ${target.nombre} · ${output.ancho}×${output.alto}. Review copy and product before approving and exporting.`);
+  void advertisement?.analyze();
+  const card=Array.from(document.querySelectorAll('#grid [data-f]')).find(el=>el.dataset.f===id);
   if(card){card.focus({preventScroll:true});card.scrollIntoView({block:'nearest',behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'instant':'smooth'});}
 }
-$('#btn-portrait').onclick=enterPortrait;
-// [PORTRAIT-ENTRY-END]
-document.querySelectorAll('.steps .step').forEach(b => b.onclick = () => goStep(+b.dataset.go));
-$('#btn-adaptar').onclick = () => goStep(2);
-$('#btn-volver').onclick = () => goStep(1);
+$('#btn-portrait').onclick=()=>enterClassic('9:16');
+$('#btn-landscape').onclick=()=>enterClassic('16:9');
+document.querySelectorAll('.steps .step').forEach(b=>b.onclick=()=>goStep(+b.dataset.go));
+$('#btn-adaptar').onclick=()=>{if(isImage()){const ids=classicTargets(classicSource(),mediaReady());if(ids.length===1)enterClassic(ids[0]);else goStep(1);}else goStep(2);};
+$('#btn-volver').onclick=()=>goStep(1);
+// [CLASSIC-STEP-END]
 $('#btn-sizes').onclick = () => { const m = document.querySelector('.pix-nav-icon-menu'); if (m && document.body.classList.contains('pf-left-off')) m.click(); else document.body.classList.remove('pf-left-off'); };
 $('#modo-global').onchange = (e) => { state.modoGlobal = e.target.value; refreshInfo(); };
 $('#format-profile').onchange = (e) => {
@@ -1879,7 +1922,7 @@ function syncURL() {
 }
 let switching = 0;
 async function switchProject(id) {
-  saveSettings();
+  resetClassic({keepStep:true,keepAnalysis:true});saveSettings();
   const turn = ++switching, entry = INDEX.find(x => x.id === id);
   let ficha = null, lists = {}, note = '', estancos = null;
   if (entry) {
