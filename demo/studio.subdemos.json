@@ -212,7 +212,7 @@
         }
       ],
       "ejecucion_real_opcional": {
-        "tool": "crear_imagen",
+        "tool": "creador_imagen_generar",
         "args": {
           "prompt": "Fotografía publicitaria de un café humeante en una taza de cerámica sobre una barra de madera, luz cálida de la mañana, fondo de cafetería desenfocado, sin texto y con el producto centrado.",
           "aspect_ratio": "16:9"
@@ -546,7 +546,7 @@
     },
     "url": "https://admira.studio/creador/?demo=creador&mode=full",
     "guide": "https://admira.studio/docs/demo-creador.md",
-    "generation": "one new Imagen 4 image and one new Grok Imagine Video 5-second clip per explicit request",
+    "generation": "one new Grok Imagine Image and one new Grok Imagine Video 5-second clip per explicit request",
     "steps": [
       "brief",
       "concept",
@@ -567,7 +567,7 @@
     "mcp": {
       "plan": "creador_demo mode full",
       "explicitExecution": [
-        "crear_imagen",
+        "creador_imagen_generar",
         "creador_imagen_guardar",
         "clip_desde_imagen",
         "clip_estado"

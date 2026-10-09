@@ -1,8 +1,8 @@
-import {createCreatorCampaign,creatorTwinURL,retainCampaign,CREATOR_HISTORY} from './creator-core.mjs?v=creator-full-1';
-import {drawCreatorCampaign} from './creator-render.mjs?v=creator-full-1';
+import {createCreatorCampaign,creatorTwinURL,retainCampaign,CREATOR_HISTORY} from './creator-core.mjs?v=creator-full-2';
+import {drawCreatorCampaign} from './creator-render.mjs?v=creator-full-2';
 import {INSTALLATIONS,loadNextStepAssets,createClock} from '../next-step/render.mjs';
-import {newFull,readFull,saveFull,runFull} from './creator-ai.mjs?v=creator-full-1';
-import {loadCreatorMedia} from './creator-media.mjs?v=creator-full-1';
+import {newFull,readFull,saveFull,runFull} from './creator-ai.mjs?v=creator-full-2';
+import {loadCreatorMedia} from './creator-media.mjs?v=creator-full-2';
 const en=new URLSearchParams(location.search).get('lang')==='en'||document.documentElement.lang==='en',t=(a,b)=>en?b:a;
 const names=[t('Brief','Brief'),t('Concepto','Concept'),t('Imagen + vídeo IA','AI image + video'),t('Adaptación','Adaptation'),t('Gemelo 360','360 twin')];
 const phases={brief:0,concept:1,'image-requested':2,'image-ready':2,'archive-requested':2,'image-archived':2,'video-requested':2,'video-pending':2,'media-ready':3,adapted:3,twin:4};
@@ -13,7 +13,7 @@ const btn=(text,fn,id)=>{const x=el('button',text,'pill');x.type='button';x.oncl
 function rows(){try{return JSON.parse(localStorage.getItem(CREATOR_HISTORY)||'[]');}catch{return [];}}
 function campaign(){return {...job.campaign,image:job.image,video:job.video,fullPhase:job.phase,request_id:job.request_id};}
 function remember(){try{localStorage.setItem(CREATOR_HISTORY,JSON.stringify(retainCampaign(rows(),campaign())));}catch{}}
-function mount(){if(root)return;root=el('section',null,'creator-demo creator-full');root.id='creator-full';root.hidden=true;root.setAttribute('aria-label',t('Demo Creador completo','Full Creator demo'));document.querySelector('.adapt-main').prepend(root);const css=el('link');css.rel='stylesheet';css.href='/campanas/creador/demo.css?v=creator-full-1';document.head.append(css);}
+function mount(){if(root)return;root=el('section',null,'creator-demo creator-full');root.id='creator-full';root.hidden=true;root.setAttribute('aria-label',t('Demo Creador completo','Full Creator demo'));document.querySelector('.adapt-main').prepend(root);const css=el('link');css.rel='stylesheet';css.href='/campanas/creador/demo.css?v=creator-full-2';document.head.append(css);}
 function state(){if(!active)return t('Sin demo completa activa','No active full demo');if(!job)return t('Preparando campaña completa','Preparing full campaign');if(job.error)return t('Proceso pendiente: ','Process pending: ')+job.error;if(paused)return t('Recorrido pausado. Las solicitudes enviadas al proveedor pueden terminar.','Walkthrough paused. Requests already sent to the provider may finish.');if(ready&&step===4)return t('Imagen y vídeo IA aplicados en el gemelo 360','AI image and video applied in the 360 twin');return messages[job.phase]+(job.providerStatus?' · '+job.providerStatus:'');}
 function paintStatus(){const x=root?.querySelector('#creator-full-state');if(x)x.textContent=state();const p=root?.querySelector('#creator-full-pause');if(p)p.textContent=paused?t('▶ Continuar','▶ Resume'):t('Ⅱ Pausar','Ⅱ Pause');}
 function tell(action){if(ready&&iframe?.contentWindow)iframe.contentWindow.postMessage({type:'admira:creator-control',seed:job.seed,action},'https://www.admira.store');}
@@ -48,7 +48,7 @@ async function prepare(token){if(!media){await loadNextStepAssets(new URL('../ne
 async function pipeline(){if(busy||!active)return;busy=true;const token=epoch;try{render();if(job.phase==='brief')await delay(4000);if(job.phase==='twin'){await prepare(token);step=phases[job.phase];render();return;}
  await runFull(job,{checkpoint:()=>checkpoint(token),alive:()=>active&&token===epoch,delay,changed:()=>{if(!active||token!==epoch)return;step=phases[job.phase]??2;remember();render();}});
  if(!active||token!==epoch||job.error)return;if(['media-ready','adapted'].includes(job.phase)){await prepare(token);await checkpoint(token);job.phase='adapted';job.events.push({phase:'adapted',at:new Date().toISOString()});await saveFull(job);remember();step=3;render();await delay(8000);await checkpoint(token);job.phase='twin';job.events.push({phase:'twin',at:new Date().toISOString()});await saveFull(job);remember();step=4;render();}
- }catch(e){if(active&&token===epoch&&e.message!=='demo-stopped'){job.error=e.message;await saveFull(job);paintStatus();}}finally{if(token===epoch){busy=false;const b=root?.querySelector('#creator-full-new');if(b)b.disabled=false;}}}
+ }catch(e){if(active&&token===epoch&&e.message!=='demo-stopped'){job.error=e.message;await saveFull(job);paintStatus();}}finally{if(token===epoch){busy=false;root?.querySelector('progress')?.remove();const b=root?.querySelector('#creator-full-new');if(b)b.disabled=false;}}}
 function tick(now){if(!active)return;raf=requestAnimationFrame(tick);if(now-last<100)return;last=now;preview();}
 export async function startCreatorFull(seed,explicit=false){return start(seed,explicit);}
 async function start(seed,explicit){if(busy)return t('Ya hay una generación en curso.','A generation is already running.');stop();window.CreatorDemo?.stopLocal?.();mount();active=true;paused=false;epoch++;root.hidden=false;document.body.classList.add('creator-demo-active');root.scrollIntoView({block:'start'});try{
