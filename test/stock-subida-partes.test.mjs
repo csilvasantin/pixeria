@@ -27,7 +27,8 @@ test('planParts: trozos iguales salvo el último, n desde 1, cubren el fichero e
   assert.deepEqual(planParts(10, 25), [{n: 1, start: 0, end: 10}]);
   assert.deepEqual(planParts(0, 25), []);
   assert.equal(PARTS_THRESHOLD, 8 * MB);
-  assert.equal(MAX_STOCK_BYTES, MAX_SIZE, 'el tope del cliente es el de /stock-upload/start');
+  assert.equal(MAX_STOCK_BYTES, 500 * MB, 'el Adaptador y su caja 2 suben hasta 500 MB');
+  assert.equal(MAX_SIZE, 2048 * MB, '/stock-upload/start admite lo que el Worker (2 GB): el Stock de pixeria.com sube episodios');
 });
 
 // Stock simulado detrás de /stock-upload/*: anota cada llamada y deja inyectar fallos por trozo.
@@ -227,7 +228,8 @@ test('PUT /stock-upload/part: clave ajena, n fuera de rango, sin Content-Length 
   const calls = fetchFalso(t);
   const casos = [
     [{key: 'stock/123/asset.mp4', uploadId: UPLOAD_ID, n: 1}, {}, 400, 'bad-key'],
-    [{key: 'uploads/mgx1abc-k3j2h1g0.webm', uploadId: UPLOAD_ID, n: 1}, {}, 400, 'bad-key'],
+    [{key: 'uploads/mgx1abc-k3j2h1g0.mp4.exe', uploadId: UPLOAD_ID, n: 1}, {}, 400, 'bad-key'],
+    [{key: 'uploads/../stock/a.mp4', uploadId: UPLOAD_ID, n: 1}, {}, 400, 'bad-key'],
     [{key: KEY, uploadId: 'con espacio', n: 1}, {}, 400, 'bad-key'],
     [{key: KEY, uploadId: UPLOAD_ID, n: 0}, {}, 400, 'bad-part'],
     [{key: KEY, uploadId: UPLOAD_ID, n: 401}, {}, 400, 'bad-part'],
@@ -256,9 +258,10 @@ test('POST /stock-upload/start: solo MP4 de los motores del Adaptador, con tama�
   assert.deepEqual(JSON.parse(calls[0].init.body), {mime: 'video/mp4', size: 70 * MB});
   cabecerasStock(calls[0].headers);
   const malos = [
-    [{...bien, motor: 'local'}, 400, 'solo-adaptaciones'],
-    [{...bien, type: 'image'}, 400, 'solo-adaptaciones'],
-    [{...bien, mime: 'video/webm'}, 400, 'solo-adaptaciones'],
+    [{...bien, motor: 'veo'}, 400, 'solo-adaptaciones'],
+    [{...bien, type: 'image'}, 400, 'solo-adaptaciones'],          // tipo y mime no casan
+    [{...bien, type: 'capsula'}, 400, 'solo-adaptaciones'],
+    [{...bien, mime: 'text/html'}, 400, 'solo-adaptaciones'],
     [{...bien, size: undefined}, 400, 'bad-size'],
     [{...bien, size: 0}, 400, 'bad-size'],
     [{...bien, size: 1.5}, 400, 'bad-size'],
@@ -317,8 +320,9 @@ test('POST /stock-publish con r2Staged: reenvía la clave sin base64 y con los m
     {...meta},                                        // sin fuente
     {...meta, r2Staged: KEY, base64: 'AAAA'},         // dos fuentes
     {...meta, r2Staged: 'stock/1/asset.mp4'},         // clave ajena
-    {...meta, r2Staged: 'uploads/mgx1abc-k3j2h1g0.webm'},
-    {...meta, motor: 'local', r2Staged: KEY},
+    {...meta, r2Staged: 'uploads/mgx1abc-k3j2h1g0.mp4.exe'},
+    {...meta, motor: 'veo', r2Staged: KEY},
+    {...meta, mime: 'audio/mpeg', r2Staged: KEY},
   ]) {
     const m = await publishPost({request: postJSON('/stock-publish', body), env: {}});
     assert.equal(m.status, 400, JSON.stringify(body));
