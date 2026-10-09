@@ -1,10 +1,10 @@
 {
-  "version": "v.09.10.2026.r22.13:31",
+  "version": "v.09.10.2026.r23.13:50",
   "deployer": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
   "agent": "TrinityMBP16",
-  "builtAt": "2026-10-09T11:31:42Z",
+  "builtAt": "2026-10-09T11:50:38Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
     "Creador vuelve a iniciar correctamente en español e inglés con el shell actual del Adaptador",

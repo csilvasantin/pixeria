@@ -1,8 +1,8 @@
 {
-  "version": "v.09.10.2026.r22.13:31",
+  "version": "v.09.10.2026.r23.13:50",
   "deployer": "TrinityMBP16",
   "agent": "TrinityMBP16",
   "machine": "MacBookPro16",
   "signature": "TrinityMBP16 · MacBookPro16",
-  "evidence": "Creador ES/EN regenerado desde el shell vigente del Adaptador: incluye los controles y hosts clásicos que requiere el runtime. El generador conserva la entrada demo.mjs y produce páginas repetibles. 63 pruebas pertinentes pasan, incluidos los 80 IDs compartidos, los bindings reales del fallo, publicación PNG, aprobación y demos con proveedores simulados. Sin generaciones ni publicación de assets reales."
+  "evidence": "133 pruebas pertinentes pasan: pareja local H/V, guardados y aprobaciones, ciclo real de Admirito, cancelación/respuestas tardías, cierre embebido y shell ES/EN, contrato standalone-artwork sin relajar producto/texto/cajas. QA local del SVG y retirada completada; publicación y QA web se verifican después del despliegue."
 }

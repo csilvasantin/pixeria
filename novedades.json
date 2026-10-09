@@ -6,9 +6,10 @@
     "Volver atrás: sello v.09.10.2026.r10.08:40."
   ],
   "default": [
-    "Creador recupera interfaz y controles compatibles",
-    "Regeneración mantiene demo y ruta de idioma Creador",
-    "Conserva publicación PNG con texto y composición y aprobación manual"
+    "Creador muestra horizontal y vertical desde las mismas capas, sin añadir generaciones de IA ni cambiar destinos guardados.",
+    "Admirito dibuja y borra junto al previo durante los trabajos reales; admite cancelación, móvil y movimiento reducido.",
+    "Adaptador exige arte final sin pantalla o marco exterior, manteniendo controles de producto y texto.",
+    "Se elimina el acceso duplicado al Adaptador dentro del Creador."
   ],
   "v.07.10.2026.r11.23:39": [
     "Campo de etiquetas al importar (URL o ficheros) y junto a «Publicar en Stock» de lo que creas",
@@ -232,5 +233,11 @@
     "Creador recupera interfaz y controles compatibles",
     "Regeneración mantiene demo y ruta de idioma Creador",
     "Conserva publicación PNG con texto y composición y aprobación manual"
+  ],
+  "v.09.10.2026.r23.13:50": [
+    "Creador muestra horizontal y vertical desde las mismas capas, sin añadir generaciones de IA ni cambiar destinos guardados.",
+    "Admirito dibuja y borra junto al previo durante los trabajos reales; admite cancelación, móvil y movimiento reducido.",
+    "Adaptador exige arte final sin pantalla o marco exterior, manteniendo controles de producto y texto.",
+    "Se elimina el acceso duplicado al Adaptador dentro del Creador."
   ]
 }
