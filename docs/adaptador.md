@@ -732,3 +732,5 @@ ES: `/campana` abre el taller Sneakers Store: elementos editables, tres direccio
 EN: `/campaign` opens Sneakers Store workshop: editable elements, three directions, five maps with joints/doorway, review and native screen exports. Saved JSON preserves design and requires fresh review on import.
 
 [Tutorial y contrato ES/EN · ES/EN tutorial and contract](/docs/campanas-instalacion.md). MCP real: `campana_instalacion` calcula planes, no render ni publicación / returns plans, no render or publication.
+
+Creador / Creator: categoría independiente en `/creador/` y `/en/creador/` para campañas desde cero. Adaptador / Adapter conserva las imágenes y vídeos existentes o de terceros. Guía ES/EN: [Creador y Adaptador](campanas-instalacion.md).

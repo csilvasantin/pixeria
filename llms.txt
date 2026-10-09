@@ -54,3 +54,8 @@ Adapter still advertisements: anuncio_analizar extracts authenticated verbatim O
 Advanced still-image recreation: choose Advanced > Recreate with AI > reconstruct. Generate missing surroundings from the original scene and protect important elements; exact copy is typeset separately. Native full-scene preview/PNG/MP4, per-piece approval, reserved-zone intersection checks. Default adapt preserved. Generative inference is not DLSS or factual restoration. Guide: /docs/adaptador.md#recrear-con-ia--recreate-with-ai
 
 Adapter typography / Tipografía: OCR extracts optional per-block observed type traits and colour blocks. Local OFL fonts load before layout; failure blocks. Reconstruction integrates exact copy into a complete photograph, preserving source hierarchy. Similar font, not exact identification; review every piece. Old documents valid; analyze again. Guide https://www.pixeria.com/docs/adaptador.md#tipografía-recreada--recreated-typography
+
+## Creator and Adapter
+- Creator / Creador: https://www.pixeria.com/creador/ and /en/creador/ — campaigns from scratch with separate product, logo and copy, designed for target screen configurations. Replaces Advertising in primary navigation.
+- Adapter / Adaptador: https://www.pixeria.com/adaptaciones/ — adapts existing or third-party image/video assets.
+- Sneakers Store is an optional Creator example: /creador/?demo=sneakers-store. Guide ES/EN: /docs/campanas-instalacion.md. Old workshop URL, saved history and audience creatives remain available.

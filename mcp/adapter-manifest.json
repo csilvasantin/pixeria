@@ -1081,7 +1081,7 @@
       "anamorphicExport": false
     },
     "seed": "/adaptaciones/campanas/sneakers-store.json",
-    "editor": "/adaptaciones/?taller=sneakers-store",
+    "editor": "/creador/",
     "pilotInstallations": 5,
     "pilotScreens": 11,
     "altadisProfiles": 29,
@@ -1094,6 +1094,23 @@
     "approval": "per-piece-per-direction-per-revision; cleared on edit/import",
     "hardwareVerified": false,
     "measuredGeometry": false,
-    "anamorphicExport": false
+    "anamorphicExport": false,
+    "pilotEditor": "/creador/?demo=sneakers-store",
+    "legacyEditor": "/adaptaciones/?taller=sneakers-store"
+  },
+  "content_workflows": {
+    "creator": {
+      "es": "Campaña desde cero: producto, logo y copia independientes",
+      "en": "Campaign from scratch: independent product, logo and copy",
+      "route": "/creador/",
+      "englishRoute": "/en/creador/"
+    },
+    "adapter": {
+      "es": "Adaptar contenidos existentes o de terceros",
+      "en": "Adapt existing or third-party content",
+      "route": "/adaptaciones/",
+      "englishRoute": "/en/adaptaciones/"
+    },
+    "legacyAdvertising": "/publicidad.html"
   }
 }

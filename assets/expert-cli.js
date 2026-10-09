@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   // ─── Piezas puras (también se prueban en node: test/marca-blanca.test.cjs) ───
-  var COMMANDS = ['help', 'campana', 'campaign', 'demo', 'clear', 'echo', 'date', 'status', 'version', 'history', 'open', 'marca', 'idioma', 'language', 'languague', 'avatar', 'avataron', 'avataroff', 'avatardigital', 'digitalavatar', 'admirito'];
+  var COMMANDS = ['help', 'creador', 'creator', 'campana', 'campaign', 'demo', 'clear', 'echo', 'date', 'status', 'version', 'history', 'open', 'marca', 'idioma', 'language', 'languague', 'avatar', 'avataron', 'avataroff', 'avatardigital', 'digitalavatar', 'admirito'];
   var MARCA_VERB = /^\/?(?:marca|brand|marcablanca)$/i;
   // Semilla del catálogo de admiranext.com/marcablanca: vale para el Tab sin red. Con la
   // marca blanca cargada se usa la lista real (AdmiraMarca.conocidas()).
@@ -217,7 +217,7 @@
     window.visualViewport.addEventListener('scroll', sync);
   }
   var history = [], cursor = 0, draft = '';
-  var sections = {
+  var sections = { creator: 'creador/', creador: 'creador/',
     home: en ? '/en/' : '/', audio: 'audio.html', music: 'musica.html', musica: 'musica.html',
     images: 'imagenes.html', imagenes: 'imagenes.html', video: 'video.html',
     adapter: en ? '/en/adaptaciones/' : '/adaptaciones/', adaptador: '/adaptaciones/', stock: 'stock.html', assets: 'crear/', docs: 'documentacion/', radar: 'radar/'
@@ -376,12 +376,12 @@
       return;
     }
     switch (name) {
-      case 'campana': case 'campaign': location.assign((en ? '/en/adaptaciones/' : '/adaptaciones/') + '?taller=sneakers-store&lang=' + (en ? 'en' : 'es')); break;
+      case 'creador': case 'creator': case 'campana': case 'campaign': location.assign((en ? '/en/creador/' : '/creador/') + '?lang=' + (en ? 'en' : 'es')); break;
       case 'demo': import('/assets/taza-demo.mjs?v=1').then(function(m){write(m.runTazaDemo(arg,en?'en':'es'));}).catch(function(){write(t('No se pudo cargar la cámara.','Could not load camera.'));});break;
       case 'help': case 'ayuda':
-        write(t('/campana — taller Sneakers Store: editar elementos → dirección → instalación → revisar/aprobar → exportar; guía /docs/campanas-instalacion.md.','/campaign — Sneakers Store workshop: edit elements → direction → installation → review/approve → export; guide /docs/campanas-instalacion.md.'));
+        write(t('/creador · /campana — Creador: campaña desde cero; ejemplo Sneakers Store; editar elementos → dirección → instalación → revisar/aprobar → exportar; guía /docs/campanas-instalacion.md.','/creator · /campaign — Creator: campaign from scratch; Sneakers Store example; edit elements → direction → installation → review/approve → export; guide /docs/campanas-instalacion.md.'));
         write(t('/demo taza — cámara en una esquina; /demo taza cerrar — cerrar cámara.','/demo taza — corner camera; /demo taza close — close camera.'));
-        write(t('Adaptador Altadis: open adapter → contenido → Ver en gemelo digital en cada tarjeta (Best isométrico; Formato con Anterior/Siguiente y Recorrer formatos cada 8 s (manual, parar al interactuar/cerrar); Calidad Best/Better; Referencia Automática por formato o cinco familias + esquina; Estanco OSM independiente; Planta/De frente; Punto de observación con altura/distancia/lateral; Esc) → formato/estanco → Generar fondo IA → Aplicar demo / Visitar demo (junto a Aplicar, formato y estanco seleccionados, reproduce contenido) → Guardar formatos y aplicaciones. Guía: /docs/altadis-ia-estancos.md\nComandos en este navegador:', 'Altadis adapter: open adapter → content → View in digital twin on each card (Best isometric; Format with Previous/Next and Run format tour every 8 s (manual, stops on interaction/close); Quality Best/Better; Reference Automatic per format or five families + corner; independent OSM Shop; Floor/front; Observation point with height/distance/lateral; Esc) → format/shop → Generate AI background → Apply shop demo / Visit demo (beside Apply, selected format and shop, plays content) → Save formats and placements. Guide: /docs/altadis-ia-estancos.md\nCommands in this browser:') + '\nhelp · clear · echo <text> · date · status · version · history\nopen <home|audio|music|images|video|adapter|stock|assets|docs|radar>\nidioma [/language] [ESP|ENG] — ' + t('alterna o fija el idioma (también idiomaESP)', 'toggle or set language (also idiomaESP)') + '\n' +
+        write(t('Adaptador Altadis: open adapter → contenido → Ver en gemelo digital en cada tarjeta (Best isométrico; Formato con Anterior/Siguiente y Recorrer formatos cada 8 s (manual, parar al interactuar/cerrar); Calidad Best/Better; Referencia Automática por formato o cinco familias + esquina; Estanco OSM independiente; Planta/De frente; Punto de observación con altura/distancia/lateral; Esc) → formato/estanco → Generar fondo IA → Aplicar demo / Visitar demo (junto a Aplicar, formato y estanco seleccionados, reproduce contenido) → Guardar formatos y aplicaciones. Guía: /docs/altadis-ia-estancos.md\nComandos en este navegador:', 'Altadis adapter: open adapter → content → View in digital twin on each card (Best isometric; Format with Previous/Next and Run format tour every 8 s (manual, stops on interaction/close); Quality Best/Better; Reference Automatic per format or five families + corner; independent OSM Shop; Floor/front; Observation point with height/distance/lateral; Esc) → format/shop → Generate AI background → Apply shop demo / Visit demo (beside Apply, selected format and shop, plays content) → Save formats and placements. Guide: /docs/altadis-ia-estancos.md\nCommands in this browser:') + '\nhelp · clear · echo <text> · date · status · version · history\nopen <home|audio|music|images|video|creator|adapter|stock|assets|docs|radar>\nidioma [/language] [ESP|ENG] — ' + t('alterna o fija el idioma (también idiomaESP)', 'toggle or set language (also idiomaESP)') + '\n' +
           t('/marca [marca] — Marca blanca del catálogo de admiranext.com/marcablanca: /marca <id> viste la web con esa marca, /marca off vuelve a Admira, /marca sola dice cuál está activa y lista las disponibles, /marca <web> abre el analizador en otra pestaña. Alias: /brand.',
             '/marca [brand] — White label from the admiranext.com/marcablanca catalogue: /marca <id> dresses the site in that brand, /marca off returns to Admira, /marca alone shows the active one and lists them, /marca <website> opens the analyser in a new tab. Alias: /brand.') + '\n' +
           t('marca: off (Admira), ', 'brand: off (Admira), ') + brandIds().join(', ') + t(' · o una web para analizarla (starbucks.es)', ' · or a website to analyse (starbucks.es)') + '\n' +

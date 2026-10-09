@@ -15,7 +15,7 @@
   var LANG_KEY = 'admiranext_expert_lang';
   var englishHost = /(^|\.)pixeria\.(com|pages\.dev)$/.test(location.hostname);
   var localePath = location.pathname;
-  var translatedPages = ['/', '/index.html', '/audio.html', '/musica.html', '/imagenes.html', '/video.html', '/anonimizador.html', '/publicidad.html', '/stock.html', '/crear/'];
+  var translatedPages = ['/', '/index.html', '/audio.html', '/musica.html', '/imagenes.html', '/video.html', '/anonimizador.html', '/publicidad.html', '/stock.html', '/crear/', '/creador/'];
   function langPref() {
     try { var v = localStorage.getItem(LANG_KEY); return v === 'es' || v === 'en' ? v : ''; } catch (_) { return ''; }
   }
@@ -128,8 +128,8 @@
     ['/musica.html', 'Música'],
     ['/imagenes.html', 'Imágenes'],
     ['/video.html', 'Video'],
+    ['/creador/', 'Creador'],
     ['/adaptaciones/', 'Adaptador'],
-    ['/publicidad.html', 'Publicidad'],
     ['/anonimizador.html', 'Anonimizador'],
     ['/ideas.html', 'Ideas'],
     ['/crear/', 'Assets'],
@@ -140,8 +140,8 @@
     ['/en/musica.html', 'Music'],
     ['/en/imagenes.html', 'Images'],
     ['/en/video.html', 'Video'],
+    ['/en/creador/', 'Creator'],
     ['/en/adaptaciones/', 'Adapter'],
-    ['/en/publicidad.html', 'Advertising'],
     ['/en/anonimizador.html', 'Anonymizer'],
     // Ideas todavía no tiene versión inglesa: se apunta a la española antes que
     // dejar un enlace roto o esconder la categoría a quien navega en inglés.
@@ -160,7 +160,7 @@
   }
 
   function render(nav, items) {
-    var here = norm(location.pathname);
+    var here = norm(new URLSearchParams(location.search).get('taller') === 'sneakers-store' ? (isEnPath(location.pathname) ? '/en/creador/' : '/creador/') : location.pathname);
     nav.replaceChildren();
     items.forEach(function (item) {
       var link = document.createElement('a');
@@ -378,7 +378,8 @@
     ['/musica.html', 'Música', 'Bandas sonoras, jingles y marca sonora'],
     ['/audio.html', 'Audio · Megafonía', 'Voces, locución y megafonía de marca'],
     ['/video.html', 'Vídeo', 'Storyboards, generación, edición y loops'],
-    ['/adaptaciones/', 'Adaptador', 'Un vídeo, todas las pantallas: 9:16, 16:9, 1:1 y 4:5'],
+    ['/creador/', 'Creador', 'Crea campañas desde cero para tus pantallas'],
+    ['/adaptaciones/', 'Adaptador', 'Adapta contenidos existentes a cada pantalla'],
     ['/imagenes.html', 'Imágenes', 'Dirección de arte, producto y estilo'],
     ['/avatar.html', 'Avatar 3D', 'Presentadores y avatares generativos'],
     ['/anonimizador.html', 'Anonimizador', 'Privacidad en imagen y vídeo'],
@@ -386,7 +387,6 @@
     ['/plataforma.html', 'Plataforma', 'Mapa de capas, motores y salida a XpaceOS'],
     ['/stock.html', 'Stock', 'Galería pública de assets desplegados'],
     ['/crear-campana/', 'Campañas', 'Compra y activación en puntos y pantallas'],
-    ['/publicidad.html', 'Publicidad', 'Formatos y activos por canal'],
     ['/clearchannel/', 'Demo Clear Channel', 'Pixer Feed en vivo sobre pantallas reales']
   ];
   var HOME_RAIL_DOCS = [
@@ -399,7 +399,7 @@
   function ensureHomeRails() {
     if (isHome() || document.querySelector('.rail-left')) return;
     document.querySelectorAll('.quad-left,.quad-right').forEach(function (rail) { rail.remove(); });
-    var here = norm(location.pathname);
+    var here = norm(new URLSearchParams(location.search).get('taller') === 'sneakers-store' ? (isEnPath(location.pathname) ? '/en/creador/' : '/creador/') : location.pathname);
     var left = document.createElement('aside');
     var version = (document.querySelector('meta[name="admiranext-version"]') || {}).content || 'Pixeria';
     left.className = 'rail rail-left';

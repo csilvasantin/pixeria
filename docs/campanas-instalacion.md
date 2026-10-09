@@ -6,7 +6,7 @@ Estado / Status: piloto editable Sneakers Store. Composición fija; sin generaci
 
 ## Tutorial ES
 
-1. Abre [Taller Sneakers Store](https://www.pixeria.com/adaptaciones/?lang=es&taller=sneakers-store), también en [admira.studio](https://admira.studio/adaptaciones/?taller=sneakers-store). Desde Adaptador pulsa **Abrir taller**. El adaptador anterior sigue disponible al volver.
+1. Abre [Taller Sneakers Store](https://www.pixeria.com/creador/?lang=es&demo=sneakers-store), también en [admira.studio](https://admira.studio/creador/?demo=sneakers-store). Desde Creador pulsa **Ejemplo · Sneakers Store**. Para comenzar tu propia campaña usa **Nueva campaña**. Adaptador conserva el recorrido para contenidos existentes.
 2. **Editar contenido** abre Opciones, a la izquierda: nombre, titular completo, CTA, precio opcional, producto y logotipo independientes (PNG/JPG/WebP, hasta 8 MB cada uno), colores y duración (1–60 segundos). El ejemplo incluye una ilustración de zapatilla y una marca ficticia sustituibles. No extrae automáticamente capas de un vídeo.
 3. Elige **Producto protagonista**, **Composición editorial** o **Relato entre pantallas**. Son tres composiciones deterministas editables, sin consumir créditos de generación. Se previsualizan para la instalación seleccionada. El último utiliza repeticiones del producto, sin animación temporal.
 4. Revisa Horizontal, Vertical, Tira panorámica, Jordan de cinco paneles y LED con puerta. **Ajustar instalación** abre Avanzados, a la derecha: lienzo, paneles y huecos en píxeles, y giros físicos 0/90/180/270°. Aplicar medidas invalida todas las aprobaciones. Jordan y LED son referencias aproximadas: confirmar medidas y conexionado antes de entregar al local. Los tres recortes del LED no presuponen tres players físicos.
@@ -22,7 +22,7 @@ Opciones, Avanzados y Experto mantienen el shell cuadrático nativo y arrancan c
 
 ## English tutorial
 
-Open the [workshop](https://www.pixeria.com/en/adaptaciones/?taller=sneakers-store) or its [Studio mirror](https://admira.studio/adaptaciones/?taller=sneakers-store). Return to Adapter to use the existing workflows.
+Open the [workshop](https://www.pixeria.com/en/creador/?demo=sneakers-store) or its [Studio mirror](https://admira.studio/creador/?demo=sneakers-store). Return to Adapter to use the existing workflows.
 
 1. **Edit content** opens native left Options: campaign name, complete headline, CTA, optional price, separate product and logo (PNG/JPG/WebP, up to 8 MB each), colours and 1–60-second duration. The supplied sneaker illustration and fictional wordmark are replaceable demo assets. Video layers are not extracted automatically.
 2. Compare **Product hero**, **Editorial composition** and **Story across screens**. These are editable deterministic compositions, without generation credits. Story repeats the product spatially; it does not animate it.
@@ -55,3 +55,13 @@ Pilot plans protect complete copy/product/logo for three directions across five 
 ## Pendiente / Pending
 
 Measured store geometry and player routing, hardware sync/colour acceptance, calibrated anamorphic export, automatic temporal video-layer separation and generated AI art direction beyond the existing ad tools.
+
+## Creador y Adaptador / Creator and Adapter
+
+**ES. Creador** es la categoría principal que sustituye a Publicidad. Abre [/creador/](https://www.pixeria.com/creador/?lang=es) o [admira.studio](https://admira.studio/creador/): comienza una campaña con producto, logo y mensaje independientes, elige las pantallas, compara tres composiciones, revisa y exporta. **Nueva campaña** arranca con elementos de muestra neutrales y tres perfiles genéricos; sustituye las imágenes y escribe tu mensaje. **Ejemplo · Sneakers Store** carga el piloto con cinco mapas. Al editar el ejemplo se conserva el borrador al recargar; el enlace de ejemplo explícito vuelve a cargar el ejemplo. Creador tiene su propio borrador; el historial y los JSON guardados siguen disponibles. Guarda JSON antes de empezar otra campaña para conservar cambios anteriores.
+
+**ES. Adaptador** en [/adaptaciones/](https://www.pixeria.com/adaptaciones/?lang=es) parte de una imagen o vídeo existente, propio o de terceros: Stock, subida o importación → formatos → ajustes → exportación. El acceso de campañas dentro del Adaptador lleva a Creador. La ruta histórica `/adaptaciones/?taller=sneakers-store` conserva el taller y su borrador anterior. `/crear/` sigue siendo Assets; `/crear-campana/` conserva compra/activación; `/publicidad.html` conserva las creatividades por audiencia y se encuentra en Avanzados del Creador. No se renombran datos ni se borran herramientas.
+
+**EN. Creator** replaces Advertising in the main categories. Open [/en/creador/](https://www.pixeria.com/en/creador/) to create a campaign from scratch using independent product, logo and copy. **New campaign** uses neutral placeholders and three generic screen profiles; replace the assets and write the message. **Example · Sneakers Store** opens the five-map pilot. Compare layouts, review each destination and export. Its draft is separate from the legacy workshop; saved JSON and history remain available. Save JSON before starting another campaign to preserve previous changes. Editing the example survives reload; an explicit example URL resets to the sample.
+
+**EN. Adapter** starts with an existing or third-party image/video: Stock/upload/import → formats → adjustments → export. `/adaptaciones/` and its English route remain. The old workshop URL and draft, Assets, campaign buying/activation and audience creatives remain accessible. CLI `/creador`, `/creator`, `/campana`, `/campaign` opens Creator; `open creator` and `open adapter` select each workflow. MCP `campana_instalacion` keeps its name and schema: validates contracts/plans, never renders or publishes; no new remote write operation.

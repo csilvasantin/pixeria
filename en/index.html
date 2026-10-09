@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r3.0611';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r4.0632';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -38,7 +38,7 @@
   <title>Pixeria · AI content creation intelligence</title>
   <meta name="description" content="Pixeria is the operating reference for creating, directing and publishing AI content: model radar, production method, campaign workflows and Pixer Feed for real-world screens.">
   <meta name="theme-color" content="#0b1117">
-  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r3.06:11">
+  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r4.06:32">
   <meta property="og:title" content="Pixeria · AI content creation intelligence">
   <meta property="og:description" content="Model radar, production method and Pixer Feed: AI content pushed to screens and live event surfaces.">
   <meta property="og:type" content="website">
@@ -54,8 +54,8 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="../assets/styles.css?v=09.10.2026.r3.0611">
-  <link rel="stylesheet" href="../assets/cuadratura.css?v=09.10.2026.r3.0611">
+  <link rel="stylesheet" href="../assets/styles.css?v=09.10.2026.r4.0632">
+  <link rel="stylesheet" href="../assets/cuadratura.css?v=09.10.2026.r4.0632">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -87,7 +87,7 @@
     }
   }
   </script>
-  <script defer src="/assets/site-nav.js?v=09.10.2026.r3.0611"></script>
+  <script defer src="/assets/site-nav.js?v=09.10.2026.r4.0632"></script>
 </head>
 <body>
   <!-- Cuadratura: panels start closed on every load (no flash) and overlay the content -->
@@ -119,7 +119,7 @@
       <a href="/en/imagenes.html">Images</a>
       <a href="/en/video.html">Video</a>
       <a href="/en/adaptaciones/">Adapter</a>
-      <a href="/en/publicidad.html">Advertising</a>
+      <a href="/en/creador/">Creator</a>
       <a href="/en/anonimizador.html">Anonymizer</a>
       <a href="/en/crear/">Assets</a>
       <a href="/en/stock.html">Stock</a>
@@ -141,7 +141,7 @@
     <a href="/en/imagenes.html">Images</a>
     <a href="/en/video.html">Video</a>
     <a href="/en/adaptaciones/">Adapter</a>
-    <a href="/en/publicidad.html">Advertising</a>
+    <a href="/en/creador/">Creator</a>
     <a href="/en/avatar.html">Avatar 3D</a>
       <a href="/en/anonimizador.html">Anonymizer</a>
     <a href="/en/crear/">Assets</a>
@@ -168,11 +168,11 @@
         <a href="/en/plataforma.html"><b>Platform</b><small>Map of layers, engines and XpaceOS output</small></a>
         <a href="/en/stock.html"><b>Stock</b><small>Public gallery of deployed assets</small></a>
         <a href="/en/crear-campana/"><b>Campaigns</b><small>Buy and activate across points and screens</small></a>
-        <a href="/en/publicidad.html"><b>Advertising</b><small>Formats and assets per channel</small></a>
+        <a href="/en/creador/"><b>Creator</b><small>Create campaigns from scratch for your screens</small></a>
         <a href="/clearchannel/"><b>Clear Channel demo</b><small>Pixer Feed live on real screens</small></a>
       </nav>
       <div class="rail-options-meta" aria-label="Pixeria release">
-        <span class="rail-ver">Pixeria v.09.10.2026.r3.06:11</span>
+        <span class="rail-ver">Pixeria v.09.10.2026.r4.06:32</span>
       </div>
     </aside>
     <!-- ══ CENTER · what matters: hero + radar + formats ══ -->
@@ -191,7 +191,7 @@
         <div class="hero-actions">
           <a class="button primary" href="#radar">Explore radar</a>
           <a class="button secondary" href="#method">See method</a>
-          <a class="button secondary" href="/en/crear/">Open Creator</a>
+          <a class="button secondary" href="/en/creador/">Open Creator</a>
         </div>
         <div class="topbar hero-terminal-bar" aria-label="Pixeria status">
           <span class="pill">July 2026 radar</span>
@@ -543,9 +543,9 @@
       sections.forEach(s => io.observe(s));
     })();
   </script>
-  <script defer src="/assets/radar.js?v=09.10.2026.r3.0611"></script>
-  <script defer src="/assets/matrix-rain.js?v=09.10.2026.r3.0611"></script>
-  <script defer src="/assets/newsletter.js?v=09.10.2026.r3.0611"></script>
-  <script defer src="/assets/cuadratura.js?v=09.10.2026.r3.0611"></script>
+  <script defer src="/assets/radar.js?v=09.10.2026.r4.0632"></script>
+  <script defer src="/assets/matrix-rain.js?v=09.10.2026.r4.0632"></script>
+  <script defer src="/assets/newsletter.js?v=09.10.2026.r4.0632"></script>
+  <script defer src="/assets/cuadratura.js?v=09.10.2026.r4.0632"></script>
 </body>
 </html>

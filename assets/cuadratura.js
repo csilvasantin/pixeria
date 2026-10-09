@@ -24,14 +24,14 @@
     { href: '/musica.html',       t: 'Música',            d: 'Bandas sonoras, jingles y marca sonora' },
     { href: '/audio.html',        t: 'Audio · Megafonía', d: 'Voces, locución y megafonía de marca' },
     { href: '/video.html',        t: 'Vídeo',             d: 'Storyboards, generación, edición y loops' },
-    { href: '/adaptaciones/', t: 'Adaptador', d: 'Un contenido, todos los formatos de pantalla' },
+    { href: '/creador/',          t: 'Creador',           d: 'Crea campañas desde cero para tus pantallas' },
+    { href: '/adaptaciones/', t: 'Adaptador', d: 'Adapta contenidos existentes a cada pantalla' },
     { href: '/imagenes.html',     t: 'Imágenes',          d: 'Dirección de arte, producto y estilo' },
     { href: '/avatar.html',       t: 'Avatar 3D',         d: 'Presentadores y avatares generativos' },
     { href: '/anonimizador.html', t: 'Anonimizador',      d: 'Privacidad en imagen y vídeo' },
     { href: '/plataforma.html',   t: 'Plataforma',        d: 'Mapa de capas, motores y salida a XpaceOS' },
     { href: '/stock.html',        t: 'Stock',             d: 'Galería pública de assets desplegados' },
     { href: '/crear-campana/',    t: 'Campañas',          d: 'Compra y activación en puntos y pantallas' },
-    { href: '/publicidad.html',   t: 'Publicidad',        d: 'Formatos y activos por canal' },
     { href: '/clearchannel/',     t: 'Demo Clear Channel', d: 'Pixer Feed en vivo sobre pantallas reales' }
   ];
   var DOCS = [

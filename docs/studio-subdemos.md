@@ -66,4 +66,4 @@ El verificador comprueba contrato, orden, campos/selecciones actuales, rutas, pa
 
 ## Campañas por instalación / Installation campaigns
 
-[Taller, tutorial y contrato ES/EN](/docs/campanas-instalacion.md). Abrir Adaptador → Abrir taller Sneakers Store / Adapter → Open Sneakers Store workshop. MCP `campana_instalacion {campaign_json?,direction?}` valida y calcula planes; no renderiza ni publica / validates and plans; no render or publication. La CLI anterior sigue disponible / Existing CLI remains available.
+[Taller, tutorial y contrato ES/EN](/docs/campanas-instalacion.md). Abrir Creador → Ejemplo Sneakers Store / Adapter → Open Sneakers Store workshop. MCP `campana_instalacion {campaign_json?,direction?}` valida y calcula planes; no renderiza ni publica / validates and plans; no render or publication. La CLI anterior sigue disponible / Existing CLI remains available.
