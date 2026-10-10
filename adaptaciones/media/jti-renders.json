@@ -1,0 +1,67 @@
+{
+  "source": {
+    "file": "jti-tu-sitio-de-siempre-fuente.mp4",
+    "commit": "9a56112",
+    "sha256": "4af78bb4e78a0ed47573835e4aa822d23ef231dc8da7eab9615c3d85e0817ea5",
+    "width": 824,
+    "height": 1464,
+    "duration": 59.605
+  },
+  "cases": [
+    "JTI «Tu sitio de siempre»",
+    "Altadis (same JTI media as PR #17)"
+  ],
+  "generator": "node scripts/render-adaptaciones-demo.mjs",
+  "compatibility": "fhd",
+  "notes": "Fixed rendered defaults: auto fit, centred focus, zoom 1. Geometry from adapter-core.mjs; 25 fps delivery, AAC audio. No paid services.",
+  "renders": [
+    {
+      "id": "1:1",
+      "file": "jti-1x1-1080x1080.mp4",
+      "poster": "jti-1x1-poster.jpg",
+      "mode": "blur",
+      "focus": {
+        "modo": "auto",
+        "fx": 0.5,
+        "fy": 0.5,
+        "zoom": 1
+      },
+      "rule": "contener",
+      "cropLoss": 0.4372,
+      "bitrateKbps": 2500,
+      "width": 1080,
+      "height": 1080,
+      "videoCodec": "h264",
+      "pixelFormat": "yuv420p",
+      "fps": 25,
+      "audioCodec": "aac",
+      "duration": 59.605,
+      "bytes": 19773189,
+      "sha256": "0ef13386f157a4ca681704f9f8cbd32acaaa1ecd517bcf987948dd394370b60b"
+    },
+    {
+      "id": "4:5",
+      "file": "jti-4x5-1080x1350.mp4",
+      "poster": "jti-4x5-poster.jpg",
+      "mode": "blur",
+      "focus": {
+        "modo": "auto",
+        "fx": 0.5,
+        "fy": 0.5,
+        "zoom": 1
+      },
+      "rule": "contener",
+      "cropLoss": 0.2964,
+      "bitrateKbps": 2500,
+      "width": 1080,
+      "height": 1350,
+      "videoCodec": "h264",
+      "pixelFormat": "yuv420p",
+      "fps": 25,
+      "audioCodec": "aac",
+      "duration": 59.605,
+      "bytes": 19781637,
+      "sha256": "628b35f66891ac669b0b9988541301fb39aa3381681d803e3775023a51db9c2a"
+    }
+  ]
+}

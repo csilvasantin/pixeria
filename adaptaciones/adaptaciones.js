@@ -1,4 +1,5 @@
 import {classicTargets,isClassicFormat,extraFormats} from './classic-step.mjs?v=20261009-classic-step-1';
+import {demoCase,mountRenderedDemo} from './demo-renders.mjs?v=4904-1';
 import {mountAdvertisement} from './anuncio-studio.mjs?v=classic-auto-6';
 import {compositionFromStock} from '../assets/content-composition.mjs?v=composition-1';
 import {mountCampaign} from './campaign-studio.mjs?v=creator-tools-2';
@@ -1958,7 +1959,7 @@ PROJECTS = mergeProjects(savedList, INDEX);
 let migratedTo = null; try { migratedTo = migrateStorage(localStorage, STORAGE_KEY); } catch (_) {}
 campaignWorkshop=mountCampaign({t,queue,openTwin:f=>twin?.open(f)});
 let query = null, lastProject = null;
-try { query = new URLSearchParams(location.search).get('proyecto'); } catch (_) {}
+try { query = new URLSearchParams(location.search).get('proyecto') || (demoCase(location.search) === 'altadis' ? 'altadis' : null); } catch (_) {}
 try { lastProject = localStorage.getItem(PROJECT_KEY) || migratedTo; } catch (_) { lastProject = migratedTo; }
 const live = fetchYokup();
 let start = initialProject({query, saved: lastProject, projects: PROJECTS, index: INDEX});
@@ -1996,6 +1997,7 @@ textZone:f=>{if(!f.especial)return null;const seg=geometry(f.layout).segments.re
 changed:()=>{buildCardSettings();refreshInfo();drawDirty=true;}});
 
 buildGrid();
+mountRenderedDemo({document, search:location.search, loadSource:cargarFuente});
 
 async function exportAdvertisements(formats,kinds,extra){
  const frozen=formats.map(f=>({f,a:advertisement.entry(f)}));if(frozen.some(x=>!x.a?.approved))return;
