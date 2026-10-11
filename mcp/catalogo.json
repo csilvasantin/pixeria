@@ -269,5 +269,20 @@
         "en": "Bounded edit plan; never applies or generates."
       }
     }
-  ]
+  ],
+  "uiLocale": {
+    "sections": [
+      "Creator",
+      "Adapter",
+      "Audio",
+      "Music",
+      "Images",
+      "Video",
+      "Assets",
+      "Stock"
+    ],
+    "guide": "/docs/ui-idioma.md",
+    "es": "Etiquetas y ayudas según el idioma; valores y contenido originales conservados.",
+    "en": "Labels and help follow page language; original values and content retained."
+  }
 }

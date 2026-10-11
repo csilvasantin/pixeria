@@ -1,15 +1,24 @@
 {
-  "version": "v.09.10.2026.r27.16:27",
+  "version": "v.11.10.2026.r1.12:43",
   "deployer": "OraculoMacMini",
   "machine": "MacMini",
   "signature": "OraculoMacMini · MacMini",
   "agent": "OraculoMacMini",
-  "builtAt": "2026-10-09T14:26:06Z",
+  "builtAt": "2026-10-11T10:43:23Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
-    "Creador muestra horizontal y vertical desde las mismas capas, sin añadir generaciones de IA ni cambiar destinos guardados.",
-    "Admirito dibuja y borra junto al previo durante los trabajos reales; admite cancelación, móvil y movimiento reducido.",
-    "Adaptador exige arte final sin pantalla o marco exterior, manteniendo controles de producto y texto.",
-    "Se elimina el acceso duplicado al Adaptador dentro del Creador."
-  ]
+    "Controles, desplegables y ayudas en inglés en las ocho secciones.",
+    "Assets conserva la ruta inglesa; opciones y preferencias mantienen sus valores.",
+    "Castellano y contenido de Stock conservados; revisión de menús generados por código."
+  ],
+  "evidence": "Focused tests pass. Public cloud restore and ES/EN editor verified. H264 exports normalize limited colour range and pad short browser capture tails to a common 32s / 800 frames.",
+  "author": "OraculoMacMini",
+  "git": "a12d531079801a05e1de7d62cbd00f18872dfbf3",
+  "gitFull": "a12d531079801a05e1de7d62cbd00f18872dfbf3",
+  "gitShort": "a12d531",
+  "dirty": false,
+  "rollback": {
+    "tag": "retorno/pre-controles-en-5634-pixeria-20261011",
+    "git": "a12d531079801a05e1de7d62cbd00f18872dfbf3"
+  }
 }

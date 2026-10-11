@@ -80,7 +80,7 @@
       renderMotorSelectors();
     });
     document.getElementById('clearKeys')?.addEventListener('click', () => {
-      if (!confirm('¿Borrar todas las API keys de este navegador?')) return;
+      if (!confirm(providerCopy('¿Borrar todas las API keys de este navegador?', 'Delete all API keys from this browser?'))) return;
       localStorage.removeItem(KEYS_STORE);
       refresh();
       showToast('Keys borradas');
@@ -176,14 +176,14 @@
       { id: 'suno-web', nombre: 'Suno', tipo: 'pro', badge: 'Suno', coste: providerCopy('créditos Suno · cuenta Pro', 'Suno credits · Pro account'), desc: providerCopy('cola Suno · ESP/ENG · ejecutar → Stock', 'Suno queue · ESP/ENG · execute → Stock'), use: providerCopy('Cápsula', 'Capsule') },
     ],
     imagenes: [
-      { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Good',   coste: 'gratis (free tier)',   desc: 'generación + edición · Gemini 2.5 Flash Image' },
-      { id: 'nano-banana-pro',               nombre: 'Nano Banana Pro (Gemini 3)', tipo: 'pro', badge: 'Best', coste: 'premium · Gemini 3 Pro Image', desc: 'máxima calidad y seguimiento de prompt' },
-      { id: 'grok-imagine-image-pro',        nombre: 'Grok Imagine Pro (xAI)',  tipo: 'pro',  badge: 'Better', coste: '$0.07 / imagen',       desc: 'mayor calidad · vía worker' },
+      { id: 'nano-banana',                   nombre: 'Nano Banana (Gemini 2.5)', tipo: 'free', badge: 'Good',   coste: providerCopy('gratis (free tier)', "free tier"),   desc: providerCopy('generación + edición · Gemini 2.5 Flash Image', "generation + editing · Gemini 2.5 Flash Image") },
+      { id: 'nano-banana-pro',               nombre: 'Nano Banana Pro (Gemini 3)', tipo: 'pro', badge: 'Best', coste: 'premium · Gemini 3 Pro Image', desc: providerCopy('máxima calidad y seguimiento de prompt', "maximum quality and prompt adherence") },
+      { id: 'grok-imagine-image-pro',        nombre: 'Grok Imagine Pro (xAI)',  tipo: 'pro',  badge: 'Better', coste: providerCopy('$0.07 / imagen', "$0.07 / image"),       desc: providerCopy('mayor calidad · vía worker', "higher quality · via worker") },
     ],
     video: [
-      { id: 'pollinations-wan-fast',         nombre: 'Pollinations · Wan (gratis)', tipo: 'free', badge: 'Good',   coste: 'gratis · vía worker', desc: 'texto→vídeo gratis · Wan-Fast · 720p' },
-      { id: 'veo-3.0-generate-001',          nombre: 'Veo 3 (Google)',       tipo: 'pro', badge: 'Better', coste: '~$0.40 / segundo', desc: 'audio nativo · 720p' },
-      { id: 'grok-imagine-video',            nombre: 'Grok Imagine Video (xAI)', tipo: 'pro', badge: 'Best', coste: 'premium · vía worker xAI', desc: 'Grok Imagine · vídeo cinemático · 720p' },
+      { id: 'pollinations-wan-fast',         nombre: providerCopy('Pollinations · Wan (gratis)', "Pollinations · Wan (free)"), tipo: 'free', badge: 'Good',   coste: providerCopy('gratis · vía worker', "free · via worker"), desc: providerCopy('texto→vídeo gratis · Wan-Fast · 720p', "free text-to-video · Wan-Fast · 720p") },
+      { id: 'veo-3.0-generate-001',          nombre: 'Veo 3 (Google)',       tipo: 'pro', badge: 'Better', coste: providerCopy('~$0.40 / segundo', "~$0.40 / second"), desc: providerCopy('audio nativo · 720p', "native audio · 720p") },
+      { id: 'grok-imagine-video',            nombre: 'Grok Imagine Video (xAI)', tipo: 'pro', badge: 'Best', coste: providerCopy('premium · vía worker xAI', "premium · via xAI worker"), desc: providerCopy('Grok Imagine · vídeo cinemático · 720p', "Grok Imagine · cinematic video · 720p") },
     ],
   };
 
@@ -286,13 +286,13 @@
         </div>`;
       }).join('');
       const titleHint = isMulti
-        ? '<span style="color:#75aab9;font-weight:normal;font-size:11px;margin-left:8px">· multi-click para comparar</span>'
+        ? `<span style="color:#75aab9;font-weight:normal;font-size:11px;margin-left:8px">· ${providerCopy('multi-click para comparar', 'select multiple engines to compare')}</span>`
         : '';
       host.innerHTML = `
         <div class="motor-section" data-section="${seccion}">
           <div class="motor-head">
-            <span class="motor-title">${providerCopy('Motor', 'Engine')} · ${providerCopy(seccion, ({ audio: 'audio', musica: 'music' })[seccion] || seccion)}${titleHint}</span>
-            <span class="motor-disclaimer">${seccion === 'audio' || seccion === 'musica' ? providerCopy('Crédito según cuenta del proveedor', 'Credit depends on provider account') : 'Costes orientativos a ' + COSTES_FECHA}</span>
+            <span class="motor-title">${providerCopy('Motor', 'Engine')} · ${providerCopy(seccion, ({ audio: 'audio', musica: 'music', imagenes: 'images', video: 'video' })[seccion] || seccion)}${titleHint}</span>
+            <span class="motor-disclaimer">${seccion === 'audio' || seccion === 'musica' ? providerCopy('Crédito según cuenta del proveedor', 'Credit depends on provider account') : providerCopy('Costes orientativos a ', 'Indicative costs as of ') + COSTES_FECHA}</span>
           </div>
           <div class="motor-grid" data-count="${opciones.length}">${opts}</div>
           <div class="motor-warning" data-warning hidden></div>
@@ -319,10 +319,10 @@
           <strong>${motor.nombre}</strong> · ${motor.coste}.
           <span class="warn-ok">${providerCopy('Ruta configurada', 'Configured route')}: ${keyLabel}. ${providerCopy('Requiere sesión y crédito del proveedor; disponibilidad y saldo no verificados.', 'Requires a session and provider credit; availability and balance are not verified.')}</span>` : `
           <span class="warn-icon">⚠</span>
-          <strong>${motor.nombre}</strong> es de pago — consume tokens (${motor.coste}).
+          <strong>${motor.nombre}</strong> ${providerCopy("es de pago — consume tokens", "is paid — consumes tokens")} (${motor.coste}).
           ${ok
-            ? `<span class="warn-ok">[ KEY ${keyLabel} configurada ]</span>`
-            : `<span class="warn-missing">[ FALTA ${keyLabel} · pulsa <a href="#" data-open-keys>⚙ KEYS</a> ]</span>`}`;
+            ? `<span class="warn-ok">[ KEY ${keyLabel} ${providerCopy("configurada", "configured")} ]</span>`
+            : `<span class="warn-missing">[ ${providerCopy("FALTA", "MISSING")} ${keyLabel} · ${providerCopy("pulsa", "click")} <a href="#" data-open-keys>⚙ KEYS</a> ]</span>`}`;
         wrap.querySelector('[data-open-keys]')?.addEventListener('click', (e) => {
           e.preventDefault();
           document.getElementById('openSettings')?.click();
@@ -479,7 +479,7 @@
         saveStore(store);
         document.querySelectorAll('input[type=text], select, textarea').forEach(el => { if (el.name) el.value = ''; });
         document.querySelectorAll('.chip input').forEach(i => { i.checked = false; i.closest('.chip')?.classList.remove('active'); });
-        if (out) out.textContent = '// Rellena los campos y pulsa "Generar brief".';
+        if (out) out.textContent = providerCopy('// Rellena los campos y pulsa "Generar brief".', '// Fill in the fields and press "Generate brief".');
         try { setMusicCover(''); } catch (_) {}
         showToast('Limpiado');
       },
@@ -619,7 +619,7 @@
   }
   function confirmPro(motor, coste) {
     return (async () => {
-      return confirm(`⚠ ${motor} es DE PAGO y consumirá tokens (${coste}).\n\n¿Continuar con la reproducción real?`);
+      return confirm(providerCopy(`⚠ ${motor} es DE PAGO y consumirá tokens (${coste}).\n\n¿Continuar con la reproducción real?`, `⚠ ${motor.replace(/COMPARAR motores/g, "COMPARE engines").replace(/COMPARAR vídeo/g, "COMPARE video")} is PAID and will consume tokens (${coste.replace(/caracteres/g, "characters").replace(/vía/g, "via").replace(/audio nativo/g, "native audio").replace(/c\/u/g, "each")}).\n\nContinue with playback?`));
     })();
   }
 
@@ -1368,7 +1368,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     const label = 'Lyria 3 Pro';
 
     if (!lyrics) {
-      const ok = confirm(`No has generado letra todavía. ${label} CON letra suena cantando; sin letra cantará improvisando.\n\n¿Continuar igual?`);
+      const ok = confirm(providerCopy(`No has generado letra todavía. ${label} CON letra suena cantando; sin letra cantará improvisando.\n\n¿Continuar igual?`, `You have not generated lyrics yet. ${label} sings supplied lyrics; without lyrics it will improvise.\n\nContinue?`));
       if (!ok) return;
     }
     if (!(await confirmPro(label + ' (Google)', `paid tier Gemini · vía worker pixer-eleven`))) return;

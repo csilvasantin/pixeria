@@ -15,7 +15,7 @@
   var LANG_KEY = 'admiranext_expert_lang';
   var englishHost = /(^|\.)pixeria\.(com|pages\.dev)$/.test(location.hostname);
   var localePath = location.pathname;
-  var translatedPages = ['/', '/index.html', '/audio.html', '/musica.html', '/imagenes.html', '/video.html', '/anonimizador.html', '/publicidad.html', '/stock.html', '/crear/', '/creador/'];
+  var translatedPages = ['/', '/index.html', '/audio.html', '/musica.html', '/imagenes.html', '/video.html', '/anonimizador.html', '/publicidad.html', '/stock.html', '/crear/', '/creador/', '/adaptaciones/'];
   function langPref() {
     try { var v = localStorage.getItem(LANG_KEY); return v === 'es' || v === 'en' ? v : ''; } catch (_) { return ''; }
   }
@@ -211,7 +211,7 @@
       lead.hidden = !open;
       btn.textContent = open ? '\u2212' : '?';          // − / ?
       btn.setAttribute('aria-expanded', String(open));
-      var t = open ? 'Ocultar la descripción' : 'Qué es esto';
+      var t = document.documentElement.lang === 'en' ? (open ? 'Hide description' : 'What is this') : (open ? 'Ocultar la descripción' : 'Qué es esto');
       btn.setAttribute('aria-label', t);
       btn.title = t;
     }

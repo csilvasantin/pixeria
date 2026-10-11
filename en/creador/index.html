@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r27.1627';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=11.10.2026.r1.1243';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -36,25 +36,26 @@
 <meta charset="utf-8">
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r27.16:27">
+  <meta name="admiranext-version" content="Pixeria v.11.10.2026.r1.12:43">
 <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
 <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <title>Creator · Campaigns for screens | Pixeria</title>
   <meta name="description" content="Create campaigns from scratch for every screen configuration, with editable product, logo and copy.">
   <link rel="canonical" href="https://www.pixeria.com/creador/">
   <!-- Tema Matrix compartido con /video.html y el resto del sitio (tokens, mono, CRT y lluvia) -->
-  <link rel="stylesheet" href="/workspace.css?v=09.10.2026.r27.1627">
-  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=09.10.2026.r27.1627">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=09.10.2026.r27.1627">
-  <script defer src="/assets/site-nav.js?v=09.10.2026.r27.1627"></script>
+  <link rel="stylesheet" href="/workspace.css?v=11.10.2026.r1.1243">
+  <link rel="stylesheet" href="/adaptaciones/adaptaciones.css?v=11.10.2026.r1.1243">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=11.10.2026.r1.1243">
+  <script defer src="/assets/site-nav.js?v=11.10.2026.r1.1243"></script>
+  <script src="/assets/ui-locale.js?v=11.10.2026.r1.1243"></script>
 </head>
 <body class="adapt-page creator-page">
   <script>document.body.classList.add('pf-left-off','pf-right-off','pf-bottom-off');</script>
   <canvas id="matrix-rain" aria-hidden="true"></canvas>
   <header class="site-header">
-    <a class="brand" href="/" aria-label="Pixeria inicio"><span>Pixeria</span></a>
+    <a class="brand" href="/" aria-label="Pixeria home"><span>Pixeria</span></a>
     <nav class="nav" aria-label="Pixeria sections">
-      <a href="/audio.html">Audio</a><a href="/musica.html">Música</a><a href="/imagenes.html">Imágenes</a><a href="/en/video.html">Video</a><a href="/en/stock.html">Stock</a>
+      <a href="/audio.html">Audio</a><a href="/musica.html">Music</a><a href="/imagenes.html">Images</a><a href="/en/video.html">Video</a><a href="/en/stock.html">Stock</a>
     </nav>
   </header>
   <main class="adapt-main">
@@ -156,14 +157,14 @@
       <details class="plan"><summary>Encoding plan by format (resolution, H.264, bitrate and ffmpeg command)</summary><div id="plan-tecnico"></div></details>
     </div>
   </main>
-  <script defer src="/adaptaciones/formatos-entrada.js?v=09.10.2026.r27.1627"></script>
-  <script defer src="/adaptaciones/stock-fuentes.js?v=09.10.2026.r27.1627"></script>
-  <script defer src="/adaptaciones/stock-select.js?v=09.10.2026.r27.1627"></script>
-  <script defer src="/adaptaciones/ficha-tecnica.js?v=09.10.2026.r27.1627"></script>
-  <script defer src="/adaptaciones/importar.js?v=09.10.2026.r27.1627"></script>
-  <script type="module" src="/adaptaciones/adaptaciones.js?v=09.10.2026.r27.1627"></script>
-  <script defer src="/matrix-rain.js?v=09.10.2026.r27.1627"></script>
-  <script defer src="/assets/cuadratura.js?v=09.10.2026.r27.1627"></script>
+  <script defer src="/adaptaciones/formatos-entrada.js?v=11.10.2026.r1.1243"></script>
+  <script defer src="/adaptaciones/stock-fuentes.js?v=11.10.2026.r1.1243"></script>
+  <script defer src="/adaptaciones/stock-select.js?v=11.10.2026.r1.1243"></script>
+  <script defer src="/adaptaciones/ficha-tecnica.js?v=11.10.2026.r1.1243"></script>
+  <script defer src="/adaptaciones/importar.js?v=11.10.2026.r1.1243"></script>
+  <script type="module" src="/adaptaciones/adaptaciones.js?v=11.10.2026.r1.1243"></script>
+  <script defer src="/matrix-rain.js?v=11.10.2026.r1.1243"></script>
+  <script defer src="/assets/cuadratura.js?v=11.10.2026.r1.1243"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 <script type="module" src="/campanas/creador/demo.mjs?v=creator-tools-4"></script>
 </body>

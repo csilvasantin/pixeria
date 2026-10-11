@@ -56,14 +56,16 @@ jobs:
             novedades="$(jq -c --arg v "$release" '(if type=="object" then (.[$v] // .default // .novedades // []) elif type=="array" then . else [] end) | if type=="array" then . else [] end | map(tostring) | map(select(length>0)) | .[0:4]' novedades.json 2>/dev/null || echo '[]')"
           fi
           [ -n "$novedades" ] || novedades='[]'
-          jq -n --argjson novedades "$novedades" \
+          rollback="$(jq -c '.rollback // {}' release-signature.json)"
+          jq --arg git "$GITHUB_SHA" '. + {git:$git,gitFull:$git,gitShort:($git[0:7]),dirty:false}' release-signature.json > "$TMP/release-signature.json"
+          jq -n --argjson rollback "$rollback" --argjson novedades "$novedades" \
             --arg version "$release" \
             --arg deployedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --arg deployer "$deployer" \
             --arg machine "$machine" \
             --arg signature "$deployer · $machine" \
             --arg git "$GITHUB_SHA" \
-            '{version:$version,deployedAt:$deployedAt,deployer:$deployer,machine:$machine,signature:$signature,git:$git,gitShort:($git[0:7]),gitFull:$git,dirty:false,novedades:$novedades}' \
+            '{version:$version,deployedAt:$deployedAt,deployer:$deployer,machine:$machine,signature:$signature,git:$git,gitShort:($git[0:7]),gitFull:$git,dirty:false,novedades:$novedades,rollback:$rollback}' \
             > "$TMP/version.json"
           npx --yes wrangler@latest pages deploy "$TMP" --project-name pixeria --branch main
           echo "✓ https://www.pixeria.com (Cloudflare Pages) · mirror https://pixeria.pages.dev"

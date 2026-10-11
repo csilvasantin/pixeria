@@ -104,3 +104,7 @@ Real MCP `creador_demo({mode:"full",language:"en"})` is **plan only**. Explicit 
 ## Creador / Creator
 
 `/demo creador todo` / `/demo creator full`: abre la campaña IA con edición por instrucciones, nube y exportación animada tras revisión. No genera de nuevo al abrir historial. / AI campaign with reviewed instruction editing, cloud snapshots and animated export; history does not regenerate assets. [Tutorial ES/EN](creator-tools.md).
+
+## Idioma de interfaz / UI language
+
+ES: `/language ENG` y `/idioma ESP` conservan el historial y los valores internos, y cambian las etiquetas, opciones y ayudas de las ocho secciones. EN: `/language ENG` and `/idioma ESP` retain history and internal values while changing UI labels, options and help across all eight sections. [Tutorial y contrato / Tutorial and contract](/docs/ui-idioma.md).

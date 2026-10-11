@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r27.1627';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=11.10.2026.r1.1243';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r27.16:27">
+  <meta name="admiranext-version" content="Pixeria v.11.10.2026.r1.12:43">
   <link rel="canonical" href="https://www.pixeria.com/en/musica.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/musica.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/musica.html">
@@ -43,17 +43,18 @@
   <link rel="icon" href="/favicon.ico?v=20260522-r2" sizes="any">
   <link rel="icon" type="image/png" href="/favicon.png?v=20260522-r2" sizes="64x64">
   <link rel="shortcut icon" href="/favicon.ico?v=20260522-r2">
-  <title>Pixeria Studio · Musica</title>
+  <title>Pixeria Studio · Music</title>
   <meta name="description" content="Brief operativo de Música: identidad musical y piezas adaptativas para Admira.xp.">
   <!-- Admira · Xperience · design system del grupo (tokens + nav header) -->
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/tokens.css">
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="../workspace.css?v=09.10.2026.r27.1627">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=09.10.2026.r27.1627">
-  <script defer src="/assets/site-nav.js?v=09.10.2026.r27.1627"></script>
-  <script defer src="/assets/descarga-local.js?v=09.10.2026.r27.1627"></script>
+  <link rel="stylesheet" href="../workspace.css?v=11.10.2026.r1.1243">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=11.10.2026.r1.1243">
+  <script defer src="/assets/site-nav.js?v=11.10.2026.r1.1243"></script>
+  <script defer src="/assets/descarga-local.js?v=11.10.2026.r1.1243"></script>
+  <script src="/assets/ui-locale.js?v=11.10.2026.r1.1243"></script>
 </head>
 <body data-page="musica">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -116,21 +117,21 @@
     <form id="briefForm">
       <div class="field" style="margin-bottom: 16px; display:grid; grid-template-columns: minmax(220px, 1fr) auto auto; gap:10px; align-items:end;">
         <div>
-          <label for="proj-cliente">Cliente / proyecto</label>
-          <input id="proj-cliente" name="cliente" type="text" placeholder="Ej. Aena Mallorca - Campaña primavera">
+          <label for="proj-cliente">Client / project</label>
+          <input id="proj-cliente" name="cliente" type="text" placeholder="E.g. Aena Mallorca - Spring campaign">
         </div>
-        <button type="button" class="btn" id="sendToAdmiraXP" title="Envía el último contenido generado al feed de Admira XP">📺 ENVIAR A ADMIRA XP</button>
-        <a class="btn" href="../signage.html" target="_blank" rel="noopener" title="Abre la pantalla de signage para ver lo enviado">↗ VER PANTALLA</a>
+        <button type="button" class="btn" id="sendToAdmiraXP" title="Send the latest generated content to the Admira XP feed">📺 SEND TO ADMIRA XP</button>
+        <a class="btn" href="../signage.html" target="_blank" rel="noopener" title="Open the signage screen to see the sent content">↗ VIEW SCREEN</a>
       </div>
 
       <article class="module">
-        <div class="module-head"><h3><span class="accent" style="background: var(--music);"></span>Música</h3><small>identidad + loop + energía</small></div>
+        <div class="module-head"><h3><span class="accent" style="background: var(--music);"></span>Music</h3><small>identity + loop + energy</small></div>
         <div data-motor-section="musica"></div>
 
-        <section id="sunoCapsula" class="suno-capsula" hidden aria-label="Cápsula Suno">
+        <section id="sunoCapsula" class="suno-capsula" hidden aria-label="Suno capsule">
           <div class="suno-capsula-head">
-            <h4>SUNO · cápsula musical</h4>
-            <span class="suno-capsula-badge">Execute · créditos Suno · ESP/ENG</span>
+            <h4>SUNO · music capsule</h4>
+            <span class="suno-capsula-badge">Execute · Suno credits · ESP/ENG</span>
           </div>
           <div class="suno-tabs" role="tablist">
             <button type="button" class="suno-tab is-on" data-kind="songs" role="tab">Songs</button>
@@ -138,57 +139,57 @@
             <button type="button" class="suno-tab" data-kind="sounds" role="tab">Sounds</button>
           </div>
           <div class="suno-row">
-            <div class="suno-pills" role="group" aria-label="Modo">
+            <div class="suno-pills" role="group" aria-label="Mode">
               <button type="button" class="suno-pill is-on" data-mode="simple">Simple</button>
               <button type="button" class="suno-pill" data-mode="advanced">Advanced</button>
             </div>
-            <label class="suno-ver-wrap">Versión
-              <select id="sunoVersion" class="suno-ver" name="musica.suno.version" aria-label="Versión Suno">
+            <label class="suno-ver-wrap">Version
+              <select id="sunoVersion" class="suno-ver" name="musica.suno.version" aria-label="Suno version">
                 <option value="v6" selected>Suno v5.5 (chirp-v5-5)</option>
                 <option value="v5">v5</option>
                 <option value="v4.5">v4.5</option>
               </select>
             </label>
           </div>
-          <div class="suno-langs" role="group" aria-label="Idioma / Language">
-            <span class="suno-langs-label">Idioma</span>
+          <div class="suno-langs" role="group" aria-label="Language">
+            <span class="suno-langs-label">Language</span>
             <button type="button" class="suno-lang is-on" data-lang="ESP" aria-pressed="true">ESP</button>
             <button type="button" class="suno-lang" data-lang="ENG" aria-pressed="false">ENG</button>
-            <small class="suno-langs-hint">multi · p.ej. bilingüe ESP+ENG</small>
+            <small class="suno-langs-hint">multi · e.g. bilingual ESP+ENG</small>
           </div>
-          <div class="suno-attach" aria-label="Adjuntos">
+          <div class="suno-attach" aria-label="Attachments">
             <button type="button" data-attach="audio">+ Audio</button>
             <button type="button" data-attach="voice">+ Voice</button>
             <button type="button" data-attach="image">+ Image</button>
           </div>
           <div class="field">
-            <label for="sunoTitle">Título <small style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(opcional)</small></label>
-            <input id="sunoTitle" name="musica.suno.title" type="text" placeholder="Ej. Capsula retail · tribal highlife" autocomplete="off">
+            <label for="sunoTitle">Title <small style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</small></label>
+            <input id="sunoTitle" name="musica.suno.title" type="text" placeholder="E.g. Retail capsule · tribal highlife" autocomplete="off">
           </div>
           <div class="field">
             <label for="sunoPrompt">Prompt</label>
             <textarea id="sunoPrompt" class="suno-prompt" name="musica.suno.prompt" rows="5" placeholder="Tribal highlife song about toxic cycles"></textarea>
           </div>
           <button type="button" class="suno-create" id="sunoCreate">♪ Create</button>
-          <div class="suno-job" id="sunoJobStatus">Cola lista. Create encola con execute=true (idiomas ESP/ENG) → suno-local → Stock.</div>
+          <div class="suno-job" id="sunoJobStatus">Queue ready. Create queues with execute=true (ESP/ENG languages) → suno-local → Stock.</div>
         </section>
         <div id="musicaClassicFields">
 
-        <div class="field"><label>Mapa emocional</label>
+        <div class="field"><label>Emotional map</label>
           <div class="chips" data-name="musica.emocion">
-            <label class="chip"><input type="checkbox" value="Calma">Calma</label>
-            <label class="chip"><input type="checkbox" value="Tension">Tensión</label>
-            <label class="chip"><input type="checkbox" value="Descubrimiento">Descubrimiento</label>
-            <label class="chip"><input type="checkbox" value="Celebracion">Celebración</label>
-            <label class="chip"><input type="checkbox" value="Marca">Marca</label>
-            <label class="chip"><input type="checkbox" value="Transicion">Transición</label>
+            <label class="chip"><input type="checkbox" value="Calma">Calm</label>
+            <label class="chip"><input type="checkbox" value="Tension">Tension</label>
+            <label class="chip"><input type="checkbox" value="Descubrimiento">Discovery</label>
+            <label class="chip"><input type="checkbox" value="Celebracion">Celebration</label>
+            <label class="chip"><input type="checkbox" value="Marca">Brand</label>
+            <label class="chip"><input type="checkbox" value="Transicion">Transition</label>
           </div>
         </div>
-        <div class="field"><label>Capas</label>
+        <div class="field"><label>Layers</label>
           <div class="chips" data-name="musica.capas">
             <label class="chip"><input type="checkbox" value="Base">Base</label>
-            <label class="chip"><input type="checkbox" value="Percusion">Percusión</label>
-            <label class="chip"><input type="checkbox" value="Melodia">Melodía</label>
+            <label class="chip"><input type="checkbox" value="Percusion">Percussion</label>
+            <label class="chip"><input type="checkbox" value="Melodia">Melody</label>
             <label class="chip"><input type="checkbox" value="Stinger">Stinger</label>
             <label class="chip"><input type="checkbox" value="Pad">Pad</label>
             <label class="chip"><input type="checkbox" value="Bed">Bed</label>
@@ -196,12 +197,12 @@
         </div>
         <div class="row2">
           <div class="field"><label for="m-bpm">BPM</label><input id="m-bpm" name="musica.bpm" type="text" placeholder="92"></div>
-          <div class="field"><label for="m-tonalidad">Tonalidad</label><input id="m-tonalidad" name="musica.tonalidad" type="text" placeholder="C menor"></div>
+          <div class="field"><label for="m-tonalidad">Key</label><input id="m-tonalidad" name="musica.tonalidad" type="text" placeholder="C minor"></div>
         </div>
-        <div class="field"><label for="m-versiones">Versiones a entregar</label><input id="m-versiones" name="musica.versiones" type="text" placeholder="Loop limpio, versión 30s, versión extendida 2min"></div>
-        <div class="field"><label for="m-uso">Uso en experiencia</label><input id="m-uso" name="musica.uso" type="text" placeholder="Bed de menú + stinger de cierre"></div>
+        <div class="field"><label for="m-versiones">Versions to deliver</label><input id="m-versiones" name="musica.versiones" type="text" placeholder="Clean loop, 30s version, extended 2min version"></div>
+        <div class="field"><label for="m-uso">Use in experience</label><input id="m-uso" name="musica.uso" type="text" placeholder="Menu bed + closing stinger"></div>
         <div class="field">
-          <label for="m-letra">Letra <button type="button" class="btn" id="genLyrics" style="font-size:10px;padding:4px 8px;margin-left:8px;vertical-align:middle;">✏️ GENERAR CON GEMINI</button></label>
+          <label for="m-letra">Lyrics <button type="button" class="btn" id="genLyrics" style="font-size:10px;padding:4px 8px;margin-left:8px;vertical-align:middle;">✏️ GENERATE WITH GEMINI</button></label>
           <textarea id="m-letra" name="musica.letra" rows="10" placeholder="[Verse 1]&#10;...&#10;&#10;[Chorus]&#10;..." style="font-family:inherit;"></textarea>
         </div>
         </div>
@@ -209,17 +210,17 @@
 
       <div class="brief-area">
         <div class="brief-head">
-          <h3>Brief de Música</h3>
+          <h3>Music brief</h3>
           <div class="brief-actions">
-            <button class="btn play" type="button" id="playOutput"><span class="play-label">✨ CREAR</span></button>
-            <button class="btn" type="button" id="genBrief">Generar brief</button>
-            <button class="btn" type="button" id="copyBrief">Copiar JSON</button>
-            <button class="btn" type="button" id="copyMd">Copiar Markdown</button>
-            <button class="btn" type="button" id="dlBrief">Descargar .json</button>
-            <button class="btn" type="button" id="clearAll">Limpiar Música</button>
+            <button class="btn play" type="button" id="playOutput"><span class="play-label">✨ CREATE</span></button>
+            <button class="btn" type="button" id="genBrief">Generate brief</button>
+            <button class="btn" type="button" id="copyBrief">Copy JSON</button>
+            <button class="btn" type="button" id="copyMd">Copy Markdown</button>
+            <button class="btn" type="button" id="dlBrief">Download .json</button>
+            <button class="btn" type="button" id="clearAll">Clear Music</button>
           </div>
         </div>
-        <pre class="brief" id="briefOut">// Rellena los campos y pulsa "Generar brief".</pre>
+        <pre class="brief" id="briefOut">// Fill in the fields and press "Generate brief".</pre>
       </div>
       <div id="player" class="player-area" hidden></div>
     </form>
@@ -229,20 +230,20 @@
 
   <dialog id="importModal" class="keys-modal">
     <form method="dialog" class="keys-form import-form">
-      <h3>📥 IMPORTAR DESDE URL</h3>
-      <p class="keys-warn">yt-dlp en Mac Mini (audio mp3 + video mp4). Hosts permitidos: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn, Telegram (t.me). Se pueden pegar VARIAS URLs a la vez, una por línea.</p>
-      <div class="field"><label for="import-url">URL <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(una o varias, una por línea)</small></label><textarea id="import-url" rows="2" autocomplete="off" spellcheck="false" placeholder="https://www.youtube.com/watch?v=…&#10;https://t.me/canal/123"></textarea></div>
+      <h3>📥 IMPORT FROM URL</h3>
+      <p class="keys-warn">yt-dlp on Mac Mini (MP3 audio + MP4 video). Supported hosts: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn, Telegram (t.me). Paste multiple URLs, one per line.</p>
+      <div class="field"><label for="import-url">URL <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(one or more, one per line)</small></label><textarea id="import-url" rows="2" autocomplete="off" spellcheck="false" placeholder="https://www.youtube.com/watch?v=…&#10;https://t.me/canal/123"></textarea></div>
       <div class="field">
-        <label for="import-comment">Comentarios <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(opcional · indexable por búsqueda en Stock)</small></label>
-        <textarea id="import-comment" rows="2" autocomplete="off" placeholder="Notas, etiquetas, contexto… (luego se puede buscar)"></textarea>
+        <label for="import-comment">Comments <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(optional · searchable in Stock)</small></label>
+        <textarea id="import-comment" rows="2" autocomplete="off" placeholder="Notes, tags, context… (searchable later)"></textarea>
       </div>
       <div class="field">
-        <label>Formato</label>
-        <div class="import-fmt" role="radiogroup" aria-label="Formato de importación">
+        <label>Format</label>
+        <div class="import-fmt" role="radiogroup" aria-label="Import format">
           <label class="import-fmt-chip is-audio">
             <input type="radio" name="import-fmt" value="audio" checked>
             <span class="import-fmt-icon" aria-hidden="true">🎵</span>
-            <span class="import-fmt-label"><b>AUDIO</b><small>mp3 · sólo pista de audio</small></span>
+            <span class="import-fmt-label"><b>AUDIO</b><small>mp3 · audio track only</small></span>
           </label>
           <label class="import-fmt-chip is-video">
             <input type="radio" name="import-fmt" value="video">
@@ -253,7 +254,7 @@
       </div>
       <div class="import-progress" id="importProgress" hidden>
         <div class="import-progress-head">
-          <span class="import-progress-kind" id="importProgressKind">— ESPERANDO —</span>
+          <span class="import-progress-kind" id="importProgressKind">— WAITING —</span>
           <span class="import-progress-stats" id="importProgressStats">0 MB · 0s</span>
         </div>
         <div class="import-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
@@ -262,8 +263,8 @@
         </div>
       </div>
       <div class="keys-actions">
-        <button type="button" class="btn primary" id="doImport">Importar</button>
-        <button type="button" class="btn" id="closeImport">Cerrar</button>
+        <button type="button" class="btn primary" id="doImport">Import</button>
+        <button type="button" class="btn" id="closeImport">Close</button>
       </div>
       <pre class="brief" id="importStatus" style="display:none;font-size:11px;max-height:200px;"></pre>
     </form>
@@ -271,15 +272,15 @@
   <dialog id="keysModal" class="keys-modal">
     <form method="dialog" class="keys-form">
       <h3>⚙ API KEYS</h3>
-      <p class="keys-warn">Las claves se guardan solo en este navegador (localStorage). No se envían a ningún servidor de PixerIA.</p>      <div class="field"><label for="key-elevenlabs-voice">ElevenLabs Voice ID</label><input id="key-elevenlabs-voice" type="text" autocomplete="off" placeholder="EXAVITQu4vr4xnSDxMaL (Bella · default)"></div>      <div class="keys-actions">
+      <p class="keys-warn">Keys are stored only in this browser (localStorage). They are not sent to any Pixeria server.</p>      <div class="field"><label for="key-elevenlabs-voice">ElevenLabs Voice ID</label><input id="key-elevenlabs-voice" type="text" autocomplete="off" placeholder="EXAVITQu4vr4xnSDxMaL (Bella · default)"></div>      <div class="keys-actions">
         <button type="button" class="btn primary" id="saveKeys">Guardar</button>
         <button type="button" class="btn" id="clearKeys">Borrar todas</button>
         <button type="button" class="btn" id="closeKeys">Cerrar</button>
       </div>
     </form>
   </dialog>
-  <script defer src="/matrix-rain.js?v=09.10.2026.r27.1627"></script>
-  <script src="../app.js?v=09.10.2026.r27.1627"></script>
-  <script defer src="/assets/cuadratura.js?v=09.10.2026.r27.1627"></script>
+  <script defer src="/matrix-rain.js?v=11.10.2026.r1.1243"></script>
+  <script src="../app.js?v=11.10.2026.r1.1243"></script>
+  <script defer src="/assets/cuadratura.js?v=11.10.2026.r1.1243"></script>
 </body>
 </html>

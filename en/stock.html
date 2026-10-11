@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=09.10.2026.r27.1627';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=11.10.2026.r1.1243';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.09.10.2026.r27.16:27">
+  <meta name="admiranext-version" content="Pixeria v.11.10.2026.r1.12:43">
   <link rel="canonical" href="https://www.pixeria.com/en/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -50,7 +50,7 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="../workspace.css?v=09.10.2026.r27.1627">
+  <link rel="stylesheet" href="../workspace.css?v=11.10.2026.r1.1243">
   <style>
     .stock-lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);z-index:30;width:54px;height:84px;display:flex;align-items:center;justify-content:center;
       border:1px solid rgba(118,185,0,.4);border-radius:12px;background:rgba(8,16,8,.72);color:#b8e577;font-size:34px;line-height:1;cursor:pointer;
@@ -103,11 +103,12 @@
     .cat-result.sum{ color:var(--muted); border-style:dashed; }
     .cat-result a{ color:var(--matrix); }
   </style>
-  <script defer src="/assets/site-nav.js?v=09.10.2026.r27.1627"></script>
-  <script defer src="/assets/descarga-local.js?v=09.10.2026.r27.1627"></script>
-  <link rel="stylesheet" href="../assets/xpaces/viewer.css?v=09.10.2026.r27.1627">
+  <script defer src="/assets/site-nav.js?v=11.10.2026.r1.1243"></script>
+  <script defer src="/assets/descarga-local.js?v=11.10.2026.r1.1243"></script>
+  <link rel="stylesheet" href="../assets/xpaces/viewer.css?v=11.10.2026.r1.1243">
 <link rel="stylesheet" href="/assets/furniture/editor.css">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=09.10.2026.r27.1627">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=11.10.2026.r1.1243">
+  <script src="/assets/ui-locale.js?v=11.10.2026.r1.1243"></script>
 </head>
 <body data-page="stock">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -160,7 +161,7 @@
 
   <main>
     <section class="stock-toolbar">
-      <nav class="stock-pager stock-pager-top" aria-label="Vista, filtros, búsqueda, orden y paginación">
+      <nav class="stock-pager stock-pager-top" aria-label="View, filters, search, sorting and pagination">
         <div class="stock-view" role="group" aria-label="View">
           <button type="button" class="stock-view-btn" id="stockViewToggle" title="Toggle view: detail ↔ grid" aria-label="Toggle view">▦</button>
         </div>
@@ -170,23 +171,23 @@
           <button type="button" class="btn primary stock-import-btn" id="stockImportFromSearch" title="Import the URL in the search box (yt-dlp · same as AdmiraXP on Telegram)" aria-label="Import URL">📥</button>
         </div>
         <div class="stock-pager-filters">
-          <select id="stockTypeFilter" title="Filtrar por tipo" aria-label="Filtrar por tipo">
-            <option value="">Todos los tipos</option>
+          <select id="stockTypeFilter" title="Filter by type" aria-label="Filter by type">
+            <option value="">All types</option>
             <option value="locucion">Public announcements</option>
             <option value="audio">Audio</option>
-            <option value="music">Música</option>
-            <option value="image">Imágenes</option>
+            <option value="music">Music</option>
+            <option value="image">Images</option>
             <option value="xpaces">Xpaces</option>
             <option value="video" selected>Video</option>
             <option value="catalogo">Catalogues</option>
-            <option value="animation">Animaciones</option>
-            <option value="furni">Mobiliario</option>
+            <option value="animation">Animations</option>
+            <option value="furni">Furniture</option>
           </select>
         </div>
-        <div class="stock-pager-sort" id="stockSortBar" role="group" aria-label="Ordenar por">
-          <span class="stock-sortbar-label">Ordenar:</span>
-          <button type="button" class="stock-sort-th" data-key="name">Nombre <span class="stock-sort-arrow">⇅</span></button>
-          <button type="button" class="stock-sort-th" data-key="date">Fecha <span class="stock-sort-arrow">⇅</span></button>
+        <div class="stock-pager-sort" id="stockSortBar" role="group" aria-label="Sort by">
+          <span class="stock-sortbar-label">Sort:</span>
+          <button type="button" class="stock-sort-th" data-key="name">Name <span class="stock-sort-arrow">⇅</span></button>
+          <button type="button" class="stock-sort-th" data-key="date">Date <span class="stock-sort-arrow">⇅</span></button>
         </div>
         <div class="stock-pager-controls">
           <button type="button" class="stock-pager-btn" data-page="first" title="First page" aria-label="First page">«</button>
@@ -211,11 +212,11 @@
       <div id="stockOrigenBar" class="stock-origen-bar" hidden></div>
       <div id="stockGrid" class="stock-grid"></div>
       <div id="stockEmpty" class="stock-empty" hidden>
-        <p>// Stock vacío.</p>
-        <p>Genera un asset en Audio/Música/Imágenes/Video y pulsa <strong>📌 PUBLICAR EN STOCK</strong>.</p>
+        <p>// Stock is empty.</p>
+        <p>Generate an asset in Audio/Music/Images/Video and press <strong>📌 PUBLISH TO STOCK</strong>.</p>
       </div>
 
-      <nav class="stock-pager stock-pager-bottom" hidden aria-label="Paginación (abajo)">
+      <nav class="stock-pager stock-pager-bottom" hidden aria-label="Pagination (bottom)">
         <div class="stock-pager-controls">
           <button type="button" class="stock-pager-btn" data-page="first" title="First page" aria-label="First page">«</button>
           <button type="button" class="stock-pager-btn" data-page="prev" title="Previous" aria-label="Previous page">‹</button>
@@ -258,20 +259,20 @@
 
   <dialog id="importModal" class="keys-modal">
     <form method="dialog" class="keys-form import-form">
-      <h3>📥 IMPORTAR DESDE URL</h3>
-      <p class="keys-warn">yt-dlp en Mac Mini (audio mp3 + video mp4). Hosts permitidos: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn, Telegram (t.me). Se pueden pegar VARIAS URLs a la vez, una por línea.</p>
-      <div class="field"><label for="import-url">URL <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(una o varias, una por línea)</small></label><textarea id="import-url" rows="2" autocomplete="off" spellcheck="false" placeholder="https://www.youtube.com/watch?v=…&#10;https://t.me/canal/123"></textarea></div>
+      <h3>📥 IMPORT FROM URL</h3>
+      <p class="keys-warn">yt-dlp on Mac Mini (MP3 audio + MP4 video). Supported hosts: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn, Telegram (t.me). Paste multiple URLs, one per line.</p>
+      <div class="field"><label for="import-url">URL <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(one or more, one per line)</small></label><textarea id="import-url" rows="2" autocomplete="off" spellcheck="false" placeholder="https://www.youtube.com/watch?v=…&#10;https://t.me/canal/123"></textarea></div>
       <div class="field">
-        <label for="import-comment">Comentarios <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(opcional · indexable por búsqueda en Stock)</small></label>
-        <textarea id="import-comment" rows="2" autocomplete="off" placeholder="Notas, etiquetas, contexto… (luego se puede buscar)"></textarea>
+        <label for="import-comment">Comments <small style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none">(optional · searchable in Stock)</small></label>
+        <textarea id="import-comment" rows="2" autocomplete="off" placeholder="Notes, tags, context… (searchable later)"></textarea>
       </div>
       <div class="field">
-        <label>Formato</label>
-        <div class="import-fmt" role="radiogroup" aria-label="Formato de importación">
+        <label>Format</label>
+        <div class="import-fmt" role="radiogroup" aria-label="Import format">
           <label class="import-fmt-chip is-audio">
             <input type="radio" name="import-fmt" value="audio" checked>
             <span class="import-fmt-icon" aria-hidden="true">🎵</span>
-            <span class="import-fmt-label"><b>AUDIO</b><small>mp3 · sólo pista de audio</small></span>
+            <span class="import-fmt-label"><b>AUDIO</b><small>mp3 · audio track only</small></span>
           </label>
           <label class="import-fmt-chip is-video">
             <input type="radio" name="import-fmt" value="video">
@@ -282,7 +283,7 @@
       </div>
       <div class="import-progress" id="importProgress" hidden>
         <div class="import-progress-head">
-          <span class="import-progress-kind" id="importProgressKind">— ESPERANDO —</span>
+          <span class="import-progress-kind" id="importProgressKind">— WAITING —</span>
           <span class="import-progress-stats" id="importProgressStats">0 MB · 0s</span>
         </div>
         <div class="import-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
@@ -291,15 +292,15 @@
         </div>
       </div>
       <div class="keys-actions">
-        <button type="button" class="btn primary" id="doImport">Importar</button>
-        <button type="button" class="btn" id="closeImport">Cerrar</button>
+        <button type="button" class="btn primary" id="doImport">Import</button>
+        <button type="button" class="btn" id="closeImport">Close</button>
       </div>
       <pre class="brief" id="importStatus" style="display:none;font-size:11px;max-height:200px;"></pre>
     </form>
   </dialog>
 
-  <script defer src="/matrix-rain.js?v=09.10.2026.r27.1627"></script>
-  <script src="../app.js?v=09.10.2026.r27.1627"></script>
+  <script defer src="/matrix-rain.js?v=11.10.2026.r1.1243"></script>
+  <script src="../app.js?v=11.10.2026.r1.1243"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "../assets/xpaces/catalog.mjs";
   import {isFurniture3D} from "../assets/furniture/catalog.mjs";
@@ -449,18 +450,18 @@
       if (!Array.isArray(tags) || tags.length === 0) return '';
       return `<div class="stock-tags">${tags.map(t => {
         const safe = verTag(t).replace(/</g, '&lt;');
-        return `<button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Filtrar por #${escAttr(verTag(t))}">#${safe}</button>`;
+        return `<button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Filter by #${escAttr(verTag(t))}">#${safe}</button>`;
       }).join('')}</div>`;
     }
     function renderTagsEditorHtml(id, tags) {
       const safeId = String(id || '').replace(/[^A-Za-z0-9-]/g, '');
       const chips = (Array.isArray(tags) ? tags : []).map(t => {
         const safe = verTag(t).replace(/</g, '&lt;');
-        return `<span class="stock-tag-edit"><button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Filtrar por #${escAttr(verTag(t))}">#${safe}</button><button type="button" class="stock-tag-x" data-act="remove-tag" data-tag="${escAttr(t)}" title="Quitar etiqueta" aria-label="Quitar #${escAttr(verTag(t))}">✕</button></span>`;
+        return `<span class="stock-tag-edit"><button type="button" class="stock-tag" data-tag="${escAttr(t)}" title="Filter by #${escAttr(verTag(t))}">#${safe}</button><button type="button" class="stock-tag-x" data-act="remove-tag" data-tag="${escAttr(t)}" title="Remove tag" aria-label="Remove #${escAttr(verTag(t))}">✕</button></span>`;
       }).join('');
       return `<div class="stock-tags-editor" data-edit-id="${safeId}">
         ${chips}
-        <button type="button" class="stock-tag-add" data-act="add-tag" title="Añadir etiqueta">+ etiqueta</button>
+        <button type="button" class="stock-tag-add" data-act="add-tag" title="Add tag">+ tag</button>
       </div>`;
     }
     async function saveTags(id, tags) {
@@ -507,7 +508,7 @@
         ? `<span class="stock-title-inline" title="${escAttr(titleRaw)}">${titleRaw.replace(/</g,'&lt;').slice(0, 90)}${titleRaw.length > 90 ? '…' : ''}</span>`
         : '';
       // Meta de cabecera (sube footer + motor a la línea del badge): motor · coste · fecha
-      const headMeta = [verMotor(it.motor), it.costEst, fmtDate(it.createdAt)]
+      const headMeta = [verMotor(it.motor), it.costEst === 'gratis' ? 'free' : it.costEst, fmtDate(it.createdAt)]
         .filter(Boolean).map(s => String(s).replace(/</g, '&lt;')).join(' · ');
       const commentRaw = (it.comment || '').trim();
       const commentSafe = commentRaw.replace(/</g, '&lt;');
@@ -515,7 +516,7 @@
         ? `<p class="stock-comment" title="${escAttr(commentRaw)}">💬 ${commentSafe.slice(0, 200)}${commentRaw.length > 200 ? '…' : ''}</p>`
         : '';
       const tagsBlock = renderTagsHtml(it.tags);
-      return `<article class="stock-card" data-type="${typeLabel}" data-motor="${it.motor}" data-id="${idAttr}" tabindex="0" role="button" aria-label="Maximizar ${typeLabel}">
+      return `<article class="stock-card" data-type="${typeLabel}" data-motor="${it.motor}" data-id="${idAttr}" tabindex="0" role="button" aria-label="Maximize ${typeLabel}">
         <div class="stock-card-media">
           ${renderPreview(it)}
         </div>
@@ -1492,6 +1493,6 @@
     })();
   })();
   </script>
-  <script defer src="/assets/cuadratura.js?v=09.10.2026.r27.1627"></script>
+  <script defer src="/assets/cuadratura.js?v=11.10.2026.r1.1243"></script>
 </body>
 </html>
