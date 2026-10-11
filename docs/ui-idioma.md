@@ -20,6 +20,6 @@ ES: No requiere un nuevo comando ni modifica herramientas de generación, export
 
 ## Verificación / Verification
 
-Prueba de regresión: `UI_BASE_REF=<commit de retorno> NODE_PATH=<jsdom instalado> node --test scripts/test-ui-locale.cjs`. Comprueba las ocho rutas, valores/orden de opciones, IDs, entradas editables, traducción dinámica y castellano sin cambios. La revisión pública se registra separadamente de las pruebas locales; se utiliza la vista de revisión prevista por el sitio (`?gate=off`), sin cambiar su configuración de acceso.
+Prueba de regresión: `UI_BASE_REF=<commit de retorno> NODE_PATH=<jsdom instalado> node --test scripts/test-ui-locale.cjs`. Comprueba las ocho rutas, valores/orden de opciones, IDs, entradas editables, traducción dinámica y castellano sin cambios. La revisión pública se registra separadamente de las pruebas locales; se requiere una sesión autorizada de Google o el acceso oficial de agentes (`/auth/agente`), sin cambiar la configuración de acceso.
 
-Regression check: `UI_BASE_REF=<rollback commit> NODE_PATH=<installed jsdom> node --test scripts/test-ui-locale.cjs`. Covers eight routes, option values/order, IDs, editable content, dynamic translation and unchanged Spanish. Public review is recorded separately from local tests using the site’s documented review view (`?gate=off`), without changing its access configuration.
+Regression check: `UI_BASE_REF=<rollback commit> NODE_PATH=<installed jsdom> node --test scripts/test-ui-locale.cjs`. Covers eight routes, option values/order, IDs, editable content, dynamic translation and unchanged Spanish. Public review is recorded separately from local tests with an authorized Google session or the official agent entry (`/auth/agente`), without changing the access configuration.

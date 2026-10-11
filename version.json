@@ -1,10 +1,10 @@
 {
-  "version": "v.11.10.2026.r1.12:43",
+  "version": "v.11.10.2026.r3.12:52",
   "deployer": "OraculoMacMini",
   "machine": "MacMini",
   "signature": "OraculoMacMini · MacMini",
   "agent": "OraculoMacMini",
-  "builtAt": "2026-10-11T10:43:23Z",
+  "builtAt": "2026-10-11T10:52:02Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
     "Controles, desplegables y ayudas en inglés en las ocho secciones.",
@@ -13,9 +13,9 @@
   ],
   "evidence": "Focused tests pass. Public cloud restore and ES/EN editor verified. H264 exports normalize limited colour range and pad short browser capture tails to a common 32s / 800 frames.",
   "author": "OraculoMacMini",
-  "git": "a12d531079801a05e1de7d62cbd00f18872dfbf3",
-  "gitFull": "a12d531079801a05e1de7d62cbd00f18872dfbf3",
-  "gitShort": "a12d531",
+  "git": "8193a4d95eeb3d777153ac5a1dc1d7885696faaa",
+  "gitFull": "8193a4d95eeb3d777153ac5a1dc1d7885696faaa",
+  "gitShort": "8193a4d",
   "dirty": false,
   "rollback": {
     "tag": "retorno/pre-controles-en-5634-pixeria-20261011",

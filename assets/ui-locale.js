@@ -591,6 +591,7 @@
   "Pixeria · sistema creativo": "Pixeria · creative system",
   "Pixeria Studio · sistema creativo": "Pixeria Studio · creative system",
   "NUEVO": "NEW",
+  "VERSIÓN NUEVA · RECARGAR": "NEW VERSION · RELOAD",
   "Novedades": "What's new",
   "recargar": "reload",
   "Versión publicada, sin notas en este sello.": "Published version, with no notes in this stamp.",
@@ -619,7 +620,7 @@
       ['📥 Estado actual ← ', '📥 Current state ← '], ['🚚 Mudanza → ', '🚚 Move layout → '],
       ['⚪ En vivo ⇄ ', '⚪ Live ⇄ '], ['🔴 EN VIVO ⇄ ', '🔴 LIVE ⇄ '],
       ['— todo el circuito (', '— entire circuit ('], ['Ya hay otra versión publicada: ', 'Another version is published: '],
-      ['Sello de versión ', 'Version stamp '], ['Textura ', 'Texture '], ['Subir textura ', 'Upload texture '],
+      ['Sello de versión ', 'Version stamp '], ['Sello ', 'Version stamp '], ['Textura ', 'Texture '], ['Subir textura ', 'Upload texture '],
       ['girable · ', 'rotatable · '], ['Ver todos los muebles 3D (', 'View all 3D furniture ('], ['Ver variante en el Xpace · ', 'View variant in the Xpace · '], ['No se pudo cargar la textura: ', 'Could not load texture: '], ['No se pudo cargar el mobiliario: ', 'Could not load furniture: ']
     ];
     for (const [es, en] of prefixes) if (key.startsWith(es)) return s.replace(es, en);
@@ -628,6 +629,9 @@
   }
   function translateAttribute(s) {
     let out = translate(s);
+    if (out.startsWith('Se ha publicado algo desde que abriste esta pestaña')) {
+      out = out.replace('Se ha publicado algo desde que abriste esta pestaña', 'An update has been published since you opened this tab').replace(' (ahora en producción: ', ' (now in production: ').replace('. Los datos se refrescan, el código no: recarga para verlos bien.', '. Data refreshes automatically; reload to load the updated code.');
+    }
     const add = /^Añadir (.+) al plano$/.exec(out);
     if (add) return 'Add ' + translate(add[1]) + ' to the plan';
     const replacements = [
@@ -672,7 +676,7 @@
       for (const attr of ['title', 'aria-label', 'placeholder', 'alt', 'label']) {
         if (!el.hasAttribute(attr)) continue;
         const original = el.getAttribute(attr);
-        const translated = el.closest('.ax-sello') ? original.split(' — ').map(part => part.split(' · ').map(translateAttribute).join(' · ')).join(' — ') : translateAttribute(original);
+        const translated = (el.closest('.ax-sello') || /\bv\.\d{2}\.\d{2}\.\d{4}\.r\d+/.test(original)) ? original.split(' — ').map(part => part.split(' · ').map(translateAttribute).join(' · ')).join(' — ') : translateAttribute(original);
         if (translated !== original) el.setAttribute(attr, translated);
       }
       if (el.tagName === 'TEXTAREA') continue;
