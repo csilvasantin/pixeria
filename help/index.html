@@ -27,7 +27,7 @@
   <!-- GATE-FIN -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.11.10.2026.r3.12:52">
+  <meta name="admiranext-version" content="Pixeria v.12.10.2026.r1.16:22">
   <title>Pixeria · Ayuda — qué es y cómo se usa</title>
   <meta name="description" content="Guía de Pixeria: crear campañas, adaptar formatos, probar demos y organizar contenido en Stock. Ayuda para personas y catálogo MCP compartido con Admira Studio.">
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -52,9 +52,10 @@
     .nota b{color:var(--pur)}
     .indice{padding:16px;border:1px solid var(--line);border-radius:12px;line-height:2;overflow-wrap:anywhere}.indice b{display:block}section,h2[id]{scroll-margin-top:90px}.puerta:focus-visible,.indice a:focus-visible{outline:2px solid var(--acc);outline-offset:4px}
     .wrap > footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--dim);font:11px var(--mono)}
-  </style>
+  #native-players table{width:100%;border-collapse:collapse;margin:16px 0}#native-players td,#native-players th{padding:10px;text-align:left;border-bottom:1px solid var(--line)}#native-players code{overflow-wrap:anywhere}
+</style>
   <link rel="stylesheet" href="/assets/cuadratura.css?v=11.10.2026.r3.1252">
-  <script defer src="/assets/site-nav.js?v=11.10.2026.r3.1252"></script>
+  <script defer src="/assets/site-nav.js?v=12.10.2026.r1.1622"></script>
 </head>
 <body>
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -78,6 +79,8 @@
   </nav>
 </header>
 <main>
+
+
 <div class="wrap">
   <p class="kicker">● Pixeria · ayuda</p>
   <h1>Qué es Pixeria y cómo se usa</h1>
@@ -98,6 +101,7 @@
   <nav class="indice" aria-label="En esta guía / In this guide">
     <b>En esta guía / In this guide</b>
     <a href="#creador-adaptador">Creador / Creator y Adaptador / Adapter</a> ·
+    <a href="#native-players">Players nativos / Native players</a> ·
     <a href="#demo-creador">Demo Creador</a> ·
     <a href="#demo-creador-full">Demo completa con IA / Full AI demo</a> ·
     <a href="#anuncios-reales">Anuncios reales / Real ads</a> ·
@@ -116,6 +120,23 @@
     <code>/demo creator full</code> explicitly requests a new image and video using your session and credit.
     Reload/history recover existing media. Review before export; the demo does not schedule physical screens.</p>
   </div>
+
+<section id="native-players">
+<h2>Players nativos · Native players</h2>
+<p lang="es">Entra con tu sesión de Pixeria y abre Modo Experto (⌘). Selecciona el proyecto real en Creador/Adaptador; en páginas sin selector añade <code>?project=starbucks</code> usando tu proyecto. El contexto del selector manda sobre la URL. Un proyecto sin playlist asociada devuelve un error: no se sustituye por una lista global.</p>
+<p lang="en">Sign in to Pixeria and open Expert mode (⌘). Select the actual project in Creator/Adapter; pages without a selector accept <code>?project=starbucks</code> with your project. The selected project takes precedence over the URL. Missing project playlists produce an error; there is no global playlist fallback.</p>
+<table><thead><tr><th>Comando / Command</th><th>Destino / Target</th></tr></thead><tbody>
+<tr><td><code>/demo android</code></td><td>Fold + Wear OS</td></tr>
+<tr><td><code>/demo android Fold8</code></td><td>Fold</td></tr>
+<tr><td><code>/demo android watch</code></td><td>Wear OS</td></tr>
+<tr><td><code>/demo ios</code> · <code>/demo ios iphone</code> · <code>/demo ios watch</code></td><td>iPhone + Apple Watch / individual</td></tr>
+</tbody></table>
+<p lang="es">Sin sufijo, usa la última playlist asociada al proyecto. Añade <code>playlist "Starbucks Audio"</code> para elegir por nombre, o <code>#retail #audio</code> para filtrar por etiquetas. Ejemplo: <code>/demo android Fold8 playlist "Starbucks Audio"</code>. Necesita el puente Admira Native Demo instalado en el Mac de presentación y sus runtimes disponibles; una solicitud aceptada no confirma el arranque.</p>
+<p lang="en">Without a suffix, use the project's latest associated playlist. Add <code>playlist "Starbucks Audio"</code> to select by name, or <code>#retail #audio</code> to filter by tags. Requires the installed Admira Native Demo Mac bridge and available runtimes. An accepted request does not confirm startup.</p>
+<p lang="es">Android abre el panel local en segundo plano: <a href="http://127.0.0.1:18766/?device=both&amp;mode=demo">ambos</a>, <a href="http://127.0.0.1:18766/?device=fold&amp;mode=demo">Fold</a>, <a href="http://127.0.0.1:18766/?device=wear&amp;mode=demo">Watch</a>. Estos enlaces funcionan en el Mac de presentación. Fold8 es un alias virtual sobre Pixel Fold Android 16, no firmware Samsung ni certificación de un Fold8 físico. Wear OS 4 muestra imágenes/vídeos sin sonido; los audios muestran título y ♫. Límite Wear: 8 MiB por archivo, 24 MiB de caché total. La demo no acredita sincronía exacta, funcionamiento offline ni reproducción en hardware. Cambia sólo las apps demo aisladas; conserva el visor privado y los players físicos. Si falla el segundo destino, el primero puede haber cambiado.</p>
+<p lang="en">Android opens its local panel in the background; the links above work on the presentation Mac. Fold8 is a virtual alias using Pixel Fold Android 16, not Samsung firmware or physical-device certification. Wear OS 4 shows silent images/video and audio titles with ♫. Wear limits: 8 MiB per file and 24 MiB total cache. This demo does not verify exact synchronization, offline playback or physical hardware. Only isolated demo apps change; private viewers and physical players are preserved. Failure on the second target may leave the first updated.</p>
+<p><a href="/docs/native-players.md">Guía completa ES/EN · Full guide</a> · <a href="https://api.yokup.com/media/fleet/dddb19c869cc0feb.mp4">Minitutorial: cinco pilares / Five pillars</a> — animación explicativa, no grabación de pantalla / explanatory animation, not a screen recording.</p>
+</section>
 
   <h2 id="biblioteca">Qué guarda Stock</h2>
   <p>Piezas: vídeos, imágenes y <b>guiones</b>. Cada una con su título, su comentario y sus

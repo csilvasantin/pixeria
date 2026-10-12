@@ -1,22 +1,22 @@
 {
-  "version": "v.11.10.2026.r3.12:52",
-  "deployer": "OraculoMacMini",
-  "agent": "OraculoMacMini",
-  "machine": "MacMini",
-  "signature": "OraculoMacMini · MacMini",
-  "evidence": "Focused tests pass. Public cloud restore and ES/EN editor verified. H264 exports normalize limited colour range and pad short browser capture tails to a common 32s / 800 frames.",
-  "author": "OraculoMacMini",
-  "git": "8193a4d95eeb3d777153ac5a1dc1d7885696faaa",
-  "gitFull": "8193a4d95eeb3d777153ac5a1dc1d7885696faaa",
-  "gitShort": "8193a4d",
-  "dirty": false,
+  "version": "v.12.10.2026.r1.16:22",
+  "deployer": "Trinity",
+  "agent": "Trinity",
+  "machine": "MBP14",
+  "signature": "Trinity · MBP14",
+  "evidence": "Native demo project-scoped contracts and existing authentication regressions. Mission Hoy 148; publication pending peer review.",
+  "author": "Trinity",
+  "git": "fa995bc0d115d37797d4495768c82a69cf7d5231",
+  "gitFull": "fa995bc0d115d37797d4495768c82a69cf7d5231",
+  "gitShort": "fa995bc",
+  "dirty": true,
   "rollback": {
     "tag": "retorno/pre-controles-en-5634-pixeria-20261011",
     "git": "a12d531079801a05e1de7d62cbd00f18872dfbf3"
   },
   "novedades": [
-    "Controles, desplegables y ayudas en inglés en las ocho secciones.",
-    "Assets conserva la ruta inglesa; opciones y preferencias mantienen sus valores.",
-    "Castellano y contenido de Stock conservados; revisión de menús generados por código."
+    "/demo android, /demo android Fold8 y /demo android watch usan el proyecto seleccionado.",
+    "Motor compartido local conservando iOS y demos existentes.",
+    "Help/MCP ES/EN con minitutorial y límites de los dispositivos virtuales."
   ]
 }
