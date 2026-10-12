@@ -35,7 +35,7 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.11.10.2026.r3.12:52">
+  <meta name="admiranext-version" content="Pixeria v.12.10.2026.r1.16:22">
   <link rel="canonical" href="https://www.pixeria.com/mcp/">
 <title>Pixeria · MCP — crear, adaptar y consultar</title>
 <meta name="description" content="MCP compartido de Pixeria y Admira Studio: biblioteca, planes, muestras, análisis y generación autenticada. Shared tools, effects and safe examples in Spanish and English.">
@@ -75,9 +75,10 @@
   .mcp-note{border-left:3px solid var(--acc);padding-left:16px;margin:24px 0}
   a{color:var(--acc)}
   footer{color:var(--mut);font-size:13px;margin-top:38px;border-top:1px solid var(--line);padding-top:18px}
+#native-players table{width:100%;border-collapse:collapse;margin:16px 0}#native-players td,#native-players th{padding:10px;text-align:left;border-bottom:1px solid var(--line)}#native-players code{overflow-wrap:anywhere}
 </style>
   <link rel="stylesheet" href="/assets/cuadratura.css?v=11.10.2026.r3.1252">
-  <script defer src="/assets/site-nav.js?v=11.10.2026.r3.1252"></script>
+  <script defer src="/assets/site-nav.js?v=12.10.2026.r1.1622"></script>
 </head>
 <body>
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -101,6 +102,8 @@
     </nav>
   </header>
 <main>
+
+
 <div class="wrap">
   <div class="kick">Pixeria · Model Context Protocol</div>
   <h1><b>Crear y adaptar</b> con MCP</h1>
@@ -114,6 +117,25 @@
     <code class="url" id="ep">https://mcp-pixeria.admira.store/mcp</code>
     <button class="copy" onclick="navigator.clipboard.writeText('https://mcp-pixeria.admira.store/mcp')">Copiar / Copy</button>
   </div>
+
+<section id="native-players">
+<h2>Players nativos · Native players</h2>
+<p lang="es">Los comandos siguientes se ejecutan en Modo Experto mediante el puente local, no son nuevas herramientas RPC del MCP. El catálogo vivo de abajo sigue siendo la autoridad de <code>tools/list</code>. Documentación autenticada: <code>resources/list</code> y <code>resources/read {"uri":"pixeria://native-players"}</code> con la clave de flota existente; sólo lectura, sin abrir dispositivos.</p>
+<p lang="en">These commands run in Expert mode through the local bridge; they are not new MCP RPC tools. The live catalogue below remains the authority for <code>tools/list</code>. Authenticated documentation: <code>resources/list</code> and <code>resources/read {"uri":"pixeria://native-players"}</code> using existing fleet authentication; read-only, without opening devices.</p>
+<p lang="es">Entra con tu sesión de Pixeria y abre Modo Experto (⌘). Selecciona el proyecto real en Creador/Adaptador; en páginas sin selector añade <code>?project=starbucks</code> usando tu proyecto. El contexto del selector manda sobre la URL. Un proyecto sin playlist asociada devuelve un error: no se sustituye por una lista global.</p>
+<p lang="en">Sign in to Pixeria and open Expert mode (⌘). Select the actual project in Creator/Adapter; pages without a selector accept <code>?project=starbucks</code> with your project. The selected project takes precedence over the URL. Missing project playlists produce an error; there is no global playlist fallback.</p>
+<table><thead><tr><th>Comando / Command</th><th>Destino / Target</th></tr></thead><tbody>
+<tr><td><code>/demo android</code></td><td>Fold + Wear OS</td></tr>
+<tr><td><code>/demo android Fold8</code></td><td>Fold</td></tr>
+<tr><td><code>/demo android watch</code></td><td>Wear OS</td></tr>
+<tr><td><code>/demo ios</code> · <code>/demo ios iphone</code> · <code>/demo ios watch</code></td><td>iPhone + Apple Watch / individual</td></tr>
+</tbody></table>
+<p lang="es">Sin sufijo, usa la última playlist asociada al proyecto. Añade <code>playlist "Starbucks Audio"</code> para elegir por nombre, o <code>#retail #audio</code> para filtrar por etiquetas. Ejemplo: <code>/demo android Fold8 playlist "Starbucks Audio"</code>. Necesita el puente Admira Native Demo instalado en el Mac de presentación y sus runtimes disponibles; una solicitud aceptada no confirma el arranque.</p>
+<p lang="en">Without a suffix, use the project's latest associated playlist. Add <code>playlist "Starbucks Audio"</code> to select by name, or <code>#retail #audio</code> to filter by tags. Requires the installed Admira Native Demo Mac bridge and available runtimes. An accepted request does not confirm startup.</p>
+<p lang="es">Android abre el panel local en segundo plano: <a href="http://127.0.0.1:18766/?device=both&amp;mode=demo">ambos</a>, <a href="http://127.0.0.1:18766/?device=fold&amp;mode=demo">Fold</a>, <a href="http://127.0.0.1:18766/?device=wear&amp;mode=demo">Watch</a>. Estos enlaces funcionan en el Mac de presentación. Fold8 es un alias virtual sobre Pixel Fold Android 16, no firmware Samsung ni certificación de un Fold8 físico. Wear OS 4 muestra imágenes/vídeos sin sonido; los audios muestran título y ♫. Límite Wear: 8 MiB por archivo, 24 MiB de caché total. La demo no acredita sincronía exacta, funcionamiento offline ni reproducción en hardware. Cambia sólo las apps demo aisladas; conserva el visor privado y los players físicos. Si falla el segundo destino, el primero puede haber cambiado.</p>
+<p lang="en">Android opens its local panel in the background; the links above work on the presentation Mac. Fold8 is a virtual alias using Pixel Fold Android 16, not Samsung firmware or physical-device certification. Wear OS 4 shows silent images/video and audio titles with ♫. Wear limits: 8 MiB per file and 24 MiB total cache. This demo does not verify exact synchronization, offline playback or physical hardware. Only isolated demo apps change; private viewers and physical players are preserved. Failure on the second target may leave the first updated.</p>
+<p><a href="/docs/native-players.md">Guía completa ES/EN · Full guide</a> · <a href="https://api.yokup.com/media/fleet/dddb19c869cc0feb.mp4">Minitutorial: cinco pilares / Five pillars</a> — animación explicativa, no grabación de pantalla / explanatory animation, not a screen recording.</p>
+</section>
 
   <h2>Herramientas y efectos / Tools and effects</h2>
   <div class="mcp-note">

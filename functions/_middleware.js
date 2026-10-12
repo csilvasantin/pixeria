@@ -34,7 +34,7 @@ async function guardedRequest(context) {
   // scraper con cabecera por defecto entraba (FLT-1484). Ahora manda la RUTA:
   // es documento todo lo que no sea un asset con extensión propia.
   const wantsDocument = request.method === 'GET' && (
-    isDocumentPath(url.pathname) ||
+    isDocumentPath(url.pathname) || url.pathname === '/docs/native-players.md' ||
     request.headers.get('Sec-Fetch-Dest') === 'document' ||
     (request.headers.get('Accept') || '').includes('text/html')
   );

@@ -1,0 +1,26 @@
+name: Native demo compatibility
+on:
+  pull_request:
+  push:
+    branches: [main, codex/android-demo-five-pillars-20261012]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test test/native-players.test.mjs test/auth-flow.test.mjs test/site-nav-idioma.test.mjs
+      - name: Install browser test runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/native-player-browser" playwright@1.64.0
+          "$RUNNER_TEMP/native-player-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify actual Help/MCP command dispatch without launching devices
+        run: |
+          python3 -m http.server 18463 --bind 127.0.0.1 > "$RUNNER_TEMP/native-player-server.log" 2>&1 &
+          native_server_pid=$!
+          trap 'kill "$native_server_pid"' EXIT
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/native-player-browser/node_modules/playwright" node test/native-players.browser.cjs
