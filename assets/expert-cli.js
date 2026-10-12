@@ -369,19 +369,8 @@
     try { if (window.AdmiraDemoControl && typeof window.AdmiraDemoControl.idioma === 'function') window.AdmiraDemoControl.idioma(l); } catch (_) {}
     return l;
   }
-  function execute(command) {
-    var langCmd = parseLangCommand(command);
-    if (langCmd) {
-      if (!langCmd.ok) {
-        write(t('Usa /idioma o /language (toggle), /idioma ESP|ENG. También idiomaESP, languageENG…',
-          'Use /idioma or /language (toggle), /idioma ESP|ENG. Also idiomaESP, languageENG…'));
-        return;
-      }
-      applyExpertLang(langCmd.lang);
-      write(langCmd.lang === 'en' ? 'Language: English' : 'Idioma: español');
-      return;
-    }
-    var words = command.trim().split(/\s+/), name = words.shift().toLowerCase().replace(/^\//, ''), arg = words.join(' ');
+  function executeAction(command) {
+    var name=command.name,arg=command.args;en=document.documentElement.lang.indexOf('en')===0;
     if (MARCA_VERB.test(name)) {
       if (!marcaCliente(arg)) marca().then(function (M) { return runMarca(arg, M, en, write); });
       return;
@@ -428,18 +417,18 @@
       default: write(t('Comando desconocido. Escribe help.', 'Unknown command. Type help.'));
     }
   }
-  // The suite owns slash demos; this camera command belongs to this page.
-  document.addEventListener('submit', function(e){if(e.target===form && ((window.CreatorDemo?.active && /^\/demo\s+(?:pausa|pause|reanudar|resume|siguiente|next|estado|status|stop|off)\s*$/i.test(input.value.trim())) || /^\/demo\s+(?:taza|creador|creator|sneakers?|next-step|nextstep)(?:\s|$)/i.test(input.value.trim())||(/^\/demo\s*$/i.test(input.value.trim())&&/\/creador(?:\/|$)|\/campanas\/next-step/.test(location.pathname))))input.value=input.value.trim().slice(1);},true);
-  form.addEventListener('submit', function (ev) {
-    ev.preventDefault();
-    var command = input.value.trim();
-    if (!command) return;
-    history.push(command);
-    if (history.length > 100) history.shift();
-    cursor = history.length; draft = ''; input.value = '';
-    if (height === MIN) resize(expanded, false);
-    write('› ' + command);
-    execute(command);
+  function connectCommands(engine) {
+    var actions=['marca','brand','marcablanca','creador','creator','campana','campaign','echo','date','fecha','history','historial','open','abrir'];
+    engine.registerAdapter({id:'studio',onCommand:function(command){history.push(command);if(history.length>100)history.shift();cursor=history.length;draft='';},
+      verbs:actions.map(function(name){return {name:name,desc:[name,name],run:function(args,log,command){return executeAction(command);}};}),
+      demos:['taza','creador','creator','sneakers','sneaker','next-step','nextstep','pausa','pause','reanudar','resume','siguiente','next','estado','status','stop','off',''].map(function(name){return {name:name,when:function(){return name?(!/^(pausa|pause|reanudar|resume|siguiente|next|estado|status|stop|off)$/.test(name)||!!window.CreatorDemo?.active):/\/creador(?:\/|$)|\/campanas\/next-step/.test(location.pathname);},run:function(args){return executeAction({name:'demo',args:(name?name+' ':'')+args.join(' ')});}};})});
+    COMMANDS=engine.list().flatMap(function(action){return [action.name].concat(action.alias || []);});
+  }
+  if(window.AdmiraExperto)connectCommands(window.AdmiraExperto);else(window.AdmiraCommandAdapters || (window.AdmiraCommandAdapters=[])).push(connectCommands);
+  form.addEventListener('submit',function(event){
+    event.preventDefault();
+    if(!window.AdmiraExperto){write(t('Cargando motor de comandos. Reintenta en un momento.','Loading command engine. Try again shortly.'));return;}
+    var command=input.value;input.value='';window.AdmiraExperto.exec(command,log);
   });
   function brandIds() {
     try { if (window.AdmiraMarca) return window.AdmiraMarca.conocidas().map(function (b) { return b.id; }); } catch (_) {}
