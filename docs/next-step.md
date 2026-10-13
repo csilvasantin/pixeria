@@ -34,3 +34,10 @@ Original generated product: product.png, optimised delivery product.webp. Built-
 ## Demo Creador / Creator demo
 
 /demo creador crea otra campaña Sneaker Xtore y muestra todos los pasos hasta el gemelo 360/3D. /demo creator makes a new Sneaker Xtore campaign and shows the full process. [Tutorial y contrato ES/EN](https://admira.studio/docs/demo-creador.md).
+
+
+## Preview #5834 · controles / controls
+
+ES: Preview #5834: /demo sneakers iniciar, pausa, reanudar, reiniciar, estado y detener (también start, pause, resume, restart, status y stop). Iniciar continúa desde la pausa; reiniciar vuelve a cero y reproduce. Una orden desconocida no cambia la reproducción. Detener deja el primer fotograma pausado en el visor de campaña y restaura las texturas y playlists previas en el gemelo. La demo no escribe borradores, historial de Creador ni playlists. Las siete composiciones comparten reloj dentro de cada visor; abrir el gemelo inicia su propio reloj de sesión, sin sincronización entre pestañas. La navegación local usa Studio :8481 y Store :8482; las ramas Pages usan destinos de preview emparejados. Producción no se despliega en este encargo.
+
+EN: Preview #5834: /demo sneakers start, pause, resume, restart, status and stop (Spanish aliases also supported). Start resumes a paused clock; restart returns to zero and plays. Unknown commands leave playback unchanged. Stop holds the opening frame in the campaign viewer and restores prior textures and playlists in the twin. The demo does not write Creator drafts/history or playlists. Seven compositions share a clock within each viewer; opening the twin starts its own session clock, without cross-tab synchronisation. Local navigation uses Studio :8481 and Store :8482; Pages branches use paired preview destinations. This assignment does not deploy production.

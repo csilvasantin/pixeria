@@ -1,0 +1,122 @@
+{
+  "checkedAt": "2026-10-13T14:25:06.036Z",
+  "files": [
+    {
+      "screen": "lcd",
+      "width": 1920,
+      "height": 1080,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "entrance",
+      "width": 1080,
+      "height": 1920,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "jordan-1",
+      "width": 540,
+      "height": 1360,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "jordan-2",
+      "width": 540,
+      "height": 1706,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "jordan-3",
+      "width": 540,
+      "height": 2066,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "jordan-4",
+      "width": 540,
+      "height": 1706,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "jordan-5",
+      "width": 540,
+      "height": 1360,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "rear-left",
+      "width": 1080,
+      "height": 2304,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "rear-top",
+      "width": 720,
+      "height": 756,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "rear-right",
+      "width": 1080,
+      "height": 2304,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "strip",
+      "width": 3840,
+      "height": 600,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "column",
+      "width": 320,
+      "height": 1920,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    },
+    {
+      "screen": "tablet",
+      "width": 1080,
+      "height": 1440,
+      "fps": 25,
+      "duration": 32,
+      "codec": "h264",
+      "audio": false
+    }
+  ]
+}

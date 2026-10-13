@@ -1,10 +1,11 @@
 import {INSTALLATIONS,DURATION,cue,drawNextStep,loadNextStepAssets} from './render.mjs';
-import {createPlayback,playbackAction,twinURL} from './control.mjs?v=5834-1';
+import {createPlayback,playbackAction,twinURL} from './control.mjs?v=5834-2';
 const en=new URLSearchParams(location.search).get('lang')==='en'||document.documentElement.lang==='en',t=(a,b)=>en?b:a;
 document.documentElement.lang=en?'en':'es';
 const $=s=>document.querySelector(s),playback=createPlayback();
 let product,selected='landscape',tour=false,raf=0,last=-1,renderedTime=-1,disposed=false;
 const canvases=new Map();
+$('.next-eyebrow').textContent=t('CREADOR / SNEAKER STORE / NEXT STEP','CREATOR / SNEAKER STORE / NEXT STEP');
 $('#demo-title').textContent=t('Una tienda. Un pulso.','One store. One pulse.');
 $('#demo-subtitle').textContent=t('NEXT STEP · una campaña que se vive, desde la entrada hasta el fondo.','NEXT STEP · a campaign to experience, from entrance to rear.');
 $('#twin-link').textContent=t('Ver en la tienda ↗','View in the store ↗');
@@ -13,7 +14,7 @@ if(defaultTwin)$('#twin-link').href=defaultTwin;
 else{
  $('#twin-link').setAttribute('aria-disabled','true');
  fetch('./preview-targets.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(config=>{
-  const href=twinURL(config?.twinOrigin,en?'en':'es');
+  const href=twinURL(['localhost','127.0.0.1'].includes(location.hostname)?config?.localTwinOrigin:config?.twinOrigin,en?'en':'es');
   if(href){$('#twin-link').href=href;$('#twin-link').removeAttribute('aria-disabled');}
   else $('#twin-link').textContent=t('Gemelo no disponible','Store twin unavailable');
  }).catch(()=>{$('#twin-link').textContent=t('Gemelo no disponible','Store twin unavailable');});

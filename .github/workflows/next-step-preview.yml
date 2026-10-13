@@ -1,0 +1,55 @@
+name: NEXT STEP 5834 branch preview
+on:
+  push:
+    branches: ["oraculo/5834-next-step-preview-20261013"]
+permissions:
+  contents: read
+concurrency:
+  group: next-step-5834-preview
+  cancel-in-progress: false
+jobs:
+  preview:
+    if: github.ref == 'refs/heads/oraculo/5834-next-step-preview-20261013'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify demo contracts
+        run: node --test test/next-step-control.test.mjs test/creator-shell.test.mjs
+      - name: Publish only the branch preview and verify production unchanged
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PREVIEW_PROJECT: pixeria
+          PREVIEW_BRANCH: 5834-next-step-preview
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "oraculo/5834-next-step-preview-20261013"
+          test "$PREVIEW_BRANCH" != main
+          test -n "$CLOUDFLARE_API_TOKEN"
+          cat > /tmp/5834-production.py <<'PYTHON'
+          import json, os, pathlib, sys, urllib.request
+          url = 'https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']+'/pages/projects/'+os.environ['PREVIEW_PROJECT']
+          request = urllib.request.Request(url, headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']})
+          with urllib.request.urlopen(request, timeout=30) as response:
+              data = json.load(response)
+          assert data['success'], 'Pages project lookup failed'
+          project = data['result']
+          assert project['production_branch'] != os.environ['PREVIEW_BRANCH'], 'Refusing a production branch'
+          current = project.get('canonical_deployment', {}).get('id')
+          assert current, 'Production baseline unavailable'
+          baseline = pathlib.Path('/tmp/5834-production-id')
+          if sys.argv[1] == 'before':
+              baseline.write_text(current)
+          else:
+              assert baseline.read_text() == current, 'Production changed during preview: investigate'
+              print('Production deployment unchanged; only branch preview published.')
+          PYTHON
+          python3 /tmp/5834-production.py before
+          preview_dir="$(mktemp -d)"
+          git archive HEAD | tar -x -C "$preview_dir"
+          npx --yes wrangler@4 pages deploy "$preview_dir" --project-name "$PREVIEW_PROJECT" --branch "$PREVIEW_BRANCH" --commit-hash "$GITHUB_SHA"
+          python3 /tmp/5834-production.py after
+          echo "Preview: https://5834-next-step-preview.pixeria.pages.dev" >> "$GITHUB_STEP_SUMMARY"
