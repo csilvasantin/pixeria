@@ -40,3 +40,31 @@ body .pf-cli[data-cli-open="false"] { display: none !important; }
 body .pf-cli.pf-cli { width:auto; transform:none; justify-content:initial; align-items:stretch; gap:0; border-radius:0; }
 body .pf-cli .pf-cli-form button { writing-mode:horizontal-tb; min-height:32px; }
 body .pf-cli .pf-cli-form { width:100%; box-sizing:border-box; }
+
+/* Encargo #4663: native resize and folded input survive the shared suite skin. */
+html[data-ax-experto] .pf-cli.ax-experto.ax-dock .pf-cli-grip {
+  display: block !important; position: absolute; inset: 0 0 auto;
+  height: 12px; z-index: 3; cursor: ns-resize; touch-action: none;
+}
+html[data-ax-experto] .pf-cli.ax-experto.ax-dock .ax-grip { display: none !important; }
+html[data-ax-experto] .pf-cli.pf-cli.ax-experto.ax-dock {
+  bottom: var(--pf-cli-keyboard, 0px) !important;
+}
+html[data-ax-experto] .pf-cli.pf-cli.pf-cli.ax-experto.ax-dock.pf-cli-compact.pf-cli-compact {
+  padding: 8px 12px 0 !important;
+}
+html[data-ax-experto] .pf-cli.pf-cli.pf-cli.ax-experto.ax-dock.pf-cli-compact.pf-cli-compact :is(.ax-hd,.ax-engine-slot) {
+  display: none !important;
+}
+html[data-ax-experto] .pf-cli.pf-cli.pf-cli.ax-experto.ax-dock.pf-cli-folded.pf-cli-folded .ax-cli-out {
+  display: none !important;
+}
+html[data-ax-experto] .pf-cli.pf-cli.pf-cli.ax-experto.ax-dock.pf-cli-folded.pf-cli-folded :is(.ax-body,.ax-cli-module) {
+  min-height: 0 !important; padding: 0 !important; gap: 0 !important;
+}
+html[data-ax-experto] .pf-cli.ax-experto.ax-dock .ax-cli-module,
+html[data-ax-experto] .pf-cli.ax-experto.ax-dock .ax-cli-out { min-height: 0 !important; }
+@media (max-width: 600px) {
+  body.pf-cli-open { padding-bottom: var(--pf-cli-height, 48px); scroll-padding-bottom: var(--pf-cli-height, 48px); }
+  html[data-ax-experto] .pf-cli.ax-experto.ax-dock .ax-engine-slot { display: none !important; }
+}

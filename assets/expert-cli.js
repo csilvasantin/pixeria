@@ -150,6 +150,8 @@
       try { localStorage.setItem('pixeria_cli_height', String(expanded)); } catch (_) {}
     }
     document.documentElement.style.setProperty('--pf-cli-height', height + 'px');
+    document.documentElement.style.setProperty('--ax-dock-h', height + 'px');
+    panel.classList.toggle('pf-cli-compact', height < 200);
     if (panel.classList.contains('pf-cli-folded') !== (height === MIN)) panel.classList.toggle('pf-cli-folded', height === MIN);
     log.hidden = height === MIN;
     toggle.textContent = height === MIN ? '▴' : '▾';
@@ -177,8 +179,8 @@
     else if (!docked() && open !== wasOpen) { try { sessionStorage.setItem(OPEN_KEY, open ? '1' : '0'); } catch (_) {} }
     if (panel.dataset.cliOpen !== String(open)) panel.dataset.cliOpen = String(open);
     document.querySelectorAll('.pix-nav-icon-expert').forEach(function (b) { if (b.getAttribute('aria-expanded') !== String(open)) b.setAttribute('aria-expanded', String(open)); });
-    // Al abrirse, desplegado: ficha + registro + orden (nunca la barra mínima).
-    if (open && !wasOpen) resize(document.documentElement.hasAttribute('data-ax-experto') ? Math.max(expanded, 300) : expanded, false);
+    // Each entry starts with one input line; expansion restores the saved height.
+    if (open && !wasOpen) resize(MIN, false);
     wasOpen = open;
     if (document.body.classList.contains('pf-cli-open') !== open) document.body.classList.toggle('pf-cli-open', open);
     var vv = window.visualViewport;
@@ -186,6 +188,9 @@
     resize(height, false);
   }
   function fold() { resize(height > MIN ? MIN : expanded, false); }
+  window.addEventListener('submit', function (event) {
+    if (event.target === form && input.value.trim() && wasOpen && height === MIN) resize(expanded, false);
+  }, true);
   toggle.addEventListener('click', fold);
   grip.addEventListener('dblclick', fold);
   grip.addEventListener('pointerdown', function (ev) {
