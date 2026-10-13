@@ -710,10 +710,10 @@
       document.body.appendChild(cliente);
       if (!document.querySelector('.rail-bottom,.quad-bottom,#pixNavExpertLayer')) return;
       var css = document.createElement('link');
-      css.rel = 'stylesheet'; css.href = '/assets/expert-cli.css' + (STAMP || '?v=4663');
+      css.rel = 'stylesheet'; css.href = '/assets/expert-cli.css?v=4663-preview-20261013';
       document.head.appendChild(css);
       var cli = document.createElement('script');
-      cli.src = '/assets/expert-cli.js?v=creator-full-3';
+      cli.src = '/assets/expert-cli.js?v=4663-preview-20261013';
       document.body.appendChild(cli);
       // ⌘ EXPERTO · CLI con el look de digitalavatar.ai (Carlos, 4-oct-2026): piel compartida de la
       // suite (www.admiranext.com/suite) sobre la consola de expert-cli.js; los comandos no cambian.

@@ -93,8 +93,8 @@ test('site-nav.js is the single hook: ?marca= or a remembered brand loads marca-
     assert.deepEqual(r.fetched, [], 'site-nav.js itself never talks to admiranext.com');
   }
   const nav = read('assets/site-nav.js');
-  assert.match(nav, /'\/assets\/expert-cli\.js' \+ \(STAMP \|\| '\?v=4663'\)/, 'the expert console follows the release stamp too');
-  assert.match(nav, /'\/assets\/expert-cli\.css' \+ \(STAMP \|\| '\?v=4663'\)/);
+  assert.match(nav, /expert-cli\.js\?v=4663-preview-20261013/, 'the changed console gets a fresh cache key');
+  assert.match(nav, /expert-cli\.css\?v=4663-preview-20261013/);
   assert.ok(!/marca-blanca/.test(read('assets/cuadratura.js')), 'cuadratura.js does not load it a second time');
   assert.match(nav, /setTimeout\(lift, 1500\)/, 'the veil never lasts more than 1.5 s');
   assert.match(nav, /addEventListener\('admira:marca-error', lift\)/);
