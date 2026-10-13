@@ -33,9 +33,20 @@ for(const base of (process.env.CLI_TEST_ORIGINS || 'http://127.0.0.1:8463').spli
  await grip.dblclick(); assert((await panel.boundingBox()).height>200,'double click expands');
  const g=await grip.boundingBox(); const start=(await panel.boundingBox()).height;
  await p.mouse.move(g.x+g.width/2,g.y+5);await p.mouse.down();await p.mouse.move(g.x+g.width/2,g.y-65,{steps:10});await p.mouse.up();
- const resized=Math.round((await panel.boundingBox()).height);
+ let resized=Math.round((await panel.boundingBox()).height);
  assert.equal(resized,Math.min(450,start+70),'drag controls suite height');
  assert.equal(Number(await p.evaluate(()=>localStorage.getItem('pixeria_cli_height'))),resized);
+ // #5828: grow AND shrink by dragging the same top edge; remember both values.
+ for(const target of [360,180]){
+  const current=await panel.boundingBox(),edge=await grip.boundingBox();
+  const x=edge.x+edge.width/2,y=edge.y+5;
+  await p.mouse.move(x,y);await p.mouse.down();
+  await p.mouse.move(x,y-(target-current.height),{steps:15});await p.mouse.up();
+  resized=Math.round((await panel.boundingBox()).height);
+  assert.equal(resized,target,'top edge drag reaches requested height in either direction');
+  assert.equal(Number(await p.evaluate(()=>localStorage.getItem('pixeria_cli_height'))),target,'each dragged height is saved');
+  await p.screenshot({path:(process.env.CLI_SHOT_DIR||'/tmp')+'/cli-height-'+target+'-'+(lang==='/'?'es':'en')+'-'+width+'.png'});
+ }
  await grip.dblclick();assert.equal(Math.round((await panel.boundingBox()).height),48,'double click folds');
  await p.reload({waitUntil:'domcontentloaded'});await p.waitForSelector('.pf-cli.ax-dock');
  assert.equal(Math.round((await panel.boundingBox()).height),48,'reload enters folded');

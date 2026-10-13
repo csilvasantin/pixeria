@@ -21,3 +21,22 @@ respuestas, historial, salida de texto segura y acceso al contenido móvil. 10 p
 1080×1920, H.264/AAC; no es una grabación de pantalla y no tiene locución (sonido sintetizado).
 [Brief y guion](tutorial-4663-brief.json).
 Capturas reales del navegador: [plegada](cli-folded-en-1440.png) y [desplegada](cli-expanded-en-1440.png).
+
+
+## Encargo #5828 · entrega en el PR #105
+
+Continuación de la misma rama `oraculo/4663-cli-preview-20261013`.
+La implementación de la consola ya estaba en `4bbd8af0`; esta entrega incorpora
+la regresión explícita de agrandar **y achicar** por arrastre (360 → 180 px),
+comprobando `localStorage` en cada cambio y recuperando la última altura al recargar.
+Se comprueba en ES/EN y anchuras de 1440 y 390 px. No se modifican los comandos.
+
+[PR abierto, sin fusionar](https://github.com/csilvasantin/pixeria/pull/105).
+[Preview de la rama](https://oraculo-4663-cli-preview.pixeria.pages.dev/en/).
+Capturas reales con la barra arrastrada: [180 px](5828-height-180.png) y [360 px](5828-height-360.png).
+Las capturas corresponden al commit funcional `4bbd8af0` comprobado en la preview;
+la prueba automatizada permite repetirlas con este commit, sin falsear su procedencia.
+
+El minitutorial oficial enlazado arriba sigue describiendo la misma función;
+se conserva y reutiliza su vídeo exportado, sin presentarlo como grabación real.
+Solo rama y preview. Ninguna fusión a main ni publicación de producción autorizada.
