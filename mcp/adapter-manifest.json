@@ -1161,7 +1161,24 @@
     "outputs": 13,
     "physicalControl": false,
     "draftChanges": false,
-    "playlistChanges": false
+    "playlistChanges": false,
+    "preview5834": {
+      "status": "branch-preview; production unchanged",
+      "studio": "http://127.0.0.1:8481/campanas/next-step/?lang=es",
+      "twin": "http://127.0.0.1:8482/xpacios/sneakerstore/?campaign=next-step&view=jordan&lang=es",
+      "actions": [
+        "start",
+        "pause",
+        "resume",
+        "restart",
+        "status",
+        "stop"
+      ],
+      "restart": "zero and play",
+      "clockScope": "one per viewer session; no cross-tab sync",
+      "unknownAction": "no mutation",
+      "draftWrites": false
+    }
   },
   "creator_demo_contract": {
     "schema": "admira.creator-demo.v1",
