@@ -713,7 +713,7 @@
       css.rel = 'stylesheet'; css.href = '/assets/expert-cli.css?v=4663-preview-20261013';
       document.head.appendChild(css);
       var cli = document.createElement('script');
-      cli.src = '/assets/expert-cli.js?v=4663-preview-20261013';
+      cli.src = '/assets/expert-cli.js?v=5834-1';
       document.body.appendChild(cli);
       // ⌘ EXPERTO · CLI con el look de digitalavatar.ai (Carlos, 4-oct-2026): piel compartida de la
       // suite (www.admiranext.com/suite) sobre la consola de expert-cli.js; los comandos no cambian.
