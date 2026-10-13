@@ -2164,6 +2164,10 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
   align-items: center;
   gap: 6px;
 }
+/* El atributo [hidden] del UA es display:none, pero el display:flex de arriba lo
+   pisaba: por eso los controles del pager superior seguían visibles (con un
+   "1/N" obsoleto) al filtrar a una sola página. Esto lo restaura. */
+.stock-pager-controls[hidden] { display: none; }
 .stock-pager-btn {
   appearance: none;
   min-width: 36px;

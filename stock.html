@@ -78,6 +78,15 @@
       background:var(--bg); border:1px solid var(--line-bright); color:var(--matrix); border-radius:6px; padding:6px 8px; font-family:inherit; font-size:12px; }
     .dist-sched-row input[type="number"]{ width:64px; }
     .dist-sched-note{ font-size:11px; color:var(--muted); opacity:.85; }
+    /* Aviso de programación: prominente (no letra pequeña). Deja claro que las
+       tareas server-side sobreviven al cierre, y que el fallback local NO. */
+    .dist-sched-warn{ border:1px solid var(--line-bright); border-left:3px solid var(--matrix);
+      border-radius:8px; padding:10px 12px; background:rgba(0,255,65,.06); display:flex; flex-direction:column; gap:6px; }
+    .dist-sched-warn-main{ margin:0; font-size:13px; line-height:1.4; color:var(--ink); }
+    .dist-sched-warn-fallback{ margin:0; font-size:12.5px; line-height:1.45; color:#ffb454;
+      border-top:1px dashed var(--line); padding-top:6px; }
+    .dist-sched-warn b{ color:var(--matrix); }
+    .dist-sched-warn-fallback b{ color:#ffb454; }
 
     .dist-screens-head{ display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--muted); }
     .dist-screens-head a{ color:var(--matrix); cursor:pointer; text-decoration:underline; }
@@ -96,6 +105,8 @@
     .dist-items-note{ font-size:11px; color:var(--muted); }
     .dist-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:4px; }
     .dist-empty{ color:var(--muted); font-size:12px; text-align:center; padding:14px; }
+    .dist-empty.dist-error{ color:#ffb454; }
+    .dist-empty .dist-retry{ margin-top:8px; }
 
     /* Cabecera de grupo/circuito en la lista de pantallas */
     .dist-group-head{ display:flex; align-items:center; gap:8px; padding:6px 10px; margin-top:4px;
@@ -198,6 +209,8 @@
     .distq-row .ql{ flex:1; min-width:0; }
     .distq-row .ql b{ color:var(--matrix); }
     .distq-row .ql .qmeta{ color:var(--muted); font-size:11px; display:block; margin-top:2px; }
+    .distq-tag-local{ color:#020602; background:#ffb454; padding:1px 6px; border-radius:4px; font-weight:600; }
+    .distq-tag-server{ color:var(--matrix); border:1px solid var(--line-bright); padding:1px 6px; border-radius:4px; }
     .distq-row .qact{ display:flex; gap:6px; flex:none; }
     .distq-mini{ border:1px solid var(--line-bright); background:transparent; color:var(--matrix); border-radius:6px;
       padding:5px 9px; font-size:11px; cursor:pointer; font-family:inherit; transition:all .15s; }
@@ -408,7 +421,10 @@
             <label>Nº de pases <input type="number" id="distPasses" min="1" max="50" value="1"></label>
             <label>cada <input type="number" id="distEvery" min="1" max="240" value="5"> min</label>
           </div>
-          <p class="dist-sched-note">La programación es local: corre mientras esta pestaña esté abierta. La cola sobrevive a recargas.</p>
+          <div class="dist-sched-warn" role="note">
+            <p class="dist-sched-warn-main">⏰ Lo programado se guarda en el <b>servidor</b> y se emite aunque cierres esta pestaña o el navegador.</p>
+            <p class="dist-sched-warn-fallback">⚠️ <b>Solo si el servidor no responde</b>, la tarea queda <b>📍 local</b>: en ese caso <b>únicamente se emite mientras esta pestaña siga abierta</b> — si la cierras, se detiene. El estado real (servidor o 📍 local) aparece en cada tarea de la cola ⏰.</p>
+          </div>
         </div>
 
         <div class="dist-screens-head">
@@ -1000,18 +1016,23 @@
       pagers.forEach(p => {
         const isTop = p.classList.contains('stock-pager-top');
         const controls = p.querySelector('.stock-pager-controls');
+        // Refrescar SIEMPRE el contador y el estado de las flechas con el
+        // conjunto FILTRADO/BUSCADO actual (sorted), aunque luego se oculten.
+        // Antes se hacía `return` cuando había una sola página y el "1/N" se
+        // quedaba obsoleto del filtro anterior (p.ej. "1/9" tras buscar 2
+        // resultados); además el CSS de .stock-pager-controls no respetaba el
+        // atributo [hidden], así que ese texto viejo seguía visible.
+        p.querySelector('.stock-pager-info').textContent = `${currentPage}/${totalPages}`;
+        p.querySelector('[data-page="first"]').disabled = currentPage <= 1;
+        p.querySelector('[data-page="prev"]').disabled = currentPage <= 1;
+        p.querySelector('[data-page="next"]').disabled = currentPage >= totalPages;
+        p.querySelector('[data-page="last"]').disabled = currentPage >= totalPages;
         if (isTop) {
           p.hidden = false;
           if (controls) controls.hidden = hidePagers;
         } else {
           p.hidden = hidePagers;
         }
-        if (hidePagers) return;
-        p.querySelector('.stock-pager-info').textContent = `${currentPage}/${totalPages}`;
-        p.querySelector('[data-page="first"]').disabled = currentPage <= 1;
-        p.querySelector('[data-page="prev"]').disabled = currentPage <= 1;
-        p.querySelector('[data-page="next"]').disabled = currentPage >= totalPages;
-        p.querySelector('[data-page="last"]').disabled = currentPage >= totalPages;
       });
     }
 
@@ -1559,42 +1580,74 @@
       function selectedItems() { return allItems.filter(i => sel.has(i.id)); }
 
       // ── Pantallas ──
+      // fetch con timeout: sin esto, un /signage/screens (o /signage/now) que
+      // no responde dejaba el panel en "cargando pantallas…" PARA SIEMPRE — ni
+      // empty-state ni error, y "↻ recargar" volvía a colgarse igual.
+      const SCREENS_TIMEOUT_MS = 8000;
+      function fetchTimeout(url, ms) {
+        const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        const to = ctrl ? setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, ms || SCREENS_TIMEOUT_MS) : null;
+        return fetch(url, { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+          .finally(() => { if (to) clearTimeout(to); });
+      }
+      let screensLoading = false;
+      let screensError = false;
       async function loadScreens(force) {
         const fresh = (Date.now() - screensAt) < 15000;
         if (!force && fresh && screens.length) { renderScreens(); return; }
+        screensLoading = true; screensError = false;
         $('distScreensSummary').textContent = 'cargando pantallas…';
+        updateGoEnabled();
         try {
-          const r = await fetch(`${STOCK_BASE}/signage/screens`, { cache: 'no-store' });
+          const r = await fetchTimeout(`${STOCK_BASE}/signage/screens`);
+          if (!r.ok) throw new Error('HTTP ' + r.status);
           const d = await r.json();
           screens = Array.isArray(d.screens) ? d.screens : [];
           screensAt = Date.now();
-          // "ahora reproduciendo" por pantalla (solo online, para ahorrar)
+          // "ahora reproduciendo" por pantalla (solo online, para ahorrar).
+          // Cada llamada con su propio timeout: una sola colgada ya no bloquea
+          // el render del resto.
           await Promise.all(screens.filter(s => s.online).map(async s => {
             try {
-              const rr = await fetch(`${STOCK_BASE}/signage/now?screen=${encodeURIComponent(s.screen)}`, { cache: 'no-store' });
+              const rr = await fetchTimeout(`${STOCK_BASE}/signage/now?screen=${encodeURIComponent(s.screen)}`, 5000);
               const dd = await rr.json();
               s.now = dd && dd.item ? (dd.item.title || dd.item.kind || '—') : null;
             } catch { s.now = null; }
           }));
+          screensError = false;
         } catch (e) {
           screens = [];
-          $('distScreensSummary').textContent = 'error al cargar pantallas';
+          screensError = true;
+        } finally {
+          screensLoading = false;
         }
         renderScreens();
+        updateGoEnabled();
       }
       // Nombre de circuito/grupo de una pantalla: ubicación si la hay, si no su rol.
       const groupOf = s => (s.locName || s.loc || s.role || 'signage');
       function renderScreens() {
         const box = $('distScreens'); if (!box) return;
+        // Estado de error: el servidor no respondió (timeout/red). Ofrece reintento.
+        if (screensError) {
+          $('distScreensSummary').textContent = 'error al cargar pantallas';
+          box.innerHTML = `<div class="dist-screen all-row${tsel.has(ALL) ? ' sel' : ''}" data-sid="${ALL}">
+              <span class="dot" style="background:#c8ffd0"></span>
+              <span class="sid">📢 TODAS (broadcast)</span>
+              <span class="srole">a cada pantalla viva</span></div>
+            <div class="dist-empty dist-error">⚠️ No se pudo contactar con el servidor de pantallas (timeout o red).<br>
+              Puedes usar “TODAS” igualmente, o <button type="button" class="btn dist-retry" data-retry>↻ reintentar</button></div>`;
+          return;
+        }
         const online = screens.filter(s => s.online).length;
         $('distScreensSummary').textContent = screens.length
-          ? `${online} online · ${screens.length} total` : 'sin pantallas registradas';
+          ? `${online} online · ${screens.length} total` : 'no se encontraron pantallas';
         let html = `<div class="dist-screen all-row${tsel.has(ALL) ? ' sel' : ''}" data-sid="${ALL}">
           <span class="dot" style="background:#c8ffd0"></span>
           <span class="sid">📢 TODAS (broadcast)</span>
           <span class="srole">a cada pantalla viva</span></div>`;
         if (!screens.length) {
-          html += `<div class="dist-empty">No hay pantallas con heartbeat reciente.<br>Abre <code>signage.html</code> en un display o arranca el gemelo. Puedes usar “TODAS”.</div>`;
+          html += `<div class="dist-empty">No se encontraron pantallas con heartbeat reciente.<br>Abre <code>signage.html</code> en un display o arranca el gemelo. Puedes usar “TODAS”.<br><button type="button" class="btn dist-retry" data-retry>↻ reintentar</button></div>`;
         } else {
           // Agrupar por circuito (ubicación o rol). Cada grupo lleva cabecera que
           // selecciona/deselecciona todas sus pantallas de golpe.
@@ -1623,6 +1676,28 @@
           }).join('');
         }
         box.innerHTML = html;
+        updateGoEnabled();
+      }
+
+      // ── Destino y estado del botón Distribuir ──
+      // Nº de pantallas a las que llegaría el envío con la selección actual.
+      // Con TODAS (broadcast) = las pantallas descubiertas; con selección
+      // concreta = las marcadas.
+      function targetCount() {
+        if (tsel.has(ALL)) return screens.length;
+        return tsel.size;
+      }
+      // Deshabilita "Distribuir" cuando no hay un destino real: mientras se
+      // descubren pantallas, si la carga falló, o si no hay ninguna pantalla a
+      // la que enviar (broadcast a una lista vacía no emite a nadie).
+      function updateGoEnabled() {
+        const btn = $('distGo'); if (!btn) return;
+        const noDest = screensLoading || screensError || targetCount() === 0;
+        btn.disabled = !!noDest;
+        btn.title = screensLoading ? 'Cargando pantallas…'
+          : screensError ? 'No se pudo cargar la lista de pantallas — reintenta'
+          : targetCount() === 0 ? 'Selecciona al menos una pantalla (o espera a que aparezcan)'
+          : 'Distribuir a las pantallas seleccionadas';
       }
 
       // ── Envío ──
@@ -1736,7 +1811,9 @@
         box.innerHTML = pend.map(t => {
           const when = new Date(t.fireAt).toLocaleString('es', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
           const passes = t.total > 1 ? ` · pase ${t.total - t.passesLeft + 1}/${t.total} (cada ${t.everyMin}m)` : '';
-          const tag = t._local ? ' · 📍 local (esta pestaña)' : '';
+          const tag = t._local
+            ? ` · <span class="distq-tag-local" title="Esta tarea NO está en el servidor: solo se emite mientras esta pestaña siga abierta">📍 local · requiere esta pestaña abierta</span>`
+            : ` · <span class="distq-tag-server" title="Programada en el servidor: se emite aunque cierres el navegador">☁ servidor</span>`;
           return `<div class="distq-row" data-qid="${escAttr(t.qid)}" data-local="${t._local ? '1' : '0'}">
             <span class="ql"><b>${escAttr(t.label)}</b><span class="qmeta">⏰ ${when} → ${escAttr(fmtTargets(t.targets))}${passes}${tag}</span></span>
             <span class="qact">
@@ -1875,6 +1952,7 @@
 
         // Modal: destino (delegado) — pantalla individual o cabecera de grupo/circuito
         $('distScreens').addEventListener('click', e => {
+          if (e.target.closest('[data-retry]')) { loadScreens(true); return; }
           const head = e.target.closest('.dist-group-head');
           if (head) {
             const g = head.dataset.group;
