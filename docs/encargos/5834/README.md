@@ -22,3 +22,7 @@ Run `python3 scripts/next-step-preview.py --port 8481 --session-fixture` in Pixe
 Pages previews are created only by `next-step-preview.yml` on the exact #5834 branch. It rejects the production branch and compares the canonical production deployment ID before and after publication. Existing auth/Functions remain in the package. The Pixeria PR stacks on #4663 to keep that pending work separate; no #4663 or #5125 branch is merged.
 
 Pending / Pendiente: read `encargo_estado(5834)` and `encargo_estado(5412)` once the Studio's Admira.live MCP connection is available. No MCP credential was present in this session; unauthenticated requests were refused. This record does not mark the assignment done. XpaceOS help changes remain on their own branch and local Worker preview; the production MCP is not deployed.
+
+## Pages deployment / Despliegue Pages
+
+Workflow https://github.com/csilvasantin/pixeria/actions/runs/38413680600 passed; deployment https://eac83796.pixeria.pages.dev, branch alias https://5834-next-step-preview.pixeria.pages.dev . The canonical production deployment ID was identical before and after publication. The branch retains its access gate (unauthenticated document request: HTTP 401); its public asset `campanas/next-step/preview-targets.json` responds HTTP 200 and pairs the Store preview. Creator/campaign interaction is browser-verified on the loopback fixture. Hosted Store interaction is recorded in its own repository; the real production MCP is unchanged.
