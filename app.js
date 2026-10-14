@@ -3162,6 +3162,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         costEst: meta.costEst || null,
         thumbnail: meta.thumbnail || null,
         quality: meta.quality || motorQuality(meta.motor),  // good/better/best (default good)
+        ...(meta.searchContext ? {searchContext:meta.searchContext} : {}),
       };
       // All import paths converge here; staged files carry dimensions measured before upload.
       if (meta.type === 'image' || meta.type === 'video') {
@@ -3202,6 +3203,13 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         throw new Error('asset sin url');
       }
       // Vídeos: miniatura real generada aquí (assets/poster-frame.mjs) para que nada llegue sin imagen.
+      if (meta.type === 'video' && meta.searchContext && meta.url) {
+        try {
+          const {sampleImportVideo} = await import('/assets/import-context.mjs?v=smart-import-1');
+          payload.analysisFrames = await sampleImportVideo(meta.url);
+          if (payload.analysisFrames.length) payload.poster = payload.analysisFrames[0];
+        } catch (_) { /* Text notes/title still generate searchable labels. */ }
+      }
       if (meta.type === 'video' && !payload.thumbnail && meta.url) {
         try { const { posterFromVideo } = await import('/assets/poster-frame.mjs'); const poster = await posterFromVideo(meta.url); if (poster) payload.poster = poster; } catch (_) {}
       }
@@ -3670,6 +3678,14 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
   function bindImportModal() {
     const dlg = document.getElementById('importModal');
     if (!dlg) return;
+    const videoDefault = document.querySelector('input[name="import-fmt"][value="video"]');
+    if (videoDefault) videoDefault.checked = true;
+    const notes = document.getElementById('import-comment');
+    if (notes) {
+      notes.placeholder = ETIQ_EN ? 'Describe the content, e.g. music top songs 1982. Search tags are generated automatically.' : 'Describe el contenido, por ejemplo: music top songs 1982. Las etiquetas de búsqueda se generan automáticamente.';
+      const label = dlg.querySelector('label[for="import-comment"] small');
+      if (label) label.textContent = ETIQ_EN ? '(optional · generates search tags automatically)' : '(opcional · genera etiquetas de búsqueda automáticamente)';
+    }
     // Campo de etiquetas: se crea al cargar y se vacía CADA VEZ que la ventana se abre, la abra quien la abra (el
     // Stock la abre por su cuenta). No se arrastran de una importación a otra: una de pantalla emitiría sola lo siguiente.
     campoEtiquetasImport();
@@ -3776,10 +3792,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
           chip.classList.toggle('is-selected', !!(ip && ip.checked));
         });
       });
-      // Init
-      if (input.checked) {
-        input.closest('.import-fmt-chip')?.classList.add('is-selected');
-      }
+      input.closest('.import-fmt-chip')?.classList.toggle('is-selected', input.checked);
     });
 
     // Botón de reintento: se inyecta junto a los demás y se muestra tras un fallo.
@@ -3842,6 +3855,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
           title: file.name.replace(/\.[^.]+$/, ''),
           comment: comment || null,
           tags: etiquetasImport(),
+          searchContext:{version:1,description:''},
           costEst: `local · ${sizeMB}MB`,
           url: blobUrl,
           blob: file,
@@ -3953,6 +3967,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       if (!jobId) return 'fallback';
       const tPoll = Date.now();
       const MAX_MS = 6 * 60 * 1000;
+      let sourceDescription = '';
       while (true) {
         await new Promise(r => setTimeout(r, 1500));
         if (Date.now() - tPoll > MAX_MS) throw new Error('timeout esperando al proxy (>6 min)');
@@ -3965,7 +3980,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
           progress?.update(st.size || 0, 0, (Date.now() - tPoll) / 1000);
           continue;
         }
-        if (st.state === 'done') break;
+        if (st.state === 'done') { sourceDescription = typeof st.description === 'string' ? st.description.slice(0,4000) : ''; break; }
         throw new Error(st.error || st.state || 'estado desconocido del proxy');
       }
       const getR = await fetch(`${ep.jobBase}/get?id=${encodeURIComponent(jobId)}`, { cache: 'no-store' });
@@ -3975,7 +3990,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       }
       let title = ''; try { title = decodeURIComponent(getR.headers.get('X-Tube-Title') || ''); } catch {}
       const { blob } = await fetchWithProgress(getR, (received, total, sec) => progress?.update(received, total, sec));
-      return { blob, title };
+      return { blob, title, description:sourceDescription };
     }
 
     // Flujo de un solo POST (suno-local, o admira-tube antiguo como fallback).
@@ -4039,6 +4054,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
             title: importedTitle || null,
             comment: comment || null,
             tags: etiquetasImport(),
+            searchContext:{version:1,description:typeof out.description==='string' ? out.description : ''},
             costEst: `gratis · ${sizeMB}MB · ${sec}s`,
             url: blobUrl,
             mime,
@@ -4160,7 +4176,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     document.getElementById('doImport')?.addEventListener('click', () => {
       const raw = document.getElementById('import-url').value;
       const urls = parseUrls(raw);
-      const fmt = document.querySelector('input[name="import-fmt"]:checked')?.value || 'audio';
+      const fmt = document.querySelector('input[name="import-fmt"]:checked')?.value || 'video';
       const comment = (document.getElementById('import-comment')?.value || '').trim();
       if (!urls.length) {
         const stat = document.getElementById('importStatus');

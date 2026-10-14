@@ -270,12 +270,12 @@
         <label>Format</label>
         <div class="import-fmt" role="radiogroup" aria-label="Import format">
           <label class="import-fmt-chip is-audio">
-            <input type="radio" name="import-fmt" value="audio" checked>
+            <input type="radio" name="import-fmt" value="audio">
             <span class="import-fmt-icon" aria-hidden="true">🎵</span>
             <span class="import-fmt-label"><b>AUDIO</b><small>mp3 · audio track only</small></span>
           </label>
           <label class="import-fmt-chip is-video">
-            <input type="radio" name="import-fmt" value="video">
+            <input type="radio" name="import-fmt" value="video" checked>
             <span class="import-fmt-icon" aria-hidden="true">🎬</span>
             <span class="import-fmt-label"><b>VIDEO</b><small>mp4 · video + audio</small></span>
           </label>
@@ -301,6 +301,7 @@
 
   <script defer src="/matrix-rain.js?v=11.10.2026.r3.1252"></script>
   <script src="../app.js?v=11.10.2026.r3.1252"></script>
+  <script src="../assets/stock-search.js?v=smart-import-1"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "../assets/xpaces/catalog.mjs";
   import {isFurniture3D} from "../assets/furniture/catalog.mjs";
@@ -660,15 +661,7 @@
           const tags = Array.isArray(it.tags) ? it.tags.map(t => String(t).toLowerCase()) : [];
           if (!tags.includes(filters.tag.toLowerCase())) return false;
         }
-        if (filters.q) {
-          const hay = (
-            (it.prompt || '') + ' ' +
-            (it.title || '') + ' ' +
-            (it.comment || '') + ' ' +
-            (Array.isArray(it.tags) ? it.tags.join(' ') : '')
-          ).toLowerCase();
-          if (!hay.includes(filters.q)) return false;
-        }
+        if (filters.q && !window.AdmiraStockSearch.matches(it,filters.q)) return false;
         return true;
       });
       const sorted = sortItems(items, sortMode);

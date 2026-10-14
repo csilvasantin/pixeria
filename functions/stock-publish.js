@@ -39,6 +39,11 @@ export async function onRequestPost({ request, env }) {
   }
   const limpio = {};
   for (const k of CAMPOS) if (body[k] != null) limpio[k] = body[k];
+  if (body.searchContext?.version === 1 && ['yt-dlp','local'].includes(body.motor)) {
+    limpio.searchContext = {version:1,description:typeof body.searchContext.description==='string' ? body.searchContext.description.slice(0,4000) : ''};
+    limpio.analysisFrames = (Array.isArray(body.analysisFrames) ? body.analysisFrames : []).slice(0,3)
+      .filter(v=>typeof v==='string' && v.length<280000 && /^data:image\/(jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(v));
+  }
   let compositionToken=null;
   if(body.composition!=null){
     try{limpio.composition=validateComposition(body.composition,{type:body.type,width:body.validacion?.ancho||body.dimensions?.width,height:body.validacion?.alto||body.dimensions?.height});}catch{return error(400,'invalid-composition');}
