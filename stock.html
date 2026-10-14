@@ -72,6 +72,21 @@
     /* ── Distribuidor de assets ───────────────────────────────── */
     /* Casilla de selección en lote sobre cada tarjeta */
     .stock-card{ position:relative; }
+    .stock-card-media{position:relative}
+    .stock-playlist-badge{position:absolute;right:9px;bottom:9px;z-index:4;border:1px solid var(--matrix);border-radius:7px;background:#001b0bee;color:var(--matrix);padding:5px 8px;font-size:11px;font-weight:700;font-family:inherit;cursor:help;max-width:80%}
+    .stock-playlist-badge:focus-visible{outline:2px solid #fff;outline-offset:2px}
+    #plModal .pl-row{grid-template-columns:repeat(auto-fit,minmax(185px,1fr))}
+    #plModal select{width:100%;background:var(--bg);border:1px solid var(--line-bright);color:var(--matrix);border-radius:6px;padding:7px;font-size:12px;font-family:inherit}
+    #plProjectField[hidden]{display:none}
+    #plModal .keys-form{grid-template-columns:minmax(0,1fr)}
+    #plModal .pl-body,#plModal .pl-field{min-width:0}
+    #plModal .pl-pick-row span{min-width:0}
+    #plModal .pl-saved-row{flex-wrap:wrap}
+    #plModal .pl-nm,#plModal .pl-meta,#plResult,#plCircuitInfo{overflow-wrap:anywhere}
+    #plModal .dist-actions{flex-wrap:wrap}
+    @media(max-width:480px){#plModal .pl-row{grid-template-columns:minmax(0,1fr)}#plModal .dist-actions .btn{flex:1 1 125px}#plModal .pl-chip{max-width:100%;overflow-wrap:anywhere}}
+    .pl-destination-note{font-size:11px;color:var(--muted);margin:0}
+
     .stock-select{ position:absolute; top:8px; left:8px; z-index:6; width:24px; height:24px;
       display:grid; place-items:center; border:1px solid var(--line-bright); border-radius:6px;
       background:rgba(0,0,0,.7); color:var(--matrix); cursor:pointer; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
@@ -703,11 +718,14 @@
         </div>
 
         <div class="pl-row">
-          <div class="pl-field"><label>Alcance</label><select id="plScope" class="model-select" style="width:100%;background:var(--bg);border:1px solid var(--line-bright);color:var(--matrix);border-radius:6px;padding:6px;font-family:inherit;font-size:12px;"><option value="">—</option></select></div>
-          <div class="pl-field"><label>Circuito</label><select id="plCircuit" class="model-select" style="width:100%;background:var(--bg);border:1px solid var(--line-bright);color:var(--matrix);border-radius:6px;padding:6px;font-family:inherit;font-size:12px;"><option value="">— circuito —</option></select></div>
-          <div class="pl-field"><label>Ubicación (punto)</label><select id="plLocation" class="model-select" style="width:100%;background:var(--bg);border:1px solid var(--line-bright);color:var(--matrix);border-radius:6px;padding:6px;font-family:inherit;font-size:12px;"><option value="">— todo el circuito —</option></select></div>
+          <div class="pl-field" id="plProjectField"><label for="plProject">Proyecto</label><select id="plProject" class="model-select"><option value="">— elige proyecto —</option></select></div>
+          <div class="pl-field"><label for="plCircuit">Circuito</label><select id="plCircuit" class="model-select" style="width:100%;background:var(--bg);border:1px solid var(--line-bright);color:var(--matrix);border-radius:6px;padding:6px;font-family:inherit;font-size:12px;"><option value="">— circuito —</option></select></div>
+          <div class="pl-field"><label for="plLocation">Ubicación</label><select id="plLocation" class="model-select"><option value="">— todas las ubicaciones —</option></select></div>
+          <div class="pl-field"><label for="plDevice">Dispositivo</label><select id="plDevice" class="model-select"><option value="">— todos los dispositivos —</option></select></div>
         </div>
         <div id="plCircuitInfo" style="font-size:11px;color:var(--muted);"></div>
+        <div id="plResult" role="status" style="font-size:12px;white-space:pre-line;"></div>
+        <p class="pl-destination-note">Guardar y distribuir añade los contenidos a la playlist actual del destino. Conserva las piezas anteriores y evita duplicados.</p>
       </div>
       <div class="dist-actions">
         <button type="button" class="btn" id="plPlay">▶ Reproducir playlist</button>
@@ -735,6 +753,8 @@
   <script defer src="/matrix-rain.js?v=11.10.2026.r3.1252"></script>
   <script src="app.js?v=11.10.2026.r3.1252"></script>
   <script src="assets/stock-search.js?v=smart-import-1"></script>
+  <script src="/assets/stock-destinations.js?v=stock-destinations-1"></script>
+  <script src="/assets/stock-playlist-data.js?v=stock-destinations-1"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "./assets/xpaces/catalog.mjs";
   import {isFurniture3D} from "./assets/furniture/catalog.mjs";
@@ -1255,6 +1275,7 @@
         <button type="button" class="stock-select" data-act="select" title="Seleccionar para distribuir en lote" aria-label="Seleccionar asset" aria-pressed="${DIST.isSelected(it.id) ? 'true' : 'false'}"><span aria-hidden="true">${DIST.isSelected(it.id) ? '✓' : '+'}</span></button>
         <div class="stock-card-media">
           ${renderPreview(it)}
+          ${window.StockPlaylistData ? StockPlaylistData.badge(it.id) : ''}
         </div>
         <div class="stock-card-body">
           <header>
@@ -1845,6 +1866,7 @@
       }
       // Botones de acciones (max/del/open) — el "open" es un <a> y deja burbujear,
       // pero detenemos para no abrir también el lightbox.
+      if(e.target.closest('.stock-playlist-badge')){e.preventDefault();e.stopPropagation();return;}
       const btn = e.target.closest('.stock-card-btn');
       if (btn) {
         const card = btn.closest('.stock-card');
@@ -2708,13 +2730,12 @@
     // Una playlist es un BUNDLE de assets (audio/música/imágenes/video/publicidad/
     // avatar/mueble) atado a un circuito → punto. Distribuirla = empujar sus assets
     // al destino (ahora o programado), vía el mismo DIST. Cascada Alcance→Circuito→
-    // Ubicación tomada del manifiesto compartido admira.app/circuits.json.
+    // Ubicación y dispositivo del catálogo real de Admira, filtrado por la cuenta.
     const PL = (function () {
       const KEY = 'pixeriaPlaylists_v1';
-      const SRC = 'https://admira.app/circuits.json';
       const $ = id => document.getElementById(id);
       let playlists = [];
-      let draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '', criterionTags: [], criterionMode: 'or' };
+      let draft = { id: null, name: '', items: [], projectId: '', circuitId: '', locId: '', deviceId: '', criterionTags: [], criterionMode: 'or' };
       // Criterio normalizado de una playlist/draft (soporta el legacy criterionTag).
       const critTags = p => {
         if (p && Array.isArray(p.criterionTags) && p.criterionTags.length) return { tags: p.criterionTags, mode: p.criterionMode || 'or' };
@@ -2722,32 +2743,39 @@
         return null;
       };
       const critLabel = c => c.tags.map(t => '#' + t).join(c.mode === 'and' ? ' Y ' : ' O ');
-      let circuits = [], scopes = null;
-      const lang = () => ((document.documentElement.lang || 'es').slice(0, 2) === 'en') ? 'en' : 'es';
-      const clabel = c => (c.label && (c.label[lang()] || c.label.es || c.label.en)) || c.id;
-      const byId = id => circuits.find(c => c.id === id) || null;
-
-      function load() { try { playlists = JSON.parse(localStorage.getItem(KEY) || '[]') || []; } catch { playlists = []; } }
-      function save() { try { localStorage.setItem(KEY, JSON.stringify(playlists.slice(0, 100))); } catch {} }
-      function list() { return playlists.slice(); }
-      function get(id) { return playlists.find(p => p.id === id) || null; }
-      // Pantallas destino de una playlist: las de su circuito (o vacío = broadcast).
-      function resolveScreens(p) {
-        if (!p || !p.circuit) return [];
-        const c = byId(p.circuit.id) || p.circuit;
-        return Array.isArray(c.screens) ? c.screens : [];
+      let targetData={rows:[],assignments:[]}, targetsReady=false, targetsError='';
+      const lang=()=>((document.documentElement.lang||'es').slice(0,2)==='en')?'en':'es';
+      const destination=()=>({project:draft.projectId,circuit:draft.circuitId,location:draft.locId,device:draft.deviceId});
+      function load(){try{playlists=JSON.parse(localStorage.getItem(KEY)||'[]')||[];}catch{playlists=[];}}
+      function save(){try{localStorage.setItem(KEY,JSON.stringify(playlists.slice(0,100)));}catch{}}
+      function list(){return playlists.slice();}
+      function get(id){return playlists.find(p=>p.id===id)||null;}
+      function resolveScreens(p){return p&&p.destination?StockDestinations.screensFor(targetData,p.destination):[];}
+      async function loadCircuits(){
+        targetsReady=false;targetsError='';renderCircuitInfo();
+        try{targetData=await StockPlaylistData.load(true);const PC=window.PixeriaCliente,allowed=PC&&PC.permitidos?PC.permitidos():null;
+          if(allowed!==null){const has=new Set(allowed);targetData={...targetData,restricted:true,rows:targetData.rows.filter(r=>has.has(r.project))};}
+          targetsReady=true;
+        }catch(e){targetData={rows:[],assignments:[]};targetsError='No se pudieron cargar los destinos. Vuelve a abrir la playlist para reintentar.';}
       }
-
-      async function loadCircuits() {
-        if (circuits.length) return;
-        try { const r = await fetch(SRC, { cache: 'no-store' }); const d = await r.json(); circuits = Array.isArray(d.circuits) ? d.circuits : []; scopes = d.scopes || null; } catch { circuits = []; }
+      function options(id,rows,placeholder,value){const el=$(id);el.innerHTML='<option value="">'+placeholder+'</option>'+rows.map(r=>'<option value="'+escAttr(r.id)+'">'+escAttr(r.name)+'</option>').join('');el.value=rows.some(r=>r.id===value)?value:'';el.disabled=!targetsReady||!rows.length;return el.value;}
+      function fillProjects(){
+        let rows=StockDestinations.projects(targetData);const PC=window.PixeriaCliente,labels=PC&&PC.lista?new Map(PC.lista().map(c=>[c.id,c.nombre])):new Map();rows=rows.map(r=>({...r,name:labels.get(r.id)||r.name}));
+        if(targetData.restricted&&rows.length===1)draft.projectId=rows[0].id;
+        draft.projectId=options('plProject',rows,'— elige proyecto —',draft.projectId);
+        $('plProjectField').hidden=targetData.restricted&&rows.length===1;
       }
-      function circuitsForScope() { if (!draft.scope || !scopes) return circuits.slice(); const ids = (scopes.circuitIds && scopes.circuitIds[draft.scope]) || []; return circuits.filter(c => ids.indexOf(c.id) >= 0); }
-      function fillScopes() { const s = $('plScope'); if (!s || !scopes) return; const ord = scopes.order || Object.keys(scopes.labels || {}); s.innerHTML = ord.map(x => '<option value="' + x + '">' + ((scopes.labels && scopes.labels[x] && (scopes.labels[x][lang()] || scopes.labels[x].es)) || x) + '</option>').join(''); if (!draft.scope) draft.scope = (scopes.order && scopes.order[0]) || ''; s.value = draft.scope; }
-      function fillCircuits() { const s = $('plCircuit'); if (!s) return; const ls = circuitsForScope(); s.innerHTML = '<option value="">— circuito —</option>' + ls.map(c => '<option value="' + c.id + '">' + clabel(c) + ' · ' + c.pointCount + ' pts</option>').join(''); s.value = draft.circuitId; }
-      function fillLocations() { const s = $('plLocation'); if (!s) return; const c = byId(draft.circuitId); if (!c) { s.innerHTML = '<option value="">— todo el circuito —</option>'; return; } const pts = c.points || []; s.innerHTML = '<option value="">— todo el circuito (' + c.pointCount + ') —</option>' + pts.map(p => '<option value="' + p.id + '">' + (p.name || p.id) + (p.addr ? ' · ' + p.addr : '') + '</option>').join(''); s.value = draft.locId; }
-      function renderCircuitInfo() { const box = $('plCircuitInfo'); if (!box) return; const c = byId(draft.circuitId); if (!c) { box.textContent = ''; return; } const loc = draft.locId && (c.points || []).find(p => p.id === draft.locId); const scr = (c.screens || []).length; const repLoc = encodeURIComponent(c.client || c.id); box.innerHTML = 'cliente <code>' + c.client + '</code> · ' + (loc ? '📍 ' + (loc.name || loc.id) : c.pointCount + ' Xpacios') + ' · ' + scr + ' pantalla(s) real(es)' + '<br><a href="https://www.clearchannel.tv/detail.html?loc=' + repLoc + '" target="_blank" rel="noopener" style="color:var(--matrix);font-weight:600;text-decoration:none;">📡 Informe de audiencia verificada (clearchannel.tv) →</a>'; }
-
+      function fillCircuits(){draft.circuitId=options('plCircuit',draft.projectId?StockDestinations.circuits(targetData,destination()):[],'— todo el proyecto —',draft.circuitId);}
+      function fillLocations(){draft.locId=options('plLocation',StockDestinations.locations(targetData,destination()),'— todas las ubicaciones —',draft.locId);}
+      function fillDevices(){draft.deviceId=options('plDevice',StockDestinations.devices(targetData,destination()),'— todos los dispositivos —',draft.deviceId);}
+      function renderCircuitInfo(){
+        const box=$('plCircuitInfo'),screens=targetsReady?StockDestinations.screensFor(targetData,destination()):[];
+        $('plSaveDist').disabled=!targetsReady||!screens.length;
+        if(!targetsReady){box.textContent=targetsError||'Cargando destinos…';return;}
+        if(!screens.length){box.textContent='Elige un proyecto y acota el destino. No se enviará nada sin dispositivos resueltos.';return;}
+        const assigned=targetData.assignments.filter(a=>screens.includes(a.screen)),names=[...new Set(assigned.map(a=>a.name))];
+        box.textContent=screens.length+' dispositivo(s) · '+(names.length?'Playlist destino: '+names.join(' · '):'Sin playlist manual asignada')+(targetData.partial?' · catálogo parcial':'');
+      }
       // Lista de assets del stock filtrada por tipo (para añadir a la playlist).
       let pickType = '';
       function renderPick() {
@@ -2796,14 +2824,14 @@
         if (clr) clr.addEventListener('click', () => { draft.criterionTags = []; draft.criterionMode = 'or'; renderSmartNote(); });
       }
 
-      function currentCircuitObj() { const c = byId(draft.circuitId); if (!c) return null; const loc = draft.locId && (c.points || []).find(p => p.id === draft.locId); return { circuit: { id: c.id, client: c.client, scope: c.scope, label: c.label, screens: c.screens || [] }, location: loc ? { id: loc.id, name: loc.name, addr: loc.addr } : null }; }
+      function currentCircuitObj(){const r=StockDestinations.rowsFor(targetData,destination())[0];return r?{circuit:{id:r.circuit,client:r.project,label:{es:r.circuitName},screens:StockDestinations.screensFor(targetData,destination())},location:draft.locId?{id:r.location,name:r.locationName}:null}:null;}
       function persistDraft() {
         // Inteligente: refresca los items desde el criterio antes de guardar.
         const dc = critTags(draft);
         if (dc) draft.items = liveItemsForCriterion(dc.tags, dc.mode);
         if (!draft.items.length) { status.textContent = '// la playlist no tiene elementos'; return null; }
         const cc = currentCircuitObj();
-        const p = { id: draft.id || ('pl-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)), name: (draft.name || $('plName').value || 'Playlist').trim().slice(0, 60), items: draft.items.slice(), criterionTags: dc ? dc.tags.slice() : null, criterionMode: dc ? dc.mode : null, circuit: cc ? cc.circuit : null, location: cc ? cc.location : null, updatedAt: Date.now() };
+        const p = { id: draft.id || ('pl-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)), name: (draft.name || $('plName').value || 'Playlist').trim().slice(0, 60), items: draft.items.slice(), criterionTags: dc ? dc.tags.slice() : null, criterionMode: dc ? dc.mode : null, circuit: cc ? cc.circuit : null, location: cc ? cc.location : null, destination: destination(), updatedAt: Date.now() };
         const i = playlists.findIndex(x => x.id === p.id);
         if (i >= 0) playlists[i] = p; else playlists.unshift(p);
         save(); renderSaved();
@@ -2811,8 +2839,9 @@
       }
 
       function open(seedItems, opts) {
+        $('plResult').textContent='';
         load();
-        draft = { id: null, name: '', items: [], scope: '', circuitId: '', locId: '', criterionTags: [], criterionMode: 'or' };
+        draft = { id: null, name: '', items: [], projectId: '', circuitId: '', locId: '', deviceId: '', criterionTags: [], criterionMode: 'or' };
         // Criterio de etiqueta(s) → playlist INTELIGENTE (se auto-actualiza). Si
         // viene criterio, los items se derivan en vivo (ignora seedItems sueltos).
         let crit = null;
@@ -2825,19 +2854,28 @@
         if (opts && opts.name) { draft.name = String(opts.name); $('plName').value = draft.name; }
         renderSaved(); renderItems(); renderSmartNote(); pickType = ''; document.querySelectorAll('.pl-type').forEach(b => b.classList.toggle('active', b.dataset.t === '')); renderPick();
         const dlg = $('plModal'); if (dlg && !dlg.open) dlg.showModal();
-        loadCircuits().then(() => { fillScopes(); fillCircuits(); fillLocations(); renderCircuitInfo(); });
+        loadCircuits().then(() => { fillProjects(); fillCircuits(); fillLocations(); fillDevices(); renderCircuitInfo(); });
       }
-      function editPlaylist(id) { const p = get(id); if (!p) return; const ec = critTags(p); draft = { id: p.id, name: p.name, items: (p.items || []).slice(), scope: (p.circuit && p.circuit.scope) || '', circuitId: (p.circuit && p.circuit.id) || '', locId: (p.location && p.location.id) || '', criterionTags: ec ? ec.tags.slice() : [], criterionMode: ec ? ec.mode : 'or' }; if (ec) draft.items = liveItemsForCriterion(ec.tags, ec.mode); $('plName').value = p.name || ''; renderItems(); renderSmartNote(); renderPick(); fillScopes(); fillCircuits(); fillLocations(); renderCircuitInfo(); }
-      function distributePlaylist(id) {
-        const p = get(id); if (!p) return;
-        // Inteligente: recoge los assets actuales del criterio (incluye lo recién
-        // publicado) y guarda el refresco antes de distribuir.
-        const pc = critTags(p);
-        if (pc) { p.items = liveItemsForCriterion(pc.tags, pc.mode); p.updatedAt = Date.now(); save(); renderSaved(); }
-        const items = (p.items || []).slice();
-        if (!items.length) { status.textContent = '// la playlist «' + (p.name || '') + '» no tiene assets' + (pc ? ' con el criterio ' + critLabel(pc) : ''); return; }
-        const dlg = $('plModal'); if (dlg && dlg.open) dlg.close();
-        DIST.open(items, { label: '🎵 ' + (p.name || 'playlist') + ' · ' + items.length + ' items' + (p.location ? ' → ' + p.location.name : (p.circuit ? ' → ' + ((p.circuit.label && (p.circuit.label[lang()] || p.circuit.label.es)) || p.circuit.id) : '')), targetScreens: resolveScreens(p) });
+      function editPlaylist(id){const p=get(id);if(!p)return;const ec=critTags(p),d=p.destination||{};draft={id:p.id,name:p.name,items:(p.items||[]).slice(),projectId:d.project||'',circuitId:d.circuit||'',locId:d.location||'',deviceId:d.device||'',criterionTags:ec?ec.tags.slice():[],criterionMode:ec?ec.mode:'or'};if(ec)draft.items=liveItemsForCriterion(ec.tags,ec.mode);$('plName').value=p.name||'';renderItems();renderSmartNote();renderPick();fillProjects();fillCircuits();fillLocations();fillDevices();renderCircuitInfo();}
+      async function distributePlaylist(id){
+        const p=get(id);if(!p)return;const pc=critTags(p);if(pc){p.items=liveItemsForCriterion(pc.tags,pc.mode);p.updatedAt=Date.now();save();renderSaved();}
+        const items=(p.items||[]).slice(),screens=resolveScreens(p);
+        const report=message=>{status.textContent=message;$('plResult').textContent=message;};
+        if(!items.length||!screens.length){report('Elige contenidos y un destino concreto; no se enviará a todas las pantallas.');return;}
+        const errors={automatic_playlist_requires_explicit_pin:'El destino sigue una playlist automática. Hay que fijarla explícitamente antes de añadir piezas manuales.',playlist_full:'La playlist destino está llena.',no_destination:'El destino ya no está disponible.',distribution_unavailable:'No se pudo contactar con el servicio de distribución.',permissions_unavailable:'No se pudieron verificar los permisos.',revision_conflict:'La playlist cambió mientras se guardaba. Vuelve a intentar el añadido.'};
+        const btn=$('plSaveDist');btn.disabled=true;report('Añadiendo contenidos a la playlist del destino…');
+        try{
+          const r=await fetch('/stock-playlists',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({selection:p.destination,stockIds:items.map(i=>i.id),name:p.name})});
+          const d=await r.json();
+          if(!Array.isArray(d.results)||!d.results.length)throw Error(errors[d.error]||d.error||'No se pudo añadir el contenido');
+          report(d.results.map(x=>x.ok?'✓ '+x.added+' añadido(s) a «'+x.name+'» · '+x.screen:'✕ '+x.screen+': '+(errors[x.error]||x.error||'No se guardó')).join('\n'));
+          if(r.ok&&d.ok){const dlg=$('plModal');if(dlg.open)dlg.close();}
+          // Una respuesta parcial puede haber guardado varios destinos. Actualizar
+          // sus marcas también en ese caso, sin convertir un fallo de refresco en
+          // un supuesto fallo de escritura.
+          try{targetData=await StockPlaylistData.load(true);}catch{report(status.textContent+'\nEl resultado se ha recibido; las marcas se actualizarán al recuperar la conexión.');}
+        }catch(e){report('No se completó el añadido: '+e.message);}
+        finally{renderCircuitInfo();}
       }
 
       // Reproduce una playlist en un overlay (vista previa secuencial, como se
@@ -2904,9 +2942,10 @@
         $('plTypes').addEventListener('click', e => { const b = e.target.closest('.pl-type'); if (!b) return; pickType = b.dataset.t || ''; document.querySelectorAll('.pl-type').forEach(x => x.classList.toggle('active', x === b)); renderPick(); });
         $('plPick').addEventListener('click', e => { const row = e.target.closest('.pl-pick-row'); if (!row) return; const it = (typeof allItems !== 'undefined' ? allItems : []).find(x => x.id === row.dataset.id); if (it) addItem(it); });
         $('plItems').addEventListener('click', e => { const x = e.target.closest('[data-x]'); if (x) removeItem(x.dataset.x); });
-        $('plScope').addEventListener('change', () => { draft.scope = $('plScope').value; draft.circuitId = ''; draft.locId = ''; fillCircuits(); fillLocations(); renderCircuitInfo(); });
-        $('plCircuit').addEventListener('change', () => { draft.circuitId = $('plCircuit').value; draft.locId = ''; fillLocations(); renderCircuitInfo(); });
-        $('plLocation').addEventListener('change', () => { draft.locId = $('plLocation').value; renderCircuitInfo(); });
+        $('plProject').addEventListener('change',()=>{draft.projectId=$('plProject').value;draft.circuitId='';draft.locId='';draft.deviceId='';fillCircuits();fillLocations();fillDevices();renderCircuitInfo();});
+        $('plCircuit').addEventListener('change',()=>{draft.circuitId=$('plCircuit').value;draft.locId='';draft.deviceId='';fillLocations();fillDevices();renderCircuitInfo();});
+        $('plLocation').addEventListener('change',()=>{draft.locId=$('plLocation').value;draft.deviceId='';fillDevices();renderCircuitInfo();});
+        $('plDevice').addEventListener('change',()=>{draft.deviceId=$('plDevice').value;renderCircuitInfo();});
         $('plSaved').addEventListener('click', e => { const row = e.target.closest('.pl-saved-row'); const act = e.target.closest('[data-act]'); if (!row || !act) return; const id = row.dataset.id; if (act.dataset.act === 'edit') editPlaylist(id); else if (act.dataset.act === 'dist') distributePlaylist(id); else if (act.dataset.act === 'play') { const p = get(id); if (p) { const pc = critTags(p); const items = pc ? liveItemsForCriterion(pc.tags, pc.mode) : (p.items || []); playPreview(items, () => distributePlaylist(id)); } } else if (act.dataset.act === 'del') { playlists = playlists.filter(x => x.id !== id); save(); renderSaved(); } });
         const plPlay = $('plPlay'); if (plPlay) plPlay.addEventListener('click', () => { const dc = critTags(draft); const items = dc ? liveItemsForCriterion(dc.tags, dc.mode) : draft.items; playPreview(items, () => { const p = persistDraft(); if (p) distributePlaylist(p.id); }); });
         $('plSave').addEventListener('click', () => { const p = persistDraft(); if (p) { status.textContent = '🎵 playlist «' + p.name + '» guardada (' + p.items.length + ' items)'; const d = $('plModal'); if (d && d.open) d.close(); } });
