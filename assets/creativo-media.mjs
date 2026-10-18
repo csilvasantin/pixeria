@@ -1,4 +1,4 @@
-import {voicePayload} from './creativo-core.mjs?v=creativo-20261018-13';
+import {voicePayload} from './creativo-core.mjs?v=creativo-20261018-14';
 export const MUSIC_ORIGIN='/creativo-music';
 // GET-only preflight. Missing sessions/providers do not leave a job marked submitted.
 export async function mediaPreflight(job,fetcher=fetch){

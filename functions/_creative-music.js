@@ -1,3 +1,4 @@
+import {validMusicAudioURL} from './_creative-music-audio.js';
 export class QueueError extends Error{constructor(message,status=400){super(message);this.status=status;}}
 const fail=(message,status)=>{throw new QueueError(message,status);};
 const idOk=value=>typeof value==='string'&&/^[a-z0-9_-]{1,100}$/i.test(value);
@@ -19,7 +20,7 @@ export function validatePart(data){
  if(data.remaining_min_seconds!==undefined||data.remaining_max_seconds!==undefined){if(!Number.isFinite(data.remaining_min_seconds)||!Number.isFinite(data.remaining_max_seconds)||data.remaining_min_seconds<0||data.remaining_max_seconds<data.remaining_min_seconds||data.remaining_max_seconds>86400||typeof data.eta_basis!=='string'||!data.eta_basis.trim()||data.eta_basis.length>200)fail('invalid-estimate');Object.assign(value,{remaining_min_seconds:data.remaining_min_seconds,remaining_max_seconds:data.remaining_max_seconds,eta_basis:data.eta_basis});}
  if(data.clips!==undefined){
   if(!Array.isArray(data.clips)||data.clips.length>4)fail('invalid-clips');
-  value.clips=data.clips.map(clip=>{let url;try{url=new URL(clip.audio_url);}catch{fail('invalid-clip-url');}if(url.protocol!=='https:'||url.username||url.password||!/(^|\.)suno\.(ai|com)$/i.test(url.hostname)||!idOk(clip.id))fail('invalid-clip-url');return {id:clip.id,audio_url:url.href,title:String(clip.title||'').slice(0,200)};});
+  value.clips=data.clips.map(clip=>{const url=validMusicAudioURL(clip?.audio_url,clip?.id);if(!url||!idOk(clip.id))fail('invalid-clip-url');return {id:clip.id,audio_url:url,title:String(clip.title||'').slice(0,200)};});
  }
  return value;
 }
@@ -43,6 +44,11 @@ export class MusicQueue{
   const token=crypto.randomUUID(),now=this.now(),progress={...JSON.parse(row.progress),phase:row.action==='audit_only'?'auditoria':'recibido',message:row.action==='audit_only'?'El consejero está comprobando el intento anterior.':'El consejero ha recibido el encargo.'};
   const changed=await this.db.prepare('UPDATE studio_music_requests SET claim_hash=?,claimed_by=?,claimed_at=?,updated_at=?,revision=revision+1,progress=? WHERE request_id=? AND claim_hash IS NULL AND revision=?').bind(await hash(token),operator.toLowerCase(),now,now,JSON.stringify(progress),id,row.revision).run();
   if(changed.meta.changes!==1)fail('already-claimed',409);return {...await this.get(id,operator,true),claim_token:token,song:JSON.parse(row.payload)};
+ }
+ async claimed(id,token,operator){
+  const row=await this.row(id);
+  if(!idOk(token)||row.claimed_by!==operator.toLowerCase()||!row.claim_hash||await hash(token)!==row.claim_hash)fail('claim-required',403);
+  return row;
  }
  async update(part,operator){
   part=validatePart(part);

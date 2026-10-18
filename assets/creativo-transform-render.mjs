@@ -1,6 +1,6 @@
-import {transformGeometry,transformVideoJob,outpaintRequest} from './creativo-transform-core.mjs?v=creativo-20261018-13';
+import {transformGeometry,transformVideoJob,outpaintRequest} from './creativo-transform-core.mjs?v=creativo-20261018-14';
 import {rect,defaults} from '../adaptaciones/adapter-core.mjs';
-import {isGood,renderGoodVideo} from './creativo-good.mjs?v=creativo-20261018-13';
+import {isGood,renderGoodVideo} from './creativo-good.mjs?v=creativo-20261018-14';
 import {createEngine} from '../adaptaciones/adapter-export.js';
 export async function loadTransformMedia(blob,type){
  const url=URL.createObjectURL(blob),media=type==='image'?new Image():document.createElement('video');

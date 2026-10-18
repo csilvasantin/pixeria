@@ -1,4 +1,4 @@
-import {comboExportJob} from './creativo-combo-core.mjs?v=creativo-20261018-13';
+import {comboExportJob} from './creativo-combo-core.mjs?v=creativo-20261018-14';
 import {createEngine} from '../adaptaciones/adapter-export.js';
 export async function generateComboImage(job,fetcher=fetch){
  const prompt=job.imagePrompt+'\nOutput composition: '+(job.orientation==='horizontal'?'landscape 16:9':'portrait 9:16')+'. Keep every subject and requested word fully inside the frame.';

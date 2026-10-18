@@ -27,7 +27,17 @@ Los partes son snapshots: cada actualización reemplaza la fase/mensaje/estimaci
 
 Solo enviar los dos extremos del rango restante si existe base real; acompañar `eta_basis` (fuente, hasta 200 caracteres). Cada parte sin estimación la retira, evitando mantener un cálculo viejo. Studio resta el tiempo desde el parte, indica estimación superada si se agota y noticias desactualizadas tras 2 minutos. Ningún porcentaje ni tiempo restante se inventa.
 
-`clips` admite hasta cuatro `{id,audio_url,title?}`; URL HTTPS de `suno.ai`/`suno.com` o subdominios, sin credenciales. `terminado` exige audio en creaciones nuevas. Finalizar una auditoría sin audio se conserva como auditoría finalizada, no canción creada. Un resultado terminado es inmutable y no se reejecuta.
+`clips` admite hasta cuatro `{id,audio_url,title?}`; URL HTTPS de un fichero de audio de `suno.ai`/`suno.com` o subdominios, sin credenciales. Una ficha `/song/...` no es un audio y se rechaza en nuevos partes. `terminado` exige audio en creaciones nuevas. Finalizar una auditoría sin audio se conserva como auditoría finalizada, no canción creada. Un resultado terminado es inmutable y no se reejecuta.
+
+### Entregar la exportación oficial en privado
+
+Si la descarga directa da 403 o el reproductor entrega bytes que no son reproducibles fuera de Suno, utiliza **Download Audio/MP3** desde la sesión existente del consejero. Verifica el fichero exportado y su duración. No uses la URL de la ficha como sustituto del audio ni intentes descifrar el streaming.
+
+`POST /creativo-music/deliver?request_id=<id>&clip_id=<clip>` entrega los **bytes binarios** de ese fichero (máximo 5 MiB), con `Content-Type: audio/mpeg` o `audio/mp4` y `X-Music-Claim: <claim_token original>`. Usa la cookie de operador existente. Nunca pegues esa cookie o claim en un enlace, chat o informe. La fase debe ser `recuperando_audio` o `terminado`, y el clip debe estar registrado en los partes del mismo encargo. En nuevas entregas registra la URL multimedia de Suno en `clips`, exporta el fichero, entrégalo y después publica `terminado`.
+
+La respuesta confirma tamaño y SHA-256, con `generation:false` y `publication:false`. Los bytes se guardan por fragmentos en el almacenamiento privado de Studio. Repetir la entrega de los mismos bytes devuelve la misma referencia; otros bytes para ese clip responden 409. No cambia la revisión, los tiempos, el estado final ni el intento de generación. También permite completar **solo la entrega** de un encargo antiguo cerrado por error con una ficha `/song/`, conservando su request y clip originales.
+
+`GET /creativo-music/audio?request_id=<id>&clip=0` devuelve primero la exportación privada. Exige la sesión de su propietario o del operador autorizado. Si no existe fichero entregado, solo consulta los destinos multimedia Suno permitidos; sigue rechazando HTML y redirecciones ajenas. No se publica en Stock ni se crea una URL pública para el archivo.
 
 Studio consulta cada 30 segundos (60 con la página oculta). El cronómetro se deriva de tiempos persistidos, no se reinicia al recargar. Se distingue espera total, generación y seguimiento de intentos antiguos. Las locuciones conservan el flujo previo.
 

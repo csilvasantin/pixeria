@@ -1,6 +1,6 @@
-import {ImportRepository} from './creativo-import.mjs?v=creativo-20261018-13';
-import {comboSpec,comboIdentity,comboImageIdentity,comboHash} from './creativo-combo-core.mjs?v=creativo-20261018-13';
-import {creativeJob} from './creativo-core.mjs?v=creativo-20261018-13';
+import {ImportRepository} from './creativo-import.mjs?v=creativo-20261018-14';
+import {comboSpec,comboIdentity,comboImageIdentity,comboHash} from './creativo-combo-core.mjs?v=creativo-20261018-14';
+import {creativeJob} from './creativo-core.mjs?v=creativo-20261018-14';
 export class ComboRepository extends ImportRepository{
  static open(factory=globalThis.indexedDB){return new Promise((resolve,reject)=>{const r=factory.open('admira-creativo-combos',1);r.onupgradeneeded=()=>{r.result.createObjectStore('jobs',{keyPath:'id'});r.result.createObjectStore('media');};r.onerror=()=>reject(r.error);r.onsuccess=()=>resolve(new ComboRepository(r.result));});}
  list(){return this.tx('readonly',(tx,out)=>{const r=tx.objectStore('jobs').getAll();r.onsuccess=()=>out(r.result.filter(x=>x.recordType==='combo').sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)));});}
