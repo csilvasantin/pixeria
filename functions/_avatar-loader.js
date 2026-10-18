@@ -14,7 +14,7 @@ export function wantsAvatar(response, url) {
   if (!response || response.status !== 200) return false;
   if (!String(response.headers.get('content-type') || '').includes('text/html')) return false;
   const path = url ? url.pathname : '/';
-  return !path.startsWith('/auth/');           // ni en la verja ni en el login
+  return !path.startsWith('/auth/') && !/^\/(?:en\/)?creativo(?:\/|$)/.test(path);           // Creativo owns its assistant; auth pages have no avatar.
 }
 
 export function withAvatar(response, url) {

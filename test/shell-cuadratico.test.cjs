@@ -14,6 +14,8 @@ const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 // Páginas que NO llevan el shell, con el motivo. Añadir aquí es una decisión de
 // producto: si dudas, la página lleva el shell.
 const SHELL_EXCEPTIONS = {
+  'creativo/index.html': 'Ventana del asistente Creativo: controles en Detalle dentro del avatar, invocada desde Experto sin duplicar su shell.',
+  'en/creativo/index.html': 'La misma ventana del asistente Creativo en inglés, embebida desde Experto.',
   'idea.html': 'Redirección inmediata a /concepto.html; no pinta nada.',
   'en/crear/index.html': 'Redirección inmediata a /crear/; no pinta nada.',
   'xpacios/index.html': 'Redirección a xpaceos.com/xpacios/ (Xpacios se mudó a XpaceOS).',

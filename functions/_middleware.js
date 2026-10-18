@@ -26,6 +26,8 @@ async function guardedRequest(context) {
   // devuelve JSON. No abre ninguna página del estudio.
   if (url.pathname === '/creator-campaigns') return context.next(); // Authenticated owner-scoped cloud API.
   if (url.pathname.startsWith('/creator-ai/')) return context.next(); // Each action verifies the existing session.
+  if (url.pathname.startsWith('/creativo-import/')) return context.next(); // Each import relay action checks the session and origin.
+  if (url.pathname.startsWith('/creativo-music/')) return context.next(); // The music relay verifies session and origin.
   if (url.pathname === '/avatar-ask') return context.next();
 
   // La verja NO puede depender de lo que diga el cliente. Hasta el 1-sep-2026

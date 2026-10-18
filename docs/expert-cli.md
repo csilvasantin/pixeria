@@ -108,3 +108,45 @@ Real MCP `creador_demo({mode:"full",language:"en"})` is **plan only**. Explicit 
 ## Idioma de interfaz / UI language
 
 ES: `/language ENG` y `/idioma ESP` conservan el historial y los valores internos, y cambian las etiquetas, opciones y ayudas de las ocho secciones. EN: `/language ENG` and `/idioma ESP` retain history and internal values while changing UI labels, options and help across all eight sections. [Tutorial y contrato / Tutorial and contract](/docs/ui-idioma.md).
+
+
+
+
+## El Creativo / The Creative
+
+`/admirito creativo` invoca a Admirito Creativo dentro de una ventana del asistente, sin abandonar la página ni abrir un taller. Su nube conserva la forma de Admirito, con gafas de pasta y gorra bohemia. La acción se registra en `AdmiraExperto.exec`; `/crear` sigue reservado al motor común.
+
+Los controles de texto/letra literal, voz, idioma, estilo e historial están en **Detalle**. Desde la conversación:
+
+- `crear locución "Bienvenido. Tu pausa empieza aquí." chico esp`
+- `crear locución "Welcome. Your break starts here." chica eng`
+- `crear música "Aquí escribimos la letra completa" chica esp flamenco`
+- `crear música "Here comes the morning\nAquí empieza el día" chico esp eng funk`
+
+El texto entre comillas se conserva exactamente, incluidos los saltos de línea. Los atributos van fuera: chico/chica, ESP/ENG, y estilo musical libre (rap, trap, flamenco, funk, soul…). Locución admite un idioma; música uno o ambos. El idioma orienta la interpretación y no traduce ni reescribe la letra. Imágenes y vídeo quedan para la próxima etapa.
+
+Enviar el mensaje **prepara** el encargo. El botón **Crear locución / Crear música** inicia una petición real usando los proveedores existentes de Studio: ElevenLabs multilingüe con las voces ESP/ENG chico/chica del servicio de megafonía; Suno en modo letra personalizada con voz, idioma y estilo en Styles. Detalle informa del consumo de créditos. El reproductor y la descarga aparecen en la misma ventana.
+
+Encargos y MP3 de locución se guardan en IndexedDB en este navegador/perfil/origen; el borrador queda en localStorage. La reserva del encargo es atómica entre pestañas antes de un POST. Recargar no repite la generación: una canción con referencia consulta solo GET /status; una respuesta perdida sin referencia se conserva como desconocida y bloquea repetición. No se declara éxito hasta tener audio real. Si guardar un MP3 falla, se ofrece su descarga inmediata. Los resultados musicales conservan la URL del proveedor (puede caducar); descárgalos para guardar una copia. No se publican a Stock automáticamente.
+
+EN: `/admirito creativo` opens Admirito Creative in the current page. **Detail** holds the exact text/lyrics, male/female voice, ESP/ENG (both for music), music style, and saved requests. Example: `create voice "Welcome." female eng` or `create music "Your exact lyrics" male eng soul`. Sending prepares the request; Create submits it. Reload resumes GET status checks for known music references and never repeats an uncertain POST. Audio players and downloads remain inside the assistant. Images and videos follow later.
+
+Standalone: `/creativo/?lang=es` and `/en/creativo/?lang=en`. The launcher embeds that same assistant at `?embed=1`; same-origin/source checks protect its close/command messages. No remote avatar persona support is assumed and the default avatar on other Studio routes stays unchanged.
+
+
+### Llamadas de Admirito y sugerencias
+
+La ayuda `/admirito help` reúne `/admirito creativo`, `/admirito arquitecto`, `/admirito bugito` y `/admirito supervisor`, con sus opciones en el log de Experto. La implementación única del espacio de nombres está en la prueba de AdmiraNeXT `pruebas/admirito/admirito.mjs`; delega una sola vez en las acciones ya existentes, sin duplicar historial, parsers ni listeners de ejecución. El adaptador de Studio registra únicamente su acción del Creativo. `/creativo` y `/creative` se conservan como alias compatibles. El texto del encargo se toma de `command.raw` para conservar espacios y saltos de línea. La promoción del módulo común a `/suite/admirito.mjs` y su carga desde `suite/experto.js` es dependencia de publicación; la prueba local lo carga desde el servidor de ensayo, sin abrir la zona privada en producción.
+
+En el Creativo, pulsar en el campo vacío convierte la sugerencia en texto editable y coloca el cursor al final. Locución y Música proponen ejemplos válidos. Enter o el botón ↑ revisan la sugerencia; Mayús+Enter añade una línea y la composición IME no se envía antes de terminar. El botón Crear sigue separado: aceptar una sugerencia no inicia una generación de pago. El borrador conserva también el mensaje sin enviar.
+
+## Importar desde El Creativo
+
+`/importar URL` abre El Creativo e importa el contenido al Stock de Studio. En su compositor también se admite `importar URL` o pegar una única URL; Enter y ↑ ejecutan la importación. `/admirito creativo importar URL` utiliza la misma acción. `/importar` muestra la ayuda sin iniciar descargas. Se conservan los encargos y resultados anteriores. Detalles y límites: `docs/creativo-import.md`.
+
+El Creativo también admite `/adaptar imagen horizontal|vertical`, `/adaptar video horizontal|vertical` y `/recrear imagen|video horizontal|vertical`. Abren su propio panel de revisión, con Archivo, originales guardados y Stock en Detalle. Enter/↑ prepara; Adaptar procesa localmente; Recrear con IA consume crédito tras mostrar el motor. [Contrato y límites](creativo-adaptar-recrear.md).
+
+
+### Ayuda completa y combos
+
+`/admirito creativo help` lista locución, música, importación, las ocho operaciones de adaptar/recrear y los dos combos. Las sugerencias se aceptan con Enter o ↑. `/crear combo imagen locucion 10 segundos` y `/crear combo imagen musica 10 segundos` utilizan el despacho `/crear` existente y abren Detalle dentro del Creativo; no generan al navegar. Imagen y texto/letra se introducen por separado, con voz, idiomas, estilo y formato. Guardado independiente de componentes; música por consejeros/Suno. Guía y contrato MCP: [Combos y MCP](creativo-combos-mcp.md), `/mcp/creativo.json`. Las herramientas `creativo_help` y `creativo_combo_preparar` son de consulta/preparación; Crear combo confirma la generación en la sesión web.

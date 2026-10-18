@@ -132,3 +132,8 @@ Qué cambió al adoptarlas:
 ---
 
 **Rule: every new Pixeria page uses the shell.** Load `/assets/cuadratura.css` after the page CSS, `/assets/site-nav.js` (defer) and `/assets/cuadratura.js`, give the page a `header.site-header` (or `.topnav`) with a direct `.brand` child and a `nav.nav`, and wrap the content in `<main>`. Use `var(--pf-topbar-h)` for heights and keep own modals above z-index 1300. Panels overlay the content (Carlos, 3 Oct 2026): opening ☰, ▤ or ⌘ never moves or resizes `main`, `.cuad-center`, `.page-head` or `body`, and every page loads with the three panels closed (only their resized size is remembered); `test/paneles-superpuestos.test.cjs` enforces it. 57 of the 73 pages carry the shell; the 16 exceptions (redirects, full-screen players, an iframe fragment and the two public no-session routes) are listed above and in `SHELL_EXCEPTIONS` of `test/shell-cuadratico.test.cjs`, which fails when a page skips the shell.
+
+
+### Ventana del asistente Creativo
+
+`creativo/index.html` y `en/creativo/index.html` son superficies autónomas del asistente virtual, invocadas por `/creativo` desde la consola de la página anfitriona. Por petición de Carlos (18-oct-2026), los controles viven en Detalle dentro del entorno de Admirito; no llevan una segunda barra, consola ni talleres completos embebidos. La página anfitriona mantiene su shell.
