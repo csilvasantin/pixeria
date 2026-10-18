@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {parseCreative,creativeJob,voicePayload,musicPayload,recoverJob,canGenerate,musicReferences,VOICES} from '../assets/creativo-core.mjs';
-import {mediaPreflight,submitMedia,pollMusic} from '../assets/creativo-media.mjs';
+import {mediaPreflight,submitMedia,pollMusic,counselorPayload} from '../assets/creativo-media.mjs';
 import {wantsAvatar} from '../functions/_avatar-loader.js';
 const voice=()=>creativeJob({kind:'locucion',brief:'  Bienvenido.\nTu café te espera.  ',voice:'chico',languages:['ESP'],id:'voice-test'});
 const song=()=>creativeJob({kind:'cancion',brief:'Aquí empieza el día\nHere comes the sun',voice:'chica',languages:['ESP','ENG'],style:'funk',id:'song-test'});
@@ -33,20 +33,15 @@ test('voice generation uses the existing authenticated proxy and returns only an
  let sent;const result=await submitMedia(voice(),'test-token',async(url,init)=>{sent={url,init};return new Response(new Blob(['audio-bytes'],{type:'audio/mpeg'}));});assert.equal(sent.url,'https://api.admira.store/tts');assert.equal(sent.init.headers.Authorization,'Bearer test-token');assert.deepEqual(JSON.parse(sent.init.body),voicePayload(voice()));assert.equal(await result.blob.text(),'audio-bytes');
  await assert.rejects(submitMedia(voice(),'test-token',async()=>Response.json({ok:true})),/audio-invalid/);
 });
-test('music generation keeps provider references; polling uses GET exclusively',async()=>{
- let sent;const result=await submitMedia(song(),'',async(url,init)=>{sent={url,init};return Response.json({pendingId:'pending-one'});});assert.match(sent.url,/\/generate$/);assert.deepEqual(JSON.parse(sent.init.body),musicPayload(song()));assert.equal(result.pendingId,'pending-one');
- const job={...song(),...result,state:'pending'},calls=[];
- const next=await pollMusic(job,async(url,init)=>{calls.push({url,init});return Response.json({ids:['clip-one','clip-two']});});assert.deepEqual(next.ids,['clip-one','clip-two']);assert.match(calls[0].url,/status\?pending=pending-one/);assert.equal(calls[0].init,undefined);
+test('music sends one durable counselor request and polling reads the same id without resending',async()=>{
+ let sent;const response={request_id:song().id,phase:'en_cola',state:'pending',clips:[]};const result=await submitMedia(song(),'',async(url,init)=>{sent={url,init};return Response.json(response);});assert.match(sent.url,/generate$/);assert.deepEqual(JSON.parse(sent.init.body),counselorPayload(song()));assert.equal(result.musicProgress.request_id,song().id);
+ const calls=[];await pollMusic({...song(),...result},async(url,init)=>{calls.push({url,init});return Response.json(response);});assert.match(calls[0].url,/request_id=song-test/);assert(!calls[0].init.method);assert.equal(calls.length,1);
 });
-test('partial clips remain pending; completed results expose only HTTPS audio URLs',async()=>{
- const job={...song(),ids:['clip-one','clip-two']};let result=await pollMusic(job,async()=>Response.json([{id:'clip-one',audio_url:'https://cdn.example/a.mp3',status:'complete'}]));assert.equal(result.state,'pending');
- result=await pollMusic(job,async()=>Response.json([{id:'clip-one',audio_url:'https://cdn.example/a.mp3',status:'complete'},{id:'clip-two',audio_url:'javascript:alert(1)',status:'error'}]));assert.equal(result.state,'complete');assert.equal(result.clips.length,1);
- const failed=await pollMusic(job,async()=>Response.json({status:'error',error:'provider-failed'}));assert.equal(failed.state,'failed');
+test('missing legacy reference registers an audit only, never generates',async()=>{
+ const calls=[];await pollMusic({...song(),state:'unknown'},async(url,init)=>{calls.push({url,init});return calls.length===1?Response.json({error:'request-not-found'},{status:404}):Response.json({request_id:song().id,phase:'auditoria',state:'unknown'});});assert.match(calls[1].url,/track$/);assert(!calls.some(c=>c.url.endsWith('/generate')));
 });
-test('provider failures and missing references do not claim completion',async()=>{
- await assert.rejects(submitMedia(song(),'',async()=>Response.json({error:'offline'},{status:503})),/provider-503/);
- await assert.rejects(submitMedia(song(),'',async()=>Response.json({ok:true})),/no-reference/);
- assert.deepEqual(musicReferences({ids:['clip-a','../unsafe','clip-a']}),{ids:['clip-a'],pendingId:''});
+test('provider failures and missing queue references never claim completion',async()=>{
+ await assert.rejects(submitMedia(song(),'',async()=>Response.json({error:'offline'},{status:503})),/provider-503/);await assert.rejects(submitMedia(song(),'',async()=>Response.json({ok:true})),/no-reference/);
 });
 test('Creativo owns its assistant surface without injecting a second generic avatar',()=>{
  const response=new Response('<main></main>',{headers:{'Content-Type':'text/html'}});

@@ -44,7 +44,7 @@ export function musicPayload(job) {
   return {prompt:[job.voice==='chico'?'male vocals':'female vocals',lang,job.style].join(', '),lyrics:job.brief,title:job.name,instrumental:false,model:'chirp-v5-5'};
 }
 export function recoverJob(job) {
-  const normalized=creativeJob(job),states=['prepared','submitting','pending','complete','unknown','failed'];
+  const normalized=creativeJob(job),states=['prepared','submitting','pending','complete','unknown','failed','blocked'];
   return {...job,...normalized,updatedAt:job.updatedAt||normalized.updatedAt,state:states.includes(job.state)?job.state:'unknown'};
 }
 export function canGenerate(job){return job?.state==='prepared';}
