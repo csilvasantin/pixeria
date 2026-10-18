@@ -1,5 +1,5 @@
 import {voicePayload,musicPayload,musicReferences} from './creativo-core.mjs?v=creativo-20261018-2';
-export const MUSIC_ORIGIN=globalThis.location?.protocol==='http:'?'http://127.0.0.1:3777':'https://macmini.tail48b61c.ts.net/suno';
+export const MUSIC_ORIGIN='/creativo-music';
 // GET-only preflight. Missing sessions/providers do not leave a job marked submitted.
 export async function mediaPreflight(job,fetcher=fetch){
  if(job.kind==='locucion'){
