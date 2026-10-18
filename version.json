@@ -1,10 +1,10 @@
 {
-  "version": "v.11.10.2026.r3.12:52",
-  "deployer": "OraculoMacMini",
-  "machine": "MacMini",
-  "signature": "OraculoMacMini · MacMini",
-  "agent": "OraculoMacMini",
-  "builtAt": "2026-10-11T10:52:02Z",
+  "version": "v.18.10.2026.r1.20:50",
+  "deployer": "WozniakMacStudio",
+  "machine": "MacStudio",
+  "signature": "WozniakMacStudio · MacStudio",
+  "agent": "WozniakMacStudio",
+  "builtAt": "2026-10-18T18:44:50Z",
   "deployedAt": "2026-10-07T10:54:08Z",
   "novedades": [
     "Controles, desplegables y ayudas en inglés en las ocho secciones.",

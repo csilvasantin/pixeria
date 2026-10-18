@@ -263,5 +263,11 @@
     "Controles, desplegables y ayudas en inglés en las ocho secciones.",
     "Assets conserva la ruta inglesa; opciones y preferencias mantienen sus valores.",
     "Castellano y contenido de Stock conservados; revisión de menús generados por código."
+  ],
+  "v.18.10.2026.r1.20:50": [
+    "Importador de URL: el Mac Studio es el importador por defecto y el Mac Mini queda de respaldo.",
+    "Creador: retoma campañas sin perder cambios y revisa textos y recortes antes de exportar.",
+    "Stock: destinos jerárquicos y añadido a playlists; importación en vídeo por defecto con etiquetas del contenido.",
+    "Volver atrás: sello v.11.10.2026.r3.12:52."
   ]
 }
