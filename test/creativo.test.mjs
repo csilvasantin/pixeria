@@ -53,3 +53,9 @@ test('Creativo owns its assistant surface without injecting a second generic ava
  for(const path of ['/creativo/','/en/creativo/'])assert.equal(wantsAvatar(response,new URL('https://admira.studio'+path)),false);
  assert.equal(wantsAvatar(response,new URL('https://admira.studio/creador/')),true);
 });
+
+test('suggestions are valid editable commands and Enter accepts while Shift+Enter and IME retain text editing',async()=>{
+ const {creativeSuggestion,acceptsCreativeEnter}=await import('../assets/creativo-core.mjs');
+ for(const kind of ['locucion','cancion'])for(const lang of ['es','en']){const parsed=parseCreative(creativeSuggestion(kind,lang));const job=creativeJob(parsed);assert.equal(job.kind,kind);assert.equal(job.languages[0],lang==='en'?'ENG':'ESP');assert(!job.brief.includes('Tu texto'));}
+ assert(acceptsCreativeEnter({key:'Enter',shiftKey:false,isComposing:false}));assert(!acceptsCreativeEnter({key:'Enter',shiftKey:true}));assert(!acceptsCreativeEnter({key:'Enter',isComposing:true}));assert(!acceptsCreativeEnter({key:'ArrowUp'}));
+});

@@ -185,6 +185,7 @@
     document.documentElement.style.setProperty('--pf-cli-keyboard', (vv ? Math.max(0, innerHeight - vv.height - vv.offsetTop) : 0) + 'px');
     resize(height, false);
   }
+  window.addEventListener('admira:assistant-help',function(){setNative(true);if(docked()&&window.AdmiraExperto){window.AdmiraExperto.open();window.AdmiraExperto.resize(Math.max(300,expanded));}resize(Math.max(300,expanded),false);log.hidden=false;});
   function fold() { resize(height > MIN ? MIN : expanded, false); }
   toggle.addEventListener('click', fold);
   grip.addEventListener('dblclick', fold);
@@ -370,7 +371,7 @@
     return l;
   }
   function executeAction(command) {
-    var name=command.name,arg=command.args;en=document.documentElement.lang.indexOf('en')===0;
+    var name=command.name,arg=command.args;if((name==='creativo'||name==='creative')&&command.raw)arg=command.raw.replace(/^\/?\S+\s*/, '');en=document.documentElement.lang.indexOf('en')===0;
     if (MARCA_VERB.test(name)) {
       if (!marcaCliente(arg)) marca().then(function (M) { return runMarca(arg, M, en, write); });
       return;
@@ -382,7 +383,7 @@
       case 'creador': case 'creator': case 'campana': case 'campaign': location.assign((en ? '/en/creador/' : '/creador/') + '?lang=' + (en ? 'en' : 'es')); break;
       case 'demo': if(/^(?:creador|creator)(?:\s|$)/i.test(arg) || (window.CreatorDemo?.active && /^(?:pausa|pause|reanudar|resume|siguiente|next|estado|status|stop|off)$/.test(arg))){if(window.CreatorDemo)Promise.resolve(window.CreatorDemo.run(arg.replace(/^(?:creador|creator)\s*/i,''))).then(write);else location.assign((en?'/en/creador/':'/creador/')+'?demo=creador&lang='+(en?'en':'es')+(/(?:^|\s)(todo|full)$/.test(arg)?'&mode=full&intent=full':''));break;} if(/^(?:sneakers?|next-step|nextstep)(?:\s|$)/i.test(arg)||(!arg&&/\/creador(?:\/|$)|\/campanas\/next-step/.test(location.pathname))){var demoArgs=arg.replace(/^(?:sneakers?|next-step|nextstep)\s*/i,'');if(window.NextStepDemo)write(window.NextStepDemo.run(demoArgs));else location.assign('/campanas/next-step/?lang='+(en?'en':'es'));break;} import('/assets/taza-demo.mjs?v=1').then(function(m){write(m.runTazaDemo(arg,en?'en':'es'));}).catch(function(){write(t('No se pudo cargar la cámara.','Could not load camera.'));});break;
       case 'help': case 'ayuda':
-        write(t('/creativo — Admirito Creativo. En su ventana: crear locución "texto" chica esp · crear música "letra" chico eng funk. Atributos en Detalle.','/creative — Admirito Creative. In its window: create voice "text" female eng · create music "lyrics" male eng funk. Attributes in Detail.'));
+        write(t('/admirito creativo — Admirito Creativo. En su ventana: crear locución "texto" chica esp · crear música "letra" chico eng funk. Atributos en Detalle.','/admirito creativo — Admirito Creative. In its window: create voice "text" female eng · create music "lyrics" male eng funk. Attributes in Detail.'));
         write(t('/creador · /campana — Creador: campaña desde cero; ejemplo Sneakers Store; editar elementos → dirección → instalación → revisar/aprobar → exportar; guía /docs/campanas-instalacion.md.','/creator · /campaign — Creator: campaign from scratch; Sneakers Store example; edit elements → direction → installation → review/approve → export; guide /docs/campanas-instalacion.md.'));
         write(t('/demo creador todo — imagen y vídeo IA nuevos hasta el gemelo 360; sesión y crédito del proveedor. /demo creador — campaña nueva para Sneaker Xtore: brief → concepto → creatividades → adaptación → gemelo 360/3D. nueva · pausa · reanudar · siguiente · estado · stop; historial demo separado.','/demo creator full — new AI image and video into the 360 twin; session and provider credit. /demo creator — new Sneaker Xtore campaign: brief → concept → creatives → adaptation → 360/3D twin. new · pause · resume · next · status · stop; separate demo history.'));
         write(t('/demo sneakers — NEXT STEP: campaña de Sneaker Store; en Creador también /demo. pausa · reiniciar · recorrer · parar.','/demo sneakers — NEXT STEP: Sneaker Store campaign; in Creator also /demo. pause · restart · tour · stop.'));

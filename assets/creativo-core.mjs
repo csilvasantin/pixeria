@@ -52,3 +52,8 @@ export function musicReferences(data) {
   const ids=(data.ids||(data.clips||[]).map(c=>c.id)).filter(id=>typeof id==='string'&&/^[a-z0-9_-]{1,120}$/i.test(id));
   return {ids:[...new Set(ids)],pendingId:typeof data.pendingId==='string'?data.pendingId.slice(0,200):''};
 }
+export function creativeSuggestion(kind='locucion',language='es'){
+ if(kind==='cancion')return language==='en'?'create music "Here comes a brighter day, let the rhythm lead the way." female eng funk':'crear música "Aquí empieza un nuevo día, con ritmo y alegría." chica esp funk';
+ return language==='en'?'create voice "Welcome. Your break starts here." female eng':'crear locución "Bienvenido. Tu pausa empieza aquí." chica esp';
+}
+export function acceptsCreativeEnter(event){return event.key==='Enter'&&!event.shiftKey&&!event.isComposing;}

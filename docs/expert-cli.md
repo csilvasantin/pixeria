@@ -114,7 +114,7 @@ ES: `/language ENG` y `/idioma ESP` conservan el historial y los valores interno
 
 ## El Creativo / The Creative
 
-`/creativo` (`/creative`) invoca a Admirito Creativo dentro de una ventana del asistente, sin abandonar la página ni abrir un taller. Su nube conserva la forma de Admirito, con gafas de pasta y gorra bohemia. La acción se registra en `AdmiraExperto.exec`; `/crear` sigue reservado al motor común.
+`/admirito creativo` invoca a Admirito Creativo dentro de una ventana del asistente, sin abandonar la página ni abrir un taller. Su nube conserva la forma de Admirito, con gafas de pasta y gorra bohemia. La acción se registra en `AdmiraExperto.exec`; `/crear` sigue reservado al motor común.
 
 Los controles de texto/letra literal, voz, idioma, estilo e historial están en **Detalle**. Desde la conversación:
 
@@ -129,6 +129,13 @@ Enviar el mensaje **prepara** el encargo. El botón **Crear locución / Crear m�
 
 Encargos y MP3 de locución se guardan en IndexedDB en este navegador/perfil/origen; el borrador queda en localStorage. La reserva del encargo es atómica entre pestañas antes de un POST. Recargar no repite la generación: una canción con referencia consulta solo GET /status; una respuesta perdida sin referencia se conserva como desconocida y bloquea repetición. No se declara éxito hasta tener audio real. Si guardar un MP3 falla, se ofrece su descarga inmediata. Los resultados musicales conservan la URL del proveedor (puede caducar); descárgalos para guardar una copia. No se publican a Stock automáticamente.
 
-EN: `/creative` opens Admirito Creative in the current page. **Detail** holds the exact text/lyrics, male/female voice, ESP/ENG (both for music), music style, and saved requests. Example: `create voice "Welcome." female eng` or `create music "Your exact lyrics" male eng soul`. Sending prepares the request; Create submits it. Reload resumes GET status checks for known music references and never repeats an uncertain POST. Audio players and downloads remain inside the assistant. Images and videos follow later.
+EN: `/admirito creativo` opens Admirito Creative in the current page. **Detail** holds the exact text/lyrics, male/female voice, ESP/ENG (both for music), music style, and saved requests. Example: `create voice "Welcome." female eng` or `create music "Your exact lyrics" male eng soul`. Sending prepares the request; Create submits it. Reload resumes GET status checks for known music references and never repeats an uncertain POST. Audio players and downloads remain inside the assistant. Images and videos follow later.
 
 Standalone: `/creativo/?lang=es` and `/en/creativo/?lang=en`. The launcher embeds that same assistant at `?embed=1`; same-origin/source checks protect its close/command messages. No remote avatar persona support is assumed and the default avatar on other Studio routes stays unchanged.
+
+
+### Llamadas de Admirito y sugerencias
+
+La ayuda `/admirito help` reúne `/admirito creativo`, `/admirito arquitecto`, `/admirito bugito` y `/admirito supervisor`, con sus opciones en el log de Experto. La implementación única del espacio de nombres está en la prueba de AdmiraNeXT `pruebas/admirito/admirito.mjs`; delega una sola vez en las acciones ya existentes, sin duplicar historial, parsers ni listeners de ejecución. El adaptador de Studio registra únicamente su acción del Creativo. `/creativo` y `/creative` se conservan como alias compatibles. El texto del encargo se toma de `command.raw` para conservar espacios y saltos de línea. La promoción del módulo común a `/suite/admirito.mjs` y su carga desde `suite/experto.js` es dependencia de publicación; la prueba local lo carga desde el servidor de ensayo, sin abrir la zona privada en producción.
+
+En el Creativo, pulsar en el campo vacío convierte la sugerencia en texto editable y coloca el cursor al final. Locución y Música proponen ejemplos válidos. Enter o el botón ↑ revisan la sugerencia; Mayús+Enter añade una línea y la composición IME no se envía antes de terminar. El botón Crear sigue separado: aceptar una sugerencia no inicia una generación de pago. El borrador conserva también el mensaje sin enviar.
