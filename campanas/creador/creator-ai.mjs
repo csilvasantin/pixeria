@@ -6,14 +6,25 @@ export function fullPrompts(c){
  const n=parseInt(c.seed.slice(0,8),16);return {image:finalArtworkPrompt(`Photorealistic premium sneaker advertising hero photograph for campaign ${c.name}. A completely new original unbranded sneaker design, a single pair with intricate woven upper and sculpted sole, placed on a low plinth in a ${scenes[n%scenes.length]}. Colour accents ${c.accent} and ${c.secondary}. Camera three-quarter product view, sneakers fill 65 percent of the frame. Premium editorial lighting, accurate footwear proportions, sharp material detail, atmospheric depth. No people, no lettering, no logos, no watermark. Unique creative direction ${c.seed}.`),video:finalArtworkPrompt(`Animate this exact sneaker advertising photograph for ${c.name}. Slow cinematic camera orbit, subtle atmospheric light movement, realistic material reflections. Preserve the sneaker design and setting from the image. No people, no added text or logos. Seamless gentle motion, premium product film. Creative direction ${c.seed}.`,{video:true})};
 }
 function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open('admira.creator-full',1);r.onupgradeneeded=()=>r.result.createObjectStore('jobs',{keyPath:'seed'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(Error('campaign-storage-unavailable'));});}
-export async function saveFull(job){const d=await db();try{await new Promise((resolve,reject)=>{const tx=d.transaction('jobs','readwrite');tx.objectStore('jobs').put(job);tx.oncomplete=resolve;tx.onerror=()=>reject(Error('campaign-storage-unavailable'));});}finally{d.close();}}
+export async function saveFull(job){const snapshot=structuredClone({...job,updatedAt:new Date().toISOString()});const d=await db();try{await new Promise((resolve,reject)=>{const tx=d.transaction('jobs','readwrite');tx.objectStore('jobs').put(snapshot);tx.oncomplete=resolve;tx.onerror=()=>reject(Error('campaign-storage-unavailable'));});}finally{d.close();}}
 export async function readFull(seed){const d=await db();try{return await new Promise((resolve,reject)=>{const r=d.transaction('jobs').objectStore('jobs').get(seed);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(Error('campaign-storage-unavailable'));});}finally{d.close();}}
+export async function listFull(){const d=await db();try{return await new Promise((resolve,reject)=>{const r=d.transaction('jobs').objectStore('jobs').getAll();r.onsuccess=()=>resolve(r.result.map(j=>({seed:j.seed,name:j.campaign.name,phase:j.phase,updatedAt:j.updatedAt||new Date(j.startedAt||0).toISOString()})).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)));r.onerror=()=>reject(Error('campaign-storage-unavailable'));});}finally{d.close();}}
+// Existing results take precedence over an interrupted/stale phase marker.
+export function recoverFull(job){
+ const asset=a=>a&&typeof a.id==='string'&&typeof a.url==='string';
+ if(asset(job.image)&&asset(job.video)){if(!['media-ready','adapted','twin'].includes(job.phase))job.phase='media-ready';}
+ else if(job.request_id&&['brief','concept','image-requested','image-ready','archive-requested','image-archived','video-requested'].includes(job.phase))job.phase='video-pending';
+ else if(asset(job.image)&&['brief','concept','image-requested','image-ready','archive-requested'].includes(job.phase))job.phase='image-archived';
+ else if(job.imageData&&['brief','concept','image-requested'].includes(job.phase))job.phase='image-ready';
+ return job;
+}
 export function newFull(c){return {schema:FULL_SCHEMA,seed:c.seed,campaign:{...c,mode:'full',product:null,generatedBy:'Grok Imagine Image + Grok Imagine Video',productProvenance:'New AI image and image-to-video generated for this run'},phase:'brief',events:[],startedAt:Date.now(),prompts:fullPrompts(c)};}
 export async function creatorRequest(action,body){const r=await fetch('/creator-ai/'+action,{method:body?'POST':'GET',credentials:'include',cache:'no-store',headers:{'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});const data=await r.json().catch(()=>({error:'invalid-response'}));if(!r.ok||data.error)throw Error((typeof data.error==='object'?data.error.message||JSON.stringify(data.error):data.error||'HTTP '+r.status)+(data.detail?' · '+data.detail:'')+' · '+r.status);return data;}
 export async function runFull(job,{checkpoint,changed,alive,delay,persist=saveFull,request=creatorRequest}){
  const emit=async(phase,detail)=>{job.phase=phase;job.error=null;job.events.push({phase,detail,at:new Date().toISOString()});await persist(job);changed(job);};
  const guard=async()=>{await checkpoint();if(!alive())throw Error('demo-stopped');};
  try{
+  recoverFull(job);
   // Issued POSTs are never repeated automatically after reload or lost replies.
   if(['image-requested','video-requested','archive-requested'].includes(job.phase))throw Error('request-result-unknown');
   job.error=null;await guard();

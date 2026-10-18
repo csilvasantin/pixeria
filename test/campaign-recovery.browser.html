@@ -1,0 +1,19 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>Trinity · Recuperación de campañas · pruebas</title><style>body{background:#07120d;color:#e8fff1;font:18px system-ui;max-width:950px;margin:40px auto}li{margin:16px}a,button{color:#7aff8e;background:#12331d;padding:12px;display:inline-block}pre{white-space:pre-wrap}</style><h1>Recuperación de campañas</h1><p>Pruebas locales con recursos ficticios. No se solicita generación ni se publica contenido.</p><ol id="results"></ol><pre id="error"></pre><script type="module">
+import {newCampaign} from '../adaptaciones/campaign-entry.mjs';
+import {recoverySnapshot,saveRecovery,readRecovery,listRecovery,recoveryWriter} from '../adaptaciones/campaign-recovery.mjs';
+const output=document.querySelector('#results'),key='trinity.recovery.test',state=JSON.parse(sessionStorage.getItem(key)||'null'),scope=state?.scope||'test-'+crypto.randomUUID();
+const check=(value,message)=>{if(!value)throw Error(message);const li=document.createElement('li');li.textContent='✓ '+message;output.append(li);};
+try{
+ if(!state){
+  const first=newCampaign(false,'recovery-first');first.headline='CAMPAÑA CONSERVADA';first.product='data:image/png;base64,'+'A'.repeat(6*1024*1024);first.revision=8;first.placements={'landscape:hero:product':{x:.1,y:.2,w:.3,h:.4}};const approvals={'portrait:hero:r8':{revision:8,direction:'hero',reviewedAt:new Date().toISOString()}};
+  await saveRecovery(scope,recoverySnapshot(first,{selected:'portrait',approvals,guides:false}));const second=newCampaign(false,'recovery-second');second.headline='OTRA CAMPAÑA';await saveRecovery(scope,recoverySnapshot(second));
+  check((await listRecovery(scope)).length===2,'Crear una campaña nueva conserva la anterior, con una imagen de 6 MB.');
+  const row=await readRecovery(scope,first.id);check(row.campaign.product===first.product&&row.selected==='portrait'&&!row.guides&&row.approvals['portrait:hero:r8'],'Recursos, pantalla seleccionada y revisión se recuperan completos.');
+  const writer=recoveryWriter(scope);writer.adopt(row);const p1=writer.save(recoverySnapshot({...first,headline:'ANTES'}));const p2=writer.save(recoverySnapshot({...first,headline:'DESPUÉS'}));await Promise.all([p1,p2]);check((await readRecovery(scope,first.id)).campaign.headline==='DESPUÉS','Las escrituras seguidas conservan el último cambio.');
+  const stale=await readRecovery(scope,first.id),other=recoveryWriter(scope);other.adopt(stale);await writer.save(recoverySnapshot({...first,headline:'DESPUÉS'}));let conflicted=false;try{await other.save(recoverySnapshot({...first,headline:'STALE'}));}catch(e){conflicted=e.message==='campaign-version-conflict';}check(conflicted&&(await readRecovery(scope,first.id)).campaign.headline==='DESPUÉS','Otra ventana no puede sobrescribir una versión más reciente.');
+  sessionStorage.setItem(key,JSON.stringify({scope}));const a=document.createElement('a');a.href=location.href;a.textContent='Recargar y comprobar persistencia';document.body.append(a);
+ }else{
+  const row=await readRecovery(scope,'recovery-first'),current=await readRecovery(scope);check(row.campaign.headline==='DESPUÉS'&&row.campaign.product.length>6*1024*1024,'La campaña y la imagen completa sobreviven a recargar la página.');check(current.campaign.id==='recovery-first','Se conserva la última campaña activa.');check((await listRecovery(scope)).length===2,'Las dos campañas siguen disponibles después de recargar.');document.title='PASS · Trinity · Recuperación de campañas';
+ }
+}catch(e){document.querySelector('#error').textContent='FALLO: '+e.stack;document.title='FAIL · Recuperación';}
+</script></html>

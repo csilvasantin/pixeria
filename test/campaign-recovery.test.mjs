@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {newCampaign} from '../adaptaciones/campaign-entry.mjs';
+import {recoverySnapshot,restoreRecovery} from '../adaptaciones/campaign-recovery.mjs';
+import {newFull,runFull} from '../campanas/creador/creator-ai.mjs';
+import {createCreatorCampaign} from '../campanas/creador/creator-core.mjs';
+test('snapshot roundtrip preserves copy, embedded originals, geometry, placements, selected destination and exact revision reviews',()=>{
+ const c=newCampaign(false,'recover-fixture');c.revision=8;c.headline='CONTINUAR SIN PERDER';c.product='data:image/png;base64,AAAA';c.logo='data:image/png;base64,BBBB';c.installations[1].enabled=false;c.placements={'landscape:hero:product':{x:.1,y:.1,w:.3,h:.4}};
+ const review={revision:8,direction:'hero',reviewedAt:'2026-10-18T07:00:00Z'},s=recoverySnapshot(c,{selected:'portrait',approvals:{'landscape:hero:r8':review,'portrait:hero:r7':{...review,revision:7}},guides:false});
+ const restored=restoreRecovery(JSON.parse(JSON.stringify(s)));assert.deepEqual(restored.campaign,c);assert.equal(restored.selected,'portrait');assert.equal(restored.guides,false);assert.deepEqual(restored.approvals,{'landscape:hero:r8':review});c.headline='CHANGED';assert.equal(s.campaign.headline,'CONTINUAR SIN PERDER');
+});
+test('recovery rejects malformed campaigns rather than resetting stored originals',()=>{assert.throws(()=>restoreRecovery({schema:'wrong'}));const s=recoverySnapshot(newCampaign());s.campaign.product='javascript:alert(1)';assert.throws(()=>restoreRecovery(s));});
+const asset=id=>({id,url:'https://api.admira.store/stock/asset/'+id});
+const options=request=>({request,persist:async()=>{},checkpoint:async()=>{},alive:()=>true,delay:async()=>{},changed:()=>{}});
+test('existing archived results win over stale phase and make zero provider requests',async()=>{for(const phase of ['brief','concept','image-requested','archive-requested','video-requested','video-pending','adapted','twin']){const job=newFull(createCreatorCampaign('0123456789abcdef0123456789abcdef'));Object.assign(job,{phase,image:asset('image-123'),video:asset('video-123')});let calls=0;await runFull(job,options(async()=>{calls++;throw Error('unexpected request');}));assert.equal(calls,0);assert.ok(['media-ready','adapted','twin'].includes(job.phase));}});
+test('a known video request resumes polling its same ID without new image or video generation',async()=>{const job=newFull(createCreatorCampaign('0123456789abcdef0123456789abcdef'));Object.assign(job,{phase:'video-requested',image:asset('image-123'),request_id:'existing-request'});const calls=[];await runFull(job,options(async action=>{calls.push(action);return {archived:true,...asset('video-123')};}));assert.deepEqual(calls,['status?request_id=existing-request']);assert.equal(job.phase,'media-ready');});
+test('an already received image is archived and reused without another image request',async()=>{const job=newFull(createCreatorCampaign('0123456789abcdef0123456789abcdef'));Object.assign(job,{phase:'image-requested',imageData:'data:image/png;base64,AAAA'});const calls=[];await runFull(job,options(async action=>{calls.push(action);if(action==='archive')return {ok:true,...asset('image-123')};if(action==='video')return {request_id:'existing-request'};return {archived:true,...asset('video-123')};}));assert.deepEqual(calls,['archive','video','status?request_id=existing-request']);});
