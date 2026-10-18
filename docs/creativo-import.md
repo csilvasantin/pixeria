@@ -16,3 +16,8 @@ Formato por defecto: vídeo para enlaces sociales, audio para archivos de audio.
 El asistente conserva los encargos de locución/música al entrar y salir de la importación. El historial de importación usa IndexedDB separado, con identidad por URL normalizada y formato. Dos pestañas reclaman una sola descarga/publicación. Recargar un resultado terminado abre la misma entrada de Stock; no vuelve a publicarlo. Una respuesta incierta al iniciar descarga o al publicar se conserva sin reenvío automático. El usuario puede consultar Stock antes de decidir otra acción. Con un identificador de descarga confirmado, continuar usa consultas GET para recuperar ese mismo trabajo.
 
 Las rutas `/creativo-import/health|start|status|get` requieren sesión y validan origen. Solo reenvían al importador primario/respaldo ya existentes; no admiten destinos arbitrarios. El archivo se sirve como stream. No se cambian ni distribuyen credenciales de los proveedores y no hay generación IA en el comando.
+
+
+## Importador principal
+
+Mac Studio se comprueba primero; Mac Mini y MacBook Pro 16 quedan de respaldo. Los identificadores del relay se mantienen: Mini=0, portátil=1, Studio=2. Un trabajo ya creado conserva su nodo al recargar y solo consulta su estado; nunca se reinicia en otro equipo. El cambio no regenera ni duplica recursos de Stock. La disponibilidad depende de que alguno de los equipos importadores esté encendido.

@@ -14,3 +14,21 @@ test('parallel import runners publish once; completed imports reuse Stock result
 test('uncertain publication never automatically retries and HTML cannot be published as media',async()=>{const repository=memory(prepared);let posts=0;const opts={fetcher:async(url)=>{if(url==='/stock-publish'){posts++;throw Error('lost-response');}return new Response('image',{headers:{'Content-Type':'image/png'}});},dimensions:async()=>null,source:async()=>({ok:true,fields:{base64:'bytes'}})};await runImport(prepared,repository,opts);const saved=await repository.get();assert.equal(saved.state,'unknown');await runImport(saved,repository,opts);assert.equal(posts,1);const other=memory(prepared);await runImport(prepared,other,{...opts,fetcher:async()=>new Response('<html>',{headers:{'Content-Type':'text/html'}})});assert.equal((await other.get()).state,'failed');});
 test('failed social start remains unconfirmed; an existing job is resumed through GET only',async()=>{const job={...prepared,direct:false,url:'https://youtu.be/abc'},repository=memory(job);let starts=0;const fetcher=async url=>{if(url.includes('/health'))return Response.json({ok:true});if(url.includes('/start')){starts++;throw Error('lost');}throw Error('unexpected');};await runImport(job,repository,{fetcher});const saved=await repository.get();assert.equal(saved.state,'unknown');await runImport(saved,repository,{fetcher});assert.equal(starts,1);});
 test('streaming reader enforces upload limit before consuming a large response',async()=>{await assert.rejects(readImportBlob(new Response('large',{headers:{'Content-Length':'100000001'}})),/too-large/);});
+
+test('new imports prefer Studio, fall back before start, and keep saved node on resume',async()=>{
+ for(const healthyNode of [2,0,1]){
+  const job={...prepared,direct:false,url:'https://youtu.be/abc'},repository=memory(job),calls=[];
+  const fetcher=async(url,init)=>{calls.push([url,init?.method||'GET']);if(url.includes('/health'))return Response.json({ok:url.endsWith('='+healthyNode),available:url.endsWith('='+healthyNode)});if(url.includes('/start'))return Response.json({jobId:'existing'});if(url.includes('/status'))return Response.json({state:'running'});throw Error('unexpected');};
+  // Interrupt the first status read without losing the job, as a reload/network failure would.
+  let statuses=0;const initial=async(url,init)=>{if(url.includes('/status')&&++statuses===1)throw Error('offline');return fetcher(url,init);};
+  await runImport(job,repository,{fetcher:initial,wait:async()=>{}});const saved=await repository.get();assert.equal(saved.state,'downloading');assert.equal(saved.node,healthyNode);assert.equal(saved.jobId,'existing');
+  const expected=[2,0,1].slice(0,[2,0,1].indexOf(healthyNode)+1).map(n=>'/creativo-import/health?node='+n);assert.deepEqual(calls.filter(([u])=>u.includes('/health')).map(([u])=>u),expected);
+  const resumed=[];await runImport(saved,repository,{fetcher:async(url)=>{resumed.push(url);if(url.includes('/status'))return Response.json({state:'done'});if(url.includes('/get'))return new Response('png',{headers:{'Content-Type':'image/png'}});if(url==='/stock-publish')return Response.json({ok:true,id:'stock-once'});throw Error('unexpected');},dimensions:async()=>null,source:async()=>({ok:true,fields:{base64:'png'}})});
+  assert(resumed.every(u=>!u.includes('/health')&&!u.includes('/start')));assert(resumed.filter(u=>u.includes('/status')||u.includes('/get')).every(u=>u.includes('node='+healthyNode)));assert.equal((await repository.get()).state,'complete');
+ }
+});
+test('relay preserves old node numbers and adds Studio without arbitrary hosts',async()=>{
+ const nodes=['macmini','macbook-pro-16','macstudio'];
+ for(let n=0;n<3;n++){let seen;const response=await importRelay(context('health',null,'?node='+n),async u=>{seen=u;return Response.json({ok:true});},allowed);assert.equal(response.status,200);assert.equal(seen,'https://'+nodes[n]+'.tail48b61c.ts.net/admira/tube/health');}
+ assert.equal((await importRelay(context('health',null,'?node=3'),async()=>{throw Error('must not fetch');},allowed)).status,400);
+});

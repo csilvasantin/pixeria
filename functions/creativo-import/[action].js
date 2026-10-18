@@ -1,5 +1,6 @@
 import {sessionInfo} from '../_auth.js';
-const NODES=['https://macmini.tail48b61c.ts.net/admira/tube','https://macbook-pro-16.tail48b61c.ts.net/admira/tube'];
+// Los índices 0 y 1 se conservan para reanudar trabajos anteriores. Studio usa 2.
+const NODES=['https://macmini.tail48b61c.ts.net/admira/tube','https://macbook-pro-16.tail48b61c.ts.net/admira/tube','https://macstudio.tail48b61c.ts.net/admira/tube'];
 const ALLOWED=/(^|\.)(youtube\.com|youtu\.be|vimeo\.com|twitter\.com|x\.com|tiktok\.com|instagram\.com|facebook\.com|fb\.watch)$/i;
 const json=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 export async function importRelay({request,env,params},fetcher=fetch,authorize=sessionInfo){
@@ -7,7 +8,7 @@ export async function importRelay({request,env,params},fetcher=fetch,authorize=s
  const action=params?.action;if(!['health','start','status','get'].includes(action))return json({error:'unknown-action'},404);
  if(request.method!==(action==='start'?'POST':'GET'))return json({error:'method-not-allowed'},405);
  const origin=request.headers.get('Origin');if(origin&&origin!==new URL(request.url).origin)return json({error:'invalid-origin'},403);
- const query=new URL(request.url).searchParams,node=query.get('node')||'0';if(!/^[01]$/.test(node))return json({error:'invalid-node'},400);
+ const query=new URL(request.url).searchParams,node=query.get('node')||'0';if(!/^[012]$/.test(node))return json({error:'invalid-node'},400);
  let target=NODES[Number(node)]+'/'+action,init={method:request.method,headers:{Accept:action==='get'?'*/*':'application/json'},signal:AbortSignal.timeout(action==='get'?120000:20000)};
  if(action==='start'){
   let data,url;try{const raw=await request.text();if(raw.length>5000)return json({error:'request-too-large'},413);data=JSON.parse(raw);url=new URL(data.url);}catch{return json({error:'invalid-url'},400);}

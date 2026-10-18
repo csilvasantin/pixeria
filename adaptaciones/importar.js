@@ -15,6 +15,7 @@
   var t = function (es, en) { return EN ? en : es; };
   var $ = function (s) { return document.querySelector(s); };
   var TUBES = [
+    {kind: 'admira-tube-studio', base: 'https://macstudio.tail48b61c.ts.net/admira/tube'},
     {kind: 'admira-tube', base: 'https://macmini.tail48b61c.ts.net/admira/tube'},
     {kind: 'admira-tube-backup', base: 'https://macbook-pro-16.tail48b61c.ts.net/admira/tube'}
   ];

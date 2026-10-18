@@ -1,4 +1,4 @@
-import {parseImportCommand,importIdentity,importMessage} from './creativo-import-core.mjs?v=creativo-20261018-14';
+import {parseImportCommand,importIdentity,importMessage} from './creativo-import-core.mjs?v=creativo-20261018-15';
 import {stockSource} from '../adaptaciones/stock-publish.mjs';
 import {localMedia,MAX_LOCAL_BYTES} from './stock-local-files.mjs';
 import {readMediaDimensions} from './content-orientation.mjs';
@@ -24,7 +24,7 @@ export async function runImport(job,repository,{fetcher=fetch,notify=()=>{},wait
  try{
   if(job.state==='prepared'){
    let node=0;
-   if(!job.direct){let healthy=false;for(node=0;node<2;node++){try{const r=await fetcher('/creativo-import/health?node='+node),d=await r.json();if(r.ok&&d.ok!==false&&d.available!==false){healthy=true;break;}}catch{}}if(!healthy)throw Error('import-offline');}
+   if(!job.direct){let healthy=false;for(const candidate of [2,0,1]){node=candidate;try{const r=await fetcher('/creativo-import/health?node='+node),d=await r.json();if(r.ok&&d.ok!==false&&d.available!==false){healthy=true;break;}}catch{}}if(!healthy)throw Error('import-offline');}
    const claimed=await repository.move(id,['prepared'],{state:job.direct?'downloading':'starting',node});if(!claimed)return await repository.get(id);job=claimed;show(job);
    if(!job.direct){const r=await fetcher('/creativo-import/start?node='+node,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:job.url,format:job.format})});if(!r.ok)throw Error('import-unknown');const data=await r.json();if(!data.jobId||!/^[a-z0-9_-]{1,160}$/i.test(data.jobId))throw Error('import-unknown');job=await repository.move(id,['starting'],{state:'downloading',jobId:data.jobId});if(!job)throw Error('import-storage');show(job);}
   }

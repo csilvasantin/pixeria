@@ -3656,6 +3656,14 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       healthUrl: 'http://127.0.0.1:3777/healthz',
       bodyFor: (u, fmt) => ({ url: u, format: fmt }),
     };
+    // Mac Studio primero; Mini y portátil conservan sus trabajos y sirven de respaldo.
+    const admiraTubeStudio = {
+      kind: 'admira-tube-studio',
+      url: 'https://macstudio.tail48b61c.ts.net/admira/tube/download',
+      healthUrl: 'https://macstudio.tail48b61c.ts.net/admira/tube/health',
+      jobBase: 'https://macstudio.tail48b61c.ts.net/admira/tube',
+      bodyFor: (u, fmt) => ({ url: u, format: fmt }),
+    };
     const admiraTube = {
       kind: 'admira-tube',
       url: 'https://macmini.tail48b61c.ts.net/admira/tube/download',
@@ -3672,7 +3680,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       jobBase: 'https://macbook-pro-16.tail48b61c.ts.net/admira/tube',
       bodyFor: (u, fmt) => ({ url: u, format: fmt }),
     };
-    return isLocalOrigin ? [sunoLocal, admiraTube, admiraTubeBackup] : [admiraTube, admiraTubeBackup];
+    return isLocalOrigin ? [sunoLocal, admiraTubeStudio, admiraTube, admiraTubeBackup] : [admiraTubeStudio, admiraTube, admiraTubeBackup];
   }
 
   function bindImportModal() {
