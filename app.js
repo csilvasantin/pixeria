@@ -3955,12 +3955,13 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     // el timeout del Funnel con descargas largas. Devuelve {blob, title}, o el
     // string 'fallback' si el server aún no tiene los endpoints nuevos (404).
     async function importViaJob(ep, url, fmt, progress, stat) {
+      const began = Date.now();
       const {downloadWithFailover,IMPORT_NODES}=await import('/assets/import-failover.mjs?v=import-ha-20261018-16');
       const selected=IMPORT_NODES.find(n=>n.base===ep.jobBase);
       const nodes=selected?[selected,...IMPORT_NODES.filter(n=>n.id!==selected.id)]:IMPORT_NODES;
       return downloadWithFailover({url,format:fmt,nodes,maxBytes:300*1024*1024,onProgress:state=>{
         if(stat)stat.textContent=state.phase==='switching'?(ETIQ_EN?'// Continuing the import automatically…':'// Continuando la importación automáticamente…'):(ETIQ_EN?'// Importing media…':'// Importando contenido…')+(state.bytes?' '+(state.bytes/1048576).toFixed(1)+' MB':'');
-        progress?.update(state.bytes||0,state.total||0,0);
+        progress?.update(state.bytes||0,state.total||0,(Date.now()-began)/1000);
       }});
     }
 
