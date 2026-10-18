@@ -7,7 +7,7 @@ export async function goodIdentity(digest,orientation){
  return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');
 }
 export async function goodPreflight(fetcher=fetch){
- try{const r=await fetcher(BASE+'/health',{signal:AbortSignal.timeout(5000),credentials:'omit'}),data=await r.json();if(!r.ok||!data.ok||data.engine!==GOOD_METHOD||!data.token)throw Error();return data.token;}catch{throw Error('good-offline');}
+ try{const r=await fetcher(BASE+'/health',{signal:AbortSignal.timeout(45000),credentials:'omit'}),data=await r.json();if(!r.ok||!data.ok||data.engine!==GOOD_METHOD||!data.token)throw Error();return data.token;}catch{throw Error('good-offline');}
 }
 export async function renderGoodVideo(job,source,blob,token,{fetcher=fetch,notify=()=>{},resume=false,pause=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
  const id=await goodIdentity(source.digest,job.orientation),headers={'X-Creativo-Good':token},url=BASE+'/jobs/'+id;

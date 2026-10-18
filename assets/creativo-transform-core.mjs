@@ -8,9 +8,10 @@ export function parseTransformCommand(text){
  return {action:m[1].toLowerCase(),type:m[2].toLowerCase()==='imagen'?'image':'video',orientation:m[3].toLowerCase()};
 }
 export function transformGeometry(source,orientation,method){
+ if(!TARGETS[orientation])throw Error('transform-size');
  const dst=method===GOOD_METHOD?{...(orientation==='horizontal'?{width:854,height:480,ratio:'16:9'}:{width:480,height:854,ratio:'9:16'})}:TARGETS[orientation];if(!dst||![source.width,source.height].every(n=>Number.isInteger(n)&&n>0&&n<=32768)||source.width*source.height>64000000)throw Error('transform-size');
  const r=rect({ancho:source.width,alto:source.height},dst.width,dst.height,'contain',defaults());
- return {...dst,sourceRect:{x:r.x,y:r.y,width:r.w,height:r.h},sameRatio:Math.abs(source.width/source.height-dst.width/dst.height)<.001};
+ return {...dst,sourceRect:{x:r.x,y:r.y,width:r.w,height:r.h},sameRatio:Math.abs(source.width/source.height-TARGETS[orientation].width/TARGETS[orientation].height)<.001};
 }
 export async function blobDigest(blob){const bytes=await crypto.subtle.digest('SHA-256',await blob.arrayBuffer());return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');}
 export function transformIdentity(order,source){if(!/^[a-f0-9]{64}$/.test(source.digest))throw Error('transform-source');return (order.action==='recrear'&&order.type==='video'?'transform-good-temporal-v1-':'transform-v1-')+source.digest+'-'+order.action+'-'+order.type+'-'+order.orientation;}
