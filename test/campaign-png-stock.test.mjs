@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {reviewPlan as checkPlan,formatKind} from '../adaptaciones/campaign-preflight.mjs';
 import {recoverySnapshot} from '../adaptaciones/campaign-recovery.mjs';
 import * as core from '../adaptaciones/campaign-core.mjs';
 import {CREATOR_KEY,newCampaign,orientationPair} from '../adaptaciones/campaign-entry.mjs';
@@ -25,7 +26,7 @@ async function workshop({two=false,creator=true,fresh=false,saved=null,en=false}
  function element(tag='div'){
   const nodes=new Map(),children=[];
   const e={tagName:tag.toUpperCase(),children,dataset:{},hidden:false,disabled:false,value:'',checked:true,width:300,height:150,
-   classList:{add(){},remove(){}},append(...items){children.push(...items);},after(){},before(){},setAttribute(k,v){this[k]=v;},scrollIntoView(){},click(){},
+   classList:{add(){},remove(){},toggle(){}},addEventListener(){},append(...items){children.push(...items);},after(){},before(){},setAttribute(k,v){this[k]=v;},scrollIntoView(){},click(){},
    replaceChildren(...items){children.splice(0,children.length,...items);},
    querySelector(selector){if(e.id==='campaign-workshop'&&selector==='#campaign-close'&&!e.innerHTML.includes('id="campaign-close"'))return null;if(!nodes.has(selector))nodes.set(selector,element(selector.includes('canvas')?'canvas':'div'));return nodes.get(selector);},
    querySelectorAll(selector){
@@ -37,9 +38,9 @@ async function workshop({two=false,creator=true,fresh=false,saved=null,en=false}
   const context=new Proxy({measureText(text){const px=Number(this.font?.match(/ (\d+(?:\.\d+)?)px/)?.[1]||20);return{width:[...text].length*px*.5};},createLinearGradient(){return{addColorStop(){}};}},{get:(o,k)=>k in o?o[k]:()=>{}});
   elements.push(e);return e;
  }
- const main=new Map(),document={documentElement:{lang:en?'en':'es'},body:element(),fonts:{add(){}},createElement:element,querySelector(s){if(!main.has(s))main.set(s,element());return main.get(s);}};
+ const main=new Map(),document={documentElement:{lang:en?'en':'es'},body:element(),fonts:{add(){}},createElement:element,createTextNode:text=>text,querySelector(s){if(!main.has(s))main.set(s,element());return main.get(s);}};
  const storageKey=creator?CREATOR_KEY:'pixeria.installation-campaign.v1';
- const context=vm.createContext({mountCampaignCloud:()=>{},recoverySnapshot,readRecovery:async()=>null,listRecovery:async()=>[],recoveryWriter:key=>({adopt(){},save:async snapshot=>{stored.set(key,plain(snapshot.campaign));return snapshot;}}),...core,CREATOR_KEY,newCampaign,orientationPair,campaignComposition,document,URL,URLSearchParams,Blob,TextEncoder,
+ const context=vm.createContext({checkPlan,formatKind,mountCampaignCloud:()=>{},recoverySnapshot,readRecovery:async()=>null,listRecovery:async()=>[],recoveryWriter:key=>({adopt(){},save:async snapshot=>{stored.set(key,plain(snapshot.campaign));return snapshot;}}),...core,CREATOR_KEY,newCampaign,orientationPair,campaignComposition,document,URL,URLSearchParams,Blob,TextEncoder,
   location:{pathname:creator?'/creador/':'/adaptaciones/',search:creator?'':'?taller=sneakers-store'},window:{history:{replaceState(){}},addEventListener(){}},
   localStorage:{getItem:key=>key===storageKey&&!fresh?JSON.stringify(campaign):null,setItem(key,value){stored.set(key,JSON.parse(value));}},
   Image:class{naturalWidth=800;naturalHeight=600;async decode(){}},FontFace:class{async load(){}},Option:class{},
@@ -47,6 +48,7 @@ async function workshop({two=false,creator=true,fresh=false,saved=null,en=false}
   publishAdaptation:(blob,meta,extra)=>publishAdaptation(blob,meta,extra,{fetch:async(url,init)=>{assert.equal(url,'/stock-publish');published.push(JSON.parse(init.body));return json({ok:true,id:'png-'+published.length,num:100+published.length});}})
  });
  vm.runInContext(source('adaptaciones/campaign-render.mjs').replaceAll('export function ','function '),context);
+ vm.runInContext(source('adaptaciones/campaign-review-ui.mjs').replace(/^import .*;\n/gm,'').replace('export function mountCampaignReview','function mountCampaignReview'),context);
  vm.runInContext(source('adaptaciones/campaign-studio.mjs').replace(/^import .*;\n/gm,'').replace('export function mountCampaign','function mountCampaign'),context);
  const api=context.mountCampaign({t:(es,english)=>en?english:es,queue:{add:item=>{queued.push(item);return item;},note(){}}});
  await new Promise(resolve=>setImmediate(resolve));
