@@ -3,7 +3,7 @@ export const TARGETS={horizontal:{width:1920,height:1080,ratio:'16:9'},vertical:
 export function parseTransformCommand(text){
  const value=String(text||'').trim();if(!/^\/?(?:adaptar|recrear)\b/i.test(value))return null;
  const m=/^\/?(adaptar|recrear)\s+(imagen|video|vídeo)\s+(horizontal|vertical)\s*$/i.exec(value);
- if(!m||m[1].toLowerCase()==='recrear'&&m[2].toLowerCase()!=='imagen')throw Error('transform-command');
+ if(!m)throw Error('transform-command');
  return {action:m[1].toLowerCase(),type:m[2].toLowerCase()==='imagen'?'image':'video',orientation:m[3].toLowerCase()};
 }
 export function transformGeometry(source,orientation){
@@ -26,7 +26,7 @@ export function outpaintRequest(image,source,orientation){
  prompt:`Outpaint this canvas to ${dst.width} x ${dst.height} (${dst.ratio}). The original image occupies x=${r.x}, y=${r.y}, width=${r.width}, height=${r.height}; the grey margins are missing surroundings, not part of the scene. Keep the original at this exact position and scale. Generate only the missing surroundings continuing perspective, colours, lighting and textures naturally across the boundaries. Do not crop, move, stretch or duplicate any subject. Preserve original lettering, logos, people and objects. Do not invent new text or watermarks. Fill the whole frame with a continuous scene, without blurred padding, mirrored edges, bars or frames. The untouched original will be composited over this exact rectangle after generation.`};
 }
 export function transformMessage(error,en=false){const messages={
- 'transform-command':['Usa /adaptar imagen horizontal, /adaptar imagen vertical, /adaptar video horizontal, /adaptar video vertical, /recrear imagen horizontal o /recrear imagen vertical.','Use /adaptar imagen horizontal|vertical, /adaptar video horizontal|vertical or /recrear imagen horizontal|vertical.'],
+ 'transform-command':['Usa /adaptar imagen horizontal, /adaptar imagen vertical, /adaptar video horizontal, /adaptar video vertical, /recrear imagen horizontal|vertical o /recrear video horizontal|vertical.','Use /adaptar imagen horizontal|vertical, /adaptar video horizontal|vertical or /recrear imagen|video horizontal|vertical.'],
  'transform-source':['Selecciona una imagen o un vídeo del tipo indicado.','Select an image or video of the requested type.'],
  'transform-size':['No se puede leer esta imagen o vídeo. Máximo: 64 megapíxeles.','Cannot read this image or video. Maximum: 64 megapixels.'],
  'transform-duration':['La adaptación de vídeo admite hasta 3 minutos. El original se conserva completo.','Video adaptation supports up to 3 minutes. The full original is preserved.'],
