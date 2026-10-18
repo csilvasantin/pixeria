@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {recoverySnapshot} from '../adaptaciones/campaign-recovery.mjs';
 import * as core from '../adaptaciones/campaign-core.mjs';
 import {CREATOR_KEY,newCampaign,orientationPair} from '../adaptaciones/campaign-entry.mjs';
 import {campaignComposition} from '../adaptaciones/campaign-composition.mjs';
@@ -38,8 +39,8 @@ async function workshop({two=false,creator=true,fresh=false,saved=null,en=false}
  }
  const main=new Map(),document={documentElement:{lang:en?'en':'es'},body:element(),fonts:{add(){}},createElement:element,querySelector(s){if(!main.has(s))main.set(s,element());return main.get(s);}};
  const storageKey=creator?CREATOR_KEY:'pixeria.installation-campaign.v1';
- const context=vm.createContext({...core,CREATOR_KEY,newCampaign,orientationPair,campaignComposition,document,URL,URLSearchParams,Blob,TextEncoder,
-  location:{pathname:creator?'/creador/':'/adaptaciones/',search:creator?'':'?taller=sneakers-store'},window:{history:{replaceState(){}}},
+ const context=vm.createContext({mountCampaignCloud:()=>{},recoverySnapshot,readRecovery:async()=>null,listRecovery:async()=>[],recoveryWriter:key=>({adopt(){},save:async snapshot=>{stored.set(key,plain(snapshot.campaign));return snapshot;}}),...core,CREATOR_KEY,newCampaign,orientationPair,campaignComposition,document,URL,URLSearchParams,Blob,TextEncoder,
+  location:{pathname:creator?'/creador/':'/adaptaciones/',search:creator?'':'?taller=sneakers-store'},window:{history:{replaceState(){}},addEventListener(){}},
   localStorage:{getItem:key=>key===storageKey&&!fresh?JSON.stringify(campaign):null,setItem(key,value){stored.set(key,JSON.parse(value));}},
   Image:class{naturalWidth=800;naturalHeight=600;async decode(){}},FontFace:class{async load(){}},Option:class{},
   geometry:()=>assert.fail('no special installation request'),FFLATE:{},setTimeout:callback=>callback(),
