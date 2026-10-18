@@ -1,10 +1,12 @@
-import {musicTiming} from './creativo-progress.mjs?v=creativo-20261018-5';
-import {TYPES,parseCreative,creativeJob,recoverJob,canGenerate,creativeSuggestion,acceptsCreativeEnter} from './creativo-core.mjs?v=creativo-20261018-5';
-import {openCreativeDB,CreativeRepository} from './creativo-repository.mjs?v=creativo-20261018-5';
-import {mediaPreflight,submitMedia,pollMusic} from './creativo-media.mjs?v=creativo-20261018-5';
+import {bindCreativeImport} from './creativo-import.mjs?v=creativo-20261018-6';
+import {parseImportCommand} from './creativo-import-core.mjs?v=creativo-20261018-6';
+import {musicTiming} from './creativo-progress.mjs?v=creativo-20261018-6';
+import {TYPES,parseCreative,creativeJob,recoverJob,canGenerate,creativeSuggestion,acceptsCreativeEnter} from './creativo-core.mjs?v=creativo-20261018-6';
+import {openCreativeDB,CreativeRepository} from './creativo-repository.mjs?v=creativo-20261018-6';
+import {mediaPreflight,submitMedia,pollMusic} from './creativo-media.mjs?v=creativo-20261018-6';
 const en=document.documentElement.lang==='en',t=(es,eng)=>en?eng:es,$=id=>document.getElementById(id),DRAFT='admira.creativo.draft.v2';
 const embedded=new URLSearchParams(location.search).get('embed')==='1';if(embedded)document.documentElement.dataset.embedded='true';
-let mediaKey='';
+let mediaKey='',importView=false,importUI=null;
 let repository,active=null,jobs=[],dirty=false,details=false,renderTurn=0,busy=false,urls=[],polling=new Set(),unsavedMedia=new Map();
 const messages={
  'creative-command':t('Prueba: crear locución "Tu texto" chica esp · crear música "Tu letra" chico eng funk.','Try: create voice "Your text" female eng · create music "Your lyrics" male eng funk.'),
@@ -17,9 +19,9 @@ const messages={
  'creative-session':t('Inicia sesión en Admira Studio para generar la locución. El encargo sigue guardado.','Sign in to Admira Studio to generate the voice-over. Your request is saved.'),
  'creative-music-offline':t('El motor musical no está disponible. Tu encargo sigue guardado.','The music engine is unavailable. Your request is saved.')
 };
-function updateTiming(){const timing=musicTiming(active,Date.now(),en?'en':'es'),panel=$('creative-progress');panel.hidden=!timing;if(!timing)return;for(const [key,value]of Object.entries(timing)){$('creative-time-'+key).textContent=value;}}
+function updateTiming(){const timing=musicTiming(active,Date.now(),en?'en':'es'),panel=$('creative-progress');panel.hidden=!timing||importView;if(!timing)return;for(const [key,value]of Object.entries(timing)){const el=$('creative-time-'+key);if(el.textContent!==value)el.textContent=value;}}
 setInterval(updateTiming,1000);
-function say(text){$('creative-status').textContent=text;}
+function say(text){if(!importView)$('creative-status').textContent=text;}
 function errorText(error){return messages[error.message]||t('No se pudo completar la operación. Tu texto sigue en Detalle.','Could not complete the operation. Your text is still in Detail.');}
 function draft(){return {kind:$('creative-kind').value,brief:$('creative-brief').value,voice:$('creative-voice').value,languages:$('creative-languages').value.split('+'),style:$('creative-kind').value==='cancion'?$('creative-style').value:''};}
 function fingerprint(value){return JSON.stringify([value.kind,value.brief,value.voice,value.languages,value.style||'']);}
@@ -28,7 +30,7 @@ function suggestion(){return creativeSuggestion($('creative-kind').value,en?'en'
 function acceptSuggestion(){const input=$('creative-command');if(!input.value.trim()){input.value=suggestion();writeDraft();return true;}return false;}
 function syncKind(){const music=$('creative-kind').value==='cancion';$('creative-style-field').hidden=!music;$('creative-style').required=music;$('creative-command').placeholder=suggestion();$('creative-bilingual').disabled=!music;if(!music&&$('creative-languages').value==='ESP+ENG')$('creative-languages').value=en?'ENG':'ESP';$('creative-text-label').firstChild.textContent=music?t('Letra literal de la canción','Exact song lyrics'):t('Texto literal a locutar','Exact text to speak');$('creative-engine').textContent=music?t('Suno · consume créditos de la cuenta al crear.','Suno · uses account credits when creating.'):t('ElevenLabs · modelo multilingüe · consume crédito según el texto.','ElevenLabs · multilingual model · uses credit according to text length.');}
 function fill(value){$('creative-kind').value=value.kind||'locucion';$('creative-brief').value=value.brief||'';$('creative-voice').value=value.voice||'chica';$('creative-languages').value=(value.languages||[en?'ENG':'ESP']).join('+');$('creative-style').value=value.style||'';syncKind();}
-function showDetails(show){details=show;$('creative-details').hidden=!show;$('creative-detail').setAttribute('aria-expanded',String(show));$('creative-scene').hidden=show||!!active;$('creative-conversation').hidden=show||!active;$('creative-generate').hidden=show||!active;}
+function showDetails(show){$('creative-composer-hint').textContent=importView?t('Enter o ↑: importar · Pegar una URL inicia la importación.','Enter or ↑: import · Pasting a URL starts the import.'):t('Enter o ↑: revisar · Mayús+Enter: nueva línea · Crear: generar.','Enter or ↑: review · Shift+Enter: new line · Create: generate.');details=show;$('creative-details').hidden=!show;$('creative-detail').setAttribute('aria-expanded',String(show));$('creative-scene').hidden=show||!!active;$('creative-conversation').hidden=show||!active;$('creative-generate').hidden=show||!active||importView;if(importView){$('creative-details').hidden=true;$('creative-scene').hidden=true;$('creative-conversation').hidden=true;}updateTiming();}
 async function history(){jobs=await repository.list();const select=$('creative-history');select.replaceChildren(new Option(t('Retomar un encargo','Resume a request'),''),...jobs.map(j=>new Option((TYPES[j.kind]?.[en?'en':'es']||j.kind)+' · '+j.name,j.id)));select.value=active?.id||'';}
 async function render(){const turn=++renderTurn;updateTiming();if(!active)return;const job=active;$('creative-summary').textContent=TYPES[job.kind][en?'en':'es']+' · '+t(job.voice,job.voice==='chico'?'Male':'Female')+' · '+job.languages.join(' + ')+(job.style?' · '+job.style:'');$('creative-literal').textContent=job.brief;$('creative-generate').textContent=job.kind==='cancion'?t('Crear música','Create music'):t('Crear locución','Create voice-over');$('creative-generate').disabled=busy||dirty||!canGenerate(job);$('creative-resume').hidden=!(job.kind==='cancion'&&job.state!=='complete'&&job.state!=='prepared'&&!job.musicProgress?.finished_at);$('creative-review').textContent=dirty?t('Revisar cambios en Detalle','Review changes in Detail'):t('Editar en Detalle','Edit in Detail');
  const results=$('creative-results');const blob=unsavedMedia.get(job.id)||(job.state==='complete'&&job.kind==='locucion'?await repository.media(job.id):null);if(turn!==renderTurn)return;const nextMediaKey=JSON.stringify([job.id,blob?.size||0,job.clips||[]]);if(mediaKey!==nextMediaKey){mediaKey=nextMediaKey;urls.forEach(URL.revokeObjectURL);urls=[];results.replaceChildren();
@@ -40,13 +42,15 @@ async function review(){try{const value=creativeJob(draft());if(active&&fingerpr
 $('creative-form').onsubmit=e=>{e.preventDefault();void review();};
 $('creative-form').oninput=()=>{syncKind();dirty=!!active&&fingerprint(draft())!==fingerprint(active);writeDraft();$('creative-generate').disabled=dirty||!canGenerate(active);};
 $('creative-form').onchange=$('creative-form').oninput;
-$('creative-detail').onclick=()=>showDetails(!details);$('creative-review').onclick=()=>showDetails(true);
+$('creative-detail').onclick=()=>{if(importView){importView=false;importUI?.hide();$('creative-status').hidden=false;}showDetails(!details);};$('creative-review').onclick=()=>showDetails(true);
 $('creative-new').onclick=()=>{$('creative-command').value='';active=null;updateTiming();dirty=false;renderTurn++;urls.forEach(URL.revokeObjectURL);urls=[];fill({});writeDraft();showDetails(true);say(t('Nuevo encargo. Los anteriores siguen guardados.','New request. Previous requests remain saved.'));};
 $('creative-history').onchange=async e=>{const job=await repository.get(e.target.value);if(job)await select(job);};
 $('creative-copy').onclick=()=>{const value=active||{schema:'admira.creativo.draft.v2',...draft()},url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download='creativo-'+(active?.id||'borrador')+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),60000);};
 $('creative-close').onclick=()=>{if(embedded)parent.postMessage({type:'admira:creative:close'},location.origin);else {showDetails(false);say(t('El encargo queda guardado. Puedes cerrar esta pestaña.','Your request is saved. You can close this tab.'));}};
-async function launch(text){try{const parsed=parseCreative(text);if(!parsed.kind){showDetails(false);return;}fill({...draft(),...parsed,style:parsed.kind==='cancion'?(parsed.style||''):''});dirty=true;writeDraft();await review();}catch(error){say(errorText(error));}}
+async function launch(text){try{const importing=parseImportCommand(text);if(importing){importUI=importUI||await importsReady;if(importUI)await importUI.launch(text);return;}if(importView){importView=false;importUI?.hide();$('creative-status').hidden=false;}const parsed=parseCreative(text);if(!parsed.kind){showDetails(false);return;}fill({...draft(),...parsed,style:parsed.kind==='cancion'?(parsed.style||''):''});dirty=true;writeDraft();await review();}catch(error){const message=error.message==='import-url'?t('Usa /importar seguido de una URL pública.','Use /import followed by a public URL.'):errorText(error);if(importView)$('creative-import-status').textContent=message;else say(message);}}
 $('creative-command').oninput=writeDraft;
+$('creative-command').addEventListener('paste',event=>{const text=event.clipboardData?.getData('text/plain')?.trim()||'';try{const order=parseImportCommand(text);if(order&&!order.help){event.preventDefault();$('creative-command').value=text;writeDraft();void launch(text);}}catch{}});
+$('creative-import-example').onclick=()=>{void importsReady.then(ui=>ui?.launch('/importar'));};
 $('creative-command').onfocus=()=>{if(acceptSuggestion())requestAnimationFrame(()=>{const input=$('creative-command');input.setSelectionRange(input.value.length,input.value.length);});};
 $('creative-command').onkeydown=event=>{if(acceptsCreativeEnter(event)){event.preventDefault();$('creative-command-form').requestSubmit();}};
 $('creative-command-form').onsubmit=e=>{e.preventDefault();acceptSuggestion();const text=$('creative-command').value;if(text.trim())void launch(text);};
@@ -64,6 +68,7 @@ $('creative-generate').onclick=async()=>{
 };
 window.AdmiraCreativo={toggle(){showDetails(false);return t('El Creativo está listo.','The Creative is ready.');},lanzar:launch};
 window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==parent)return;if(event.data?.type==='admira:creative:command')void launch(event.data.text);});
+const importsReady=bindCreativeImport({en,open(){importView=true;$('creative-status').hidden=true;showDetails(false);},back(){importView=false;$('creative-status').hidden=false;if(active)void render();else showDetails(false);}}).then(ui=>importUI=ui).catch(()=>null);
 try{
  repository=new CreativeRepository(await openCreativeDB());await history();let savedDraft;try{savedDraft=JSON.parse(localStorage.getItem(DRAFT)||'null');}catch{}
  // Preserve the earlier prototype's text without generating or rewriting it.

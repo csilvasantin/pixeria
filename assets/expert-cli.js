@@ -371,14 +371,14 @@
     return l;
   }
   function executeAction(command) {
-    var name=command.name,arg=command.args;if((name==='creativo'||name==='creative')&&command.raw)arg=command.raw.replace(/^\/?\S+\s*/, '');en=document.documentElement.lang.indexOf('en')===0;
+    var name=command.name,arg=command.args;if(['creativo','creative','importar','import'].includes(name)&&command.raw)arg=command.raw.replace(/^\/?\S+\s*/, '');en=document.documentElement.lang.indexOf('en')===0;
     if (MARCA_VERB.test(name)) {
       if (!marcaCliente(arg)) marca().then(function (M) { return runMarca(arg, M, en, write); });
       return;
     }
     switch (name) {
-      case 'creativo': case 'creative': {
-        import('/assets/creativo-launcher.mjs?v=creativo-20261018-5').then(function(m){write(m.openCreative(arg,en?'en':'es'));}).catch(function(){write(t('No se pudo abrir el Creativo.','Could not open El Creativo.'));});break;
+      case 'creativo': case 'creative': case 'importar': case 'import': {
+        import('/assets/creativo-launcher.mjs?v=creativo-20261018-6').then(function(m){write(m.openCreative(name==='importar'||name==='import'?'/importar '+arg:arg,en?'en':'es'));}).catch(function(){write(t('No se pudo abrir el Creativo.','Could not open El Creativo.'));});break;
       }
       case 'creador': case 'creator': case 'campana': case 'campaign': location.assign((en ? '/en/creador/' : '/creador/') + '?lang=' + (en ? 'en' : 'es')); break;
       case 'demo': if(/^(?:creador|creator)(?:\s|$)/i.test(arg) || (window.CreatorDemo?.active && /^(?:pausa|pause|reanudar|resume|siguiente|next|estado|status|stop|off)$/.test(arg))){if(window.CreatorDemo)Promise.resolve(window.CreatorDemo.run(arg.replace(/^(?:creador|creator)\s*/i,''))).then(write);else location.assign((en?'/en/creador/':'/creador/')+'?demo=creador&lang='+(en?'en':'es')+(/(?:^|\s)(todo|full)$/.test(arg)?'&mode=full&intent=full':''));break;} if(/^(?:sneakers?|next-step|nextstep)(?:\s|$)/i.test(arg)||(!arg&&/\/creador(?:\/|$)|\/campanas\/next-step/.test(location.pathname))){var demoArgs=arg.replace(/^(?:sneakers?|next-step|nextstep)\s*/i,'');if(window.NextStepDemo)write(window.NextStepDemo.run(demoArgs));else location.assign('/campanas/next-step/?lang='+(en?'en':'es'));break;} import('/assets/taza-demo.mjs?v=1').then(function(m){write(m.runTazaDemo(arg,en?'en':'es'));}).catch(function(){write(t('No se pudo cargar la cámara.','Could not load camera.'));});break;
