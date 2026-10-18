@@ -1,6 +1,6 @@
-import {paintTransform,loadTransformMedia} from './creativo-transform-render.mjs?v=creativo-20261018-11';
-import {transformGeometry} from './creativo-transform-core.mjs?v=creativo-20261018-11';
-import {isGood} from './creativo-good.mjs?v=creativo-20261018-11';
+import {paintTransform,loadTransformMedia} from './creativo-transform-render.mjs?v=creativo-20261018-12';
+import {transformGeometry} from './creativo-transform-core.mjs?v=creativo-20261018-12';
+import {isGood} from './creativo-good.mjs?v=creativo-20261018-12';
 // A small live composition previews the same geometry as export. It never decodes encoder output.
 export async function createTransformPreview(container,{blob,source,order,result=null,background=null,en=false}){
  const t=(es,eng)=>en?eng:es,loaded=await loadTransformMedia(blob,order.type),original=loaded.media,dst=transformGeometry(source,order.orientation,order.method),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');let disposed=false,frame=null,lastPaint=0,bg=null,output=null,resultURL=null;
