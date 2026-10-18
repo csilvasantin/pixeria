@@ -12,20 +12,38 @@ function memory(job){let saved={...job},blob;return {async get(){return {...save
 const prepared={id:'url-one',url:'https://cdn.example.test/test.png',format:'video',direct:true,state:'prepared'};
 test('parallel import runners publish once; completed imports reuse Stock result on reload',async()=>{const repository=memory(prepared);let posts=0;const options={fetcher:async(url)=>{if(url==='/stock-publish'){posts++;return Response.json({ok:true,id:'stock-one'});}return new Response('png-bytes',{headers:{'Content-Type':'image/png'}});},dimensions:async()=>null,source:async()=>({ok:true,fields:{base64:'bytes'}})};await Promise.all([runImport(prepared,repository,options),runImport(prepared,repository,options)]);const saved=await repository.get();assert.equal(saved.state,'complete');await runImport(saved,repository,options);assert.equal(posts,1);});
 test('uncertain publication never automatically retries and HTML cannot be published as media',async()=>{const repository=memory(prepared);let posts=0;const opts={fetcher:async(url)=>{if(url==='/stock-publish'){posts++;throw Error('lost-response');}return new Response('image',{headers:{'Content-Type':'image/png'}});},dimensions:async()=>null,source:async()=>({ok:true,fields:{base64:'bytes'}})};await runImport(prepared,repository,opts);const saved=await repository.get();assert.equal(saved.state,'unknown');await runImport(saved,repository,opts);assert.equal(posts,1);const other=memory(prepared);await runImport(prepared,other,{...opts,fetcher:async()=>new Response('<html>',{headers:{'Content-Type':'text/html'}})});assert.equal((await other.get()).state,'failed');});
-test('failed social start remains unconfirmed; an existing job is resumed through GET only',async()=>{const job={...prepared,direct:false,url:'https://youtu.be/abc'},repository=memory(job);let starts=0;const fetcher=async url=>{if(url.includes('/health'))return Response.json({ok:true});if(url.includes('/start')){starts++;throw Error('lost');}throw Error('unexpected');};await runImport(job,repository,{fetcher});const saved=await repository.get();assert.equal(saved.state,'unknown');await runImport(saved,repository,{fetcher});assert.equal(starts,1);});
 test('streaming reader enforces upload limit before consuming a large response',async()=>{await assert.rejects(readImportBlob(new Response('large',{headers:{'Content-Length':'100000001'}})),/too-large/);});
-
-test('new imports prefer Studio, fall back before start, and keep saved node on resume',async()=>{
- for(const healthyNode of [2,0,1]){
-  const job={...prepared,direct:false,url:'https://youtu.be/abc'},repository=memory(job),calls=[];
-  const fetcher=async(url,init)=>{calls.push([url,init?.method||'GET']);if(url.includes('/health'))return Response.json({ok:url.endsWith('='+healthyNode),available:url.endsWith('='+healthyNode)});if(url.includes('/start'))return Response.json({jobId:'existing'});if(url.includes('/status'))return Response.json({state:'running'});throw Error('unexpected');};
-  // Interrupt the first status read without losing the job, as a reload/network failure would.
-  let statuses=0;const initial=async(url,init)=>{if(url.includes('/status')&&++statuses===1)throw Error('offline');return fetcher(url,init);};
-  await runImport(job,repository,{fetcher:initial,wait:async()=>{}});const saved=await repository.get();assert.equal(saved.state,'downloading');assert.equal(saved.node,healthyNode);assert.equal(saved.jobId,'existing');
-  const expected=[2,0,1].slice(0,[2,0,1].indexOf(healthyNode)+1).map(n=>'/creativo-import/health?node='+n);assert.deepEqual(calls.filter(([u])=>u.includes('/health')).map(([u])=>u),expected);
-  const resumed=[];await runImport(saved,repository,{fetcher:async(url)=>{resumed.push(url);if(url.includes('/status'))return Response.json({state:'done'});if(url.includes('/get'))return new Response('png',{headers:{'Content-Type':'image/png'}});if(url==='/stock-publish')return Response.json({ok:true,id:'stock-once'});throw Error('unexpected');},dimensions:async()=>null,source:async()=>({ok:true,fields:{base64:'png'}})});
-  assert(resumed.every(u=>!u.includes('/health')&&!u.includes('/start')));assert(resumed.filter(u=>u.includes('/status')||u.includes('/get')).every(u=>u.includes('node='+healthyNode)));assert.equal((await repository.get()).state,'complete');
- }
+function socialFetch({crash=false,losePublish=false}={}){
+ const calls=[];let misses=0;
+ const fetcher=async(url,init={})=>{
+  calls.push({url,method:init.method||'GET'});const node=new URL(url,'https://studio.test').searchParams.get('node');
+  if(url.includes('/health'))return Response.json({ok:true});
+  if(url.includes('/start'))return Response.json({jobId:'job-'+node});
+  if(url.includes('/status')){if(crash&&node==='2'&&++misses<=3)throw Error('primary connection lost');return Response.json({state:'done',title:'Original'});}
+  if(url.includes('/get'))return new Response('video',{headers:{'Content-Type':'video/mp4'}});
+  if(url==='/stock-publish'){if(losePublish)throw Error('lost acknowledgement');return Response.json({ok:true,id:'one-stock-result'});}
+  throw Error('unexpected request');
+ };
+ return {calls,options:{fetcher,wait:async()=>{},dimensions:async()=>null,sample:async()=>[],source:async()=>({ok:true,fields:{base64:'video'}})}};
+}
+test('mid-download failover publishes once and reloading the finished job makes no requests',async()=>{
+ const job={...prepared,direct:false,url:'https://youtu.be/abc'},repository=memory(job),h=socialFetch({crash:true});
+ await runImport(job,repository,h.options);const saved=await repository.get();assert.equal(saved.state,'complete');assert.equal(saved.node,0);assert.equal(saved.stockId,'one-stock-result');
+ assert.deepEqual(h.calls.filter(c=>c.url.includes('/start')).map(c=>c.url),['/creativo-import/start?node=2','/creativo-import/start?node=0']);assert.equal(h.calls.filter(c=>c.url==='/stock-publish').length,1);
+ const count=h.calls.length;await runImport(saved,repository,h.options);assert.equal(h.calls.length,count);
+});
+test('reload during download keeps the saved node and only polls that job',async()=>{
+ const job={...prepared,direct:false,url:'https://youtu.be/abc',state:'downloading',node:1,jobId:'old-portable-job'},repository=memory(job),h=socialFetch();
+ await runImport(job,repository,h.options);assert.equal((await repository.get()).state,'complete');assert(!h.calls.some(c=>c.url.includes('/start')||c.url.includes('/health')));assert(h.calls.filter(c=>c.url.includes('/status')||c.url.includes('/get')).every(c=>c.url.includes('node=1')));
+});
+test('uncertain Stock publication after failover is never retried automatically',async()=>{
+ const job={...prepared,direct:false,url:'https://youtu.be/abc'},repository=memory(job),h=socialFetch({crash:true,losePublish:true});
+ await runImport(job,repository,h.options);const saved=await repository.get();assert.equal(saved.state,'unknown');const count=h.calls.length;await runImport(saved,repository,h.options);assert.equal(h.calls.length,count);assert.equal(h.calls.filter(c=>c.url==='/stock-publish').length,1);
+});
+test('lost download start can fall back, while legacy unknown jobs remain untouched',async()=>{
+ const job={...prepared,direct:false,url:'https://youtu.be/abc'},repository=memory(job),h=socialFetch(),fetcher=async(u,i)=>{if(u==='/creativo-import/start?node=2')throw Error('lost start reply');return h.options.fetcher(u,i);};
+ await runImport(job,repository,{...h.options,fetcher});assert.equal((await repository.get()).state,'complete');assert.equal((await repository.get()).node,0);
+ const legacy=memory({...job,state:'unknown'});const count=h.calls.length;await runImport(await legacy.get(),legacy,h.options);assert.equal(h.calls.length,count);
 });
 test('relay preserves old node numbers and adds Studio without arbitrary hosts',async()=>{
  const nodes=['macmini','macbook-pro-16','macstudio'];

@@ -1,7 +1,7 @@
 /* Adaptaciones · paso 1 · caja 2 «Subirlo / Importarlo» (Carlos, 5-oct-2026, 07:59).
  * Pegar una URL (YouTube, Instagram, TikTok, X, Vimeo… o un mp4 directo) e importarla con el
- * MISMO mecanismo que el Stock (app.js · bindImportModal): admira-tube (yt-dlp en el Mac Mini, con
- * el MacBook Pro de respaldo) por start → status → get. Al llegar, el vídeo entra como si se hubiera
+ * MISMO mecanismo que Stock: import-failover.mjs con Mac Studio, Mac Mini y portátil,
+ * por start → status → get y relevo automático antes de guardar. Al llegar, el vídeo entra como si se hubiera
  * subido del equipo (#src-file → setSource), pasa solo a «Adaptar» y se guarda en el Stock como las
  * importaciones del Stock (POST /stock-publish → /stock/publish), con la etiqueta del cliente activo.
  * Un mp4 directo se descarga desde el navegador (si su servidor lo permite por CORS).
@@ -14,12 +14,7 @@
   var EN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
   var t = function (es, en) { return EN ? en : es; };
   var $ = function (s) { return document.querySelector(s); };
-  var TUBES = [
-    {kind: 'admira-tube-studio', base: 'https://macstudio.tail48b61c.ts.net/admira/tube'},
-    {kind: 'admira-tube', base: 'https://macmini.tail48b61c.ts.net/admira/tube'},
-    {kind: 'admira-tube-backup', base: 'https://macbook-pro-16.tail48b61c.ts.net/admira/tube'}
-  ];
-  var MAX_BYTES = 100 * 1024 * 1024, MAX_MS = 6 * 60 * 1000;
+  var MAX_BYTES = 100 * 1024 * 1024;
   var CLIENTE_STOCK = '/adaptaciones/stock-publish.mjs'; // el mismo módulo que importa adaptaciones.js
   var DIRECTO = /\.(mp4|m4v|mov|webm)(?:[?#]|$)/i;
   var enCurso = false;
@@ -35,21 +30,6 @@
     b.firstElementChild.style.width = pct == null ? '' : Math.max(2, Math.min(100, pct)) + '%';
   }
   function mb(n) { return (n / 1048576).toFixed(1).replace('.', EN ? '.' : ',') + ' MB'; }
-  function espera(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
-  function conTiempo(url, opts, ms) {
-    var c = new AbortController(), r = setTimeout(function () { c.abort(); }, ms || 4500);
-    return fetch(url, Object.assign({signal: c.signal, cache: 'no-store'}, opts || {})).finally(function () { clearTimeout(r); });
-  }
-  async function errorLegible(r) {
-    var txt = '', d = null; try { txt = await r.text(); d = JSON.parse(txt); } catch (_) {}
-    if (d && typeof d === 'object') {
-      if (d.message) return String(d.message);
-      var base = String(d.error || 'HTTP ' + r.status);
-      if (Array.isArray(d.allowed)) return base + (d.host ? ' (' + d.host + ')' : '') + '. ' + t('Hosts permitidos: ', 'Allowed hosts: ') + d.allowed.join(', ') + '.';
-      return base;
-    }
-    return 'HTTP ' + r.status;
-  }
   async function leer(resp, total, alAvanzar) {
     var lector = resp.body && resp.body.getReader ? resp.body.getReader() : null;
     if (!lector) return resp.blob();
@@ -62,36 +42,15 @@
     }
     return new Blob(trozos, {type: resp.headers.get('content-type') || 'video/mp4'});
   }
-  async function tubeSano() {
-    for (var i = 0; i < TUBES.length; i++) {
-      estado(t('Comprobando el importador…', 'Checking the importer…')); barra(null);
-      try { var r = await conTiempo(TUBES[i].base + '/health'); if (r.ok) { var j = {}; try { j = await r.json(); } catch (_) {} if (j.ok !== false && j.available !== false) return TUBES[i]; } } catch (_) {}
-    }
-    return null;
-  }
-  // Mismo flujo que el Stock: start → status (cada 1,5 s) → get.
   async function porTube(url) {
-    var ep = await tubeSano();
-    if (!ep) throw new Error(t('El importador (yt-dlp en el Mac Mini y su respaldo) no responde ahora mismo. Reintenta en unos segundos o sube el vídeo desde tu equipo.', 'The importer (yt-dlp on the Mac Mini and its backup) is not answering right now. Retry in a few seconds or upload the video from your computer.'));
-    var r = await fetch(ep.base + '/start', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({url: url, format: 'video'})});
-    if (!r.ok) throw new Error(await errorLegible(r));
-    var id = (await r.json()).jobId; if (!id) throw new Error(t('El importador no ha devuelto trabajo.', 'The importer returned no job.'));
-    var t0 = Date.now(), titulo = '';
-    for (;;) {
-      await espera(1500);
-      if (Date.now() - t0 > MAX_MS) throw new Error(t('El importador tarda más de 6 minutos; prueba con un vídeo más corto.', 'The importer is taking over 6 minutes; try a shorter video.'));
-      var st; try { st = await (await fetch(ep.base + '/status?id=' + encodeURIComponent(id), {cache: 'no-store'})).json(); } catch (_) { continue; }
-      if (st.title) titulo = st.title;
-      if (st.state === 'running') { estado(t('Descargando con yt-dlp… ', 'Downloading with yt-dlp… ') + mb(st.size || 0) + ' · ' + Math.round((Date.now() - t0) / 1000) + ' s'); barra(null); continue; }
-      if (st.state === 'done') break;
-      throw new Error(st.error || t('El importador no ha podido con esta URL.', 'The importer could not handle this URL.'));
-    }
-    var g = await fetch(ep.base + '/get?id=' + encodeURIComponent(id), {cache: 'no-store'});
-    if (!g.ok) throw new Error(await errorLegible(g));
-    try { titulo = decodeURIComponent(g.headers.get('X-Tube-Title') || '') || titulo; } catch (_) {}
-    var total = +g.headers.get('content-length') || 0;
-    var blob = await leer(g, total, function (n, tot) { estado(t('Recibiendo… ', 'Receiving… ') + mb(n) + (tot ? ' / ' + mb(tot) : '')); barra(tot ? n / tot * 100 : null); });
-    return {blob: blob, titulo: titulo, motor: 'yt-dlp', via: ep.kind};
+    var module = await import('/assets/import-failover.mjs?v=import-ha-20261018-16');
+    var result = await module.downloadWithFailover({url: url, format: 'video', maxBytes: MAX_BYTES,
+      onProgress: function (state) {
+        estado(state.phase === 'switching' ? t('Continuando la importación automáticamente…', 'Continuing the import automatically…')
+          : t('Importando contenido… ', 'Importing media… ') + (state.bytes ? mb(state.bytes) : ''));
+        barra(state.total ? state.bytes / state.total * 100 : null);
+      }});
+    return {blob: result.blob, titulo: result.title, motor: 'yt-dlp', via: result.kind};
   }
   async function directo(url) {
     estado(t('Descargando el archivo…', 'Downloading the file…')); barra(null);

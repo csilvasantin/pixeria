@@ -3955,50 +3955,13 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     // el timeout del Funnel con descargas largas. Devuelve {blob, title}, o el
     // string 'fallback' si el server aún no tiene los endpoints nuevos (404).
     async function importViaJob(ep, url, fmt, progress, stat) {
-      const startR = await fetch(ep.jobBase + '/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, format: fmt }),
-      });
-      // 404 (o cuerpo no-JSON) ⇒ el server no tiene los endpoints nuevos ⇒ al
-      // POST único de siempre. Pero un 400 con JSON es el server DICIENDO que no
-      // (host no permitido, post de Telegram sin media): repetirlo por la otra
-      // ruta solo hace esperar más para el mismo «no». Se corta aquí.
-      if (!startR.ok) {
-        if (startR.status === 404) return 'fallback';
-        const msg = await errorLegible(startR.clone ? startR.clone() : startR);
-        if (/^HTTP \d+: <|^HTTP \d+: $/.test(msg)) return 'fallback';   // HTML estático
-        throw new Error(msg);
-      }
-      let jobId;
-      try { jobId = (await startR.json()).jobId; } catch { return 'fallback'; }
-      if (!jobId) return 'fallback';
-      const tPoll = Date.now();
-      const MAX_MS = 6 * 60 * 1000;
-      let sourceDescription = '';
-      while (true) {
-        await new Promise(r => setTimeout(r, 1500));
-        if (Date.now() - tPoll > MAX_MS) throw new Error('timeout esperando al proxy (>6 min)');
-        let st;
-        try { st = await (await fetch(`${ep.jobBase}/status?id=${encodeURIComponent(jobId)}`, { cache: 'no-store' })).json(); }
-        catch { continue; } // un poll fallido no aborta; reintenta en el siguiente ciclo
-        if (st.state === 'running') {
-          const mb = (st.size || 0) / 1024 / 1024;
-          if (stat) stat.textContent = `// ${ep.kind} · descargando ${fmt}… ${mb.toFixed(1)} MB`;
-          progress?.update(st.size || 0, 0, (Date.now() - tPoll) / 1000);
-          continue;
-        }
-        if (st.state === 'done') { sourceDescription = typeof st.description === 'string' ? st.description.slice(0,4000) : ''; break; }
-        throw new Error(st.error || st.state || 'estado desconocido del proxy');
-      }
-      const getR = await fetch(`${ep.jobBase}/get?id=${encodeURIComponent(jobId)}`, { cache: 'no-store' });
-      if (!getR.ok) {
-        let err = ''; try { err = JSON.stringify(await getR.json()); } catch { err = await getR.text(); }
-        throw new Error(`get ${getR.status}: ${err.slice(0, 200)}`);
-      }
-      let title = ''; try { title = decodeURIComponent(getR.headers.get('X-Tube-Title') || ''); } catch {}
-      const { blob } = await fetchWithProgress(getR, (received, total, sec) => progress?.update(received, total, sec));
-      return { blob, title, description:sourceDescription };
+      const {downloadWithFailover,IMPORT_NODES}=await import('/assets/import-failover.mjs?v=import-ha-20261018-16');
+      const selected=IMPORT_NODES.find(n=>n.base===ep.jobBase);
+      const nodes=selected?[selected,...IMPORT_NODES.filter(n=>n.id!==selected.id)]:IMPORT_NODES;
+      return downloadWithFailover({url,format:fmt,nodes,maxBytes:300*1024*1024,onProgress:state=>{
+        if(stat)stat.textContent=state.phase==='switching'?(ETIQ_EN?'// Continuing the import automatically…':'// Continuando la importación automáticamente…'):(ETIQ_EN?'// Importing media…':'// Importando contenido…')+(state.bytes?' '+(state.bytes/1048576).toFixed(1)+' MB':'');
+        progress?.update(state.bytes||0,state.total||0,0);
+      }});
     }
 
     // Flujo de un solo POST (suno-local, o admira-tube antiguo como fallback).
@@ -4039,12 +4002,12 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         const progress = importProgressStart(fmt);
         const t0 = Date.now();
         try {
-          // admira-tube: flujo asíncrono (start→status→get) que evita el timeout
-          // del Funnel. Si el server aún no tiene esos endpoints (404), cae al
-          // POST único de siempre. suno-local usa siempre el POST único.
+          // El relevo solo repite descargas. La subida y publicación quedan fuera.
+          // suno-local conserva el POST único de su API local.
           let out = ep.jobBase ? await importViaJob(ep, url, fmt, progress, stat) : 'fallback';
           if (out === 'fallback') out = await importOneShot(ep, url, fmt, progress);
           const blob = out.blob;
+          const actualKind = out.kind || ep.kind;
           const importedTitle = out.title || '';
           const sec = ((Date.now() - t0) / 1000).toFixed(1);
           const sizeMB = (blob.size / 1024 / 1024).toFixed(2);
@@ -4073,12 +4036,12 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
             player.hidden = false;
             player.innerHTML = `
               <div class="player-card">
-                <div class="player-head">📥 IMPORTADO · ${kind.toUpperCase()} · ${sizeMB} MB · ${sec}s · ${ep.kind}</div>
+                <div class="player-head">📥 IMPORTADO · ${kind.toUpperCase()} · ${sizeMB} MB · ${sec}s · ${actualKind}</div>
                 <${elTag} controls autoplay src="${blobUrl}" style="width:100%;${kind === 'video' ? 'max-height:55vh;' : ''}"></${elTag}>
                 <pre class="player-body">${url.replace(/</g, '&lt;')}</pre>
                 ${downloadBtnHTML(importMeta, 'Descargar')}
                 ${publishBtnHTML(importMeta)}
-                <small class="player-foot">// vía yt-dlp (${ep.kind}) · publicando en Stock automáticamente...</small>
+                <small class="player-foot">// vía yt-dlp (${actualKind}) · publicando en Stock automáticamente...</small>
               </div>`;
           }
           stat.textContent = `${prefijo}✓ Importado (${sizeMB} MB en ${sec}s) · subiendo a Stock…`;
@@ -4098,17 +4061,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         } catch (e) {
           const msg = String(e && e.message || e);
           progress?.error(msg.slice(0, 80));
-          const isNetwork = /Failed to fetch|NetworkError|ERR_|load failed/i.test(msg);
-          if (isNetwork && fmt === 'video') {
-            stat.textContent = `${prefijo}ERROR: ${msg}\n`
-              + `// ${ep.kind} respondió al health-check → el proxy NO está caído.\n`
-              + `// Probable timeout del Funnel con la descarga de vídeo.\n`
-              + `// Reintenta (↻) o importa como AUDIO.`;
-          } else if (isNetwork) {
-            stat.textContent = `${prefijo}ERROR: ${msg}\n// La conexión con ${ep.kind} se cortó. Reintenta (↻).`;
-          } else {
-            stat.textContent = `${prefijo}${msg}`;
-          }
+          stat.textContent = `${prefijo}No se ha podido completar la importación. La URL queda preparada para reintentar.\n// ${msg}`;
           return { ok: false, error: msg };
         }
       }
@@ -4136,7 +4089,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         // Pre-chequeo: ¿hay backend vivo? Evita esperar a un timeout largo.
         const ep = await pickHealthyEndpoint(stat);
         if (!ep) {
-          stat.textContent = `// El importador (Mac Mini) está dormido o apagado ahora mismo.\n`
+          stat.textContent = `// Los importadores no responden ahora mismo.\n`
             + `// PLAN B: pulsa «📂 Archivo local → Stock» para subir un archivo\n`
             + `//   desde este dispositivo directo al Stock (funciona sin el Mac).\n`
             + `// O reintenta (↻) en unos segundos por si el Mac despierta.`;

@@ -21,3 +21,12 @@ Las rutas `/creativo-import/health|start|status|get` requieren sesión y validan
 ## Importador principal
 
 Mac Studio se comprueba primero; Mac Mini y MacBook Pro 16 quedan de respaldo. Los identificadores del relay se mantienen: Mini=0, portátil=1, Studio=2. Un trabajo ya creado conserva su nodo al recargar y solo consulta su estado; nunca se reinicia en otro equipo. El cambio no regenera ni duplica recursos de Stock. La disponibilidad depende de que alguno de los equipos importadores esté encendido.
+
+
+## Relevo durante una descarga
+
+Stock, Adaptador y Creativo comparten `assets/import-failover.mjs`. Se cambia de equipo si falla la salud inicial, se pierde el inicio, desaparece el trabajo, fallan tres consultas seguidas o se corta/queda detenido el fichero. Un fallo aislado de consulta no vuelve a descargar. El respaldo reinicia la descarga completa; no reconstruye los bytes parciales del otro equipo. Los archivos parciales nunca pasan a Stock.
+
+Los equipos solo descargan: la subida y la publicación se ejecutan una vez, después de recibir el archivo completo. Los errores de autenticación, URL no válida, almacenamiento o tamaño no generan reintentos entre equipos. En Creativo se guarda el nodo y el trabajo antes del sondeo; la recarga recupera ese trabajo y los bloqueos del navegador serializan pestañas. Una publicación incierta no se vuelve a enviar automáticamente. Los encargos antiguos marcados como inciertos mantienen esa protección.
+
+La comprobación de salud tiene un límite de 4,5 s; las peticiones de control, 12 s; un fichero sin recibir datos, 15 s. Cada nodo se intenta una vez por recorrido. Si todos fallan, la URL queda guardada para reintentar. La redundancia de equipos no cubre una pérdida de su conexión compartida a Internet.
