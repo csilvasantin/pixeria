@@ -1,4 +1,4 @@
-import {voicePayload} from './creativo-core.mjs?v=creativo-20261018-4';
+import {voicePayload} from './creativo-core.mjs?v=creativo-20261018-13';
 export const MUSIC_ORIGIN='/creativo-music';
 // GET-only preflight. Missing sessions/providers do not leave a job marked submitted.
 export async function mediaPreflight(job,fetcher=fetch){
@@ -20,7 +20,7 @@ export async function submitMedia(job,token,fetcher=fetch){
  if(!r.ok)throw Error('creative-provider-'+r.status);
  return counselorResult(await r.json());
 }
-export function counselorPayload(job){return {request_id:job.id,lyrics:job.brief,voice:job.voice,languages:job.languages,style:job.style,title:job.name,...(job.pendingId?{previous_pending_id:job.pendingId}:{}),...(job.ids?.length?{previous_clip_ids:job.ids}:{})};}
+export function counselorPayload(job){return {request_id:job.id,lyrics:job.brief,voice:job.voice,languages:job.languages,style:job.style,title:job.name,...(job.durationSeconds?{duration_seconds:job.durationSeconds}:{}),...(job.pendingId?{previous_pending_id:job.pendingId}:{}),...(job.ids?.length?{previous_clip_ids:job.ids}:{})};}
 function counselorResult(data){if(!data.request_id||!data.phase)throw Error('creative-music-no-reference');return {musicProgress:data,clips:data.clips||[],state:data.state};}
 export async function pollMusic(job,fetcher=fetch){
  const r=await fetcher(MUSIC_ORIGIN+'/status?request_id='+encodeURIComponent(job.id),{cache:'no-store'});

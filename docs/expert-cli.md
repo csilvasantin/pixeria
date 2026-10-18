@@ -145,3 +145,8 @@ En el Creativo, pulsar en el campo vacío convierte la sugerencia en texto edita
 `/importar URL` abre El Creativo e importa el contenido al Stock de Studio. En su compositor también se admite `importar URL` o pegar una única URL; Enter y ↑ ejecutan la importación. `/admirito creativo importar URL` utiliza la misma acción. `/importar` muestra la ayuda sin iniciar descargas. Se conservan los encargos y resultados anteriores. Detalles y límites: `docs/creativo-import.md`.
 
 El Creativo también admite `/adaptar imagen horizontal|vertical`, `/adaptar video horizontal|vertical` y `/recrear imagen|video horizontal|vertical`. Abren su propio panel de revisión, con Archivo, originales guardados y Stock en Detalle. Enter/↑ prepara; Adaptar procesa localmente; Recrear con IA consume crédito tras mostrar el motor. [Contrato y límites](creativo-adaptar-recrear.md).
+
+
+### Ayuda completa y combos
+
+`/admirito creativo help` lista locución, música, importación, las ocho operaciones de adaptar/recrear y los dos combos. Las sugerencias se aceptan con Enter o ↑. `/crear combo imagen locucion 10 segundos` y `/crear combo imagen musica 10 segundos` utilizan el despacho `/crear` existente y abren Detalle dentro del Creativo; no generan al navegar. Imagen y texto/letra se introducen por separado, con voz, idiomas, estilo y formato. Guardado independiente de componentes; música por consejeros/Suno. Guía y contrato MCP: [Combos y MCP](creativo-combos-mcp.md), `/mcp/creativo.json`. Las herramientas `creativo_help` y `creativo_combo_preparar` son de consulta/preparación; Crear combo confirma la generación en la sesión web.

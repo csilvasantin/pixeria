@@ -1,5 +1,5 @@
 import {exportJob,defaults,rect} from '../adaptaciones/adapter-core.mjs';
-import {GOOD_METHOD} from './creativo-good.mjs?v=creativo-20261018-12';
+import {GOOD_METHOD} from './creativo-good.mjs?v=creativo-20261018-13';
 export const TARGETS={horizontal:{width:1920,height:1080,ratio:'16:9'},vertical:{width:1080,height:1920,ratio:'9:16'}};
 export function parseTransformCommand(text){
  const value=String(text||'').trim();if(!/^\/?(?:adaptar|recrear)\b/i.test(value))return null;

@@ -1,4 +1,4 @@
-import {parseImportCommand,importIdentity,importMessage} from './creativo-import-core.mjs?v=creativo-20261018-12';
+import {parseImportCommand,importIdentity,importMessage} from './creativo-import-core.mjs?v=creativo-20261018-13';
 import {stockSource} from '../adaptaciones/stock-publish.mjs';
 import {localMedia,MAX_LOCAL_BYTES} from './stock-local-files.mjs';
 import {readMediaDimensions} from './content-orientation.mjs';

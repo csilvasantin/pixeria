@@ -268,6 +268,28 @@
         "es": "Plan acotado de cambios; sin aplicar ni generar.",
         "en": "Bounded edit plan; never applies or generates."
       }
+    },
+    {
+      "name": "creativo_help",
+      "category": "library",
+      "mode": "read",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Todos los comandos del Creativo y sus límites; no genera.",
+        "en": "All Creative commands and limits; no generation."
+      }
+    },
+    {
+      "name": "creativo_combo_preparar",
+      "category": "plans",
+      "mode": "plan",
+      "auth": "public",
+      "cost": "none",
+      "description": {
+        "es": "Prepara imagen + locución o música de 10 s para revisar y confirmar en Creativo; no genera ni publica.",
+        "en": "Prepare an image + voice/music 10-second request for review and confirmation in Creative; no generation or publication."
+      }
     }
   ],
   "uiLocale": {

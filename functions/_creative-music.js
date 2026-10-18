@@ -8,7 +8,8 @@ const hash=async text=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA
 export function validateSong(data){
  if(!idOk(data?.request_id)||typeof data.lyrics!=='string'||!data.lyrics.trim()||data.lyrics.length>5000||!['chico','chica'].includes(data.voice)||!Array.isArray(data.languages)||!data.languages.length||data.languages.length>2||data.languages.some(x=>!['ESP','ENG'].includes(x))||typeof data.style!=='string'||!data.style.trim()||data.style.length>120||typeof data.title!=='string'||data.title.length>200)fail('invalid-song');
  if(data.previous_pending_id!==undefined&&!idOk(data.previous_pending_id))fail('invalid-reference');if(data.previous_clip_ids!==undefined&&(!Array.isArray(data.previous_clip_ids)||data.previous_clip_ids.length>4||data.previous_clip_ids.some(x=>!idOk(x))))fail('invalid-reference');
- return {request_id:data.request_id,lyrics:data.lyrics,voice:data.voice,languages:[...new Set(data.languages)],style:data.style.trim(),title:data.title,...(data.previous_pending_id?{previous_pending_id:data.previous_pending_id}:{}),...(data.previous_clip_ids?.length?{previous_clip_ids:data.previous_clip_ids}:{})};
+ if(data.duration_seconds!==undefined&&data.duration_seconds!==10)fail('invalid-duration');
+ return {request_id:data.request_id,...(data.duration_seconds?{duration_seconds:data.duration_seconds}:{}),lyrics:data.lyrics,voice:data.voice,languages:[...new Set(data.languages)],style:data.style.trim(),title:data.title,...(data.previous_pending_id?{previous_pending_id:data.previous_pending_id}:{}),...(data.previous_clip_ids?.length?{previous_clip_ids:data.previous_clip_ids}:{})};
 }
 export function validatePart(data){
  if(!idOk(data?.request_id)||!idOk(data.claim_token)||!Number.isSafeInteger(data.revision)||data.revision<1||!phases.includes(data.phase)||typeof data.message!=='string'||!data.message.trim()||data.message.length>600)fail('invalid-progress');

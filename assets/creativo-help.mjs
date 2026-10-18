@@ -1,0 +1,16 @@
+export const CREATIVE_COMMANDS=Object.freeze([
+ {command:'/admirito creativo help',es:'Lista los comandos del Creativo. No genera contenido.',en:'List Creative commands. No generation.'},
+ {command:'/admirito creativo',es:'Abre El Creativo; Detalle contiene los atributos y los encargos guardados.',en:'Open Creative; Detail holds attributes and saved requests.'},
+ {command:'crear locución "Texto literal" chica esp',es:'Locución: chico/chica, esp/eng. ElevenLabs; consume crédito al pulsar Crear.',en:'Voice-over: chico/chica, esp/eng. ElevenLabs; uses credit on Create.'},
+ {command:'crear música "Letra literal" chico esp funk',es:'Canción: chico/chica, esp/eng o ambos y estilo. Consejeros → Suno; espera el audio real.',en:'Song: voice, language(s), style. Counselors → Suno; waits for actual audio.'},
+ {command:'/crear combo imagen locucion 10 segundos',es:'Imagen + texto a locutar. Atributos en Detalle; MP4 de 10 s. La locución debe caber completa.',en:'Image description + spoken text in Detail; 10-second MP4. Voice-over must fit in full.'},
+ {command:'/crear combo imagen musica 10 segundos',es:'Imagen + letra. Consejeros/Suno; selección de un fragmento de 10 s si la canción es más larga.',en:'Image description + lyrics. Counselors/Suno; choose a 10-second excerpt if the song is longer.'},
+ {command:'/importar URL',es:'Importa una URL pública al Stock. Pegar una URL en el compositor también importa.',en:'Import a public URL to Stock. Pasting a URL also imports.'},
+ ...['imagen','video'].flatMap(type=>['horizontal','vertical'].flatMap(format=>[
+  {command:`/adaptar ${type} ${format}`,es:'Fondo difuminado y oscuro; original completo. Vídeo conserva su audio. Sin IA.',en:'Dark blurred padding; full original, video audio retained. No AI.'},
+  {command:`/recrear ${type} ${format}`,es:type==='imagen'?'Gemini amplía el entorno de la imagen. Generación de pago; revisar antes de Stock.':'GOOD local experimental: 3 s a 480p, márgenes con movimiento y audio original; puede generar artefactos.',en:type==='imagen'?'Gemini extends image surroundings. Paid generation; review before Stock.':'Experimental local GOOD: 3 s at 480p, moving margins and original audio; may contain artifacts.'}
+ ])),
+ {command:'/admirito help',es:'Lista Creativo, Arquitecto, Bugito y Supervisor.',en:'List Creative, Architect, Bugito and Supervisor.'}
+]);
+export const isCreativeHelp=text=>/^\/?(?:(?:admirito\s+)?(?:creativo|creative)\s+)?(?:help|ayuda|\?)\s*$/i.test(String(text||'').trim());
+export function creativeHelp(language='es'){const en=language==='en';return {schema:'admira.creativo.help.v1',language:en?'en':'es',commands:CREATIVE_COMMANDS.map(x=>({command:x.command,description:x[en?'en':'es']})),comboExample:en?'/crear combo imagen locucion 10 segundos imagen "Warm coffee photograph" texto "Welcome. Your coffee is ready." chica eng':'/crear combo imagen locucion 10 segundos imagen "Foto cálida de un café" texto "Bienvenido. Tu café está listo." chica esp',webHelpURL:'https://admira.studio/creativo/?help=1&lang='+ (en?'en':'es'),musicVia:'consejeros-suno',generationOnHelp:false,stockPublication:'explicit-review',mcp:{endpoint:'https://mcp-pixeria.admira.store/mcp',tools:['creativo_help','creativo_combo_preparar'],generation:'Confirm in Creative; MCP preparation does not generate or publish.'}};}
