@@ -8,7 +8,7 @@ import {stockSource} from '../adaptaciones/stock-publish.mjs';
 export async function publishTransform(job,repository,{fetcher=fetch,source=stockSource}={}){
  if(job.state!=='complete'||job.stockId)return job;
  const claimed=await repository.move(job.id,['complete'],{state:'publishing'});if(!claimed)return repository.get(job.id);
- try{const blob=await repository.media(job.id),original=await repository.get(job.sourceId),target=transformGeometry(original,job.orientation),motor=job.action==='recrear'?'gemini-2.5-flash-image':'adaptador';
+ try{const blob=await repository.media(job.id),original=await repository.get(job.sourceId),target=transformGeometry(original,job.orientation),motor='adaptador';
  const upload=await source(blob,{fetch:fetcher,type:job.type,mime:blob.type,motor});if(!upload.ok)throw Error('transform-unknown');
  const payload={...upload.fields,type:job.type,mime:blob.type,motor,externalRef:job.id,title:original.name+' · '+job.action+' · '+job.orientation,prompt:job.action+' · '+job.orientation+' · origen '+original.name,tags:[...new Set([job.action,target.ratio,...(original.tags||[])])],dimensions:{width:target.width,height:target.height},validacion:{ok:true,ancho:target.width,alto:target.height,duracion:original.duration||null,por:'creativo'},costEst:job.action==='recrear'?'Gemini 2.5 Flash Image · 1 imagen':'Sin IA'};
  const r=await fetcher('/stock-publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),data=await r.json();if(!r.ok||!data.ok||!data.id)throw Error('transform-unknown');return await repository.move(job.id,['publishing'],{state:'complete',stockId:data.id});
