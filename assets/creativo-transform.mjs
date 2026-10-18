@@ -1,10 +1,10 @@
-import {createTransformPreview} from './creativo-transform-preview.mjs?v=creativo-20261018-9';
-import {parseTransformCommand,transformGeometry,transformVideoJob,transformMessage} from './creativo-transform-core.mjs?v=creativo-20261018-9';
-import {TransformRepository,runTransform} from './creativo-transform-store.mjs?v=creativo-20261018-9';
-import {ImportRepository,readImportBlob} from './creativo-import.mjs?v=creativo-20261018-9';
+import {createTransformPreview} from './creativo-transform-preview.mjs?v=creativo-20261018-10';
+import {parseTransformCommand,transformGeometry,transformVideoJob,transformMessage} from './creativo-transform-core.mjs?v=creativo-20261018-10';
+import {TransformRepository,runTransform} from './creativo-transform-store.mjs?v=creativo-20261018-10';
+import {ImportRepository,readImportBlob} from './creativo-import.mjs?v=creativo-20261018-10';
 import {localMedia} from './stock-local-files.mjs';
-import {publicImportURL} from './creativo-import-core.mjs?v=creativo-20261018-9';
-import {loadTransformMedia,renderTransform,transformPreflight} from './creativo-transform-render.mjs?v=creativo-20261018-9';
+import {publicImportURL} from './creativo-import-core.mjs?v=creativo-20261018-10';
+import {loadTransformMedia,renderTransform,transformPreflight} from './creativo-transform-render.mjs?v=creativo-20261018-10';
 import {stockSource} from '../adaptaciones/stock-publish.mjs';
 export async function publishTransform(job,repository,{fetcher=fetch,source=stockSource}={}){
  if(job.state!=='complete'||job.stockId)return job;

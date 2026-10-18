@@ -1,5 +1,5 @@
-import {ImportRepository} from './creativo-import.mjs?v=creativo-20261018-9';
-import {blobDigest,transformIdentity} from './creativo-transform-core.mjs?v=creativo-20261018-9';
+import {ImportRepository} from './creativo-import.mjs?v=creativo-20261018-10';
+import {blobDigest,transformIdentity} from './creativo-transform-core.mjs?v=creativo-20261018-10';
 export class TransformRepository extends ImportRepository{
  static open(factory=globalThis.indexedDB){return new Promise((resolve,reject)=>{const r=factory.open('admira-creativo-transforms',1);r.onupgradeneeded=()=>{r.result.createObjectStore('jobs',{keyPath:'id'});r.result.createObjectStore('media');};r.onerror=()=>reject(r.error);r.onsuccess=()=>resolve(new TransformRepository(r.result));});}
  async saveSource(blob,metadata){const digest=await blobDigest(blob),id='source-'+digest,source={...metadata,digest,id,state:'source',updatedAt:new Date().toISOString()};await this.tx('readwrite',(tx)=>{tx.objectStore('jobs').put(source);tx.objectStore('media').put(blob,id);});return source;}

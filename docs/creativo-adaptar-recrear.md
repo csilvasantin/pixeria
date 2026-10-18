@@ -11,7 +11,7 @@ Comandos del modo Experto y de `/admirito creativo`:
 - `/recrear video horizontal`
 - `/recrear video vertical`
 
-Enter o ↑ prepara la acción; el botón Adaptar o Recrear con IA inicia el trabajo. El panel Detalle permite elegir Archivo, originales guardados en este navegador o Stock. Por defecto se propone el original guardado más reciente o una importación posterior del tipo solicitado. Se muestra siempre su nombre, medidas y destino. Horizontal es 1920 × 1080 (16:9); vertical es 1080 × 1920 (9:16).
+Enter o ↑ prepara la acción; el botón Adaptar o Recrear con IA inicia el trabajo. El panel Detalle permite elegir Archivo, originales guardados en este navegador o Stock. Por defecto se propone el original guardado más reciente o una importación posterior del tipo solicitado. Se muestra siempre su nombre, medidas y destino. Las dos vistas indican su resolucion en pixeles (por ejemplo, Original 1080 x 1920 px y Resultado 1920 x 1080 px), tambien durante la vista previa y tras recuperar el resultado. Horizontal es 1920 × 1080 (16:9); vertical es 1080 × 1920 (9:16).
 
 ## Adaptar
 

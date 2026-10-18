@@ -1,4 +1,4 @@
-import {transformGeometry,transformVideoJob,outpaintRequest} from './creativo-transform-core.mjs?v=creativo-20261018-9';
+import {transformGeometry,transformVideoJob,outpaintRequest} from './creativo-transform-core.mjs?v=creativo-20261018-10';
 import {rect,defaults} from '../adaptaciones/adapter-core.mjs';
 import {aiJob} from '../adaptaciones/ia-core.mjs';
 import {createEngine} from '../adaptaciones/adapter-export.js';
