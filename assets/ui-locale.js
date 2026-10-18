@@ -149,7 +149,7 @@
   "Limpiar Video": "Clear Video",
   "// Rellena los campos y pulsa \"Generar brief\".": "// Fill in the fields and press \"Generate brief\".",
   "📥 IMPORTAR DESDE URL": "📥 IMPORT FROM URL",
-  "yt-dlp en Mac Mini (audio mp3 + video mp4). Hosts permitidos: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn, Telegram (t.me). Se pueden pegar VARIAS URLs a la vez, una por línea.": "yt-dlp on Mac Mini (MP3 audio + MP4 video). Supported hosts: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn, Telegram (t.me). Paste multiple URLs, one per line.",
+  "yt-dlp en Mac Studio / Mac Mini (audio mp3 + video mp4). Hosts permitidos: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn, Telegram (t.me). Se pueden pegar VARIAS URLs a la vez, una por línea.": "yt-dlp on Mac Studio / Mac Mini (MP3 audio + MP4 video). Supported hosts: YouTube, Vimeo, Twitter/X, TikTok, Instagram, LinkedIn, Telegram (t.me). Paste multiple URLs, one per line.",
   "(una o varias, una por línea)": "(one or more, one per line)",
   "Comentarios": "Comments",
   "(opcional · indexable por búsqueda en Stock)": "(optional · searchable in Stock)",

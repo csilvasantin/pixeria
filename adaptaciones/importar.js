@@ -1,7 +1,7 @@
 /* Adaptaciones · paso 1 · caja 2 «Subirlo / Importarlo» (Carlos, 5-oct-2026, 07:59).
  * Pegar una URL (YouTube, Instagram, TikTok, X, Vimeo… o un mp4 directo) e importarla con el
- * MISMO mecanismo que el Stock (app.js · bindImportModal): admira-tube (yt-dlp en el Mac Mini, con
- * el MacBook Pro de respaldo) por start → status → get. Al llegar, el vídeo entra como si se hubiera
+ * MISMO mecanismo que el Stock (app.js · bindImportModal): admira-tube (yt-dlp en el Mac Studio, con
+ * el Mac Mini de respaldo) por start → status → get. Al llegar, el vídeo entra como si se hubiera
  * subido del equipo (#src-file → setSource), pasa solo a «Adaptar» y se guarda en el Stock como las
  * importaciones del Stock (POST /stock-publish → /stock/publish), con la etiqueta del cliente activo.
  * Un mp4 directo se descarga desde el navegador (si su servidor lo permite por CORS).
@@ -15,8 +15,8 @@
   var t = function (es, en) { return EN ? en : es; };
   var $ = function (s) { return document.querySelector(s); };
   var TUBES = [
-    {kind: 'admira-tube', base: 'https://macmini.tail48b61c.ts.net/admira/tube'},
-    {kind: 'admira-tube-backup', base: 'https://macbook-pro-16.tail48b61c.ts.net/admira/tube'}
+    {kind: 'admira-tube-studio', base: 'https://macstudio.tail48b61c.ts.net/admira/tube'},
+    {kind: 'admira-tube', base: 'https://macmini.tail48b61c.ts.net/admira/tube'}
   ];
   var MAX_BYTES = 100 * 1024 * 1024, MAX_MS = 6 * 60 * 1000;
   var CLIENTE_STOCK = '/adaptaciones/stock-publish.mjs'; // el mismo módulo que importa adaptaciones.js
@@ -71,7 +71,7 @@
   // Mismo flujo que el Stock: start → status (cada 1,5 s) → get.
   async function porTube(url) {
     var ep = await tubeSano();
-    if (!ep) throw new Error(t('El importador (yt-dlp en el Mac Mini y su respaldo) no responde ahora mismo. Reintenta en unos segundos o sube el vídeo desde tu equipo.', 'The importer (yt-dlp on the Mac Mini and its backup) is not answering right now. Retry in a few seconds or upload the video from your computer.'));
+    if (!ep) throw new Error(t('El importador (yt-dlp en el Mac Studio / Mac Mini) no responde ahora mismo. Reintenta en unos segundos o sube el vídeo desde tu equipo.', 'The importer (yt-dlp on the Mac Studio / Mac Mini) is not answering right now. Retry in a few seconds or upload the video from your computer.'));
     var r = await fetch(ep.base + '/start', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({url: url, format: 'video'})});
     if (!r.ok) throw new Error(await errorLegible(r));
     var id = (await r.json()).jobId; if (!id) throw new Error(t('El importador no ha devuelto trabajo.', 'The importer returned no job.'));

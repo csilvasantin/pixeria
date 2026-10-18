@@ -3656,6 +3656,16 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       healthUrl: 'http://127.0.0.1:3777/healthz',
       bodyFor: (u, fmt) => ({ url: u, format: fmt }),
     };
+    // Orden de preferencia (Carlos, 18-oct-2026): el Mac Studio es el importador por defecto;
+    // el Mac Mini queda de respaldo (sobrecargado, a veces available:false). pickHealthyEndpoint()
+    // elige el primero cuyo /health responda sano. El MacBook Pro 16 ya no tiene servicio.
+    const admiraTubeStudio = {
+      kind: 'admira-tube-studio',
+      url: 'https://macstudio.tail48b61c.ts.net/admira/tube/download',
+      healthUrl: 'https://macstudio.tail48b61c.ts.net/admira/tube/health',
+      jobBase: 'https://macstudio.tail48b61c.ts.net/admira/tube',
+      bodyFor: (u, fmt) => ({ url: u, format: fmt }),
+    };
     const admiraTube = {
       kind: 'admira-tube',
       url: 'https://macmini.tail48b61c.ts.net/admira/tube/download',
@@ -3663,16 +3673,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
       jobBase: 'https://macmini.tail48b61c.ts.net/admira/tube',
       bodyFor: (u, fmt) => ({ url: u, format: fmt }),
     };
-    // Backup/failover: si el Mac Mini no responde al health-check, pickHealthyEndpoint()
-    // cae automáticamente a este nodo (MacBook Pro 16) expuesto por su propio Funnel.
-    const admiraTubeBackup = {
-      kind: 'admira-tube-backup',
-      url: 'https://macbook-pro-16.tail48b61c.ts.net/admira/tube/download',
-      healthUrl: 'https://macbook-pro-16.tail48b61c.ts.net/admira/tube/health',
-      jobBase: 'https://macbook-pro-16.tail48b61c.ts.net/admira/tube',
-      bodyFor: (u, fmt) => ({ url: u, format: fmt }),
-    };
-    return isLocalOrigin ? [sunoLocal, admiraTube, admiraTubeBackup] : [admiraTube, admiraTubeBackup];
+    return isLocalOrigin ? [sunoLocal, admiraTubeStudio, admiraTube] : [admiraTubeStudio, admiraTube];
   }
 
   function bindImportModal() {
@@ -3808,7 +3809,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
 
     // Plan B (fallback degradado): subir un archivo local directo al Stock.
     // El Stock (worker pixer-eleven en Cloudflare) está siempre encendido, así que
-    // esto funciona aunque el Mac Mini (importador yt-dlp) esté dormido o apagado.
+    // esto funciona aunque el importador yt-dlp (Mac Studio / Mac Mini) esté dormido o apagado.
     const localInput = document.createElement('input');
     localInput.type = 'file';
     localInput.accept = 'audio/*,video/*,image/*';
@@ -3821,7 +3822,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
     localBtn.className = 'btn';
     localBtn.id = 'importLocalBtn';
     localBtn.textContent = '📂 Archivos locales → Stock';
-    localBtn.title = 'Sube uno o varios archivos de este dispositivo directo al Stock (no depende del Mac Mini)';
+    localBtn.title = 'Sube uno o varios archivos de este dispositivo directo al Stock (no depende del importador)';
     document.querySelector('#importModal .keys-actions')?.appendChild(localBtn);
     localBtn.addEventListener('click', () => localInput.click());
     localInput.addEventListener('change', () => {
@@ -4128,7 +4129,7 @@ title: ${(first.title || titleHint || '').replace(/</g,'&lt;')}</pre>
         // Pre-chequeo: ¿hay backend vivo? Evita esperar a un timeout largo.
         const ep = await pickHealthyEndpoint(stat);
         if (!ep) {
-          stat.textContent = `// El importador (Mac Mini) está dormido o apagado ahora mismo.\n`
+          stat.textContent = `// El importador (Mac Studio / Mac Mini) está dormido o apagado ahora mismo.\n`
             + `// PLAN B: pulsa «📂 Archivo local → Stock» para subir un archivo\n`
             + `//   desde este dispositivo directo al Stock (funciona sin el Mac).\n`
             + `// O reintenta (↻) en unos segundos por si el Mac despierta.`;
