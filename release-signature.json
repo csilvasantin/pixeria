@@ -1,14 +1,14 @@
 {
-  "version": "v.18.10.2026.r1.20:50",
-  "deployer": "WozniakMacStudio",
-  "agent": "WozniakMacStudio",
+  "version": "v.22.10.2026.r1.10:32",
+  "deployer": "LucasGrokBot",
+  "agent": "LucasGrokBot",
   "machine": "MacStudio",
-  "signature": "WozniakMacStudio · MacStudio",
-  "evidence": "Tests: 466/478; 3 fallos preexistentes en main (poster img, fallback 22 tools, tester formato/bitrate). Importador de URL: Mac Studio por defecto (health OK, CORS *), Mac Mini de respaldo.",
-  "author": "WozniakMacStudio",
+  "signature": "LucasGrokBot · MacStudio",
+  "evidence": "#114: el filtro «Cápsulas» del Stock incluye las cápsulas en vídeo (type video + tag capsula). Tests: stock-capsulas-video, xpace-capsulas, capsula-publicar, stock-deep-link (9/9). Verificado en local contra el índice público.",
+  "author": "LucasGrokBot",
   "dirty": false,
   "rollback": {
-    "git": "fa995bc0d115d37797d4495768c82a69cf7d5231",
-    "version": "v.11.10.2026.r3.12:52"
+    "git": "015025571c16ced254e3871710db5aafabfee0f9",
+    "version": "v.18.10.2026.r1.20:50"
   }
 }
