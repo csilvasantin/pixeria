@@ -81,7 +81,7 @@ for (const [path, es] of [['stock.html', true], ['en/stock.html', false]]) {
     const share = html.indexOf('class="stock-card-btn" data-act="compartir"');
     const del = html.indexOf('class="stock-card-btn danger" data-act="del"');
     assert.ok(share > 0 && share < del, 'botón de tarjeta antes de la papelera');
-    assert.match(html, new RegExp(`data-act="compartir" title="${es ? 'Compartir' : 'Share'}"`));
+    assert.match(html, new RegExp(`class="stock-card-btn" data-act="compartir" title="${es ? 'Subir a YouTube' : 'Upload to YouTube'}"`));
     assert.match(html, /class="btn" data-act="compartir"/);
     assert.match(html, /btn\.dataset\.act === 'compartir'\) \{ e\.preventDefault\(\); window\.YTCompartir\?\.abrir\(item\)/);
     assert.match(html, /stock-lightbox-actions \[data-act="compartir"\]/);
