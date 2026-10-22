@@ -1386,7 +1386,10 @@
       // delante todo el vídeo del catálogo. Los distingue su categoría o su
       // etiqueta, que es lo que pone quien los genera.
       if (t === 'tiktok') return it.category === 'tiktoks' || tagsLc.includes('tiktok');
-      if (t === 'capsula') return isCapsule(it);
+      // «Cápsulas» = cápsulas de texto (type capsula/guion) Y cápsulas en vídeo
+      // (type video con etiqueta 'capsula', p. ej. las «¿Sabías que?»). Las de
+      // vídeo siguen pintándose como tarjeta de vídeo reproducible.
+      if (t === 'capsula') return isCapsule(it) || (it.type === 'video' && tagsLc.includes('capsula'));
       if (t === 'furni') return isFurni(it);
       if (t === 'video') return it.type === 'video' && !isAnim;
       if (t === 'image') return it.type === 'image' && !isFurni(it) && !isTwinNpc && !isDigitalTwin;
