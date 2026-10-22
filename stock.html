@@ -1291,7 +1291,7 @@
               <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Abrir asset en pestaña nueva" aria-label="Abrir asset en pestaña nueva" data-act="open"><span aria-hidden="true">↗</span></a>
               <button type="button" class="stock-card-btn" data-act="descargar" title="Descargar el fichero a este ordenador" aria-label="Descargar a este ordenador"><span aria-hidden="true">⬇</span></button>
               <button type="button" class="stock-card-btn" data-act="max" title="Maximizar" aria-label="Maximizar asset"><span aria-hidden="true">⛶</span></button>
-              ${typeLabel === 'video' ? `<button type="button" class="stock-card-btn" data-act="compartir" title="Compartir" aria-label="Compartir (YouTube o enlace)"><span aria-hidden="true">📤</span></button>` : ''}
+              ${typeLabel === 'video' ? `<button type="button" class="stock-card-btn" data-act="compartir" title="Subir a YouTube" aria-label="Subir a YouTube"><span aria-hidden="true">▶&#xFE0E;</span></button>` : ''}
               <button type="button" class="stock-card-btn danger" data-act="del" title="Eliminar" aria-label="Eliminar asset"><span aria-hidden="true">🗑</span></button>
             </div>
             ${titleInline}
@@ -1380,6 +1380,9 @@
         || it.category === 'animaciones'
         || String(it.motor || '').toLowerCase().startsWith('ainimation');
       const tagsLc = Array.isArray(it.tags) ? it.tags.map(x => String(x).toLowerCase()) : [];
+      // Cápsula en vídeo («¿Sabías que?», plantilla v5): vídeo con etiqueta capsula o sabiasque.
+      // Solo sale en «Cápsulas»; «Vídeo» la excluye.
+      const isVideoCapsule = it.type === 'video' && tagsLc.some(x => /^#?(capsula|sabias-?que)$/.test(x.trim()));
       // Gemelos del Anonimizador: NPC pixel-art (twin-npc) y persona sintética (digital-twin).
       const isTwinNpc = it.type === 'twin-npc' || tagsLc.includes('twin-npc');
       const isDigitalTwin = it.type === 'digital-twin' || tagsLc.includes('digital-twin');
@@ -1393,9 +1396,9 @@
       // «Cápsulas» = cápsulas de texto (type capsula/guion) Y cápsulas en vídeo
       // (type video con etiqueta 'capsula', p. ej. las «¿Sabías que?»). Las de
       // vídeo siguen pintándose como tarjeta de vídeo reproducible.
-      if (t === 'capsula') return isCapsule(it) || (it.type === 'video' && tagsLc.includes('capsula'));
+      if (t === 'capsula') return isCapsule(it) || isVideoCapsule;
       if (t === 'furni') return isFurni(it);
-      if (t === 'video') return it.type === 'video' && !isAnim;
+      if (t === 'video') return it.type === 'video' && !isAnim && !isVideoCapsule;
       if (t === 'image') return it.type === 'image' && !isFurni(it) && !isTwinNpc && !isDigitalTwin;
       // «Megafonía» (slug interno estable: locucion) = solo type locucion (las que creamos en la página Audio).
       // No se fusiona con el viejo bucket 'audio' porque ahí cayó también música
