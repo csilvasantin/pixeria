@@ -96,3 +96,17 @@ test('modal en inglés cuando <html lang="en">', async () => {
     assert.equal(window.YTCompartir.T.head, head);
   }
 });
+
+for (const path of ['stock.html', 'en/stock.html']) {
+  test(`${path}: la tarjeta oculta 💬 en assets #sabiasque y lo mantiene en el resto`, () => {
+    const html = readFileSync(new URL('../' + path, import.meta.url), 'utf8');
+    const m = html.match(/const esSabiasQue = (.+);\n\s*const commentBlock = commentRaw && !esSabiasQue\n\s*\? (`<p class="stock-comment"[^\n]+`)\n\s*: '';/);
+    assert.ok(m, 'commentBlock de tarjeta condicionado a esSabiasQue');
+    const render = new Function('it', 'commentRaw', 'commentSafe', 'escAttr', `const esSabiasQue = ${m[1]}; return commentRaw && !esSabiasQue ? ${m[2]} : '';`);
+    const r = tags => render({tags}, 'Hola', 'Hola', x => x);
+    for (const t of [['sabiasque'], ['SabiasQue'], ['sabias-que'], ['x', 'SABIAS-QUE']]) assert.equal(r(t), '', t.join());
+    assert.match(r(['capsula']), /💬 Hola/);
+    assert.match(r(undefined), /💬 Hola/);
+    assert.match(r(['sabiasquex']), /💬 Hola/);
+  });
+}
