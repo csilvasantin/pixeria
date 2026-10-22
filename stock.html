@@ -349,6 +349,7 @@
   </style>
   <script defer src="/assets/site-nav.js?v=22.10.2026.r1.1032"></script>
   <script defer src="/assets/descarga-local.js?v=22.10.2026.r1.1032"></script>
+  <script defer src="/assets/youtube-compartir.js?v=22.10.2026.r1.1032"></script>
   <link rel="stylesheet" href="assets/xpaces/viewer.css?v=22.10.2026.r1.1032">
 <link rel="stylesheet" href="/assets/furniture/editor.css">
   <link rel="stylesheet" href="/assets/cuadratura.css?v=22.10.2026.r1.1032">
@@ -1266,7 +1267,9 @@
         .filter(Boolean).map(s => String(s).replace(/</g, '&lt;')).join(' · ');
       const commentRaw = (it.comment || '').trim();
       const commentSafe = commentRaw.replace(/</g, '&lt;');
-      const commentBlock = commentRaw
+      // 💬 oculto en las tarjetas «¿Sabías que…?» (tag sabiasque / sabias-que).
+      const esSabiasQue = (Array.isArray(it.tags) ? it.tags : []).some(t => /^#?sabias-?que$/i.test(String(t).trim()));
+      const commentBlock = commentRaw && !esSabiasQue
         ? `<p class="stock-comment" title="${escAttr(commentRaw)}">💬 ${commentSafe.slice(0, 200)}${commentRaw.length > 200 ? '…' : ''}</p>`
         : '';
       const tagsBlock = renderTagsHtml(it.tags, it.id);
@@ -1288,6 +1291,7 @@
               <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Abrir asset en pestaña nueva" aria-label="Abrir asset en pestaña nueva" data-act="open"><span aria-hidden="true">↗</span></a>
               <button type="button" class="stock-card-btn" data-act="descargar" title="Descargar el fichero a este ordenador" aria-label="Descargar a este ordenador"><span aria-hidden="true">⬇</span></button>
               <button type="button" class="stock-card-btn" data-act="max" title="Maximizar" aria-label="Maximizar asset"><span aria-hidden="true">⛶</span></button>
+              ${typeLabel === 'video' ? `<button type="button" class="stock-card-btn" data-act="compartir" title="Compartir" aria-label="Compartir (YouTube o enlace)"><span aria-hidden="true">📤</span></button>` : ''}
               <button type="button" class="stock-card-btn danger" data-act="del" title="Eliminar" aria-label="Eliminar asset"><span aria-hidden="true">🗑</span></button>
             </div>
             ${titleInline}
@@ -1596,6 +1600,7 @@
         <div class="stock-lightbox-actions">
           <a class="btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener">AI Abrir en AINimation</a>
           <button type="button" class="btn" data-act="descargar" title="Guarda el fichero en este ordenador con un nombre legible">⬇ Descargar a este ordenador</button>
+          ${typeLabel === 'video' ? `<button type="button" class="btn" data-act="compartir" title="Compartir (YouTube o enlace)">📤 Compartir</button>` : ''}
           <button type="button" class="btn prio0-btn" data-act="prio0" title="Envía este asset AHORA al destino que elijas e interrumpe lo que se esté emitiendo">⚠ Prioridad 0 · interrumpir</button>
         </div>`;
       if (isXpace(it)) {
@@ -1679,6 +1684,13 @@
       // ⬇ Descargar: guarda el fichero EN EL DISCO. El <a download> de antes no
       // servía (href de otro origen → el navegador ignora el atributo y abre el
       // asset en una pestaña); ahora lo hace descarga-local.js vía blob.
+      const shareBtn = e.target.closest('.stock-lightbox-actions [data-act="compartir"]');
+      if (shareBtn) {
+        e.preventDefault(); e.stopPropagation();
+        const it = currentItemInLightbox();
+        if (it) window.YTCompartir?.abrir(it);
+        return;
+      }
       const dlBtn = e.target.closest('[data-act="descargar"]');
       if (dlBtn) {
         e.preventDefault(); e.stopPropagation();
@@ -1881,6 +1893,7 @@
         else if (btn.dataset.act === 'feed') { e.preventDefault(); DIST.open([item]); }
         else if (btn.dataset.act === 'playlist') { e.preventDefault(); PL.open([item]); }
         else if (btn.dataset.act === 'descargar') { e.preventDefault(); descargarAsset(item); }
+        else if (btn.dataset.act === 'compartir') { e.preventDefault(); window.YTCompartir?.abrir(item); }
         // 'open' es <a target=_blank> → deja burbujear sin preventDefault
         e.stopPropagation();
         return;
