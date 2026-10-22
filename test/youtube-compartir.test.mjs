@@ -72,3 +72,27 @@ test('cuota agotada → 429 youtube-cuota', async () => {
   assert.equal(r.status, 429);
   assert.equal((await r.json()).error, 'youtube-cuota');
 });
+
+import {readFileSync} from 'node:fs';
+for (const [path, es] of [['stock.html', true], ['en/stock.html', false]]) {
+  test(`${path}: carga el script y tiene el botón Compartir en la tarjeta (antes de borrar) y en el visor`, () => {
+    const html = readFileSync(new URL('../' + path, import.meta.url), 'utf8');
+    assert.match(html, /<script[^>]+src="\/assets\/youtube-compartir\.js/);
+    const share = html.indexOf('class="stock-card-btn" data-act="compartir"');
+    const del = html.indexOf('class="stock-card-btn danger" data-act="del"');
+    assert.ok(share > 0 && share < del, 'botón de tarjeta antes de la papelera');
+    assert.match(html, new RegExp(`data-act="compartir" title="${es ? 'Compartir' : 'Share'}"`));
+    assert.match(html, /class="btn" data-act="compartir"/);
+    assert.match(html, /btn\.dataset\.act === 'compartir'\) \{ e\.preventDefault\(\); window\.YTCompartir\?\.abrir\(item\)/);
+    assert.match(html, /stock-lightbox-actions \[data-act="compartir"\]/);
+  });
+}
+
+test('modal en inglés cuando <html lang="en">', async () => {
+  const src = readFileSync(new URL('../assets/youtube-compartir.js', import.meta.url), 'utf8');
+  for (const [lang, head] of [['en', 'Share ▸ YouTube'], ['es', 'Compartir ▸ YouTube']]) {
+    const window = {};
+    new Function('window', 'document', src)(window, {documentElement: {lang}});
+    assert.equal(window.YTCompartir.T.head, head);
+  }
+});
