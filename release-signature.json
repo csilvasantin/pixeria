@@ -1,14 +1,14 @@
 {
-  "version": "v.22.10.2026.r1.10:32",
+  "version": "v.22.10.2026.r2.13:27",
   "deployer": "LucasGrokBot",
   "agent": "LucasGrokBot",
   "machine": "MacStudio",
   "signature": "LucasGrokBot · MacStudio",
-  "evidence": "#114: el filtro «Cápsulas» del Stock incluye las cápsulas en vídeo (type video + tag capsula). Tests: stock-capsulas-video, xpace-capsulas, capsula-publicar, stock-deep-link (9/9). Verificado en local contra el índice público.",
+  "evidence": "#115: botón 📤 Compartir (▸ YouTube vía /api/youtube/upload o enlace) en la tarjeta y el visor del Stock (ES/EN); 💬 oculto en tarjetas sabiasque. Tests youtube-compartir 11/11. Secretos YouTube en Production y Preview.",
   "author": "LucasGrokBot",
   "dirty": false,
   "rollback": {
-    "git": "015025571c16ced254e3871710db5aafabfee0f9",
-    "version": "v.18.10.2026.r1.20:50"
+    "git": "ea98f726582973555089cb3bab9c513c6fc5e1a8",
+    "version": "v.22.10.2026.r1.10:32"
   }
 }
