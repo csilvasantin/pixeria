@@ -427,12 +427,16 @@
         else { seekToPreviewFrame(v); v.src = v.dataset.src; }
       });
     }
+    function isEditableCapsula(it) {
+      return !!it && it.type === 'video' && /^capsula-url:[a-f0-9]{16}$/.test(String(it.externalRef || ''));
+    }
     function ainimationImportHref(it) {
       const params = new URLSearchParams();
       params.set('admiraStockUrl', it.url || '');
       params.set('admiraStockType', it.type || '');
       params.set('admiraStockTitle', it.title || it.prompt || 'Admira Stock asset');
       if (it.id) params.set('admiraStockId', it.id);
+      if (isEditableCapsula(it)) params.set('mode', 'capsula');
       if (it.prompt) params.set('admiraStockPrompt', it.prompt);
       if (it.thumbnail) params.set('admiraStockThumbnail', it.thumbnail);
       if (it.width) params.set('admiraStockWidth', it.width);
@@ -708,6 +712,41 @@
     }
 
     let xpaceController;
+    // Published files remain intact; previous capsule versions are available here.
+    async function loadCapsulaHistory(it) {
+      const host = document.createElement('details');
+      host.className = 'stock-capsula-history';
+      const title = document.createElement('summary');
+      title.textContent = 'Version history';
+      host.append(title);
+      const body = document.createElement('div');
+      body.textContent = 'Loading versions…';
+      host.append(body);
+      lightboxMeta.append(host);
+      try {
+        const r = await fetch(`${STOCK_BASE}/stock/capsula/${encodeURIComponent(it.id)}`, {cache:'no-store'});
+        const data = await r.json();
+        if (!host.isConnected || window.__lightboxItemId !== it.id) return;
+        if (!r.ok && !Array.isArray(data.history)) throw new Error('history-unavailable');
+        const history = Array.isArray(data.history) ? data.history : [];
+        body.replaceChildren();
+        if (!history.length) { body.textContent = 'No previous versions.'; return; }
+        const list = document.createElement('ul');
+        for (const version of history) {
+          const row = document.createElement('li');
+          const link = document.createElement('a');
+          const id = String(version.id || '');
+          if (!/^[A-Za-z0-9-]+$/.test(id)) continue;
+          link.href = `${STOCK_BASE}/stock/asset/${encodeURIComponent(id)}`;
+          link.target = '_blank'; link.rel = 'noopener';
+          link.textContent = `v${Number(version.version || version.capsuleSource?.version) || 1}${version.num ? ' · #' + Number(version.num) : ''}${id === it.id ? ' · current' : ''}`;
+          row.append(link); list.append(row);
+        }
+        body.append(list);
+      } catch {
+        if (host.isConnected) body.textContent = 'Version history could not be loaded. Try again.';
+      }
+    }
     function openLightbox(it) {
       if(isFurniture3D(it)){import('../assets/furniture/editor.mjs').then(m=>m.openFurniture(it));return;}
       xpaceController?.abort();
@@ -764,6 +803,7 @@
         import('../assets/xpaces/viewer.mjs?v=itil-capa-2').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'Could not load 3D. Close and reopen to retry.';});
       }
       window.__lightboxItemId = it.id || null;
+      if (isEditableCapsula(it)) loadCapsulaHistory(it);
       const i = currentView.findIndex(x => x.id === it.id);
       lightboxPrev.disabled = !(i > 0);
       lightboxNext.disabled = !(i >= 0 && i < currentView.length - 1);

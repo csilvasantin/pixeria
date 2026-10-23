@@ -1053,12 +1053,17 @@
         else { seekToPreviewFrame(v); v.src = v.dataset.src; } // fallback sin IO
       });
     }
+    function isEditableCapsula(it) {
+      return !!it && it.type === 'video' && /^capsula-url:[a-f0-9]{16}$/.test(String(it.externalRef || ''));
+    }
     function ainimationImportHref(it) {
       const params = new URLSearchParams();
       params.set('admiraStockUrl', it.url || '');
       params.set('admiraStockType', it.type || '');
       params.set('admiraStockTitle', it.title || it.prompt || 'Admira Stock asset');
       if (it.id) params.set('admiraStockId', it.id);
+      if (isEditableCapsula(it)) params.set('mode', 'capsula');
+
       if (it.prompt) params.set('admiraStockPrompt', it.prompt);
       if (it.thumbnail) params.set('admiraStockThumbnail', it.thumbnail);
       if (it.width) params.set('admiraStockWidth', it.width);
@@ -1556,6 +1561,41 @@
     }
 
     let xpaceController;
+    // Published files remain intact; previous capsule versions are available here.
+    async function loadCapsulaHistory(it) {
+      const host = document.createElement('details');
+      host.className = 'stock-capsula-history';
+      const title = document.createElement('summary');
+      title.textContent = 'Historial de versiones';
+      host.append(title);
+      const body = document.createElement('div');
+      body.textContent = 'Cargando versiones…';
+      host.append(body);
+      lightboxMeta.append(host);
+      try {
+        const r = await fetch(`${STOCK_BASE}/stock/capsula/${encodeURIComponent(it.id)}`, {cache:'no-store'});
+        const data = await r.json();
+        if (!host.isConnected || window.__lightboxItemId !== it.id) return;
+        if (!r.ok && !Array.isArray(data.history)) throw new Error('history-unavailable');
+        const history = Array.isArray(data.history) ? data.history : [];
+        body.replaceChildren();
+        if (!history.length) { body.textContent = 'Sin versiones anteriores.'; return; }
+        const list = document.createElement('ul');
+        for (const version of history) {
+          const row = document.createElement('li');
+          const link = document.createElement('a');
+          const id = String(version.id || '');
+          if (!/^[A-Za-z0-9-]+$/.test(id)) continue;
+          link.href = `${STOCK_BASE}/stock/asset/${encodeURIComponent(id)}`;
+          link.target = '_blank'; link.rel = 'noopener';
+          link.textContent = `v${Number(version.version || version.capsuleSource?.version) || 1}${version.num ? ' · #' + Number(version.num) : ''}${id === it.id ? ' · actual' : ''}`;
+          row.append(link); list.append(row);
+        }
+        body.append(list);
+      } catch {
+        if (host.isConnected) body.textContent = 'No se ha podido cargar el historial. Vuelve a intentarlo.';
+      }
+    }
     function openLightbox(it) {
       if(isFurniture3D(it)){import('./assets/furniture/editor.mjs').then(m=>m.openFurniture(it));return;}
       xpaceController?.abort();
@@ -1619,11 +1659,13 @@
         import('./assets/xpaces/viewer.mjs?v=itil-capa-2').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'No se ha podido cargar el 3D. Cierra y vuelve a abrir para reintentar.';});
       }
       window.__lightboxItemId = it.id || null;
+      if (isEditableCapsula(it)) loadCapsulaHistory(it);
       lightbox.hidden = false;
       lightbox.setAttribute('aria-hidden', 'false');
       document.body.classList.add('stock-lightbox-open');
       updateLightboxNav();
       if (isCapsule(it)) trackCapsuleConsumption(it);
+
     }
     function lightboxIndex() {
       const id = window.__lightboxItemId;
