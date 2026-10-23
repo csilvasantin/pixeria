@@ -110,6 +110,7 @@
 <link rel="stylesheet" href="/assets/furniture/editor.css">
   <link rel="stylesheet" href="/assets/cuadratura.css?v=22.10.2026.r2.1327">
   <script src="/assets/ui-locale.js?v=22.10.2026.r2.1327"></script>
+<link rel="stylesheet" href="/assets/stock-capsule-editor.css?v=capsule-inline-1">
 </head>
 <body data-page="stock">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -427,6 +428,21 @@
         else { seekToPreviewFrame(v); v.src = v.dataset.src; }
       });
     }
+    let capsuleEditorAbort = null;
+    function resetCapsuleEditor() { capsuleEditorAbort?.abort(); capsuleEditorAbort = null; }
+    async function editCapsuleInDetail(it, button) {
+      if (capsuleEditorAbort && button.getAttribute('aria-expanded') === 'true' && !button.disabled) { resetCapsuleEditor(); return; }
+      resetCapsuleEditor();
+      const controller = capsuleEditorAbort = new AbortController();
+      button.disabled = true;
+      try {
+        const {openStockCapsuleEditor} = await import('/assets/stock-capsule-editor.mjs?v=capsule-inline-1');
+        if (controller.signal.aborted) return;
+        await openStockCapsuleEditor({item:it,mediaHost:lightboxInner,detailRoot:lightbox,button,signal:controller.signal});
+      } catch (error) {
+        if (!controller.signal.aborted) { button.disabled=false; button.setAttribute('aria-expanded','false'); status.textContent="Could not open the editor. Please retry."; }
+      }
+    }
     function ainimationImportHref(it) {
       const params = new URLSearchParams();
       params.set('admiraStockUrl', it.url || '');
@@ -710,6 +726,7 @@
 
     let xpaceController;
     function openLightbox(it) {
+      resetCapsuleEditor();
       if(isFurniture3D(it)){import('../assets/furniture/editor.mjs').then(m=>m.openFurniture(it));return;}
       xpaceController?.abort();
       xpaceController = null;
@@ -747,6 +764,7 @@
         <p class="stock-prompt">${renderPromptHtml(it.prompt)}</p>
         ${commentBlock}
         <div class="stock-lightbox-actions">
+          ${/^capsula-url:[a-f0-9]{16}$/.test(it.externalRef || '') ? '<button type="button" class="btn" data-act="edit-capsule" aria-expanded="false">Edit with Ainimation</button>' : ''}
           <a class="btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener">AI Abrir en AINimation</a>
           <button type="button" class="btn" data-act="descargar" title="Save the file on this computer with a readable name">⬇ Download to this computer</button>
           ${typeLabel === 'video' ? `<button type="button" class="btn" data-act="compartir" title="Share (YouTube or link)">📤 Share</button>` : ''}
@@ -773,6 +791,7 @@
       document.body.classList.add('stock-lightbox-open');
     }
     function closeLightbox() {
+      resetCapsuleEditor();
       xpaceController?.abort();
       xpaceController = null;
       lightbox.classList.remove('is-xpace');
@@ -801,6 +820,9 @@
 
     // Edición de tags dentro del lightbox (quitar / añadir)
     lightboxMeta.addEventListener('click', async e => {
+      const editCapsuleBtn = e.target.closest('[data-act="edit-capsule"]');
+      if (editCapsuleBtn) { e.preventDefault(); e.stopPropagation(); const it = currentItemInLightbox(); if(it) await editCapsuleInDetail(it, editCapsuleBtn); return; }
+
       const shareBtn = e.target.closest('.stock-lightbox-actions [data-act="compartir"]');
       if (shareBtn) {
         e.preventDefault(); e.stopPropagation();

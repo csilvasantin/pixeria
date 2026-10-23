@@ -11,3 +11,10 @@ EN: In Stock, “Open in AINimation” loads the saved script for capsules with 
 `POST` to the same URL accepts `{revision, guion, cartelas}` with `Content-Type: application/json` and the existing Stock authorization (`X-Notify-Key` or internal ingest header). A matching revision and completed previous render are required. It archives the previous job, preserves source/media parameters, and conditionally updates the queue using the R2 ETag. Replies: `202` queued; `401` unauthorized; `409 revision-conflict`, `render-in-progress` or `version-limit`; `400` invalid script. No shared content changes while typing or saving a local draft.
 
 MCP: this is an HTTP/browser workflow; no new MCP tool is claimed. Agents can inspect the contract and use the existing authenticated API. Do not put keys in URLs, prompts or repository files.
+
+
+## Edición integrada / Inline editing
+
+ES: «Editar con Ainimation» en el detalle de Stock abre la edición en la misma pantalla, a la izquierda del enlace externo existente. [Guía y contrato](capsule-inline-editor.md).
+
+EN: “Edit with Ainimation” in Stock detail opens editing in the same screen, immediately before the existing external link. [Guide and contract](capsule-inline-editor.md).
