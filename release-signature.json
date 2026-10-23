@@ -1,10 +1,10 @@
 {
   "version": "v.22.10.2026.r2.13:27",
-  "deployer": "LucasGrokBot",
-  "agent": "LucasGrokBot",
+  "deployer": "Trinity",
+  "agent": "Trinity",
   "machine": "MacStudio",
-  "signature": "LucasGrokBot · MacStudio",
-  "evidence": "#115: botón 📤 Compartir (▸ YouTube vía /api/youtube/upload o enlace) en la tarjeta y el visor del Stock (ES/EN); 💬 oculto en tarjetas sabiasque. Tests youtube-compartir 11/11. Secretos YouTube en Production y Preview.",
+  "signature": "Trinity · MacStudio",
+  "evidence": "Capsule source reference link to Ainimation original-script editor (ES/EN). Link tests pass; worker API and Director editor published.",
   "author": "LucasGrokBot",
   "dirty": false,
   "rollback": {
