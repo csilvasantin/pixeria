@@ -1059,6 +1059,7 @@
       params.set('admiraStockType', it.type || '');
       params.set('admiraStockTitle', it.title || it.prompt || 'Admira Stock asset');
       if (it.id) params.set('admiraStockId', it.id);
+      if (/^capsula-url:[a-f0-9]{16}$/.test(it.externalRef || '')) params.set('admiraCapsuleRef', it.externalRef);
       if (it.prompt) params.set('admiraStockPrompt', it.prompt);
       if (it.thumbnail) params.set('admiraStockThumbnail', it.thumbnail);
       if (it.width) params.set('admiraStockWidth', it.width);
