@@ -61,6 +61,8 @@ export async function clientesPermitidos(session, env) {
 }
 const AGENT_TOKEN_MIN = 32;
 const API_TOKEN_TTL_SECONDS = 15 * 60;
+// Only this editor may receive a short-lived API token through a user-opened popup.
+const CAPSULE_BRIDGE_ORIGINS = new Set(['https://ainimation.studio', 'https://www.ainimation.studio']);
 const CHALLENGE_TTL_MS = 10 * 60 * 1000;
 const OWNER_FALLBACK = new Set(['csilva@admira.com', 'csilvasantin@gmail.com']);
 const encoder = new TextEncoder();
@@ -143,8 +145,21 @@ function normalEmail(value) {
 export function safeReturnTo(value) {
   const candidate = String(value || '/');
   if (!candidate.startsWith('/') || candidate.startsWith('//') || candidate.length > 1024 || /[\\\u0000-\u001f\u007f]/.test(candidate)) return '/';
-  if (candidate.startsWith('/auth/')) return '/';
+  if (candidate.startsWith('/auth/')) {
+    const bridge = capsuleBridgeTarget(new URL(candidate, CALLBACK_URI));
+    return bridge ? bridge.returnTo : '/';
+  }
   return candidate;
+}
+
+export function capsuleBridgeTarget(url) {
+  if (url.pathname !== '/auth/bridge' || url.hash) return null;
+  const entries = [...url.searchParams];
+  if (entries.length !== 2 || entries.filter(([key]) => key === 'origin').length !== 1 || entries.filter(([key]) => key === 'state').length !== 1) return null;
+  const origin = url.searchParams.get('origin');
+  const state = url.searchParams.get('state');
+  if (!CAPSULE_BRIDGE_ORIGINS.has(origin) || !/^[A-Za-z0-9_-]{16,128}$/.test(state || '')) return null;
+  return {origin, state, returnTo:'/auth/bridge?' + new URLSearchParams({origin, state}).toString()};
 }
 
 async function hmac(secret, message) {
@@ -521,8 +536,31 @@ async function agente(request, env, waitUntil) {
   }});
 }
 
+async function capsuleBridge(request, env) {
+  const url = new URL(request.url);
+  const target = capsuleBridgeTarget(url);
+  if (!target) return new Response('Destino no válido', {status:400, headers:{'cache-control':'no-store', 'referrer-policy':'no-referrer'}});
+  if (request.method !== 'GET') return new Response('Method not allowed', {status:405, headers:{allow:'GET', 'cache-control':'no-store'}});
+  const canonical = new URL(CALLBACK_URI);
+  if (url.hostname.replace(/^www\./, '') === canonical.hostname.replace(/^www\./, '') && url.origin !== canonical.origin) {
+    return new Response(null, {status:302, headers:{location:canonical.origin + target.returnTo, 'cache-control':'no-store', 'referrer-policy':'no-referrer'}});
+  }
+  const session = await readSession(request, env);
+  if (!session) return loginResponse(env, target.returnTo);
+  const minted = await createApiToken(env, session.email);
+  const nonce = randomId();
+  const payload = JSON.stringify({type:'ainimation:auth', token:minted.token, expiresAt:minted.exp * 1000, state:target.state}).replace(/[<>&]/g, char => ({'<':'\\u003c', '>':'\\u003e', '&':'\\u0026'}[char]));
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AInimation · Sesión verificada</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#111912;color:#e6efd9;font:16px system-ui,sans-serif}main{max-width:28em;padding:2em;line-height:1.6}</style></head><body><main><h1>Sesión verificada</h1><p id="status">Volviendo al editor de cápsulas…</p></main><script nonce="${nonce}">(function(){if(!window.opener){document.getElementById('status').textContent='Vuelve al editor y pulsa Conectar sesión para continuar.';return;}window.opener.postMessage(${payload},${JSON.stringify(target.origin)});document.getElementById('status').textContent='Puedes cerrar esta ventana y continuar en el editor.';window.close();})();</script></body></html>`;
+  return withSessionRenewal(new Response(html, {headers:{
+    'content-type':'text/html; charset=utf-8', 'cache-control':'no-store', 'referrer-policy':'no-referrer',
+    'x-robots-tag':'noindex, nofollow', 'x-content-type-options':'nosniff',
+    'content-security-policy':`default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`
+  }}), session, env);
+}
+
 export async function handleAuth(request, env, waitUntil = null) {
   const url = new URL(request.url);
+  if (url.pathname === '/auth/bridge') return capsuleBridge(request, env);
   if (url.pathname === '/auth/agente') return agente(request, env, waitUntil);
   if (url.pathname === '/auth/login' && request.method === 'GET') {
     // The __Host- nonce must be issued on the host receiving Google's POST.
