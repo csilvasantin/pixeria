@@ -1,14 +1,14 @@
 {
-  "version": "v.24.10.2026.r1.13:52",
+  "version": "v.24.10.2026.r2.14:15",
   "deployer": "TrinityMBA16",
   "agent": "TrinityMBA16",
   "machine": "MacBookAir16plata",
   "signature": "TrinityMBA16 · MacBookAir16plata",
-  "evidence": "Admira–AInimation linked editable versions; coordinated release #48/#73/#125.",
+  "evidence": "Create video or interactive from multiple catalogue resources; editor #75, catalogue #126, Studio #132.",
   "author": "TrinityMBA16",
   "dirty": false,
   "rollback": {
-    "git": "94a6187eed87da01782004602af1a3fbfece7d37",
-    "version": "v.22.10.2026.r2.13:27"
+    "git": "00dcd356907a408cb2b57aeda6cf7ba3a918ed58",
+    "version": "v.24.10.2026.r1.13:52"
   }
 }
