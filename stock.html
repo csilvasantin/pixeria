@@ -441,11 +441,6 @@
           <button type="button" class="stock-pager-btn capsula-toggle" id="capsulaFormToggle" title="Crear cápsula Blinkist (texto → Stock → Cafebrería)" aria-expanded="false" aria-controls="capsulaPanel">📚 Nueva cápsula</button>
           <button type="button" class="stock-pager-btn" id="tagMgrBtn" title="Gestor de etiquetas: renombrar, fusionar variaciones y borrar en todo el Stock">🏷️ Etiquetas</button>
         </div>
-        <div class="stock-pager-sort" id="stockSortBar" role="group" aria-label="Ordenar por">
-          <span class="stock-sortbar-label">Ordenar:</span>
-          <button type="button" class="stock-sort-th" data-key="name">Nombre <span class="stock-sort-arrow">⇅</span></button>
-          <button type="button" class="stock-sort-th" data-key="date">Fecha <span class="stock-sort-arrow">⇅</span></button>
-        </div>
         <div class="stock-pager-controls">
           <button type="button" class="stock-pager-btn" data-page="first" title="Primera página" aria-label="Primera página">«</button>
           <button type="button" class="stock-pager-btn" data-page="prev" title="Anterior" aria-label="Página anterior">‹</button>
@@ -455,6 +450,14 @@
         </div>
       </nav>
       <div id="stockStatus" class="stock-status" role="status" aria-live="polite"></div>
+      <div class="stock-order-head" id="stockSortBar" role="group" aria-label="Ordenar contenidos multimedia">
+        <span class="stock-order-title">Ordenar contenidos</span>
+        <button type="button" class="stock-sort-th" data-key="name">Nombre <span class="stock-sort-arrow">⇅</span></button>
+        <button type="button" class="stock-sort-th" data-key="date">Fecha <span class="stock-sort-arrow">⇅</span></button>
+        <button type="button" class="stock-sort-th" data-key="format">Formato <span class="stock-sort-arrow">⇅</span></button>
+        <button type="button" class="stock-sort-th" data-key="type">Tipo <span class="stock-sort-arrow">⇅</span></button>
+        <button type="button" class="stock-sort-th" data-key="motor">Motor <span class="stock-sort-arrow">⇅</span></button>
+      </div>
     </section>
 
     <section>
@@ -1332,11 +1335,20 @@
       const sorted = items.slice();
       const recent = (a, b) => (b.createdAt || '').localeCompare(a.createdAt || '');
       const name = it => (it.title || it.prompt || '').trim();
+      const format = it => {
+        const width = Number(it && (it.width || it._mediaWidth)) || 0;
+        const height = Number(it && (it.height || it._mediaHeight)) || 0;
+        const ratio = width && height ? width / height : 0;
+        if (ratio) return ratio < 0.9 ? 'vertical' : ratio > 1.1 ? 'horizontal' : 'cuadrado';
+        return String((it && (it.format || it.aspectRatio || it.mime)) || 'sin formato');
+      };
       const comparators = {
         'date-desc': recent,
         'date-asc':  (a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''),
         'name-asc':  (a, b) => name(a).localeCompare(name(b), 'es', { sensitivity: 'base' }) || recent(a, b),
         'name-desc': (a, b) => name(b).localeCompare(name(a), 'es', { sensitivity: 'base' }) || recent(a, b),
+        'format-asc': (a, b) => format(a).localeCompare(format(b), 'es', { sensitivity: 'base' }) || recent(a, b),
+        'format-desc': (a, b) => format(b).localeCompare(format(a), 'es', { sensitivity: 'base' }) || recent(a, b),
         'type-asc':  (a, b) => ((TYPE_ORDER[displayType(a)] ?? 99) - (TYPE_ORDER[displayType(b)] ?? 99)) || recent(a, b),
         'type-desc': (a, b) => ((TYPE_ORDER[displayType(b)] ?? 99) - (TYPE_ORDER[displayType(a)] ?? 99)) || recent(a, b),
         'motor-asc': (a, b) => String(a.motor || '').localeCompare(String(b.motor || ''), 'es', { sensitivity: 'base' }) || recent(a, b),
@@ -2201,9 +2213,9 @@
       if (/^https?:\/\//i.test(v) && urlField) { urlField.value = v; search.value = ''; filters.q = ''; applyFilters(true); }
       dlg.showModal();
     });
-    // Cabezales ordenables (Nombre / Fecha / Tipo / Motor) — clic alterna asc/desc
-    const SORT_DEFAULT_DIR = { name: 'asc', date: 'desc' };
-    const SORT_VALID = new Set(['name-asc','name-desc','date-asc','date-desc']);
+    // Cabezal ordenable — clic alterna asc/desc y se recuerda entre sesiones.
+    const SORT_DEFAULT_DIR = { name: 'asc', date: 'desc', format: 'asc', type: 'asc', motor: 'asc' };
+    const SORT_VALID = new Set(['name-asc','name-desc','date-asc','date-desc','format-asc','format-desc','type-asc','type-desc','motor-asc','motor-desc']);
     function applySortIndicators() {
       const [key, dir] = sortMode.split('-');
       sortBar.querySelectorAll('.stock-sort-th').forEach(b => {

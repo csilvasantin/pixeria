@@ -187,11 +187,6 @@
             <option value="furni">Furniture</option>
           </select>
         </div>
-        <div class="stock-pager-sort" id="stockSortBar" role="group" aria-label="Sort by">
-          <span class="stock-sortbar-label">Sort:</span>
-          <button type="button" class="stock-sort-th" data-key="name">Name <span class="stock-sort-arrow">⇅</span></button>
-          <button type="button" class="stock-sort-th" data-key="date">Date <span class="stock-sort-arrow">⇅</span></button>
-        </div>
         <div class="stock-pager-controls">
           <button type="button" class="stock-pager-btn" data-page="first" title="First page" aria-label="First page">«</button>
           <button type="button" class="stock-pager-btn" data-page="prev" title="Previous" aria-label="Previous page">‹</button>
@@ -201,6 +196,14 @@
         </div>
       </nav>
       <div id="stockStatus" class="stock-status" role="status" aria-live="polite"></div>
+      <div class="stock-order-head" id="stockSortBar" role="group" aria-label="Sort multimedia content">
+        <span class="stock-order-title">Sort content</span>
+        <button type="button" class="stock-sort-th" data-key="name">Name <span class="stock-sort-arrow">⇅</span></button>
+        <button type="button" class="stock-sort-th" data-key="date">Date <span class="stock-sort-arrow">⇅</span></button>
+        <button type="button" class="stock-sort-th" data-key="format">Format <span class="stock-sort-arrow">⇅</span></button>
+        <button type="button" class="stock-sort-th" data-key="type">Type <span class="stock-sort-arrow">⇅</span></button>
+        <button type="button" class="stock-sort-th" data-key="motor">Engine <span class="stock-sort-arrow">⇅</span></button>
+      </div>
     </section>
 
     <section>
@@ -583,11 +586,20 @@
       const sorted = items.slice();
       const recent = (a, b) => (b.createdAt || '').localeCompare(a.createdAt || '');
       const name = it => (it.title || it.prompt || '').trim();
+      const format = it => {
+        const width = Number(it && (it.width || it._mediaWidth)) || 0;
+        const height = Number(it && (it.height || it._mediaHeight)) || 0;
+        const ratio = width && height ? width / height : 0;
+        if (ratio) return ratio < 0.9 ? 'portrait' : ratio > 1.1 ? 'landscape' : 'square';
+        return String((it && (it.format || it.aspectRatio || it.mime)) || 'unknown');
+      };
       const comparators = {
         'date-desc': recent,
         'date-asc':  (a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''),
         'name-asc':  (a, b) => name(a).localeCompare(name(b), 'es', { sensitivity: 'base' }) || recent(a, b),
         'name-desc': (a, b) => name(b).localeCompare(name(a), 'es', { sensitivity: 'base' }) || recent(a, b),
+        'format-asc': (a, b) => format(a).localeCompare(format(b), 'en', { sensitivity: 'base' }) || recent(a, b),
+        'format-desc': (a, b) => format(b).localeCompare(format(a), 'en', { sensitivity: 'base' }) || recent(a, b),
         'type-asc':  (a, b) => ((TYPE_ORDER[displayType(a)] ?? 99) - (TYPE_ORDER[displayType(b)] ?? 99)) || recent(a, b),
         'type-desc': (a, b) => ((TYPE_ORDER[displayType(b)] ?? 99) - (TYPE_ORDER[displayType(a)] ?? 99)) || recent(a, b),
         'motor-asc': (a, b) => String(a.motor || '').localeCompare(String(b.motor || ''), 'es', { sensitivity: 'base' }) || recent(a, b),
@@ -1135,9 +1147,9 @@
       if (/^https?:\/\//i.test(v) && urlField) { urlField.value = v; search.value = ''; filters.q = ''; applyFilters(true); }
       dlg.showModal();
     });
-    // Cabezales ordenables (Nombre / Fecha / Tipo / Motor) — clic alterna asc/desc
-    const SORT_DEFAULT_DIR = { name: 'asc', date: 'desc' };
-    const SORT_VALID = new Set(['name-asc','name-desc','date-asc','date-desc']);
+    // Sortable header: click toggles asc/desc and persists between sessions.
+    const SORT_DEFAULT_DIR = { name: 'asc', date: 'desc', format: 'asc', type: 'asc', motor: 'asc' };
+    const SORT_VALID = new Set(['name-asc','name-desc','date-asc','date-desc','format-asc','format-desc','type-asc','type-desc','motor-asc','motor-desc']);
     function applySortIndicators() {
       const [key, dir] = sortMode.split('-');
       sortBar.querySelectorAll('.stock-sort-th').forEach(b => {
