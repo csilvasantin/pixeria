@@ -98,7 +98,7 @@
 
     /* Barra flotante de lote */
     .dist-batchbar{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(120%);
-      z-index:40; display:flex; gap:14px; align-items:center; padding:12px 18px;
+      z-index:40; display:flex; flex-wrap:wrap; max-width:calc(100vw - 24px); width:max-content; gap:14px; align-items:center; padding:12px 18px;
       background:var(--panel-2); border:1px solid var(--matrix); border-radius:12px; box-shadow:var(--glow);
       font-size:13px; color:var(--matrix); transition:transform .22s ease; }
     .dist-batchbar.show{ transform:translateX(-50%) translateY(0); }
@@ -614,6 +614,7 @@
     <button type="button" class="btn primary" id="distBatchSend">Distribuir →</button>
     <button type="button" class="btn" id="distBatchPlaylist">🎵 A playlist</button>
     <button type="button" class="btn" id="distBatchDownload" title="Descarga los assets seleccionados a este ordenador, uno detrás de otro">⬇ Descargar</button>
+    <button type="button" class="btn" id="distBatchCreate">AI Crear en AInimation</button>
     <button type="button" class="btn" id="distBatchClear">Limpiar</button>
   </div>
 
@@ -2728,6 +2729,12 @@
         // Barra de lote
         $('distBatchSend').addEventListener('click', () => open(selectedItems()));
         $('distBatchClear').addEventListener('click', clearSelection);
+        $('distBatchCreate').addEventListener('click', async () => {
+          try {
+            const {openBatchCreator}=await import('/assets/admira-batch-create.mjs?v=batch-1');
+            openBatchCreator([...sel].map(id=>allItems.find(item=>item.id===id)).filter(Boolean));
+          } catch(error) { window.alert(error.message); }
+        });
         const bdl = $('distBatchDownload');
         if (bdl) bdl.addEventListener('click', () => descargarAssets(selectedItems()));
         const bpl = $('distBatchPlaylist'); if (bpl) bpl.addEventListener('click', () => { if (window.PL) window.PL.open(selectedItems()); });
