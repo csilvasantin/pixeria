@@ -444,6 +444,15 @@
         if (!controller.signal.aborted) { button.disabled=false; button.setAttribute('aria-expanded','false'); status.textContent="Could not open the editor. Please retry."; }
       }
     }
+    const batchSelection=new Set();
+    const batchBar=document.createElement('aside');batchBar.style.cssText='position:fixed;bottom:18px;left:12px;right:12px;z-index:40;display:flex;gap:12px;align-items:center;background:var(--panel-2,#031006);padding:12px;border:1px solid var(--matrix,#00ff41)';
+    const batchCount=document.createElement('span'),batchCreate=document.createElement('button'),batchClear=document.createElement('button');
+    batchCreate.type=batchClear.type='button';batchCreate.className=batchClear.className='btn';batchCreate.textContent='Create in AInimation';batchClear.textContent='Clear';batchBar.append(batchCount,batchCreate,batchClear);document.body.append(batchBar);
+    function renderBatchSelection(){batchBar.hidden=!batchSelection.size;batchBar.style.display=batchSelection.size?'flex':'none';batchCount.textContent=batchSelection.size+' selected';document.querySelectorAll('[data-act="batch-select"]').forEach(b=>b.setAttribute('aria-pressed',String(batchSelection.has(b.closest('[data-id]')?.dataset.id))));}
+    document.addEventListener('click',event=>{const b=event.target.closest('[data-act="batch-select"]');if(!b)return;event.stopImmediatePropagation();const id=b.closest('[data-id]')?.dataset.id;if(!id)return;batchSelection.has(id)?batchSelection.delete(id):batchSelection.add(id);renderBatchSelection();},true);
+    batchClear.onclick=()=>{batchSelection.clear();renderBatchSelection();};
+    batchCreate.onclick=async()=>{try{const {openBatchCreator}=await import('/assets/admira-batch-create.mjs?v=batch-1');openBatchCreator([...batchSelection].map(id=>allItems.find(item=>item.id===id)).filter(Boolean),{english:true});}catch(error){window.alert(error.message);}};
+    new MutationObserver(renderBatchSelection).observe(grid,{childList:true});renderBatchSelection();
     function ainimationImportHref(it) {
       const params = new URLSearchParams();
       params.set('admiraStockUrl', it.url || '');
@@ -551,6 +560,7 @@
           <header>
             <span class="stock-type ${typeLabel}">${typeLabel === 'locucion' ? 'Public announcements' : typeLabel}</span>
             <div class="stock-card-actions">
+              <button type="button" class="stock-card-btn" data-act="batch-select" aria-label="Select for AInimation" aria-pressed="false">＋</button>
               <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Edit in AInimation" aria-label="Edit in AInimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
               <button type="button" class="stock-card-btn" data-act="feed" title="Send to Pixer Feed (screens / twin)" aria-label="Send to Pixer Feed"><span aria-hidden="true">📺</span></button>
               <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Open asset in a new tab" aria-label="Open asset in a new tab" data-act="open"><span aria-hidden="true">↗</span></a>
