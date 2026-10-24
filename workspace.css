@@ -2137,11 +2137,12 @@ body[data-page="stock"] .primary-nav a[data-nav="stock"] {
   grid-template-columns: minmax(150px, 1.4fr) repeat(5, minmax(92px, 1fr));
   align-items: stretch;
   width: 100%;
-  margin: 6px 0 10px;
+  margin: 0;
   border: 1px solid var(--line-bright);
   background: rgba(0, 255, 65, .025);
 }
 .stock-toolbar:has(+ .stock-order-head) { margin-bottom: 0; }
+.stock-order-head + section { padding-top: 0; }
 .stock-order-title {
   display: flex;
   align-items: center;

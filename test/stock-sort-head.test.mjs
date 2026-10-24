@@ -23,4 +23,6 @@ test('el cabezal ocupa la franja y se adapta a móvil', () => {
   assert.match(css, /\.stock-order-head\s*\{[^}]*grid-template-columns:/s);
   assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*\.stock-order-head/);
   assert.match(css, /\.stock-toolbar:has\(\+ \.stock-order-head\)\s*\{[^}]*margin-bottom:\s*0/);
+  assert.match(css, /\.stock-order-head\s*\{[^}]*margin:\s*0;/s);
+  assert.match(css, /\.stock-order-head \+ section\s*\{[^}]*padding-top:\s*0/);
 });
