@@ -1,14 +1,14 @@
 {
-  "version": "v.22.10.2026.r2.13:27",
-  "deployer": "Trinity",
-  "agent": "Trinity",
-  "machine": "MacStudio",
-  "signature": "Trinity · MacStudio",
-  "evidence": "Capsule source reference link to Ainimation original-script editor (ES/EN). Link tests pass; worker API and Director editor published.",
-  "author": "LucasGrokBot",
+  "version": "v.24.10.2026.r1.13:52",
+  "deployer": "TrinityMBA16",
+  "agent": "TrinityMBA16",
+  "machine": "MacBookAir16plata",
+  "signature": "TrinityMBA16 · MacBookAir16plata",
+  "evidence": "Admira–AInimation linked editable versions; coordinated release #48/#73/#125.",
+  "author": "TrinityMBA16",
   "dirty": false,
   "rollback": {
-    "git": "ea98f726582973555089cb3bab9c513c6fc5e1a8",
-    "version": "v.22.10.2026.r1.10:32"
+    "git": "94a6187eed87da01782004602af1a3fbfece7d37",
+    "version": "v.22.10.2026.r2.13:27"
   }
 }
