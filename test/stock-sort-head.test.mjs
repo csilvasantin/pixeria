@@ -6,6 +6,7 @@ for (const path of ['stock.html', 'en/stock.html']) {
   test(`${path}: cabezal completo de ordenación multimedia`, () => {
     const html = readFileSync(new URL('../' + path, import.meta.url), 'utf8');
     assert.equal((html.match(/id="stockSortBar"/g) || []).length, 1);
+    assert.match(html, /<\/section>\s*<div class="stock-order-head" id="stockSortBar"/);
     for (const key of ['name', 'date', 'format', 'type', 'motor']) {
       assert.match(html, new RegExp(`class="stock-sort-th" data-key="${key}"`));
       assert.match(html, new RegExp(`'${key}-asc'`));
@@ -21,4 +22,5 @@ test('el cabezal ocupa la franja y se adapta a móvil', () => {
   assert.match(css, /\.stock-order-head\s*\{[^}]*display:\s*grid;/s);
   assert.match(css, /\.stock-order-head\s*\{[^}]*grid-template-columns:/s);
   assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*\.stock-order-head/);
+  assert.match(css, /\.stock-toolbar:has\(\+ \.stock-order-head\)\s*\{[^}]*margin-bottom:\s*0/);
 });
