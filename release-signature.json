@@ -1,14 +1,14 @@
 {
-  "version": "v.22.10.2026.r2.13:27",
-  "deployer": "LucasGrokBot",
-  "agent": "LucasGrokBot",
-  "machine": "MacStudio",
-  "signature": "LucasGrokBot · MacStudio",
-  "evidence": "#115: botón 📤 Compartir (▸ YouTube vía /api/youtube/upload o enlace) en la tarjeta y el visor del Stock (ES/EN); 💬 oculto en tarjetas sabiasque. Tests youtube-compartir 11/11. Secretos YouTube en Production y Preview.",
-  "author": "LucasGrokBot",
+  "version": "v.24.10.2026.r2.14:15",
+  "deployer": "TrinityMBA16",
+  "agent": "TrinityMBA16",
+  "machine": "MacBookAir16plata",
+  "signature": "TrinityMBA16 · MacBookAir16plata",
+  "evidence": "Create video or interactive from multiple catalogue resources; editor #75, catalogue #126, Studio #132.",
+  "author": "TrinityMBA16",
   "dirty": false,
   "rollback": {
-    "git": "ea98f726582973555089cb3bab9c513c6fc5e1a8",
-    "version": "v.22.10.2026.r1.10:32"
+    "git": "00dcd356907a408cb2b57aeda6cf7ba3a918ed58",
+    "version": "v.24.10.2026.r1.13:52"
   }
 }

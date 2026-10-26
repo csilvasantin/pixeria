@@ -20,7 +20,7 @@
       if(q==='on'||q==='off') on = q;              // escape puntual, solo esta carga
     }catch(e){}
     if(on!=='on') return;                          // sitio normal SOLO con ?gate=off explícito
-    var s=document.createElement('script'); s.src='/auth-gate.js?v=22.10.2026.r2.1327';
+    var s=document.createElement('script'); s.src='/auth-gate.js?v=24.10.2026.r2.1415';
     (document.head||document.documentElement).appendChild(s);
     // Si a los 10s el gate sigue bloqueando y no hay sesión, lo más probable es que el
     // origen aún no esté autorizado en Google → mensaje claro en pantalla.
@@ -35,7 +35,7 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="admiranext-version" content="Pixeria v.22.10.2026.r2.13:27">
+  <meta name="admiranext-version" content="Pixeria v.24.10.2026.r2.14:15">
   <link rel="canonical" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="es" href="https://www.pixeria.com/stock.html">
   <link rel="alternate" hreflang="en" href="https://www.pixeria.com/en/stock.html">
@@ -50,7 +50,7 @@
   <link rel="stylesheet" href="https://www.carlossilva.info/admira-design/nav.css">
   <link rel="preload" as="style" href="https://www.carlossilva.info/admira-design/contact-panel.css" onload="this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://www.carlossilva.info/admira-design/contact-panel.css"></noscript>
   <script defer src="https://www.carlossilva.info/admira-design/contact-panel.js"></script>
-  <link rel="stylesheet" href="workspace.css?v=22.10.2026.r2.1327">
+  <link rel="stylesheet" href="workspace.css?v=24.10.2026.r2.1415">
   <style>
     /* Contador de elementos en stock (en el título), con flash al crecer */
     .stock-count{ font-variant-numeric:tabular-nums; display:inline-block; }
@@ -98,7 +98,7 @@
 
     /* Barra flotante de lote */
     .dist-batchbar{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(120%);
-      z-index:40; display:flex; gap:14px; align-items:center; padding:12px 18px;
+      z-index:40; display:flex; flex-wrap:wrap; max-width:calc(100vw - 24px); width:max-content; gap:14px; align-items:center; padding:12px 18px;
       background:var(--panel-2); border:1px solid var(--matrix); border-radius:12px; box-shadow:var(--glow);
       font-size:13px; color:var(--matrix); transition:transform .22s ease; }
     .dist-batchbar.show{ transform:translateX(-50%) translateY(0); }
@@ -347,12 +347,14 @@
     .cat-result.sum{ color:var(--muted); border-style:dashed; }
     .cat-result a{ color:var(--matrix); }
   </style>
-  <script defer src="/assets/site-nav.js?v=22.10.2026.r2.1327"></script>
-  <script defer src="/assets/descarga-local.js?v=22.10.2026.r2.1327"></script>
-  <script defer src="/assets/youtube-compartir.js?v=22.10.2026.r2.1327"></script>
-  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=22.10.2026.r2.1327">
+  <script defer src="/assets/site-nav.js?v=24.10.2026.r2.1415"></script>
+  <script defer src="/assets/descarga-local.js?v=24.10.2026.r2.1415"></script>
+  <script defer src="/assets/youtube-compartir.js?v=24.10.2026.r2.1415"></script>
+  <link rel="stylesheet" href="assets/xpaces/viewer.css?v=24.10.2026.r2.1415">
 <link rel="stylesheet" href="/assets/furniture/editor.css">
-  <link rel="stylesheet" href="/assets/cuadratura.css?v=22.10.2026.r2.1327">
+  <link rel="stylesheet" href="/assets/cuadratura.css?v=24.10.2026.r2.1415">
+<link rel="stylesheet" href="/assets/stock-capsule-editor.css?v=24.10.2026.r2.1415">
+<link rel="stylesheet" href="/assets/stock-detail-shell.css?v=24.10.2026.r2.1415">
 </head>
 <body data-page="stock">
   <!-- Cuadratura: los paneles entran cerrados en cada carga (sin parpadeo) y se superponen al contenido -->
@@ -439,11 +441,6 @@
           <button type="button" class="stock-pager-btn capsula-toggle" id="capsulaFormToggle" title="Crear cápsula Blinkist (texto → Stock → Cafebrería)" aria-expanded="false" aria-controls="capsulaPanel">📚 Nueva cápsula</button>
           <button type="button" class="stock-pager-btn" id="tagMgrBtn" title="Gestor de etiquetas: renombrar, fusionar variaciones y borrar en todo el Stock">🏷️ Etiquetas</button>
         </div>
-        <div class="stock-pager-sort" id="stockSortBar" role="group" aria-label="Ordenar por">
-          <span class="stock-sortbar-label">Ordenar:</span>
-          <button type="button" class="stock-sort-th" data-key="name">Nombre <span class="stock-sort-arrow">⇅</span></button>
-          <button type="button" class="stock-sort-th" data-key="date">Fecha <span class="stock-sort-arrow">⇅</span></button>
-        </div>
         <div class="stock-pager-controls">
           <button type="button" class="stock-pager-btn" data-page="first" title="Primera página" aria-label="Primera página">«</button>
           <button type="button" class="stock-pager-btn" data-page="prev" title="Anterior" aria-label="Página anterior">‹</button>
@@ -454,6 +451,15 @@
       </nav>
       <div id="stockStatus" class="stock-status" role="status" aria-live="polite"></div>
     </section>
+
+    <div class="stock-order-head" id="stockSortBar" role="group" aria-label="Ordenar contenidos multimedia">
+      <span class="stock-order-title">Ordenar contenidos</span>
+      <button type="button" class="stock-sort-th" data-key="name">Nombre <span class="stock-sort-arrow">⇅</span></button>
+      <button type="button" class="stock-sort-th" data-key="date">Fecha <span class="stock-sort-arrow">⇅</span></button>
+      <button type="button" class="stock-sort-th" data-key="format">Formato <span class="stock-sort-arrow">⇅</span></button>
+      <button type="button" class="stock-sort-th" data-key="type">Tipo <span class="stock-sort-arrow">⇅</span></button>
+      <button type="button" class="stock-sort-th" data-key="motor">Motor <span class="stock-sort-arrow">⇅</span></button>
+    </div>
 
     <section>
 
@@ -612,6 +618,7 @@
     <button type="button" class="btn primary" id="distBatchSend">Distribuir →</button>
     <button type="button" class="btn" id="distBatchPlaylist">🎵 A playlist</button>
     <button type="button" class="btn" id="distBatchDownload" title="Descarga los assets seleccionados a este ordenador, uno detrás de otro">⬇ Descargar</button>
+    <button type="button" class="btn" id="distBatchCreate">AI Crear en AInimation</button>
     <button type="button" class="btn" id="distBatchClear">Limpiar</button>
   </div>
 
@@ -751,11 +758,11 @@
     </form>
   </dialog>
 
-  <script defer src="/matrix-rain.js?v=22.10.2026.r2.1327"></script>
-  <script src="app.js?v=22.10.2026.r2.1327"></script>
-  <script src="assets/stock-search.js?v=22.10.2026.r2.1327"></script>
-  <script src="/assets/stock-destinations.js?v=22.10.2026.r2.1327"></script>
-  <script src="/assets/stock-playlist-data.js?v=22.10.2026.r2.1327"></script>
+  <script defer src="/matrix-rain.js?v=24.10.2026.r2.1415"></script>
+  <script src="app.js?v=24.10.2026.r2.1415"></script>
+  <script src="assets/stock-search.js?v=24.10.2026.r2.1415"></script>
+  <script src="/assets/stock-destinations.js?v=24.10.2026.r2.1415"></script>
+  <script src="/assets/stock-playlist-data.js?v=24.10.2026.r2.1415"></script>
   <script type="module">
   import {isXpace, blendFor, xpacePoster} from "./assets/xpaces/catalog.mjs";
   import {isFurniture3D} from "./assets/furniture/catalog.mjs";
@@ -1053,23 +1060,39 @@
         else { seekToPreviewFrame(v); v.src = v.dataset.src; } // fallback sin IO
       });
     }
-    function isEditableCapsula(it) {
-      return !!it && it.type === 'video' && /^capsula-url:[a-f0-9]{16}$/.test(String(it.externalRef || ''));
+    let capsuleEditorAbort = null;
+    function resetCapsuleEditor() { capsuleEditorAbort?.abort(); capsuleEditorAbort = null; }
+    async function editCapsuleInDetail(it, button) {
+      if (capsuleEditorAbort && button.getAttribute('aria-expanded') === 'true' && !button.disabled) { resetCapsuleEditor(); return; }
+      resetCapsuleEditor();
+      const controller = capsuleEditorAbort = new AbortController();
+      button.disabled = true;
+      try {
+        const {openStockCapsuleEditor} = await import('/assets/stock-capsule-editor.mjs?v=capsule-inline-1');
+        if (controller.signal.aborted) return;
+        await openStockCapsuleEditor({item:it,mediaHost:lightboxInner,detailRoot:lightbox,button,signal:controller.signal});
+      } catch (error) {
+        if (!controller.signal.aborted) { button.disabled=false; button.setAttribute('aria-expanded','false'); status.textContent="No se pudo abrir el editor. Vuelve a intentarlo."; }
+      }
     }
     function ainimationImportHref(it) {
       const params = new URLSearchParams();
       params.set('admiraStockUrl', it.url || '');
+      const returnUrl = new URL(location.href);
+      returnUrl.searchParams.delete('highlight');returnUrl.searchParams.delete('origen');
+      params.set('admiraReturnUrl', returnUrl.href);
+      if (it.mime) params.set('admiraStockMime', it.mime);
+      if (it.editorKind) params.set('admiraEditable', it.editorKind);
       params.set('admiraStockType', it.type || '');
       params.set('admiraStockTitle', it.title || it.prompt || 'Admira Stock asset');
       if (it.id) params.set('admiraStockId', it.id);
-      if (isEditableCapsula(it)) params.set('mode', 'capsula');
-
+      if (/^capsula-url:[a-f0-9]{16}$/.test(it.externalRef || '')) params.set('admiraCapsuleRef', it.externalRef);
       if (it.prompt) params.set('admiraStockPrompt', it.prompt);
       if (it.thumbnail) params.set('admiraStockThumbnail', it.thumbnail);
       if (it.width) params.set('admiraStockWidth', it.width);
       if (it.height) params.set('admiraStockHeight', it.height);
       if (it.duration) params.set('admiraStockDuration', it.duration);
-      return `https://ainimation.studio/studio.html?${params.toString()}`;
+      return `https://ainimation.studio/${it.editorKind === 'interactive' ? 'interactivos/' : 'studio.html'}?${params.toString()}`;
     }
     function renderPromptHtml(raw) {
       const safe = String(raw || '').replace(/</g,'&lt;');
@@ -1290,7 +1313,7 @@
             <span class="stock-type ${typeLabel}">${typeText(typeLabel)}</span>
             ${it.num ? `<span class="stock-num" title="ID único del asset · llámalo con /play${it.num} en admira.tv">#${it.num}</span>` : ''}
             <div class="stock-card-actions">
-              <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Abrir en AINimation" aria-label="Abrir en AINimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
+              <a class="stock-card-btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener" title="Editar en AInimation" aria-label="Editar en AInimation" data-act="ainimation"><span aria-hidden="true">AI</span></a>
               <button type="button" class="stock-card-btn" data-act="playlist" title="Añadir a una playlist" aria-label="Añadir a playlist"><span aria-hidden="true">🎵</span></button>
               <button type="button" class="stock-card-btn" data-act="feed" title="Distribuir a pantallas (elegir destino, ahora o programado)" aria-label="Distribuir a pantallas"><span aria-hidden="true">📡</span></button>
               <a class="stock-card-btn" href="${assetUrl}" target="_blank" rel="noopener" title="Abrir asset en pestaña nueva" aria-label="Abrir asset en pestaña nueva" data-act="open"><span aria-hidden="true">↗</span></a>
@@ -1313,11 +1336,20 @@
       const sorted = items.slice();
       const recent = (a, b) => (b.createdAt || '').localeCompare(a.createdAt || '');
       const name = it => (it.title || it.prompt || '').trim();
+      const format = it => {
+        const width = Number(it && (it.width || it._mediaWidth)) || 0;
+        const height = Number(it && (it.height || it._mediaHeight)) || 0;
+        const ratio = width && height ? width / height : 0;
+        if (ratio) return ratio < 0.9 ? 'vertical' : ratio > 1.1 ? 'horizontal' : 'cuadrado';
+        return String((it && (it.format || it.aspectRatio || it.mime)) || 'sin formato');
+      };
       const comparators = {
         'date-desc': recent,
         'date-asc':  (a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''),
         'name-asc':  (a, b) => name(a).localeCompare(name(b), 'es', { sensitivity: 'base' }) || recent(a, b),
         'name-desc': (a, b) => name(b).localeCompare(name(a), 'es', { sensitivity: 'base' }) || recent(a, b),
+        'format-asc': (a, b) => format(a).localeCompare(format(b), 'es', { sensitivity: 'base' }) || recent(a, b),
+        'format-desc': (a, b) => format(b).localeCompare(format(a), 'es', { sensitivity: 'base' }) || recent(a, b),
         'type-asc':  (a, b) => ((TYPE_ORDER[displayType(a)] ?? 99) - (TYPE_ORDER[displayType(b)] ?? 99)) || recent(a, b),
         'type-desc': (a, b) => ((TYPE_ORDER[displayType(b)] ?? 99) - (TYPE_ORDER[displayType(a)] ?? 99)) || recent(a, b),
         'motor-asc': (a, b) => String(a.motor || '').localeCompare(String(b.motor || ''), 'es', { sensitivity: 'base' }) || recent(a, b),
@@ -1439,7 +1471,7 @@
     // Adaptaciones del Adaptador de Pixeria: vídeos nuevos con motor «adaptador» y
     // externalRef = id del vídeo original. Se agrupan bajo su original con el filtro
     // «origen» (?origen=<id>): el original primero y detrás sus adaptaciones.
-    const isAdaptacion = it => !!(it && it.motor === 'adaptador' && it.externalRef);
+    const isAdaptacion = it => !!(it && (it.motor === 'adaptador' || String(it.motor || '').toLowerCase().startsWith('ainimation')) && it.externalRef);
     let ADAPT = new Map();
     (function () {
       const st = document.createElement('style');
@@ -1457,12 +1489,12 @@
     function adaptChip(it) {
       if (isAdaptacion(it)) {
         const orig = allItems.find(x => x.id === it.externalRef);
-        const label = orig ? `↳ adaptación de «${escTxt((orig.title || orig.id).slice(0, 60))}»` : '↳ adaptación';
-        return `<button type="button" class="stock-adapt-chip" data-act="origen" data-origen="${escTxt(it.externalRef)}" title="Ver el original y sus adaptaciones">${label}</button>`;
+        const label = orig ? `↳ versión de «${escTxt((orig.title || orig.id).slice(0, 60))}»` : '↳ versión';
+        return `<button type="button" class="stock-adapt-chip" data-act="origen" data-origen="${escTxt(it.externalRef)}" title="Ver el original y sus versiones">${label}</button>`;
       }
       const n = ADAPT.get(it.id) || 0;
       if (!n || filters.origen === it.id) return '';
-      return `<button type="button" class="stock-adapt-chip" data-act="origen" data-origen="${escTxt(it.id)}" title="Ver el original y sus adaptaciones">▸ ${n} ${n === 1 ? 'adaptación' : 'adaptaciones'}</button>`;
+      return `<button type="button" class="stock-adapt-chip" data-act="origen" data-origen="${escTxt(it.id)}" title="Ver el original y sus versiones">▸ ${n} ${n === 1 ? 'versión' : 'versiones'}</button>`;
     }
     function renderOrigenBar() {
       const bar = document.getElementById('stockOrigenBar');
@@ -1471,7 +1503,7 @@
       if (!filters.origen) { bar.innerHTML = ''; return; }
       const orig = allItems.find(x => x.id === filters.origen);
       const n = ADAPT.get(filters.origen) || 0;
-      bar.innerHTML = `<span>Original «${escTxt(orig ? (orig.title || orig.id) : filters.origen)}» · ${n} ${n === 1 ? 'adaptación' : 'adaptaciones'}</span><button type="button" data-act="origen" data-origen="">✕ Ver todo el Stock</button>`;
+      bar.innerHTML = `<span>Original «${escTxt(orig ? (orig.title || orig.id) : filters.origen)}» · ${n} ${n === 1 ? 'versión' : 'versiones'}</span><button type="button" data-act="origen" data-origen="">✕ Ver todo el Stock</button>`;
     }
     document.addEventListener('click', e => {
       const b = e.target.closest && e.target.closest('[data-act="origen"]');
@@ -1495,11 +1527,27 @@
       const PC = window.PixeriaCliente, clienteListo = !!(PC && PC.listo && PC.listo());
       if (!clienteListo && clientePendiente() && !clienteEsperaAgotada) { grid.innerHTML = ''; return; }
       ADAPT = new Map();
-      for (const it of allItems) if (isAdaptacion(it)) ADAPT.set(it.externalRef, (ADAPT.get(it.externalRef) || 0) + 1);
+      for (const it of allItems) {
+        const seen = new Set(); let child = it;
+        while (isAdaptacion(child) && !seen.has(child.id)) {
+          seen.add(child.id);
+          ADAPT.set(child.externalRef, (ADAPT.get(child.externalRef) || 0) + 1);
+          child = allItems.find(x => x.id === child.externalRef);
+        }
+      }
       renderOrigenBar();
       const items = allItems.filter(it => {
         if (clienteListo && !PC.visible(it)) return false;
-        if (filters.origen) return it.id === filters.origen || (isAdaptacion(it) && it.externalRef === filters.origen);
+        if (filters.origen) {
+          if (it.id === filters.origen) return true;
+          const seen = new Set(); let parent = it;
+          while (isAdaptacion(parent) && !seen.has(parent.id)) {
+            seen.add(parent.id);
+            if (parent.externalRef === filters.origen) return true;
+            parent = allItems.find(x => x.id === parent.externalRef);
+          }
+          return false;
+        }
         if (!matchesType(it, filters.type)) return false;
         if (filters.motor && verMotor(it.motor) !== verMotor(filters.motor)) return false;
         if (filters.tags && filters.tags.length) {
@@ -1561,42 +1609,8 @@
     }
 
     let xpaceController;
-    // Published files remain intact; previous capsule versions are available here.
-    async function loadCapsulaHistory(it) {
-      const host = document.createElement('details');
-      host.className = 'stock-capsula-history';
-      const title = document.createElement('summary');
-      title.textContent = 'Historial de versiones';
-      host.append(title);
-      const body = document.createElement('div');
-      body.textContent = 'Cargando versiones…';
-      host.append(body);
-      lightboxMeta.append(host);
-      try {
-        const r = await fetch(`${STOCK_BASE}/stock/capsula/${encodeURIComponent(it.id)}`, {cache:'no-store'});
-        const data = await r.json();
-        if (!host.isConnected || window.__lightboxItemId !== it.id) return;
-        if (!r.ok && !Array.isArray(data.history)) throw new Error('history-unavailable');
-        const history = Array.isArray(data.history) ? data.history : [];
-        body.replaceChildren();
-        if (!history.length) { body.textContent = 'Sin versiones anteriores.'; return; }
-        const list = document.createElement('ul');
-        for (const version of history) {
-          const row = document.createElement('li');
-          const link = document.createElement('a');
-          const id = String(version.id || '');
-          if (!/^[A-Za-z0-9-]+$/.test(id)) continue;
-          link.href = `${STOCK_BASE}/stock/asset/${encodeURIComponent(id)}`;
-          link.target = '_blank'; link.rel = 'noopener';
-          link.textContent = `v${Number(version.version || version.capsuleSource?.version) || 1}${version.num ? ' · #' + Number(version.num) : ''}${id === it.id ? ' · actual' : ''}`;
-          row.append(link); list.append(row);
-        }
-        body.append(list);
-      } catch {
-        if (host.isConnected) body.textContent = 'No se ha podido cargar el historial. Vuelve a intentarlo.';
-      }
-    }
     function openLightbox(it) {
+      resetCapsuleEditor();
       if(isFurniture3D(it)){import('./assets/furniture/editor.mjs').then(m=>m.openFurniture(it));return;}
       xpaceController?.abort();
       xpaceController = null;
@@ -1641,7 +1655,8 @@
         <p class="stock-prompt">${renderPromptHtml(it.prompt)}</p>
         ${commentBlock}
         <div class="stock-lightbox-actions">
-          <a class="btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener">AI Abrir en AINimation</a>
+          ${/^capsula-url:[a-f0-9]{16}$/.test(it.externalRef || '') ? '<button type="button" class="btn" data-act="edit-capsule" aria-expanded="false">Editar con Ainimation</button>' : ''}
+          <a class="btn" href="${escAttr(ainimationImportHref(it))}" target="_blank" rel="noopener">AI Editar en AInimation</a>
           <button type="button" class="btn" data-act="descargar" title="Guarda el fichero en este ordenador con un nombre legible">⬇ Descargar a este ordenador</button>
           ${typeLabel === 'video' ? `<button type="button" class="btn" data-act="compartir" title="Compartir (YouTube o enlace)">📤 Compartir</button>` : ''}
           <button type="button" class="btn prio0-btn" data-act="prio0" title="Envía este asset AHORA al destino que elijas e interrumpe lo que se esté emitiendo">⚠ Prioridad 0 · interrumpir</button>
@@ -1659,13 +1674,11 @@
         import('./assets/xpaces/viewer.mjs?v=itil-capa-2').then(m => {if (!controller.signal.aborted) return m.mountXpace(host, it, {signal:controller.signal});}).catch(() => {if (!controller.signal.aborted) host.textContent = 'No se ha podido cargar el 3D. Cierra y vuelve a abrir para reintentar.';});
       }
       window.__lightboxItemId = it.id || null;
-      if (isEditableCapsula(it)) loadCapsulaHistory(it);
       lightbox.hidden = false;
       lightbox.setAttribute('aria-hidden', 'false');
       document.body.classList.add('stock-lightbox-open');
       updateLightboxNav();
       if (isCapsule(it)) trackCapsuleConsumption(it);
-
     }
     function lightboxIndex() {
       const id = window.__lightboxItemId;
@@ -1686,6 +1699,7 @@
       openLightbox(currentView[j]);
     }
     function closeLightbox() {
+      resetCapsuleEditor();
       xpaceController?.abort();
       xpaceController = null;
       lightbox.classList.remove('is-xpace');
@@ -1708,6 +1722,9 @@
 
     // Edición de tags dentro del lightbox (quitar / añadir)
     lightboxMeta.addEventListener('click', async e => {
+      const editCapsuleBtn = e.target.closest('[data-act="edit-capsule"]');
+      if (editCapsuleBtn) { e.preventDefault(); e.stopPropagation(); const it = currentItemInLightbox(); if(it) await editCapsuleInDetail(it, editCapsuleBtn); return; }
+
       const ratingBtn = e.target.closest('[data-act="rate-capsule"]');
       if (ratingBtn) {
         e.preventDefault(); e.stopPropagation();
@@ -2105,7 +2122,8 @@
           absorber(indice, true);
         } catch (e) { lastErr = e; }
         const edadMin = (indice && indice.builtAt) ? (Date.now() - Date.parse(indice.builtAt)) / 60000 : Infinity;
-        if (!indice || !(edadMin < 20)) {
+        const highlighted = new URLSearchParams(location.search).get('highlight');
+        if (!indice || !(edadMin < 20) || (highlighted && !indice.some(it => it.id === highlighted))) {
           // 15 s para el worker: tarda 4-9 s medidos; con timeout de 9000 se
           // abortaba a sí mismo casi siempre.
           try { absorber(await fetchSource(STOCK_LIST_FALLBACK, 15000), false); } catch (e) { lastErr = e; }
@@ -2196,9 +2214,9 @@
       if (/^https?:\/\//i.test(v) && urlField) { urlField.value = v; search.value = ''; filters.q = ''; applyFilters(true); }
       dlg.showModal();
     });
-    // Cabezales ordenables (Nombre / Fecha / Tipo / Motor) — clic alterna asc/desc
-    const SORT_DEFAULT_DIR = { name: 'asc', date: 'desc' };
-    const SORT_VALID = new Set(['name-asc','name-desc','date-asc','date-desc']);
+    // Cabezal ordenable — clic alterna asc/desc y se recuerda entre sesiones.
+    const SORT_DEFAULT_DIR = { name: 'asc', date: 'desc', format: 'asc', type: 'asc', motor: 'asc' };
+    const SORT_VALID = new Set(['name-asc','name-desc','date-asc','date-desc','format-asc','format-desc','type-asc','type-desc','motor-asc','motor-desc']);
     function applySortIndicators() {
       const [key, dir] = sortMode.split('-');
       sortBar.querySelectorAll('.stock-sort-th').forEach(b => {
@@ -2724,6 +2742,12 @@
         // Barra de lote
         $('distBatchSend').addEventListener('click', () => open(selectedItems()));
         $('distBatchClear').addEventListener('click', clearSelection);
+        $('distBatchCreate').addEventListener('click', async () => {
+          try {
+            const {openBatchCreator}=await import('/assets/admira-batch-create.mjs?v=batch-1');
+            openBatchCreator([...sel].map(id=>allItems.find(item=>item.id===id)).filter(Boolean));
+          } catch(error) { window.alert(error.message); }
+        });
         const bdl = $('distBatchDownload');
         if (bdl) bdl.addEventListener('click', () => descargarAssets(selectedItems()));
         const bpl = $('distBatchPlaylist'); if (bpl) bpl.addEventListener('click', () => { if (window.PL) window.PL.open(selectedItems()); });
@@ -3458,7 +3482,7 @@
       .catch(()=>{});
   })();
   </script>
-  <script defer src="/assets/cuadratura.js?v=22.10.2026.r2.1327"></script>
+  <script defer src="/assets/cuadratura.js?v=24.10.2026.r2.1415"></script>
   <script src="/assets/admira-version-watch.js" defer></script>
 </body>
 </html>

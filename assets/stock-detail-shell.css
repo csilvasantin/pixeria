@@ -1,0 +1,7 @@
+/* Preserve the canonical header while Stock detail owns the remaining viewport. */
+body.stock-lightbox-open .pf-topbar{position:fixed;inset:0 0 auto;z-index:1602}
+body.stock-lightbox-open .stock-lightbox{top:var(--pf-topbar-h,70px);backdrop-filter:none;-webkit-backdrop-filter:none}
+body.stock-lightbox-open .stock-lightbox.is-capsule-editing{padding-top:12px}
+body.stock-lightbox-open .rail,body.stock-lightbox-open .pix-nav-layer,body.stock-lightbox-open .pix-rail-resize{z-index:1601}
+body.stock-lightbox-open .stock-lightbox .stock-lightbox-close{z-index:40}
+body.stock-lightbox-open .stock-lightbox.is-capsule-editing .stock-lightbox-close{top:calc(var(--pf-topbar-h,70px) + 18px);z-index:40}
